@@ -1,5 +1,4 @@
-#summary One-sentence summary of this page.
-
+RegGen is a toolbox for the integrative analysis of regulatory and expression data from experiments such as ChIP-Seq, RNA-Seq and genomic sequence. The tool provides (and will) several functionalities from Chip-Seq peak calling, transcription factor binding site, to enrichment analysis and association of several genome-wide sources of data such as wig and bed files.
 = Introduction =
 
 To come ...
