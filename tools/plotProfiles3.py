@@ -1,6 +1,6 @@
 import sys
 from os.path import basename
-from CoverageSet import *
+from rgt.CoverageSet import *
 
 
 

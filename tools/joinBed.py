@@ -1,5 +1,5 @@
 import sys
-from SetGenomicRegions import *
+from rgt.SetGenomicRegions import *
 
 tfs={}
 for l in open(sys.argv[1]):
