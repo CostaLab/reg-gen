@@ -26,7 +26,7 @@ class SetGenomicRegions:
     self.sorted=True
 
   def readBed(self,file):
-    #self.name=file
+    self.fileName=file
     chrs={}
     ct=0
     for l in open(file):
@@ -90,6 +90,40 @@ class SetGenomicRegions:
     for s in self:
        file.write(str(s)+'\n')
     file.close()
+
+  def filterByGeneAssociation(self,fileName,geneListFile,geneAnnotation,genomeSize):
+    """code based on eduardos functions. This should be  integrated in the core framework soon"""
+    "XXX"
+    from rgt.motifanalysis.util import bedFunctions,sort
+    from rgt.motifanalysis.enrichment.geneAssociation import *
+    self.fileName=fileName
+    genes=[l.strip("\n") for l in open(geneListFile)]
+    coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
+    coordDict = sort.sortBedDictionary(coordDict, field=0)
+    [dictBed,allBed]=geneAssociationByPromoter(coordDict,genes,geneAnnotation,genomeSize)  
+    #print dictBed
+    for chr in allBed.keys():
+      for (v1,v2,name,orientation,data) in allBed[chr]:
+        names=name.split(":")
+        keep=False
+        for n in names:
+          if "." not in n:
+             keep=True
+        if keep:
+          self.add(GenomicRegion(chr,v1,v2,name))
+    self.sort()
+
+
+
+   
+   
+      
+      
+
+
+
+
+    
 
        
 
