@@ -105,12 +105,9 @@ class SetGenomicRegions:
     for chr in allBed.keys():
       for (v1,v2,name,orientation,data) in allBed[chr]:
         names=name.split(":")
-        keep=False
-        for n in names:
-          if "." not in n:
-             keep=True
-        if keep:
-          self.add(GenomicRegion(chr,v1,v2,name))
+        keep=[n for n in names if "." not in n]
+        if len(keep) > 0:
+          self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
     self.sort()
 
 
