@@ -97,18 +97,29 @@ class SetGenomicRegions:
     from rgt.motifanalysis.util import bedFunctions,sort
     from rgt.motifanalysis.enrichment.geneAssociation import *
     self.fileName=fileName
-    genes=[l.strip("\n") for l in open(geneListFile)]
+    de_genes=list(set([l.strip("\n") for l in open(geneListFile)]))
     coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
     coordDict = sort.sortBedDictionary(coordDict, field=0)
-    [dictBed,allBed]=geneAssociationByPromoter(coordDict,genes,geneAnnotation,genomeSize)  
+    [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize)  
     #print dictBed
-    for chr in allBed.keys():
-      for (v1,v2,name,orientation,data) in allBed[chr]:
+    genes=[]
+    totalPeaks=0
+    allgenes=[]
+    for chr in dictBed.keys():
+      for (v1,v2,name,orientation,data) in dictBed[chr]:
+        totalPeaks+=1
         names=name.split(":")
         keep=[n for n in names if "." not in n]
         if len(keep) > 0:
           self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
+        genes=genes+keep
+        allgenes=allgenes+[n.strip(".") for n in names]
+    #print "Total Peaks", total
+    mappedGenes=len(list(set(allgenes)))
     self.sort()
+    self.genes=list(set(genes))
+    return len(de_genes), len(self.genes), mappedGenes, totalPeaks 
+  
 
 
 
