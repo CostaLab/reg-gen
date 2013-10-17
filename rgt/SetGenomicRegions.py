@@ -48,8 +48,11 @@ class SetGenomicRegions:
         self.sorted = True
 
     def readBed(self, filename):
-        """Read BED file (see format: http://genome.ucsc.edu/FAQ/FAQformat.html#format1)
-        and add every row as a GenomicRegion."""
+        """Read BED file and add every row as a GenomicRegion. 
+        Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. 
+        All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
+        The numbers in parentheses are the columns of the BED format.
+        See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
         with open(filename) as line:
             name, orientation, data = None, None, None
             line = line.strip("\n")
