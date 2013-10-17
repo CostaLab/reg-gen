@@ -1,7 +1,7 @@
 from __future__ import print_function
 from rgt.SetGenomicRegions import *
 import pysam, sys
-import numpy
+import numpy as np
 import numpy.ma
 import matplotlib
 matplotlib.use('Agg')
@@ -21,6 +21,8 @@ Methods:
 coverageFromBam(filename):
 Compute coverage of SetGenomicRegions based on BAM file.
 
+writeBed:
+Output coverage in BED format.
 """
 
 class CoverageSet:
@@ -34,9 +36,10 @@ class CoverageSet:
         self.reads = 0 #number of reads
 
     def coverageFromBam(self, bamFile, readSize = 200, binsize = 50):
-        """Infer coverage of genomicRegions from <bamFile>. 
+        """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
         Consider reads in <bamFile> with a length of <readSize>.
-        Divide the genomic regions in bin with a width of <binsize>."""
+        Divide the genomic regions in bins with a width of <binsize>."""
+        self.binsize = binsize
         bam = pysam.Samfile(bamFile, "rb" )
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
@@ -44,53 +47,71 @@ class CoverageSet:
         for region in self.genomicRegions:
             cov = [0] * (len(region) / binsize)
             for read in bam.fetch(region.chrom, region.initial - readSize, region.final + readSize):
-                pos = read.pos 
-                for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize ):
+                if read.is_reverse is False:
+                    pos = read.pos 
+                    for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize ):
+                        cov[i] += 1
+                else:
+                    pos = read.pos + read.rlen
+                    for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize ):
                         cov[i] += 1
 
-            self.values.append(cov)
+            self.values.append(np.array(cov))
 
-        self.values = numpy.array(self.values, numpy.float)
-        self.valuesorig = self.values.copy()
+        self.valuesorig = self.values[:]
 
-    def normRPM(self):
-        self.values = self.values * (1000000.0 / self.mapped_reads)
-    
-    def normFPKM(self):
-        self.values = self.values * (1000000000.0 / self.mapped_reads)
-    
-    def normFactor(self, factor):
-        self.values = self.values * (1000000.0 / (self.step * factor))
+    def writeBed(self, filename):
+        """Output coverage in BED format"""
+        with open(filename, 'w') as f:
+            i = 0
+            for region in self.genomicRegions:
+                coverage = self.values[i]
+                i += 1
+                assert len(coverage) == (region.final - region.initial) / self.binsize
+                for j in range(1, len(coverage) + 1):
+                    if coverage[j-1] == 0:
+                        continue
+                    print(region.chrom, region.initial+ (j-1)*self.binsize, min(region.initial+j*self.binsize, region.final), \
+                          coverage[j-1], sep='\t', file=f)
 
-    def log(self):
-        print(self.name, numpy.min(self.values), file=sys.stderr)
-        self.values=numpy.log2(self.values + 0.01)
-
-    def mean(self):
-        return numpy.mean(self.values, axis=0)
-    
-    def diff(self, coverage):
-        self.valuesorig = self.valuesorig + coverage.valuesorig
-        self.values = self.values - coverage.values
-    
-    def abs(self):
-        self.values = abs(self.values)
-
-    def plot(self, log = False, name = None, outTxt = True):
-        if name is None:
-            name = self.name
-        mean = self.mean()
-        plt.plot(range(0, self.step * len(mean), self.step), mean)
-        plt.title("Mean Expression "+name)
-        plt.axis([0, len(mean) * self.step, mean.min(), mean.max()])
-        plt.savefig(name + ".pdf")
-        plt.close("all")
-        if outTxt:
-            f = open(name + ".txt", "w")
-            f.write("Pos\tValue\n")
-        for i, m in enumerate(mean):
-            f.write(str(i * self.step) + '\t' + str(m) + '\n')
-        f.close()
+#    def normRPM(self):
+#        self.values = self.values * (1000000.0 / self.mapped_reads)
+#    
+#    def normFPKM(self):
+#        self.values = self.values * (1000000000.0 / self.mapped_reads)
+#    
+#    def normFactor(self, factor):
+#        self.values = self.values * (1000000.0 / (self.step * factor))
+#
+#    def log(self):
+#        print(self.name, numpy.min(self.values), file=sys.stderr)
+#        self.values=numpy.log2(self.values + 0.01)
+#
+#    def mean(self):
+#        return numpy.mean(self.values, axis=0)
+#    
+#    def diff(self, coverage):
+#        self.valuesorig = self.valuesorig + coverage.valuesorig
+#        self.values = self.values - coverage.values
+#    
+#    def abs(self):
+#        self.values = abs(self.values)
+#
+#    def plot(self, log = False, name = None, outTxt = True):
+#        if name is None:
+#            name = self.name
+#        mean = self.mean()
+#        plt.plot(range(0, self.step * len(mean), self.step), mean)
+#        plt.title("Mean Expression "+name)
+#        plt.axis([0, len(mean) * self.step, mean.min(), mean.max()])
+#        plt.savefig(name + ".pdf")
+#        plt.close("all")
+#        if outTxt:
+#            f = open(name + ".txt", "w")
+#            f.write("Pos\tValue\n")
+#        for i, m in enumerate(mean):
+#            f.write(str(i * self.step) + '\t' + str(m) + '\n')
+#        f.close()
     
 
 #def statisticsFromDiffProfiles(self,coverage,log=False,norm="RPM"):
