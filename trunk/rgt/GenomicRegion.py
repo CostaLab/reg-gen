@@ -70,30 +70,21 @@ class GenomicRegion:
         """Return official representation of GenomicRegion"""
         return ','.join( [self.chrom, str(self.initial), str(self.final)] )
 
-
-    """    leave feature out, until it is clear how one can compare two regions:
-    what is about different chromosomes?
-    what is about different length?
-    what is more important? initial or final coordinate?
-    
-    This is importing for sorting (a particular sorting criteria). We can maybe call it another name.
-    """
-        
     def __cmp__(self, region):
-         """Return negative value if x < y, zero if x == y and strictly positive if x > y"""
-         if self.chrom < region.chrom:
-             return -1
-         elif self.chrom > region.chrom:
-             return 1
-         else:
-             if self.initial < region.initial:
-                 return -1
-             elif self.initial > region.final:
-                 return 1
-             else:
-                 if self.final < region.final:
-                     return -1
-                 elif self.final > region.final:
-                     return 1
-                 else:
-                     return 0
+        """Return negative value if x < y, zero if x == y and strictly positive if x > y"""
+        if self.chrom < region.chrom:
+            return -1
+        elif self.chrom > region.chrom:
+            return 1
+        else:
+            if self.initial < region.initial:
+                return -1
+            elif self.initial > region.final:
+                return 1
+            else:
+                if self.final < region.final:
+                    return -1
+                elif self.final > region.final:
+                    return 1
+                else:
+                    return 0
