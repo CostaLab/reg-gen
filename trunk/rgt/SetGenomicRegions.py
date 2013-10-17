@@ -53,23 +53,24 @@ class SetGenomicRegions:
         All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
         The numbers in parentheses are the columns of the BED format.
         See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
-        with open(filename) as line:
-            name, orientation, data = None, None, None
-            line = line.strip("\n")
-            line = line.split("\t")
-            size = len(line)
-            chrom = line[0]
-            start, end = int(line[1]), int(line[2])
-            if start > end:
-                start, end =  end, start
-            if size > 3:
-                name = line[3]
-            if size > 5:
-                orientation = line[5]
-            if size > 5:
-                data = "\t".join( [line[4], line[6:]] )
-            self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
-        self.sort()
+        with open(filename) as f:
+            for line in f:
+                name, orientation, data = None, None, None
+                line = line.strip("\n")
+                line = line.split("\t")
+                size = len(line)
+                chrom = line[0]
+                start, end = int(line[1]), int(line[2])
+                if start > end:
+                    start, end =  end, start
+                if size > 3:
+                    name = line[3]
+                if size > 5:
+                    orientation = line[5]
+                if size > 5:
+                    data = "\t".join( [line[4], line[6:]] )
+                self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
+            self.sort()
   
     def intersect(self,y):
         """Return new SetGenomicRegions as the intersection with y"""
