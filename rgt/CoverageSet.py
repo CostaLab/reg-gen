@@ -1,11 +1,11 @@
 from __future__ import print_function
 from rgt.SetGenomicRegions import *
-import pysam, sys
+import pysam, sys  # @UnusedImport @UnresolvedImport
 import numpy as np
 import numpy.ma
-import matplotlib
+import matplotlib  # @UnresolvedImport
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # @UnresolvedImport
 
 """
 Represent coverage data.
@@ -35,7 +35,7 @@ class CoverageSet:
         self.mapped_reads = 0 #number of mapped read
         self.reads = 0 #number of reads
 
-    def coverageFromBam(self, bamFile, readSize = 200, binsize = 50):
+    def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50):
         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
         Consider reads in <bamFile> with a length of <readSize>.
         Divide the genomic regions in bins with a width of <binsize>."""
@@ -60,7 +60,7 @@ class CoverageSet:
 
         self.valuesorig = self.values[:]
 
-    def writeBed(self, filename):
+    def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
             i = 0
