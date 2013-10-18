@@ -1,5 +1,5 @@
 from __future__ import print_function
-from rgt.SetGenomicRegions import *
+from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnusedImport @UnresolvedImport
 import numpy as np
 import numpy.ma
@@ -12,24 +12,24 @@ Represent coverage data.
 
 Authors: Ivan G. Costa, Manuel Allhoff
 
-CoverageSet has an instance of SetGenomicRegions. 
-It has the coverage data for its SetGenomicRegions.
+CoverageSet has an instance of GenomicRegionSet. 
+It has the coverage data for its GenomicRegionSet.
 The coverage depends on the binsize.
 
 Methods:
 
 coverageFromBam(filename):
-Compute coverage of SetGenomicRegions based on BAM file.
+Compute coverage of GenomicRegionSet based on BAM file.
 
 writeBed:
 Output coverage in BED format.
 """
 
 class CoverageSet:
-    def __init__(self, name, SetGenomicRegions):
+    def __init__(self, name, GenomicRegionSet):
         """Initialize CoverageSet <name>."""
         self.name = name
-        self.genomicRegions = SetGenomicRegions
+        self.genomicRegions = GenomicRegionSet
         self.values = [] #coverage data for genomicRegions
         self.binsize = 1
         self.mapped_reads = 0 #number of mapped read
