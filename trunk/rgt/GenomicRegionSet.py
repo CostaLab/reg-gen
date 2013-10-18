@@ -18,8 +18,8 @@ Return intersection with region.
 
 """
 
-class SetGenomicRegions:
-  
+class GenomicRegionSet:
+
     def __init__(self, name):
         """Initialize a set of GenmocRegions"""
         self.name = name
@@ -73,8 +73,8 @@ class SetGenomicRegions:
             self.sort()
   
     def intersect(self,y):
-        """Return new SetGenomicRegions as the intersection with y"""
-        z = SetGenomicRegions(self.name + '&' + y.name)
+        """Return new GenomicRegionSet as the intersection with y"""
+        z = GenomicRegionSet(self.name + '&' + y.name)
         x = self.__iter__()
         y = y.__iter__()
         cont_loop = True
