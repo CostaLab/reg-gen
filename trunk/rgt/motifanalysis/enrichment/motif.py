@@ -129,7 +129,7 @@ def motifMatchingBiopython(combinationList,pwmList,coordDict,pwmLocation,genomeL
     
     return mpbsDict, statDict, geneDict
 
-def readMotifMatching(combinationList,coordDict,pwmFileNameList,color="black",pwmReferenceList=None):
+def readMotifMatching(combinationList,coordDict,pwmFileNameList,color="black",pwmReferenceList=None,coordFileName=None):
     """Reads motif predicted binding sites files and creates necessary structures for the statistical test.
 
     Keyword arguments:
@@ -141,6 +141,11 @@ def readMotifMatching(combinationList,coordDict,pwmFileNameList,color="black",pw
     pwmReferenceList -- Optional argument. In case pwmFileNameList is a single file (final motif matching file), this
                         parameter can be set to be a pwmList that will preserve the order of the pwmList. This is useful
                         in the case you want the same combinations of cobinding factors be created. (default None)
+    coordFileName -- If the motif matching file entries are in bigBed format, it need to be converted to a bed in order
+                     to be read. In this case where different executions are looking into the same set of bigBed files,
+                     there will be a conflict during the deletions of the bed files. In order to remove this conflict, 
+                     this additional argument is going to be passed ONLY to be used to name the created bed files. The
+                     coordinates ARE NOT used in this function.
 
     Returns:
     mpbsDict -- Dictionary (for each PWM) of dictionaries (for each chromosome) of motif predicted binding sites.
@@ -153,7 +158,17 @@ def readMotifMatching(combinationList,coordDict,pwmFileNameList,color="black",pw
     if(isinstance(pwmFileNameList, list)):
         for pwmFileName in pwmFileNameList:
             pwmList.append(".".join(pwmFileName.split("/")[-1].split(".")[:-1]))
-            allMpbsDict[pwmList[-1]] = bedFunctions.createBedDictFromSingleFile(pwmFileName, features=[1,2,3,4,5])
+            pwmFileNameToRead = pwmFileName
+            removeBed = False
+            print pwmFileName, pwmFileName.split(".")[-1]
+            if(pwmFileName.split(".")[-1] == "bb"): 
+                coordName = ".".join(coordFileName.split("/")[-1].split(".")[:-1])
+                bedFileName = pwmFileName[:-3]+"_"+coordName+".bed"
+                bedFunctions.bigBedToBed(pwmFileName, bedFileName, removeBed=False)
+                removeBed = True
+                pwmFileNameToRead = bedFileName
+            allMpbsDict[pwmList[-1]] = bedFunctions.createBedDictFromSingleFile(pwmFileNameToRead, features=[1,2,3,4,5])
+            if(removeBed): os.system("rm "+bedFileName)
     else:
         if(pwmReferenceList): pwmList = pwmReferenceList
         pwmFile = open(pwmFileNameList,"r")

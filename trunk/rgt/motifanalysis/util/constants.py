@@ -19,7 +19,7 @@ def getDataLocation():
     Returns:
     dataLocation -- Location of the data directory.
     """
-    packagePathFile = open("/".join(os.path.dirname(__file__).split("/")[:-1])+"/packagePathFile.txt","r")
+    packagePathFile = open("/".join(os.path.dirname(__file__).split("/")[:-2])+"/packagePathFile.txt","r")
     dataLocation = packagePathFile.readline().strip()+"data/"
     packagePathFile.close()
     return dataLocation
@@ -87,6 +87,14 @@ def getLogoFolder():
     dataLocation -- Location of the logo folder.
     """
     return getDataLocation()+"logo/"
+
+def getPrecompFdr4Folder():
+    """Returns the location of the pre-computed motif matches using an FDR = 10^(-4) on the original installation path.
+    
+    Returns:
+    dataLocation -- Location of the pre-computed folder.
+    """
+    return getDataLocation()+"PrecomputedMotifs_fdr4/"
 
 def getChromList(x=True, y=True, m=True, nChrom=22, reference=[]):
     """Returns a chromosome aliases list.

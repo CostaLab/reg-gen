@@ -6,6 +6,7 @@
 # Python Libraries
 import os
 import sys
+import glob
 
 # Local Libraries
 import html
@@ -147,6 +148,12 @@ def main(sysArg):
     params.append("                            as the evidence set, i.e. it will be performed")
     params.append("                            only the coordinate vs. background analysis.")
     params.append("                            Default: N.")
+    params.append("  -use_precomp_mm=<Y|N>     If Y then uses pre-computed motif matchings.")
+    params.append("                            These matchings correspond to an FDR of 10^(-4)")
+    params.append("                            using biopython motif matching. If -motif_list is")
+    params.append("                            given, then use only motifs from this list,")
+    params.append("                            otherwise, use all pre-computed motifs.")
+    params.append("                            Default: N.")
 
     params.append("\nOutput Options: ")
     params.append("  -output_location=<PATH>   Path where the output files will be written.")
@@ -277,6 +284,10 @@ def main(sysArg):
         if(inputParameters["-all_coord_evidence"] == "Y"): inputParameters["-all_coord_evidence"] = True
         else: inputParameters["-all_coord_evidence"] = False
     else: inputParameters["-all_coord_evidence"] = False
+    if("-use_precomp_mm" in inputParameters.keys()):
+        if(inputParameters["-use_precomp_mm"] == "Y"): inputParameters["-use_precomp_mm"] = True
+        else: inputParameters["-use_precomp_mm"] = False
+    else: inputParameters["-use_precomp_mm"] = False
 
     # Output Options
     if("-output_location" in inputParameters.keys()):
@@ -375,7 +386,20 @@ def main(sysArg):
     ##### MOTIF MATCHING ############################################################################
     #################################################################################################
 
-    if(not flagMM and not flagMF): # If motif matching multiple factor files and final file were not given, perform motif matching.
+    if(inputParameters["-use_precomp_mm"]): # If the user wants to use pre-computed motif matching from all the motifs in the dataset.
+
+        # Creating pre-computed list
+        mmList = []
+        if(flagM):
+            for e in util.readList(inputParameters["-motif_list"]): mmList.append(constants.getPrecompFdr4Folder()+e+".bb")
+        else: mmList = glob.glob(constants.getPrecompFdr4Folder()+"*.bb")
+
+        # Reading mpbs files
+        mpbsDictEv, statDictEv, geneDictEv = motif.readMotifMatching(inputParameters["-cobinding"],evDict,mmList,"green",None,inputParameters["-coord_file"])
+        mpbsDictNev, statDictNev, geneDictNev = motif.readMotifMatching(inputParameters["-cobinding"],nonEvDict,mmList,"red",None,inputParameters["-coord_file"])
+        mpbsDictRand, statDictRand, geneDictRand = motif.readMotifMatching(inputParameters["-cobinding"],randDict,mmList,"black",None,inputParameters["-coord_file"])
+
+    elif(not flagMM and not flagMF): # If motif matching multiple factor files and final file were not given, perform motif matching.
         if(flagM): motifList = util.readList(inputParameters["-motif_list"])
         else:
             motifList = []
@@ -394,14 +418,14 @@ def main(sysArg):
                 ll = line.strip().split("\t")
                 if(ll[3] not in motifList): motifList.append(ll[3])
             motifFinalFile.close()
-        mpbsDictEv, statDictEv, geneDictEv = motif.readMotifMatching(inputParameters["-cobinding"],evDict,inputParameters["-mpbs_final_file"],"green",motifList)
-        mpbsDictNev, statDictNev, geneDictNev = motif.readMotifMatching(inputParameters["-cobinding"],nonEvDict,inputParameters["-mpbs_final_file"],"red",motifList)
-        mpbsDictRand, statDictRand, geneDictRand = motif.readMotifMatching(inputParameters["-cobinding"],randDict,inputParameters["-mpbs_final_file"],"black",motifList)
+        mpbsDictEv, statDictEv, geneDictEv = motif.readMotifMatching(inputParameters["-cobinding"],evDict,inputParameters["-mpbs_final_file"],"green",motifList,inputParameters["-coord_file"])
+        mpbsDictNev, statDictNev, geneDictNev = motif.readMotifMatching(inputParameters["-cobinding"],nonEvDict,inputParameters["-mpbs_final_file"],"red",motifList,inputParameters["-coord_file"])
+        mpbsDictRand, statDictRand, geneDictRand = motif.readMotifMatching(inputParameters["-cobinding"],randDict,inputParameters["-mpbs_final_file"],"black",motifList,inputParameters["-coord_file"])
 
     else: # If motif matching multiple factor files were given, read them and create the motif counts to be used in fisher test.
-        mpbsDictEv, statDictEv, geneDictEv = motif.readMotifMatching(inputParameters["-cobinding"],evDict,inputParameters["-mpbs_file"],"green")
-        mpbsDictNev, statDictNev, geneDictNev = motif.readMotifMatching(inputParameters["-cobinding"],nonEvDict,inputParameters["-mpbs_file"],"red")
-        mpbsDictRand, statDictRand, geneDictRand = motif.readMotifMatching(inputParameters["-cobinding"],randDict,inputParameters["-mpbs_file"],"black")
+        mpbsDictEv, statDictEv, geneDictEv = motif.readMotifMatching(inputParameters["-cobinding"],evDict,inputParameters["-mpbs_file"],"green",None,inputParameters["-coord_file"])
+        mpbsDictNev, statDictNev, geneDictNev = motif.readMotifMatching(inputParameters["-cobinding"],nonEvDict,inputParameters["-mpbs_file"],"red",None,inputParameters["-coord_file"])
+        mpbsDictRand, statDictRand, geneDictRand = motif.readMotifMatching(inputParameters["-cobinding"],randDict,inputParameters["-mpbs_file"],"black",None,inputParameters["-coord_file"])
 
     #################################################################################################
     ##### STATISTICS ################################################################################
