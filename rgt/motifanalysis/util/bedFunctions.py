@@ -148,6 +148,21 @@ def bedToBigBed(inputBedFileName, chromSizesLocation, outputBedFileName, removeB
     if(removeBed): os.system("rm "+inputBedFileName)
     return 0
 
+def bigBedToBed(inputBedFileName, outputBedFileName, removeBed=False):
+    """Converts a big bed (bb) file to a bed file.
+
+    Keyword arguments:
+    inputBedFileName -- Input big bed file location + name.
+    outputBedFileName -- Output bed file location + name.
+    removeBed -- Wether to remove the initial big bed file or not.
+
+    Returns:
+    outputBedFileName -- Bed file.
+    """
+    os.system("bigBedToBed "+inputBedFileName+" "+outputBedFileName)
+    if(removeBed): os.system("rm "+inputBedFileName)
+    return 0
+
 def printBedDict(bedDict, outputBedFileName, out="bed", chromSizesLocation=None, separator="\t"):
     """Print the contents of a bed dictionary on a bed or big bed file.
 
