@@ -44,8 +44,10 @@ class CoverageSet:
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
         
+        
         for region in self.genomicRegions:
             cov = [0] * (len(region) / binsize)
+            print("load reads of %s" % region.chrom, file=sys.stderr)
             for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
                 if read.is_reverse is False:
                     pos = read.pos
