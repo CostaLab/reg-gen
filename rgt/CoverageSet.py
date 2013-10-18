@@ -30,7 +30,7 @@ class CoverageSet:
         """Initialize CoverageSet <name>."""
         self.name = name
         self.genomicRegions = GenomicRegionSet
-        self.values = [] #coverage data for genomicRegions
+        self.coverage = [] #coverage data for genomicRegions
         self.binsize = 1
         self.mapped_reads = 0 #number of mapped read
         self.reads = 0 #number of reads
@@ -56,23 +56,23 @@ class CoverageSet:
                     for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
                         cov[i] += 1
 
-            self.values.append(np.array(cov))
+            self.coverage.append(np.array(cov))
 
-        self.valuesorig = self.values[:]
+        self.coverageorig = self.coverage[:]
 
     def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
             i = 0
             for region in self.genomicRegions:
-                coverage = self.values[i]
+                c = self.coverage[i]
                 i += 1
-                assert len(coverage) == (region.final - region.initial) / self.binsize
-                for j in range(1, len(coverage) + 1):
-                    if coverage[j-1] == 0:
+                assert len(c) == (region.final - region.initial) / self.binsize
+                for j in range(1, len(c) + 1):
+                    if c[j-1] == 0:
                         continue
                     print(region.chrom, region.initial+ (j-1)*self.binsize, min(region.initial+j*self.binsize, region.final), \
-                          coverage[j-1], sep='\t', file=f)
+                          c[j-1], sep='\t', file=f)
 
 #    def normRPM(self):
 #        self.values = self.values * (1000000.0 / self.mapped_reads)
