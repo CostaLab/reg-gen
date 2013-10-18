@@ -1,6 +1,6 @@
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
-import pysam, sys  # @UnusedImport @UnresolvedImport
+import pysam, sys  # @UnresolvedImport
 import numpy as np
 import numpy.ma
 import matplotlib  # @UnresolvedImport
@@ -46,14 +46,14 @@ class CoverageSet:
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / binsize)
-            for read in bam.fetch(region.chrom, region.initial - readSize, region.final + readSize):
+            for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
                 if read.is_reverse is False:
-                    pos = read.pos 
-                    for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize ):
+                    pos = read.pos
+                    for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize + 1 ):
                         cov[i] += 1
                 else:
                     pos = read.pos + read.rlen
-                    for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize ):
+                    for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
                         cov[i] += 1
 
             self.values.append(np.array(cov))
