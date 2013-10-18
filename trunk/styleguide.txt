@@ -5,3 +5,4 @@ This document provides some style guidelines for programming in python.
 * use docstring (see http://www.python.org/dev/peps/pep-0257/)
 * class names have CapWords convention
 * function names consists of lowercases, with words separated by underscores 
+* we should use the future print function? (from __future__ import print_function)

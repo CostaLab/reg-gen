@@ -47,7 +47,7 @@ class SetGenomicRegions:
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
 
-    def readBed(self, filename):
+    def read_bed(self, filename):
         """Read BED file and add every row as a GenomicRegion. 
         Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. 
         All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
@@ -68,7 +68,7 @@ class SetGenomicRegions:
                 if size > 5:
                     orientation = line[5]
                 if size > 5:
-                    data = "\t".join( [line[4], line[6:]] )
+                    data = "\t".join( [line[4]] + line[6:] )
                 self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
             self.sort()
   
@@ -101,13 +101,13 @@ class SetGenomicRegions:
         return z
         
 
-    def writeBed(self,filename):
+    def write_bed(self,filename):
         """Write GenomicRegions to BED file"""
         with open(filename, 'w') as f:
             for s in self:
                 print(s, file=f)
 
-    def filterByGeneAssociation(self,fileName,geneListFile,geneAnnotation,genomeSize):
+    def filter_by_gene_association(self,fileName,geneListFile,geneAnnotation,genomeSize):
         """code based on eduardos functions. This should be  integrated in the core framework soon
         TODO: Eduardo should check this!"""
         from rgt.motifanalysis.util import bedFunctions,sort

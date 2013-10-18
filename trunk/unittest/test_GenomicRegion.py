@@ -62,7 +62,7 @@ class TestGenomicRegion(unittest.TestCase):
         r3.extend(15,0)
         self.assertEqual(r3.initial, 0)
         
-        #extend so that initla and final coordinate change
+        #extend so that inital and final coordinate change
         r4 = GenomicRegion(chrom=1, initial=10, final=20)
         r4.extend(-50,-50)
         self.assertEqual(r4.initial, 0)
@@ -71,6 +71,27 @@ class TestGenomicRegion(unittest.TestCase):
     def test_len(self):
         r = GenomicRegion(chrom=1, initial=10, final=20)
         self.assertEqual(len(r), 10)
+        
+    def test_cmp(self):
+        r = GenomicRegion(chrom=1, initial=10, final=20)
+        
+        r2 = GenomicRegion(chrom=1, initial=12, final=22)
+        self.assertTrue(r < r2)
+        
+        r2 = GenomicRegion(chrom=1, initial=8, final=18)
+        self.assertTrue(r > r2)
+        
+        r2 = GenomicRegion(chrom=1, initial=10, final=12)
+        self.assertTrue(r > r2)
+        
+        r2 = GenomicRegion(chrom=1, initial=12, final=14)
+        self.assertTrue(r < r2)
+        
+        r2 = GenomicRegion(chrom='X', initial=4, final=8)
+        self.assertTrue(r < r2)
+        
+        r2 = GenomicRegion(chrom=1, initial=10, final=18)
+        self.assertTrue(r >= r2)
     
 if __name__ == '__main__':
     unittest.main()
