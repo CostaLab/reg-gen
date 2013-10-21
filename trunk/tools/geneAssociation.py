@@ -1,14 +1,19 @@
 import sys
 import os.path
 from rgt.GenomicRegionSet import *
+from rgt.DesingMatrix import *
 from fisher import pvalue
 
 
 
 #geneList = sys.argv[2]
 anotationPath = sys.argv[2]
+designFile = sys.argv[3]
 genomeFile=anotationPath+"chrom.sizes"
 geneFile=anotationPath+"association_file.bed"
+
+d=DesingMatrix()
+d.read(designFile)
 
 print os.path.realpath('.')
 #get experiments

@@ -34,16 +34,16 @@ class ExperimentalMatrix:
                     dict[l[fi]].append(line[0])
                 except:
                     dict[l[fi]]=[line[0]]
-        self.loadObjects()
+        self.load_objects()
 
-    def loadObjects():
+    def load_objects():
         for i,t in enumerate(self.type):
             if t == "regions":
-                bed = SetGenomicRegions(self.files[i])
-                bed.readBed(self.files[i])
+                bed = GenomicRegionSet(self.files[i])
+                bed.read_bed(self.files[i])
                 self.objects[self.names[i]]=bed
             if t == "genes":
-                genes= SetGenes()
+                genes= GeneSet()
                 genes.read(self.files[i])
                 self.objects[self.names[i]]=genes
 
