@@ -47,6 +47,8 @@ class CoverageSet:
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / binsize)
+            if len(region) % binsize != 0: #end of chromosome
+                cov += [0]
             print("load reads of %s" % region.chrom, file=sys.stderr)
             for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
                 if read.is_reverse is False:
@@ -69,7 +71,7 @@ class CoverageSet:
             for region in self.genomicRegions:
                 c = self.coverage[i]
                 i += 1
-                assert len(c) == (region.final - region.initial) / self.binsize
+                assert len(c) == (region.final - region.initial) / self.binsize + 1
                 for j in range(1, len(c) + 1):
                     if c[j-1] == 0:
                         continue
