@@ -36,7 +36,7 @@ class ExperimentalMatrix:
                     dict[l[fi]]=[line[0]]
         self.loadObjects()
 
-    def loadObjects():
+    def load_objects():
         for i,t in enumerate(self.type):
             if t == "regions":
                 bed = SetGenomicRegions(self.files[i])
