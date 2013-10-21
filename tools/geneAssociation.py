@@ -1,6 +1,6 @@
 import sys
 import os.path
-from rgt.SetGenomicRegions import *
+from rgt.GenomicRegionSet import *
 from fisher import pvalue
 
 
@@ -15,8 +15,8 @@ print os.path.realpath('.')
 beds=[]
 geneLists=[]
 
-bedGenes = SetGenomicRegions(geneFile)
-bedGenes.readBed(geneFile)
+bedGenes = GenomicRegionSet(geneFile)
+bedGenes.read_bed(geneFile)
 allgenes=[]
 for r in bedGenes:
  allgenes.append(r.name)
@@ -30,9 +30,8 @@ for l in open(sys.argv[1]):
       geneList=l[3]
       bedFile=l[2]
 
-
-      bed = SetGenomicRegions(bedFile)
-      [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filterByGeneAssociation(bedFile,geneList,geneFile,genomeFile)
+      bed = GenomicRegionSet(bedFile)
+      [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(bedFile,geneList,geneFile,genomeFile)
       #print degenes,de_peak_genes, mappedGenes, totalPeaks
       prop_de=de_peak_genes/float(degenes)
       prop_back=mappedGenes/float(len(allgenes))
@@ -41,7 +40,7 @@ for l in open(sys.argv[1]):
       c=mappedGenes-de_peak_genes
       d=len(allgenes)-b-c-a
       p= pvalue(a,b,c,len(allgenes)-b-c-a)
-      print name1,name2,a,b,c,d,degenes,mappedGenes,len(allgenes),prop_de,prop_back,prop_de/prop_back,p.right_tail
+      print name1,name2,a,b,c,d,degenes,mappedGenes,len(allgenes),prop_de,prop_back,prop_de/prop_back,p.right_tail,p.left_tail
 
 #print "No Peaks", len(bed)
 #print "No Genes", len(bed.genes)
