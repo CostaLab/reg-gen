@@ -25,6 +25,7 @@ class GenomicRegionSet:
         self.name = name
         self.sequences = []
         self.sorted = False
+	self.fileName=""
     
     def add(self, region):
         """Add GenomicRegion"""
@@ -53,6 +54,7 @@ class GenomicRegionSet:
         All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
         The numbers in parentheses are the columns of the BED format.
         See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
+	self.fileName=filename
         with open(filename) as f:
             for line in f:
                 name, orientation, data = None, None, None
@@ -107,13 +109,13 @@ class GenomicRegionSet:
             for s in self:
                 print(s, file=f)
 
-    def filter_by_gene_association(self,fileName,geneListFile,geneAnnotation,genomeSize):
+    def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize):
         """code based on eduardos functions. This should be  integrated in the core framework soon
         TODO: Eduardo should check this!"""
         from rgt.motifanalysis.util import bedFunctions,sort
         from rgt.motifanalysis.enrichment.geneAssociation import *
         self.fileName=fileName
-        de_genes=list(set([l.strip("\n") for l in open(geneListFile)]))
+        de_genes=geneSet.genes
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
         coordDict = sort.sortBedDictionary(coordDict, field=0)
         [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize)  
