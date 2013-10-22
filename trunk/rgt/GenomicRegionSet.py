@@ -86,7 +86,7 @@ class GenomicRegionSet:
             if s.overlap(ss):
                 z.add(s)
                 try:
-                    x.next()
+                    s=x.next()
                 except:
                     cont_loop = False
             elif s >= ss:
