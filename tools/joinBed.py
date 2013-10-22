@@ -1,41 +1,17 @@
 import sys
-from rgt.SetGenomicRegions import *
+from rgt.ExperimentalMatrix import *
+from rgt.GenomicRegionSet import *
 
-tfs={}
-for l in open(sys.argv[1]):
-      l=l.strip('\n')
-      l=l.split('\t')
-      tfs[l[0]]=l[1]
+designFile = sys.argv[1]
+exps=ExperimentalMatrix()
+exps.read(designFile)
+beds = exps.get_regionsets()
 
-histones={}
-for l in open(sys.argv[2]):
-    l=l.strip('\n')
-    l=l.split('\t')
-    histones[l[0]]=l[1]
+print "\t"+("\t".join([b.name for b in beds]))
+for b in beds:
+    res=[b.name]
+    for b2 in beds:
+        inter=b.intersect(b2)
+        res.append(str(len(inter)))
+    print "\t".join(res)
 
-bedtfs={}
-for n in tfs.keys():
-  bedtfs[n] = SetGenomicRegions(n)
-  bedtfs[n].readBed(tfs[n])
-nametfs = tfs.keys()
-
-bedhistones={}
-for n in histones.keys():
-  bedhistones[n] = SetGenomicRegions(n)
-  bedhistones[n].readBed(histones[n])
-namehistones =  bedhistones.keys()
-                
-print "tf"+"\t"+"\t".join(namehistones)+"\t"+"cts"+"\t"+"\t".join(namehistones)
-ct=0
-for tf in bedtfs.keys():
-    btf=bedtfs[tf]
-    cttf=len(btf)
-    res=[]
-    for hist in bedhistones.keys():
-      bhis=bedhistones[hist]
-      chist=len(bhis)
-      inter=btf.intersect(bhis)
-      res.append(len(inter))
-    print tf+"\t"+"\t".join([str(o) for o in res])+"\t"+str(cttf)+"\t"+"\t".join([str(float(o)/cttf) for o in res])
-    ct+=1
-#print bedtfs

@@ -83,7 +83,7 @@ class GenomicRegionSet:
         s = x.next()
         ss = y.next()
         while cont_loop:
-            if s.overlapp(ss):
+            if s.overlap(ss):
                 z.add(s)
                 try:
                     x.next()
