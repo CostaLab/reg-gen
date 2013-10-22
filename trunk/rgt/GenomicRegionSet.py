@@ -25,7 +25,7 @@ class GenomicRegionSet:
         self.name = name
         self.sequences = []
         self.sorted = False
-	self.fileName=""
+        self.fileName=""
     
     def add(self, region):
         """Add GenomicRegion"""
@@ -54,7 +54,7 @@ class GenomicRegionSet:
         All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
         The numbers in parentheses are the columns of the BED format.
         See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
-	self.fileName=filename
+        self.fileName=filename
         with open(filename) as f:
             for line in f:
                 name, orientation, data = None, None, None
