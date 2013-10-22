@@ -45,7 +45,7 @@ class GenomicRegion:
         return s
 
     def extend(self, left, right):
-        """Extend GenmocRegion both-sided"""
+        """Extend GenomicRegion both-sided"""
         self.initial -= left
         self.final += right 
         

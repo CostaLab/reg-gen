@@ -23,6 +23,7 @@ Compute coverage of GenomicRegionSet based on BAM file.
 
 writeBed:
 Output coverage in BED format.
+
 """
 
 class CoverageSet:
@@ -35,6 +36,19 @@ class CoverageSet:
         self.mapped_reads = 0 #number of mapped read
         self.reads = 0 #number of reads
 
+    def mask(self, mask_region):
+        """mask coverage with 0 in GenomicRegion mask_region"""
+        chrom = 0
+        for region in self.genomicRegions:
+            if region.chrom != mask_region.chrom: #jump over chromosomes
+                chrom += 1 
+            else:
+                break
+            
+        start = mask_region.initial / self.binsize
+        end = mask_region.final / self.binsize
+        self.coverage[chrom][max(0,start) : end] = 0
+                             
     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50):
         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
         Consider reads in <bamFile> with a length of <readSize>.
