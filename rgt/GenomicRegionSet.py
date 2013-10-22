@@ -21,7 +21,7 @@ Return intersection with region.
 class GenomicRegionSet:
 
     def __init__(self, name):
-        """Initialize a set of GenmocRegions"""
+        """Initialize a set of GenomicRegions"""
         self.name = name
         self.sequences = []
         self.sorted = False
