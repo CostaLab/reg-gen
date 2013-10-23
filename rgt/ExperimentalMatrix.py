@@ -27,6 +27,7 @@ class ExperimentalMatrix:
         for line in f:
             line=line.strip("\n")
             line=line.split("\t")
+            print line
             self.names.append(line[0])
             self.files[line[0]]=line[2]
             self.types.append(line[1])
