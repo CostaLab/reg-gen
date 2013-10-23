@@ -76,7 +76,7 @@ class GenomicRegionSet:
   
     def intersect(self,y):
         """Return new GenomicRegionSet as the intersection with y"""
-        z = GenomicRegionSet(self.name + '&' + y.name)
+        z = GenomicRegionSet(self.name + '_' + y.name)
         x = self.__iter__()
         y = y.__iter__()
         cont_loop = True
