@@ -1,0 +1,35 @@
+#summary Prediction of transcription factor binding sites using HMMs on DNase-seq and histone modification ChIP-seq data.
+
+= Footprints =
+
+Command: *rgt-footprint*
+
+== Method ==
+
+We propose an HMM-based approach to integrate both DNase I hypersensitivity and histone modifications for the detection of open chromatin regions and active binding sites.
+
+Within transcription factor binding sites, there is a specific grammar of DNase I digestion and histone marks. We have therefore devised a multivariate HMM to model this regulatory grammar by simultaneous analysis of DNase-seq and the ChIP-seq profiles of H3K4me3 (indicative of promoters) or H3K4me1 (indicative of enhancers) on a genome-wide level.
+
+The HMM has as input a normalized and a slope signal of DNase-seq and one of the histone marks. It can therefore detect the increase, top and decrease regions of either histone modification and DNase signals. The genomic regions annotated with the 'footprint' HMM state are considered our predictions and represent likely binding sites within that cell's context.
+
+== Input ==
+
+==== Required Input: ====
+|| `-dnase_file=<FILE>` || File containing the DNase-seq signal. The file consists of the genomic coverage (read overlap) of the aligned reads. A high-resolution signal should be given correspoding to the overlap of all the 5' read base pairs.<br>Format: bigwig.<br> Default: None.||
+|| `-histone_file=<FILE>` || File containing the ChIP-seq signal from histone modifications. The file consists of the genomic coverage of the aligned reads. Each read should be extended to the average length of immunoprecipitated fragments.<br>Format: bigwig.<br>Default: None.||
+|| `-hmm_file=<FILE>` || File containing the HMM parameters. Check the manual for more information on the format and how to obtain these models.<br>Format: hmm.<br>Default: None.||
+
+==== Optional Input: ====
+|| `-coord_file=<FILE>` || Coordinate file containing the regions of the genome where the footprinting will be performed. If None, the footprinting is applied to the complete genome.<br>Format: bed.<br>Default: Complete genome tiled in 10000bp regions.||
+
+
+==== Input Parameters: ====
+|| `-organism=<STRING>` || Organism considered on the analysis. Can be 'hg19'  or 'mm9'. All the default files are going to be based on the chosen organism.<br>Default: hg19||
+
+
+==== Output Options: ====
+|| `-output_location=<PATH>` || Path where the output files will be written.<br>Default: current directory.||
+
+== Output ==
+
+Under construction.
