@@ -1,0 +1,21 @@
+#summary Instructions to use Motif Analysis module
+
+= Motif Analysis =
+
+Command: *rgt-motifanalysis*
+
+Analysis options: 
+
+*enrichment* - 
+Performs fisher exact test with multiple testing correction on MPBSs found on specific coordinates, concerning the enrichment for a specific set of genes.
+
+*matching* - 
+Searches for motif instances on the genome using different algorithms
+
+
+= Details =
+
+Add your content here.  Format your content with:
+  * Text in *bold* or _italic_
+  * Headings, paragraphs, and lists
+  * Automatic links to other wiki pages
