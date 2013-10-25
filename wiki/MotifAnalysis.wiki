@@ -86,6 +86,7 @@ The basic output files are described below.
   * `rand` - Contains all random coordinates.
   * `<nev/rand>_<X>_statistics` - Statistics for the enrichment analysis. They are available in tab-delimited plain text (.txt) file and html file (for faster visualization). The information available is: factor name, p-value from fisher test, corrected p-value, A, B, C, D (see above what each letter means), percentage of positive coordinates with at least one occurrence of the motif (i.e. A/(A+B)), percentage of negative coordinates with at least one occurrence of the motif (i.e. C/(C+D)), genes (separated by comma in text file and a link to GO analysis in html file) associated with the positive coordinates in which there is at least one occurrence of the target motif.
 
+
 = Motif Matching =
 
 Searches for putative binding sites based only on sequence information.
