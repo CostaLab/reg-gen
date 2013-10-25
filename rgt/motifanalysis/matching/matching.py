@@ -1,6 +1,5 @@
 #################################################################################################
-# Performs fisher exact test with multiple testing correction on MPBSs found on specific
-# coordinates, concerning the enrichment for a specific set of genes.
+# Searches for motif instances on the genome using different algorithms.
 #################################################################################################
 
 # Python Libraries
