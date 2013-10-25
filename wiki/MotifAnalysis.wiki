@@ -82,9 +82,9 @@ After performing the fisher test for all motifs, p-values are corrected for mult
 The basic output files are described below.
 
   * `coord_association` - A bed file containing all the coordinates and the genes associated to each coordinate. The genes can be seen in the NAME field of the bed file and are separated by colon. A dot can be seen in the coordinates that were not associated with any gene.
-  * `mpbs` - Contains all Motif-Predicted
-  * `rand`
-  * `<nev/rand>_<X>_statistics`
+  * `mpbs` - Contains all Motif-Predicted Binding Sites (MPBSs) predicted with the motif matching procedure for all coordinates and random locations.
+  * `rand` - Contains all random coordinates.
+  * `<nev/rand>_<X>_statistics` - Statistics for the enrichment analysis. They are available in tab-delimited plain text (.txt) file and html file (for faster visualization). The information available is: factor name, p-value from fisher test, corrected p-value, A, B, C, D (see above what each letter means), percentage of positive coordinates with at least one occurrence of the motif (i.e. A/(A+B)), percentage of negative coordinates with at least one occurrence of the motif (i.e. C/(C+D)), genes (separated by comma in text file and a link to GO analysis in html file) associated with the positive coordinates in which there is at least one occurrence of the target motif.
 
 = Motif Matching =
 
