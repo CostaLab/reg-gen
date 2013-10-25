@@ -10,12 +10,45 @@ Analysis options:
 Performs fisher exact test with multiple testing correction on MPBSs found on specific coordinates, concerning the enrichment for a specific set of genes.
 
 *matching* - 
-Searches for motif instances on the genome using different algorithms
+Searches for motif instances on the genome using different algorithms.
+
+= Enrichment Analysis =
+
+The basic input for this analysis are coordinates in which the enrichment will be tested. Additionally, a list of genes and motifs can be given in order to narrow the enrichment analysis. Bellow, the procedure is explained in details. The explanation focuses on the default parameters, but they can be changed.
+
+== Method ==
+
+First, the given coordinates are associated with genes. This association is made by considering promoter-proximal regions, i.e. coordinates that are within 1000 bp of each gene's TSS (labeled as PROX); the gene body, i.e. coordinates that are inside the genes (also labeled as PROX); and distal regions, i.e. coordinates that are within 50,000 bp of each gene's 3' or 5' ends (labeled as DIST). If a list of genes is provided, the association is made only with the genes in the list. Otherwise, the association is made with all genes from the selected organism. Aditionally, there is an option not to associate coordinates with genes and use all coordinates to perform the enrichment.
+
+After the association, motif occurrences are searched (using 405 primary motifs from Jaspar & Uniprobe) inside the coordinates that were associated with at least 1 gene (labeled ev) and the coordinates that were not associated with any gene (labeled nev). The motif matching is done using Biopython's motif matching implementation and uses a False Positive Rate (FPR)-based approach to determine the cutoff for each motif (FPR = 10^(-4)). Also, regularizing factors can be added to every nucleotide in every position of the PWMs used for matching.
+
+Additionally, motif matching is performed inside random genomic regions (labeled rand) with the same coordinate length as the input coordinate file. The number of peaks from this random set can be controlled.
+
+With these information, two enrichment tests can be performed. The ev set is considered the positive set and the nev/rand sets are considered the negative sets. To perform the enrichment, four metrics are calculated for each transcription factor:
+
+A = number of positive coordinates in which there is at least one occurrence of target motif.
+
+B = number of positive coordinates in which there is no occurrence of target motif.
+
+C = number of negative coordinates in which there is at least one occurrence of target motif.
+
+D = number of negative coordinates in which there is no occurrence of target motif.
+
+After performing the fisher test for all motifs, p-values are corrected for multiple testing using the Benjamini & Hochberg method.
+
+== Input ==
+
+{{{
+teste = 1;
+teste =2
+}}}
+
+== Output ==
 
 
-= Details =
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+= Motif Matching =
+
+Searches for putative binding sites based only on sequence information.
+Under construction.
+
