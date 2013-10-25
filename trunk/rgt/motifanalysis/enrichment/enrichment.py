@@ -482,6 +482,7 @@ def main(sysArg):
         bedFunctions.bedToBigBed(inputParameters["-output_location"]+"coord_association.bed",inputParameters["-chrom_sizes_file"],inputParameters["-output_location"]+"coord_association.bb",removeBed=True)
         os.system("rm "+inputParameters["-output_location"]+"coord_association_temp.bed")
 
+
     # Print all MPBSs
     if(inputParameters["-print_mpbs"]):
 
