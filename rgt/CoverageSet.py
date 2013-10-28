@@ -6,6 +6,7 @@ import numpy.ma
 import matplotlib  # @UnresolvedImport
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # @UnresolvedImport
+import os.path
 
 """
 Represent coverage data.
@@ -48,31 +49,64 @@ class CoverageSet:
         start = mask_region.initial / self.binsize
         end = mask_region.final / self.binsize
         self.coverage[chrom][max(0,start) : end] = 0
-                             
-    def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50):
+    
+    def _get_bedinfo(self, l):
+        if l != "":
+            l.strip()
+            l = l.split('\t')
+            return l[0], int(l[1]), int(l[2]),True
+        else:
+            return -1, -1, -1, False
+                   
+    def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50, rmdup = False, mask_file=None):
         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
         Consider reads in <bamFile> with a length of <readSize>.
+        Remove duplicates (read with same position) with rmdup=True, else rmdup=False (default).
+        Do not consider reads, that originate from positions described by ,mask_file>.
         Divide the genomic regions in bins with a width of <binsize>."""
         self.binsize = binsize
         bam = pysam.Samfile(bamFile, "rb" )
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
         
+        last_pos, last_chrom, next_it = -1, -1, True
+        
+        #check whether one should mask
+        if mask_file is not None and os.path.exists(mask_file):
+            mask = True
+            f = open(mask_file, 'r')
+            c, s, e = self.genomicRegions.sequences[0].chrom, -1, -1
+        else:
+            mask = False
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / binsize)
             if len(region) % binsize != 0: #end of chromosome
                 cov += [0]
             print("load reads of %s" % region.chrom, file=sys.stderr)
+            
             for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
+                pos = read.pos if not read.is_reverse else read.pos + read.rlen #get right or left position of read
+
+                if rmdup and last_chrom == region.chrom and last_pos == pos: 
+                    continue #rmdup
+                
+                if mask:
+                    while next_it and c != region.chrom: #get right chromosome
+                        c, s, e, next_it = self._get_bedinfo(f.readline())
+                    while next_it and e <= pos: #check right position
+                        c, s, e, next_it = self._get_bedinfo(f.readline())
+                    if next_it and s <= pos:
+                        continue #pos in mask region
+
                 if read.is_reverse is False:
-                    pos = read.pos
                     for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize + 1 ):
                         cov[i] += 1
                 else:
-                    pos = read.pos + read.rlen
                     for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
                         cov[i] += 1
+
+                last_pos, last_chrom = pos, region.chrom
 
             self.coverage.append(np.array(cov))
 
