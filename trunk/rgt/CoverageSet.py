@@ -194,3 +194,75 @@ class CoverageSet:
         #    #print "Warning: pile up returned outside read",pileupcolumn.pos,region
         #    pass
 #         self.window=window
+
+    def coverage_from_bam2(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = False):
+        """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
+        Consider reads in <bam_file> with a length of <read_size>.
+        Remove duplicates (read with same position) with rmdup=True.
+        Divide the genomic regions in bins with a width of <binsize>."""
+        self.binsize = binsize
+        self.stepsize = stepsize
+        bam = pysam.Samfile(bam_file, "rb" )
+        self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
+        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
+        
+        for region in self.genomicRegions:
+            print("loading reads of %s" %region.chrom, file=sys.stderr)
+            
+            cov = [0] * (len(region) / stepsize)
+            positions = []
+            
+            for read in bam.fetch(region.chrom):
+                if not read.is_unmapped:
+                    pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
+                    positions.append(pos)
+            
+            positions = list(set(positions))
+            positions.sort()
+            positions.reverse()
+            
+            i = 0
+            while positions:
+                win_s = i * stepsize
+                win_e = i * stepsize + binsize
+                c = 0
+                taken = []
+                 
+                while True:
+                    s = positions.pop()
+                    taken.append(s)
+                    if s <= win_e: #read within window
+                        c += 1
+                    if s > win_e or not positions:
+                        taken.reverse()
+                        for s in taken:
+                            if s + read_size >= win_s: #consider read in next iteration
+                                positions.append(s)
+                            else:
+                                break #as taken decreases monotonously
+                        taken = []
+                        break
+                     
+                cov[i] = c
+                i += 1
+        
+            self.coverage.append(np.array(cov))
+
+        self.coverageorig = self.coverage[:]
+
+
+
+
+
+    def write_bed2(self, filename):
+        """Output coverage in BED format"""
+        with open(filename, 'w') as f:
+            i = 0
+            for region in self.genomicRegions:
+                c = self.coverage[i]
+                i += 1
+                for j in range(len(c)):
+                    if c[j] != 0:
+                        print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
+                              j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
+             
