@@ -24,7 +24,8 @@ Compute coverage of GenomicRegionSet based on BAM file.
 writeBed:
 Output coverage in BED format.
 
-
+subtract:
+Subtract coverage from CoverageSet object
 
 """
 
