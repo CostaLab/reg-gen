@@ -6,7 +6,6 @@ import numpy.ma
 import matplotlib  # @UnresolvedImport
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # @UnresolvedImport
-import os.path
 
 """
 Represent coverage data.
@@ -33,85 +32,11 @@ class CoverageSet:
         self.name = name
         self.genomicRegions = GenomicRegionSet
         self.coverage = [] #coverage data for genomicRegions
-        self.binsize = 1
-        self.mapped_reads = 0 #number of mapped read
-        self.reads = 0 #number of reads
-
-    def mask(self, mask_region):
-        """mask coverage with 0 in GenomicRegion mask_region"""
-        chrom = 0
-        for region in self.genomicRegions:
-            if region.chrom != mask_region.chrom: #jump over chromosomes
-                chrom += 1 
-            else:
-                break
-            
-        start = mask_region.initial / self.binsize
-        end = mask_region.final / self.binsize
-        self.coverage[chrom][max(0,start) : end] = 0
-    
-    def _get_bedinfo(self, l):
-        if l != "":
-            l.strip()
-            l = l.split('\t')
-            return l[0], int(l[1]), int(l[2]),True
-        else:
-            return -1, -1, -1, False
-                   
-    def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50, rmdup = False, mask_file=None):
-        """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
-        Consider reads in <bamFile> with a length of <readSize>.
-        Remove duplicates (read with same position) with rmdup=True, else rmdup=False (default).
-        Do not consider reads, that originate from positions described by ,mask_file>.
-        Divide the genomic regions in bins with a width of <binsize>."""
-        self.binsize = binsize
-        bam = pysam.Samfile(bamFile, "rb" )
-        self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
-        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
+        self.binsize = 100
+        self.mapped_reads = None #number of mapped read
+        self.reads = None #number of reads
+        self.stepsize = 50
         
-        last_pos, last_chrom, next_it = -1, -1, True
-        
-        #check whether one should mask
-        if mask_file is not None and os.path.exists(mask_file):
-            mask = True
-            f = open(mask_file, 'r')
-            c, s, e = self.genomicRegions.sequences[0].chrom, -1, -1
-        else:
-            mask = False
-        
-        for region in self.genomicRegions:
-            cov = [0] * (len(region) / binsize)
-            if len(region) % binsize != 0: #end of chromosome
-                cov += [0]
-            print("load reads of %s" % region.chrom, file=sys.stderr)
-            
-            for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
-                pos = read.pos if not read.is_reverse else read.pos + read.rlen #get right or left position of read
-
-                if rmdup and last_chrom == region.chrom and last_pos == pos: 
-                    continue #rmdup
-                
-                if mask:
-                    while next_it and c != region.chrom: #get right chromosome
-                        c, s, e, next_it = self._get_bedinfo(f.readline())
-                    while next_it and e <= pos: #check right position
-                        c, s, e, next_it = self._get_bedinfo(f.readline())
-                    if next_it and s <= pos:
-                        continue #pos in mask region
-
-                if read.is_reverse is False:
-                    for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize + 1 ):
-                        cov[i] += 1
-                else:
-                    for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
-                        cov[i] += 1
-
-                last_pos, last_chrom = pos, region.chrom
-
-            self.coverage.append(np.array(cov))
-
-        self.coverageorig = self.coverage[:]
-
     def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
@@ -119,12 +44,234 @@ class CoverageSet:
             for region in self.genomicRegions:
                 c = self.coverage[i]
                 i += 1
-                assert len(c) == (region.final - region.initial) / self.binsize + 1
-                for j in range(1, len(c) + 1):
-                    if c[j-1] == 0:
-                        continue
-                    print(region.chrom, region.initial+ (j-1)*self.binsize, min(region.initial+j*self.binsize, region.final), \
-                          c[j-1], sep='\t', file=f)
+                for j in range(len(c)):
+                    if c[j] != 0:
+                        print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
+                              j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
+    
+    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
+        """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
+        Consider reads in <bam_file> with a length of <read_size>.
+        Remove duplicates (read with same position) with rmdup=True (default).
+        Divide the genomic regions in bins with a width of <binsize> and use <stepsize> to smooth the signal."""
+        self.binsize = binsize
+        self.stepsize = stepsize
+        bam = pysam.Samfile(bam_file, "rb" )
+        self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
+        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
+        
+        for region in self.genomicRegions:
+            print("loading reads of %s" %region.chrom, file=sys.stderr)
+            
+            cov = [0] * (len(region) / stepsize)
+            positions = []
+            
+            for read in bam.fetch(region.chrom):
+                if not read.is_unmapped:
+                    pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
+                    positions.append(pos)
+            
+            if rmdup:
+                positions = list(set(positions))
+            positions.sort()
+            positions.reverse()
+            
+            i = 0
+            while positions:
+                win_s = i * stepsize
+                win_e = i * stepsize + binsize
+                c = 0
+                taken = []
+                 
+                while True:
+                    s = positions.pop()
+                    taken.append(s)
+                    if s <= win_e: #read within window
+                        c += 1
+                    if s > win_e or not positions:
+                        taken.reverse()
+                        for s in taken:
+                            if s + read_size >= win_s: #consider read in next iteration
+                                positions.append(s)
+                            else:
+                                break #as taken decreases monotonously
+                        taken = []
+                        break
+                     
+                cov[i] = c
+                i += 1
+        
+            self.coverage.append(np.array(cov))
+
+        self.coverageorig = self.coverage[:]
+        
+        
+#     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 100, stepsize = 50, rmdup = False, mask_file=None, get_pos=False):
+#         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
+#         Consider reads in <bamFile> with a length of <readSize>.
+#         Remove duplicates (read with same position) with rmdup=True, else rmdup=False (default).
+#         Do not consider reads, that originate from positions described by ,mask_file>.
+#         If <get_pos> computes list of forward and backward reads for each bin.
+#         Divide the genomic regions in bins with a width of <binsize>."""
+#         self.binsize = binsize
+#         bam = pysam.Samfile(bamFile, "rb" )
+#         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
+#         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
+#         
+#         last_pos, last_chrom, next_it = -1, -1, True
+#         
+#         #check whether one should mask
+#         if mask_file is not None and os.path.exists(mask_file):
+#             mask = True
+#             f = open(mask_file, 'r')
+#             c, s, e = self.genomicRegions.sequences[0].chrom, -1, -1
+#         else:
+#             mask = False
+# 
+#         step = 100
+#         self.step = step
+#         for region in self.genomicRegions:
+#             cov = [0] * (len(region) / step)
+#                 
+#             print("load reads of %s" % region.chrom, file=sys.stderr)
+#             
+#             for i in range(int(self.binsize/self.step / 2), len(cov)):
+#                 f_pos, b_pos = set(), set()
+#                 if i % 10000 ==0 :
+#                     print(i, len(cov), file=sys.stderr)
+#                 for read in bam.fetch(region.chrom, i*step - self.binsize/2, i*step + self.binsize/2):
+#                     if read.is_reverse:
+#                         b_pos.add(read.pos)
+#                     else:
+#                         f_pos.add(read.pos)
+#                     
+#                     cov[i] = len(f_pos) + len(b_pos)
+#             
+#             self.coverage.append(np.array(cov))
+            
+#             for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
+#                 pos = read.pos if not read.is_reverse else read.pos + read.rlen #get right or left position of read
+#                 
+#                 if rmdup and last_chrom == region.chrom and last_pos == pos: 
+#                     continue #rmdup
+#                 
+#                 if mask:
+#                     while next_it and c != region.chrom: #get right chromosome
+#                         c, s, e, next_it = self._get_bedinfo(f.readline())
+#                     while next_it and e <= pos: #check right position
+#                         c, s, e, next_it = self._get_bedinfo(f.readline())
+#                     if next_it and s <= pos:
+#                         continue #pos in mask region
+# 
+#                 if read.is_reverse is False:
+#                     for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize + 1 ):
+#                         cov[i] += 1
+#                         if get_pos:
+#                             positions[i][0].append(pos)
+#                 else:
+#                     for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
+#                         cov[i] += 1
+#                         if get_pos:
+#                             positions[i][1].append(pos)
+# 
+#                 last_pos, last_chrom = pos, region.chrom
+# 
+#             self.coverage.append(np.array(cov))
+#             
+#             if get_pos:
+#                 self.read_pos.append( np.array(positions) )
+#         
+#         self.coverageorig = self.coverage[:]
+       
+#     def _get_bedinfo(self, l):
+#         if l != "":
+#             l.strip()
+#             l = l.split('\t')
+#             return l[0], int(l[1]), int(l[2]),True
+#         else:
+#             return -1, -1, -1, False
+              
+#     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 50, rmdup = False, mask_file=None, get_pos=False):
+#         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
+#         Consider reads in <bamFile> with a length of <readSize>.
+#         Remove duplicates (read with same position) with rmdup=True, else rmdup=False (default).
+#         Do not consider reads, that originate from positions described by ,mask_file>.
+#         If <get_pos> computes list of forward and backward reads for each bin.
+#         Divide the genomic regions in bins with a width of <binsize>."""
+#         self.binsize = binsize
+#         bam = pysam.Samfile(bamFile, "rb" )
+#         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bamFile) ])
+#         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile) ])
+#         
+#         last_pos, last_chrom, next_it = -1, -1, True
+#         
+#         #check whether one should mask
+#         if mask_file is not None and os.path.exists(mask_file):
+#             mask = True
+#             f = open(mask_file, 'r')
+#             c, s, e = self.genomicRegions.sequences[0].chrom, -1, -1
+#         else:
+#             mask = False
+#         
+#         for region in self.genomicRegions:
+#             cov = [0] * (len(region) / binsize)
+#             if get_pos:
+#                 positions = [([],[]) for _ in range(len(region) / binsize) ] #positions of forward/backward reads within bin
+#             
+#             if len(region) % binsize != 0: #end of chromosome
+#                 cov += [0]
+#                 if get_pos:
+#                     positions += [([],[])]
+#                 
+#             print("load reads of %s" % region.chrom, file=sys.stderr)
+#             
+#             for read in bam.fetch(region.chrom, max(0, region.initial - readSize), region.final + readSize):
+#                 pos = read.pos if not read.is_reverse else read.pos + read.rlen #get right or left position of read
+#                 
+#                 if rmdup and last_chrom == region.chrom and last_pos == pos: 
+#                     continue #rmdup
+#                 
+#                 if mask:
+#                     while next_it and c != region.chrom: #get right chromosome
+#                         c, s, e, next_it = self._get_bedinfo(f.readline())
+#                     while next_it and e <= pos: #check right position
+#                         c, s, e, next_it = self._get_bedinfo(f.readline())
+#                     if next_it and s <= pos:
+#                         continue #pos in mask region
+# 
+#                 if read.is_reverse is False:
+#                     for i in range( max(0, pos - region.initial) / binsize, min(len(region), pos + readSize - region.initial) / binsize + 1 ):
+#                         cov[i] += 1
+#                         if get_pos:
+#                             positions[i][0].append(pos)
+#                 else:
+#                     for i in range( max(0, pos - readSize - region.initial) / binsize, min(len(region), pos - region.initial) / binsize + 1 ):
+#                         cov[i] += 1
+#                         if get_pos:
+#                             positions[i][1].append(pos)
+# 
+#                 last_pos, last_chrom = pos, region.chrom
+# 
+#             self.coverage.append(np.array(cov))
+#             
+#             if get_pos:
+#                 self.read_pos.append( np.array(positions) )
+#         
+#         self.coverageorig = self.coverage[:]
+
+#     def write_bed(self, filename):
+#         """Output coverage in BED format"""
+#         with open(filename, 'w') as f:
+#             i = 0
+#             for region in self.genomicRegions:
+#                 c = self.coverage[i]
+#                 i += 1
+# #                 assert len(c) == (region.final - region.initial) / self.binsize + 1
+#                 for j in range(1, len(c) + 1):
+#                     if c[j-1] == 0:
+#                         continue
+#                     print(region.chrom, region.initial+ (j-1)*self.step, min(region.initial+j*self.step, region.final), \
+#                           c[j-1], sep='\t', file=f)
 
 #    def normRPM(self):
 #        self.values = self.values * (1000000.0 / self.mapped_reads)
@@ -195,74 +342,22 @@ class CoverageSet:
         #    pass
 #         self.window=window
 
-    def coverage_from_bam2(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = False):
-        """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
-        Consider reads in <bam_file> with a length of <read_size>.
-        Remove duplicates (read with same position) with rmdup=True.
-        Divide the genomic regions in bins with a width of <binsize>."""
-        self.binsize = binsize
-        self.stepsize = stepsize
-        bam = pysam.Samfile(bam_file, "rb" )
-        self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
-        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
-        
-        for region in self.genomicRegions:
-            print("loading reads of %s" %region.chrom, file=sys.stderr)
-            
-            cov = [0] * (len(region) / stepsize)
-            positions = []
-            
-            for read in bam.fetch(region.chrom):
-                if not read.is_unmapped:
-                    pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
-                    positions.append(pos)
-            
-            positions = list(set(positions))
-            positions.sort()
-            positions.reverse()
-            
-            i = 0
-            while positions:
-                win_s = i * stepsize
-                win_e = i * stepsize + binsize
-                c = 0
-                taken = []
-                 
-                while True:
-                    s = positions.pop()
-                    taken.append(s)
-                    if s <= win_e: #read within window
-                        c += 1
-                    if s > win_e or not positions:
-                        taken.reverse()
-                        for s in taken:
-                            if s + read_size >= win_s: #consider read in next iteration
-                                positions.append(s)
-                            else:
-                                break #as taken decreases monotonously
-                        taken = []
-                        break
-                     
-                cov[i] = c
-                i += 1
-        
-            self.coverage.append(np.array(cov))
 
-        self.coverageorig = self.coverage[:]
+#     def mask(self, mask_region):
+#         """mask coverage with 0 in GenomicRegion mask_region"""
+#         chrom = 0
+#         for region in self.genomicRegions:
+#             if region.chrom != mask_region.chrom: #jump over chromosomes
+#                 chrom += 1 
+#             else:
+#                 break
+#             
+#         start = mask_region.initial / self.binsize
+#         end = mask_region.final / self.binsize
+#         self.coverage[chrom][max(0,start) : end] = 0
 
 
 
 
 
-    def write_bed2(self, filename):
-        """Output coverage in BED format"""
-        with open(filename, 'w') as f:
-            i = 0
-            for region in self.genomicRegions:
-                c = self.coverage[i]
-                i += 1
-                for j in range(len(c)):
-                    if c[j] != 0:
-                        print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
-                              j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
-             
+
