@@ -24,6 +24,8 @@ Compute coverage of GenomicRegionSet based on BAM file.
 writeBed:
 Output coverage in BED format.
 
+
+
 """
 
 class CoverageSet:
@@ -36,7 +38,24 @@ class CoverageSet:
         self.mapped_reads = None #number of mapped read
         self.reads = None #number of reads
         self.stepsize = 50
+    
+    def subtract(self, cs):
+        """Substract CoverageSet <cs>, set negative values to 0."""
+        cs_chroms = cs.genomicRegions.get_chrom()
+        assert len(cs_chroms) == len(set(cs_chroms)) #no double entries
+        assert len(self.genomicRegions.get_chrom()) == len(set(self.genomicRegions.get_chrom()))
         
+        i = 0
+        for c in self.genomicRegions.get_chrom(): #c corresponds to self.coverage[i]
+            try:
+                j = cs_chroms.index(c)
+                assert len(self.coverage[i]) == len(cs.coverage[j])
+                self.coverage[i] -= cs.coverage[j]
+                self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0)) #neg. values to 0
+            except ValueError:
+                pass
+            i += 1
+    
     def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
