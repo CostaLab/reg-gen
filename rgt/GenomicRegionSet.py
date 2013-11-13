@@ -27,6 +27,10 @@ class GenomicRegionSet:
         self.sorted = False
         self.fileName=""
     
+    def get_chrom(self):
+        """Return all chromosomes"""
+        return [ r.chrom for r in self.sequences ]
+    
     def add(self, region):
         """Add GenomicRegion"""
         self.sequences.append(region)
