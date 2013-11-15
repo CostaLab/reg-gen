@@ -79,6 +79,7 @@ def motifMatchingBiopython(combinationList,pwmList,coordDict,pwmLocation,genomeL
     statDict = dict([(e,[0,0]) for e in combKeys]) # Left is evidence / Right is not evidence
     geneDict = dict([(e,[]) for e in combKeys])
     maxDict = dict([(e,-99.0) for e in pwmDict.keys()])
+    ct=0
     for chrName in chrList:
 
         # Reading genome
@@ -88,7 +89,8 @@ def motifMatchingBiopython(combinationList,pwmList,coordDict,pwmLocation,genomeL
         # Iterating on coordinate dictionary
         for e in mpbsDict.keys(): mpbsDict[e][chrName] = []
         for coord in coordDict[chrName]:
-
+            ct=ct+1
+            print "region", ct
             # Getting current sequence based on coordinates
             currSeq = sequence[coord[0]:coord[1]]
 
