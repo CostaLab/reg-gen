@@ -13,7 +13,7 @@ from .. util import *
 ##### FUNCTIONS #################################################################################
 #################################################################################################
 
-def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLocation,promoterLength=1000,threshDist=50000):
+def geneAssociationByPromoter(coordDict,geneList,,chromSizesLocation,promoterLength=1000,threshDist=50000):
     """Associates coordinates to genes given the following rules:
        1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
        2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
@@ -34,15 +34,17 @@ def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLoc
     """
 
     # Reading assocDict
+
+    geneList=[g.upper() for g in geneList]
     assocDictTemp = bedFunctions.createBedDictFromSingleFile(geneAssocLocation, features=[1,2,3,4,5])
     assocDict = dict()
     geneFlagDict = dict()
     for k in assocDictTemp.keys():
-        assocDict[k] = []
+        assocDict[k.upper()] = []
         for e in assocDictTemp[k]:
             if(len(e[2]) < 2): continue
             geneFlagDict[e[2]] = False
-            assocDict[k].append([e[0],e[1],e[2],e[3],e[4]])
+            assocDict[k.upper()].append([e[0],e[1],e[2],e[3],e[4]])
     assocDict = sort.sortBedDictionary(assocDict, field=0)
 
     # Updating geneFlagDict based on geneList
