@@ -44,6 +44,8 @@ for g in genesets:
     for region in exps.get_regionsets():
         bed = GenomicRegionSet("")
         [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,g,geneFile,genomeFile)
+        print degenes
+        print bed.genes
         a=de_peak_genes
         b=degenes-de_peak_genes
         c=back_mappedGenes-de_peak_genes

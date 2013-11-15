@@ -40,11 +40,11 @@ def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLoc
     assocDict = dict()
     geneFlagDict = dict()
     for k in assocDictTemp.keys():
-        assocDict[k.upper()] = []
+        assocDict[k] = []
         for e in assocDictTemp[k]:
             if(len(e[2]) < 2): continue
-            geneFlagDict[e[2]] = False
-            assocDict[k.upper()].append([e[0],e[1],e[2],e[3],e[4]])
+            geneFlagDict[e[2].upper()] = False
+            assocDict[k].append([e[0],e[1],e[2].upper(),e[3],e[4]])
     assocDict = sort.sortBedDictionary(assocDict, field=0)
 
     # Updating geneFlagDict based on geneList
