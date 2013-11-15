@@ -13,7 +13,7 @@ from .. util import *
 ##### FUNCTIONS #################################################################################
 #################################################################################################
 
-def geneAssociationByPromoter(coordDict,geneList,chromSizesLocation,promoterLength=1000,threshDist=50000):
+def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLocation,promoterLength=1000,threshDist=50000):
     """Associates coordinates to genes given the following rules:
        1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
        2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
