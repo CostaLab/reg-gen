@@ -29,10 +29,10 @@ def bedOverllap(beds,beds2,outPath):
             resLine.append(len(inter))
         res.append(resLine)
     res=numpy.array(res,float)
-    if len(totalCol)>1:
-      resprop1=res/numpy.array(totalCol)
-    else:
-      resprop1=numpy.divide(res,numpy.array([totalLine]).transpose())
+    #if len(totalCol)>1:
+    resprop1=res/numpy.array(totalCol)
+    #else:
+    #resprop1=numpy.divide(res,numpy.array([totalLine]).transpose())
     resprop2=res.transpose()/numpy.array(totalLine)
     resprop2=resprop2.transpose()
     return namesCol, namesLine,res,resprop1,resprop2
