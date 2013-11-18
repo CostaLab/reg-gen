@@ -27,6 +27,9 @@ Output coverage in BED format.
 subtract:
 Subtract coverage from CoverageSet object
 
+scale:
+Scale coverage by factor
+
 """
 
 class CoverageSet:
@@ -57,6 +60,11 @@ class CoverageSet:
                 pass
             i += 1
     
+    def scale(self, factor):
+        """Scale coverage with <factor>"""
+        for i in range(len(self.coverage)):
+            self.coverage[i] = np.rint(self.coverage[i] * float(factor))
+    
     def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
@@ -79,10 +87,8 @@ class CoverageSet:
         bam = pysam.Samfile(bam_file, "rb" )
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
-        
+        print("Loading reads of %s..." %self.name, file=sys.stderr)
         for region in self.genomicRegions:
-            print("loading reads of %s" %region.chrom, file=sys.stderr)
-            
             cov = [0] * (len(region) / stepsize)
             positions = []
             
