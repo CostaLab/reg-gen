@@ -63,7 +63,7 @@ class CoverageSet:
     def scale(self, factor):
         """Scale coverage with <factor>"""
         for i in range(len(self.coverage)):
-            self.coverage[i] = np.rint(self.coverage[i] * float(factor))
+            self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
     
     def write_bed(self, filename):
         """Output coverage in BED format"""
