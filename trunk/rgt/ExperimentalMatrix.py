@@ -49,6 +49,7 @@ class ExperimentalMatrix:
 
     def load_objects(self):
         for i,t in enumerate(self.types):
+            print self.files[self.names[i]]
             if t == "regions":
                 bed = GenomicRegionSet(self.names[i])
                 bed.read_bed(self.files[self.names[i]])
