@@ -1,5 +1,6 @@
 from __future__ import print_function
 from rgt.GenomicRegion import *
+import random
 
 """
 Represent list of GenomicRegions.
@@ -61,21 +62,24 @@ class GenomicRegionSet:
         self.fileName=filename
         with open(filename) as f:
             for line in f:
-                name, orientation, data = None, None, None
-                line = line.strip("\n")
-                line = line.split("\t")
-                size = len(line)
-                chrom = line[0]
-                start, end = int(line[1]), int(line[2])
-                if start > end:
-                    start, end =  end, start
-                if size > 3:
-                    name = line[3]
-                if size > 5:
-                    orientation = line[5]
-                if size > 5:
-                    data = "\t".join( [line[4]] + line[6:] )
-                self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
+                try:
+                    name, orientation, data = None, None, None
+                    line = line.strip("\n")
+                    line = line.split("\t")
+                    size = len(line)
+                    chrom = line[0]
+                    start, end = int(line[1]), int(line[2])
+                    if start > end:
+                        start, end =  end, start
+                    if size > 3:
+                        name = line[3]
+                    if size > 5:
+                        orientation = line[5]
+                    if size > 5:
+                        data = "\t".join( [line[4]] + line[6:] )
+                    self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
+                except:
+                    print("Error at line",line,self.fileName)
             self.sort()
   
     def intersect(self,y):
@@ -105,7 +109,15 @@ class GenomicRegionSet:
                     cont_loop = False
         z.sort()
         return z
-        
+
+    def randomRegions(self,size):
+        """Return a subsampling of the genomic region set with a specific number of regions"""
+        z = GenomicRegionSet(self.name + '_random')
+        samp = random.sample(range(len(self)),size)
+        for i in samp:
+          z.add(self.sequences[i])
+        z.sort()
+        return z                
 
     def write_bed(self,filename):
         """Write GenomicRegions to BED file"""
@@ -113,7 +125,7 @@ class GenomicRegionSet:
             for s in self:
                 print(s, file=f)
 
-    def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize):
+    def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
         """code based on eduardos functions. This should be  integrated in the core framework soon
         TODO: Eduardo should check this!"""
         from rgt.motifanalysis.util import bedFunctions,sort
@@ -122,7 +134,7 @@ class GenomicRegionSet:
         de_genes=geneSet.genes
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
         coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize)  
+        [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize,promoterLength,threshDist)  
         #print dictBed
         genes=[]
         totalPeaks=0

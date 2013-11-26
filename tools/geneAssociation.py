@@ -33,19 +33,18 @@ if len(sys.argv) > 3:
     backBed.read_bed(backGroundPeaks)
 
 
-if back:
-    backBed=GenomicRegionSet("BACK")    
-    backBed.read_bed(backGroundPeaks)
-    backUP=GenomicRegionSet("BACKUP")
-    [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(backGroundPeaks,genesets[0],geneFile,genomeFile)
-    prop_back=back_mappedGenes/float(len(allgenes))
+backBed=GenomicRegionSet("BACK")    
+backBed.read_bed(backGroundPeaks)
+backUP=GenomicRegionSet("BACKUP")
+[back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(backGroundPeaks,genesets[0],geneFile,genomeFile)
+prop_back=back_mappedGenes/float(len(allgenes))
 
 for g in genesets:
     for region in exps.get_regionsets():
         bed = GenomicRegionSet("")
         [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,g,geneFile,genomeFile)
-        print degenes
-        print bed.genes
+        #print degenes
+        #print bed.genes
         a=de_peak_genes
         b=degenes-de_peak_genes
         c=back_mappedGenes-de_peak_genes
