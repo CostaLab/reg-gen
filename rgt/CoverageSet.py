@@ -126,7 +126,7 @@ class CoverageSet:
                      
                 cov[i] = c
                 i += 1
-        
+            
             self.coverage.append(np.array(cov))
 
         self.coverageorig = self.coverage[:]
