@@ -117,9 +117,9 @@ def main(sysArg):
     
     # Creating coordinates
     if(inputParameters["-coord_file"]): # If coordinates were given by user
-        
+        pass
     else: # Create tiled genome-wide coordinates
-        
+        pass
 
     #################################################################################################
     ##### CREATING HMM ##############################################################################
