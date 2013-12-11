@@ -194,6 +194,7 @@ def main(sysArg):
     params.append("")
     if(len(sysArg) < 1):
         for e in params: print e
+        print "HI!!!!"
         sys.exit(0)
 
     #################################################################################################
@@ -370,6 +371,7 @@ def main(sysArg):
             evDict, nonEvDict = bedFunctions.separateEvidence(coordDict)
             evDictToPrint, nonEvDictToPrint = bedFunctions.separateEvidence(coordDictToPrint)
 
+    """
     #################################################################################################
     ##### RANDOM COORDINATES ########################################################################
     #################################################################################################
@@ -434,7 +436,7 @@ def main(sysArg):
     # Evaluating statistics
     resultTableListNev = statistics.fisherMultiple(inputParameters["-enriched_pvalue"],inputParameters["-cobinding"],inputParameters["-multiple_test_alpha"],statDictEv,statDictNev,geneDictEv,inputParameters["-cobinding_enriched_only"])
     resultTableListRand = statistics.fisherMultiple(inputParameters["-enriched_pvalue"],inputParameters["-cobinding"],inputParameters["-multiple_test_alpha"],statDictEv,statDictRand,geneDictEv,inputParameters["-cobinding_enriched_only"])
-
+    """
     #################################################################################################
     ##### PRINTING OUTPUT ###########################################################################
     #################################################################################################
@@ -482,7 +484,7 @@ def main(sysArg):
         bedFunctions.bedToBigBed(inputParameters["-output_location"]+"coord_association.bed",inputParameters["-chrom_sizes_file"],inputParameters["-output_location"]+"coord_association.bb",removeBed=True)
         os.system("rm "+inputParameters["-output_location"]+"coord_association_temp.bed")
 
-
+    """
     # Print all MPBSs
     if(inputParameters["-print_mpbs"]):
 
@@ -609,5 +611,6 @@ def main(sysArg):
 
     # TODO P-value heatmap
     if(inputParameters["-print_graph_heatmap"]): pass
+    """
 
 
