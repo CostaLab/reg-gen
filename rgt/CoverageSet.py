@@ -88,11 +88,15 @@ class CoverageSet:
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         print("Loading reads of %s..." %self.name, file=sys.stderr)
+        
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
             positions = []
-            
+            j = 0
             for read in bam.fetch(region.chrom):
+                if j % 500000 == 0:
+                    print(j, file=sys.stderr)
+                j += 1
                 if not read.is_unmapped:
                     pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
                     positions.append(pos)
@@ -112,9 +116,9 @@ class CoverageSet:
                 while True:
                     s = positions.pop()
                     taken.append(s)
-                    if s <= win_e: #read within window
+                    if s < win_e: #read within window
                         c += 1
-                    if s > win_e or not positions:
+                    if s >= win_e or not positions:
                         taken.reverse()
                         for s in taken:
                             if s + read_size >= win_s: #consider read in next iteration
