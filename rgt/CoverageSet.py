@@ -94,8 +94,8 @@ class CoverageSet:
             positions = []
             j = 0
             for read in bam.fetch(region.chrom):
-                if j % 500000 == 0:
-                    print(j, file=sys.stderr)
+#                if j % 500000 == 0:
+#                    print(j, file=sys.stderr)
                 j += 1
                 if not read.is_unmapped:
                     pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
@@ -108,8 +108,8 @@ class CoverageSet:
             
             i = 0
             while positions:
-                win_s = i * stepsize
-                win_e = i * stepsize + binsize
+                win_s = max(0, i * stepsize - 0.5*binsize)
+                win_e = i * stepsize + 0.5*binsize + 1
                 c = 0
                 taken = []
                  
