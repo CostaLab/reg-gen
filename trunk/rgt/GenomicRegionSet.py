@@ -83,34 +83,7 @@ class GenomicRegionSet:
                     print("Error at line",line,self.fileName)
             self.sort()
   
-    def intersect(self,y):
-        """Return new GenomicRegionSet as the intersection with y"""
-        z = GenomicRegionSet(self.name + '_' + y.name)
-        x = self.__iter__()
-        y = y.__iter__()
-        cont_loop = True
-        s = x.next()
-        ss = y.next()
-        while cont_loop:
-            if s.overlap(ss):
-                z.add(s)
-                try:
-                    s=x.next()
-                except:
-                    cont_loop = False
-            elif s >= ss:
-                try:
-                    ss = y.next()
-                except:
-                    cont_loop = False
-            else:
-                try:
-                    s = x.next()
-                except:
-                    cont_loop = False
-        z.sort()
-        return z
-
+ 
     def randomRegions(self,size):
         """Return a subsampling of the genomic region set with a specific number of regions"""
         z = GenomicRegionSet(self.name + '_random')
