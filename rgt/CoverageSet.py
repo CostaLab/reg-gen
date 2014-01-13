@@ -93,6 +93,7 @@ class CoverageSet:
         t = ['wigToBigWig', filename, chrom_file, filename + '.bw'] #TODO: something is wrong here, call only wigToBigWig
         c = " ".join(t)
         os.system(c)
+        os.remove(filename)
 
 
     def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
