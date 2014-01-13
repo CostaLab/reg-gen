@@ -111,6 +111,7 @@ class CoverageSet:
             cov = [0] * (len(region) / stepsize)
             positions = []
             j = 0
+            read_length = -1
             for read in bam.fetch(region.chrom):
 #                if j % 500000 == 0:
 #                    print(j, file=sys.stderr)
