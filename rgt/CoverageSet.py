@@ -77,9 +77,9 @@ class CoverageSet:
                         print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
                               j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
     
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
+    def coverage_from_bam(self, bam_file, ex_size = 200, binsize = 100, stepsize = 50, rmdup = True):
         """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
-        Consider reads in <bam_file> with a length of <read_size>.
+        Consider reads in <bam_file> with a extension size of <ex_size>.
         Remove duplicates (read with same position) with rmdup=True (default).
         Divide the genomic regions in bins with a width of <binsize> and use <stepsize> to smooth the signal."""
         self.binsize = binsize
@@ -97,14 +97,17 @@ class CoverageSet:
 #                if j % 500000 == 0:
 #                    print(j, file=sys.stderr)
                 j += 1
+                read_length = read.rlen 
                 if not read.is_unmapped:
-                    pos = read.pos + read.rlen - read_size if read.is_reverse else read.pos
+                    pos = read.pos - ex_size if read.is_reverse else read.pos
                     positions.append(pos)
             
             if rmdup:
                 positions = list(set(positions))
             positions.sort()
             positions.reverse()
+            
+            print('Read length is %s' %read_length, file=sys.stderr)
             
             i = 0
             while positions:
@@ -121,7 +124,7 @@ class CoverageSet:
                     if s >= win_e or not positions:
                         taken.reverse()
                         for s in taken:
-                            if s + read_size >= win_s: #consider read in next iteration
+                            if s + ex_size + read_length >= win_s: #consider read in next iteration
                                 positions.append(s)
                             else:
                                 break #as taken decreases monotonously
