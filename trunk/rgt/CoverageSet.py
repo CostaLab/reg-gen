@@ -6,6 +6,7 @@ import numpy.ma
 import matplotlib  # @UnresolvedImport
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # @UnresolvedImport
+import os
 
 """
 Represent coverage data.
@@ -76,7 +77,24 @@ class CoverageSet:
                     if c[j] != 0:
                         print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
                               j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
+    def write_wig(self, filename):
+        with open(filename, 'w') as f:
+            i = 0
+            for region in self.genomicRegions:
+                print('variableStep chrom=' + str(region.chrom) + ' span=' +str(self.stepsize), file=f)
+                c = self.coverage[i]
+                i += 1
+                for j in range(len(c)):
+                    if c[j] != 0:
+                        print(j * self.stepsize + ((self.binsize-self.stepsize)/2), c[j], file=f)
     
+    def write_bigwig(self, filename, chrom_file):
+        self.write_wig(filename)
+        t = ['wigToBigWig', filename, chrom_file, filename + '.bw'] #TODO: something is wrong here, call only wigToBigWig
+        c = " ".join(t)
+        os.system(c)
+
+
     def coverage_from_bam(self, bam_file, ex_size = 200, binsize = 100, stepsize = 50, rmdup = True):
         """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
         Consider reads in <bam_file> with a extension size of <ex_size>.
@@ -111,8 +129,8 @@ class CoverageSet:
             
             i = 0
             while positions:
-                win_s = max(0, i * stepsize - 0.5*binsize)
-                win_e = i * stepsize + 0.5*binsize + 1
+                win_s = max(0, i * stepsize)
+                win_e = i * stepsize + binsize
                 c = 0
                 taken = []
                  
@@ -130,7 +148,6 @@ class CoverageSet:
                                 break #as taken decreases monotonously
                         taken = []
                         break
-                     
                 cov[i] = c
                 i += 1
             
