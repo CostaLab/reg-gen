@@ -127,7 +127,7 @@ class CoverageSet:
             positions.sort()
             positions.reverse()
             
-            print('Read length is %s' %read_length, file=sys.stderr)
+#             print('Read length is %s' %read_length, file=sys.stderr)
             
             i = 0
             while positions:
