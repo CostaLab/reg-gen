@@ -134,8 +134,8 @@ class CoverageSet:
             
             i = 0
             while positions:
-                win_s = max(0, i * stepsize)
-                win_e = i * stepsize + binsize
+                win_s = max(0, i * stepsize - binsize*0.5)
+                win_e = i * stepsize + binsize*0.5
                 c = 0
                 taken = []
                  
