@@ -7,6 +7,7 @@ import matplotlib  # @UnresolvedImport
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # @UnresolvedImport
 import os
+import tempfile
 
 """
 Represent coverage data.
@@ -89,11 +90,13 @@ class CoverageSet:
                         print(j * self.stepsize + ((self.binsize-self.stepsize)/2), c[j], file=f)
     
     def write_bigwig(self, filename, chrom_file):
-        self.write_wig(filename)
-        t = ['wigToBigWig', filename, chrom_file, filename + '.bw'] #TODO: something is wrong here, call only wigToBigWig
+        _, tmp_path = tempfile.mkstemp()
+        self.write_wig(tmp_path)
+        t = ['wigToBigWig', tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
         c = " ".join(t)
+        #print(c)
         os.system(c)
-        os.remove(filename)
+        os.remove(tmp_path)
 
 
     def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
