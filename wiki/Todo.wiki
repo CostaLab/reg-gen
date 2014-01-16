@@ -1,7 +1,7 @@
 = TO-DO =
 This page contains information on functions that should be implemented.
 
-== * A ==
+== GenomicRegion & GenomicRegionSet ==
 
-|| Developer || Function || Input || Output || Description ||
+|| *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || || || || ||
