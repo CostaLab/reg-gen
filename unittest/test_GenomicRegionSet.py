@@ -965,6 +965,26 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [['chr1',45,55],['chr1',76,86]])
         result = self.setA.jaccard(self.setB)
         self.assertEqual(result, 11/31)
+    
+    def test_get_genome_data(self):
+        """mm9"""
+        result = GenomicRegionSet("mm9")
+        result.get_genome_data(organism="mm9")
+        self.assertEqual(len(result.sequences), 21)
+        """mm9, with Mitochondria chromosome"""
+        result = GenomicRegionSet("mm9")
+        result.get_genome_data(organism="mm9",chrom_M=True)
+        self.assertEqual(len(result.sequences), 22)
+        """hg19"""
+        result = GenomicRegionSet("hg19")
+        result.get_genome_data(organism="hg19")
+        self.assertEqual(len(result.sequences), 24)
+        """hg19, with Mitochondria chromosome"""
+        result = GenomicRegionSet("hg19")
+        result.get_genome_data(organism="hg19",chrom_M=True)
+        self.assertEqual(len(result.sequences), 25)
+        
+        
         
 if __name__ == "__main__":
 

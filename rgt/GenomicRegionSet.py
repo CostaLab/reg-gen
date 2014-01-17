@@ -2,6 +2,7 @@ from __future__ import print_function
 from rgt.GenomicRegion import *
 import random
 import copy
+import os
 
 """
 Represent list of GenomicRegions.
@@ -497,6 +498,7 @@ class GenomicRegionSet:
         return similarity
     
     def within_overlap(self):
+        """ Check whether there is overlapping within or not. """
         refer_posi = GenomicRegion(name="reference",chrom="chr1",initial=0,final=0)
         self.sort()
         for s in self:
@@ -504,3 +506,34 @@ class GenomicRegionSet:
                 return True
             refer_posi = s
         return False
+
+    def total_length(self):
+        """ Return the sum of all lengths. """
+        length = 0
+        for s in self:
+            length = length + s.__len__()
+        return length
+    
+    def get_genome_data(self,organism, chrom_M=False):
+        """ Add genome data from database into the GenomicRegionSet. """
+        chromosome_file = open(os.path.join(os.path.expanduser('~'),"/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/" + organism + "/chrom.sizes"),'r')
+
+        for line in chromosome_file:
+            if chrom_M:
+                if "random" not in line and "_" not in line: 
+                    chrom_region = GenomicRegion(chrom=line.split("\t")[0],
+                                                 initial=0,
+                                                 final=int(line.split("\t")[1]))
+                    self.add(chrom_region)
+                else:
+                    continue
+            else:
+                if "random" not in line and "_" not in line and "chrM" not in line: 
+                    chrom_region = GenomicRegion(chrom=line.split("\t")[0],
+                                                 initial=0,
+                                                 final=int(line.split("\t")[1]))
+                    self.add(chrom_region)
+                else:
+                    continue
+        
+            
