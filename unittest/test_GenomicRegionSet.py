@@ -984,6 +984,112 @@ class TestGenomicRegionSet(unittest.TestCase):
         result.get_genome_data(organism="hg19",chrom_M=True)
         self.assertEqual(len(result.sequences), 25)
         
+    def test_random_regions(self):
+        """
+        total_size=100,
+        overlap_result=False, 
+        overlap_input=False
+        """
+        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          total_size=100, 
+                                          overlap_result=False, 
+                                          overlap_input=False)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        """
+        total_size=100,
+        overlap_result=True, 
+        overlap_input=False
+        """
+        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          total_size=100, 
+                                          overlap_result=True, 
+                                          overlap_input=False)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        """
+        total_size=100,
+        overlap_result=False, 
+        overlap_input=True
+        """
+        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          total_size=100, 
+                                          overlap_result=False, 
+                                          overlap_input=True)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        """
+        total_size=100,
+        overlap_result=True, 
+        overlap_input=True
+        """
+        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          total_size=100, 
+                                          overlap_result=True, 
+                                          overlap_input=True)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        """
+        multiply_factor=100,
+        overlap_result=False, 
+        overlap_input=False
+        """
+        self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          multiply_factor=100, 
+                                          overlap_result=False, 
+                                          overlap_input=False)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        """
+        multiply_factor=100,
+        overlap_result=False, 
+        overlap_input=False,
+        chrom_M=False
+        """
+        self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
+                         [])
+        result = self.setA.random_regions(organism="mm9", 
+                                          multiply_factor=100, 
+                                          overlap_result=False, 
+                                          overlap_input=False,
+                                          chrom_M=True)
+        result.sort()
+        #print("-"*80)
+        #print("The result random regions are: ")
+        #for s in result.sequences:
+        #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
+        #print("Overlaps within result: ",result.within_overlap())
+        
         
         
 if __name__ == "__main__":
