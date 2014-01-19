@@ -45,9 +45,6 @@ class CoverageSet:
         self.reads = None #number of reads
         self.stepsize = 50
         
-        for region in self.genomicRegions:
-            cov = [0] * (len(region) / self.stepsize)
-            self.coverage.append(np.array(cov))
 
     
     def subtract(self, cs):
