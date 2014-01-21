@@ -12,11 +12,18 @@ This page contains information on functions that should be implemented.
 || || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields. ||
 || || get_chrom || bool non_redundant || list chrom_list || Returns chromosome names of all genomic regions without repetition. ||
 || || get_chrom_sizes || - || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with sizes of all chromosomes that occurs in self. ||
+|| || read_bigbed || - || - || Create self based on bigbed (.bb) format. ||
+|| || write_bigbed || - || - || Writes self in bigbed (.bb) format. ||
 || || || || || ||
 
 == CoverageSet ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
+|| || coverage_from_bed || - || - || Create self based on bed format. ||
+|| || coverage_from_bigbed || - || - || Create self based on bigbed (.bb) format. ||
+|| || coverage_from_wig || - || - || Create self based on wig format. ||
+|| || coverage_from_bigwig || - || - || Create self based on bigwig (.bw) format. ||
+|| || write_bigbed || - || - || Writes self in bigbed (.bb) format. ||
 || || || || || ||
 
 == ExperimentalMatrix ==
@@ -32,7 +39,7 @@ This page contains information on functions that should be implemented.
 == GeneMapping ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || gene_coord_association || GenomicRegionSet coordinates<br>GeneSet gene_set<br>(GenomicRegionSet) gene_locations<br>(ChromSizes) chrom_sizes<br>int promoter_length<br>int thresh_dist || GenomicRegionSet associated_coordinates || Associates coordinates with gene_locations based on gene_set. ||
+|| EG || gene_coord_association || GenomicRegionSet coordinates<br>GeneSet gene_set<br>(GenomicRegionSet) gene_locations<br>(ChromSizes) chrom_sizes<br>int promoter_length<br>int thresh_dist || GenomicRegionSet associated_coordinates || Associates coordinates with gene_locations based on gene_set. ||
 || || || || || ||
 
 == Util ==
