@@ -9,7 +9,7 @@ This page contains information on functions that should be implemented.
 == GenomicRegionSet ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || general_sort || (GenomicRegion attribute) `*`fields || GenomicRegionSet || Sorts GenomicRegionSet by a defined order of fields ||
+|| || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields ||
 
 == CoverageSet ==
 
@@ -29,7 +29,7 @@ This page contains information on functions that should be implemented.
 == GeneMapping ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || gene_coord_association || GenomicRegionSet coordinates<br>* teste || || ||
+|| || gene_coord_association || GenomicRegionSet coordinates<br>GeneSet gene_set<br>(GenomicRegionSet) gene_locations<br>(ChromSizes) chrom_sizes<br>int promoter_length<br>int thresh_dist || GenomicRegionSet associated_coordinates || Associates coordinates with gene_locations based on gene_set. ||
 
 == Util ==
 
