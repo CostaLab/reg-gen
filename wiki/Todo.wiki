@@ -9,7 +9,7 @@ This page contains information on functions that should be implemented.
 == GenomicRegionSet ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || generalSort || (GenomicRegion attribute) *fields || GenomicRegionSet || Sorts GenomicRegionSet by a defined order of fields ||
+|| || generalSort || (GenomicRegion attribute) &#42;fields || GenomicRegionSet || Sorts GenomicRegionSet by a defined order of fields ||
 
 == CoverageSet ==
 
