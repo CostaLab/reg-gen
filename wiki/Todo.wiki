@@ -29,7 +29,7 @@ This page contains information on functions that should be implemented.
 == GeneMapping ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || gene_coord_association || GenomicRegionSet coordinates<br>teste || || ||
+|| || gene_coord_association || GenomicRegionSet coordinates<br>* teste || || ||
 
 == Util ==
 
