@@ -4,12 +4,14 @@ This page contains information on functions that should be implemented.
 == GenomicRegion ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [http://bit.ly/1hdVNjA here]) ||
+|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [http://bit.ly/1hdVNjA here]). ||
 
 == GenomicRegionSet ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields ||
+|| || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields. ||
+|| || get_chrom || bool non_redundant || list chrom_list || Returns chromosome names of all genomic regions without repetition. ||
+|| || || || || ||
 
 == CoverageSet ==
 
@@ -30,8 +32,11 @@ This page contains information on functions that should be implemented.
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || gene_coord_association || GenomicRegionSet coordinates<br>GeneSet gene_set<br>(GenomicRegionSet) gene_locations<br>(ChromSizes) chrom_sizes<br>int promoter_length<br>int thresh_dist || GenomicRegionSet associated_coordinates || Associates coordinates with gene_locations based on gene_set. ||
+|| || || || || ||
 
 == Util ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
+|| || get_chrom || string organism || list chrom_list || Returns a list of all chromosomes for a particular organism. ||
+|| || get_chrom_sizes || string organism || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with all chromosome sizes for a particular organism. ||
 || || || || || ||
