@@ -11,6 +11,7 @@ This page contains information on functions that should be implemented.
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields. ||
 || || get_chrom || bool non_redundant || list chrom_list || Returns chromosome names of all genomic regions without repetition. ||
+|| || get_chrom_sizes || - || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with sizes of all chromosomes that occurs in self. ||
 || || || || || ||
 
 == CoverageSet ==
