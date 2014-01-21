@@ -4,7 +4,7 @@ This page contains information on functions that should be implemented.
 == GenomicRegion ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [bit.ly/1hdVNjA here]) ||
+|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [http://bit.ly/1hdVNjA here]) ||
 
 == GenomicRegionSet ==
 
