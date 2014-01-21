@@ -5,6 +5,7 @@ This page contains information on functions that should be implemented.
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [http://bit.ly/1hdVNjA here]). ||
+|| || || || || ||
 
 == GenomicRegionSet ==
 
@@ -50,5 +51,5 @@ This page contains information on functions that should be implemented.
 || || get_chrom || string organism || list chrom_list || Returns a list of all chromosomes for a particular organism. ||
 || || get_chrom_sizes || string organism || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with all chromosome sizes for a particular organism. ||
 || EG || print_html || list html_table<br>list col_types<br>string output_file || - || Writes a table on HTML format. ||
-|| || sort_row_by_col || list table<br>list col_list || list sorted_table || Sorts rows of a table by column attributes. ||
+|| EG || sort_row_by_col || list table<br>list col_list || list sorted_table || Sorts rows of a table by column attributes. ||
 || || || || || ||
