@@ -13,7 +13,9 @@ This page contains information on functions that should be implemented.
 || || get_chrom || bool non_redundant || list chrom_list || Returns chromosome names of all genomic regions without repetition. ||
 || || get_chrom_sizes || - || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with sizes of all chromosomes that occurs in self. ||
 || || read_bigbed || - || - || Create self based on bigbed (.bb) format. ||
+|| || read_fasta || - || - || Create self based on fasta (.fa) format. ||
 || || write_bigbed || - || - || Writes self in bigbed (.bb) format. ||
+|| || write_fasta || - || - || Writes self in fasta (.fa) format. ||
 || || || || || ||
 
 == CoverageSet ==
@@ -47,4 +49,6 @@ This page contains information on functions that should be implemented.
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || get_chrom || string organism || list chrom_list || Returns a list of all chromosomes for a particular organism. ||
 || || get_chrom_sizes || string organism || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with all chromosome sizes for a particular organism. ||
+|| EG || print_html || list html_table<br>list col_types<br>string output_file || - || Writes a table on HTML format. ||
+|| || sort_row_by_col || list table<br>list col_list || list sorted_table || Sorts rows of a table by column attributes. ||
 || || || || || ||
