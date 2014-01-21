@@ -4,7 +4,7 @@ This page contains information on functions that should be implemented.
 == GenomicRegion ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || || || || ||
+|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (see bit.ly/1hdVNjA) ||
 
 == GenomicRegionSet ==
 
@@ -29,7 +29,7 @@ This page contains information on functions that should be implemented.
 == GeneMapping ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || || || || ||
+|| ||  || || || ||
 
 == Util ==
 
