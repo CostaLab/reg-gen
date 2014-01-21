@@ -26,6 +26,11 @@ This page contains information on functions that should be implemented.
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
 || || || || || ||
 
+== GeneMapping ==
+
+|| *Developer* || *Function* || *Input* || *Output* || *Description* ||
+|| || || || || ||
+
 == Util ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
