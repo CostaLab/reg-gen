@@ -3,6 +3,8 @@ import unittest
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 import os
+from rgt.Util import GenomePath
+from rgt.Util import OverlapType
 
 """
 GenomicRegionSet.closest = closest
@@ -97,10 +99,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         One empty set
@@ -113,10 +115,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         A : none
@@ -128,10 +130,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         No overlapping
@@ -144,10 +146,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         End-to-end attach
@@ -160,10 +162,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
 
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Perfect overlapping
@@ -178,12 +180,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 1)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 1)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
@@ -202,12 +204,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[0].initial, 7)
         self.assertEqual(result.sequences[0].final, 10)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 1)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Two simple overlapping regions
@@ -226,14 +228,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[1].initial, 26)
         self.assertEqual(result.sequences[1].final, 30)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 2)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         self.assertEqual(result.sequences[1].initial, 26)
         self.assertEqual(result.sequences[1].final, 35)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Two separately overlapping regions 
@@ -252,14 +254,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[1].initial, 30)
         self.assertEqual(result.sequences[1].final, 35)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 2)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         self.assertEqual(result.sequences[1].initial, 26)
         self.assertEqual(result.sequences[1].final, 35)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Many various overlapping (mixed)
@@ -285,7 +287,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[4].initial, 70)
         self.assertEqual(result.sequences[4].final, 75)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 3)
         self.assertEqual(result.sequences[0].initial, 3)
         self.assertEqual(result.sequences[0].final, 30)
@@ -294,7 +296,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[2].initial, 70)
         self.assertEqual(result.sequences[2].final, 85)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Different chromosomes
@@ -307,10 +309,10 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 0)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         Completely included overlapping
@@ -331,12 +333,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[2].initial, 45)
         self.assertEqual(result.sequences[2].final, 50)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 1)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 50)
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
         A : ----    ------       -----------
@@ -356,7 +358,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[2].initial, 45)
         self.assertEqual(result.sequences[2].final, 50)
         
-        result = self.setA.intersect(self.setB, mode='original')
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
         self.assertEqual(len(result.sequences), 3)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 5)
@@ -366,7 +368,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[2].final, 60)
         
         
-        result = self.setA.intersect(self.setB, mode='comp_incl')
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 2)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 5)
@@ -969,19 +971,19 @@ class TestGenomicRegionSet(unittest.TestCase):
     def test_get_genome_data(self):
         """mm9"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism="mm9")
+        result.get_genome_data(organism=GenomePath.MM9)
         self.assertEqual(len(result.sequences), 21)
         """mm9, with Mitochondria chromosome"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism="mm9",chrom_M=True)
+        result.get_genome_data(organism=GenomePath.MM9,chrom_M=True)
         self.assertEqual(len(result.sequences), 22)
         """hg19"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism="hg19")
+        result.get_genome_data(organism=GenomePath.HG19)
         self.assertEqual(len(result.sequences), 24)
         """hg19, with Mitochondria chromosome"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism="hg19",chrom_M=True)
+        result.get_genome_data(organism=GenomePath.HG19,chrom_M=True)
         self.assertEqual(len(result.sequences), 25)
         
     def test_random_regions(self):
@@ -992,7 +994,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           total_size=100, 
                                           overlap_result=False, 
                                           overlap_input=False)
@@ -1009,7 +1011,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           total_size=100, 
                                           overlap_result=True, 
                                           overlap_input=False)
@@ -1026,7 +1028,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           total_size=100, 
                                           overlap_result=False, 
                                           overlap_input=True)
@@ -1043,7 +1045,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           total_size=100, 
                                           overlap_result=True, 
                                           overlap_input=True)
@@ -1060,7 +1062,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           multiply_factor=100, 
                                           overlap_result=False, 
                                           overlap_input=False)
@@ -1078,7 +1080,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
                          [])
-        result = self.setA.random_regions(organism="mm9", 
+        result = self.setA.random_regions(organism=GenomePath.MM9, 
                                           multiply_factor=100, 
                                           overlap_result=False, 
                                           overlap_input=False,
@@ -1089,7 +1091,15 @@ class TestGenomicRegionSet(unittest.TestCase):
         #for s in result.sequences:
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
         #print("Overlaps within result: ",result.within_overlap())
-        
+
+    def test_projection_test(self):
+        """
+        """
+        self.region_sets([['chr1',0,10000000],['chr2',0,20000000],['chr3',0,30000000]],
+                         [['chr1',10,11],['chr2',10,11],['chr3',10,11]])
+        result = self.setA.projection_test(self.setB)
+        #print(result)
+        #self.assertEqual(result, 11/31)
         
         
 if __name__ == "__main__":
