@@ -3,11 +3,14 @@ from rgt.GenomicRegion import *
 import random
 import copy
 import os
+from scipy import stats
+from rgt.Util import GenomePath
+from rgt.Util import OverlapType
 
 """
 Represent list of GenomicRegions.
 
-Authors: Ivan G. Costa, Manuel Allhoff
+Authors: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 
 Define a list of GenomicRegions. Perform operations of this set.
 
@@ -29,6 +32,7 @@ class GenomicRegionSet:
         self.sequences = []
         self.sorted = False
         self.fileName=""
+        self.genome_path = GenomePath()
     
     def get_chrom(self):
         """Return all chromosomes"""
@@ -128,10 +132,10 @@ class GenomicRegionSet:
         self.genes=list(set(genes))
         return len(de_genes), len(self.genes), mappedGenes, totalPeaks 
 
-    def intersect(self,y,mode='overlap'):
+    def intersect(self,y,mode=OverlapType.OVERLAP):
         """Return the overlapping regions with three different modes.
         
-        (mode='overlap') 
+        (mode = OverlapType.OVERLAP) 
         Return new GenomicRegionSet including only the overlapping regions with y.
         
             Keyword arguments:
@@ -145,7 +149,7 @@ class GenomicRegionSet:
             y                 ----------                    ----
             Result            ---
             
-        (mode='original')
+        (mode = OverlapType.ORIGINAL)
         Return the regions of original GenomicRegionSet which have any intersections with y.
         
             Keyword arguments:
@@ -159,7 +163,7 @@ class GenomicRegionSet:
             y              ----------                    ----
             Result     ----------
             
-        (mode='comp_incl')
+        (mode = OverlapType.COMP_INCL)
         Return region(s) of the GenomicRegionSet which are 'completely' included by y.
         
             Keyword arguments:
@@ -189,14 +193,14 @@ class GenomicRegionSet:
         while cont_loop:
             # When the regions overlap
             if s.overlap(ss):
-                if mode == 'overlap':
+                if mode == OverlapType.OVERLAP:
                     sss = GenomicRegion(chrom=s.chrom, 
                                         initial=max(s.initial, ss.initial), 
                                         final=min(s.final, ss.final))
                     z.add(sss)
-                elif mode == 'original':
+                elif mode == OverlapType.ORIGINAL:
                     z.add(s)
-                elif mode == 'comp_incl':
+                elif mode == OverlapType.COMP_INCL:
                     if s.initial >= ss.initial and s.final <= ss.final:
                         z.add(s)
                     else:
@@ -223,7 +227,7 @@ class GenomicRegionSet:
                 except:
                     cont_loop = False
         z.sort()
-        if mode == 'original':
+        if mode == OverlapType.ORIGINAL:
             z.remove_duplicates()
         return z
     
@@ -238,7 +242,7 @@ class GenomicRegionSet:
         z -- the region(s) which is nearest to self
         
         """
-        if len(self.sequences) == 0 or len(y.sequences) == 0:
+        if self.__len__() == 0 or y.__len__() == 0:
             return GenomicRegionSet('Empty set') 
         elif self.intersect(y).__len__() != 0:
             return False
@@ -457,7 +461,7 @@ class GenomicRegionSet:
         Result -----     -----    --  --       ---   ---
         
         """
-        if len(self.sequences) == 0:
+        if self.__len__() == 0:
             return GenomicRegionSet("Empty")
         else:
             z = GenomicRegionSet("Flanking intervals")
@@ -472,28 +476,26 @@ class GenomicRegionSet:
                 z.add(s2)
             return z
     
-    def jaccard(self,y):
+    def jaccard(self,query):
         """Return a value of similarity of these two GenomicRegionSet
         
         Keyword arguments:
-        y -- the GenomicRegionSet which to compare with
+        query -- the GenomicRegionSet which to compare with
         
         Return:
         similarity -- (Total length of overlapping regions)/(Total length of original regions)
         
         Graphical explanation:
         self           --8--      ---10---    -4-
-        y         ---10---             ---10---
+        query     ---10---             ---10---
         intersect      -5-             -4-    2
         similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
                       = 11/31
         
         """
-        sum_self = sum(s.__len__() for s in self)
-        sum_y = sum(s.__len__() for s in y)
-        intersects = self.intersect(y)
+        intersects = self.intersect(query)
         sum_inter = sum(s.__len__() for s in intersects)
-        similarity = sum_inter/(sum_self + sum_y - sum_inter)
+        similarity = sum_inter/(self.total_coverage() + query.total_coverage() - intersects.total_coverage())
         return similarity
     
     def within_overlap(self):
@@ -506,16 +508,16 @@ class GenomicRegionSet:
             refer_posi = s
         return False
 
-    def total_length(self):
-        """ Return the sum of all lengths. """
+    def total_coverage(self):
+        """ Return the sum of all lengths of regions. """
         length = 0
         for s in self:
             length = length + s.__len__()
         return length
     
-    def get_genome_data(self,organism, chrom_M=False):
+    def get_genome_data(self,organism=GenomePath.MM9, chrom_M=False):
         """ Add genome data from database into the GenomicRegionSet. """
-        chromosome_file = open(os.path.join(os.path.expanduser('~'),"/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/" + organism + "/chrom.sizes"),'r')
+        chromosome_file = open(organism)
 
         for line in chromosome_file:
             if chrom_M:
@@ -535,7 +537,7 @@ class GenomicRegionSet:
                 else:
                     continue
 
-    def random_regions(self, organism, total_size=None, multiply_factor=0, overlap_result=False, overlap_input=False, chrom_M=False):
+    def random_regions(self, organism=GenomePath.MM9, total_size=None, multiply_factor=0, overlap_result=False, overlap_input=False, chrom_M=False):
         """Return a GenomicRegionSet which contains the random regions generated by given entries and given number on the given organism.
         
         Keyword arguments:
@@ -553,13 +555,13 @@ class GenomicRegionSet:
         """
         # Fetching the chromosome length from data
         chrom_map = GenomicRegionSet(organism)
-        chrom_map.get_genome_data(organism=organism, chrom_M=chrom_M)
+        chrom_map.get_genome_data(organism, chrom_M)
         chrom_list = chrom_map.get_chrom()
         
         # Defining input_map, result_list (containing lengths of all result regions)
         result_list = []
         input_map = self
-        input_num = len(self.sequences)
+        input_num = self.__len__()
         input_list = [] # Contain a list of length of inputs
         for i in range(input_num):
             input_list.append(len(self.sequences[i]))
@@ -679,4 +681,19 @@ class GenomicRegionSet:
                                         initial=random_region.initial,
                                         final=random_region.final))
         return z
+    
+    def projection_test(self, query, organism=GenomePath.MM9):
+        """" Return the possibility of binomial distribution"""
+        chrom_map = GenomicRegionSet("Genome")
+        chrom_map.get_genome_data(organism=organism)
+        p = self.total_coverage()/chrom_map.total_coverage() # The average likelihood
+        
+        intersect_regions = self.intersect(query,mode="overlap")
+        n = query.__len__()
+        k = intersect_regions.__len__()
+        
+        possibility = stats.binom_test(k, n, p)
+        
+        return possibility
+        
             
