@@ -5,8 +5,8 @@ class GenomePath:
     
     rootDir = package_path_file.readline()
     package_path_file.close()
-    MM9 = rootDir + '/trunk/data/mm9/chrom.sizes'
-    HG19 = rootDir + '/trunk/data/hg19/chrom.sizes'
+    MM9 = rootDir + '/data/mm9/chrom.sizes'
+    HG19 = rootDir + '/data/hg19/chrom.sizes'
     
 class OverlapType:
     OVERLAP = 0 
