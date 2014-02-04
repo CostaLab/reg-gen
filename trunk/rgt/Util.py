@@ -1,7 +1,9 @@
 import os
 
 class GenomePath:
-    package_path_file = open(os.path.dirname(__file__) + '/packagePathFile.txt','r')
+    p = os.path.dirname(__file__) + '/packagePathFile.txt'
+    if os.path.exists(p):
+        package_path_file = open(p,'r')
     
     rootDir = package_path_file.readline()
     package_path_file.close()
