@@ -1,8 +1,10 @@
 from __future__ import print_function
+from __future__ import division
 import sys
 import os.path
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
+from rgt.Util import GenomeData
 
 """
 Statistical analysis methods for ExperimentalMatrix
@@ -10,42 +12,48 @@ Statistical analysis methods for ExperimentalMatrix
 Author: Joseph Kuo
 
 """
-
-class AssociationAnalysis:
     
-    def jaccard_test(self, query, reference, replicates=500):
-        """Return the jaccard indexes of every possible comparisons between two ExperimentalMatrix. 
-        
-        Method:
-        The distribution of random jaccard index is calculated by randomizing query for certain times. 
-        Then, we compare the real jaccard index to the distribution and formulate p-value as 
-        p-value = (# random jaccard > real jaccard)/(# random jaccard)
-        
-        """
-        print("Jaccard test")
-        print("query\treference\tp-value")
-
-        for s in query.get_regionsets():
-            for ss in reference.get_regionsets():
-                distribution = []
-                for i in range(replicates):
-                    random = s.random_regions(multiply_factor=1, overlap_result=False, overlap_input=True, chrom_M=False)
-                    distribution.append(ss.jaccard(random))
-                real_jaccard = s[1].jaccard(ss[1])
-                p = sum(x > real_jaccard for x in distribution)/replicates
-                print(s[0],"\t",ss[0],"\t",p)
-        
-    def projection_test(self, query, reference):
-        """Return the projection test of each comparison of two ExperimentalMatrix.
-        
-        """
-        print("Projection test")
-        print("query\treference\tp-value")
-
-        for s in query.get_regionsets():
-            for ss in reference.get_regionsets():
-                p = ss[1].projection_test(s[1])
-                print(s[0],"\t",ss[0],"\t",p)
+def jaccard_test(query, reference, replicates=500, organism=GenomeData.CHROMOSOME_SIZES):
+    """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
     
-        
+    Method:
+    The distribution of random jaccard index is calculated by randomizing query for given times. 
+    Then, we compare the real jaccard index to the distribution and formulate p-value as 
+    p-value = (# random jaccard > real jaccard)/(# random jaccard)
+    
+    """
+    print("Jaccard test")
+    print("query\treference\tp-value")
+    
+    result = []
+    for s in query.objectsDict.keys():
+        for ss in reference.objectsDict.keys():
+            distribution = []
+            for rep in range(replicates):
+                t0 = time.clock()
+                random = query.objectsDict[s].random_regions(organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
+                t1 = time.clock()
+                print(t1 - t0, "randoming")
+                distribution.append(reference.objectsDict[ss].jaccard(random))
+                t2 = time.clock()
+                print(t2 - t1, "jaccard index computing")
+            real_jaccard = query.objectsDict[s].jaccard(reference.objectsDict[ss])
+            p = sum(x for x in distribution if x > real_jaccard)/replicates
+            print(s, ss, p, sep="\t")
+    
+def projection_test(query, reference):
+    """Return the projection test of each comparison of two ExperimentalMatrix.
+    
+    """
+    print("Projection test")
+    #print("query\treference\tp-value")
+
+    for s in query.objectsDict.keys():
+        for ss in reference.objectsDict.keys():
+            inters = reference.objectsDict[ss].intersect(query.objectsDict[s])
+            p = reference.objectsDict[ss].projection_test(query.objectsDict[s])
+            print("%s\t%s\tp value: %.4f" % (s, ss, p))
+            print()
+
+    
         
