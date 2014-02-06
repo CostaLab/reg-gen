@@ -1,14 +1,15 @@
 from __future__ import print_function
+from __future__ import division
 import unittest
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 import os
-from rgt.Util import GenomePath
+from rgt.Util import GenomeData
 from rgt.Util import OverlapType
 
-"""
-GenomicRegionSet.closest = closest
-"""
+"""Genome paths for unittest only"""
+path_mm9 = "/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/mm9/chrom.sizes"
+path_hg19 = "/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/hg19/chrom.sizes"
 
 """Unit Test"""
 
@@ -957,33 +958,33 @@ class TestGenomicRegionSet(unittest.TestCase):
         
     def test_jaccard(self):
         """
-        self           --8--      ---10---    -4-
+        self           --8--      ---10---      -4-
         y         ---10---             ---10---
-        intersect      -5-             -4-    2
-        similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
-                      = 11/31
+        intersect      -5-             -4-    
+        similarity:   ( 5 + 4 )/[(8 + 10 + 4) + (10 +10) - (5 + 4 )]
+                      = 9/33
         """
         self.region_sets([['chr1',50,58],['chr1',70,80],['chr1',90,94]],
                          [['chr1',45,55],['chr1',76,86]])
         result = self.setA.jaccard(self.setB)
-        self.assertEqual(result, 11/31)
+        self.assertEqual(result, 9/33)
     
     def test_get_genome_data(self):
         """mm9"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism=GenomePath.MM9)
+        result.get_genome_data(organism=path_mm9)
         self.assertEqual(len(result.sequences), 21)
         """mm9, with Mitochondria chromosome"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism=GenomePath.MM9,chrom_M=True)
+        result.get_genome_data(organism=path_mm9,chrom_M=True)
         self.assertEqual(len(result.sequences), 22)
         """hg19"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism=GenomePath.HG19)
+        result.get_genome_data(organism=path_hg19)
         self.assertEqual(len(result.sequences), 24)
         """hg19, with Mitochondria chromosome"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism=GenomePath.HG19,chrom_M=True)
+        result.get_genome_data(organism=path_hg19,chrom_M=True)
         self.assertEqual(len(result.sequences), 25)
         
     def test_random_regions(self):
@@ -994,7 +995,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           total_size=100, 
                                           overlap_result=False, 
                                           overlap_input=False)
@@ -1011,7 +1012,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           total_size=100, 
                                           overlap_result=True, 
                                           overlap_input=False)
@@ -1028,7 +1029,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           total_size=100, 
                                           overlap_result=False, 
                                           overlap_input=True)
@@ -1045,7 +1046,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           total_size=100, 
                                           overlap_result=True, 
                                           overlap_input=True)
@@ -1062,7 +1063,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           multiply_factor=100, 
                                           overlap_result=False, 
                                           overlap_input=False)
@@ -1080,7 +1081,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         """
         self.region_sets([['chr1',0,1000],['chr2',0,2000],['chrX',0,3000]],
                          [])
-        result = self.setA.random_regions(organism=GenomePath.MM9, 
+        result = self.setA.random_regions(organism=path_mm9, 
                                           multiply_factor=100, 
                                           overlap_result=False, 
                                           overlap_input=False,

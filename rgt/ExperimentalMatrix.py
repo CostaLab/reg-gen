@@ -41,7 +41,7 @@ class ExperimentalMatrix:
                     dict[line[fi]]=[line[0]]
         self.types=numpy.array(self.types)
         self.names=numpy.array(self.names)
-        self.load_objects()
+        self.load_objects(dir_path=os.path.dirname(f.name))
 
     def get_genesets(self):
 	    return [self.objectsDict[i] for i in self.names[self.types=="genes"]]
@@ -49,12 +49,12 @@ class ExperimentalMatrix:
     def get_regionsets(self):
         return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
 
-    def load_objects(self):
+    def load_objects(self,dir_path):
         for i,t in enumerate(self.types):
             print(self.files[self.names[i]])
             if t == "regions":
                 bed = GenomicRegionSet(self.names[i])
-                bed.read_bed(self.files[self.names[i]])
+                bed.read_bed(os.path.join(dir_path,self.files[self.names[i]]))
                 self.objectsDict[self.names[i]]=bed
             if t == "genes":
                 genes= GeneSet(self.names[i])
