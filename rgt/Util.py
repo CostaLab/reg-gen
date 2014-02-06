@@ -1,13 +1,24 @@
 import os
+import sys
+import ConfigParser
 
-class GenomePath:
-    package_path_file = open(os.path.dirname(__file__) + '/packagePathFile.txt','r')
-    
-    rootDir = package_path_file.readline()
-    package_path_file.close()
-    MM9 = rootDir + '/data/mm9/chrom.sizes'
-    HG19 = rootDir + '/data/hg19/chrom.sizes'
-    
+root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)).split("/")[:-1])
+data_dir = os.path.join(root_dir,'data')
+config_file = os.path.join(root_dir, 'data.config')
+
+config = ConfigParser.ConfigParser()
+config.read(config_file)
+
+class GenomeData:
+    ORGANISM = config.get('GenomeData','organism')
+    GENOME = os.path.join(data_dir,ORGANISM,config.get('GenomeData','genome'))
+    CHROMOSOME_SIZES = os.path.join(data_dir,ORGANISM,config.get('GenomeData','chromosome_sizes'))
+    ASSOCIATION_FILE = os.path.join(data_dir,ORGANISM,config.get('GenomeData','association_file'))
+
+class MotifData:
+    PWM_DATASET = os.path.join(data_dir,config.get('MotifData','pwm_dataset'))
+    LOGO_DATASET = os.path.join(data_dir,config.get('MotifData','logo_dataset'))
+
 class OverlapType:
     OVERLAP = 0 
     ORIGINAL = 1
