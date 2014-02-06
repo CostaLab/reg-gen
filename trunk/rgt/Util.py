@@ -2,7 +2,7 @@ import os
 import sys
 import ConfigParser
 
-root_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)).split("/")[:-1])
+root_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 data_dir = os.path.join(root_dir,'data')
 config_file = os.path.join(root_dir, 'data.config')
 
