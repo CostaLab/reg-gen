@@ -5,6 +5,9 @@ import ConfigParser
 root_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 data_dir = os.path.join(root_dir,'data')
 config_file = os.path.join(root_dir, 'data.config')
+print root_dir
+print data_dir
+print config_file
 
 config = ConfigParser.ConfigParser()
 config.read(config_file)
