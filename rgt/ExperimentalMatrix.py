@@ -30,6 +30,9 @@ class ExperimentalMatrix:
         for line in f:
             line=line.strip("\n")
             line=line.split("\t")
+            print(line)
+            if len(line) <= 1:
+		continue
             self.names.append(line[0])
             self.files[line[0]]=line[2]
             self.types.append(line[1])
@@ -48,6 +51,12 @@ class ExperimentalMatrix:
 
     def get_regionsets(self):
         return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
+
+    def get_readsfiles(self):
+        return [self.files[i] for i in self.names[self.types=="reads"]]
+
+    def get_readsnames(self):
+        return [i for i in self.names[self.types=="reads"]]
 
     def load_objects(self,dir_path):
         for i,t in enumerate(self.types):
