@@ -522,9 +522,13 @@ class GenomicRegionSet:
     
     def get_genome_data(self,organism=GenomeData.CHROMOSOME_SIZES, chrom_M=False):
         """ Add genome data from database into the GenomicRegionSet. """
-        chromosome_file = open(organism)
+        #chromosome_file = open(organism)
+		## XXXX - hack !!!
+        chromosome_file = '/home/ivan/projetos/reg-gen/data/mm9/chrom.sizes'
 
         for line in chromosome_file:
+            if len(line) >= 1:
+                continue
             if chrom_M:
                 if "random" not in line and "_" not in line: 
                     chrom_region = GenomicRegion(chrom=line.split("\t")[0],

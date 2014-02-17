@@ -68,7 +68,11 @@ class CoverageSet:
         """Scale coverage with <factor>"""
         for i in range(len(self.coverage)):
             self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
-    
+
+    def normRPM(self):
+        factor=1000000/float(self.reads)
+        self.coverage=np.array(self.coverage)*factor
+
     def write_bed(self, filename):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
@@ -99,6 +103,16 @@ class CoverageSet:
         #print(c)
         os.system(c)
         os.remove(tmp_path)
+
+    def coverage_from_genomicset(self,bamFile,readSize=200):
+        bam = pysam.Samfile(bamFile, "rb" )
+        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+        cov=[0]*len(self.genomicRegions)
+        for i,region in enumerate(self.genomicRegions):
+            for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                 cov[i]+=1
+        self.coverage=cov 
+        self.coverageOrig=cov
 
 
     def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
@@ -330,8 +344,6 @@ class CoverageSet:
 #                     print(region.chrom, region.initial+ (j-1)*self.step, min(region.initial+j*self.step, region.final), \
 #                           c[j-1], sep='\t', file=f)
 
-#    def normRPM(self):
-#        self.values = self.values * (1000000.0 / self.mapped_reads)
 #    
 #    def normFPKM(self):
 #        self.values = self.values * (1000000000.0 / self.mapped_reads)
