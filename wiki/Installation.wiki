@@ -20,7 +20,7 @@ apt-get install subversion
 All python package requirements are handled in the installation procedure. However, if you experience any problems, you can manually install these packages.
 
 || Package || Version || Source ||
-|| TODO || TODO || TODO
+|| TODO || TODO || TODO ||
 
 == External Scripts ==
 
