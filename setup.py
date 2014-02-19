@@ -45,7 +45,8 @@ for e1 in folderNameList:
         os.system("cp "+os.path.join(script_dir,"data",e1,e2)+" "+os.path.join(data_dir, e1))
 
 # Modifying permissions
-os.system("chmod -R 700 "+data_dir)
+os.system("chmod -R 770 "+data_dir)
+os.system("chown -R $LOGNAME "+data_dir)
 
 #################################################
 # EG Data config - deprecated
