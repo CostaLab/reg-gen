@@ -6,7 +6,7 @@ The easiest way to obtain the package is using svn checkout:
 {{{
 svn checkout http://reg-gen.googlecode.com/svn/trunk/ <package_folder>
 }}}
-The command above will download the code to <package_folder>
+The command above will download the code to `package_folder`.
 
 In case you do not have svn installed, it can be installed through:
 {{{
