@@ -14,12 +14,14 @@ config = ConfigParser.ConfigParser()
 config.read(data_config_file_name)
 
 # Reading data directory
-DATA_DIR = config.get('DataPath','data_path')
+DATA_DIR = "/".join(data_config_file_name.split("/")[:-1])
+print DATA_DIR
 
 class GenomeData:
-    GENOME = os.path.join(DATA_DIR,config.get('GenomeData','genome'))
-    CHROMOSOME_SIZES = os.path.join(DATA_DIR,config.get('GenomeData','chromosome_sizes'))
-    ASSOCIATION_FILE = os.path.join(DATA_DIR,config.get('GenomeData','association_file'))
+    ORGANISM = config.get('GenomeData','organism')
+    GENOME = os.path.join(DATA_DIR,ORGANISM,config.get('GenomeData','genome'))
+    CHROMOSOME_SIZES = os.path.join(DATA_DIR,ORGANISM,config.get('GenomeData','chromosome_sizes'))
+    ASSOCIATION_FILE = os.path.join(DATA_DIR,ORGANISM,config.get('GenomeData','association_file'))
 
 class MotifData:
     PWM_DATASET = os.path.join(DATA_DIR,config.get('MotifData','pwm_dataset'))
