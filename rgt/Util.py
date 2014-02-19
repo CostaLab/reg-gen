@@ -2,25 +2,31 @@ import os
 import sys
 import ConfigParser
 
-root_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-data_dir = os.path.join(root_dir,'data')
-config_file = os.path.join(root_dir, 'data.config')
+# Reading config file directory
+root_dir = os.path.dirname(os.path.abspath(__file__))
+data_config_path_file_name = os.path.join(root_dir, 'data.config.path')
+data_config_path_file = open(data_config_path_file_name,"r")
+data_config_file_name = data_config_path_file.readline().strip()
+data_config_path_file.close()
 print root_dir
 print data_dir
 print config_file
 
+# Parsing config file
 config = ConfigParser.ConfigParser()
-config.read(config_file)
+config.read(data_config_file_name)
+
+# Reading data directory
+DATA_DIR = config.get('DataPath','data_path')
 
 class GenomeData:
-    ORGANISM = config.get('GenomeData','organism')
-    GENOME = os.path.join(data_dir,ORGANISM,config.get('GenomeData','genome'))
-    CHROMOSOME_SIZES = os.path.join(data_dir,ORGANISM,config.get('GenomeData','chromosome_sizes'))
-    ASSOCIATION_FILE = os.path.join(data_dir,ORGANISM,config.get('GenomeData','association_file'))
+    GENOME = os.path.join(DATA_DIR,config.get('GenomeData','genome'))
+    CHROMOSOME_SIZES = os.path.join(DATA_DIR,config.get('GenomeData','chromosome_sizes'))
+    ASSOCIATION_FILE = os.path.join(DATA_DIR,config.get('GenomeData','association_file'))
 
 class MotifData:
-    PWM_DATASET = os.path.join(data_dir,config.get('MotifData','pwm_dataset'))
-    LOGO_DATASET = os.path.join(data_dir,config.get('MotifData','logo_dataset'))
+    PWM_DATASET = os.path.join(DATA_DIR,config.get('MotifData','pwm_dataset'))
+    LOGO_DATASET = os.path.join(DATA_DIR,config.get('MotifData','logo_dataset'))
 
 class OverlapType:
     OVERLAP = 0 
