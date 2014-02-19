@@ -30,20 +30,26 @@ allgenes=list(set(allgenes))
 genesets=exps.get_genesets()
 
 
-for g in genesets:
-    for region in exps.get_regionsets():
+
+for region in exps.get_regionsets():
+    for j,n in enumerate(range(randomize)):
+            print len(region)
+            br=region.random_regions(total_size=len(region))
+            br.write_bed(str(j)+"random.bed")
+    for g in genesets:
+        print region,g
         bed = GenomicRegionSet("")
         [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,g,geneFile,genomeFile,threshDist=500)
         randomRes=[]
-        backBed=GenomicRegionSet("BACK")    
-        backBed.read_bed(backGroundPeaks)
+        #backBed=GenomicRegionSet("BACK")    
+        #backBed.read_bed(backGroundPeaks)
         for j,n in enumerate(range(randomize)):
-            br=backBed.randomRegions(totalPeaks)
-            br.write_bed(str(j)+"random.bed")
             backUP=GenomicRegionSet("BACKUP")
             [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(str(j)+"random.bed",g,geneFile,genomeFile,threshDist=500)
             randomRes.append(back_de_peak_genes)
+            print str(j)+"random.bed"
         randomRes=numpy.array(randomRes)
+        print randomRes
         a=de_peak_genes
         m=numpy.mean(randomRes)
         s=numpy.std(randomRes)

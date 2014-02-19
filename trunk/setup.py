@@ -44,10 +44,6 @@ for e1 in folderNameList:
     for e2 in fileNameList:
         os.system("cp "+os.path.join(script_dir,"data",e1,e2)+" "+os.path.join(data_dir, e1))
 
-# Modifying permissions
-os.system("chmod -R 770 "+data_dir)
-os.system("chown -R $LOGNAME "+data_dir)
-
 #################################################
 # EG Data config - deprecated
 #################################################
@@ -86,5 +82,11 @@ setup(name="RGT",
 
 # Removing data.config.path
 os.system("rm "+data_config_path_file_name)
+
+# Modifying permissions
+currUser = os.getenv('HOME').split("/")[-1]
+os.system("chown -R "+currUser+" "+os.path.join(data_dir,"."))
+os.system("chgrp -R "+currUser+" "+os.path.join(data_dir,"."))
+os.system("chmod -R 770 "+data_dir)
 
 

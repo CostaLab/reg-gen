@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 from __future__ import division
 from rgt.GenomicRegion import *
@@ -112,6 +113,7 @@ class GenomicRegionSet:
         from rgt.motifanalysis.enrichment.geneAssociation import *
         self.fileName=fileName
         de_genes=geneSet.genes
+        regionsToGenes={}
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
         coordDict = sort.sortBedDictionary(coordDict, field=0)
         [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize,promoterLength,threshDist)  
@@ -128,11 +130,12 @@ class GenomicRegionSet:
                     self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
                 genes=genes+keep
                 allgenes=allgenes+[n.strip(".") for n in names]
+                regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
         #print "Total Peaks", total
         mappedGenes=len(list(set(allgenes)))
         self.sort()
         self.genes=list(set(genes))
-        return len(de_genes), len(self.genes), mappedGenes, totalPeaks 
+        return len(de_genes), len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self,y,mode=OverlapType.OVERLAP):
         """Return the overlapping regions with three different modes.
@@ -524,7 +527,7 @@ class GenomicRegionSet:
         """ Add genome data from database into the GenomicRegionSet. """
         #chromosome_file = open(organism)
 		## XXXX - hack !!!
-        chromosome_file = '/home/ivan/projetos/reg-gen/data/mm9/chrom.sizes'
+        #chromosome_file = '/home/ivan/projetos/reg-gen/data/mm9/chrom.sizes'
 
         for line in chromosome_file:
             if len(line) >= 1:
