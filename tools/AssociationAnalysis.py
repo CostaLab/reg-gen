@@ -28,18 +28,16 @@ def jaccard_test(query, reference, replicates=500, organism=GenomeData.CHROMOSOM
     result = []
     for s in query.objectsDict.keys():
         for ss in reference.objectsDict.keys():
+            t0 = time.clock()
             distribution = []
             for rep in range(replicates):
-                t0 = time.clock()
                 random = query.objectsDict[s].random_regions(organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
-                t1 = time.clock()
-                print(t1 - t0, "randoming")
                 distribution.append(reference.objectsDict[ss].jaccard(random))
-                t2 = time.clock()
-                print(t2 - t1, "jaccard index computing")
             real_jaccard = query.objectsDict[s].jaccard(reference.objectsDict[ss])
             p = sum(x for x in distribution if x > real_jaccard)/replicates
             print(s, ss, p, sep="\t")
+            t1 = time.clock()
+            print(t1 - t0, "randoming")
     
 def projection_test(query, reference):
     """Return the projection test of each comparison of two ExperimentalMatrix.

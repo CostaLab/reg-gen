@@ -16,7 +16,7 @@ class Test(unittest.TestCase):
         matrix2 = ExperimentalMatrix()
         matrix1.read(path_input2)
         matrix2.read(path_input2)
-        #AssociationAnalysis.jaccard_test(matrix1, matrix2,replicates=2)
+        #AssociationAnalysis.jaccard_test(matrix1, matrix2,replicates=3)
 
     def test_projection_test(self):
         matrix1 = ExperimentalMatrix()
