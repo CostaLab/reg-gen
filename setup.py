@@ -20,12 +20,11 @@ os.system("mkdir -p "+data_dir)
 # Creating data.config
 data_config_file_name = os.path.join(data_dir, "data.config")
 data_config_file = open(data_config_file_name,"w")
-data_config_file.write("[DataPath]\n")
-data_config_file.write("data_path: "+data_dir+"\n\n")
 data_config_file.write("[GenomeData]\n")
-data_config_file.write("genome: hg19/genome.fa\n")
-data_config_file.write("chromosome_sizes: hg19/chrom.sizes\n")
-data_config_file.write("association_file: hg19/association_file.bed\n\n")
+data_config_file.write("organism: hg19\n")
+data_config_file.write("genome: genome.fa\n")
+data_config_file.write("chromosome_sizes: chrom.sizes\n")
+data_config_file.write("association_file: association_file.bed\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: PWM\n")
 data_config_file.write("logo_dataset: logo\n\n")
@@ -36,6 +35,17 @@ data_config_path_file_name = os.path.join(script_dir,"rgt","data.config.path")
 data_config_path_file = open(data_config_path_file_name,"w")
 data_config_path_file.write(data_config_file_name)
 data_config_path_file.close()
+
+# Copying data from package folder to installation folder
+folderNameList = ["hg19","mm9"]
+fileNameList = ["association_file.bed","chrom.sizes"]
+for e1 in folderNameList:
+    os.system("mkdir -p "+os.path.join(data_dir, e1))
+    for e2 in fileNameList:
+        os.system("cp "+os.path.join(script_dir,"data",e1,e2)+" "+os.path.join(data_dir, e1))
+
+# Modifying permissions
+os.system("chmod -R 700 "+data_dir)
 
 #################################################
 # EG Data config - deprecated
