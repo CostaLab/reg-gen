@@ -8,9 +8,6 @@ data_config_path_file_name = os.path.join(root_dir, 'data.config.path')
 data_config_path_file = open(data_config_path_file_name,"r")
 data_config_file_name = data_config_path_file.readline().strip()
 data_config_path_file.close()
-print root_dir
-print data_dir
-print config_file
 
 # Parsing config file
 config = ConfigParser.ConfigParser()
