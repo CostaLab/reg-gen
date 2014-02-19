@@ -41,7 +41,7 @@ python setup.py install --prefix=<install_folder>
 
 = Customized Installation =
 
-During the usual installation, a folder named `rgtdata` will be created in your home directory. This folder contains auxiliary data such as the sizes of the chromosomes and gene annotations needed by all tools. You can define a new location <data_folder> by adding:
+During the usual installation, a folder named `rgtdata` will be created in your home directory. This folder contains auxiliary data such as the sizes of the chromosomes and gene annotations needed by all tools. You can define a new location `data_folder` by adding:
 {{{
 --rgt-data-path=<data_folder>
 }}}
