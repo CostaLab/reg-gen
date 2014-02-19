@@ -972,19 +972,19 @@ class TestGenomicRegionSet(unittest.TestCase):
     def test_get_genome_data(self):
         """mm9"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism=path_mm9)
+        result.get_genome_data()
         self.assertEqual(len(result.sequences), 21)
         """mm9, with Mitochondria chromosome"""
         result = GenomicRegionSet("mm9")
-        result.get_genome_data(organism=path_mm9,chrom_M=True)
+        result.get_genome_data(chrom_M=True)
         self.assertEqual(len(result.sequences), 22)
         """hg19"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism=path_hg19)
+        result.get_genome_data(path=path_hg19)
         self.assertEqual(len(result.sequences), 24)
         """hg19, with Mitochondria chromosome"""
         result = GenomicRegionSet("hg19")
-        result.get_genome_data(organism=path_hg19,chrom_M=True)
+        result.get_genome_data(path=path_hg19,chrom_M=True)
         self.assertEqual(len(result.sequences), 25)
         
     def test_random_regions(self):
