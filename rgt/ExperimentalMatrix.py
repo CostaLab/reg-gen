@@ -1,6 +1,6 @@
 from __future__ import print_function
-from rgt.GenomicRegionSet import *
-from rgt.GeneSet import *
+from GenomicRegionSet import *
+from GeneSet import *
 import numpy
 
 
