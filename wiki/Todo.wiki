@@ -53,3 +53,9 @@ This page contains information on functions that should be implemented.
 || EG || print_html || list html_table<br>list col_types<br>string output_file || - || Writes a table on HTML format. ||
 || EG || sort_row_by_col || list table<br>list col_list || list sorted_table || Sorts rows of a table by column attributes. ||
 || || || || || ||
+
+== Tools ==
+
+associationAnalysis
+- include the coverageFromBed function and box plot function
+- include the geneCogerageFromBed tool and box plot function
