@@ -64,32 +64,29 @@ def projection_test(query, reference):
 # Parameters
 params = []
 params.append("\nAssociation Analysis")
-params.append("Analysis association between different experimental data by different statistical methods.")
-params.append("\nAssociationAnalysis.py <method> <reference> <query> <others>\n")
-params.append("    <method>")
-params.append("        jaccard")
-params.append("            Return the jaccard test of every possible comparisons between two ExperimentalMatrix.")
-params.append("        projection")
-params.append("            Return the projection test of each comparison of two ExperimentalMatrix.")
-params.append("    <reference>")
-params.append("        The text file contains ExperimentalMatrix. (As reference)")
-params.append("        Format: txt defined by ExperimentalMatrix")
-params.append("        Default: None.")
-params.append("    <query>")
-params.append("        The text file contains ExperimentalMatrix. (As query)")
-params.append("        Format: txt defined by ExperimentalMatrix")
-params.append("        Default: None.")
-params.append("\nOther Parameters: ")
-params.append("    <replicate>")
-params.append("        For Jaccard test's replication times.")
-params.append("        Default: 100")
 params.append("")
+params.append("Usage:\tpython AssociationAnalysis.py <command> [options]\n")
+params.append("Command:\n\tjaccard\t\tJaccard test analysis")
+params.append("\tprojection\tProjection test analysis\n")
+
+# Jaccard
+params.append("\nUsage:\tpython AssociationAnalysis.py jaccard -r <Path> -q <Path> [-R]\n")
+params.append("Options:\t-r\treference input of ExperimetalMatrix")
+params.append("\t\t-q\tquery input of ExperimentalMatrix")
+params.append("\t\t-R\tnumber of randomizations for Jaccard test [100]\n")
+# Projection
+params.append("\nUsage:\tpython AssociationAnalysis.py projection -r <Path> -q <Path>\n")
+params.append("Options:\t-r\treference input of ExperimetalMatrix")
+params.append("\t\t-q\tquery input of ExperimentalMatrix\n")
+
 if(len(sys.argv) == 1):
-    for e in params: print(e)
+    for e in params[0:5]: print(e)
     sys.exit(0)
-elif(1 < len(sys.argv) < 4):
-    print("Error: Please add",4 - len(sys.argv), "more parameters according to the following format.")
-    for e in params[2:]: print(e)
+elif(len(sys.argv) == 2) and sys.argv[1] == "jaccard":
+    for e in params[5:9]: print(e)
+    sys.exit(0)
+elif(len(sys.argv) == 2) and sys.argv[1] == "projection":
+    for e in params[9:12]: print(e)
     sys.exit(0)
 #################################################################################################
 ##### INPUT #####################################################################################
@@ -97,27 +94,31 @@ elif(1 < len(sys.argv) < 4):
 
 # Input parameters dictionary
 inputParameters={}
-inputParameters["-method"] = sys.argv[1]
-inputParameters["-reference"] = sys.argv[2]
-inputParameters["-query"] = sys.argv[3]
+inputParameters["command"] = sys.argv[1]
+i = 2
+con_loop = True
+while con_loop:
+    try:
+        inputParameters[sys.argv[i]] = sys.argv[i+1]
+        i = i + 2
+    except: con_loop = False
 
 # Input ExperimentalMatrix1
 reference = ExperimentalMatrix()
-if ("-reference" in inputParameters.keys()):
-    reference.read(inputParameters["-reference"])
+if ("-r" in inputParameters.keys()):
+    reference.read(inputParameters["-r"])
 # Input ExperimentalMatrix2
 query = ExperimentalMatrix()
-if ("-query" in inputParameters.keys()):
-    query.read(inputParameters["-query"])
+if ("-q" in inputParameters.keys()):
+    query.read(inputParameters["-q"])
 # Input parameter
-if ("-method" in inputParameters.keys()):
-    if inputParameters["-method"] == "jaccard":
-        try:
-            repeats = sys.argv[4]
-        except:
-            repeats = 100
-        jaccard_test(query, reference, replicates=repeats, organism=GenomeData.CHROMOSOME_SIZES)
-    
-    if inputParameters["-method"] == "projection":
-        projection_test(query, reference)
+if inputParameters["command"] == "jaccard":
+    try:
+        repeats = inputParameters["-R"]
+    except:
+        repeats = 100
+    jaccard_test(query, reference, replicates=repeats, organism=GenomeData.CHROMOSOME_SIZES)
+
+if inputParameters["command"] == "projection":
+    projection_test(query, reference)
     
