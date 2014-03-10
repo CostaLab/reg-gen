@@ -57,13 +57,19 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
      
     if len(args) != 4:
-            parser.error("Exactly three parameters are needed: experimental matrix, gene expression, annotation path and prefix for output")
-     
+        parser.error("Exactly three parameters are needed: experimental matrix, gene expression, annotation path and prefix for output")
+    
     #map arguments
     experimental_matrix_file = args[0]
     gene_exp = args[1]
     annotation_path = args[2]
     outputdir = args[3]
+    
+    
+#     experimental_matrix_file = "/home/manuel/input_pu1.txt"
+#     gene_exp = "/home/manuel/dcs.txt"
+#     annotation_path = "/home/manuel/workspace/eclipse_workspace/reg-gen/data/mm9"
+#     outputdir = "/home/manuel/tmp5"
     
     exps = ExperimentalMatrix()
     exps.read(experimental_matrix_file)
