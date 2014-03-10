@@ -15,7 +15,7 @@ config.read(data_config_file_name)
 
 # Reading data directory
 DATA_DIR = "/".join(data_config_file_name.split("/")[:-1])
-print DATA_DIR
+
 
 class GenomeData:
     ORGANISM = config.get('GenomeData','organism')
