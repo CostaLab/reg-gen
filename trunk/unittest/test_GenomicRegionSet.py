@@ -1,11 +1,12 @@
 from __future__ import print_function
 from __future__ import division
+import sys
 import unittest
-from rgt.GenomicRegion import *
-from rgt.GenomicRegionSet import *
+from GenomicRegion import *
+from GenomicRegionSet import *
 import os
-from rgt.Util import GenomeData
-from rgt.Util import OverlapType
+from Util import GenomeData
+from Util import OverlapType
 
 """Genome paths for unittest only"""
 path_mm9 = "/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/mm9/chrom.sizes"
