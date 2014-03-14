@@ -1,14 +1,13 @@
-
 from __future__ import print_function
 from __future__ import division
-from rgt.GenomicRegion import *
+from GenomicRegion import *
 import random
 import copy
 import os
 import time
 from scipy import stats
-from rgt.Util import GenomeData
-from rgt.Util import OverlapType
+from Util import GenomeData
+from Util import OverlapType
 
 """
 Represent list of GenomicRegions.
