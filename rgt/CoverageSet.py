@@ -153,8 +153,6 @@ class CoverageSet:
                 j += 1
                 read_length = read.rlen 
                 if not read.is_unmapped:
-                    if region.chrom == "chr2" and read.pos > 3785070 and read.pos < 3785080:
-                        pass
                     pos = read.pos - read_size if read.is_reverse else read.pos
                     pos_help = read.pos - read.qlen if read.is_reverse else read.pos
                     #if position in mask region, then ignore
