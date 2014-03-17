@@ -157,7 +157,6 @@ class CoverageSet:
                     pos_help = read.pos - read.qlen if read.is_reverse else read.pos
                     #if position in mask region, then ignore
                     if mask:
-                        print("YES")
                         #while next_it and c != region.chrom: #get right chromosome
                         #    c, s, e, next_it = self._get_bedinfo(f.readline())
                         while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
