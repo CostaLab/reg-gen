@@ -110,12 +110,19 @@ class CoverageSet:
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
             for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                 cov[i]+=1
+                cov[i] += 1
         self.coverage=cov 
         self.coverageOrig=cov
 
+    def _get_bedinfo(self, l):
+        if l != "":
+            l.strip()
+            l = l.split('\t')
+            return l[0], int(l[1]), int(l[2]), True
+        else:
+            return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True):
+    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None):
         """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
         Consider reads in <bam_file> with a extension size of <read_size>.
         Remove duplicates (read with same position) with rmdup=True (default).
@@ -127,26 +134,45 @@ class CoverageSet:
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         print("Loading reads of %s..." %self.name, file=sys.stderr)
         
+        #check whether one should mask
+        next_it = True
+        if mask_file is not None and os.path.exists(mask_file):
+            mask = True
+            f = open(mask_file, 'r')
+            c_help, s_help, e_help = self.genomicRegions.sequences[0].chrom, -1, -1
+        else:
+            mask = False
+        
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
             positions = []
             j = 0
             read_length = -1
             for read in bam.fetch(region.chrom):
-#                if j % 500000 == 0:
-#                    print(j, file=sys.stderr)
+
                 j += 1
                 read_length = read.rlen 
                 if not read.is_unmapped:
+                    if region.chrom == "chr2" and read.pos > 3785070 and read.pos < 3785080:
+                        pass
                     pos = read.pos - read_size if read.is_reverse else read.pos
+                    pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                    #if position in mask region, then ignore
+                    if mask:
+                        print("YES")
+                        #while next_it and c != region.chrom: #get right chromosome
+                        #    c, s, e, next_it = self._get_bedinfo(f.readline())
+                        while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
+                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                        if next_it and s_help <= pos_help and c_help == region.chrom:
+                            continue #pos in mask region
+                    
                     positions.append(pos)
-            
+                    
             if rmdup:
                 positions = list(set(positions))
             positions.sort()
             positions.reverse()
-            
-#             print('Read length is %s' %read_length, file=sys.stderr)
             
             i = 0
             while positions:
