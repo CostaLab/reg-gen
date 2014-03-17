@@ -115,7 +115,7 @@ class CoverageSet:
         self.coverageOrig=cov
 
     def _get_bedinfo(self, l):
-        if l != "":
+        if len(l) > 1:
             l.strip()
             l = l.split('\t')
             return l[0], int(l[1]), int(l[2]), True
@@ -143,6 +143,8 @@ class CoverageSet:
         else:
             mask = False
         
+        chrom_regions = [r.chrom for r in self.genomicRegions.sequences] #chroms by regions
+        
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
             positions = []
@@ -155,10 +157,14 @@ class CoverageSet:
                 if not read.is_unmapped:
                     pos = read.pos - read_size if read.is_reverse else read.pos
                     pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                    
                     #if position in mask region, then ignore
                     if mask:
-                        #while next_it and c != region.chrom: #get right chromosome
-                        #    c, s, e, next_it = self._get_bedinfo(f.readline())
+                        while next_it and c_help not in chrom_regions: #do not consider this deadzone
+                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                        if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
+                            while next_it and c_help != region.chrom: #get right chromosome
+                                c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
                         while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
                             c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
                         if next_it and s_help <= pos_help and c_help == region.chrom:
