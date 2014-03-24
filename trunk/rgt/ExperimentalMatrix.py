@@ -72,6 +72,12 @@ class ExperimentalMatrix:
         """Return RegionSets"""
         return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
 
+    def get_readsfiles(self):
+        return [self.files[i] for i in self.names[self.types=="reads"]]
+
+    def get_readsnames(self):
+        return [i for i in self.names[self.types=="reads"]]
+
     def load_objects(self):
         """Load files and initialize object"""
         for i, t in enumerate(self.types):
