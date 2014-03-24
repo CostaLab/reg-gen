@@ -294,9 +294,7 @@ class GenomicRegionSet:
             
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
-        for i in self.sequences:
-            if self.sequences.count(i) > 1:
-                self.sequences.remove(i)  # remove the first item with value i
+        self.sequences = set(self.sequences)
     
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number 
@@ -417,6 +415,9 @@ class GenomicRegionSet:
             z.add(previous)
             self.sequences = z.sequences
             return
+    def combine(self,region_set):
+        """ Adding another GenomicRegionSet without merging the overlapping regions. """
+        self.sequences.append(region_set.sequences)
     
     def cluster(self,max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
