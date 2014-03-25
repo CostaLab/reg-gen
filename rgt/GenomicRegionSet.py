@@ -59,7 +59,6 @@ class GenomicRegionSet:
     def sort(self):
         """Sort Elements by criteria defined by a GenomicRegion"""
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
-        self.sorted = True
 
     def read_bed(self, filename):
         """Read BED file and add every row as a GenomicRegion. 
@@ -95,7 +94,7 @@ class GenomicRegionSet:
         z = GenomicRegionSet(self.name + '_random')
         samp = random.sample(range(len(self)),size)
         for i in samp:
-          z.add(self.sequences[i])
+            z.add(self.sequences[i])
         z.sort()
         return z                
 
@@ -108,14 +107,14 @@ class GenomicRegionSet:
     def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
         """code based on eduardos functions. This should be  integrated in the core framework soon
         TODO: Eduardo should check this!"""
-        from rgt.motifanalysis.util import bedFunctions,sort
+        from rgt.motifanalysis.util import bedFunctions, sort
         from rgt.motifanalysis.enrichment.geneAssociation import *
         self.fileName=fileName
         de_genes=geneSet.genes
         regionsToGenes={}
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
         coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed]=geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize,promoterLength,threshDist)  
+        [dictBed,allBed] = geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize,promoterLength,threshDist)  
         #print dictBed
         genes=[]
         totalPeaks=0
@@ -127,7 +126,7 @@ class GenomicRegionSet:
                 keep=[n for n in names if "." not in n]
                 if len(keep) > 0:
                     self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
-                genes=genes+keep
+                genes = genes+keep
                 allgenes=allgenes+[n.strip(".") for n in names]
                 regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
         #print "Total Peaks", total
@@ -294,8 +293,14 @@ class GenomicRegionSet:
             
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
-        self.sequences = set(self.sequences)
-    
+        self.sort()
+        for i in range(len(self.sequences) - 1):
+            try:
+                if self.sequences[i] == self.sequences[i+1]:
+                    del self.sequences[i+1]
+            except:
+                continue
+            
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number 
         (1000, by default) of base pairs upstream and downstream of each region in self. 
@@ -415,10 +420,12 @@ class GenomicRegionSet:
             z.add(previous)
             self.sequences = z.sequences
             return
+    
     def combine(self,region_set):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
-        self.sequences.append(region_set.sequences)
-    
+        self.sequences.extend(region_set.sequences)
+        self.sorted = False
+        
     def cluster(self,max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
         

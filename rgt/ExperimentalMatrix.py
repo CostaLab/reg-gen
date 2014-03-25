@@ -49,6 +49,7 @@ class ExperimentalMatrix:
         for line in f:
             line = line.strip("\n")
             line = line.split("\t")
+            print(line)
             self.names.append(line[0])
             self.files[line[0]] = line[2] #dict: filename -> filepath
             self.types.append(line[1])
@@ -71,7 +72,10 @@ class ExperimentalMatrix:
     def get_regionsets(self):
         """Return RegionSets"""
         return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
-
+    
+    def get_regionsnames(self):
+        return [i for i in self.names[self.types=="regions"]]
+    
     def get_readsfiles(self):
         return [self.files[i] for i in self.names[self.types=="reads"]]
 

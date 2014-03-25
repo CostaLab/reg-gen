@@ -9,8 +9,8 @@ from Util import GenomeData
 from Util import OverlapType
 
 """Genome paths for unittest only"""
-path_mm9 = "/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/mm9/chrom.sizes"
-path_hg19 = "/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/hg19/chrom.sizes"
+path_mm9 = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/reggen/data/mm9/chrom.sizes"
+path_hg19 = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/reggen/data/hg19/chrom.sizes"
 
 """Unit Test"""
 
@@ -88,7 +88,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[3].initial, 60)
         self.assertEqual(result.sequences[3].final, 80)
         self.assertEqual(result.sequences[3].chrom, 'chr4')
-
+        
+    def test_sort(self):
+        self.region_sets([['chr1',15,20],['chr1',40,50],['chr1',65,75],['chr1',5,10]],
+                         [])
+        self.setA.sort()
+    
     def test_intersect(self):
         """
         Two empty sets
@@ -768,25 +773,6 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[1].final, 30000)
         self.assertEqual(result.sequences[2].initial, 0)
         self.assertEqual(result.sequences[2].final, 31000)
-        """
-        For random regions
-        """
-        # Fetching the chromosome length from data
-        chromosome_file = open(os.path.join(os.path.expanduser('~'),"/Users/Yu-ChingTsai/Documents/workspace/Reg-Gen/trunk/data/mm9/chrom.sizes"),'r')
-        chrom_map = GenomicRegionSet("mm9")
-        
-        for line in chromosome_file:
-            if "random" not in line: 
-                chrom_region = GenomicRegion(chrom=line.split("\t")[0],
-                                             initial=0,
-                                             final=line.split("\t")[1])
-                chrom_map.add(chrom_region)
-            else:
-                continue
-        self.region_sets([['chr5',57295670,57313871],['chr15',71175282,71186769]],
-                         [])
-        result = chrom_map.subtract(self.setA)
-        self.assertEqual(len(result.sequences), 24)
         
     def test_merge(self):
         """
@@ -971,22 +957,14 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result, 9/33)
     
     def test_get_genome_data(self):
-        """mm9"""
-        result = GenomicRegionSet("mm9")
-        result.get_genome_data()
-        self.assertEqual(len(result.sequences), 21)
-        """mm9, with Mitochondria chromosome"""
-        result = GenomicRegionSet("mm9")
-        result.get_genome_data(chrom_M=True)
-        self.assertEqual(len(result.sequences), 22)
         """hg19"""
         result = GenomicRegionSet("hg19")
         result.get_genome_data(path=path_hg19)
-        self.assertEqual(len(result.sequences), 24)
+        self.assertEqual(len(result.sequences), 23)
         """hg19, with Mitochondria chromosome"""
         result = GenomicRegionSet("hg19")
         result.get_genome_data(path=path_hg19,chrom_M=True)
-        self.assertEqual(len(result.sequences), 25)
+        self.assertEqual(len(result.sequences), 24)
         
     def test_random_regions(self):
         """
