@@ -4,7 +4,7 @@ import pysam, sys  # @UnresolvedImport
 import numpy as np
 import numpy.ma
 import matplotlib  # @UnresolvedImport
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 import matplotlib.pyplot as plt  # @UnresolvedImport
 import os
 import tempfile
@@ -66,6 +66,7 @@ class CoverageSet:
     
     def scale(self, factor):
         """Scale coverage with <factor>"""
+#        print(factor)
         for i in range(len(self.coverage)):
             self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
 
@@ -129,6 +130,7 @@ class CoverageSet:
         Divide the genomic regions in bins with a width of <binsize> and use <stepsize> to smooth the signal."""
         self.binsize = binsize
         self.stepsize = stepsize
+        
         bam = pysam.Samfile(bam_file, "rb" )
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
