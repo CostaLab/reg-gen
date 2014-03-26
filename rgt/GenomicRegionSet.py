@@ -401,25 +401,23 @@ class GenomicRegionSet:
             return z
     
     def merge(self):
-        """Merge the regions within the GenomicRegionSet (no return)"""
-        #self.sort()
-        if len(self) == 0:
-            return GenomicRegionSet('None region')
-        elif len(self) == 1:
+        """Merge the regions within the GenomicRegionSet"""
+        self.sort()
+        
+        if len(self.sequences) in [0, 1]:
             return self
         else:
-            z = GenomicRegionSet(name=self.name)
-            previous = self.sequences[0]
-            for s in self.sequences[1:]:
-                if previous.overlap(s):
-                    previous.initial = min(previous.initial, s.initial)
-                    previous.final = max(previous.final, s.final)
+            z = GenomicRegionSet(name = self.name)
+            prev_region = self.sequences[0]
+            for cur_region in self.sequences[1:]:
+                if prev_region.overlap(cur_region):
+                    prev_region.initial = min(prev_region.initial, cur_region.initial)
+                    prev_region.final = max(prev_region.final, cur_region.final)
                 else:
-                    z.add(previous)
-                    previous = s
-            z.add(previous)
+                    z.add(prev_region)
+                    prev_region = cur_region
+            z.add(prev_region)
             self.sequences = z.sequences
-            return
     
     def combine(self,region_set):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
