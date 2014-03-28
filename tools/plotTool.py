@@ -6,7 +6,7 @@ import os
 lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
 import numpy
-from scipy.stats import mstats
+from scipy.stats import mstats, wilcoxon
 import matplotlib.pyplot as plt
 import time
 
@@ -59,6 +59,7 @@ def printTable(namesCol,namesLines,table,fileName):
     f.close()
 
 # For boxplot
+
 def quantile_normalization(matrix):
     """ Return the np.array which contains the normalized values
     """
@@ -135,16 +136,24 @@ def box_plot(tables,bednames,readnames,groupby = "bed"):
     nb = 8
     if groupby == "bed":
         for bed in plotDict.keys():
-            x_label.append(bed+" "*nb)
+            x_label.append(bed)
             for bam in plotDict[bed].keys():
                 data.append(plotDict[bed][bam])
                 x_tick.append(bam)
     elif groupby == "bam":
         for bam in readnames:
-            x_label.append(bam+" "*nb)
+            x_label.append(bam)
             for bed in plotDict.keys():
                 data.append(plotDict[bed][bam])
                 x_tick.append(bed)
+    
+    # Calculate p value
+    p = numpy.ones(len(data))  # Array for storing p values
+    posi = numpy.zero(len(data)) # A list storing position [x,y]
+    for i, s1 in enumerate(data[1:]):
+        for j, s2 in enumerate(data[i+1:]):
+            t, p[i,j] = wilcoxon(s1,s2)
+            posi[i,j] = ((i+1+j+1)*0.5,max(data[i,j])*1.1)
     
     ## Initialize the figure
     fig = plt.figure()
@@ -156,16 +165,27 @@ def box_plot(tables,bednames,readnames,groupby = "bed"):
     
     # Editting for details
     plt.title("Boxplot of Gene Association analysis")
-    plt.ylabel("Count")
-    plt.savefig("boxplot.png") 
+    plt.set_yscale('log')   
+    plt.ylabel("Count (log)")
+
     plt.setp(bp['boxes'], color='black')
     plt.setp(bp['whiskers'], color='black')
-    plt.setp(bp['fliers'], markerfacecolor='none',color='gray',alpha=0.8)
+    plt.setp(bp['fliers'], markerfacecolor='none',color='gray',alpha=0.6)
     plt.setp(bp['medians'], color='black', linewidth=2)
-    plt.xticks(range(1,len(x_tick)+1), x_tick, rotation=90)
+    #plt.xticks(range(1,len(x_tick)+1), x_tick, rotation=70)
+    gn = len(x_tick)/len(x_label)
+    plt.xticks(range(0.5*(gn+1),len(x_tick),gn),x_label)
+    # Label significance
+    for i,r in enumerate(p):
+        for j,pv in enumerate(r):
+            if pv < 0.5:
+                plt.annotate("*",xy=(posi[i,j][0],posi[i,j][1]+7),horizontalalignment='center',zorder=10)
+                plt.annotate("",xy=(i+1,posi[i,j][1]),xytext=(j+1,posi[i,j][1]),arrowprops=props,zorder=10)
+    
+    # Saving
     plt.savefig("boxplot.png")
     plt.show()
-    
+
 #################################################################################################
 ##### PARAMETERS ################################################################################
 #################################################################################################
