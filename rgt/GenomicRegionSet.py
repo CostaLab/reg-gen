@@ -89,6 +89,26 @@ class GenomicRegionSet:
                     print("Error at line",line,self.fileName)
             self.sort()
   
+  
+    def read_bedgraph(self, filename):
+        """Read BEDGRAPH file and add every row as a GenomicRegion. 
+        See BEDGRAPH format at: http://genome.ucsc.edu/goldenPath/help/bedgraph.html """
+        self.fileName=filename
+        with open(filename) as f:
+            for line in f:
+                try:
+                    line = line.strip("\n")
+                    line = line.split("\t")
+                    assert len(line) == 4
+
+                    chrom, start, end, data = line[0], int(line[1]), int(line[2]), float(line[3])
+
+                    self.add( GenomicRegion(chrom=chrom, initial=start, final=end, data=data) )
+                except:
+                    print("Error at line", line, self.fileName)
+                    
+            self.sort()
+            
     def random_subregions(self,size):
         """Return a subsampling of the genomic region set with a specific number of regions"""
         z = GenomicRegionSet(self.name + '_random')
