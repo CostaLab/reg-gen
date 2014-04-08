@@ -74,7 +74,7 @@ setup(name="RGT",
       package_data={'rgt': ['packagePathFile.txt','data.config.path']},
       entry_points = {
           'console_scripts': [
-              'rgt-motifanalysis = rgt.motifanalysis.main:main'
+              'rgt-motifanalysis = rgt.motifanalysis.main:main', 'rgt-ODIN = rgt.ODIN.ODIN:main'
           ]
       },
       install_requires=['numpy>=1.4.0','scipy>=0.7.0','Biopython>=1.60','pandas==0.7.1','fisher>=0.1.0','statsmodels>=0.4.0','HTML>=0.04','matplotlib>=1.1.0'] # TODO Put the correct versions
