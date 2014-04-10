@@ -10,6 +10,8 @@ from scipy.stats import mstats, wilcoxon, mannwhitneyu
 import matplotlib.pyplot as plt
 import time, datetime
 import argparse
+import HTML
+from matplotlib.backends.backend_pdf import PdfPages
 
 # Local Libraries
 # Distal Libraries
@@ -20,8 +22,6 @@ from rgt.Util import *
 from rgt.CoverageSet import *
 
 # Local test
-tool_path = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/reggen/tools/plotTools.py"
-input_path = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/box_plot/input_EM.txt"
 dir = os.getcwd()
 #sys.argv = ["plotTools","boxplot",input_path]
 
@@ -120,45 +120,48 @@ def tables_for_plot(norm_table,all_bed,beds):
                 continue
     return tableDict
 
-def group_tags(exps, groupby, colorby, arrangeby):
+def unique(a):
+    seen = set()
+    return [seen.add(x) or x for x in a if x not in seen]
+
+def group_tags(exps, groupby, colorby, sortby):
     """Generate the tags for the grouping of plot
     
     Parameters:
         groupby = 'bam','bed','cell',or 'factor'
         colorby = 'bam','bed','cell',or 'factor'
-        arrangeby = 'bam','bed','cell',or 'factor'
+        sortby = 'bam','bed','cell',or 'factor'
     """
     
-    if groupby == "bam":
+    if groupby == "read":
         l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
-        group_tags = [ i for i in set(l)]
-    elif groupby == "bed":
+        group_tags = unique(l)
+    elif groupby == "region":
         l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
-        group_tags = [ i for i in set(l)]
+        group_tags = unique(l)
     else:
-        group_tags = exps.fieldsDict[groupby].keys()
+        group_tags = exps.fieldsDict[exps.fields[int(groupby[-1])-1]].keys()
         
-    if colorby == "bam":
+    if colorby == "read":
         l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
-        color_tags = [ i for i in set(l)]
-    elif colorby == "bed":
+        color_tags = unique(l)
+    elif colorby == "region":
         l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
-        color_tags = [ i for i in set(l)]
+        color_tags = unique(l)
     else:
-        color_tags = exps.fieldsDict[colorby].keys()
+        color_tags = exps.fieldsDict[exps.fields[int(colorby[-1])-1]].keys()
     
-    if arrangeby == "bam":
+    if sortby == "read":
         l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
-        arrange_tags = [ i for i in set(l)]
-    elif arrangeby == "bed":
+        sort_tags = unique(l)
+    elif sortby == "region":
         l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
-        arrange_tags = [ i for i in set(l)]
+        sort_tags = unique(l)
     else:
-        arrange_tags = exps.fieldsDict[arrangeby].keys()
-    
-    return group_tags, color_tags, arrange_tags
+        sort_tags = exps.fieldsDict[str(exps.fields[int(sortby[-1])-1])].keys()
+    return group_tags, color_tags, sort_tags
 
-def group_data(tables, exps, group_tags, color_tags, arrange_tags):
+def group_data(tables, exps, group_tags, color_tags, sort_tags):
     
     plotDict = {}  # Extracting the data from different bed_bams file
     cues = {}   # Storing the cues for back tracking
@@ -168,7 +171,7 @@ def group_data(tables, exps, group_tags, color_tags, arrange_tags):
         for i,readname in enumerate(exps.get_readsnames()):
             plotDict[bedname][readname] = mt[:,i]
             #print(plotDict[bedname][readname])
-            x = tuple(exps.get_types(readname) + [exps.get_type(bedname,'factor')])
+            x = tuple(exps.get_types(readname) + exps.get_types(bedname))
             cues[x] = [bedname, readname]
     #print(cues.keys())
     
@@ -179,17 +182,17 @@ def group_data(tables, exps, group_tags, color_tags, arrange_tags):
         for c in color_tags:
             #print("        "+c)
             sortDict[g][c] = {}
-            for a in arrange_tags:
+            for a in sort_tags:
                 #print("            "+a)
                 sortDict[g][c][a] = []
                 for k in cues.keys():
                     if set([g,c,a]) == set(k):
                         sortDict[g][c][a] = plotDict[cues[k][0]][cues[k][1]]
-                        
+                        #print(sortDict[g][c][a])
                     #else: sortDict[g][c][a] = []
     return sortDict 
 
-def box_plot(sortDict, group_tags, color_tags, arrange_tags):
+def box_plot(sortDict, group_tags, color_tags, sort_tags):
     """ Return boxplot from the given tables.
     
     """
@@ -217,46 +220,70 @@ def box_plot(sortDict, group_tags, color_tags, arrange_tags):
     ## Initialize the figure
     #plt.title("Boxplot of Gene Association analysis")
     
-    colors = [ 'pink', 'cyan', 'lightblue', 'lightgreen', 'tan']
+    colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
     
     # Subplt by group_tags
-    f, axarr = plt.subplots(1, len(group_tags))
+    f, axarr = plt.subplots(1, len(group_tags), figsize=(10,7), dpi=100)
+    f.canvas.set_window_title(args.t)
+    f.suptitle(args.t, fontsize=20)
     axarr = axarr.reshape(-1)
     plt.subplots_adjust(bottom=0.3)
     
-    axarr[0].set_ylabel("Count number (log)")
+    axarr[0].set_ylabel("Count number")
     
     for i, g in enumerate(group_tags):
-        axarr[i].set_title(g)
+        axarr[i].set_title(g, y=0.94)
         axarr[i].set_yscale('log')
+        axarr[i].tick_params(axis='y', direction='out')
+        axarr[i].yaxis.tick_left()
+        
         #axarr[i].grid(color='w', linestyle='-', linewidth=2, dash_capstyle='round')
-        d = []
-        color_t = []
+        d = []  # Store data within group
+        color_t = []  # Store tag for coloring boxes
+        x_ticklabels = []  # Store ticklabels
         for j, c in enumerate(color_tags):
-            for a in arrange_tags:
-                d.append([x for x in sortDict[g][c][a]])
-                color_t.append(colors[j])
+            for a in sort_tags:
+                if sortDict[g][c][a] == []:  # When there is no matching data, skip it
+                    continue
+                else:
+                    d.append([x+1 for x in sortDict[g][c][a]])
+                    color_t.append(colors[j])
+                    x_ticklabels.append(a + "." + c)
+
         # Fine tuning boxplot
         bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
                               patch_artist=True, bootstrap=None)
-        plt.setp(bp['whiskers'], color='black')
-        plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,size=0.2)
-        plt.setp(bp['medians'], color='black', linewidth=2)
+        plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8)
+        plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8)
+        plt.setp(bp['caps'],color='none')
+        plt.setp(bp['medians'], color='black', linewidth=1.5)
+        legends = []
         for patch, color in zip(bp['boxes'], color_t):
-            patch.set_facecolor(color)
+            patch.set_facecolor(color) # When missing the data, the color patch will exceeds
+            legends.append(patch)
+            
         # Fine tuning subplot
-        axarr[i].set_xticklabels([ s  + "." + c for s in arrange_tags]*len(color_tags), rotation=90)
+        axarr[i].set_xticklabels(x_ticklabels, rotation=90, fontsize=10)
+        axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
+        axarr[i].set_ylim(bottom=0.9)
         for spine in ['top', 'right', 'left', 'bottom']:
             axarr[i].spines[spine].set_visible(False)
-        axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        axarr[i].tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='on')
+        if i > 0:
+            plt.setp(axarr[i].get_yticklabels(),visible=False)
+            axarr[i].minorticks_off()
+        
         #axarr[i].set_aspect(1)
 #        for j, c in enumerate(color_tags):
-#            bp['boxes'][j*len(arrange_tags):(j+1)*len(arrange_tags)].facecolor = colors[j]
+#            bp['boxes'][j*len(sort_tags):(j+1)*len(sort_tags)].facecolor = colors[j]
                 
     plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
     #plt.legend(colors, color_tags, loc=7)
     
-    
+    f.legend(legends[::len(sort_tags)], color_tags, loc='upper right', handlelength=1, 
+             handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
+             bbox_to_anchor=(0.96, 0.39))
+             
     """
     gn = len(x_tick)/len(x_label)
     plt.xticks(range(0.5*(gn+1),len(x_tick),gn),x_label)
@@ -268,7 +295,27 @@ def box_plot(sortDict, group_tags, color_tags, arrange_tags):
                 plt.annotate("",xy=(i+1,posi[i,j][1]),xytext=(j+1,posi[i,j][1]),arrowprops=props,zorder=10)
     """
     # Saving
-    plt.savefig("boxplot.png")
+    plt.savefig(args.output + ".eps", bbox_extra_artists=(legends), bbox_inches='tight')
+    
+    if args.pdf:
+        with PdfPages(dir + args.output + '.pdf') as pp:
+            #plt.savefig(pdf, format='pdf')
+            pp.savefig(f)
+            #pdf.savefig(f.suptitle)
+            #pdf.savefig(axarr[:])
+        
+            # Set the file's metadata via the PdfPages object:
+            d = pp.infodict()
+            d['Title'] = args.t
+            d['CreationDate'] = datetime.datetime.today()
+            #pdf.close()
+                
+    if args.html:
+        f = open(args.output+'.html','w')
+        htmlcode = HTML.table(args.t, '<img src="' + args.output + '.png">')
+        f.write(htmlcode)
+        f.close()
+    
     plt.show()
 
 #################################################################################################
@@ -276,24 +323,23 @@ def box_plot(sortDict, group_tags, color_tags, arrange_tags):
 #################################################################################################
 
 
-parser = argparse.ArgumentParser(description='Provides various plotting tools.')
+parser = argparse.ArgumentParser(description='Provides various plotting tools.\nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho')
 
-subparsers = parser.add_subparsers(help='sub-command help')
+subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 
 parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the bam and bed files for gene association analysis.')
-parser_boxplot.add_argument('input',help='The name of the input Experimental Matrix file.')
-parser_boxplot.add_argument('output',default='boxplot', help='The name of the output file.(pdf or html)')
-parser_boxplot.add_argument('-o','--output', choices=["pdf","html"], default="pdf",help='Choose the output format, pdf or html.')
-parser_boxplot.add_argument('-t','--title', default='The boxplot for gene association analysis', help='The title shown on the top of the plot.')
-parser_boxplot.add_argument('-g','--grouped',choices=['bam','bed','cell','factor'], default='bam', help="The way to group data into different subplots.")
-parser_boxplot.add_argument('-c','--colored',choices=['bam','bed','cell','factor'], default='bed', help="The way to color data within the same subplot.")
-parser_boxplot.add_argument('-a','--arranged',choices=['bam','bed','cell','factor'], default='cell', help="The way to arranged data which shared the same color.")
-
+parser_boxplot.add_argument('input',help='The file name of the input Experimental Matrix file.')
+parser_boxplot.add_argument('output',default='boxplot', help='The file name of the output file.(pdf or html)')
+parser_boxplot.add_argument('-t', default='The boxplot', help='The title shown on the top of the plot.')
+parser_boxplot.add_argument('-g',choices=['read','region','col4','col5','col6'], default='read', help="The way to group data into different subplots.(Default:read)")
+parser_boxplot.add_argument('-c',choices=['read','region','col4','col5','col6'], default='region', help="The way to color data within the same subplot.(Default:region)")
+parser_boxplot.add_argument('-s',choices=['read','region','col4','col5','col6'], default='col4', help="The way to sort data which shared the same color.(Default:col4)")
+parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_else = subparsers.add_parser('Else tool', help='others')
 parser_else.add_argument('input',help='The name of the input Experimental Matrix file.')
 
 args = parser.parse_args()
-print(args)
 
 #################################################################################################
 ##### INPUT #####################################################################################
@@ -311,8 +357,8 @@ reads = exps.get_readsfiles()
 readsnames = exps.get_readsnames()
 fieldsDict = exps.fieldsDict
 
-if args.input:
-
+if args.input and args.mode=='boxplot':
+    
     # Combine the beds
     print("\nStep 1/5: Combining all regions")
     all_bed = GenomicRegionSet("All regions")
@@ -354,11 +400,11 @@ if args.input:
     
     # Plotting
     print("Step 5/5: Plotting")
-    group_tags, color_tags, arrange_tags = group_tags(exps, groupby=args.grouped, colorby=args.colored, arrangeby=args.arranged)
-    #print(group_tags, "\n", color_tags, "\n", arrange_tags)
-    sortDict = group_data(tables, exps, group_tags, color_tags, arrange_tags)
+    group_tags, color_tags, sort_tags = group_tags(exps, groupby=args.g, colorby=args.c, sortby=args.s)
+    #print(group_tags, "\n", color_tags, "\n", sort_tags)
+    sortDict = group_data(tables, exps, group_tags, color_tags, sort_tags)
     #print(sortDict)
-    box_plot(sortDict,group_tags, color_tags, arrange_tags)
+    box_plot(sortDict,group_tags, color_tags, sort_tags)
     t5 = time.time()
     print("    --- finished in {0:.3f} secs".format(t5-t4))
     print("Total running time is : " + str(datetime.timedelta(seconds=t5-t0)))

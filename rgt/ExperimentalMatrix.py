@@ -3,6 +3,7 @@ from rgt.GenomicRegionSet import *
 from rgt.GeneSet import *
 import numpy
 import sys
+from collections import *
 
 """
 Describe an experiment.
@@ -44,7 +45,7 @@ class ExperimentalMatrix:
         
         #initialize further header files        
         for fi in range(3,len(self.fields)):
-            self.fieldsDict[ header[fi] ] = {}
+            self.fieldsDict[ header[fi] ] = OrderedDict()
         
         for line in f:
             line = line.strip("\n")
