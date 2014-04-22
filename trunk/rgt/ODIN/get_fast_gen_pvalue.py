@@ -12,13 +12,13 @@ value y follows h2.
 '''
 
 from __future__ import print_function
-# from get_gen_pvalue import get_log_pvalue, get_pvalue, table_prob
 from time import time
 from scipy.stats import nbinom, binom
 from math import log, fabs, exp
 from sklearn.utils.extmath import logsumexp
 import numpy as np
 import sys
+
 lookup_pmf = {}
 lookup_pvalue = {}
 

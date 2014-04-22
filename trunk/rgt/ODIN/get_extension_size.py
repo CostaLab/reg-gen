@@ -21,8 +21,6 @@ Return shift/extension size of reads descriebed by BAM file.
 
 from __future__ import print_function
 import pysam, sys
-import multiprocessing
-
 
 cov_f = {}
 cov_r = {}
@@ -30,20 +28,6 @@ cov_r = {}
 def get_value(d, x):
     """Return d[x] of dictionary d or 0"""
     return d[x] if d.has_key(x) else 0 
-
-# def init_cov(filename):
-#     """Initialize coverage data, consider only first chromosome"""
-#     file = pysam.Samfile(filename, "rb")
-#     i = 1
-#     for column in file.pileup(file.references[0]):
-#         if i % 10000000 == 0:
-#             print("%sm pileups for initializing considered" % (i/1000000), file=sys.stderr)
-# #             break
-#         i += 1
-#         pos = column.pos
-#         read_strands = [ read.alignment.is_reverse for read in column.pileups ]
-#         cov_f[pos] = read_strands.count(False)
-#         cov_r[pos] = read_strands.count(True)
 
 def init_cov(filename):
     file = pysam.Samfile(filename, "rb")
@@ -61,7 +45,6 @@ def init_cov(filename):
 def ccf(k):
     """Return value of cross-correlation function"""
     s = 0
-#     print(k, file=sys.stderr)
     forward_keys = set(cov_f.keys())
     reverse_keys = set(map(lambda x: x - k, cov_r.keys()))
     keys = forward_keys & reverse_keys
@@ -76,19 +59,9 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     Search value with a resolution of <stepsize> from start to end."""
     init_cov(filename)
     
-    #pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()/2)
     r = map(ccf, range(start, end, stepsize) )
     
     return max(r)[1], r
 
-if __name__ == '__main__':
-    filename = sys.argv[1]
-#    filename='/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bam'
-    
-    init_cov(filename)
-    #pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()/2)
-    r = map(ccf, range(0,int(sys.argv[2]),5) )
 
-    for i,k in r:
-        print(i,k)
     
