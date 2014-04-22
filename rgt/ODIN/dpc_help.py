@@ -3,17 +3,12 @@ from optparse import OptionParser
 from .. CoverageSet import CoverageSet
 from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
-#from CoverageSet import CoverageSet
-#from GenomicRegion import GenomicRegion
-#from GenomicRegionSet import GenomicRegionSet
+
 from get_extension_size import get_extension_size
 import os.path
 import sys
 from DualCoverageSet import DualCoverageSet
-#from get_gen_pvalue import get_log_pvalue
 from get_fast_gen_pvalue import get_log_pvalue_new
-from math import log
-import multiprocessing
 
 SIGNAL_CUTOFF = 10000
 
@@ -142,35 +137,27 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
     start = 0
     end = 600
     ext_stepsize = 5
-    #TODO: mit vorschleifen den ganzen scheiss vereinfachen!
+    #TODO: maybe for-loops?
     #compute extension size
     if [ext_1, ext_2, ext_input_1, ext_input_2].count(None) > 0:
         print("Computing read extension sizes...", file=sys.stderr)
     if ext_1 is None:
-#         print("Computing read extension size for first file...", file=sys.stderr)
         ext_1, values_1 = get_extension_size(bam_file_1, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for first file: %s" %ext_1, file=sys.stderr)
     
     if ext_2 is None:
-#         print("Computing read extension size for second file...", file=sys.stderr)
         ext_2, values_2 = get_extension_size(bam_file_2, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for second file: %s" %ext_2, file=sys.stderr)
 
     if input_1 is not None and ext_input_1 is None:
-#         print("Computing read extension size for first input file...", file=sys.stderr)
         ext_input_1, values_input_1 = get_extension_size(input_1, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for first input file: %s" %ext_input_1, file=sys.stderr)
     
     if input_1 is not None and input_2 is not None and input_1 == input_2 and 'ext_input_1' in locals() and 'values_input_1' in locals():
-#         print("Read extension size for second input file equals the one from first file...", file=sys.stderr)
         ext_input_2, values_input_2 = ext_input_1, values_input_1
     elif input_2 is not None and ext_input_2 is None:
-#         print("Computing read extension size for second input file...", file=sys.stderr)
         ext_input_2, values_input_2 = get_extension_size(input_2, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for second input file: %s" %ext_input_2, file=sys.stderr)
-    
-    
-    
     
     if verbose:
         if 'values_1' in locals() and values_1 is not None:
@@ -213,19 +200,19 @@ def _get_chrom_list(file):
                 l.append(line[0])
     return l
 
-def _check_order(deadzones, regions, parser):
-    chrom_dz = _get_chrom_list(deadzones)
-    chrom_regions= _get_chrom_list(regions)
-    #chrom_regions may be subset of chrom_dz, but in same ordering
-    pos_old = -1
-    tmp_dz = []
-    #the list should have the same element
-    for r_chrom in chrom_dz:
-        if r_chrom in chrom_regions:
-            tmp_dz.append(r_chrom)
-    #they should be in the same order
-    if not tmp_dz == chrom_regions:
-        parser.error("Please make sure the deadzone file has the same order as the region file.")
+# def _check_order(deadzones, regions, parser):
+#     chrom_dz = _get_chrom_list(deadzones)
+#     chrom_regions= _get_chrom_list(regions)
+#     #chrom_regions may be subset of chrom_dz, but in same ordering
+#     pos_old = -1
+#     tmp_dz = []
+#     #the list should have the same element
+#     for r_chrom in chrom_dz:
+#         if r_chrom in chrom_regions:
+#             tmp_dz.append(r_chrom)
+#     #they should be in the same order
+#     if not tmp_dz == chrom_regions:
+#         parser.error("Please make sure the deadzone file has the same order as the region file.")
     
 
 class HelpfulOptionParser(OptionParser):
@@ -247,10 +234,6 @@ def input(laptop):
                       help="Size of underlying bins for creating the signal.  [default: %default]")
     parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
                       help="Stepsize with which the window consecutively slides across the genome to create the signal.")
-    parser.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
-                      help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
-    parser.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
-                      help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
     parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                       help="Experiment's name and prefix for all files that are created.")
     parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
@@ -271,13 +254,13 @@ def input(laptop):
     parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                       help="turn of GC content calculation")
-    parser.add_option("--deadzones", dest="deadzones", default=None, \
-                      help="Deadzones (BED) [default: %default]")
+#     parser.add_option("--deadzones", dest="deadzones", default=None, \
+#                       help="Deadzones (BED) [default: %default]")
     (options, args) = parser.parse_args()
     
     
     if options.version:
-        version = "version \"0.1alpha\""
+        version = "version \"0.01\""
         print("")
         print(version)
         sys.exit()
@@ -290,7 +273,6 @@ def input(laptop):
     regions = args[2]
     genome = args[3]
     chrom_sizes = args[4]
-
     
     if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
         or not os.path.isfile(regions) or not os.path.isfile(genome):
@@ -318,9 +300,9 @@ def input(laptop):
     if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
         parser.error("GC content can only be computed with both input files.")
     
-    if options.deadzones is not None:
-        #check the ordering of deadzones and region
-        _check_order(options.deadzones, regions, parser)
+#     if options.deadzones is not None:
+#         #check the ordering of deadzones and region
+#         _check_order(options.deadzones, regions, parser)
     
     return options, bamfile_1, bamfile_2, regions, genome, chrom_sizes
 

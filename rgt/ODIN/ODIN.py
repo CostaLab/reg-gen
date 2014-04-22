@@ -116,10 +116,8 @@ def main():
       
     if options.verbose:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
-      
+    
     m.fit([training_set_obs])
-     
-    #m.merge_distr()
      
     print('...done', file=sys.stderr)
     if options.verbose:
