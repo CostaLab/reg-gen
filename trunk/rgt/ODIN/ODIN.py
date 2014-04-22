@@ -86,7 +86,7 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     
     return n_, p_
  
-if __name__ == '__main__':
+def main():
     test = True
     options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
    
