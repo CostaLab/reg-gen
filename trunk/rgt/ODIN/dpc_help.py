@@ -1,8 +1,11 @@
 from __future__ import print_function
 from optparse import OptionParser
-from CoverageSet import CoverageSet
-from GenomicRegion import GenomicRegion
-from GenomicRegionSet import GenomicRegionSet
+from .. CoverageSet import CoverageSet
+from .. GenomicRegion import GenomicRegion
+from .. GenomicRegionSet import GenomicRegionSet
+#from CoverageSet import CoverageSet
+#from GenomicRegion import GenomicRegion
+#from GenomicRegionSet import GenomicRegionSet
 from get_extension_size import get_extension_size
 import os.path
 import sys

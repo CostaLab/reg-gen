@@ -1,11 +1,8 @@
 from __future__ import print_function
-from CoverageSet import CoverageSet
+from .. CoverageSet import CoverageSet
 import numpy as np
 from random import sample, randrange
 from time import time
-#import rpy2.robjects as robjects
-#from rpy2.robjects.packages import importr
-#from compute_pvalue import get_pvalue
 from help_hmm import EPSILON, LEN_GENOMES
 from gc_content import get_gc_context
 import sys
