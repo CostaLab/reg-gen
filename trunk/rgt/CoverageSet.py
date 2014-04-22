@@ -83,8 +83,9 @@ class CoverageSet:
                 i += 1
                 for j in range(len(c)):
                     if c[j] != 0:
-                        print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2), \
-                              j * self.stepsize + ((self.binsize+self.stepsize)/2), c[j], sep='\t', file=f)
+                        print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
+                              j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
+                        
     def write_wig(self, filename):
         with open(filename, 'w') as f:
             i = 0
@@ -149,6 +150,7 @@ class CoverageSet:
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
+
             positions = []
             j = 0
             read_length = -1
@@ -159,6 +161,9 @@ class CoverageSet:
                 if not read.is_unmapped:
                     pos = read.pos - read_size if read.is_reverse else read.pos
                     pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                    
+                    if not (pos >= region.initial and pos < region.final):
+                        continue
                     
                     #if position in mask region, then ignore
                     if mask:
@@ -173,7 +178,7 @@ class CoverageSet:
                             continue #pos in mask region
                     
                     positions.append(pos)
-                    
+
             if rmdup:
                 positions = list(set(positions))
             positions.sort()
@@ -181,13 +186,13 @@ class CoverageSet:
             
             i = 0
             while positions:
-                win_s = max(0, i * stepsize - binsize*0.5)
-                win_e = i * stepsize + binsize*0.5
+                win_s = max(0, i * stepsize - binsize*0.5) + region.initial
+                win_e = i * stepsize + binsize*0.5 + region.initial 
                 c = 0
                 taken = []
-                 
                 while True:
                     s = positions.pop()
+                    
                     taken.append(s)
                     if s < win_e: #read within window
                         c += 1
@@ -200,9 +205,12 @@ class CoverageSet:
                                 break #as taken decreases monotonously
                         taken = []
                         break
-                cov[i] = c
+                
+                if i < len(cov):
+                    cov[i] = c
+
                 i += 1
-            
+
             self.coverage.append(np.array(cov))
 
         self.coverageorig = self.coverage[:]
