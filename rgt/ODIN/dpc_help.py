@@ -20,7 +20,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     c1 = list(first_overall_coverage)
     c2 = list(second_overall_coverage)
     
-    print("Computing info...", file=sys.stderr)
+    #print("Computing info...", file=sys.stderr)
     f = open(name + '-posts.bed', 'w')
     g = open(name + '-states-viterbi.bed', 'w')
     
@@ -251,13 +251,14 @@ def input(laptop):
     parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                       help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
     parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
-    parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
+    #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                      help="turn of GC content calculation")
+                      help="do not compute GC content model")
 #     parser.add_option("--deadzones", dest="deadzones", default=None, \
 #                       help="Deadzones (BED) [default: %default]")
-    (options, args) = parser.parse_args()
     
+    (options, args) = parser.parse_args()
+    options.norm_strategy = 5
     
     if options.version:
         version = "version \"0.01\""
@@ -265,17 +266,15 @@ def input(laptop):
         print(version)
         sys.exit()
     
-    if len(args) != 5:
-        parser.error("Exactly five parameters are needed")
+    if len(args) != 3:
+        parser.error("Exactly three parameters are needed")
         
     bamfile_1 = args[0]
     bamfile_2 = args[1]
     regions = args[2]
-    genome = args[3]
-    chrom_sizes = args[4]
     
     if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
-        or not os.path.isfile(regions) or not os.path.isfile(genome):
+        or not os.path.isfile(regions): # or not os.path.isfile(genome):
         parser.error("At least one input parameter is not a file")
     
     if options.name is None:
@@ -304,5 +303,5 @@ def input(laptop):
 #         #check the ordering of deadzones and region
 #         _check_order(options.deadzones, regions, parser)
     
-    return options, bamfile_1, bamfile_2, regions, genome, chrom_sizes
+    return options, bamfile_1, bamfile_2, regions
 

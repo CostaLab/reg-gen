@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-%prog
+%prog <BAM> <BAM> <BED>
 
 Find differential peaks in regions.
 
@@ -11,7 +11,6 @@ Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
 from __future__ import print_function
 import numpy as np
-#from hmm_hist import histogram, histHMM2d3s
 import sys
 from math import log, fabs
 from dpc_help import initialize
@@ -20,7 +19,7 @@ from dpc_help import get_peaks
 from dpc_help import input
 from hmm_binom_2d3s import BinomialHMM2d3s
 from random import sample
-import multiprocessing
+from .. Util import GenomeData
 
 def write(name, l):
     f = open(name, 'w')
@@ -30,13 +29,11 @@ def write(name, l):
     f.close()
 
 def get_init_parameters(name, indices_of_interest, first_overall_coverage, second_overall_coverage, \
-                        x = 10000, threshold = 2.0, diff_cov = 10):
+                        verbose, x = 10000, threshold = 2.0, diff_cov = 10):
 
-    #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
-    #n_ = np.array([tmp, tmp])
-    
-    n_ = np.array([training_set_obs.shape[0], training_set_obs.shape[0]])
-    print('n_: ', n_, file=sys.stderr)
+    tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
+    n_ = np.array([tmp, tmp])
+    #print('n_: ', n_, file=sys.stderr)
     
     s0 = []
     s1 = []
@@ -61,15 +58,16 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
             so.append((cov1,cov2))
         i += 1
     
-    write(name + 's0', s0)
-    write(name + 's1', s1)
-    write(name + 's2', s2)
-    write(name + 'soverall', so)
+    if verbose:
+        write(name + 's0', s0)
+        write(name + 's1', s1)
+        write(name + 's2', s2)
+        write(name + 'soverall', so)
     
     
     #get observation that occurs most often:
     m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
-    print('m_', m_, file=sys.stderr)
+    #print('m_', m_, file=sys.stderr)
     
     p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
     
@@ -82,14 +80,16 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     p_[0][2] = p_[0][0]
     p_[1][2] = m_[1] / n_[1]
     
-    print('p_', p_, file=sys.stderr)
+    #print('p_', p_, file=sys.stderr)
     
     return n_, p_
  
 def main():
     test = True
-    options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
-   
+    options, bamfile_1, bamfile_2, regions = input(test)
+    genome = GenomeData.GENOME
+    chrom_sizes = GenomeData.CHROMOSOME_SIZES
+    
     ######### WORK! ##########
     exp_data = initialize(name=options.name, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
@@ -97,8 +97,8 @@ def main():
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
                           input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2, \
                           chrom_sizes = chrom_sizes,
-                          verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones)
-    print('done', file=sys.stderr)
+                          verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=None)
+
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
@@ -109,9 +109,9 @@ def main():
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
          
-    n_, p_ = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage)
+    n_, p_ = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.verbose)
      
-    print('Training HMM...', file=sys.stderr)
+    print('Train HMM...', file=sys.stderr)
     m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
       
     if options.verbose:
@@ -119,7 +119,6 @@ def main():
     
     m.fit([training_set_obs])
      
-    print('...done', file=sys.stderr)
     if options.verbose:
         print('p', m.p, file=sys.stderr)
         print("Final HMM's transition matrix: ", file=sys.stderr)
@@ -128,13 +127,12 @@ def main():
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    print("...done", file=sys.stderr)
      
     if options.verbose: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
-    print('t', m.n, m.p, file=sys.stderr)
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
-     
-     
+    
+if __name__ == '__main__':
+    main()
     
