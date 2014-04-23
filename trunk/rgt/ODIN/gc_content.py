@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 '''
-@author: manuel
+@author: Manuel Allhoff
 '''
 from __future__ import print_function
 import numpy as np
@@ -15,7 +15,6 @@ class help_content():
         self.g = -1
         
     def add(self, d, c):
-#        print(c*100, round(float(d),2), file=sys.stderr)
         self.content[int(c*100)].append(round(float(d),2))
         
     def _compute(self):
@@ -38,9 +37,6 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
         cur_gc_value = []
         
         for i in range(len(cov)):
-#             if cov[i] < 1e-300:
-#                 cur_gc_value.append(0)
-#                 continue
             s = i * stepsize
             e = i * stepsize + binsize
             seq = genome[s : e+1]
@@ -57,8 +53,6 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
         
         gc_content_cov.append(cur_gc_value)
     
-#    gc_content_cov = np.matrix(gc_content_cov)
-    
     content._compute()
     r = []
     for l in gc_content_cov:
@@ -67,22 +61,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
     
     return r, content.g, content.g_gc
     
-if __name__ == '__main__':
-    
-    stepsize=50
-    binsize=100
-    genome_path='/home/manuel/g.fa'
-    c = np.random.uniform(0, 10, size=10000/stepsize)
-    c = np.around(c, 2)
-    a,b=get_gc_context(stepsize, binsize, genome_path, [c])
-#     print(c)
-#     print(b)
-#     print(len(a[0]))
-#     print(a[0])
-    
-    for i in a[0]:
-        print(i)
-    
+
     
     
     

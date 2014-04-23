@@ -3,7 +3,7 @@ from .. CoverageSet import CoverageSet
 import numpy as np
 from random import sample, randrange
 from time import time
-from help_hmm import EPSILON, LEN_GENOMES
+from help_hmm import EPSILON
 from gc_content import get_gc_context
 import sys
 from normalize import get_normalization_factor
@@ -19,6 +19,7 @@ class DualCoverageSet():
         self.cov1 = CoverageSet('first file', region)
         self.cov2 = CoverageSet('second file', region)
         
+        print("Loading reads...", file=sys.stderr)
         self.cov1.coverage_from_bam(bam_file=file_1, read_size=ext_1, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
         self.cov2.coverage_from_bam(bam_file=file_2, read_size=ext_2, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
         
@@ -42,7 +43,7 @@ class DualCoverageSet():
             if not no_gc_content:
                 if input['input'] is not None:
                     gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage)
-                    print("Gamma: %s" %avg_gc_content, file=sys.stderr)
+                    #print("Gamma: %s" %avg_gc_content, file=sys.stderr)
                     self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                     self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                     
@@ -54,21 +55,19 @@ class DualCoverageSet():
                         #input['cov-input'].write_bed(name + '-gc-s%s-input-2.bed' %i)
                     input['cov-ip'].write_bigwig(name + '-gc-s%s-2.bw' %i, chrom_sizes)
                     #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
-            else:
-                print("Do not compute GC-content", file=sys.stderr)
-            
-
         
+        if not no_gc_content:
+            print("Do not compute GC-content", file=sys.stderr)                
         
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
             
-            print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
-            print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
+            #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
+            #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose)
-            print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
-            print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
+            #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
+            #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             
             if verbose:
                 if input['input'] is not None:
@@ -164,7 +163,7 @@ class DualCoverageSet():
         
         #diaz and naive
         if i != 1 and norm_strategy == 5:
-            print("Normalize by input (Diaz) and naive method", file=sys.stderr)
+            print("Normalize...", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
                                                               genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
@@ -254,21 +253,15 @@ class DualCoverageSet():
         m = len(self.first_overall_coverage)
         n = 0.9
         self._compute_score()
-        print('before filter step:', len(self.scores), file=sys.stderr)
+        #print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
-        print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
+        #print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(self.first_overall_coverage + self.second_overall_coverage > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
-        print('length of intersection set: ', len(tmp), file=sys.stderr)
+        #print('length of intersection set: ', len(tmp), file=sys.stderr)
         self.indices_of_interest = tmp2
-        print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
+        #print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
         #extend regions by l steps
-#         self.indices_of_interest = list(self.indices_of_interest)
-#         tmp = self.indices_of_interest[:]
-#         for i in tmp:
-#             self.indices_of_interest += range(max(0, i-l), i+l+1) #TODO: whats about chromosome ends?
-         
-#         self.indices_of_interest = set(self.indices_of_interest)
         tmp = set()
         for i in self.indices_of_interest:
             for j in range(max(0, i-l), i+l+1):
@@ -278,10 +271,6 @@ class DualCoverageSet():
         tmp.sort()
         self.indices_of_interest = np.array(tmp)
 
-#         self.indices_of_interest = list(set(self.indices_of_interest)) #remove double indices
-#         self.indices_of_interest.sort()
-#         self.indices_of_interest = np.array(self.indices_of_interest)
-         
     def get_initial_dist(self, filename):
         """Write BED file with initial state distribution"""
         states = []

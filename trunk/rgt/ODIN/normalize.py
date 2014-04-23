@@ -197,7 +197,7 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     for normalization.
     Also give list of tuples (x,y) describing bins where x,y are the values for each bin."""
     #create dict of counts
-    print("Dividing genome into bins...", file=sys.stderr)
+    #print("Dividing genome into bins...", file=sys.stderr)
     counts_dict_2 = get_bins(chrom_len, chromosomes, count_list_2, step_width, feature_len)
     counts_dict_1 = get_bins(chrom_len, chromosomes, count_list_1, step_width, feature_len)
     
@@ -212,9 +212,9 @@ def work(first_path, second_path, step_width, zero_counts, genome, two_sample):
     """work"""
     CHROM_LEN = CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
     #counts_1, counts_1 is a genomicarray (HTSeq) describing chr und pos of reads
-    print("Reading first input file...", file=sys.stderr)
+    #print("Reading first input file...", file=sys.stderr)
     counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path)
-    print("Reading second input file...", file=sys.stderr)
+    #print("Reading second input file...", file=sys.stderr)
     counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path)
 #     print("...done", file=sys.stderr)
     chromosomes = chromosomes1 | chromosomes2
@@ -238,15 +238,15 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, g
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
 #    write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width)
     
-    print("norm sums 1 : ", sum([i for (i,j) in pq_list]), file=sys.stderr)
-    print("norm sums 2 : ", sum([j for (i,j) in pq_list]), file=sys.stderr)
+    #print("norm sums 1 : ", sum([i for (i,j) in pq_list]), file=sys.stderr)
+    #print("norm sums 2 : ", sum([j for (i,j) in pq_list]), file=sys.stderr)
     
     if two_sample:
         l = 0.5
         s1 = sum([i for (i,j) in pq_list[:int(len(pq_list)*l)]])
         s2 = sum([j for (i,j) in pq_list[:int(len(pq_list)*l)]])
         
-        print("norm sums half: ", s1, s2, file=sys.stderr)
+        #print("norm sums half: ", s1, s2, file=sys.stderr)
         
         if s1 > s2:
             return 2, factor1
@@ -255,50 +255,5 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, g
     else:
         return -1, factor1
 
-if __name__ == '__main__':
-#     #first_path='/home/manuel/data/project_chipseq_norm/data/PU1_CDP.bam'
-    first_path='/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bam'
-#     #first_path='/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bed'
-#     first_path='/home/manuel/workspace/cluster_home/projects/chipseq_wolfgang/bam/without_trimming/KF5_K4_early.sorted.bam'
-#      
-#     #second_path='/home/manuel/data/project_chipseq_norm/data/PU1_Input4mix.bam'
-    second_path='/home/manuel/data/project_chipseq_norm/data/PU1_Input_1000000.bam'
-#     #second_path='/home/manuel/data/project_chipseq_norm/data/PU1_Input_1000000.bed'
-#     second_path='/home/manuel/workspace/cluster_home/projects/chipseq_wolfgang/    KF5_K4_late.sorted.bam'
-    name = 'test_mixed'
 
-#     first_path = sys.argv[1]
-#     second_path = sys.argv[2]
-#     name = sys.argv[3]
-
-    verbose = True
-    
-    print(get_normalization_factor(first_path, second_path, step_width=1000, zero_counts=0, genome='mm9', filename=name + '-norm1', verbose=verbose, two_sample=True))
-    
-    
-#     #input
-#     parser = HelpfulOptionParser(usage=__doc__)
-#     (options, args) = parser.parse_args()
-#         
-#     if len(args) != 6:
-#         parser.error("Sorry, IP, control, name, step width, 0-counts and genome required!")
-#       
-#     first_path = args[0] #IP
-#     second_path = args[1] #control
-#     name = args[2]
-#     step_width = int(args[3])
-#     zero_counts = int(args[4])
-#     genome = args[5]
-# 
-#     CHROM_LEN = CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
-#     
-#     #work
-#     pq_list, max_index, max_value, factor1, factor2, count_list1, count_list2, chromosomes = \
-#     work(first_path, second_path, step_width, zero_counts, genome)
-#     
-#     #output
-#     write_pq_list(pq_list, max_index, max_value, factor1, factor2, name + '_pq-list.data')
-#     write_bedgraph(CHROM_LEN, chromosomes, count_list1, name + '_countlist-1.bedgraph', step_width)
-#     write_bedgraph(CHROM_LEN, chromosomes, count_list2, name + '_countlist-2.bedgraph', step_width)
-    
     

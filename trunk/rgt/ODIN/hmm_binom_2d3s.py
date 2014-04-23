@@ -105,9 +105,9 @@ class BinomialHMM2d3s(_BaseHMM):
         self.p[1] = _add_pseudo_counts(self.p[1])
         
         self.merge_distr()
-        print('m-step: ',self.p, file=sys.stderr)
-        tmp=np.array(map(lambda x: x*self.n[0], self.p))
-        print(np.reshape(tmp, (-1,3)), file=sys.stderr)
+        #print('m-step: ',self.p, file=sys.stderr)
+        #tmp=np.array(map(lambda x: x*self.n[0], self.p))
+        #print(np.reshape(tmp, (-1,3)), file=sys.stderr)
         
     
     def _count(self, posts):
