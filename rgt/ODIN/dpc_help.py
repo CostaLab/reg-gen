@@ -1,3 +1,14 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+%prog <BAM> <BAM> <BED>
+
+Find differential peaks between two <BAM> files within regions defined by <BED> file.
+
+Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+"""
+
 from __future__ import print_function
 from optparse import OptionParser
 from .. CoverageSet import CoverageSet
