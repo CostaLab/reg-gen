@@ -62,7 +62,6 @@ class DualCoverageSet():
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
-            
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose)
@@ -76,8 +75,6 @@ class DualCoverageSet():
                 input['cov-ip'].write_bigwig(name + '-gc-s%s-3.bw'%i, chrom_sizes)
                 #input['cov-ip'].write_bed(name + '-gc-s%s-3.bed'%i)
                 
-        
-        
         #make one array for the coverage
         self.first_overall_coverage = reduce(lambda x,y: np.concatenate((x,y)), [self.cov1.coverage[i] for i in range(len(self.cov1.genomicRegions))])
         self.second_overall_coverage = reduce(lambda x,y: np.concatenate((x,y)), [self.cov2.coverage[i] for i in range(len(self.cov2.genomicRegions))])
@@ -94,8 +91,8 @@ class DualCoverageSet():
         #pre-defined values
         if input['input_factor'] is not None and i != 1:
             print("Normalize by Diaz and pre-defined values...", input['input_factor'], file=sys.stderr)
-            print("Factor: normalize file 1 with input normalization factor %s" %(map_input[1]['input_factor']), file=sys.stderr)
-            print("Factor: normalize file 2 with input normalization factor %s" %(map_input[2]['input_factor']), file=sys.stderr)
+            print("Normalize file 1 with input normalization factor %s" %(map_input[1]['input_factor']), file=sys.stderr)
+            print("Normalize file 2 with input normalization factor %s" %(map_input[2]['input_factor']), file=sys.stderr)
             
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
             map_input[2]['cov-input'].scale(map_input[2]['input_factor'])
@@ -163,7 +160,7 @@ class DualCoverageSet():
         
         #diaz and naive
         if i != 1 and norm_strategy == 5:
-            print("Normalize...", file=sys.stderr)
+            print("Normalizing...", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
                                                               genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)

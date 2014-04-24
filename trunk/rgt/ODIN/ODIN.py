@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-%prog <BAM> <BAM> <BED>
-
-Find differential peaks in regions.
-
-Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
-
-"""
-
 from __future__ import print_function
 import numpy as np
 import sys
@@ -99,19 +90,19 @@ def main():
                           chrom_sizes = chrom_sizes,
                           verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=None)
 
-    print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
+    #print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     
     if options.verbose:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
-    print('Compute training set...',file=sys.stderr)
+    print('Computing training set...',file=sys.stderr)
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
          
     n_, p_ = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.verbose)
      
-    print('Train HMM...', file=sys.stderr)
+    print('Training HMM...', file=sys.stderr)
     m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
       
     if options.verbose:
