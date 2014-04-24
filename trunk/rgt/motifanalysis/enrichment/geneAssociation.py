@@ -34,8 +34,6 @@ def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLoc
     """
 
     # Reading assocDict
-
-    geneList=[g.upper() for g in geneList]
     assocDictTemp = bedFunctions.createBedDictFromSingleFile(geneAssocLocation, features=[1,2,3,4,5])
     assocDict = dict()
     geneFlagDict = dict()
@@ -49,6 +47,7 @@ def geneAssociationByPromoter(coordDict,geneList,geneAssocLocation,chromSizesLoc
 
     # Updating geneFlagDict based on geneList
     if(geneList):
+        geneList=[g.upper() for g in geneList]
         for e in geneList: geneFlagDict[e] = True
     else:
         for e in geneFlagDict.keys(): geneFlagDict[e] = True

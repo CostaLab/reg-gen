@@ -6,6 +6,7 @@
 import os
 import sys
 import math
+import glob
 
 # Local Libraries
 import biopythonMM
@@ -29,8 +30,13 @@ def main(sysArg):
 
     params.append("\nRequired Input: ")
     params.append("  -pwm_list=<FILE1[,FILE2,...,FILEN]>")
-    params.append("                            List of PWM files in jaspar format.")
+    params.append("                            List of PWM files in jaspar format. If this")
+    params.append("                            parameter is not used, then pwm_path need to be")
+    params.append("                            used.")
     params.append("                            Format: jaspar.")
+    params.append("                            Default: None.")
+    params.append("  -pwm_path=<PATH>          A path containing many PWMs in jaspar format with")
+    params.append("                            .pwm extension.")
     params.append("                            Default: None.")
     params.append("  -genome_list=<FILE1[,FILE2,...,FILEN]>")
     params.append("                            List of files containing the genomic sequences in")
@@ -107,19 +113,23 @@ def main(sysArg):
     else: inputParameters["-organism"] = "hg19"
 
     # Required Input
-    flagP = False; flagG = False
+    flagP = False; flagPP = False; flagG = False
     if("-pwm_list" in inputParameters.keys()):
         flagP = True
         inputParameters["-pwm_list"] = inputParameters["-pwm_list"].split(",")
     else: inputParameters["-pwm_list"] = None
+    if("-pwm_path" in inputParameters.keys()):
+        flagPP = True
+        if(inputParameters["-pwm_path"][-1] != "/"): inputParameters["-pwm_path"] += "/"
+    else: inputParameters["-pwm_path"] = None
     if("-genome_list" in inputParameters.keys()):
         flagG = True
         inputParameters["-genome_list"] = inputParameters["-genome_list"].split(",")
     else: inputParameters["-genome_list"] = None
 
     # Required input verification
-    if(not flagP): 
-        print "ERROR: You must specify at least one PWM file."
+    if(not flagP and not flagPP): 
+        print "ERROR: You must specify at least one PWM file (-pwm_list) or path (-pwm_path)."
         sys.exit(0)
     if(not flagG): 
         print "ERROR: You must specify at least one genome file."
@@ -170,6 +180,14 @@ def main(sysArg):
     else: inputParameters["-print_graph_mmscore"] = True
 
     #################################################################################################
+    ##### MOTIF LIST ################################################################################
+    #################################################################################################
+
+    motifList = []
+    if(flagP): motifList = inputParameters["-pwm_list"]
+    else: motifList = glob.glob(inputParameters["-pwm_path"]+"*.pwm")
+    
+    #################################################################################################
     ##### MOTIF MATCHING ############################################################################
     #################################################################################################
 
@@ -184,7 +202,7 @@ def main(sysArg):
         mpbsDict = dict([(e,[]) for e in chrList])        
         
         # Motif Matching
-        for pwmFileName in inputParameters["-pwm_list"]:
+        for pwmFileName in motifList:
             bitScoreMM.bitScoreMM(pwmFileName,genomeDict,mpbsDict,inputParameters["-scoring_method"],inputParameters["-output_location"],inputParameters["-pseudocounts"],inputParameters["-bitscore"],inputParameters["-fpr"],inputParameters["-precision"],inputParameters["-high_cutoff"],inputParameters["-functional_depth"])
 
     # Biopython
@@ -198,7 +216,7 @@ def main(sysArg):
         mpbsDict = dict([(e,[]) for e in chrList])        
         
         # Motif Matching
-        for pwmFileName in inputParameters["-pwm_list"]:
+        for pwmFileName in motifList:
             biopythonMM.biopythonMM(pwmFileName,genomeDict,mpbsDict,inputParameters["-scoring_method"],inputParameters["-output_location"],inputParameters["-pseudocounts"],inputParameters["-bitscore"],inputParameters["-fpr"],inputParameters["-precision"],inputParameters["-high_cutoff"],inputParameters["-functional_depth"])
 
     # Fimo
@@ -211,7 +229,7 @@ def main(sysArg):
         mpbsDict = dict()
 
         # Motif Matching
-        for pwmFileName in inputParameters["-pwm_list"]:
+        for pwmFileName in motifList:
             fimoMM.fimoMM(pwmFileName,inputParameters["-output_location"]+"genome.fa",mpbsDict,inputParameters["-scoring_method"],inputParameters["-output_location"],inputParameters["-pseudocounts"],inputParameters["-bitscore"],inputParameters["-fpr"],inputParameters["-precision"],inputParameters["-high_cutoff"],inputParameters["-functional_depth"],inputParameters["-fimo_thresold"])
 
         # Remove genome file
