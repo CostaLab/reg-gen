@@ -26,7 +26,11 @@ class DualCoverageSet():
         map_input = {1: {'input': input_1, 'input_factor': input_factor_1, 'ext': ext_input_1, 'cov-ip': self.cov1, 'ip': file_1}, 
                      2: {'input': input_2, 'input_factor': input_factor_2, 'ext': ext_input_2, 'cov-ip': self.cov2, 'ip': file_2}}
         
-        
+        if no_gc_content:
+            print("Do not consider GC content model", file=sys.stderr)
+        else:
+            print("Computing GC content", file=sys.stderr)
+            
         for i in [1, 2]:
             #get GC-content
             input = map_input[i]
@@ -55,9 +59,6 @@ class DualCoverageSet():
                         #input['cov-input'].write_bed(name + '-gc-s%s-input-2.bed' %i)
                     input['cov-ip'].write_bigwig(name + '-gc-s%s-2.bw' %i, chrom_sizes)
                     #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
-        
-        if not no_gc_content:
-            print("Do not compute GC-content", file=sys.stderr)                
         
         norm_done = False
         for i in [1, 2]:
@@ -167,7 +168,7 @@ class DualCoverageSet():
             _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'], step_width=1000, zero_counts=0, \
                                                               genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
             
-            print("Factor: normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
+            print("Normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
             map_input[2]['cov-input'].scale(map_input[2]['input_factor'])
             
@@ -180,9 +181,9 @@ class DualCoverageSet():
             
             if s1 > s2:
                 map_input[2]['cov-ip'].scale(s1/float(s2))
-                print("Factor: normalize file 2 by signal with factor %s: " %(s1/float(s2)), file=sys.stderr)
+                print("Normalize file 2 by signal with factor %s: " %(s1/float(s2)), file=sys.stderr)
             elif s2 >= s1:
-                print("Factor: normalize file 1 by signal with factor %s: " %(s2/float(s1)), file=sys.stderr)
+                print("Normalize file 1 by signal with factor %s: " %(s2/float(s1)), file=sys.stderr)
                 map_input[1]['cov-ip'].scale(s2/float(s1))
 
         
@@ -296,8 +297,6 @@ class DualCoverageSet():
             
         f.close()
    
-    
-        
     def write_putative_regions(self, path):
         """Write putative regions (defined by criteria mentioned in method) as BED file."""
         with open(path, 'w') as f:
@@ -305,8 +304,6 @@ class DualCoverageSet():
                 chrom, start, end = self._index2coordinates(i)
                 print(chrom, start, end, file=f)
             
-
-    
     def get_training_set(self, exp_data, x, verbose, name):
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""

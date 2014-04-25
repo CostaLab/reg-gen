@@ -7,6 +7,7 @@ from __future__ import print_function
 import numpy as np
 import pysam
 import sys
+from HTSeq import FastaReader
 
 class help_content():
     def __init__(self):
@@ -28,8 +29,15 @@ class help_content():
         return self.g_gc[x]
 
 def get_gc_context(stepsize, binsize, genome_path, cov_list):
+    chromosomes = []
+    #get first chromosome, typically chr1
+    for s in FastaReader(genome_path):
+        chromosomes.append(s.name)
+    tmp = map(lambda x: x.replace('chr',''), chromosomes)
+    tmp.sort()
     genome_fasta = pysam.Fastafile(genome_path)
-    genome = genome_fasta.fetch(reference="chr1") #TODO: only chr1
+    genome = genome_fasta.fetch(reference="chr"+tmp[0])
+    
     content = help_content()
     gc_content_cov = []
 
