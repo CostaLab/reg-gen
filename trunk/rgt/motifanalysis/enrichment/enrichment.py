@@ -176,7 +176,7 @@ def main(sysArg):
     params.append("                            combination of factors) containing a list of")
     params.append("                            enriched genes where a MPBS for that factor (or")
     params.append("                            combination of factors) occured.")
-    params.append("                            Default: Y.")
+    params.append("                            Default: N.")
     params.append("  -print_rand_coordinates=<Y|N>")
     params.append("                            Whether to output a bigbed file containing the")
     params.append("                            random coordinates.")
@@ -312,7 +312,7 @@ def main(sysArg):
     if("-print_enriched_genes" in inputParameters.keys()):
         if(inputParameters["-print_enriched_genes"] == "Y"): inputParameters["-print_enriched_genes"] = True
         else: inputParameters["-print_enriched_genes"] = False
-    else: inputParameters["-print_enriched_genes"] = True
+    else: inputParameters["-print_enriched_genes"] = False
     if("-print_rand_coordinates" in inputParameters.keys()):
         if(inputParameters["-print_rand_coordinates"] == "Y"): inputParameters["-print_rand_coordinates"] = True
         else: inputParameters["-print_rand_coordinates"] = False
