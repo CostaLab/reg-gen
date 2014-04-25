@@ -1,0 +1,7 @@
+#summary One-state DIffereNtial peak caller
+
+= Installation =
+
+svn co https://reg-gen.googlecode.com/svn/tags/ODIN-0.0.1alpha/ ODIN
+cd ODIN
+sudo python setup.py install --rgt-data-folder=~/data/
