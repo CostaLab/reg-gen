@@ -76,18 +76,16 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     return n_, p_
  
 def main():
-    test = True
-    options, bamfile_1, bamfile_2, regions = input(test)
-    genome = GenomeData.GENOME
-    chrom_sizes = GenomeData.CHROMOSOME_SIZES
+    test = False
+    options, bamfile_1, bamfile_2, genome = input(test)
     
     ######### WORK! ##########
-    exp_data = initialize(name=options.name, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
+    exp_data = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
                           bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
                           input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2, \
-                          chrom_sizes = chrom_sizes,
+                          chrom_sizes = options.chrom_sizes,
                           verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=None)
 
     #print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
@@ -96,6 +94,7 @@ def main():
     
     if options.verbose:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
+    
     print('Computing training set...',file=sys.stderr)
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
@@ -111,7 +110,7 @@ def main():
     m.fit([training_set_obs])
      
     if options.verbose:
-        print('p', m.p, file=sys.stderr)
+        #print('p', m.p, file=sys.stderr)
         print("Final HMM's transition matrix: ", file=sys.stderr)
         print(m._get_transmat(), file=sys.stderr)
          

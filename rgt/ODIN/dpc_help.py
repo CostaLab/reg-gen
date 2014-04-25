@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-%prog <BAM> <BAM> <BED>
+%prog <BAM> <BAM> <FASTA>
 
-Find differential peaks between two <BAM> files within regions defined by <BED> file.
+Find differential peaks between two <BAM> files in <FASTA> genome.
 
 Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
@@ -14,7 +14,9 @@ from optparse import OptionParser
 from .. CoverageSet import CoverageSet
 from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
+from .. Util import GenomeData
 
+from HTSeq import FastaReader
 from get_extension_size import get_extension_size
 import os.path
 import sys
@@ -47,7 +49,6 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
     f.close()
     g.close()
-    print("done...", file=sys.stderr)
 
 
 def _compute_pvalue((x, y, side, distr)):
@@ -137,11 +138,29 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones):
     
     regionset = GenomicRegionSet(name)
-    with open(regions) as f:
-        for line in f:
-            line = line.split('\t')
-            c, s, e = line[0], int(line[1]), int(line[2])
-            regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+    
+    #if regions option is set, take the values, otherwise the whole set of 
+    #chromosomes as region to search for DPs
+    if regions is not None:
+        with open(regions) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                c, s, e = line[0], int(line[1]), int(line[2])
+                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+    else:
+        chromosomes = []
+        for s in FastaReader(genome_path):
+            chromosomes.append(s.name)
+        chromosomes.sort()
+        print(chromosomes, file=sys.stderr)
+        with open(chrom_sizes) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                chr, end = line[0], int(line[1])
+                if chr in chromosomes:
+                    regionset.add(GenomicRegion(chrom=chr, initial=0, final=end))
     
     regionset.sequences.sort()
     
@@ -240,31 +259,35 @@ def input(laptop):
     parser.add_option("--input-2", dest="input_2", default=None, \
                       help="Input control file for second parameter [default: %default]")
     parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
-                      help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+                      help="Call only peaks with p-value lower than cutoff. [default: %default]")
     parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                       help="Size of underlying bins for creating the signal.  [default: %default]")
     parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                      help="Stepsize with which the window consecutively slides across the genome to create the signal.")
+                      help="Stepsize with which the window consecutively slides across the genome to create the HMM signal.")
     parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                       help="Experiment's name and prefix for all files that are created.")
     parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
-                      help="Read's extension size for first BAM file. If option is not chosen, estimate extension size. [default: %default]")
+                      help="Read's extension size for first BAM file. If None, estimate extension size. [default: %default]")
     parser.add_option("--ext-2", default=None, dest="ext_2", type="int",\
-                      help="Read's extension size for second BAM file. If option is not chosen, estimate extension size [default: %default]")
+                      help="Read's extension size for second BAM file. If None, estimate extension size [default: %default]")
     parser.add_option("--ext-input-1", default=None, dest="ext_input_1", type="int",\
-                      help="Read's extension size for first input file. If option is not chosen, estimate extension size. [default: %default]")
+                      help="Read's extension size for first input file. If None, estimate extension size. [default: %default]")
     parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",\
-                      help="Read's extension size for second input file. If option is not chosen, estimate extension size. [default: %default]")
+                      help="Read's extension size for second input file. If None, estimate extension size. [default: %default]")
     parser.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
-                      help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+                      help="Normalization factor for first input. If None, estimate factor. [default: %default]")
     parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
-                      help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+                      help="Normalization factor for first input. If None, estimate factor. [default: %default]")
     parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
-                      help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
+                      help="Output among others initial state distribution, putative differential peaks and genomic signal. [default: %default]")
     parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
     #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                      help="do not compute GC content model")
+                      help="Do not compute GC content model  [default: %default]")
+    parser.add_option("-r", "--regions", default=None, dest="regions", \
+                     help="Regions where to search for differential peaks.  [default: %default]")
+    parser.add_option("-c", "--chrom-sizes", default=None, dest="chrom_sizes", \
+                      help="Sizes of chromosomes.  [default: %default]")
 #     parser.add_option("--deadzones", dest="deadzones", default=None, \
 #                       help="Deadzones (BED) [default: %default]")
     
@@ -272,7 +295,7 @@ def input(laptop):
     options.norm_strategy = 5
     
     if options.version:
-        version = "version \"0.01\""
+        version = "version \"0.01alpha\""
         print("")
         print(version)
         sys.exit()
@@ -282,10 +305,18 @@ def input(laptop):
         
     bamfile_1 = args[0]
     bamfile_2 = args[1]
-    regions = args[2]
+    genome = args[2]
     
-    if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
-        or not os.path.isfile(regions): # or not os.path.isfile(genome):
+    if options.chrom_sizes is not None and not os.path.isfile(options.chrom_sizes):
+        parser.error("Please give a proper file for chromosome files.")
+    
+    if options.chrom_sizes is None:
+        options.chrom_sizes = GenomeData.CHROMOSOME_SIZES
+    
+    if options.regions is not None and not os.path.isfile(options.regions):
+        parser.error("Please give a proper region file.")
+    
+    if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2):
         parser.error("At least one input parameter is not a file")
     
     if options.name is None:
@@ -296,7 +327,6 @@ def input(laptop):
     if (options.input_1 is None and options.ext_input_1 is not None) \
         or (options.input_2 is None and options.ext_input_2 is not None):
         parser.error("Read extension size without input file (use -i)")
-    
     
     if options.input_1 is None and options.input_2 is None:
         print("GC content is not calculated as there is no input file.", file=sys.stderr)
@@ -314,5 +344,5 @@ def input(laptop):
 #         #check the ordering of deadzones and region
 #         _check_order(options.deadzones, regions, parser)
     
-    return options, bamfile_1, bamfile_2, regions
+    return options, bamfile_1, bamfile_2, genome
 
