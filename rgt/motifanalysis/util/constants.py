@@ -78,7 +78,7 @@ def getPwmFolder():
     Returns:
     dataLocation -- Location of the PWM folder.
     """
-    return getDataLocation()+"PWM/"
+    return getDataLocation()+"motifs/jaspar_vertebrates/"
 
 def getLogoFolder():
     """Returns the location of the logo folder on the original installation path.
@@ -86,7 +86,7 @@ def getLogoFolder():
     Returns:
     dataLocation -- Location of the logo folder.
     """
-    return getDataLocation()+"logo/"
+    return getDataLocation()+"logos/jaspar_vertebrates/"
 
 def getPrecompFdr4Folder():
     """Returns the location of the pre-computed motif matches using an FDR = 10^(-4) on the original installation path.

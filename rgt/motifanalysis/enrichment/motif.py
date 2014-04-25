@@ -90,7 +90,7 @@ def motifMatchingBiopython(combinationList,pwmList,coordDict,pwmLocation,genomeL
         for e in mpbsDict.keys(): mpbsDict[e][chrName] = []
         for coord in coordDict[chrName]:
             ct=ct+1
-            print "region", ct
+            #print "region", ct
             # Getting current sequence based on coordinates
             currSeq = sequence[coord[0]:coord[1]]
 
