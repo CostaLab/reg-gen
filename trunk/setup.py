@@ -82,7 +82,7 @@ class PassThroughOptionParser(OptionParser):
             except (BadOptionError,AmbiguousOptionError), e:
                 largs.append(e.opt_str)
 
-# recursive_chown Function
+# recursive_chown_chmod Function
 def recursive_chown_chmod(path, uid, gid, file_permission, path_permission):
     """
     Recursively applies chown from path.
