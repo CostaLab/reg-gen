@@ -138,9 +138,7 @@ for e in sys.argv:
     elif(param_rgt_tool_name == e[:len(param_rgt_tool_name)]): continue
     new_sys_argv.append(e)
 
-print sys.argv
 sys.argv = new_sys_argv
-print sys.argv
 
 # Defining entry points
 current_entry_points = {"console_scripts" : []}
@@ -169,7 +167,8 @@ data_config_file.write("chromosome_sizes: chrom.sizes\n")
 data_config_file.write("association_file: association_file.bed\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
-data_config_file.write("logo_dataset: logos\n\n")
+data_config_file.write("logo_dataset: logos\n")
+data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
 data_config_file.close()
 
 # Creating data.config.path
