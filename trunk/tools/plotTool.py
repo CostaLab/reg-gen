@@ -12,6 +12,8 @@ import time, datetime
 import argparse
 import HTML
 from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from collections import *
 
 # Local Libraries
 # Distal Libraries
@@ -23,7 +25,6 @@ from rgt.CoverageSet import *
 
 # Local test
 dir = os.getcwd()
-#sys.argv = ["plotTools","boxplot",input_path]
 
 """
 Plot tool for generating analytic figures.
@@ -196,35 +197,15 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
     """ Return boxplot from the given tables.
     
     """
-    ## Prepare the data
-    """        
-    data = []
-    for g in sortDict.keys():
-        for c in sortDict[g].keys():
-            try:
-                for a in sortDict[g][c]:
-                    data.append(sortDict[g][c][a])
-            except:
-                data.append(sortDict[g][c])
-    """            
-    
-    # Calculate p value
-    """
-    p = numpy.ones((len(data),len(data)))  # Array for storing p values
-    posi = numpy.array((len(data),len(data))) # A list storing position [x,y]
-    for i, s1 in enumerate(data[1:]):
-        for j, s2 in enumerate(data[i+1:]):
-            t, p[i,j] = mannwhitneyu(s1,s2)
-            posi[i,j] = ((i+1+j+1)*0.5,max(data[i,j])*1.1)
-    """
     ## Initialize the figure
     #plt.title("Boxplot of Gene Association analysis")
     
     colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
     
     # Subplt by group_tags
-    f, axarr = plt.subplots(1, len(group_tags), figsize=(10,7), dpi=100)
-    f.canvas.set_window_title(args.t)
+    f, axarr = plt.subplots(1, len(group_tags), figsize=(11.69,8.27), dpi=300)
+    canvas = FigureCanvas(f)
+    canvas.set_window_title(args.t)
     f.suptitle(args.t, fontsize=20)
     axarr = axarr.reshape(-1)
     plt.subplots_adjust(bottom=0.3)
@@ -294,29 +275,39 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
                 plt.annotate("*",xy=(posi[i,j][0],posi[i,j][1]+7),horizontalalignment='center',zorder=10)
                 plt.annotate("",xy=(i+1,posi[i,j][1]),xytext=(j+1,posi[i,j][1]),arrowprops=props,zorder=10)
     """
+    output(f,legends, filename = args.output)
+    
+def output(f, extra=None, filename="outputfile"):
     # Saving
-    plt.savefig(args.output + ".eps", bbox_extra_artists=(legends), bbox_inches='tight')
+    if extra == None:
+        f.savefig(filename, bbox_inches='tight')
+    else:
+        f.savefig(filename, bbox_extra_artists=(extra), bbox_inches='tight')
     
     if args.pdf:
-        with PdfPages(dir + args.output + '.pdf') as pp:
-            #plt.savefig(pdf, format='pdf')
-            pp.savefig(f)
-            #pdf.savefig(f.suptitle)
-            #pdf.savefig(axarr[:])
-        
-            # Set the file's metadata via the PdfPages object:
-            d = pp.infodict()
-            d['Title'] = args.t
-            d['CreationDate'] = datetime.datetime.today()
-            #pdf.close()
+        pp = PdfPages(filename + '.pdf')
+        pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
+    
+        # Set the file's metadata via the PdfPages object:
+        d = pp.infodict()
+        d['Title'] = args.t
+        d['CreationDate'] = datetime.datetime.today()
+        pp.close()
                 
     if args.html:
-        f = open(args.output+'.html','w')
-        htmlcode = HTML.table(args.t, '<img src="' + args.output + '.png">')
-        f.write(htmlcode)
+        f = open(filename+'.html','w')
+        table = []
+        table.append(["<font size="+ str(20) + ">" + args.t + "</font>"])
+        table.append(["<img src='" + filename + ".png' width=800 >"])
+        htmlcode = HTML.table(table)
+        for line in htmlcode: f.write(line)
         f.close()
     
-    plt.show()
+    if args.show:
+        plt.show()
+
+
+
 
 #################################################################################################
 ##### PARAMETERS ################################################################################
@@ -336,8 +327,32 @@ parser_boxplot.add_argument('-c',choices=['read','region','col4','col5','col6'],
 parser_boxplot.add_argument('-s',choices=['read','region','col4','col5','col6'], default='col4', help="The way to sort data which shared the same color.(Default:col4)")
 parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
-parser_else = subparsers.add_parser('Else tool', help='others')
-parser_else.add_argument('input',help='The name of the input Experimental Matrix file.')
+parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+
+parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
+
+choice_method = ['midpoint','leftend','rightend','bothends'] # Be consist as the arguments of GenomicRegionSet.relocate_regions
+choice_line = ['regions-read','reads-region']
+choice_group=['col4','col5','col6']
+#choice_direction = ['left', 'right', 'both']
+
+parser_lineplot.add_argument('input', help='The file name of the input Experimental Matrix file.')
+parser_lineplot.add_argument('output', default='lineplot', help='The file name of the output file.(pdf or html)')
+parser_lineplot.add_argument('-t', default='The lineplot', help='The title shown on the top of the plot.')
+parser_lineplot.add_argument('-c', choices=choice_method, default='midpoint', 
+                             help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_method) + 
+                             '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
+parser_lineplot.add_argument('-l', choices=choice_line, default='regions-read', 
+                             help="Define the lines' content of each single plot. Options are: "+', '.join(choice_line) + '(Default:regions-read)')
+parser_lineplot.add_argument('-g', choices=choice_group, default=None, 
+                             help='Define the grouping way for reads and regions. For example, choosing the column where cell type information is, all the read(s) and region(s) are grouped together to form the plot. Options are: '+', '.join(choice_group) + '.(Default:col4)')
+parser_lineplot.add_argument('-e', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
+parser_lineplot.add_argument('-r', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
+parser_lineplot.add_argument('-s', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
+parser_lineplot.add_argument('-b', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
 args = parser.parse_args()
 
@@ -356,6 +371,8 @@ bednames = exps.get_regionsnames()
 reads = exps.get_readsfiles()
 readsnames = exps.get_readsnames()
 fieldsDict = exps.fieldsDict
+
+################################ boxplot  #######################################################
 
 if args.input and args.mode=='boxplot':
     
@@ -410,4 +427,127 @@ if args.input and args.mode=='boxplot':
     print("Total running time is : " + str(datetime.timedelta(seconds=t5-t0)))
     
     #print("Total running time is : {0:.3f} secs.\n".format(t5-t0))
+    
+    
+################################ lineplot  #######################################################    
+elif args.input and args.mode=='lineplot':
+    t0 = time.time()
+    # Processing the regions by given parameters
+    print("Step 1/3: Processing regions by given parameters")
+    processed_beds = []
+    processed_bedsF = [] # Processed beds to be flapped
+    for bed in beds:
+        if args.c == 'bothends':
+            newbed = bed.relocate_regions(center='leftend', left_length=args.e, right_length=args.e)
+            processed_beds.append(newbed)
+            newbedF = bed.relocate_regions(center='rightend', left_length=args.e, right_length=args.e)
+            processed_bedsF.append(newbedF)
+        else:
+            newbed = bed.relocate_regions(center=args.c, left_length=args.e, right_length=args.e)
+            processed_beds.append(newbed)
+            #for b in newbed.sequences:
+            #    print(b.__repr__())
+    
+    # Grouping files
+    if args.g:
+        groupedbed = {}  # Store all bed names according to their types
+        for bed in bednames:
+            ty = exps.get_type(bed,exps.fields[int(args.g[3])-1])
+            try: groupedbed[ty].append(bed)
+            except: groupedbed[ty] =[bed]
+        groupedbam = {}  # Store all bam names according to their types
+        for bam in readsnames:
+            ty = exps.get_type(bam,exps.fields[int(args.g[3])-1])
+            try: groupedbam[ty].append(bam)
+            except: groupedbam[ty] =[bam]
+    else:
+        groupedbed = {}
+        groupedbed["All"] = bednames
+        groupedbam = {}
+        groupedbam["All"] = readsnames
+    
+    t1 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t1-t0))
+    
+    
+    # Calculate for coverage
+    print("Step 2/3: Calculating the coverage to all reads and averaging (it may takes longer time depending on the given step size and the amount of reads.)")
+    len_coverage = int(2* args.e/args.s)
+    data = OrderedDict()
+    for t in groupedbed.keys():
+        data[t] = []
+        for ai, bed in enumerate(groupedbed[t]):
+            i = bednames.index(bed)
+            data[t].append([]) # New empty list for bed
+            for aj, bam in enumerate(groupedbam[t]):
+                ts = time.time()
+                #print("    calculating the coverage of " + bed + " and " + bam)
+                j = readsnames.index(bam)
+                c = CoverageSet(bed+"."+bam,processed_beds[i])            
+                c.coverage_from_bam(reads[j], read_size = args.r, binsize = args.b, stepsize = args.s)
+                # When bothends, consider the fliping end
+                if args.c == 'bothends':
+                    flap = CoverageSet("for flap", processed_bedsF[i])
+                    flap.coverage_from_bam(reads[j], read_size = args.r, binsize = args.b, stepsize = args.s)
+                    for f in flap.coverage:
+                        c.coverage.append(numpy.fliplr(f))            
+                te = time.time()
+                print("     Computing " + bed + "." + bam + "\t--{0:.1f}\tsecs".format(ts-te))
+                # Averaging the coverage of all regions of each bed file
+                avearr = numpy.zeros(len_coverage)
+                for a in c.coverage:
+                    avearr = avearr + a
+                avearr = avearr/len(c.coverage)
+                data[t][ai].append(avearr) # Store the array into data list
+    t2 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t2-t1))
+    
+    # Plotting
+    print("Step 3/3: Plotting the lineplots")
+    rot = 0
+    ticklabelsize = 10
+    color_list = plt.cm.Set2(numpy.linspace(0, 1, 12))
+    
+    for ty in data.keys():
+        
+        if args.l == 'regions-read':
+            f, axs = plt.subplots(len(groupedbam[ty]),1, dpi=300)
+            for i,bam in enumerate(groupedbam[ty]):
+                axs[i].set_title(bam)
+                
+                #axarr[i].set_ylabel()
+                x = range(-args.e, args.e, args.s)
+                for j, bed in enumerate(groupedbed[ty]): 
+                    y = data[ty][j][i]
+                    axs[i].plot(x,y, color=color_list[j], lw=1)
+                plt.setp(axs[i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(axs[i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[i].legend(groupedbed[ty], loc='center left', handlelength=1, handletextpad=1, 
+                              columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
+            axs[-1].set_xlabel("Base pairs")
+            output(f, filename = args.output + "_" + ty, extra=plt.gci())
+            
+        elif args.l == 'reads-region':         
+            f, axs = plt.subplots(len(groupedbed[ty]),1, dpi=300)
+            for i,bed in enumerate(groupedbed[ty]):
+                axs[i].set_title(bed)
+                
+                #axarr[i].set_ylabel()
+                x = range(-args.e, args.e, args.s)
+                for j, bam in enumerate(groupedbam[ty]): 
+                    y = data[ty][i][j]
+                    axs[i].plot(x,y, color=color_list[j], lw=1)
+                plt.setp(axs[i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(axs[i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[i].legend(groupedbam[ty], loc='center left', handlelength=1, handletextpad=1, 
+                              columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
+            axs[-1].set_xlabel("Base pairs")
+            output(f, filename = args.output + "_" + ty, extra=plt.gci())
+        
+    t3 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t3-t2))
+    print("Total running time is : " + str(datetime.timedelta(seconds=t3-t0)))
+
     

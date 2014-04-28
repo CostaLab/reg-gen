@@ -89,7 +89,6 @@ class GenomicRegionSet:
                     print("Error at line",line,self.fileName)
             self.sort()
   
-  
     def read_bedgraph(self, filename):
         """Read BEDGRAPH file and add every row as a GenomicRegion. 
         See BEDGRAPH format at: http://genome.ucsc.edu/goldenPath/help/bedgraph.html """
@@ -705,4 +704,38 @@ class GenomicRegionSet:
     def any_chrom(self,chrom):
         """ Return a list of regions which belongs to given chromosome. (used in random_regions) """
         return [s for s in self if s.chrom == chrom] 
-            
+    
+    def relocate_regions(self,center='midpoint', left_length=2000, right_length=2000):
+        """ Return a new GenomicRegionSet which relocates the regions by given center and extend length.
+        
+        Parameters:
+        center:    
+            midpoint  -- locate the new region's center as original region's midpoint
+            leftend      -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
+            rightend      -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
+            bothends  -- locate the new region's center as original region's both ends
+        left_length:
+        right_length:
+            The length to extend from the center
+        """
+        new_regions = GenomicRegionSet('new'+self.name)
+        for r in self.sequences:
+            # Define the position
+            if center == 'midpoint':
+                mp = int(0.5*(r.initial + r.final))
+                nr = GenomicRegion(chrom=r.chrom, initial=mp, final=mp)
+            elif center == 'leftend':
+                nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial)
+            elif center == 'rightend':
+                nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final)
+            elif center == 'bothends':
+                nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial) # newbed on left end
+                nrR = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final) # newbed on right end
+            try:new_regions.add(nr)
+            except: 
+                new_regions.add(nrL)
+                new_regions.add(nrR)
+                
+        # Extend the region
+        new_regions.extend(left_length, right_length)
+        return new_regions
