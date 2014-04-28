@@ -154,7 +154,7 @@ class CoverageSet:
             positions = []
             j = 0
             read_length = -1
-            for read in bam.fetch(region.chrom):
+            for read in bam.fetch(region.chrom, region.initial, region.final):
 
                 j += 1
                 read_length = read.rlen 

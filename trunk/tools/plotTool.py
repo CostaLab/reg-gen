@@ -471,11 +471,14 @@ elif args.input and args.mode=='lineplot':
     
     
     # Calculate for coverage
-    print("Step 2/3: Calculating the coverage to all reads and averaging (it may takes longer time depending on the given step size and the amount of reads.)")
+    print("Step 2/3: Calculating the coverage to all reads and averaging ")
     len_coverage = int(2* args.e/args.s)
     data = OrderedDict()
     for t in groupedbed.keys():
+        print("  For "+t+":")
         data[t] = []
+        totn = len(groupedbed[t]) * len(groupedbam[t])
+        bi = 0
         for ai, bed in enumerate(groupedbed[t]):
             i = bednames.index(bed)
             data[t].append([]) # New empty list for bed
@@ -489,16 +492,17 @@ elif args.input and args.mode=='lineplot':
                 if args.c == 'bothends':
                     flap = CoverageSet("for flap", processed_bedsF[i])
                     flap.coverage_from_bam(reads[j], read_size = args.r, binsize = args.b, stepsize = args.s)
-                    for f in flap.coverage:
-                        c.coverage.append(numpy.fliplr(f))            
-                te = time.time()
-                print("     Computing " + bed + "." + bam + "\t--{0:.1f}\tsecs".format(ts-te))
+                    ffcoverage = numpy.fliplr(flap.coverage)
+                    c.coverage = numpy.concatenate((c.coverage, ffcoverage), axis=0)
                 # Averaging the coverage of all regions of each bed file
                 avearr = numpy.zeros(len_coverage)
                 for a in c.coverage:
                     avearr = avearr + a
                 avearr = avearr/len(c.coverage)
                 data[t][ai].append(avearr) # Store the array into data list
+                bi += 1
+                te = time.time()
+                print("     Computing "+ str(bi)+"/"+str(totn)+"\t" + "{0:30}\t--{1:.1f}\tsecs".format(bed+"."+bam, ts-te))
     t2 = time.time()
     print("    --- finished in {0:.2f} secs".format(t2-t1))
     
@@ -513,7 +517,7 @@ elif args.input and args.mode=='lineplot':
         if args.l == 'regions-read':
             f, axs = plt.subplots(len(groupedbam[ty]),1, dpi=300)
             for i,bam in enumerate(groupedbam[ty]):
-                axs[i].set_title(bam)
+                axs[i].set_title(bam,fontsize=ticklabelsize+3)
                 
                 #axarr[i].set_ylabel()
                 x = range(-args.e, args.e, args.s)
@@ -525,13 +529,13 @@ elif args.input and args.mode=='lineplot':
                 axs[i].legend(groupedbed[ty], loc='center left', handlelength=1, handletextpad=1, 
                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
-            axs[-1].set_xlabel("Base pairs")
+            axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
             output(f, filename = args.output + "_" + ty, extra=plt.gci())
             
         elif args.l == 'reads-region':         
             f, axs = plt.subplots(len(groupedbed[ty]),1, dpi=300)
             for i,bed in enumerate(groupedbed[ty]):
-                axs[i].set_title(bed)
+                axs[i].set_title(bed,fontsize=ticklabelsize+3)
                 
                 #axarr[i].set_ylabel()
                 x = range(-args.e, args.e, args.s)
@@ -543,7 +547,7 @@ elif args.input and args.mode=='lineplot':
                 axs[i].legend(groupedbam[ty], loc='center left', handlelength=1, handletextpad=1, 
                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
-            axs[-1].set_xlabel("Base pairs")
+            axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
             output(f, filename = args.output + "_" + ty, extra=plt.gci())
         
     t3 = time.time()
