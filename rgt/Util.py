@@ -2,6 +2,7 @@ import os
 import sys
 import ConfigParser
 from pkg_resources import Requirement, resource_filename
+from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 
 """
 The Util classes contains many utilities needed by other classes
@@ -179,5 +180,20 @@ class OverlapType:
     OVERLAP = 0 
     ORIGINAL = 1
     COMP_INCL = 2
+
+class PassThroughOptionParser(OptionParser):
+    """
+    An unknown option pass-through implementation of OptionParser.
+    When unknown arguments are encountered, bundle with largs and try again,
+    until rargs is depleted.
+    sys.exit(status) will still be called if a known argument is passed
+    incorrectly (e.g. missing arguments or bad argument types, etc.)
+    """
+    def _process_args(self, largs, rargs, values):
+        while rargs:
+            try:
+                OptionParser._process_args(self,largs,rargs,values)
+            except (BadOptionError,AmbiguousOptionError), e:
+                largs.append(e.opt_str)
 
 
