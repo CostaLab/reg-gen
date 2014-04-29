@@ -154,7 +154,7 @@ class CoverageSet:
             positions = []
             j = 0
             read_length = -1
-            for read in bam.fetch(region.chrom, region.initial, region.final):
+            for read in bam.fetch(region.chrom, region.initial-read_size, region.final+read_size):
 
                 j += 1
                 read_length = read.rlen 
@@ -162,8 +162,8 @@ class CoverageSet:
                     pos = read.pos - read_size if read.is_reverse else read.pos
                     pos_help = read.pos - read.qlen if read.is_reverse else read.pos
                     
-                    if not (pos >= region.initial and pos < region.final):
-                        continue
+                    #if not (pos >= region.initial and pos < region.final):
+                    #    continue
                     
                     #if position in mask region, then ignore
                     if mask:
