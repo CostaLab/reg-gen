@@ -39,13 +39,13 @@ for region in exps.get_regionsets():
     for g in genesets:
         print region,g
         bed = GenomicRegionSet("")
-        [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,g,geneFile,genomeFile,threshDist=500)
+        [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,g.genes,geneFile,genomeFile,threshDist=500)
         randomRes=[]
         #backBed=GenomicRegionSet("BACK")    
         #backBed.read_bed(backGroundPeaks)
         for j,n in enumerate(range(randomize)):
             backUP=GenomicRegionSet("BACKUP")
-            [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(str(j)+"random.bed",g,geneFile,genomeFile,threshDist=500)
+            [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(str(j)+"random.bed",g.genes,geneFile,genomeFile,threshDist=500)
             randomRes.append(back_de_peak_genes)
             print str(j)+"random.bed"
         randomRes=numpy.array(randomRes)
