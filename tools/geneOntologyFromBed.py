@@ -20,5 +20,6 @@ exps.read(designFile)
 for region in exps.get_regionsets():
 
         bed = GenomicRegionSet("")
-        [degenes,de_peak_genes, mappedGenes, totalPeaks] = bed.filter_by_gene_association(region.fileName,None,geneFile,genomeFile,threshDist=50000)
-        print gprofilerline+("%0A".join(mappedGenes))
+        [degenes,de_peak_genes, mappedGenes, totalPeaks, blad] = bed.filter_by_gene_association(region.fileName,None,geneFile,genomeFile,threshDist=50000)
+        print mappedGenes
+        print region.name+"\t"+("\t".join(bed.genes))

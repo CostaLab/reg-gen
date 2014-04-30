@@ -129,11 +129,10 @@ class GenomicRegionSet:
         from rgt.motifanalysis.util import bedFunctions, sort
         from rgt.motifanalysis.enrichment.geneAssociation import *
         self.fileName=fileName
-        de_genes=geneSet.genes
         regionsToGenes={}
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
         coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed] = geneAssociationByPromoter(coordDict,de_genes,geneAnnotation,genomeSize,promoterLength,threshDist)  
+        [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
         #print dictBed
         genes=[]
         totalPeaks=0
@@ -152,7 +151,11 @@ class GenomicRegionSet:
         mappedGenes=len(list(set(allgenes)))
         self.sort()
         self.genes=list(set(genes))
-        return len(de_genes), len(self.genes), mappedGenes, totalPeaks,regionsToGenes
+        if geneSet == None:
+          le=0
+        else:
+          le=len(geneSet)
+        return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self,y,mode=OverlapType.OVERLAP):
         """Return the overlapping regions with three different modes.
