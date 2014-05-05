@@ -553,7 +553,7 @@ class GenomicRegionSet:
     
     def get_genome_data(self,organism, chrom_X=False, chrom_M=False):
         """ Add genome data from database into the GenomicRegionSet. """
-        genome = Genomedata(organism)
+        genome = GenomeData(organism)
         chromosome_file = open(genome.get_chromosome_sizes(),'r')
         for line in chromosome_file:
             if chrom_X and "chrX" in line and "random" not in line:
