@@ -14,6 +14,7 @@ import HTML
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from collections import *
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
 # Local Libraries
 # Distal Libraries
@@ -65,7 +66,6 @@ def printTable(namesCol,namesLines,table,fileName):
         f.write(namesLines[i]+"\t"+("\t".join([str(j) for j in line]))+"\n")
     f.close()
 
-# For boxplot
 
 def quantile_normalization(matrix):
     """ Return the np.array which contains the normalized values
@@ -200,25 +200,24 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
     ## Initialize the figure
     #plt.title("Boxplot of Gene Association analysis")
     
-    colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+    colors = plt.cm.Set2(numpy.linspace(0, 1, 12))
+    #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
     
     # Subplt by group_tags
-    f, axarr = plt.subplots(1, len(group_tags), figsize=(11.69,8.27), dpi=300)
+    f, axarr = plt.subplots(1, len(group_tags), dpi=300)
     canvas = FigureCanvas(f)
     canvas.set_window_title(args.t)
-    f.suptitle(args.t, fontsize=20)
+    #f.suptitle(args.t, fontsize=20)
     axarr = axarr.reshape(-1)
     plt.subplots_adjust(bottom=0.3)
     
     axarr[0].set_ylabel("Count number")
-    
     for i, g in enumerate(group_tags):
         axarr[i].set_title(g, y=0.94)
         axarr[i].set_yscale('log')
         axarr[i].tick_params(axis='y', direction='out')
         axarr[i].yaxis.tick_left()
-        
-        #axarr[i].grid(color='w', linestyle='-', linewidth=2, dash_capstyle='round')
+        axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
         d = []  # Store data within group
         color_t = []  # Store tag for coloring boxes
         x_ticklabels = []  # Store ticklabels
@@ -230,59 +229,83 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
                     d.append([x+1 for x in sortDict[g][c][a]])
                     color_t.append(colors[j])
                     x_ticklabels.append(a + "." + c)
-
+        
         # Fine tuning boxplot
         bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
                               patch_artist=True, bootstrap=None)
-        plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8)
-        plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8)
-        plt.setp(bp['caps'],color='none')
-        plt.setp(bp['medians'], color='black', linewidth=1.5)
+        z = 10 # zorder for bosplot
+        plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
+        plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8,zorder=z)
+        plt.setp(bp['caps'],color='none',zorder=z)
+        plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
         legends = []
         for patch, color in zip(bp['boxes'], color_t):
             patch.set_facecolor(color) # When missing the data, the color patch will exceeds
+            patch.set_zorder(z)
             legends.append(patch)
             
         # Fine tuning subplot
         axarr[i].set_xticklabels(x_ticklabels, rotation=90, fontsize=10)
-        axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.5)
-        axarr[i].set_ylim(bottom=0.9)
+        
+        axarr[i].set_ylim(bottom=0.95)
         for spine in ['top', 'right', 'left', 'bottom']:
             axarr[i].spines[spine].set_visible(False)
-        axarr[i].tick_params(axis='both', which='both', bottom='off', top='off', labelbottom='on')
+        axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        
         if i > 0:
             plt.setp(axarr[i].get_yticklabels(),visible=False)
+            #plt.setp(axarr[i].get_yticks(),visible=False)
             axarr[i].minorticks_off()
-        
-        #axarr[i].set_aspect(1)
-#        for j, c in enumerate(color_tags):
-#            bp['boxes'][j*len(sort_tags):(j+1)*len(sort_tags)].facecolor = colors[j]
+            axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
                 
     plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
     #plt.legend(colors, color_tags, loc=7)
-    
-    f.legend(legends[::len(sort_tags)], color_tags, loc='upper right', handlelength=1, 
+    axarr[-1].legend(legends[::len(sort_tags)], color_tags, loc='center left', handlelength=1, 
              handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
-             bbox_to_anchor=(0.96, 0.39))
-             
-    """
-    gn = len(x_tick)/len(x_label)
-    plt.xticks(range(0.5*(gn+1),len(x_tick),gn),x_label)
-    # Label significance
-    for i,r in enumerate(p):
-        for j,pv in enumerate(r):
-            if pv < 0.5:
-                plt.annotate("*",xy=(posi[i,j][0],posi[i,j][1]+7),horizontalalignment='center',zorder=10)
-                plt.annotate("",xy=(i+1,posi[i,j][1]),xytext=(j+1,posi[i,j][1]),arrowprops=props,zorder=10)
-    """
-    output(f,legends, filename = args.output)
+             bbox_to_anchor=(1.05, 0.5))
+    f.tight_layout(pad=2, h_pad=None, w_pad=None)
+    output(f,extra=plt.gci(), filename = args.output)
+    
+    
+    ########## HTML ###################
+    if args.html:
+                       
+        f = open(args.output+'.html','w')
+        table = []
+        # Header
+        table.append(['<font size="7">' + args.t + "</font>"])
+        # Each row is a plot with its data
+        table.append(["<img src='" + args.output + ".png' width=800 >"])
+        
+        #### Calculate p value ####
+            
+        for g in group_tags:
+            table.append(['<font size="5">' + g + "</font>"])
+            indM = 0
+            header_c = []
+            header_s = []
+            data_p = []
+            text = []
+            for c in color_tags:
+                for s in sort_tags:
+                    header_c.append(c)
+                    header_s.append(s)
+                    data_p.append(sortDict[g][c][s])
+                    for i, d in enumerate(data_p[:indM]):
+                        u, p_value = mannwhitneyu(data_p[indM], d)    
+                        text.append('{0:>20} &{1:>20} : p value = {2:>.5e}<br>'.format(c+"."+s,header_c[i]+"."+header_s[i],p_value))
+                    indM = indM + 1
+            table.append(['<font size="1">'+"".join(tuple(text))+'</font>'])
+        htmlcode = HTML.table(table)
+        for line in htmlcode: f.write(line)
+        f.close()
     
 def output(f, extra=None, filename="outputfile"):
     # Saving
     if extra == None:
-        f.savefig(filename, bbox_inches='tight')
+        f.savefig(filename, bbox_inches='tight',dpi=300)
     else:
-        f.savefig(filename, bbox_extra_artists=(extra), bbox_inches='tight')
+        f.savefig(filename, bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
     
     if args.pdf:
         pp = PdfPages(filename + '.pdf')
@@ -293,20 +316,22 @@ def output(f, extra=None, filename="outputfile"):
         d['Title'] = args.t
         d['CreationDate'] = datetime.datetime.today()
         pp.close()
-                
-    if args.html:
-        f = open(filename+'.html','w')
-        table = []
-        table.append(["<font size="+ str(20) + ">" + args.t + "</font>"])
-        table.append(["<img src='" + filename + ".png' width=800 >"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
     
     if args.show:
         plt.show()
 
 
+def output_array(array, dirname, filename):
+    """ Write a txt file from the given array. """
+    try:
+        os.stat(dirname)
+    except:
+        os.mkdir(dirname)
+             
+    f = open(os.path.join(dirname,filename),"w")
+    for i,line in enumerate(array):
+        f.write(("\t".join(j for j in line))+"\n")
+    f.close()
 
 
 #################################################################################################
@@ -341,7 +366,7 @@ parser_lineplot.add_argument('output', default='lineplot', help='The file name o
 parser_lineplot.add_argument('-t', default='The lineplot', help='The title shown on the top of the plot.')
 parser_lineplot.add_argument('-c', choices=choice_method, default='midpoint', 
                              help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_method) + 
-                             '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
+                             '.(Default:bothends) The bothend mode will flap the right end region for calculation.')
 parser_lineplot.add_argument('-l', choices=choice_line, default='regions-read', 
                              help="Define the lines' content of each single plot. Options are: "+', '.join(choice_line) + '(Default:regions-read)')
 parser_lineplot.add_argument('-g', choices=choice_group, default=None, 
@@ -353,6 +378,8 @@ parser_lineplot.add_argument('-b', type=int, default=100, help='Define the binsi
 parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+
 
 args = parser.parse_args()
 
@@ -431,6 +458,13 @@ if args.input and args.mode=='boxplot':
     
 ################################ lineplot  #######################################################    
 elif args.input and args.mode=='lineplot':
+    print("Parameters:\tExtend length:\t"+str(args.e))
+    print("\t\tRead size:\t"+str(args.r))
+    print("\t\tBin size:\t"+str(args.b))
+    print("\t\tStep size:\t"+str(args.s))
+    print("\t\tCenter mode:\t"+str(args.c+"\n"))
+    
+    
     t0 = time.time()
     # Processing the regions by given parameters
     print("Step 1/3: Processing regions by given parameters")
@@ -438,12 +472,12 @@ elif args.input and args.mode=='lineplot':
     processed_bedsF = [] # Processed beds to be flapped
     for bed in beds:
         if args.c == 'bothends':
-            newbed = bed.relocate_regions(center='leftend', left_length=args.e, right_length=args.e)
+            newbed = bed.relocate_regions(center='leftend', left_length=args.e, right_length=args.e+int(0.5*args.b))
             processed_beds.append(newbed)
-            newbedF = bed.relocate_regions(center='rightend', left_length=args.e, right_length=args.e)
+            newbedF = bed.relocate_regions(center='rightend', left_length=args.e+int(0.5*args.b), right_length=args.e)
             processed_bedsF.append(newbedF)
         else:
-            newbed = bed.relocate_regions(center=args.c, left_length=args.e, right_length=args.e)
+            newbed = bed.relocate_regions(center=args.c, left_length=args.e, right_length=args.e+int(0.5*args.b))
             processed_beds.append(newbed)
             #for b in newbed.sequences:
             #    print(b.__repr__())
@@ -495,14 +529,14 @@ elif args.input and args.mode=='lineplot':
                     ffcoverage = numpy.fliplr(flap.coverage)
                     c.coverage = numpy.concatenate((c.coverage, ffcoverage), axis=0)
                 # Averaging the coverage of all regions of each bed file
-                avearr = numpy.zeros(len_coverage)
+                avearr = numpy.zeros(len_coverage+1)
                 for a in c.coverage:
                     avearr = avearr + a
                 avearr = avearr/len(c.coverage)
                 data[t][ai].append(avearr) # Store the array into data list
                 bi += 1
                 te = time.time()
-                print("     Computing "+ str(bi)+"/"+str(totn)+"\t" + "{0:30}\t--{1:.1f}\tsecs".format(bed+"."+bam, ts-te))
+                print("     Computing ("+ str(bi)+"/"+str(totn)+")\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
     t2 = time.time()
     print("    --- finished in {0:.2f} secs".format(t2-t1))
     
@@ -511,43 +545,66 @@ elif args.input and args.mode=='lineplot':
     rot = 0
     ticklabelsize = 10
     color_list = plt.cm.Set2(numpy.linspace(0, 1, 12))
-    
+
     for ty in data.keys():
-        
         if args.l == 'regions-read':
-            f, axs = plt.subplots(len(groupedbam[ty]),1, dpi=300)
+            f, axs = plt.subplots(len(groupedbam[ty]),1, figsize=(8.27, 11.69), dpi=300)
+            
+            if len(groupedbam[ty])==1: axs=[axs]
             for i,bam in enumerate(groupedbam[ty]):
-                axs[i].set_title(bam,fontsize=ticklabelsize+3)
                 
+                axs[i].set_title(bam,fontsize=ticklabelsize)
                 #axarr[i].set_ylabel()
-                x = range(-args.e, args.e, args.s)
+                x = range(-args.e, args.e + int(0.5*args.b), args.s)
+                
+                # Processing for future output
+                if args.table:
+                    pArr = numpy.array(["Name","X","Y"]) # Header
+                    
                 for j, bed in enumerate(groupedbed[ty]): 
                     y = data[ty][j][i]
                     axs[i].plot(x,y, color=color_list[j], lw=1)
+                    # Processing for future output
+                    if args.table:
+                        name = numpy.array([bed]*len(x))
+                        xvalue = numpy.array(x)
+                        yvalue = numpy.array(y)
+                        conArr = numpy.vstack([name,xvalue,yvalue])
+                        conArr = numpy.transpose(conArr)
+                        pArr = numpy.vstack([pArr, conArr])
+                if args.table:
+                    output_array(pArr,dirname=os.path.join(dir,"tables_lineplot"),filename=ty+"_"+bam)
+                
                 plt.setp(axs[i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(axs[i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[i].locator_params(axis = 'x', nbins = 8)
+                axs[i].locator_params(axis = 'y', nbins = 4)
                 axs[i].legend(groupedbed[ty], loc='center left', handlelength=1, handletextpad=1, 
                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
             axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
+            f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             output(f, filename = args.output + "_" + ty, extra=plt.gci())
             
         elif args.l == 'reads-region':         
-            f, axs = plt.subplots(len(groupedbed[ty]),1, dpi=300)
+            f, axs = plt.subplots(len(groupedbed[ty]),1, figsize=(8.27, 11.69), dpi=300)
             for i,bed in enumerate(groupedbed[ty]):
-                axs[i].set_title(bed,fontsize=ticklabelsize+3)
+                axs[i].set_title(bed,fontsize=ticklabelsize)
                 
                 #axarr[i].set_ylabel()
-                x = range(-args.e, args.e, args.s)
+                x = range(-args.e, args.e + int(0.5*args.b), args.s)
                 for j, bam in enumerate(groupedbam[ty]): 
                     y = data[ty][i][j]
                     axs[i].plot(x,y, color=color_list[j], lw=1)
                 plt.setp(axs[i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(axs[i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[i].locator_params(axis = 'x', nbins = 8)
+                axs[i].locator_params(axis = 'y', nbins = 4)
                 axs[i].legend(groupedbam[ty], loc='center left', handlelength=1, handletextpad=1, 
                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
             axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
+            f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             output(f, filename = args.output + "_" + ty, extra=plt.gci())
         
     t3 = time.time()

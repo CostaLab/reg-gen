@@ -6,8 +6,8 @@ from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 import AssociationAnalysis
 
-path_input1 = "/Users/Yu-ChingTsai/Documents/workspace/RG local test/data/20140120 ExpMat/input jaccard.txt"
-path_input2 = "/Users/Yu-ChingTsai/Documents/workspace/RG local test/data/20140120 ExpMat/input.txt"
+path_input1 = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/20140120 ExpMat/input.txt"
+path_input2 = "/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/projects/20140120 ExpMat/input2.txt"
 
 class Test(unittest.TestCase):
     

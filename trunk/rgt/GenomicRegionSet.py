@@ -270,9 +270,9 @@ class GenomicRegionSet:
         z -- the region(s) which is nearest to self
         
         """
-        if self.__len__() == 0 or y.__len__() == 0:
+        if len(self) == 0 or len(y) == 0:
             return GenomicRegionSet('Empty set') 
-        elif self.intersect(y).__len__() != 0:
+        elif len(self.intersect(y)) != 0:
             return False
         else:
             z_dict = {}  # For storing the distance and the regions
@@ -435,7 +435,7 @@ class GenomicRegionSet:
                 if prev_region.overlap(cur_region):
                     prev_region.initial = min(prev_region.initial, cur_region.initial)
                     prev_region.final = max(prev_region.final, cur_region.final)
-                    prev_region.data += '_$_' + cur_region.data #use extra character to distinguish data sets
+                    #prev_region.data += '_$_' + cur_region.data #use extra character to distinguish data sets
                 else:
                     z.add(prev_region)
                     prev_region = cur_region
@@ -497,7 +497,7 @@ class GenomicRegionSet:
         Result -----     -----    --  --       ---   ---
         
         """
-        if self.__len__() == 0:
+        if len(self) == 0:
             return GenomicRegionSet("Empty")
         else:
             z = GenomicRegionSet("Flanking intervals")
@@ -548,7 +548,7 @@ class GenomicRegionSet:
         """ Return the sum of all lengths of regions. """
         length = 0
         for s in self:
-            length = length + s.__len__()
+            length = length + len(s)
         return length
     
     def get_genome_data(self,organism, chrom_X=False, chrom_M=False):
@@ -609,8 +609,8 @@ class GenomicRegionSet:
         # Defining input_map, result_list (containing lengths of all result regions)
         result_list = []
         input_map = self
-        input_num = self.__len__()
-        input_list = [x.__len__() for x in self.sequences] # Contain a list of length of inputs
+        input_num = len(self)
+        input_list = [len(x) for x in self.sequences] # Contain a list of length of inputs
             
         if type(total_size) == int:
             for i in range(total_size):
@@ -690,20 +690,23 @@ class GenomicRegionSet:
                                     final=random_posi + length))
         return z
     
-    def projection_test(self, query, organism):
+    def projection_test(self, query, organism, proportion=None):
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
         possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
         #print("The average likelihood: ", possibility)
-        
-        intersect_regions = self.intersect(query,mode=OverlapType.OVERLAP)
-        n = query.__len__()
-        k = intersect_regions.__len__()
+        nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
+        intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
+        n = len(nquery)
+        k = len(intersect_regions)
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
-        return p
+        if proportion:
+            return k/n, p
+        else:
+            return p
 
     def any_chrom(self,chrom):
         """ Return a list of regions which belongs to given chromosome. (used in random_regions) """

@@ -32,7 +32,6 @@ class GenomicRegion:
         """Return length of GenomicRegion"""
         return self.final - self.initial
 
-
     def __str__(self):
         """Give informal string representation"""
         s = '\t'.join( [self.chrom, str(self.initial), str(self.final)] )
