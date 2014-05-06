@@ -171,9 +171,12 @@ class OverlapType:
 
     Constants:
 
-    OVERLAP: Represents #TODO
-    ORIGINAL: Represents #TODO
-    COMP_INCL: Represents # TODO
+    OVERLAP:
+        Return new GenomicRegionSet including only the overlapping regions.
+    ORIGINAL: 
+        Return the regions of original GenomicRegionSet which have any intersections.
+    COMP_INCL: 
+        Return region(s) of the GenomicRegionSet which are 'completely' included.
 
     """
 

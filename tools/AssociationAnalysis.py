@@ -5,6 +5,9 @@ import sys
 import os.path
 lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
+import argparse
+import matplotlib.pyplot as plt
+import numpy
 
 # Local Libraries
 # Distal Libraries
@@ -12,13 +15,15 @@ from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 from rgt.Util import GenomeData
 
+
+dir = os.getcwd()
 """
 Statistical analysis methods for ExperimentalMatrix
 
 Author: Joseph Kuo
 
 """
-def jaccard_test(query, reference, replicates=500, organism=GenomeData.CHROMOSOME_SIZES):
+def jaccard_test(query, reference, organism,replicates=500, ):
     """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
     
     Method:
@@ -44,81 +49,82 @@ def jaccard_test(query, reference, replicates=500, organism=GenomeData.CHROMOSOM
             #t1 = time.clock()
             #print(t1 - t0, "randoming")
     
-def projection_test(query, reference):
-    """Return the projection test of each comparison of two ExperimentalMatrix.
-    
-    """
-    print("Projection test")
-    #print("query\treference\tp-value")
-
-    for s in query.objectsDict.keys():
-        for ss in reference.objectsDict.keys():
-            inters = reference.objectsDict[ss].intersect(query.objectsDict[s])
-            p = reference.objectsDict[ss].projection_test(query.objectsDict[s])
-            print("%s\t%s\tp value: %.4f" % (s, ss, p))
 
 #################################################################################################
 ##### PARAMETERS ################################################################################
 #################################################################################################
 
-# Parameters
-params = []
-params.append("\nAssociation Analysis")
-params.append("")
-params.append("Usage:\tpython AssociationAnalysis.py <command> [options]\n")
-params.append("Command:\n\tjaccard\t\tJaccard test analysis")
-params.append("\tprojection\tProjection test analysis\n")
+parser = argparse.ArgumentParser(description='Provides various statistical tools for association analysis.\nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho')
+
+subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
+
+# Projection test
+parser_projection = subparsers.add_parser('projection',help='Projection test evaluate the association level by comparing to the random binomial model.')
+parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
+parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file.')
+parser_projection.add_argument('-organism', default='hg19', help='Define the organism')
+parser_projection.add_argument('-plot', action="store_true", help='Generate the plot.')
+parser_projection.add_argument('-output', default='projection_test', help='Define the filename of the output plot.(Default: projection_test)') 
+#parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+#parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
+#parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
 # Jaccard
-params.append("\nUsage:\tpython AssociationAnalysis.py jaccard -r <Path> -q <Path> [-R]\n")
-params.append("Options:\t-r\treference input of ExperimetalMatrix")
-params.append("\t\t-q\tquery input of ExperimentalMatrix")
-params.append("\t\t-R\tnumber of randomizations for Jaccard test [100]\n")
-# Projection
-params.append("\nUsage:\tpython AssociationAnalysis.py projection -r <Path> -q <Path>\n")
-params.append("Options:\t-r\treference input of ExperimetalMatrix")
-params.append("\t\t-q\tquery input of ExperimentalMatrix\n")
+parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluate the association level by comparing with jaccard index from repeating randomization.')
+parser_jaccard.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
+parser_jaccard.add_argument('query', help='The file name of the query Experimental Matrix file.')
+parser_jaccard.add_argument('-r', type=int, default=500, help='Repetition times of randomization.')
+#parser_jaccard.add_argument('-plot', action="store_true", help='Generate the plot.') 
+#parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+#parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
+#parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
-if(len(sys.argv) == 1):
-    for e in params[0:5]: print(e)
-    sys.exit(0)
-elif(len(sys.argv) == 2) and sys.argv[1] == "jaccard":
-    for e in params[5:9]: print(e)
-    sys.exit(0)
-elif(len(sys.argv) == 2) and sys.argv[1] == "projection":
-    for e in params[9:12]: print(e)
-    sys.exit(0)
+args = parser.parse_args()
+
 #################################################################################################
 ##### INPUT #####################################################################################
 #################################################################################################
 
-# Input parameters dictionary
-inputParameters={}
-inputParameters["command"] = sys.argv[1]
-i = 2
-con_loop = True
-while con_loop:
-    try:
-        inputParameters[sys.argv[i]] = sys.argv[i+1]
-        i = i + 2
-    except: con_loop = False
+rEM, qEM = ExperimentalMatrix(), ExperimentalMatrix()
+rEM.read(args.reference)
+qEM.read(args.query)
+references = rEM.get_regionsets()
+referencenames = rEM.get_regionsnames()
+query = rEM.get_regionsets()
+querynames = qEM.get_regionsnames()
 
-# Input ExperimentalMatrix1
-reference = ExperimentalMatrix()
-if ("-r" in inputParameters.keys()):
-    reference.read(inputParameters["-r"])
-# Input ExperimentalMatrix2
-query = ExperimentalMatrix()
-if ("-q" in inputParameters.keys()):
-    query.read(inputParameters["-q"])
-# Input parameter
-if inputParameters["command"] == "jaccard":
-    try:
-        repeats = inputParameters["-R"]
-    except:
-        repeats = 100
-    jaccard_test(query, reference, replicates=repeats, organism=GenomeData.CHROMOSOME_SIZES)
-
-if inputParameters["command"] == "projection":
-    projection_test(query, reference)
-    
+if args.mode == "projection":
+    print("\nProjection test")
+    print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p value"))
+    qlist = []
+    for i, r in enumerate(references):
+        for j, q in enumerate(query):
+            q, p = r.projection_test(q, args.organism, proportion=True)
+            qlist.append(q)
+            if p < 0.025: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
+            elif p > 0.975: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
+    if args.plot:
+        nr = len(referencenames)
+        nq = len(querynames)
+        nAll = nr * nq
+        color_list = plt.cm.Set2(numpy.linspace(0, 1, 12))
+        width = 0.5/nq
+        x = numpy.arange(0.75,nr+0.75,1)
+        f, ax = plt.subplots()
+        for i,qy in enumerate(querynames):
+            ax.bar(x+i*width,[qlist[j] for j in range(i,nAll,nq)],width=width,color=color_list[i],align='edge')
+        ax.locator_params(axis = 'y', nbins = 2)
+        ax.set_ylabel("Proportion of overlapped query",fontsize=10)
+        ax.yaxis.tick_left()
+        ax.set_xticks(range(1,nr+1))
+        ax.set_xticklabels(referencenames)
+        ax.legend(querynames,loc='center left', handlelength=1, handletextpad=1, 
+                  columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+        for spine in ['top', 'right']:  # 'left', 'bottom'
+            ax.spines[spine].set_visible(False)
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.savefig(filename = args.output, bbox_extra_artists=(plt.gci()), bbox_inches='tight',dpi=300)
+        
+if args.mode == "jaccard":
+    #jaccard_test(args.reference, args.query, replicates=args.r, args.organism)
+    print("done")
