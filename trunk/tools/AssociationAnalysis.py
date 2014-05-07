@@ -7,7 +7,9 @@ lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
 import argparse
 import matplotlib.pyplot as plt
+from matplotlib.pyplot import cm
 import numpy
+import HTML
 
 # Local Libraries
 # Distal Libraries
@@ -23,32 +25,6 @@ Statistical analysis methods for ExperimentalMatrix
 Author: Joseph Kuo
 
 """
-def jaccard_test(query, reference, organism,replicates=500, ):
-    """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
-    
-    Method:
-    The distribution of random jaccard index is calculated by randomizing query for given times. 
-    Then, we compare the real jaccard index to the distribution and formulate p-value as 
-    p-value = (# random jaccard > real jaccard)/(# random jaccard)
-    
-    """
-    print("Jaccard test")
-    print("query\treference\tp-value")
-    
-    result = []
-    for s in query.objectsDict.keys():
-        for ss in reference.objectsDict.keys():
-            #t0 = time.clock()
-            distribution = []
-            for rep in range(replicates):
-                random = query.objectsDict[s].random_regions(organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
-                distribution.append(reference.objectsDict[ss].jaccard(random))
-            real_jaccard = query.objectsDict[s].jaccard(reference.objectsDict[ss])
-            p = sum(x for x in distribution if x > real_jaccard)/replicates
-            print(s, ss, p, sep="\t")
-            #t1 = time.clock()
-            #print(t1 - t0, "randoming")
-    
 
 #################################################################################################
 ##### PARAMETERS ################################################################################
@@ -60,8 +36,8 @@ subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 
 # Projection test
 parser_projection = subparsers.add_parser('projection',help='Projection test evaluate the association level by comparing to the random binomial model.')
-parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
-parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file.')
+parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file. Multiple references are acceptable.')
+parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file. Multiple queries are acceptable.')
 parser_projection.add_argument('-organism', default='hg19', help='Define the organism')
 parser_projection.add_argument('-plot', action="store_true", help='Generate the plot.')
 parser_projection.add_argument('-output', default='projection_test', help='Define the filename of the output plot.(Default: projection_test)') 
@@ -74,6 +50,7 @@ parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluate the
 parser_jaccard.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
 parser_jaccard.add_argument('query', help='The file name of the query Experimental Matrix file.')
 parser_jaccard.add_argument('-r', type=int, default=500, help='Repetition times of randomization.')
+parser_jaccard.add_argument('-organism', default='hg19', help='Define the organism')
 #parser_jaccard.add_argument('-plot', action="store_true", help='Generate the plot.') 
 #parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -103,6 +80,7 @@ if args.mode == "projection":
             qlist.append(q)
             if p < 0.025: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
             elif p > 0.975: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
+            else: print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
     if args.plot:
         nr = len(referencenames)
         nq = len(querynames)
@@ -126,5 +104,28 @@ if args.mode == "projection":
         f.savefig(filename = args.output, bbox_extra_artists=(plt.gci()), bbox_inches='tight',dpi=300)
         
 if args.mode == "jaccard":
-    #jaccard_test(args.reference, args.query, replicates=args.r, args.organism)
-    print("done")
+    """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
+    
+    Method:
+    The distribution of random jaccard index is calculated by randomizing query for given times. 
+    Then, we compare the real jaccard index to the distribution and formulate p-value as 
+    p-value = (# random jaccard > real jaccard)/(# random jaccard)
+    
+    """
+    print("\nJaccard Test")
+    print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p-value"))
+    
+    for i, r in enumerate(referencenames):
+        for j, q in enumerate(querynames):
+            #t0 = time.clock()
+            random_jaccards = [] # Store all the jaccard index from random regions
+            for k in range(args.r):
+                random = query[j].random_regions(organism=args.organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
+                random_jaccards.append(references[i].jaccard(random))
+            real_jaccard = query[j].jaccard(references[i]) # The real jaccard index from r and q
+            # How many randomizations have higher jaccard index than the real index?
+            p = len([x for x in random_jaccards if x > real_jaccard])/args.r
+            print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
+            
+            
+    
