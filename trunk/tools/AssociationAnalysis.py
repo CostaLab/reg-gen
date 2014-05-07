@@ -78,8 +78,16 @@ if args.mode == "projection":
         for j, q in enumerate(query):
             ratio, p = r.projection_test(q, args.organism, proportion=True)
             qlist.append(ratio)
-            if p < 0.025: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
-            elif p > 0.975: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
+            if p < 0.025: 
+                if len(q) == 0:
+                    print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(referencenames[i],querynames[j],p))
+                else:
+                    print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
+            elif p > 0.975:
+                if len(q) == 0:
+                    print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(referencenames[i],querynames[j],p))
+                else:
+                    print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
             else: print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
             
     if args.plot:
