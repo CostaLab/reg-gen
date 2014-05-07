@@ -31,7 +31,7 @@ class ExperimentalMatrix:
         CDP_PU1    regions    file2.bed    addidional_info2
         [ ... ]
         """
-        f = open(file_path)
+        f = open(file_path,'rU')
         
         #read and check header
         header = f.readline()

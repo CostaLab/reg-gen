@@ -696,7 +696,6 @@ class GenomicRegionSet:
         chrom_map.get_genome_data(organism=organism)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
         possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
-        #print("The average likelihood: ", possibility)
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
         intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
         n = len(nquery)
@@ -704,7 +703,8 @@ class GenomicRegionSet:
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
         if proportion:
-            return k/n, p
+            try: return k/n, p
+            except: return 0, p
         else:
             return p
 
