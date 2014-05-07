@@ -67,7 +67,7 @@ rEM.read(args.reference)
 qEM.read(args.query)
 references = rEM.get_regionsets()
 referencenames = rEM.get_regionsnames()
-query = rEM.get_regionsets()
+query = qEM.get_regionsets()
 querynames = qEM.get_regionsnames()
 
 if args.mode == "projection":
@@ -76,11 +76,12 @@ if args.mode == "projection":
     qlist = []
     for i, r in enumerate(references):
         for j, q in enumerate(query):
-            q, p = r.projection_test(q, args.organism, proportion=True)
-            qlist.append(q)
+            ratio, p = r.projection_test(q, args.organism, proportion=True)
+            qlist.append(ratio)
             if p < 0.025: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
             elif p > 0.975: print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
             else: print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
+            
     if args.plot:
         nr = len(referencenames)
         nq = len(querynames)
