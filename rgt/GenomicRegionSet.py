@@ -703,7 +703,7 @@ class GenomicRegionSet:
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
         if proportion:
-            try: return k/n, p
+            try: return k/n, p  # for the case n = 0
             except: return 0, p
         else:
             return p
