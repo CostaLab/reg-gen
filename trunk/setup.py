@@ -50,6 +50,11 @@ tools_dictionary = {
   "rgt.motifanalysis.main:main",
   ['numpy>=1.4.0','scipy>=0.7.0','Biopython>=1.60','pandas==0.7.1','fisher>=0.1.0','statsmodels>=0.4.0','HTML>=0.04','matplotlib>=1.1.0']
 ), 
+"motifanalysisnew": (
+  "rgt-motifanalysisnew",
+  "rgt.motifanalysisnew.Main:main",
+  []
+), 
 "footprint": (
   "rgt-footprint",
   "rgt.footprint.main:main",
@@ -165,6 +170,7 @@ data_config_file.write("[GenomeData]\n")
 data_config_file.write("genome: genome.fa\n")
 data_config_file.write("chromosome_sizes: chrom.sizes\n")
 data_config_file.write("association_file: association_file.bed\n\n")
+data_config_file.write("gencode_annotation: gencode_annotation.gtf\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
