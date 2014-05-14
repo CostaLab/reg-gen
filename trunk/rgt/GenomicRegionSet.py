@@ -690,7 +690,7 @@ class GenomicRegionSet:
                                     final=random_posi + length))
         return z
     
-    def projection_test(self, query, organism, proportion=None):
+    def projection_test(self, query, organism, extra=None):
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
@@ -702,9 +702,9 @@ class GenomicRegionSet:
         k = len(intersect_regions)
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
-        if proportion:
-            try: return k/n, p  # for the case n = 0
-            except: return 0, p
+        if extra:
+            try: return possibility, k/n, p  # for the case n = 0
+            except: return possibility, 0, p
         else:
             return p
 

@@ -200,8 +200,8 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
     ## Initialize the figure
     #plt.title("Boxplot of Gene Association analysis")
     
-    colors = plt.cm.Set2(numpy.linspace(0, 1, 12))
-    #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+    #colors = plt.cm.Accent(numpy.linspace(0, 1, 12))
+    colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
     
     # Subplt by group_tags
     f, axarr = plt.subplots(1, len(group_tags), dpi=300)
@@ -269,7 +269,7 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
     
     ########## HTML ###################
     if args.html:
-                       
+        
         f = open(args.output+'.html','w')
         table = []
         # Header
@@ -280,26 +280,55 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
         #### Calculate p value ####
             
         for g in group_tags:
-            table.append(['<font size="5">' + g + "</font>"])
+            #table.append(['<font size="5">' + g + "</font>"])
             indM = 0
-            header_c = []
-            header_s = []
+            header = []
             data_p = []
-            text = []
+            ar = numpy.chararray([len(color_tags)*len(sort_tags),len(color_tags)*len(sort_tags)], itemsize=10)
+            ar[:] = "-"
             for c in color_tags:
                 for s in sort_tags:
-                    header_c.append(c)
-                    header_s.append(s)
+                    header.append("{0}.{1}".format(c,s))
                     data_p.append(sortDict[g][c][s])
+
                     for i, d in enumerate(data_p[:indM]):
-                        u, p_value = mannwhitneyu(data_p[indM], d)    
-                        text.append('{0:>20} &{1:>20} : p value = {2:>.5e}<br>'.format(c+"."+s,header_c[i]+"."+header_s[i],p_value))
+                        u, p_value = mannwhitneyu(data_p[indM], d)
+                        #u, p_value = stats.wilcoxon(data_p[indM], d)
+                        ar[indM,i] = "{:3.1e}".format(p_value)
                     indM = indM + 1
-            table.append(['<font size="1">'+"".join(tuple(text))+'</font>'])
+            fig = plt.figure()
+            at = plt.subplot(111, frame_on=False) 
+            at.set_title(str(g))
+            at.set_axis_off()
+            
+            nrows, ncols = ar.shape
+            width, height = 1.0/(ncols+1), 1.0/(nrows+1)
+            
+            tb = matplotlib.table.Table(at, bbox=[0,0,1,1])
+            # Add cells
+            for (i,j), val in numpy.ndenumerate(ar):
+                tb.add_cell(i+1, j+1, width, height, text=val, loc='center', facecolor='none')
+                try:
+                    if float(val) < args.sl:
+                        tb.get_celld()[(i+1,j+1)].get_text().set_color('red')
+                except: pass
+            # Add column label
+            for i, h in enumerate(header):
+                # Row header
+                tb.add_cell(i+1, 0, width, height, text=h, loc='right', edgecolor='none', facecolor='none')
+                # Column header
+                tb.add_cell(0, i+1, width, height/2, text=h, loc='center', edgecolor='none', facecolor='none') #
+                
+            tb.set_fontsize(12)
+            at.add_table(tb)
+            #plt.subplots_adjust(bottom=0.3)
+    
+            fig.savefig("{0}_p_value.png".format(g), bbox_inches='tight',dpi=300)
+            table.append(["<img src='{0}_p_value.png' width=800 >".format(g)])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
-    
+        
 def output(f, extra=None, filename="outputfile"):
     # Saving
     if extra == None:
@@ -352,6 +381,7 @@ parser_boxplot.add_argument('-c',choices=['read','region','col4','col5','col6'],
 parser_boxplot.add_argument('-s',choices=['read','region','col4','col5','col6'], default='col4', help="The way to sort data which shared the same color.(Default:col4)")
 parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_boxplot.add_argument('-sl', type=float, default=0.01, help='Define the significance level for multiple test.')
 parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
 parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
@@ -371,6 +401,8 @@ parser_lineplot.add_argument('-l', choices=choice_line, default='regions-read',
                              help="Define the lines' content of each single plot. Options are: "+', '.join(choice_line) + '(Default:regions-read)')
 parser_lineplot.add_argument('-g', choices=choice_group, default=None, 
                              help='Define the grouping way for reads and regions. For example, choosing the column where cell type information is, all the read(s) and region(s) are grouped together to form the plot. Options are: '+', '.join(choice_group) + '.(Default:col4)')
+parser_lineplot.add_argument('-f', choices=choice_group, default=None,
+                             help='Define the factor column in Experimental Matrix.')
 parser_lineplot.add_argument('-e', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
 parser_lineplot.add_argument('-r', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_lineplot.add_argument('-s', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -484,20 +516,20 @@ elif args.input and args.mode=='lineplot':
     
     # Grouping files
     if args.g:
-        groupedbed = {}  # Store all bed names according to their types
+        groupedbed = OrderedDict()  # Store all bed names according to their types
         for bed in bednames:
             ty = exps.get_type(bed,exps.fields[int(args.g[3])-1])
             try: groupedbed[ty].append(bed)
             except: groupedbed[ty] =[bed]
-        groupedbam = {}  # Store all bam names according to their types
+        groupedbam = OrderedDict()  # Store all bam names according to their types
         for bam in readsnames:
             ty = exps.get_type(bam,exps.fields[int(args.g[3])-1])
             try: groupedbam[ty].append(bam)
             except: groupedbam[ty] =[bam]
     else:
-        groupedbed = {}
+        groupedbed = OrderedDict()
         groupedbed["All"] = bednames
-        groupedbam = {}
+        groupedbam = OrderedDict()
         groupedbam["All"] = readsnames
     
     t1 = time.time()
@@ -529,41 +561,47 @@ elif args.input and args.mode=='lineplot':
                     ffcoverage = numpy.fliplr(flap.coverage)
                     c.coverage = numpy.concatenate((c.coverage, ffcoverage), axis=0)
                 # Averaging the coverage of all regions of each bed file
-                avearr = numpy.zeros(len_coverage+1)
-                for a in c.coverage:
-                    avearr = avearr + a
-                avearr = avearr/len(c.coverage)
+                #avearr = numpy.zeros(len_coverage+1)
+                #avearr = [0] * int((2*args.e / args.s + 1))
+                #for a in c.coverage:
+                #    avearr = avearr + a
+                #avearr = avearr/len(c.coverage)
+                avearr = numpy.array(c.coverage)
+                avearr = numpy.average(avearr, axis=0)
+                numpy.transpose(avearr)
                 data[t][ai].append(avearr) # Store the array into data list
                 bi += 1
                 te = time.time()
-                print("     Computing ("+ str(bi)+"/"+str(totn)+")\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                print("     Computing ("+ str(bi)+"/"+str(totn)+")\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
     t2 = time.time()
     print("    --- finished in {0:.2f} secs".format(t2-t1))
     
     # Plotting
     print("Step 3/3: Plotting the lineplots")
-    rot = 0
-    ticklabelsize = 10
-    color_list = plt.cm.Set2(numpy.linspace(0, 1, 12))
-
-    for ty in data.keys():
-        if args.l == 'regions-read':
-            f, axs = plt.subplots(len(groupedbam[ty]),1, figsize=(8.27, 11.69), dpi=300)
-            
-            if len(groupedbam[ty])==1: axs=[axs]
+    rot = 50
+    ticklabelsize = 7
+    #color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+    color_list = plt.cm.Set2(numpy.linspace(0, 1, 8))
+    
+    if args.l == 'regions-read':
+        f, axs = plt.subplots(len(data.keys()),len(groupedbam.values()[0]), dpi=300) # figsize=(8.27, 11.69)
+        if len(data.keys()) == 1 and len(groupedbam.values()) == 1: axs=[axs]
+    
+        for it, ty in enumerate(data.keys()):
             for i,bam in enumerate(groupedbam[ty]):
+                if it == 0: axs[it,i].set_title(bam.split("_")[0],fontsize=11)
                 
-                axs[i].set_title(bam,fontsize=ticklabelsize)
-                #axarr[i].set_ylabel()
-                x = range(-args.e, args.e + int(0.5*args.b), args.s)
-                
+                #x = range(-args.e, args.e + int(0.5*args.b), args.s)
                 # Processing for future output
                 if args.table:
                     pArr = numpy.array(["Name","X","Y"]) # Header
                     
                 for j, bed in enumerate(groupedbed[ty]): 
                     y = data[ty][j][i]
-                    axs[i].plot(x,y, color=color_list[j], lw=1)
+                    x = numpy.linspace(-args.e, args.e, len(y))
+                    #x = range(-args.e + int(0.5*args.b), args.e + int(0.5*args.b)+args.s, args.s)
+                    #print("x {}  y {}".format(len(x), len(y)))
+                    axs[it, i].plot(x,y, color=color_list[j], lw=1)
                     # Processing for future output
                     if args.table:
                         name = numpy.array([bed]*len(x))
@@ -575,18 +613,24 @@ elif args.input and args.mode=='lineplot':
                 if args.table:
                     output_array(pArr,dirname=os.path.join(dir,"tables_lineplot"),filename=ty+"_"+bam)
                 
-                plt.setp(axs[i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
-                plt.setp(axs[i].get_yticklabels(), fontsize=ticklabelsize)
-                axs[i].locator_params(axis = 'x', nbins = 8)
-                axs[i].locator_params(axis = 'y', nbins = 4)
-                axs[i].legend(groupedbed[ty], loc='center left', handlelength=1, handletextpad=1, 
-                              columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-                plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
-            axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
-            f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-            output(f, filename = args.output + "_" + ty, extra=plt.gci())
-            
-        elif args.l == 'reads-region':         
+                axs[it,i].set_xlim([-args.e, args.e])
+                plt.setp(axs[it, i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(axs[it, i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[it, i].locator_params(axis = 'x', nbins = 4)
+                axs[it, i].locator_params(axis = 'y', nbins = 4)
+                
+                for n in groupedbed:
+                    legendl = exps.fieldsDict[exps.fields[int(args.f[-1])-1]].keys()
+                axs[0,-1].legend(legendl, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                #plt.setp([a.get_xticklabels() for a in axs[:-1]], visible=False)
+        #for r in range(len(groupedbam.values()[0])):
+        #    axs[-1,r].set_xlabel("Base pairs",fontsize=ticklabelsize)
+        for i,ty in enumerate(data.keys()):
+            axs[i,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        output(f, filename = args.output, extra=plt.gci())
+    """        
+    elif args.l == 'reads-region':         
             f, axs = plt.subplots(len(groupedbed[ty]),1, figsize=(8.27, 11.69), dpi=300)
             for i,bed in enumerate(groupedbed[ty]):
                 axs[i].set_title(bed,fontsize=ticklabelsize)
@@ -606,7 +650,23 @@ elif args.input and args.mode=='lineplot':
             axs[-1].set_xlabel("Base pairs",fontsize=ticklabelsize)
             f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             output(f, filename = args.output + "_" + ty, extra=plt.gci())
-        
+        """
+    if args.html:
+        ########## HTML ###################
+        if args.html:
+            
+            f = open(args.output+'.html','w')
+            table = []
+            # Header
+            table.append(['<font size="7">' + args.t + "</font>"])
+            # Each row is a plot with its data
+            table.append(["<img src='" + args.output + ".png' width=800 >"])
+            
+            
+            htmlcode = HTML.table(table)
+            for line in htmlcode: f.write(line)
+            f.close()
+             
     t3 = time.time()
     print("    --- finished in {0:.2f} secs".format(t3-t2))
     print("Total running time is : " + str(datetime.timedelta(seconds=t3-t0)))

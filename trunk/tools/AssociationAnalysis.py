@@ -35,11 +35,13 @@ parser = argparse.ArgumentParser(description='Provides various statistical tools
 subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 
 # Projection test
-parser_projection = subparsers.add_parser('projection',help='Projection test evaluate the association level by comparing to the random binomial model.')
+parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
+The null hypothesis is that no association between reference and query and their distribution is random.')
 parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file. Multiple references are acceptable.')
 parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file. Multiple queries are acceptable.')
 parser_projection.add_argument('-organism', default='hg19', help='Define the organism')
 parser_projection.add_argument('-plot', action="store_true", help='Generate the plot.')
+parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
 parser_projection.add_argument('-output', default='projection_test', help='Define the filename of the output plot.(Default: projection_test)') 
 #parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 #parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -74,10 +76,12 @@ if args.mode == "projection":
     print("\nProjection test")
     print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p value"))
     qlist = []
+    bglist = []
     for i, r in enumerate(references):
         for j, q in enumerate(query):
-            ratio, p = r.projection_test(q, args.organism, proportion=True)
+            background, ratio, p = r.projection_test(q, args.organism, extra=True)
             qlist.append(ratio)
+            bglist.append(background)
             if p < 0.025: 
                 if len(q) == 0:
                     print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(referencenames[i],querynames[j],p))
@@ -94,18 +98,25 @@ if args.mode == "projection":
         nr = len(referencenames)
         nq = len(querynames)
         nAll = nr * nq
-        color_list = plt.cm.Set2(numpy.linspace(0, 1, 12))
-        width = 0.5/nq
+        #color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+        color_list = plt.cm.Paired(numpy.linspace(0, 1, 6))
+        width = 0.5/(nq+1) # Plus one background
         x = numpy.arange(0.75,nr+0.75,1)
         f, ax = plt.subplots()
+        if args.log:
+            ax.set_yscale('log')
+        else:
+            ax.locator_params(axis = 'y', nbins = 2)
         for i,qy in enumerate(querynames):
             ax.bar(x+i*width,[qlist[j] for j in range(i,nAll,nq)],width=width,color=color_list[i],align='edge')
-        ax.locator_params(axis = 'y', nbins = 2)
+        ax.bar(x+nq*width,[bglist[j] for j in range(0,nAll,nq)], width=width,color=color_list[nq],align='edge')
         ax.set_ylabel("Proportion of overlapped query",fontsize=10)
         ax.yaxis.tick_left()
         ax.set_xticks(range(1,nr+1))
         ax.set_xticklabels(referencenames)
-        ax.legend(querynames,loc='center left', handlelength=1, handletextpad=1, 
+        ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+        querynames.append('Background')
+        ax.legend(querynames, loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
         for spine in ['top', 'right']:  # 'left', 'bottom'
             ax.spines[spine].set_visible(False)
