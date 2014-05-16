@@ -110,7 +110,7 @@ class GenomeData(ConfigurationFile):
         """
         return self.association_file
 
-    def get_association_file(self):
+    def get_gencode_annotation(self):
         """
         Returns the current path to the gencode annotation gtf file.
         """
