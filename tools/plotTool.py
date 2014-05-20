@@ -6,7 +6,7 @@ import os
 lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
 import numpy
-from scipy.stats import mstats, wilcoxon, mannwhitneyu
+from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import matplotlib.pyplot as plt
 import time, datetime
 import argparse
@@ -15,6 +15,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from collections import *
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import statsmodels.sandbox.stats.multicomp as sm
 
 # Local Libraries
 # Distal Libraries
@@ -65,7 +66,6 @@ def printTable(namesCol,namesLines,table,fileName):
     for i,line in enumerate(table):
         f.write(namesLines[i]+"\t"+("\t".join([str(j) for j in line]))+"\n")
     f.close()
-
 
 def quantile_normalization(matrix):
     """ Return the np.array which contains the normalized values
@@ -180,17 +180,16 @@ def group_data(tables, exps, group_tags, color_tags, sort_tags):
     for g in group_tags:
         #print("    "+g)
         sortDict[g] = {}
-        for c in color_tags:
+        for a in sort_tags:
             #print("        "+c)
-            sortDict[g][c] = {}
-            for a in sort_tags:
+            sortDict[g][a] = {}
+            for c in color_tags:
                 #print("            "+a)
-                sortDict[g][c][a] = []
+                sortDict[g][a][c] = []
                 for k in cues.keys():
-                    if set([g,c,a]) == set(k):
-                        sortDict[g][c][a] = plotDict[cues[k][0]][cues[k][1]]
-                        #print(sortDict[g][c][a])
-                    #else: sortDict[g][c][a] = []
+                    if set([g,a,c]) == set(k):
+                        sortDict[g][a][c] = plotDict[cues[k][0]][cues[k][1]]
+                        
     return sortDict 
 
 def box_plot(sortDict, group_tags, color_tags, sort_tags):
@@ -201,17 +200,18 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
     #plt.title("Boxplot of Gene Association analysis")
     
     #colors = plt.cm.Accent(numpy.linspace(0, 1, 12))
-    colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
-    
+    #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+    colors = [(0, 35/255, 138/255),(132/255, 29/255, 20/255)]
     # Subplt by group_tags
     f, axarr = plt.subplots(1, len(group_tags), dpi=300)
     canvas = FigureCanvas(f)
     canvas.set_window_title(args.t)
     #f.suptitle(args.t, fontsize=20)
-    axarr = axarr.reshape(-1)
+    try: axarr = axarr.reshape(-1)
+    except: axarr = [axarr]
     plt.subplots_adjust(bottom=0.3)
     
-    axarr[0].set_ylabel("Count number")
+    axarr[0].set_ylabel("Count number (log)")
     for i, g in enumerate(group_tags):
         axarr[i].set_title(g, y=0.94)
         axarr[i].set_yscale('log')
@@ -221,14 +221,14 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
         d = []  # Store data within group
         color_t = []  # Store tag for coloring boxes
         x_ticklabels = []  # Store ticklabels
-        for j, c in enumerate(color_tags):
-            for a in sort_tags:
-                if sortDict[g][c][a] == []:  # When there is no matching data, skip it
+        for k, a in enumerate(sort_tags):
+            for j, c in enumerate(color_tags):
+                if sortDict[g][a][c] == []:  # When there is no matching data, skip it
                     continue
                 else:
-                    d.append([x+1 for x in sortDict[g][c][a]])
+                    d.append([x+1 for x in sortDict[g][a][c]])
                     color_t.append(colors[j])
-                    x_ticklabels.append(a + "." + c)
+                    x_ticklabels.append(a)  #  + "." + c
         
         # Fine tuning boxplot
         bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
@@ -245,7 +245,9 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
             legends.append(patch)
             
         # Fine tuning subplot
-        axarr[i].set_xticklabels(x_ticklabels, rotation=90, fontsize=10)
+        axarr[i].set_xticks([len(color_tags)*n + 1 + (len(color_tags)-1)/2 for n,s in enumerate(sort_tags)])
+        #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
+        axarr[i].set_xticklabels(sort_tags, rotation=0, fontsize=10)
         
         axarr[i].set_ylim(bottom=0.95)
         for spine in ['top', 'right', 'left', 'bottom']:
@@ -260,7 +262,7 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
                 
     plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
     #plt.legend(colors, color_tags, loc=7)
-    axarr[-1].legend(legends[::len(sort_tags)], color_tags, loc='center left', handlelength=1, 
+    axarr[-1].legend(legends[0:len(color_tags)], color_tags, loc='center left', handlelength=1, 
              handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
              bbox_to_anchor=(1.05, 0.5))
     f.tight_layout(pad=2, h_pad=None, w_pad=None)
@@ -284,18 +286,32 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
             indM = 0
             header = []
             data_p = []
-            ar = numpy.chararray([len(color_tags)*len(sort_tags),len(color_tags)*len(sort_tags)], itemsize=10)
-            ar[:] = "-"
-            for c in color_tags:
-                for s in sort_tags:
-                    header.append("{0}.{1}".format(c,s))
-                    data_p.append(sortDict[g][c][s])
+            arr = []
+            
+            for s in sort_tags:
+                for c in color_tags:
+                    header.append("{0}.{1}".format(s,c))
+                    data_p.append(sortDict[g][s][c])
 
                     for i, d in enumerate(data_p[:indM]):
                         u, p_value = mannwhitneyu(data_p[indM], d)
                         #u, p_value = stats.wilcoxon(data_p[indM], d)
-                        ar[indM,i] = "{:3.1e}".format(p_value)
+                        #ar[indM,i] = "{:3.1e}".format(p_value)
+                        arr.append(p_value)
                     indM = indM + 1
+            #print(len(arr))
+            [h,pc,a,b] = sm.multipletests(arr, alpha=0.05, returnsorted=False)
+            #print(len(h))
+            #print(len(pc))
+            ar = numpy.chararray([len(color_tags)*len(sort_tags),len(color_tags)*len(sort_tags)], itemsize=10)
+            ar[:] = "-"
+            k = 0
+            for c in color_tags:
+                for s in sort_tags:
+                    for i, d in enumerate(header[:k]):
+                        ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
+                    k = k + 1
+                        
             fig = plt.figure()
             at = plt.subplot(111, frame_on=False) 
             at.set_title(str(g))
@@ -319,7 +335,7 @@ def box_plot(sortDict, group_tags, color_tags, sort_tags):
                 # Column header
                 tb.add_cell(0, i+1, width, height/2, text=h, loc='center', edgecolor='none', facecolor='none') #
                 
-            tb.set_fontsize(12)
+            tb.set_fontsize(15)
             at.add_table(tb)
             #plt.subplots_adjust(bottom=0.3)
     
@@ -349,7 +365,6 @@ def output(f, extra=None, filename="outputfile"):
     if args.show:
         plt.show()
 
-
 def output_array(array, dirname, filename):
     """ Write a txt file from the given array. """
     try:
@@ -367,7 +382,6 @@ def output_array(array, dirname, filename):
 ##### PARAMETERS ################################################################################
 #################################################################################################
 
-
 parser = argparse.ArgumentParser(description='Provides various plotting tools.\nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho')
 
 subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
@@ -375,15 +389,17 @@ subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the bam and bed files for gene association analysis.')
 parser_boxplot.add_argument('input',help='The file name of the input Experimental Matrix file.')
 parser_boxplot.add_argument('output',default='boxplot', help='The file name of the output file.(pdf or html)')
-parser_boxplot.add_argument('-t', default='The boxplot', help='The title shown on the top of the plot.')
+parser_boxplot.add_argument('-t', default='Boxplot', help='The title shown on the top of the plot.')
 parser_boxplot.add_argument('-g',choices=['read','region','col4','col5','col6'], default='read', help="The way to group data into different subplots.(Default:read)")
-parser_boxplot.add_argument('-c',choices=['read','region','col4','col5','col6'], default='region', help="The way to color data within the same subplot.(Default:region)")
 parser_boxplot.add_argument('-s',choices=['read','region','col4','col5','col6'], default='col4', help="The way to sort data which shared the same color.(Default:col4)")
+parser_boxplot.add_argument('-c',choices=['read','region','col4','col5','col6'], default='region', help="The way to color data within the same subplot.(Default:region)")
+parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
 parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_boxplot.add_argument('-sl', type=float, default=0.01, help='Define the significance level for multiple test.')
 parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
+###########################################################################
 parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
 
 choice_method = ['midpoint','leftend','rightend','bothends'] # Be consist as the arguments of GenomicRegionSet.relocate_regions
@@ -393,10 +409,10 @@ choice_group=['col4','col5','col6']
 
 parser_lineplot.add_argument('input', help='The file name of the input Experimental Matrix file.')
 parser_lineplot.add_argument('output', default='lineplot', help='The file name of the output file.(pdf or html)')
-parser_lineplot.add_argument('-t', default='The lineplot', help='The title shown on the top of the plot.')
+parser_lineplot.add_argument('-t', default='Lineplot', help='The title shown on the top of the plot.')
 parser_lineplot.add_argument('-c', choices=choice_method, default='midpoint', 
                              help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_method) + 
-                             '.(Default:bothends) The bothend mode will flap the right end region for calculation.')
+                             '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
 parser_lineplot.add_argument('-l', choices=choice_line, default='regions-read', 
                              help="Define the lines' content of each single plot. Options are: "+', '.join(choice_line) + '(Default:regions-read)')
 parser_lineplot.add_argument('-g', choices=choice_group, default=None, 
@@ -412,6 +428,35 @@ parser_lineplot.add_argument('-html', action="store_true", help='Save the figure
 parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 
+###########################################################################
+parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
+
+choice_method = ['midpoint','leftend','rightend','bothends'] # Be consist as the arguments of GenomicRegionSet.relocate_regions
+choice_line = ['regions-read','reads-region']
+choice_group=['col4','col5','col6']
+parser_heatmap.add_argument('input', help='The file name of the input Experimental Matrix file.')
+parser_heatmap.add_argument('output', default='lineplot', help='The file name of the output file.(pdf or html)')
+parser_heatmap.add_argument('-t', default='Heatmap', help='The title shown on the top of the plot.')
+parser_heatmap.add_argument('-sort',type=int, default=None, help='Define the way to sort the signals. \
+Default is no sorting at all, the signals arrange in the order of their position; \
+"0" is sorting by the average ranking of all signals; \
+"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
+parser_heatmap.add_argument('-c', choices=choice_method, default='midpoint', 
+                             help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_method) + 
+                             '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
+parser_heatmap.add_argument('-g', choices=choice_group, default=None, 
+                             help='Define the grouping way for reads and regions. For example, choosing the column where \
+                             cell type information is, all the read(s) and region(s) are grouped together to form the plot. \
+                             Options are: '+', '.join(choice_group) + '.(Default:col4)')
+parser_heatmap.add_argument('-f', choices=choice_group, default=None,
+                             help='Define the factor column in Experimental Matrix.')
+parser_heatmap.add_argument('-e', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
+parser_heatmap.add_argument('-r', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
+parser_heatmap.add_argument('-s', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
+parser_heatmap.add_argument('-b', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
 args = parser.parse_args()
 
@@ -456,7 +501,11 @@ if args.input and args.mode=='boxplot':
     
     # Quantile normalization
     print("Step 3/5: Quantile normalization of all coverage table")
-    norm_table = quantile_normalization(all_table)
+    if args.nqn:
+        print("    No quantile normalization.")
+        norm_table = all_table
+    else:
+        norm_table = quantile_normalization(all_table)
     #printTable(readsnames,regionnames,norm_table,os.path.join(dir,"cov/norm_bed.txt"))
     t3 = time.time()
     print("    --- finished in {0:.3f} secs".format(t3-t2))
@@ -671,4 +720,164 @@ elif args.input and args.mode=='lineplot':
     print("    --- finished in {0:.2f} secs".format(t3-t2))
     print("Total running time is : " + str(datetime.timedelta(seconds=t3-t0)))
 
+################################ heatmap  #######################################################
+elif args.input and args.mode=='heatmap':
+    print("Parameters:\tExtend length:\t"+str(args.e))
+    print("\t\tRead size:\t"+str(args.r))
+    print("\t\tBin size:\t"+str(args.b))
+    print("\t\tStep size:\t"+str(args.s))
+    print("\t\tCenter mode:\t"+str(args.c+"\n"))
     
+    
+    t0 = time.time()
+    # Processing the regions by given parameters
+    print("Step 1/4: Processing regions by given parameters")
+    processed_beds = []
+    processed_bedsF = [] # Processed beds to be flapped
+    for bed in beds:
+        if args.c == 'bothends':
+            newbed = bed.relocate_regions(center='leftend', left_length=args.e, right_length=args.e+int(0.5*args.b))
+            processed_beds.append(newbed)
+            newbedF = bed.relocate_regions(center='rightend', left_length=args.e+int(0.5*args.b), right_length=args.e)
+            processed_bedsF.append(newbedF)
+        else:
+            newbed = bed.relocate_regions(center=args.c, left_length=args.e, right_length=args.e+int(0.5*args.b))
+            processed_beds.append(newbed)
+            #for b in newbed.sequences:
+            #    print(b.__repr__())
+    
+    # Grouping files
+    if args.g:
+        groupedbed = OrderedDict()  # Store all bed names according to their types
+        for bed in bednames:
+            ty = exps.get_type(bed,exps.fields[int(args.g[3])-1])
+            try: groupedbed[ty].append(bed)
+            except: groupedbed[ty] =[bed]
+        groupedbam = OrderedDict()  # Store all bam names according to their types
+        for bam in readsnames:
+            ty = exps.get_type(bam,exps.fields[int(args.g[3])-1])
+            try: groupedbam[ty].append(bam)
+            except: groupedbam[ty] =[bam]
+    else:
+        groupedbed = OrderedDict()
+        groupedbed["All"] = bednames
+        groupedbam = OrderedDict()
+        groupedbam["All"] = readsnames
+    
+    t1 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t1-t0))
+    
+    
+    # Calculate for coverage
+    print("Step 2/4: Calculating the coverage to all reads and averaging ")
+    len_coverage = int(2* args.e/args.s)
+    data = OrderedDict()
+    for t in groupedbed.keys():
+        print("  For "+t+":")
+        data[t] = OrderedDict()
+        totn = len(groupedbed[t]) * len(groupedbam[t])
+        bi = 0
+        for ai, bed in enumerate(groupedbed[t]):
+            i = bednames.index(bed)
+            data[t][bed] = OrderedDict() # New empty list for bed
+            for aj, bam in enumerate(groupedbam[t]):
+                ts = time.time()
+                #print("    calculating the coverage of " + bed + " and " + bam)
+                j = readsnames.index(bam)
+                c = CoverageSet(bed+"."+bam,processed_beds[i])            
+                c.coverage_from_bam(reads[j], read_size = args.r, binsize = args.b, stepsize = args.s)
+                # When bothends, consider the fliping end
+                if args.c == 'bothends':
+                    flap = CoverageSet("for flap", processed_bedsF[i])
+                    flap.coverage_from_bam(reads[j], read_size = args.r, binsize = args.b, stepsize = args.s)
+                    ffcoverage = numpy.fliplr(flap.coverage)
+                    c.coverage = numpy.concatenate((c.coverage, ffcoverage), axis=0)
+                # Averaging the coverage of all regions of each bed file
+                #avearr = numpy.zeros(len_coverage+1)
+                #avearr = [0] * int((2*args.e / args.s + 1))
+                #for a in c.coverage:
+                #    avearr = avearr + a
+                #avearr = avearr/len(c.coverage)
+                #avearr = numpy.array(c.coverage)
+                #avearr = numpy.average(avearr, axis=0)
+                #numpy.transpose(avearr)
+                #print(c.coverage)
+                data[t][bed][bam] = numpy.vstack(c.coverage) # Store the array into data list
+                #print(data[t][bed][bam])
+                bi += 1
+                te = time.time()
+                print("     Computing ("+ str(bi)+"/"+str(totn)+")\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+    t2 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t2-t1))
+    
+    # Sorting 
+    print("Step 3/4: Sorting the data for heatmap")
+    if args.sort == None:
+        pass
+    elif args.sort == 0:
+        for t in data.keys():
+            for i, bed in enumerate(data[t].keys()):
+                #print([numpy.sum(d, axis=1) for d in data[t][bed].values()])
+                sumarr = numpy.sum([numpy.sum(d, axis=1) for d in data[t][bed].values()], axis=0)
+                #print(sumarr)
+                #sumarr = numpy.sum(sumarr, axis=1)
+                ind = stats.rankdata(sumarr,method='ordinal') # The index for further sorting
+                #print(ind)
+                for j, bam in enumerate(data[t][bed]):
+                    data[t][bed][bam] = numpy.array([data[t][bed][bam][int(k)-1,:] for k in ind])
+                    
+    else:
+        for t in data.keys():
+            for i, bed in enumerate(data[t].keys()):
+                sumarr = numpy.sum(data[t][bed].values()[args.sort - 1], axis=1)
+                #print(sumarr)
+                #sumarr = numpy.sum(sumarr, axis=1)
+                ind = stats.rankdata(sumarr,method='ordinal') # The index for further sorting
+                #list(ind)
+                #print(ind)
+                for j, bam in enumerate(data[t][bed]):
+                    data[t][bed][bam] = numpy.array([data[t][bed][bam][int(k)-1,:] for k in ind])
+                #print(data[t][bed].values()[0])
+    t3 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t3-t2))
+    # Plotting
+    print("Step 4/4: Plotting the heatmap")
+    fig = [] # Store all figures  one figure for one type
+    
+    cm_list = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples']
+    
+    for ti, t in enumerate(data.keys()):
+        fig.append([])
+        fig[ti], axs = plt.subplots(len(data[t].keys())+1,len(data[t].values()[0].keys()), sharey=True, sharex = True, dpi=300)
+        fig[ti].suptitle("Heatmap: "+t)
+        for bi, bed in enumerate(data[t].keys()):
+            for bj, bam in enumerate(data[t][bed].keys()):
+                max_value = numpy.amax(data[t][bed][bam])
+                
+                if bi == 0: axs[bi, bj].set_title(exps.get_type(bam,'factor'), fontsize=7)
+                cax = axs[bi, bj].imshow(data[t][bed][bam], extent=[-args.e, args.e, 0,1], aspect='auto',
+                                   interpolation='nearest', cmap=cm_list[bj])
+                axs[bi, bj].set_xlim([-args.e, args.e])
+                plt.setp(axs[bi, bj].get_xticklabels(), fontsize=4, rotation=30)
+                #plt.setp(axs[bi, bj].get_yticklabels(), fontsize=10)
+                axs[bi, bj].locator_params(axis = 'x', nbins = 4)
+                axs[bi, bj].locator_params(axis = 'y', nbins = 4)
+                for spine in ['top', 'right', 'left', 'bottom']:
+                    axs[bi, bj].spines[spine].set_visible(False)
+                axs[bi, bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+                axs[bi, bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
+                #if bj > 0:
+                #    plt.setp(axs[bi, bj].get_yticklabels(),visible=False)
+                #plt.setp(axarr[i].get_yticks(),visible=False)
+                axs[bi, bj].minorticks_off()
+                if bj == 0:
+                    axs[bi, bj].set_ylabel(exps.get_type(bed,'factor'), fontsize=7)
+                if bi == len(data[t].keys())-1:
+                    axs[bi+1,bj].set_axis_off()
+                    
+                    cbar = fig[ti].colorbar(cax, ax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
+                    cbar.ax.set_xticklabels(['0', 'Max'], fontsize=5)# horizontal colorbar
+        #fig[ti].tight_layout(pad=2, h_pad=None, w_pad=None)
+        output(fig[ti],extra=plt.gci(), filename=args.output + "_" + t)
+    t4 = time.time()
+    print("    --- finished in {0:.2f} secs".format(t4-t3))
