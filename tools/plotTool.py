@@ -16,6 +16,9 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from collections import *
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 import statsmodels.sandbox.stats.multicomp as sm
+import matplotlib.gridspec as gridspec
+#from mpl_toolkits.axes_grid1 import AxesGrid
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 # Local Libraries
 # Distal Libraries
@@ -454,6 +457,7 @@ parser_heatmap.add_argument('-e', type=int, default=2000, help='Define the exten
 parser_heatmap.add_argument('-r', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_heatmap.add_argument('-s', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
 parser_heatmap.add_argument('-b', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+parser_heatmap.add_argument('-log', action="store_true", help='Set the signal in logarithm scale.')
 parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -802,7 +806,10 @@ elif args.input and args.mode=='heatmap':
                 #avearr = numpy.average(avearr, axis=0)
                 #numpy.transpose(avearr)
                 #print(c.coverage)
-                data[t][bed][bam] = numpy.vstack(c.coverage) # Store the array into data list
+                if args.log:
+                    data[t][bed][bam] = numpy.log10(numpy.vstack(c.coverage)) # Store the array into data list
+                else:
+                    data[t][bed][bam] = numpy.vstack(c.coverage) # Store the array into data list
                 #print(data[t][bed][bam])
                 bi += 1
                 te = time.time()
@@ -817,15 +824,20 @@ elif args.input and args.mode=='heatmap':
     elif args.sort == 0:
         for t in data.keys():
             for i, bed in enumerate(data[t].keys()):
-                #print([numpy.sum(d, axis=1) for d in data[t][bed].values()])
+                #print(numpy.sum(data[t][bed].values()[0], axis=1))
+                #print(len(numpy.sum(data[t][bed].values()[0], axis=1)))
+                
                 sumarr = numpy.sum([numpy.sum(d, axis=1) for d in data[t][bed].values()], axis=0)
                 #print(sumarr)
                 #sumarr = numpy.sum(sumarr, axis=1)
                 ind = stats.rankdata(sumarr,method='ordinal') # The index for further sorting
-                #print(ind)
-                for j, bam in enumerate(data[t][bed]):
-                    data[t][bed][bam] = numpy.array([data[t][bed][bam][int(k)-1,:] for k in ind])
-                    
+                #numpy.fliplr(ind)
+                
+                for j, bam in enumerate(data[t][bed].keys()):
+                    d = numpy.empty(shape=(data[t][bed][bam].shape))
+                    for k, ranki in enumerate(ind):
+                        d[-ranki,:] = data[t][bed][bam][k,:]
+                    data[t][bed][bam] = d
     else:
         for t in data.keys():
             for i, bed in enumerate(data[t].keys()):
@@ -835,33 +847,50 @@ elif args.input and args.mode=='heatmap':
                 ind = stats.rankdata(sumarr,method='ordinal') # The index for further sorting
                 #list(ind)
                 #print(ind)
-                for j, bam in enumerate(data[t][bed]):
-                    data[t][bed][bam] = numpy.array([data[t][bed][bam][int(k)-1,:] for k in ind])
+                for j, bam in enumerate(data[t][bed].keys()):
+                    d = numpy.empty(shape=(data[t][bed][bam].shape))
+                    for k, ranki in enumerate(ind):
+                        d[-ranki,:] = data[t][bed][bam][k,:]
+                    data[t][bed][bam] = d
                 #print(data[t][bed].values()[0])
     t3 = time.time()
     print("    --- finished in {0:.2f} secs".format(t3-t2))
     # Plotting
     print("Step 4/4: Plotting the heatmap")
-    fig = [] # Store all figures  one figure for one type
-    
+    #fig = [] # Store all figures  one figure for one type
+    tickfontsize = 6
     cm_list = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples']
     
     for ti, t in enumerate(data.keys()):
-        fig.append([])
-        fig[ti], axs = plt.subplots(len(data[t].keys())+1,len(data[t].values()[0].keys()), sharey=True, sharex = True, dpi=300)
-        fig[ti].suptitle("Heatmap: "+t)
+        #fig.append(plt.figure())
+        #rows = len(data[t].keys())
+        columns = len(data[t].values()[0].keys())
+        #fig, axs = plt.subplots(rows,columns, sharey=True, dpi=300)
+        #matplotlib.pyplot.subplots_adjust(left=1, right=2, top=2, bottom=1)
+        fig = plt.figure()
+        plt.suptitle("Heatmap: "+t, y=1.05)
+        rows = len(data[t].keys())
+        
+        ratio = 6
+        #gs = gridspec.GridSpec(rows*ratio,columns)
+        axs = numpy.empty(shape=(rows+1,columns), dtype=object)
+
         for bi, bed in enumerate(data[t].keys()):
             for bj, bam in enumerate(data[t][bed].keys()):
                 max_value = numpy.amax(data[t][bed][bam])
                 
+                axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
+
                 if bi == 0: axs[bi, bj].set_title(exps.get_type(bam,'factor'), fontsize=7)
-                cax = axs[bi, bj].imshow(data[t][bed][bam], extent=[-args.e, args.e, 0,1], aspect='auto',
-                                   interpolation='nearest', cmap=cm_list[bj])
+                im = axs[bi, bj].imshow(data[t][bed][bam], extent=[-args.e, args.e, 0,1], aspect='auto',
+                                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm_list[bj])
                 axs[bi, bj].set_xlim([-args.e, args.e])
-                plt.setp(axs[bi, bj].get_xticklabels(), fontsize=4, rotation=30)
+                axs[bi, bj].set_xticks([-args.e, 0, args.e])
+                #axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
+                plt.setp(axs[bi, bj].get_xticklabels(), fontsize=tickfontsize, rotation=0)
                 #plt.setp(axs[bi, bj].get_yticklabels(), fontsize=10)
-                axs[bi, bj].locator_params(axis = 'x', nbins = 4)
-                axs[bi, bj].locator_params(axis = 'y', nbins = 4)
+                #axs[bi, bj].locator_params(axis = 'x', nbins = 2)
+                #axs[bi, bj].locator_params(axis = 'y', nbins = 4)
                 for spine in ['top', 'right', 'left', 'bottom']:
                     axs[bi, bj].spines[spine].set_visible(False)
                 axs[bi, bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
@@ -871,13 +900,26 @@ elif args.input and args.mode=='heatmap':
                 #plt.setp(axarr[i].get_yticks(),visible=False)
                 axs[bi, bj].minorticks_off()
                 if bj == 0:
-                    axs[bi, bj].set_ylabel(exps.get_type(bed,'factor'), fontsize=7)
-                if bi == len(data[t].keys())-1:
-                    axs[bi+1,bj].set_axis_off()
+                    nregion = len(exps.objectsDict[bed])
+                    axs[bi, bj].set_ylabel(exps.get_type(bed,'factor')+" ("+str(nregion) + ")", fontsize=7)
+                if bi == rows-1:
+                    #divider = make_axes_locatable(axs[bi,bj])
+                    #cax = divider.append_axes("bottom", size="5%", pad=0.5)
+                    axs[rows,bj] = plt.subplot2grid((rows*ratio+1, columns), (rows*ratio, bj))
+                    axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
                     
-                    cbar = fig[ti].colorbar(cax, ax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
-                    cbar.ax.set_xticklabels(['0', 'Max'], fontsize=5)# horizontal colorbar
-        #fig[ti].tight_layout(pad=2, h_pad=None, w_pad=None)
-        output(fig[ti],extra=plt.gci(), filename=args.output + "_" + t)
+                    #cbar = grid.cbar_axes[i//2].colorbar(im)
+                    cbar = plt.colorbar(im, cax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
+                    cbar.outline.set_linewidth(0.5)
+                    cbar.ax.xaxis.set_ticks_position('none')
+                    if args.log:
+                        cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                        cbar.set_label('log10', fontsize=tickfontsize)
+                    else:
+                        cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                    #cbar.set_label('Amplitute of signal')
+        fig.tight_layout(pad=1, h_pad=1, w_pad=1)
+        output(fig,extra=plt.gci(), filename=args.output + "_" + t)
     t4 = time.time()
     print("    --- finished in {0:.2f} secs".format(t4-t3))
+    print("Total running time is : " + str(datetime.timedelta(seconds=t4-t0)))

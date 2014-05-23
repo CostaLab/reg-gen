@@ -35,10 +35,13 @@ parser = argparse.ArgumentParser(description='Provides various statistical tools
 subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 
 # Projection test
+choice_group=['col4','col5','col6']
 parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
 The null hypothesis is that no association between reference and query and their distribution is random.')
 parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file. Multiple references are acceptable.')
 parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file. Multiple queries are acceptable.')
+parser_projection.add_argument('-g', choices = choice_group, default=None, help='Group data of query by given column for plot. Default: None')
+parser_projection.add_argument('-c', choices = choice_group, default=None, help='Define the column of query for various colors in plot. Default: None')
 parser_projection.add_argument('-organism', default='hg19', help='Define the organism')
 parser_projection.add_argument('-plot', action="store_true", help='Generate the plot.')
 parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -72,51 +75,99 @@ referencenames = rEM.get_regionsnames()
 query = qEM.get_regionsets()
 querynames = qEM.get_regionsnames()
 
+if args.g:
+    groupedreference = OrderedDict()  # Store all bed names according to their types
+    for r in references:
+        ty = rEM.get_type(r.name,rEM.fields[int(args.g[3])-1])
+        try: groupedreference[ty].append(r)
+        except: groupedreference[ty] =[r]
+        
+    groupedquery = OrderedDict()  # Store all bed names according to their types
+    for q in query:
+        ty = qEM.get_type(q.name,qEM.fields[int(args.g[3])-1])
+        try: groupedquery[ty].append(q)
+        except: groupedquery[ty] =[q]
+        
+else:
+    groupedreference = OrderedDict()
+    groupedreference["All"] = references
+    groupedquery = OrderedDict()
+    groupedquery["All"] = query
+
+############# Color #####################################
+#color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+#colors = plt.cm.Paired(numpy.linspace(0, 1, 12))
+colors = [(0, 35/255, 138/255),(132/255, 29/255, 20/255)]
+if args.c:
+    color_tags = {}
+    for q in query:
+        c = qEM.get_type(q.name,qEM.fields[int(args.c[3])-1])
+        color_tags[q.name] = c
+else:
+    color_tags = {}
+    for q in query:
+        color_tags[q.name] = q.name
+
+print(color_tags.values())
+color_list = {}
+for i, c in enumerate(set(color_tags.values())):
+    for q in color_tags.keys():
+        if color_tags[q] == c:
+            color_list[q] = colors[i]
+color_tags['Background'] = 'Background'
+color_list['Background'] = '0.70'
+
 if args.mode == "projection":
     print("\nProjection test")
     print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p value"))
-    qlist = []
-    bglist = []
-    for i, r in enumerate(references):
-        for j, q in enumerate(query):
-            background, ratio, p = r.projection_test(q, args.organism, extra=True)
-            qlist.append(ratio)
-            bglist.append(background)
-            if p < 0.025: 
-                if len(q) == 0:
-                    print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(referencenames[i],querynames[j],p))
-                else:
-                    print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(referencenames[i],querynames[j],p))
-            elif p > 0.975:
-                if len(q) == 0:
-                    print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(referencenames[i],querynames[j],p))
-                else:
-                    print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(referencenames[i],querynames[j],p))
-            else: print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
-            
+    qlist = OrderedDict()
+    for ty in groupedquery.keys():
+        qlist[ty] = OrderedDict()
+        for i, r in enumerate(groupedreference[ty]):
+            qlist[ty][r.name] = OrderedDict()
+            for j, q in enumerate(groupedquery[ty]):
+                background, ratio, p = r.projection_test(q, args.organism, extra=True)
+                qlist[ty][r.name][q.name] = ratio
+                if p < 0.025: 
+                    if len(q) == 0:
+                        print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(r.name,q.name,p))
+                    else:
+                        print("    {0:25s}{1:25s}{2:.2e}\tSignificantly unassociated!".format(r.name,q.name,p))
+                elif p > 0.975:
+                    if len(q) == 0:
+                        print("    {0:25s}{1:25s}{2:.2e}\tEmpty query!".format(r.name,q.name,p))
+                    else:
+                        print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(r.name,q.name,p))
+                else: print("    {0:25s}{1:25s}{2:.2e}".format(r.name,q.name,p))
+        qlist[ty][r.name]['Background'] = background
+
     if args.plot:
-        nr = len(referencenames)
-        nq = len(querynames)
-        nAll = nr * nq
-        #color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
-        color_list = plt.cm.Paired(numpy.linspace(0, 1, 6))
-        width = 0.5/(nq+1) # Plus one background
-        x = numpy.arange(0.75,nr+0.75,1)
+        #nr = len(referencenames)
+        #nq = len(querynames)
+        #nAll = nr * nq
+        
+        #x = numpy.arange(0.75,nr+0.75,1)
         f, ax = plt.subplots()
         if args.log:
             ax.set_yscale('log')
         else:
             ax.locator_params(axis = 'y', nbins = 2)
-        for i,qy in enumerate(querynames):
-            ax.bar(x+i*width,[qlist[j] for j in range(i,nAll,nq)],width=width,color=color_list[i],align='edge')
-        ax.bar(x+nq*width,[bglist[j] for j in range(0,nAll,nq)], width=width,color=color_list[nq],align='edge')
-        ax.set_ylabel("Proportion of overlapped query",fontsize=10)
+        
+        for ind_ty, ty in enumerate(qlist.keys()):
+                         
+            for ind_r,r in enumerate(qlist[ty].keys()):
+                width = 0.8/(len(qlist[ty].keys()) * len(qlist[ty][r].keys())+1) # Plus one background
+                for ind_q, q in enumerate(qlist[ty][r].keys()):
+                    ax.bar(ind_ty * len(qlist[ty].keys())+ ind_r * len(qlist[ty][r].keys()) + ind_q*width,
+                           qlist[ty][r][q], width=width, color=color_list[q],align='edge')
+            
+        ax.set_ylabel("Percentage of associated regions",fontsize=12)
         ax.yaxis.tick_left()
-        ax.set_xticks(range(1,nr+1))
-        ax.set_xticklabels(referencenames)
+        ax.set_xlim(-0.2,len(qlist.keys())-0.2)
+        ax.set_xticks([i + 0.5 - width for i in range(len(groupedreference.keys()))])
+        ax.set_xticklabels(groupedreference.keys())
         ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-        querynames.append('Background')
-        ax.legend(querynames, loc='center left', handlelength=1, handletextpad=1, 
+        ax.legend(set(color_tags.values()), loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
         for spine in ['top', 'right']:  # 'left', 'bottom'
             ax.spines[spine].set_visible(False)
