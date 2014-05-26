@@ -661,7 +661,7 @@ class GenomicRegionSet:
                 sample = random.choice(result_map.any_chrom(random.choice(candidate_chrom), len_min=length))
                 try:
                     random_posi = random.randint(sample.initial, sample.final - length)
-                    
+                    print(sample.chrom)
                     cont_loop = False
                 except:
                     pass
