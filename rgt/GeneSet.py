@@ -13,11 +13,18 @@ class GeneSet:
         self.values = {} #keys: gene, value: expression data as a list
         self.cond = []
 
+
+    def __len__(self):
+        return len(self.genes)
+    
+    def __iter__(self):
+        return iter(self.genes)
+
     def read(self, geneListFile):
         """Read genes"""
         self.genes = list(set([l.strip("\n") for l in open(geneListFile)]))
 
-    def readExpression(self, geneListFile, header = True):
+    def read_expression(self, geneListFile, header = True):
         """Read gene expression data"""
         f = open(geneListFile)
         if header:
@@ -28,5 +35,5 @@ class GeneSet:
         for l in f.readlines():
             l = l.strip("\n")
             l = l.split("\t")
-            self.genes = l[0].upper()
+            self.genes.append(l[0].upper())
             self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
