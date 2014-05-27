@@ -5,7 +5,7 @@ from GenomicRegion import GenomicRegion
 from Util import GenomeData, MotifData, AuxiliaryFunctions
 
 """
-Standardization of annotation.
+Genomic Annotation from Genes
 
 Authors: Eduardo G. Gusmao.
 

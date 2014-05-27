@@ -602,6 +602,7 @@ class GenomicRegionSet:
                 continue
         chromosome_file.close()
         
+
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
                        overlap_result=True, overlap_input=True, chrom_X=False, chrom_M=False, 
                        filter_path=None):
