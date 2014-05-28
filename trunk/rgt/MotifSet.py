@@ -2,6 +2,7 @@
 
 import os
 import sys
+import sets
 from copy import deepcopy
 from GenomicRegion import GenomicRegion
 from Util import GenomeData, MotifData, AuxiliaryFunctions
@@ -37,9 +38,10 @@ class MotifSet:
 
     def __init__(self):
         """Initialize GenomicRegion"""
-        self.motifs_map = {}
+        self.motifs_map={}
         self.genes_map={}
         self.genes_suffix_map={}
+        self.networks={}
         
 
     def add(self, new_motif):
@@ -73,13 +75,13 @@ class MotifSet:
         return res   
 
     def filter_by_motifs(self,motifs):
-        motif_set=MotifSet()
+        motif_sets=MotifSet()
         for m in motifs:
           try:
-            motif_set.add(self.motifs_map[m])
+            motif_sets.add(self.motifs_map[m])
           except:
             print "motif not found", m
-        return motif_set
+        return motif_sets
 
 
     def filter_by_genes(self,genes,search="exact"):
@@ -89,7 +91,7 @@ class MotifSet:
                inexact - genes with no exact match are searched for inexact matcth
                all - all genes are applied to an inexact match
         '''
-        motif_set=MotifSet()
+        motif_sets=MotifSet()
         motifs_genes={}
         genes_motifs={}
         not_found_genes= [] # keep genes for inexact search
@@ -99,7 +101,7 @@ class MotifSet:
            try:
              motifs=self.genes_map[g]
              for m in motifs:
-                motif_set.add(m)
+                motif_sets.add(m)
                 try:
                   genes_motifs[g].append(m.name)   
                 except:
@@ -121,7 +123,7 @@ class MotifSet:
              for s in suffs:
                motifs=self.genes_suffix_map[s]
                for m in motifs:
-                  motif_set.add(m)
+                  motif_sets.add(m)
                   try:
                     genes_motifs[g].append(m.name)   
                   except:
@@ -130,7 +132,7 @@ class MotifSet:
                     motifs_genes[m.name].append(g)   
                   except:
                     motifs_genes[m.name]=[g]
-        return motif_set,genes_motifs,motifs_genes
+        return motif_sets,genes_motifs,motifs_genes
                      
 
     def read_file(self, file_name_list):
@@ -168,4 +170,88 @@ class MotifSet:
             mtf_file.close()
 
 
+    def read_motif_targets(self,file_name,condition,pvalue_threshold):
+        ''' reading current output of motif enrichment analysis to get gene targets
+        This function could be made internal by integration with motif enrichment search
+        '''
+        network={}
 
+        for line in open(file_name):
+            line=line.strip("\n")
+            values=line.split("\t")
+            motif=values[0]
+            try:
+                self.motifs_map[motif]  
+                pvalue=float(values[2])
+                genes=values[9].split(",")
+                if (pvalue_threshold>=pvalue):
+                    network[motif]=genes
+            except Exception, e:
+                print("motif not found: "+motif+str(e))
+        self.networks[condition]=network
+
+#    def get_motifs_networks():
+#        '''
+#        Getting all motifs presents in at least one network
+#        '''
+#        motifs={}
+#        for net in self.networks:
+#            for m in net.keys():
+#              motifs[m]=[]
+#        return motifs.keys()
+
+    def write_cytoscape_network(self,genes,gene_mapping_search,out_path):
+        '''
+        Write files to be used as input for cytoscape.
+        it recieves a list of genes to map to, a mapping search strategy and path for outputting files
+        '''
+        #getting mapping of genes to motifs
+        [motif_sets,genes_motifs,motifs_genes]=self.filter_by_genes(genes,gene_mapping_search)
+        net_pairs={}
+        net_tfs={}
+        all_pairs=sets.Set()
+        all_tfs=sets.Set()
+        all_genes=sets.Set()
+        # using genes to motif mapping to get network in all conditions
+        for net_name in self.networks.keys():
+            net=self.networks[net_name]
+            pairs=sets.Set()
+            tfs=sets.Set()
+            net_pairs[net_name]=pairs
+            net_tfs[net_name]=tfs
+            for tf in genes_motifs.keys():
+                motifs=genes_motifs[gene]
+                for m in motifs:
+                    try:
+                      for target in net[m]:
+                        pairs.add(tf,target)                          
+                        tfs.add(tf)
+                        all_genes.add(tf)
+                        all_genes.add(target)
+                    except:
+                        print "motif not in network",m, tf
+            all_pairs=all_pairs.union(pairs)
+            all_tfs=all_tfs.union(tfs)
+         
+        #printing out network
+        for net_name in net_pairs.keys():
+            f=open(out_path+"/"+net_name+"_targets.txt","w")
+            pairs_aux=net_pairs[net_name]
+            for pair in all_pairs:
+              #check if pair is active in the network  
+              if pair in pairs_aux:
+                f.write(pair[0]+"\t"+pair[1]+"\tactive")
+              else:
+                f.write(pair[0]+"\t"+pair[1]+"\tinactive")
+            f.close()          
+            f=open(out_path+"/"+net_name+"_genes.txt","w")
+            for gene in all_genes:
+              #check if gene is tf active in network
+              if gene in net_tfs[net_name]:
+                f.write(gene+"\ttf_active")
+              elif gene in all_tfs:
+                f.write(gene+"\ttf_inactive")
+              else:
+                f.write(gene+"\ttarget")
+            f.close()       
+              
