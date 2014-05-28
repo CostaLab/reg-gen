@@ -9,18 +9,18 @@ import argparse
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 import numpy
-import HTML
+import time, datetime, getpass, fnmatch, HTML
 
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 from rgt.Util import GenomeData
-
+from tools.plottools import *
 
 dir = os.getcwd()
 """
-Statistical analysis methods for ExperimentalMatrix
+Statistical analysis methods and plotting tools for ExperimentalMatrix
 
 Author: Joseph Kuo
 
@@ -30,27 +30,35 @@ Author: Joseph Kuo
 ##### PARAMETERS ################################################################################
 #################################################################################################
 
-parser = argparse.ArgumentParser(description='Provides various statistical tools for association analysis.\nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho')
+# Some general help descriptions
+######### Some general plotting arguments descriptions ###############
+helpinput = 'The file name of the input Experimental Matrix file. Recommended to add more columns for more information for ploting. For example, cell type or factors.'
+helpoutput = 'The directory name for the output files. For example, project name.'
+helptitle = 'The title shown on the top of the plot and also the folder name...'
+helpgroup = "Group the data by read, region, or a factor in the header of experimental matrix."
+helpcolor = "Color the data by read, region, or a factor in the header of experimental matrix."
+helpsort = "Sort the data by read, region, or a factor in the header of experimental matrix."
 
+parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
+\nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 
-# Projection test
-choice_group=['col4','col5','col6']
+################### Projection test ##########################################
 parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
 The null hypothesis is that no association between reference and query and their distribution is random.')
-parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix file. Multiple references are acceptable.')
-parser_projection.add_argument('query', help='The file name of the query Experimental Matrix file. Multiple queries are acceptable.')
-parser_projection.add_argument('-g', choices = choice_group, default=None, help='Group data of query by given column for plot. Default: None')
-parser_projection.add_argument('-c', choices = choice_group, default=None, help='Define the column of query for various colors in plot. Default: None')
-parser_projection.add_argument('-organism', default='hg19', help='Define the organism')
-parser_projection.add_argument('-plot', action="store_true", help='Generate the plot.')
+parser_projection.add_argument('reference',help='The file name of the reference Experimental Matrix. Multiple references are acceptable.')
+parser_projection.add_argument('query', help='The file name of the query Experimental Matrix. Multiple queries are acceptable.')
+parser_projection.add_argument('-g', default=None, help=helpgroup +" (Default:None)")
+parser_projection.add_argument('-c', default=None, help=helpcolor +' (Default: None)')
+parser_projection.add_argument('-or',default='hg19', help='Define the organism. (Default: hg19)')
 parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
 parser_projection.add_argument('-output', default='projection_test', help='Define the filename of the output plot.(Default: projection_test)') 
-#parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-#parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
-#parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
-# Jaccard
+################### Jaccard test ##########################################
+
 parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluate the association level by comparing with jaccard index from repeating randomization.')
 parser_jaccard.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
 parser_jaccard.add_argument('query', help='The file name of the query Experimental Matrix file.')
@@ -61,65 +69,80 @@ parser_jaccard.add_argument('-organism', default='hg19', help='Define the organi
 #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
 #parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
-args = parser.parse_args()
+################### Boxplot ##########################################
+parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
+parser_boxplot.add_argument('input',help=helpinput)
+parser_boxplot.add_argument('output', help=helpoutput)
+parser_boxplot.add_argument('-t','--title', default='Boxplot', help=helptitle)
+parser_boxplot.add_argument('-g', default='read', help=helpgroup + " (Default:read)")
+parser_boxplot.add_argument('-c', default='region', help=helpcolor + " (Default:region)")
+parser_boxplot.add_argument('-s', default='cell', help=helpsort + " (Default:read)")
+parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
+parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_boxplot.add_argument('-p','--pvalue', type=float, default=0.01, help='Define the significance level for multiple test. Default: 0.01')
+parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
+
+################### Lineplot ##########################################
+
+################### Heatmap ##########################################
+
+################### Integration ##########################################
+
+
+################### Parsing the arguments ################################
+if len(sys.argv)==1:
+    parser.print_help()
+    sys.exit(1)
+elif len(sys.argv) == 2: 
+    # retrieve subparsers from parser
+    subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+    # there will probably only be one subparser_action,but better save than sorry
+    for subparsers_action in subparsers_actions:
+        # get all subparsers and print help
+        for choice, subparser in subparsers_action.choices.items():
+            if choice == sys.argv[1]:
+                print("\nYou need more arguments.")
+                print("\nSubparser '{}'".format(choice))        
+                subparser.print_help()
+    sys.exit(1)
+else:
+    args = parser.parse_args()
+    
 #################################################################################################
-##### INPUT #####################################################################################
+##### FUNCTIONS #################################################################################
 #################################################################################################
+    
 
-rEM, qEM = ExperimentalMatrix(), ExperimentalMatrix()
-rEM.read(args.reference)
-qEM.read(args.query)
-references = rEM.get_regionsets()
-referencenames = rEM.get_regionsnames()
-query = qEM.get_regionsets()
-querynames = qEM.get_regionsnames()
+######### Universal functions
 
-if args.g:
+    
+######### Projection test
+def fetch_refandque(referenceEM, queryEM):
+    rEM, qEM = ExperimentalMatrix(), ExperimentalMatrix()
+    rEM.read(referenceEM)
+    qEM.read(queryEM)
+    references = rEM.get_regionsets()
+    referencenames = rEM.get_regionsnames()
+    query = qEM.get_regionsets()
+    querynames = qEM.get_regionsnames()
+    return [rEM, references, referencenames, qEM, query, querynames]
+
+def group_refque(rEM, references, referencenames, qEM, query, querynames, groupby):
     groupedreference = OrderedDict()  # Store all bed names according to their types
     for r in references:
-        ty = rEM.get_type(r.name,rEM.fields[int(args.g[3])-1])
+        ty = rEM.get_type(r.name,groupby)
         try: groupedreference[ty].append(r)
         except: groupedreference[ty] =[r]
-        
     groupedquery = OrderedDict()  # Store all bed names according to their types
     for q in query:
-        ty = qEM.get_type(q.name,qEM.fields[int(args.g[3])-1])
+        ty = qEM.get_type(q.name,groupby)
         try: groupedquery[ty].append(q)
         except: groupedquery[ty] =[q]
-        
-else:
-    groupedreference = OrderedDict()
-    groupedreference["All"] = references
-    groupedquery = OrderedDict()
-    groupedquery["All"] = query
+    return groupedreference, groupedquery
 
-############# Color #####################################
-#color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
-#colors = plt.cm.Paired(numpy.linspace(0, 1, 12))
-colors = [(0, 35/255, 138/255),(132/255, 29/255, 20/255)]
-if args.c:
-    color_tags = {}
-    for q in query:
-        c = qEM.get_type(q.name,qEM.fields[int(args.c[3])-1])
-        color_tags[q.name] = c
-else:
-    color_tags = {}
-    for q in query:
-        color_tags[q.name] = q.name
-
-print(color_tags.values())
-color_list = {}
-for i, c in enumerate(set(color_tags.values())):
-    for q in color_tags.keys():
-        if color_tags[q] == c:
-            color_list[q] = colors[i]
-color_tags['Background'] = 'Background'
-color_list['Background'] = '0.70'
-
-if args.mode == "projection":
-    print("\nProjection test")
-    print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p value"))
+def projection_test(groupedreference, groupedquery, organism):
     qlist = OrderedDict()
     for ty in groupedquery.keys():
         qlist[ty] = OrderedDict()
@@ -140,40 +163,77 @@ if args.mode == "projection":
                         print("    {0:25s}{1:25s}{2:.2e}\tSignificantly associated!".format(r.name,q.name,p))
                 else: print("    {0:25s}{1:25s}{2:.2e}".format(r.name,q.name,p))
         qlist[ty][r.name]['Background'] = background
+    return qlist
 
+
+######### 
+#########
+######### 
+######### 
+#########     
+    
+#################################################################################################
+##### Main #####################################################################################
+#################################################################################################
+
+t0 = time.time()
+# Input parameters dictionary
+parameter = [] 
+
+parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+parameter.append("User: " + getpass.getuser())
+parameter.append("Project: " + args.output)
+parameter.append("\nCommand:\n   $ python " + " ".join(sys.argv))
+parameter.append("")
+
+
+if args.mode == 'projection':
+    # Fetching reference and query EM
+    [rEM, references, referencenames, qEM, query, querynames] = fetch_refandque(args.reference,args.query)
+    
+    if args.g:
+        groupedreference, groupedquery = group_refque(rEM, references, referencenames, qEM, query, querynames)
+    else:
+        groupedreference = OrderedDict()
+        groupedreference["All"] = references
+        groupedquery = OrderedDict()
+        groupedquery["All"] = query
+    
+    ############# Color #####################################
+    #color_list = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan']
+    #colors = plt.cm.Paired(numpy.linspace(0, 1, 12))
+    colors = [(0, 35/255, 138/255),(132/255, 29/255, 20/255)]
+    if args.c:
+        color_tags = {}
+        for q in query:
+            c = qEM.get_type(q.name,qEM.fields[int(args.c[3])-1])
+            color_tags[q.name] = c
+    else:
+        color_tags = {}
+        for q in query:
+            color_tags[q.name] = q.name
+    
+    #print(color_tags.values())
+    color_list = {}
+    for i, c in enumerate(set(color_tags.values())):
+        for q in color_tags.keys():
+            if color_tags[q] == c:
+                color_list[q] = colors[i]
+    color_tags['Background'] = 'Background'
+    color_list['Background'] = '0.70'
+    
+    ################### Projection test ##########################################
+    print("\nProjection test")
+    print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p value"))
+    
+    qlist = projection_test(groupedreference, groupedquery, organism=args.organism)
+    
+## TO DO
     if args.plot:
-        #nr = len(referencenames)
-        #nq = len(querynames)
-        #nAll = nr * nq
-        
-        #x = numpy.arange(0.75,nr+0.75,1)
-        f, ax = plt.subplots()
-        if args.log:
-            ax.set_yscale('log')
-        else:
-            ax.locator_params(axis = 'y', nbins = 2)
-        
-        for ind_ty, ty in enumerate(qlist.keys()):
-                         
-            for ind_r,r in enumerate(qlist[ty].keys()):
-                width = 0.8/(len(qlist[ty].keys()) * len(qlist[ty][r].keys())+1) # Plus one background
-                for ind_q, q in enumerate(qlist[ty][r].keys()):
-                    ax.bar(ind_ty * len(qlist[ty].keys())+ ind_r * len(qlist[ty][r].keys()) + ind_q*width,
-                           qlist[ty][r][q], width=width, color=color_list[q],align='edge')
-            
-        ax.set_ylabel("Percentage of associated regions",fontsize=12)
-        ax.yaxis.tick_left()
-        ax.set_xlim(-0.2,len(qlist.keys())-0.2)
-        ax.set_xticks([i + 0.5 - width for i in range(len(groupedreference.keys()))])
-        ax.set_xticklabels(groupedreference.keys())
-        ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-        ax.legend(set(color_tags.values()), loc='center left', handlelength=1, handletextpad=1, 
-                  columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-        for spine in ['top', 'right']:  # 'left', 'bottom'
-            ax.spines[spine].set_visible(False)
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f = projection_plot(args.log, qlist,color_list,groupedreference,color_tags)
         f.savefig(filename = args.output, bbox_extra_artists=(plt.gci()), bbox_inches='tight',dpi=300)
-        
+
+################### Jaccard test ##########################################
 if args.mode == "jaccard":
     """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
     
@@ -197,6 +257,14 @@ if args.mode == "jaccard":
             # How many randomizations have higher jaccard index than the real index?
             p = len([x for x in random_jaccards if x > real_jaccard])/args.r
             print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
+
             
-            
-    
+################### Boxplot ##########################################
+
+
+
+################### Lineplot #########################################
+
+################### Heatmap ##########################################
+
+################### Integration ######################################
