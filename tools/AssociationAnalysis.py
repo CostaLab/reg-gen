@@ -195,9 +195,9 @@ parser_heatmap.add_argument('-sort',type=int, default=None, help='Define the way
 Default is no sorting at all, the signals arrange in the order of their position; \
 "0" is sorting by the average ranking of all signals; \
 "1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
-parser_heatmap.add_argument('-g', default='reads', help=helpgroup + " (Default:reads)")
-parser_heatmap.add_argument('-c', default='regions', help=helpcolor + " (Default:regions)")
 parser_heatmap.add_argument('-s', default='cell', help=helpsort + " (Default:cell)")
+parser_heatmap.add_argument('-g', default='regions', help=helpgroup + " (Default:regions)")
+parser_heatmap.add_argument('-c', default='reads', help=helpcolor + " (Default:reads)")
 parser_heatmap.add_argument('-e', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
 parser_heatmap.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_heatmap.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -418,28 +418,29 @@ if args.mode=='heatmap':
     
     # Plotting
     print2(parameter, "\nStep 4/4: Plotting the heatmap")
-    lineplot.colormap(colorby = args.c, definedinEM = args.color)
+    lineplot.hmcmlist(colorby = args.c, definedinEM = args.color)
     lineplot.heatmap(args.log)
     for i, name in enumerate(lineplot.hmfiles):
-        output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name, extra=plt.gci())
+        output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name)
     if args.html: lineplot.gen_htmlhm(args.output, args.title)
     t4 = time.time()
     print2(parameter, "    --- finished in {0:.2f} secs".format(t4-t3))
     print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=t4-t0)))
-    output_parameters(parameter, directory = args.output, folder = args.t, filename="parameters.log")
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.log")
     
 ################### Integration ######################################
 if args.mode=='integration':
     if args.l2m:
         f1 = open(args.l2m,'r')
         f2 = open(args.output, 'w')
-        f2.write("name\ttype\tfile\n")
+        f2.write("name\ttype\tfile\tfactor")
         for l in f1.readlines():
+            f = l.strip()
             name = l.split('.')[0]
             if l.split('.')[1].strip() == "bed":
                 ty = "regions"
             elif l.split('.')[1].strip() == "bam":
                 ty = "reads"
-            f2.write("{0}\t{1}\t{2}".format(name, ty, l))
+            f2.write("\n{0}\t{1}\tChIP-Seq_Compendium/{2}\t{3}".format(name, ty, f,name))
         f1.close()
         f2.close()    
