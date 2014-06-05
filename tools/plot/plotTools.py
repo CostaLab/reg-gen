@@ -80,7 +80,7 @@ def colormap(exps, colorby, definedinEM):
                 c = exps.get_type(i,"color")
                 if c[0] == "(":
                     rgb = [ eval(j) for j in c.strip('()').split(',')]
-                    colors.append(rgb)
+                    colors.append([v/255 for v in rgb])
                 else:
                     colors.append(exps.get_type(i,"color"))
         else:
@@ -140,6 +140,7 @@ class projection:
         self.referencenames = self.rEM.get_regionsnames()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
+        self.parameter = []
     
     def group_refque(self, groupby=False):
         self.groupedreference = OrderedDict()  # Store all bed names according to their types
@@ -160,33 +161,42 @@ class projection:
     
     def colors(self, colorby, definedinEM):
         ############# Color #####################################
-        self.color_list = colormap(self.qEM, colorby, definedinEM).tolist()
+        self.color_list = colormap(self.qEM, colorby, definedinEM)
         self.color_tags = gen_tags(self.qEM, colorby)
         self.color_tags.append('Background')
         self.color_list.append('0.70')
     
+    def ref_inter(self):
+        self.background = {}
+        for ty in self.groupedreference.keys():
+            self.background[ty] = GenomicRegionSet("intersection of references")
+            for r in self.groupedreference[ty]:
+                self.background[ty].combine(r)
+            self.background[ty].merge()
+    
     def projection_test(self, organism):
         self.qlist = OrderedDict()
+        print2(self.parameter, "\nProjection test")
+        print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
         for ty in self.groupedquery.keys():
             self.qlist[ty] = OrderedDict()
+            try:
+                if self.background: bgset = self.background[ty]
+            except: bgset = None
             for i, r in enumerate(self.groupedreference[ty]):
                 self.qlist[ty][r.name] = OrderedDict()
                 for j, q in enumerate(self.groupedquery[ty]):
-                    background, ratio, p = r.projection_test(q, organism, extra=True)
+                    bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
                     self.qlist[ty][r.name][q.name] = ratio
-                    if p < 0.025: 
-                        if len(q) == 0:
-                            print("    {0:25s}{1:40s}{2:.2e}\tEmpty query!".format(r.name,q.name,p))
-                        else:
-                            print("    {0:25s}{1:40s}{2:.2e}\tSignificantly unassociated!".format(r.name,q.name,p))
-                    elif p > 0.975:
-                        if len(q) == 0:
-                            print("    {0:25s}{1:40s}{2:.2e}\tEmpty query!".format(r.name,q.name,p))
-                        else:
-                            print("    {0:25s}{1:40s}{2:.2e}\tSignificantly associated!".format(r.name,q.name,p))
-                    else: print("    {0:25s}{1:40s}{2:.2e}".format(r.name,q.name,p))
-                print("    {0:25s}{1:40s}{2:.2e}".format(r.name,"---Coverage in whole genome---", background))
-                self.qlist[ty][r.name]['Background'] = background
+                    if len(q) == 0:
+                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tEmpty query!".format(r.name,bg,q.name,ratio,p))
+                    elif p < 0.05 and bg > ratio: 
+                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tSignificantly unassociated!".format(r.name,bg,q.name,ratio,p))
+                    elif p < 0.05 and bg < ratio:
+                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tSignificantly associated!".format(r.name,bg,q.name,ratio,p))
+                    else:
+                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}".format(r.name,bg,q.name,ratio,p))
+                self.qlist[ty][r.name]['Background'] = bg
 
     def plot(self, logt=None):
         f, ax = plt.subplots()
@@ -204,14 +214,11 @@ class projection:
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_ty*len(self.qlist[ty].keys())+ ind_r + ind_q*width + 0.1
                     y = self.qlist[ty][r][q]
-                    print(x)
                     ax.bar(x, y, width=width, color=self.color_list[ind_q],align='edge')
-        ax.set_ylabel("Percentage of associated regions",fontsize=12)
+        ax.set_ylabel("Percentage of intersected regions",fontsize=12)
         ax.yaxis.tick_left()
-        #ax.set_xlim(-0.2,len(self.qlist.keys())*len(self.qlist.keys())-0.2)
-        #ax.set_xticks([i + 0.6 - width for i in range(len(self.groupedreference.keys()))])
         ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(g_label)*len(r_label))])
-        ax.set_xticklabels(r_label*len(g_label),rotation=60)
+        ax.set_xticklabels(r_label*len(g_label),rotation=40)
         ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
         ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
@@ -220,6 +227,28 @@ class projection:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
+    def gen_html(self,outputname, title):
+        ########## HTML ###################
+        pd = os.path.join(dir,outputname,title)
+        try:
+            os.stat(os.path.dirname(pd))
+        except:
+            os.mkdir(os.path.dirname(pd))
+        try:
+            os.stat(pd)
+        except:
+            os.mkdir(pd)    
+        f = open(os.path.join(pd,'projection.html'),'w')
+        table = []
+        # Header 
+        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
+            </style><font size="7">' + title + "</font>"])
+        # Each row is a plot with its data
+        table.append(["<img src='projection_test.png' width=800 >"])
+        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
+        htmlcode = HTML.table(table)
+        for line in htmlcode: f.write(line)
+        f.close()
 ###########################################################################################
 #                    Jaccard test
 ###########################################################################################
@@ -493,7 +522,7 @@ class boxplot:
                         
             nrows, ncols = ar.shape
             subtable = '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><table style="width:800px">'
+            </style><table style="width:100%">'
             for r in range(nrows+1):
                 subtable += '<tr>'
                 for c in range(ncols+1):
@@ -510,7 +539,7 @@ class boxplot:
                 subtable += '</tr>'
             subtable += '</table>'
             table.append([subtable])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.log")+" '><font size="+'"5"'+">Parameters</a>"])
+        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
@@ -680,11 +709,11 @@ class lineplot:
         f = open(os.path.join(pd,'lineplot.html'),'w')
         table = []
         # Header 
-        table.append(['<style>table{border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
+        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
             </style><font size="7">' + title + "</font>"])
         # Each row is a plot with its data
         table.append(["<img src='lineplot.png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.log")+" '><font size="+'"5"'+">Parameters</a>"])
+        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
@@ -806,12 +835,12 @@ class lineplot:
         f = open(os.path.join(pd,'heatmap.html'),'w')
         table = []
         # Header 
-        table.append(['<style>table{border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
+        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
             </style><font size="7">' + title + "</font>"])
         # Each row is a plot with its data
         for name in self.hmfiles:
             table.append(["<img src='" + name + ".png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.log")+" '><font size="+'"5"'+">Parameters</a>"])
+        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
