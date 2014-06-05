@@ -87,10 +87,31 @@ def colormap(exps, colorby, definedinEM):
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     if definedinEM == False:
         #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
-        colors = plt.cm.Set3(numpy.linspace(0, 1, len(gen_tags(exps, colorby))))
-        colors = colors.tolist()
+        #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
+        colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
     return colors
-        
+
+def colormaps(exps, colorby, definedinEM):
+    """Generate a list of colormaps in the format which compatible with matplotlib"""
+    if definedinEM:
+        if colorby == "reads":
+            colors = []
+            for i in exps.get_readsnames():
+                c = exps.get_type(i,"color")
+                colors.append(exps.get_type(i,"color"))
+        elif colorby == "regions":
+            colors = []
+            for i in exps.get_regionsnames():
+                c = exps.get_type(i,"color")
+                colors.append(exps.get_type(i,"color"))
+        else:
+            colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
+    if definedinEM == False:
+        colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples',  'YlGnBu', 'Greys','gist_yarg', 'GnBu', 
+                  'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+    return colors
+
+
 def output_array(array, directory, folder, filename):
     """ Write a txt file from the given array. """
     pd = os.path.join(dir,directory,folder)
@@ -139,7 +160,7 @@ class projection:
     
     def colors(self, colorby, definedinEM):
         ############# Color #####################################
-        self.color_list = colormap(self.qEM, colorby, definedinEM)
+        self.color_list = colormap(self.qEM, colorby, definedinEM).tolist()
         self.color_tags = gen_tags(self.qEM, colorby)
         self.color_tags.append('Background')
         self.color_list.append('0.70')
@@ -165,7 +186,7 @@ class projection:
                             print("    {0:25s}{1:40s}{2:.2e}\tSignificantly associated!".format(r.name,q.name,p))
                     else: print("    {0:25s}{1:40s}{2:.2e}".format(r.name,q.name,p))
                 print("    {0:25s}{1:40s}{2:.2e}".format(r.name,"---Coverage in whole genome---", background))
-            self.qlist[ty][r.name]['Background'] = background
+                self.qlist[ty][r.name]['Background'] = background
 
     def plot(self, logt=None):
         f, ax = plt.subplots()
@@ -173,22 +194,24 @@ class projection:
             ax.set_yscale('log')
         else:
             ax.locator_params(axis = 'y', nbins = 2)
-        
+        g_label = []
         for ind_ty, ty in enumerate(self.qlist.keys()):
-                         
+            g_label.append(ty)
+            r_label = []   
             for ind_r,r in enumerate(self.qlist[ty].keys()):
-                width = 0.8/(len(self.qlist[ty].keys()) * len(self.qlist[ty][r].keys())+1) # Plus one background
+                r_label.append(r)
+                width = 0.8/(len(self.qlist[ty][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
-                    x = ind_ty * len(self.qlist[ty].keys()) + ind_r * len(self.qlist[ty][r].keys()) + ind_q*width + 0.1
-                    print(x)
+                    x = ind_ty*len(self.qlist[ty].keys())+ ind_r + ind_q*width + 0.1
                     y = self.qlist[ty][r][q]
+                    print(x)
                     ax.bar(x, y, width=width, color=self.color_list[ind_q],align='edge')
-                    print(self.color_list[ind_q])
         ax.set_ylabel("Percentage of associated regions",fontsize=12)
         ax.yaxis.tick_left()
-        ax.set_xlim(-0.2,len(self.qlist.keys())-0.2)
-        ax.set_xticks([i + 0.5 - width for i in range(len(self.groupedreference.keys()))])
-        ax.set_xticklabels(self.groupedreference.keys())
+        #ax.set_xlim(-0.2,len(self.qlist.keys())*len(self.qlist.keys())-0.2)
+        #ax.set_xticks([i + 0.6 - width for i in range(len(self.groupedreference.keys()))])
+        ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(g_label)*len(r_label))])
+        ax.set_xticklabels(r_label*len(g_label),rotation=60)
         ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
         ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
@@ -701,7 +724,10 @@ class lineplot:
                             d[-ranki,:] = self.data[t][g][c][k,:]
                         self.data[t][g][c] = d
                     #print(data[t][bed].values()[0])
-                    
+    
+    def hmcmlist(self, colorby, definedinEM):
+        self.colors = colormaps(self.exps, colorby, definedinEM)
+    
     def heatmap(self, logt):
         tickfontsize = 6
         ratio = 6
@@ -725,9 +751,8 @@ class lineplot:
                 for bj, c in enumerate(self.data[t][g].keys()):
                     max_value = numpy.amax(self.data[t][g][c])
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
-                    if bi == 0: axs[bi, bj].set_title(self.exps.get_type(g,'factor'), fontsize=7)
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
-                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
+                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
                     axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
                     #axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
