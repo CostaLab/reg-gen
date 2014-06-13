@@ -16,7 +16,7 @@ import time, datetime, getpass, fnmatch, HTML
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 from rgt.Util import GenomeData
-from plottools import *
+from plotTool import *
 
 dir = os.getcwd()
 """
