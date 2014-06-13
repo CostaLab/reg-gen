@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from matplotlib_venn import venn2, venn3, venn3_circles
 import getpass
 import fnmatch
 
@@ -73,7 +74,7 @@ def colormap(exps, colorby, definedinEM):
                     rgb = [ eval(j) for j in c.strip('()').split(',')]
                     colors.append(rgb)
                 else:
-                    colors.append(exps.get_type(i,"color"))
+                    colors.append(c)
         elif colorby == "regions":
             colors = []
             for i in exps.get_regionsnames():
@@ -82,7 +83,7 @@ def colormap(exps, colorby, definedinEM):
                     rgb = [ eval(j) for j in c.strip('()').split(',')]
                     colors.append([v/255 for v in rgb])
                 else:
-                    colors.append(exps.get_type(i,"color"))
+                    colors.append(c)
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     if definedinEM == False:
@@ -111,6 +112,39 @@ def colormaps(exps, colorby, definedinEM):
                   'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
     return colors
 
+def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
+    """Generate the self.colors in the format which compatible with matplotlib"""
+    if definedinEM:
+        colors = {}
+        for ty in groupedquery.keys():
+            for q in groupedquery[ty].keys():
+                c = qEM.get_type(q.name,"color")
+                if c[0] == "(":
+                    rgb = [ eval(j) for j in c.strip('()').split(',')]
+                    colors[q.name] = rgb
+                else:
+                    colors[q.name] = c
+    if definedinEM == False:
+        colors = {}
+        qs = []
+        
+        
+        if colorby == "regions":
+            for ty in groupedquery.keys():
+                for q in groupedquery[ty]:            
+                    qs.append(q.name)
+            qs = list(set(qs))
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(qs))).tolist()
+            for i, q in enumerate(qs):
+                colors[q] = colormap[i]
+        else:
+            types = qEM.fieldsDict[colorby].keys()
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
+            for ty in groupedquery.keys():
+                for q in groupedquery[ty]: 
+                    i = types.index(qEM.get_type(q.name, colorby))
+                    colors[q.name] = colormap[i]
+    return colors 
 
 def output_array(array, directory, folder, filename):
     """ Write a txt file from the given array. """
@@ -128,9 +162,55 @@ def output_array(array, directory, folder, filename):
     for i,line in enumerate(array):
         f.write(("\t".join(j for j in line))+"\n")
     f.close()
+    
+def group_refque(rEM, qEM, groupby):
+    """ Group regionsets of rEM and qEM according to groupby """
+    groupedreference = OrderedDict()  # Store all bed names according to their types
+    groupedquery = OrderedDict()  # Store all bed names according to their types
+    if groupby:
+        for r in rEM.get_regionsets():
+            ty = rEM.get_type(r.name,groupby)
+            try: groupedreference[ty].append(r)
+            except: groupedreference[ty] =[r]
+        
+        for q in qEM.get_regionsets():
+            ty = qEM.get_type(q.name,groupby)
+            try: groupedquery[ty].append(q)
+            except: groupedquery[ty] =[q]
+    else:
+        groupedreference["All"] = rEM.get_regionsets()
+        groupedquery["All"] = qEM.get_regionsets()
+    return groupedreference, groupedquery
+
+def count_intersect(bed1, bed2, m="OVERLAP"):
+    mode = eval("OverlapType."+m)
+    intersect_r = bed1.intersect(bed2, mode)
+    len_inter = intersect_r.total_coverage()
+    allbed1 = bed1.total_coverage()
+    allbed2 = bed2.total_coverage()
+    len_12 = allbed1 - len_inter
+    len_21 = allbed2 - len_inter
+    return len_12, len_21, len_inter
+
+def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
+    mode = eval("OverlapType."+m)
+    #ABC
+    AB = bedA.intersect(bedB, mode)
+    BC = bedB.intersect(bedC, mode)
+    AC = bedA.intersect(bedC, mode)
+    ABC = AB.intersect(BC, mode)
+    Abc = bedA.subtract(AB.combine(AC))
+    aBc = bedB.subtract(AB.combine(BC))
+    ABc = AB.subtract(ABC)
+    abC = bedC.subtract(AC.combine(BC))
+    AbC = AC.subtract(ABC)
+    aBC = BC.subtract(ABC)
+    return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
+
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
+
 class projection:
     def __init__(self, referenceEM, queryEM):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
@@ -143,21 +223,7 @@ class projection:
         self.parameter = []
     
     def group_refque(self, groupby=False):
-        self.groupedreference = OrderedDict()  # Store all bed names according to their types
-        self.groupedquery = OrderedDict()  # Store all bed names according to their types
-        if groupby:
-            for r in self.references:
-                ty = self.rEM.get_type(r.name,groupby)
-                try: self.groupedreference[ty].append(r)
-                except: self.groupedreference[ty] =[r]
-            
-            for q in self.query:
-                ty = self.qEM.get_type(q.name,groupby)
-            try: self.groupedquery[ty].append(q)
-            except: self.groupedquery[ty] =[q]
-        else:
-            self.groupedreference["All"] = self.references
-            self.groupedquery["All"] = self.query
+        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
     
     def colors(self, colorby, definedinEM):
         ############# Color #####################################
@@ -253,9 +319,218 @@ class projection:
 #                    Jaccard test
 ###########################################################################################
 
+class jaccard:
+    def __init__(self, referenceEM, queryEM):
+        self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
+        self.rEM.read(referenceEM)
+        self.qEM.read(queryEM)
+        self.references = self.rEM.get_regionsets()
+        self.referencenames = self.rEM.get_regionsnames()
+        self.query = self.qEM.get_regionsets()
+        self.querynames = self.qEM.get_regionsnames()
+        self.parameter = []
+
+###########################################################################################
+#                    Inersection test
+###########################################################################################
+
+class intersect:
+    def __init__(self, referenceEM, queryEM, mode_intersect):
+        self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
+        self.rEM.read(referenceEM)
+        self.qEM.read(queryEM)
+        self.references = self.rEM.get_regionsets()
+        self.referencenames = self.rEM.get_regionsnames()
+        self.query = self.qEM.get_regionsets()
+        self.querynames = self.qEM.get_regionsnames()
+        self.parameter = []
+        self.mode_intersect = mode_intersect
+
+    def group_refque(self, groupby):
+        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
+
+    def colors(self, colorby, definedinEM):
+        """color_list is a Dict [query] : color """
+        self.color_list = color_groupdedquery(self.qEM, self.groupedquery, colorby, definedinEM)
+        if self.groupedquery.keys()[0] == "All":
+            self.color_tags = [n.name for n in self.groupedquery["All"]]
+        else:
+            self.color_tags = gen_tags(self.qEM, colorby)
+        
+    def count_intersect(self):
+        self.counts = {}
+        print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
+        for ty in self.groupedreference.keys():
+            self.counts[ty] = {}
+            for r in self.groupedreference[ty]:
+                self.counts[ty][r.name] = {}
+                rlen = r.total_coverage()
+                for q in self.groupedquery[ty]:
+                    qlen = q.total_coverage()
+                    c = count_intersect(r,q,m= self.mode_intersect)
+                    self.counts[ty][r.name][q.name] = c
+                    print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
+
+    def barplot(self, logt=None):
+        f, axs = plt.subplots(len(self.counts.keys()),1)
+        f.subplots_adjust(left=0.3)
+        #if len(axs) == 1: axs = [axs]
+        try: axs = axs.reshape(-1)
+        except: axs = [axs]
+        
+        for ai, ax in enumerate(axs):
+            if logt:
+                ax.set_yscale('log')
+                plus = 1
+            else:
+                ax.locator_params(axis = 'y', nbins = 2)
+                plus = 0
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            ax.set_title(self.counts.keys()[ai], y=0.9)
+            r_label = []   
+            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                if len(axs) == 1: r_label.append(r)
+                else: 
+                    try: r_label.append(self.rEM.get_type(r,"factor"))
+                    except: r_label.append(r)
+                width = 0.8/(len(self.counts.values()[ai][r].keys())+1) # Plus one background
+                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    x = ind_r + ind_q*width + 0.1
+                    y = self.counts.values()[ai][r][q][2] + plus # intersect number
+                    
+                    ax.bar(x, y, width=width, color=self.color_list[q],align='edge')
+                    #except:
+                    #    colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.counts[ty][r].keys()))).tolist()
+                    #    ax.bar(x, y, width=width, color=colors[ind_q],align='edge')
+            
+            #ax.set_ylabel("Counts of intersected regions",fontsize=12)
+            ax.yaxis.tick_left()
+            
+            ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
+            ax.set_xticklabels(r_label,fontsize=9, rotation=0)
+            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.set_xlim([0, len(self.counts.values()[ai].keys())-0.1])
+            
+            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            for spine in ['top', 'right']:  # 'left', 'bottom'
+                ax.spines[spine].set_visible(False)
+        f.text(-0.025, 0.5, "Counts of intersected regions", rotation="vertical", va="center")
+    
+        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        self.bar = f
+
+    def stackedbar(self):
+        f, axs = plt.subplots(len(self.counts.keys()),1)
+        f.subplots_adjust(left=0.3)
+        #if len(axs) == 1: axs = [axs]
+        try: axs = axs.reshape(-1)
+        except: axs = [axs]
+        
+        for ai, ax in enumerate(axs):
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            ax.locator_params(axis = 'y', nbins = 2)
+            ax.set_title(self.counts.keys()[ai], y=0.9)
+            r_label = []   
+            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                if len(axs) == 1: r_label.append(r)
+                else: 
+                    try: r_label.append(self.rEM.get_type(r,"factor"))
+                    except: r_label.append(r)
+                width = 0.6
+                bottom = 0
+                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    x = ind_r
+                    y = self.counts.values()[ai][r][q][2] # intersect number
+                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
+                    bottom = bottom + y
+            ax.yaxis.tick_left()
+            ax.set_xticks(range(len(r_label)))
+            ax.set_xticklabels(r_label, fontsize=9, rotation=0)
+            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.set_xlim([-0.5, ind_r+0.5])
+            
+            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            for spine in ['top', 'right']:  # 'left', 'bottom'
+                ax.spines[spine].set_visible(False)
+        f.text(-0.025, 0.5, "Counts of intersected regions", rotation="vertical", va="center")
+    
+        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        self.stackedbar = f
+
+    def venn(self):
+        """ Plot the Venn diagram accrodign to the given reference
+        """
+        f, axs = plt.subplots(len(self.counts.values()[0]),len(self.groupedreference.keys()))
+        #f.subplots_adjust(left=0.3)
+        #try: axs = axs.reshape(-1)
+        #except: axs = [axs]
+        # (ind_r, ai)
+        for ai, ax in enumerate(axs):
+            #ax.set_title(self.counts.keys()[ai], y=0.9)
+            r_label = []
+            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                if len(axs) == 1: r_label.append(r)
+                else: 
+                    try: r_label.append(self.rEM.get_type(r,"factor"))
+                    except: r_label.append(r)
+                numQ = len(self.counts.values()[ai][r].keys())
+                if numQ == 1:
+                    q = self.counts.values()[ai][r].keys()[0]
+                    print(self.counts.values()[ai][r].values()[0])
+                    print(r)
+                    print(q)
+                    print([ind_r,ai])
+                    v = venn2(subsets = self.counts.values()[ai][r].values()[0],set_labels = (r,q), ax=ax[ind_r,ai])
+                elif numQ == 2:
+                    q1 = self.counts.values()[ai][r].keys()[0]
+                    q2 = self.counts.values()[ai][r].keys()[1]
+                    bedA = self.rEM.objectsDict[r]
+                    bedB = self.qEM.objectsDict[q1]
+                    bedC = self.qEM.objectsDict[q2]
+                    
+                    v = venn3(subsets = (count_intersect3(bedA,bedB,bedC)), set_labels = (r,q1,q2),ax=ax[ind_r,ai])
+                elif numQ == 0:
+                    print("There is no corresponding query for reference ("+r+") for Venn diagram.")
+                else:
+                    print("There are more than two queries for reference ("+r+") for Venn diagram.")
+    
+        #f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        self.venn = f
+
+    def gen_html(self,outputname, title):
+        ########## HTML ###################
+        pd = os.path.join(dir,outputname,title)
+        try:
+            os.stat(os.path.dirname(pd))
+        except:
+            os.mkdir(os.path.dirname(pd))
+        try:
+            os.stat(pd)
+        except:
+            os.mkdir(pd)    
+        f = open(os.path.join(pd,'intersection.html'),'w')
+        table = []
+        # Header 
+        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
+            </style><font size="7">' + title + "</font>"])
+        # Each row is a plot with its data
+        if self.bar: table.append(["<img src='intersection_bar.png' width=800 >"])
+        if self.stackedbar: table.append(["<img src='intersection_stackedbar.png' width=800 >"])
+        if self.venn: table.append(["<img src='intersection_test.png' width=800 >"])
+        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
+        htmlcode = HTML.table(table)
+        for line in htmlcode: f.write(line)
+        f.close()
+
 ###########################################################################################
 #                    Boxplot 
 ###########################################################################################
+
+                
+    
+
 class boxplot:
     """
     input:
@@ -502,7 +777,7 @@ class boxplot:
             
             for s in self.sort_tags:
                 for c in self.color_tags:
-                    header.append("{0}.{1}".format(s,c))
+                    header.append("{0}: {1}".format(s,c))
                     data_p.append(self.sortDict[g][s][c])
 
                     for i, d in enumerate(data_p[:indM]):
@@ -623,11 +898,11 @@ class lineplot:
                             for bam in self.cuebam.keys():
                                 if len(set([g,s,c]).intersection(self.cuebam[bam])) == 2:
                                     ts = time.time()
-                                    #data[s][g][c] = []
                                     i = self.bednames.index(bed)
                                     j = self.readsnames.index(bam)
                                     cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                     cov.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                    cov.normRPM()
                                     # When bothends, consider the fliping end
                                     if self.center == 'bothends':
                                         flap = CoverageSet("for flap", self.processed_bedsF[i])
@@ -658,7 +933,8 @@ class lineplot:
         ticklabelsize = 7
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
         if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: axs=[axs]
-    
+        yaxmax = [0]*len(self.data.values()[0])
+        
         for it, s in enumerate(self.data.keys()):
             for i,g in enumerate(self.data[s].keys()):
                 if it == 0: axs[it,i].set_title(g,fontsize=11)
@@ -668,6 +944,7 @@ class lineplot:
                     
                 for j, c in enumerate(self.data[s][g].keys()): 
                     y = self.data[s][g][c]
+                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     axs[it, i].plot(x,y, color=self.colors[j], lw=1)
                     # Processing for future output
@@ -690,8 +967,11 @@ class lineplot:
                 axs[it, i].locator_params(axis = 'y', nbins = 4)
                 axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
-        for i,ty in enumerate(self.data.keys()):
-            axs[i,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+        for it,ty in enumerate(self.data.keys()):
+            axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+            for i,g in enumerate(self.data[ty].keys()):
+                axs[it,i].set_ylim([0, yaxmax[i]])
+                
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
@@ -753,7 +1033,7 @@ class lineplot:
                             d[-ranki,:] = self.data[t][g][c][k,:]
                         self.data[t][g][c] = d
                     #print(data[t][bed].values()[0])
-    
+ 
     def hmcmlist(self, colorby, definedinEM):
         self.colors = colormaps(self.exps, colorby, definedinEM)
     
@@ -849,6 +1129,7 @@ class lineplot:
 ###########################################################################################
 #                    Heatmap 
 ###########################################################################################
+
 class heatmap:
     
     def __init__(self,exps, title="Boxplot"):
