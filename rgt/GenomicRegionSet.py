@@ -602,7 +602,6 @@ class GenomicRegionSet:
                 continue
         chromosome_file.close()
         
-
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
                        overlap_result=True, overlap_input=True, chrom_X=False, chrom_M=False, 
                        filter_path=None):
@@ -662,7 +661,7 @@ class GenomicRegionSet:
                 sample = random.choice(result_map.any_chrom(random.choice(candidate_chrom), len_min=length))
                 try:
                     random_posi = random.randint(sample.initial, sample.final - length)
-                    print(sample.chrom)
+                    #print(sample.chrom)
                     cont_loop = False
                 except:
                     pass
@@ -708,12 +707,16 @@ class GenomicRegionSet:
                 z.add(new_region)
         return z
     
-    def projection_test(self, query, organism, extra=None):
+    def projection_test(self, query, organism, extra=None, background=None):
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
-        possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
+        if background: #backgound should be a GenomicRegionSet
+            ss = self.intersect(background, OverlapType.OVERLAP)
+            possibility =  ss.total_coverage() / background.total_coverage()
+        else:
+            possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
         intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
         n = len(nquery)
