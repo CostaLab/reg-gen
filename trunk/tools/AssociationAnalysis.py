@@ -16,7 +16,7 @@ import time, datetime, getpass, fnmatch, HTML
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 from rgt.Util import GenomeData
-from plotTool import *
+from plotTools import *
 
 dir = os.getcwd()
 """
@@ -81,7 +81,7 @@ def output_parameters(parameter, directory, folder, filename):
     except:
         os.mkdir(pd)    
     if parameter:
-        logp = open(os.path.join(pd,"parameters.log"),'w')
+        logp = open(os.path.join(pd,"parameters.txt"),'w')
         for s in parameter:
             logp.write("{}\n".format(s))
         logp.close()
@@ -107,6 +107,9 @@ helptitle = 'The title shown on the top of the plot and also the folder name.'
 helpgroup = "Group the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
 helpsort = "Sort the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
 helpcolor = "Color the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB.'
+helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable.'
+helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable.'
 
 parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
 \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -115,14 +118,16 @@ subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
 ################### Projection test ##########################################
 parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
 The null hypothesis is that no association between reference and query and their distribution is random.')
-parser_projection.add_argument('-r', '--reference',help='The file name of the reference Experimental Matrix. Multiple references are acceptable.')
-parser_projection.add_argument('-q', '--query', help='The file name of the query Experimental Matrix. Multiple queries are acceptable.')
+parser_projection.add_argument('output', help=helpoutput) 
+parser_projection.add_argument('-r', '--reference',help=helpreference)
+parser_projection.add_argument('-q', '--query', help=helpquery)
+parser_projection.add_argument('-t','--title', default='projection_test', help=helptitle)
 parser_projection.add_argument('-g', default=None, help=helpgroup +" (Default:None)")
 parser_projection.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
 parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
 parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
-parser_projection.add_argument('-output', default='projection_test', help='Define the filename of the output plot.(Default: projection_test)') 
-parser_projection.add_argument('-color', action="store_true", help='Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100/255, 35/255, 138/255)" for RGB.')
+parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -130,14 +135,66 @@ parser_projection.add_argument('-show', action="store_true", help='Show the figu
 ################### Jaccard test ##########################################
 
 parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluate the association level by comparing with jaccard index from repeating randomization.')
-parser_jaccard.add_argument('reference',help='The file name of the reference Experimental Matrix file.')
-parser_jaccard.add_argument('query', help='The file name of the query Experimental Matrix file.')
-parser_jaccard.add_argument('-r', type=int, default=500, help='Repetition times of randomization.')
-parser_jaccard.add_argument('-organism', default='hg19', help='Define the organism')
-#parser_jaccard.add_argument('-plot', action="store_true", help='Generate the plot.') 
-#parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-#parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
-#parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+
+parser_jaccard.add_argument('output', help=helpoutput) 
+parser_jaccard.add_argument('-r', '--reference',help=helpreference)
+parser_jaccard.add_argument('-q', '--query', help=helpquery)
+parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
+parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization.')
+parser_jaccard.add_argument('-g', default=None, help=helpgroup +" (Default:None)")
+parser_jaccard.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+parser_jaccard.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
+parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+
+################### Intersect Test ##########################################
+parser_intersect = subparsers.add_parser('intersection',help='Intersection test provides various modes of intersection to test the association between references and queries.')
+
+parser_intersect.add_argument('output', help=helpoutput)
+parser_intersect.add_argument('-r', '--reference',help=helpreference)
+parser_intersect.add_argument('-q', '--query', help=helpquery)
+parser_intersect.add_argument('-t','--title', default='intersection_test', help=helptitle)
+parser_intersect.add_argument('-g', type=str, help=helpgroup +" (Default:None)")
+parser_intersect.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_intersect.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+parser_intersect.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
+                              help="Define the mode for intersection. \
+                              'OVERLAP' defines the true intersections which are included in both reference and query, \
+                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
+                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
+parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
+parser_intersect.add_argument('-venn', action="store_true", help='Plot the intersection test in Venn diagram.(The limit of number of the regions for Venn diagram: 3, one reference plus two queries.)')
+parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
+parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+
+################### Combinatorial code ##########################################
+parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial code analyzes various associations between references and queries.')
+
+parser_combinatorial.add_argument('output', help=helpoutput)
+parser_combinatorial.add_argument('-r', '--reference',help=helpreference)
+parser_combinatorial.add_argument('-q', '--query', help=helpquery)
+parser_combinatorial.add_argument('-t','--title', default='intersection_test', help=helptitle)
+parser_combinatorial.add_argument('-g', type=str, help=helpgroup +" (Default:None)")
+parser_combinatorial.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+parser_combinatorial.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
+                              help="Define the mode for intersection. \
+                              'OVERLAP' defines the true intersections which are included in both reference and query, \
+                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
+                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
+parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
+parser_combinatorial.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+parser_combinatorial.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+
+
 
 ################### Boxplot ##########################################
 
@@ -149,7 +206,7 @@ parser_boxplot.add_argument('-g', default='reads', help=helpgroup + " (Default:r
 parser_boxplot.add_argument('-c', default='regions', help=helpcolor + " (Default:regions)")
 parser_boxplot.add_argument('-s', default='cell', help=helpsort + " (Default:cell)")
 parser_boxplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
-parser_boxplot.add_argument('-color', action="store_true", help='Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100/255, 35/255, 138/255)" for RGB.')
+parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
 parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -174,7 +231,7 @@ parser_lineplot.add_argument('-e', type=int, default=2000, help='Define the exte
 parser_lineplot.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_lineplot.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
 parser_lineplot.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-parser_lineplot.add_argument('-color', action="store_true", help='Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100/255, 35/255, 138/255)" for RGB.')
+parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -202,7 +259,7 @@ parser_heatmap.add_argument('-e', type=int, default=2000, help='Define the exten
 parser_heatmap.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_heatmap.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
 parser_heatmap.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-parser_heatmap.add_argument('-color', action="store_true", help='Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100/255, 35/255, 138/255)" for RGB.')
+parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
 parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -251,16 +308,23 @@ if args.mode == 'projection':
     projection = projection(args.reference,args.query)
     projection.group_refque(args.g)
     projection.colors(args.c, args.color)
-    print("\nProjection test")
-    print("    {0:25s}{1:40s}{2:s}".format("Reference","Query","p value"))
-    
-    qlist = projection.projection_test(organism = args.organism)
-    
-## TO DO
+    if args.intersect: 
+        projection.ref_inter()
+        qlist = projection.projection_test(organism = args.organism)
+        print2(projection.parameter, "Taking intersect of references as the background. ")
+    else:
+        qlist = projection.projection_test(organism = args.organism)
+
     if args.pdf:
         projection.plot(args.log)
-        projection.fig.savefig(filename = args.output, bbox_extra_artists=(plt.gci()), bbox_inches='tight',dpi=300)
-
+        output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci())
+    if args.html:
+        projection.gen_html(args.output, args.title)
+    parameter = parameter + projection.parameter
+    t1 = time.time()
+    print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+        
 ################### Jaccard test ##########################################
 if args.mode == "jaccard":
     """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
@@ -271,21 +335,49 @@ if args.mode == "jaccard":
     p-value = (# random jaccard > real jaccard)/(# random jaccard)
     
     """
-    print("\nJaccard Test")
-    print("    {0:25s}{1:25s}{2:s}".format("Reference","Query","p-value"))
-    
-    for i, r in enumerate(referencenames):
-        for j, q in enumerate(querynames):
-            #t0 = time.clock()
+    print2(parameter, "\nJaccard Test")
+    print2(parameter, "    {0:s}\t{1:s}\t{2:s}".format("Reference","Query","p-value"))
+    jaccard = jaccard(args.reference,args.query)
+    for i, r in enumerate(jaccard.referencenames):
+        for j, q in enumerate(jaccard.querynames):
             random_jaccards = [] # Store all the jaccard index from random regions
-            for k in range(args.r):
-                random = query[j].random_regions(organism=args.organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
-                random_jaccards.append(references[i].jaccard(random))
-            real_jaccard = query[j].jaccard(references[i]) # The real jaccard index from r and q
+            for k in range(args.runtime):
+                random = jaccard.query[j].random_regions(organism=args.organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
+                random_jaccards.append(jaccard.references[i].jaccard(random))
+            real_jaccard = jaccard.query[j].jaccard(jaccard.references[i]) # The real jaccard index from r and q
             # How many randomizations have higher jaccard index than the real index?
-            p = len([x for x in random_jaccards if x > real_jaccard])/args.r
-            print("    {0:25s}{1:25s}{2:.2e}".format(referencenames[i],querynames[j],p))
-         
+            p = len([x for x in random_jaccards if x > real_jaccard])/args.runtime
+            print2(parameter, "    {0:s}\t{1:s}\t{2:.2e}".format(jaccard.referencenames[i],jaccard.querynames[j],p))
+    t1 = time.time()
+    print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+
+################### Intersect Test ##########################################
+if args.mode == 'intersection':
+    # Fetching reference and query EM
+    inter = intersect(args.reference,args.query,mode_intersect = args.m)
+    inter.group_refque(args.g)
+    inter.colors(args.c, args.color)
+    inter.count_intersect()
+    
+    if args.pdf:
+        inter.barplot(args.log)
+        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci())
+        if args.stackedbar:
+            inter.stackedbar()
+            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
+        elif args.venn:
+            inter.venn()
+            output(f=inter.venn, directory = args.output, folder = args.title, filename="intersection_venn",extra=plt.gci())
+    if args.html:
+        inter.gen_html(args.output, args.title)
+    parameter = parameter + inter.parameter
+    t1 = time.time()
+    print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+
+
+
 ################### Boxplot ##########################################
 if args.mode == 'boxplot':
     exps = ExperimentalMatrix()
@@ -332,7 +424,7 @@ if args.mode == 'boxplot':
     t5 = time.time()
     print2(parameter,"    --- finished in {0:.3f} secs\n".format(t5-t4))
     print2(parameter,"Total running time is : " + str(datetime.timedelta(seconds=round(t5-t0))))
-    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.log")
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
 
 ################### Lineplot #########################################
 if args.mode == 'lineplot':
@@ -375,7 +467,7 @@ if args.mode == 'lineplot':
     t3 = time.time()
     print2(parameter, "    --- finished in {0:.2f} secs".format(t3-t2))
     print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
-    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.log")
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
 
 ################### Heatmap ##########################################
 if args.mode=='heatmap':
@@ -426,7 +518,7 @@ if args.mode=='heatmap':
     t4 = time.time()
     print2(parameter, "    --- finished in {0:.2f} secs".format(t4-t3))
     print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=t4-t0)))
-    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.log")
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
 ################### Integration ######################################
 if args.mode=='integration':
