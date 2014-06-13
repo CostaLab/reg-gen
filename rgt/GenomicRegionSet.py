@@ -707,6 +707,7 @@ class GenomicRegionSet:
                 z.add(new_region)
         return z
     
+    #hallo
     def projection_test(self, query, organism, extra=None, background=None):
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
