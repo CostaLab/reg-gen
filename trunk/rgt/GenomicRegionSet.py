@@ -246,7 +246,7 @@ class GenomicRegionSet:
                     except:
                         cont_loop = False   
             # When the region have no overlap
-            elif s < ss:
+            elif s <= ss:
                 try:
                     s = con_self.next()
                 except:
@@ -718,6 +718,7 @@ class GenomicRegionSet:
             possibility =  ss.total_coverage() / background.total_coverage()
         else:
             possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
+
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
         intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
         n = len(nquery)
