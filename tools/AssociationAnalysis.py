@@ -366,9 +366,6 @@ if args.mode == 'intersection':
         if args.stackedbar:
             inter.stackedbar()
             output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
-        elif args.venn:
-            inter.venn()
-            output(f=inter.venn, directory = args.output, folder = args.title, filename="intersection_venn",extra=plt.gci())
     if args.html:
         inter.gen_html(args.output, args.title)
     parameter = parameter + inter.parameter

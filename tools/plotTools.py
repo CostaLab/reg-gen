@@ -16,9 +16,6 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
-from matplotlib_venn import venn2, venn3, venn3_circles
-import getpass
-import fnmatch
 
 # Local Libraries
 # Distal Libraries
@@ -118,7 +115,7 @@ def colormaps(exps, colorby, definedinEM):
 def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
-        colors = {}
+        colors = OrderedDict()
         for ty in groupedquery.keys():
             for q in groupedquery[ty].keys():
                 c = qEM.get_type(q.name,"color")
@@ -128,7 +125,7 @@ def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
                 else:
                     colors[q.name] = c
     if definedinEM == False:
-        colors = {}
+        colors = OrderedDict()
         qs = []
         
         if colorby == "regions":
@@ -269,6 +266,10 @@ class projection:
 
     def plot(self, logt=None):
         f, ax = plt.subplots()
+        nm = len(self.groupedreference.values()[0]) * len(self.groupedquery.values()[0])
+        if nm > 40:
+            f.set_size_inches(nm * 0.2 +1 ,7)
+            
         if logt:
             ax.set_yscale('log')
         else:
@@ -462,46 +463,6 @@ class intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.stackedbar = f
 
-    def venn(self):
-        """ Plot the Venn diagram accrodign to the given reference
-        """
-        f, axs = plt.subplots(len(self.counts.values()[0]),len(self.groupedreference.keys()))
-        #f.subplots_adjust(left=0.3)
-        #try: axs = axs.reshape(-1)
-        #except: axs = [axs]
-        # (ind_r, ai)
-        for ai, ax in enumerate(axs):
-            #ax.set_title(self.counts.keys()[ai], y=0.9)
-            r_label = []
-            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
-                if len(axs) == 1: r_label.append(r)
-                else: 
-                    try: r_label.append(self.rEM.get_type(r,"factor"))
-                    except: r_label.append(r)
-                numQ = len(self.counts.values()[ai][r].keys())
-                if numQ == 1:
-                    q = self.counts.values()[ai][r].keys()[0]
-                    print(self.counts.values()[ai][r].values()[0])
-                    print(r)
-                    print(q)
-                    print([ind_r,ai])
-                    v = venn2(subsets = self.counts.values()[ai][r].values()[0],set_labels = (r,q), ax=ax[ind_r,ai])
-                elif numQ == 2:
-                    q1 = self.counts.values()[ai][r].keys()[0]
-                    q2 = self.counts.values()[ai][r].keys()[1]
-                    bedA = self.rEM.objectsDict[r]
-                    bedB = self.qEM.objectsDict[q1]
-                    bedC = self.qEM.objectsDict[q2]
-                    
-                    v = venn3(subsets = (count_intersect3(bedA,bedB,bedC)), set_labels = (r,q1,q2),ax=ax[ind_r,ai])
-                elif numQ == 0:
-                    print("There is no corresponding query for reference ("+r+") for Venn diagram.")
-                else:
-                    print("There are more than two queries for reference ("+r+") for Venn diagram.")
-    
-        #f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
-        self.venn = f
-
     def gen_html(self,outputname, title):
         ########## HTML ###################
         pd = os.path.join(dir,outputname,title)
@@ -521,7 +482,6 @@ class intersect:
         # Each row is a plot with its data
         if self.bar: table.append(["<img src='intersection_bar.png' width=800 >"])
         if self.stackedbar: table.append(["<img src='intersection_stackedbar.png' width=800 >"])
-        if self.venn: table.append(["<img src='intersection_test.png' width=800 >"])
         table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
