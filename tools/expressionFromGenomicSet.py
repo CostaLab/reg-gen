@@ -17,6 +17,7 @@ import sys
 from rgt.ExperimentalMatrix import *
 from rgt.GenomicRegionSet import *
 from rgt.CoverageSet import *
+import rgt.GeneSet
 import numpy
 
 
@@ -79,7 +80,7 @@ if __name__ == '__main__':
     gene_file = annotation_path + "/association_file.bed"
     
     genes = GeneSet("Expression")
-    genes.readExpression(gene_exp)
+    genes.read_expression(gene_exp)
     
     for region in regionsets:
         bedNew = GenomicRegionSet("")
