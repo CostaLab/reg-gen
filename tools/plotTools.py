@@ -295,7 +295,7 @@ class projection:
         ax.set_ylabel("Percentage of intersected regions",fontsize=12)
         ax.yaxis.tick_left()
         ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(g_label)*len(r_label))])
-        ax.set_xticklabels(r_label*len(g_label),rotation=40)
+        ax.set_xticklabels(r_label*len(g_label),rotation=40, ha="right")
         ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
         ax.legend(self.color_list.keys(), loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
