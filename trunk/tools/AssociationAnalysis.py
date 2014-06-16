@@ -131,6 +131,7 @@ parser_projection.add_argument('-color', action="store_true", help=helpDefinedCo
 parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 
 ################### Jaccard test ##########################################
 
@@ -166,7 +167,7 @@ parser_intersect.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGI
                               'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
                               'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
 parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
-parser_intersect.add_argument('-venn', action="store_true", help='Plot the intersection test in Venn diagram.(The limit of number of the regions for Venn diagram: 3, one reference plus two queries.)')
+parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
 parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
 parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
@@ -320,6 +321,8 @@ if args.mode == 'projection':
         output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci())
     if args.html:
         projection.gen_html(args.output, args.title)
+    if args.table:
+        projection.table(directory = args.output, folder = args.title)
     parameter = parameter + projection.parameter
     t1 = time.time()
     print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -366,6 +369,9 @@ if args.mode == 'intersection':
         if args.stackedbar:
             inter.stackedbar()
             output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
+        if args.pbar:
+            inter.percentagebar()
+            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
     if args.html:
         inter.gen_html(args.output, args.title)
     parameter = parameter + inter.parameter

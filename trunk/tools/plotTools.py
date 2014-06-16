@@ -242,18 +242,22 @@ class projection:
     
     def projection_test(self, organism):
         self.qlist = OrderedDict()
+        self.plist = OrderedDict()
         print2(self.parameter, "\nProjection test")
         print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
         for ty in self.groupedquery.keys():
             self.qlist[ty] = OrderedDict()
+            self.plist[ty] = OrderedDict()
             try:
                 if self.background: bgset = self.background[ty]
             except: bgset = None
             for i, r in enumerate(self.groupedreference[ty]):
                 self.qlist[ty][r.name] = OrderedDict()
+                self.plist[ty][r.name] = OrderedDict()
                 for j, q in enumerate(self.groupedquery[ty]):
                     bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
                     self.qlist[ty][r.name][q.name] = ratio
+                    self.plist[ty][r.name][q.name] = p
                     if len(q) == 0:
                         print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tEmpty query!".format(r.name,bg,q.name,ratio,p))
                     elif p < 0.05 and bg > ratio: 
@@ -266,7 +270,7 @@ class projection:
 
     def plot(self, logt=None):
         f, ax = plt.subplots()
-        nm = len(self.groupedreference.values()[0]) * len(self.groupedquery.values()[0])
+        nm = len(self.groupedreference.keys()) * len(self.groupedreference.values()[0]) * len(self.groupedquery.values()[0])
         if nm > 40:
             f.set_size_inches(nm * 0.2 +1 ,7)
             
@@ -319,6 +323,15 @@ class projection:
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
+        
+    def table(self, directory, folder):
+        arr = numpy.array([["reference", "query", "proportion of intersection of query", "p-value"]])
+        for ty in self.plist.keys():
+            for r in self.plist[ty].keys():
+                for q in self.plist[ty][r].keys():
+                    ar = numpy.array([[r, q, self.qlist[ty][r][q],self.plist[ty][r][q]]])
+                    arr = numpy.vstack((arr, ar))
+        output_array(arr, directory, folder, filename="output_table.txt")
 ###########################################################################################
 #                    Jaccard test
 ###########################################################################################
@@ -463,6 +476,50 @@ class intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.stackedbar = f
 
+    def percentagebar(self):
+        
+        self.color_list["No intersection"] = "0.7"
+        f, axs = plt.subplots(len(self.counts.keys()),1)
+        f.subplots_adjust(left=0.3)
+        #if len(axs) == 1: axs = [axs]
+        try: axs = axs.reshape(-1)
+        except: axs = [axs]
+        
+        for ai, ax in enumerate(axs):
+            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            ax.locator_params(axis = 'y', nbins = 2)
+            ax.set_title(self.counts.keys()[ai], y=1.05)
+            r_label = []   
+            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                if len(axs) == 1: r_label.append(r)
+                else: 
+                    try: r_label.append(self.rEM.get_type(r,"factor"))
+                    except: r_label.append(r)
+                width = 0.6
+                bottom = 0
+                sumlength = self.rEM.objectsDict[r].total_coverage()
+                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    x = ind_r
+                    y = self.counts.values()[ai][r][q][2] / sumlength # percentage
+                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
+                    bottom = bottom + y
+                ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
+            ax.yaxis.tick_left()
+            ax.set_xticks(range(len(r_label)))
+            ax.set_xticklabels(r_label, fontsize=9, rotation=0)
+            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.set_xlim([-0.5, ind_r+0.5])
+            ax.set_ylim([0,1])
+            
+            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            for spine in ['top', 'right']:  # 'left', 'bottom'
+                ax.spines[spine].set_visible(False)
+        f.text(-0.025, 0.5, "Proportion of intersected regions (%)", rotation="vertical", va="center")
+    
+        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        self.percentagebar = f
+
     def gen_html(self,outputname, title):
         ########## HTML ###################
         pd = os.path.join(dir,outputname,title)
@@ -482,6 +539,7 @@ class intersect:
         # Each row is a plot with its data
         if self.bar: table.append(["<img src='intersection_bar.png' width=800 >"])
         if self.stackedbar: table.append(["<img src='intersection_stackedbar.png' width=800 >"])
+        if self.percentagebar: table.append(["<img src='intersection_percentagebar.png' width=800 >"])
         table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
@@ -1092,13 +1150,6 @@ class lineplot:
 ###########################################################################################
 #                    Heatmap 
 ###########################################################################################
-
-class heatmap:
-    
-    def __init__(self,exps, title="Boxplot"):
-        pass
-
-
 
 
 
