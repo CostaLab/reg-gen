@@ -108,8 +108,11 @@ def colormaps(exps, colorby, definedinEM):
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     if definedinEM == False:
-        colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples',  'YlGnBu', 'Greys','gist_yarg', 'GnBu', 
-                  'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        if len(exps.get_regionsnames()) < 20:
+            colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples',  'YlGnBu', 'Greys','gist_yarg', 'GnBu', 
+                      'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        else:
+            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
 def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
@@ -127,7 +130,6 @@ def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
     if definedinEM == False:
         colors = {}
         qs = []
-        
         
         if colorby == "regions":
             for ty in groupedquery.keys():
@@ -227,10 +229,11 @@ class projection:
     
     def colors(self, colorby, definedinEM):
         ############# Color #####################################
-        self.color_list = colormap(self.qEM, colorby, definedinEM)
-        self.color_tags = gen_tags(self.qEM, colorby)
-        self.color_tags.append('Background')
-        self.color_list.append('0.70')
+        #self.color_list = colormap(self.qEM, colorby, definedinEM)
+        self.color_list = color_groupdedquery(self.qEM, self.groupedquery, colorby, definedinEM)
+        #self.color_tags = gen_tags(self.qEM, colorby)
+        #self.color_tags.append('Background')
+        self.color_list['Background'] = '0.70'
     
     def ref_inter(self):
         self.background = {}
@@ -279,14 +282,14 @@ class projection:
                 width = 0.8/(len(self.qlist[ty][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_ty*len(self.qlist[ty].keys())+ ind_r + ind_q*width + 0.1
-                    y = self.qlist[ty][r][q]
-                    ax.bar(x, y, width=width, color=self.color_list[ind_q],align='edge')
+                    y = self.qlist[ty][r][q] 
+                    ax.bar(x, y, width=width, color=self.color_list[q],align='edge')
         ax.set_ylabel("Percentage of intersected regions",fontsize=12)
         ax.yaxis.tick_left()
         ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(g_label)*len(r_label))])
         ax.set_xticklabels(r_label*len(g_label),rotation=40)
         ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-        ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+        ax.legend(self.color_list.keys(), loc='center left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
         for spine in ['top', 'right']:  # 'left', 'bottom'
             ax.spines[spine].set_visible(False)
