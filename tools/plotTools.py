@@ -243,6 +243,7 @@ class projection:
     def projection_test(self, organism):
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
+        #self.backgrounds = {}
         print2(self.parameter, "\nProjection test")
         print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
         for ty in self.groupedquery.keys():
@@ -258,6 +259,8 @@ class projection:
                     bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
                     self.qlist[ty][r.name][q.name] = ratio
                     self.plist[ty][r.name][q.name] = p
+                    #if r in self.backgrounds.keys(): pass
+                    #else: self.backgrounds[r] = bg
                     if len(q) == 0:
                         print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tEmpty query!".format(r.name,bg,q.name,ratio,p))
                     elif p < 0.05 and bg > ratio: 
@@ -325,11 +328,11 @@ class projection:
         f.close()
         
     def table(self, directory, folder):
-        arr = numpy.array([["reference", "query", "proportion of intersection of query", "p-value"]])
+        arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
         for ty in self.plist.keys():
             for r in self.plist[ty].keys():
                 for q in self.plist[ty][r].keys():
-                    ar = numpy.array([[r, q, self.qlist[ty][r][q],self.plist[ty][r][q]]])
+                    ar = numpy.array([[r, q, self.qlist[ty][r]['Background'], self.qlist[ty][r][q],self.plist[ty][r][q]]])
                     arr = numpy.vstack((arr, ar))
         output_array(arr, directory, folder, filename="output_table.txt")
 ###########################################################################################
