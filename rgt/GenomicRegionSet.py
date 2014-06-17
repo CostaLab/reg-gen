@@ -469,6 +469,7 @@ class GenomicRegionSet:
     def combine(self,region_set):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
         self.sequences.extend(region_set.sequences)
+        self.name = self.name + "+" + region_set.name
         self.sorted = False
         
     def cluster(self,max_distance):
