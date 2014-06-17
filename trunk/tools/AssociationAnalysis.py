@@ -185,18 +185,15 @@ parser_combinatorial.add_argument('-g', type=str, help=helpgroup +" (Default:Non
 parser_combinatorial.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
 parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
 parser_combinatorial.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
-                              help="Define the mode for intersection. \
-                              'OVERLAP' defines the true intersections which are included in both reference and query, \
-                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
-                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
+                                  help="Define the mode for intersection. \
+                                  'OVERLAP' defines the true intersections which are included in both reference and query, \
+                                  'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
+                                  'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
 parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
 parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_combinatorial.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_combinatorial.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-
-
-
 ################### Boxplot ##########################################
 
 parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
@@ -268,6 +265,7 @@ parser_heatmap.add_argument('-show', action="store_true", help='Show the figure 
 parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 ################### Integration ##########################################
 parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
+parser_integration.add_argument('-ihtml', help='Integrate all the html files within the given directory and generate index.html for all plots.')
 parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
 parser_integration.add_argument('-output', help='Define the folder of the output file.') 
 ################### Parsing the arguments ################################
@@ -299,7 +297,8 @@ parameter = []
 
 parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 parameter.append("User: " + getpass.getuser())
-parameter.append("Project: " + args.output)
+try: parameter.append("Project: " + args.output)
+except: pass
 parameter.append("\nCommand:\n   $ python " + " ".join(sys.argv))
 parameter.append("")
 
@@ -338,23 +337,22 @@ if args.mode == "jaccard":
     p-value = (# random jaccard > real jaccard)/(# random jaccard)
     
     """
-    print2(parameter, "\nJaccard Test")
-    print2(parameter, "    {0:s}\t{1:s}\t{2:s}".format("Reference","Query","p-value"))
     jaccard = jaccard(args.reference,args.query)
-    for i, r in enumerate(jaccard.referencenames):
-        for j, q in enumerate(jaccard.querynames):
-            random_jaccards = [] # Store all the jaccard index from random regions
-            for k in range(args.runtime):
-                random = jaccard.query[j].random_regions(organism=args.organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
-                random_jaccards.append(jaccard.references[i].jaccard(random))
-            real_jaccard = jaccard.query[j].jaccard(jaccard.references[i]) # The real jaccard index from r and q
-            # How many randomizations have higher jaccard index than the real index?
-            p = len([x for x in random_jaccards if x > real_jaccard])/args.runtime
-            print2(parameter, "    {0:s}\t{1:s}\t{2:.2e}".format(jaccard.referencenames[i],jaccard.querynames[j],p))
+    jaccard.group_refque(args.g)
+    jaccard.colors(args.c, args.color)
+    
+    
+    jaccard.jaccard_test(args.runtime, args.organism)
+    parameter = parameter + jaccard.parameter
     t1 = time.time()
+    if args.pdf:
+        jaccard.plot(args.log)
+        output(f=jaccard.fig, directory = args.output, folder = args.title, filename="jaccard_test",extra=plt.gci())
+    if args.html:
+        jaccard.gen_html(args.output, args.title)
     print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
     output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-
+    
 ################### Intersect Test ##########################################
 if args.mode == 'intersection':
     # Fetching reference and query EM
@@ -365,6 +363,30 @@ if args.mode == 'intersection':
     
     if args.pdf:
         inter.barplot(args.log)
+        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci())
+        if args.stackedbar:
+            inter.stackedbar()
+            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
+        if args.pbar:
+            inter.percentagebar()
+            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
+    if args.html:
+        inter.gen_html(args.output, args.title)
+    parameter = parameter + inter.parameter
+    t1 = time.time()
+    print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+
+
+################### Combinatorial ##########################################
+if args.mode == 'combinatorial':
+    comb = combinatorial(args.reference,args.query,mode_intersect = args.m)
+    comb.group_refque(args.g)
+    comb.resort()
+    comb.colors(args.c, args.color)
+    sys.exit[0]
+    if args.pdf:
+        comb.barplot(args.log)
         output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci())
         if args.stackedbar:
             inter.stackedbar()
@@ -538,4 +560,26 @@ if args.mode=='integration':
                 ty = "reads"
             f2.write("\n{0}\t{1}\tChIP-Seq_Compendium/{2}\t{3}".format(name, ty, f,name))
         f1.close()
-        f2.close()    
+        f2.close()
+        
+    if args.ihtml:
+        directory = args.ihtml
+        try:
+            os.stat(os.path.join(dir,directory))
+        except:
+            sys.exit("No such directory.")
+        f = open(os.path.join(dir,directory,"index.html"),'w')
+        table = []
+        # Header
+        
+        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
+            </style><font size="7">' + directory + "</font>"])
+        # Each row is a plot with its data
+        for root, dirnames, filenames in os.walk(os.path.join(dir,directory)):
+            for filename in fnmatch.filter(filenames, '*.html'):
+                if filename != 'index.html':
+                    table.append(["<a href='"+os.path.join(root, filename)+"'><font size="+'"5"'+">"+root.split('/')[-1]+"</a>"])
+        htmlcode = HTML.table(table)
+        for line in htmlcode: f.write(line)
+        f.close()
+        sys.exit("Integration finished.")
