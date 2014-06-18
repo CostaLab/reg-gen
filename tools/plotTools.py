@@ -211,25 +211,20 @@ def combset(regions):
     """
     n = len(regions)
     arr = numpy.empty(shape=(n,n),dtype=object)
+    newlist = []
     for i in range(n):
         for j in range(n):
-            arr[i,j] = regions[i-j]
-    list = []
-    for i in range(n):
-        for j in range(n-1):
-            list.append(arr[i,:j+1])
-    
-    newlist = []
-    for i, l in enumerate(list):
-        #print(i)
-        #print(l)
-        if len(l) > 1:
-            for j, r in enumerate(l[1:]): 
-                l[0].combine(r)
-                l[0].merge()
-            # Save memory by fewer comining...
-        newlist.append(l[0]) 
-        print("here")   
+            arr[i,j] = copy.deepcopy(regions[i-j])
+            if j > 0 and j != n-1:
+                #print("+   "+arr[i,j].name)
+                #print("+   "+arr[i,j-1].name)
+                arr[i,j].combine(arr[i,j-1])
+                arr[i,j].merge()
+                newlist.append(arr[i,j])
+            if i == 0 and j == n-1:
+                arr[i,j].combine(arr[i,j-1])
+                arr[i,j].merge()
+                newlist.append(arr[i,j])
     return newlist
 ###########################################################################################
 #                    Projection test
@@ -258,7 +253,7 @@ class projection:
         self.color_list['Background'] = '0.70'
     
     def ref_inter(self):
-        self.background = {}
+        self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = GenomicRegionSet("intersection of references")
             for r in self.groupedreference[ty]:
@@ -503,12 +498,12 @@ class intersect:
             self.color_tags = gen_tags(self.qEM, colorby)
         
     def count_intersect(self):
-        self.counts = {}
+        self.counts = OrderedDict()
         print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         for ty in self.groupedreference.keys():
-            self.counts[ty] = {}
+            self.counts[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
-                self.counts[ty][r.name] = {}
+                self.counts[ty][r.name] = OrderedDict()
                 rlen = r.total_coverage()
                 for q in self.groupedquery[ty]:
                     qlen = q.total_coverage()
@@ -519,6 +514,7 @@ class intersect:
     def barplot(self, logt=None):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
+        xtickrotation, xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
@@ -534,10 +530,12 @@ class intersect:
             ax.set_title(self.counts.keys()[ai], y=0.9)
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
-                if len(axs) == 1: r_label.append(r)
+                if len(axs) == 1: 
+                    r_label.append(r)
                 else: 
                     try: r_label.append(self.rEM.get_type(r,"factor"))
                     except: r_label.append(r)
+                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
                 width = 0.8/(len(self.counts.values()[ai][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
@@ -552,7 +550,7 @@ class intersect:
             ax.yaxis.tick_left()
             
             ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            ax.set_xticklabels(r_label,fontsize=9, rotation=0)
+            ax.set_xticklabels(r_label,fontsize=9, rotation=xtickrotation, ha=xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([0, len(self.counts.values()[ai].keys())-0.1])
             
@@ -560,7 +558,7 @@ class intersect:
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Counts of intersected regions", rotation="vertical", va="center")
+        f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
     
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.bar = f
@@ -568,6 +566,7 @@ class intersect:
     def stackedbar(self):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
+        xtickrotation, xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
@@ -582,6 +581,7 @@ class intersect:
                 else: 
                     try: r_label.append(self.rEM.get_type(r,"factor"))
                     except: r_label.append(r)
+                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
                 width = 0.6
                 bottom = 0
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
@@ -591,7 +591,7 @@ class intersect:
                     bottom = bottom + y
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
-            ax.set_xticklabels(r_label, fontsize=9, rotation=0)
+            ax.set_xticklabels(r_label, fontsize=9, rotation=xtickrotation, ha=xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             
@@ -599,22 +599,22 @@ class intersect:
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Counts of intersected regions", rotation="vertical", va="center")
+        f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
     
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.stackedbar = f
 
     def percentagebar(self):
-        
         self.color_list["No intersection"] = "0.7"
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
+        xtickrotation, xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
         
         for ai, ax in enumerate(axs):
-            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            #ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
             ax.set_title(self.counts.keys()[ai], y=1.05)
             r_label = []   
@@ -626,20 +626,21 @@ class intersect:
                 width = 0.6
                 bottom = 0
                 sumlength = self.rEM.objectsDict[r].total_coverage()
+                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r
-                    y = self.counts.values()[ai][r][q][2] / sumlength # percentage
+                    y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
                     ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
                     bottom = bottom + y
                 ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
-            ax.set_xticklabels(r_label, fontsize=9, rotation=0)
+            ax.set_xticklabels(r_label, fontsize=9, rotation=xtickrotation, ha=xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             ax.set_ylim([0,1])
-            
-            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+            legend_labels = self.color_tags + ["No intersection"]
+            ax.legend(legend_labels, loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
@@ -673,33 +674,17 @@ class intersect:
         for line in htmlcode: f.write(line)
         f.close()
 
-
-###########################################################################################
-#                    Combinatorial test 
-###########################################################################################
-class combinatorial:
-    def __init__(self, referenceEM, queryEM, mode_intersect):
-        self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
-        self.rEM.read(referenceEM)
-        self.qEM.read(queryEM)
-        self.references = self.rEM.get_regionsets()
-        self.referencenames = self.rEM.get_regionsnames()
-        self.query = self.qEM.get_regionsets()
-        self.querynames = self.qEM.get_regionsnames()
-        self.parameter = []
-        self.mode_intersect = mode_intersect
-
-    def group_refque(self, groupby):
-        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
-    
-    def resort(self):
+    def combinatorial(self):
         new_refs = OrderedDict()
         new_ques = OrderedDict()
         for ty in self.groupedreference.keys():
             self.groupedreference[ty] = combset(self.groupedreference[ty])
             self.groupedquery[ty] = combset(self.groupedquery[ty])
 
-            
+###########################################################################################
+#                    Combinatorial test 
+###########################################################################################
+
             
 
 ###########################################################################################
@@ -780,7 +765,7 @@ class boxplot:
 
     def tables_for_plot(self,norm_table,all_bed):
         """ Return a Dict which stores all tables for each bed with file path(more unique) as its key. """
-        tableDict = {} # Storage all tables for each bed with bedname as the key
+        tableDict = OrderedDict() # Storage all tables for each bed with bedname as the key
         conList = []   # Store containers of beds
         iterList = []
         
@@ -827,7 +812,7 @@ class boxplot:
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cues = OrderedDict()   # Storing the cues for back tracking
         for bedname in tables.keys():
-            plotDict[bedname] = {}
+            plotDict[bedname] = OrderedDict()
             mt = numpy.array(tables[bedname])
             for i,readname in enumerate(self.readsnames):
                 plotDict[bedname][readname] = mt[:,i]
@@ -835,13 +820,13 @@ class boxplot:
                 x = tuple(self.exps.get_types(readname) + self.exps.get_types(bedname))
                 cues[x] = [bedname, readname]
         #print(cues.keys())
-        sortDict = {}  # Storing the data by sorting tags
+        sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
             #print("    "+g)
-            sortDict[g] = {}
+            sortDict[g] = OrderedDict()
             for a in self.sort_tags:
                 #print("        "+c)
-                sortDict[g][a] = {}
+                sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
                     #print("            "+a)
                     sortDict[g][a][c] = []
@@ -1051,8 +1036,8 @@ class lineplot:
             self.color_tags = gen_tags(self.exps, colorby)
     
     def gen_cues(self):
-        self.cuebed = {}
-        self.cuebam = {}
+        self.cuebed = OrderedDict()
+        self.cuebam = OrderedDict()
         for bed in self.bednames:
             self.cuebed[bed] = set(self.exps.get_types(bed))
         for bam in self.readsnames:
