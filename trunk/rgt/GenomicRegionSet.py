@@ -451,7 +451,7 @@ class GenomicRegionSet:
         self.sort()
         
         if len(self.sequences) in [0, 1]:
-            return self
+            return
         else:
             z = GenomicRegionSet(name = self.name)
             prev_region = self.sequences[0]

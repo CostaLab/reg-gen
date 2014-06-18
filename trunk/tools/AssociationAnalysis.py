@@ -172,28 +172,9 @@ parser_intersect.add_argument('-log', action="store_true", help='Set y axis of t
 parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
+parser_intersect.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
 parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
-################### Combinatorial code ##########################################
-parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial code analyzes various associations between references and queries.')
-
-parser_combinatorial.add_argument('output', help=helpoutput)
-parser_combinatorial.add_argument('-r', '--reference',help=helpreference)
-parser_combinatorial.add_argument('-q', '--query', help=helpquery)
-parser_combinatorial.add_argument('-t','--title', default='intersection_test', help=helptitle)
-parser_combinatorial.add_argument('-g', type=str, help=helpgroup +" (Default:None)")
-parser_combinatorial.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
-parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-parser_combinatorial.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
-                                  help="Define the mode for intersection. \
-                                  'OVERLAP' defines the true intersections which are included in both reference and query, \
-                                  'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
-                                  'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
-parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
-parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
-parser_combinatorial.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-parser_combinatorial.add_argument('-html', action="store_true", help='Save the figure in html format.')
-parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 ################### Boxplot ##########################################
 
 parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
@@ -358,6 +339,9 @@ if args.mode == 'intersection':
     # Fetching reference and query EM
     inter = intersect(args.reference,args.query,mode_intersect = args.m)
     inter.group_refque(args.g)
+    if args.comb:
+        print("Generating all combinatorial regions for further analysis...")
+        inter.combinatorial()
     inter.colors(args.c, args.color)
     inter.count_intersect()
     
@@ -369,38 +353,13 @@ if args.mode == 'intersection':
             output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
         if args.pbar:
             inter.percentagebar()
-            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
+            output(f=inter.percentagebar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
     if args.html:
         inter.gen_html(args.output, args.title)
     parameter = parameter + inter.parameter
     t1 = time.time()
     print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
     output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-
-
-################### Combinatorial ##########################################
-if args.mode == 'combinatorial':
-    comb = combinatorial(args.reference,args.query,mode_intersect = args.m)
-    comb.group_refque(args.g)
-    comb.resort()
-    comb.colors(args.c, args.color)
-    sys.exit[0]
-    if args.pdf:
-        comb.barplot(args.log)
-        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci())
-        if args.stackedbar:
-            inter.stackedbar()
-            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
-        if args.pbar:
-            inter.percentagebar()
-            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
-    if args.html:
-        inter.gen_html(args.output, args.title)
-    parameter = parameter + inter.parameter
-    t1 = time.time()
-    print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-    output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-
 
 
 ################### Boxplot ##########################################
