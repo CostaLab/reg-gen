@@ -60,13 +60,14 @@ if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
     parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     (options, args) = parser.parse_args()
-    path_exp_matrix = args[0]
-    path_annotation = args[1]
     
     i = 2
     if len(args) != i:
         parser.error("Exactly %s parameters are needed" %i)
     
+    path_exp_matrix = args[0]
+    path_annotation = args[1]
+        
     #options.mode = 2
     #path_exp_matrix = '/home/manuel/test_exp_matrix'
     #path_annotation = '/home/manuel/data/rgtdata/mm9'
