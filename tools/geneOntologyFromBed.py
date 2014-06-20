@@ -12,6 +12,7 @@ Output all genes that are associated to all regions given by M.
 
 mode 2:
 Output for each region of M the associated genes.
+Create *.data file for each row in M.
 
 @Author: Ivan Costa, Manuel Allhoff
 
@@ -41,6 +42,8 @@ def mode_1(exp_matrix):
 
 def mode_2(exp_matrix):
     for region in exp_matrix.get_regionsets():
+        f = open("region_" + str(region.name) + ".data", 'w')
+        
         region_set = GenomicRegionSet("")
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
         for k in gene_peaks_mapping.keys():
@@ -53,7 +56,9 @@ def mode_2(exp_matrix):
             
             list = 'NA' if not gene_peaks_mapping[k] else ','.join(gene_peaks_mapping[k])
             
-            print(chr, start, end, list, sep='\t')
+            print(chr, start, end, list, sep='\t', file = f)
+        
+        f.close()
         
 
 if __name__ == '__main__':
@@ -67,10 +72,10 @@ if __name__ == '__main__':
     
     path_exp_matrix = args[0]
     path_annotation = args[1]
-        
-    #options.mode = 2
-    #path_exp_matrix = '/home/manuel/test_exp_matrix'
-    #path_annotation = '/home/manuel/data/rgtdata/mm9'
+    
+#    options.mode = 2
+#    path_exp_matrix = '/home/manuel/test_exp_matrix'
+#    path_annotation = '/home/manuel/data/rgtdata/mm9'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
