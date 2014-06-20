@@ -226,6 +226,34 @@ def combset(regions):
                 arr[i,j].merge()
                 newlist.append(arr[i,j])
     return newlist
+
+def gen_html(outputname, title, htmlname, rows):
+    ########## HTML ###################
+    pd = os.path.join(dir,outputname,title)
+    try:
+        os.stat(os.path.dirname(pd))
+    except:
+        os.mkdir(os.path.dirname(pd))
+    try:
+        os.stat(pd)
+    except:
+        os.mkdir(pd)    
+    f = open(os.path.join(pd,htmlname+'.html'),'w')
+    table = []
+    # Header 
+    table.append(["<head><style>h1 {text-align:center}</style></head>"+'<h1>' + title + "</h1>"])
+    # Each row is a plot with its data
+    for r in rows:
+        table.append([r])
+    
+    pf = open(os.path.join(dir, outputname,title,"parameters.txt"), 'rU')
+    l = "<br>".join(pf.readlines())
+    table.append(["<font size="+'"3"'+' align="left">' + "{}".format(l)+ "</font>"])
+    #table.append(["<font size="+'"5"'+"><src='"+os.path.join(dir, outputname,title,"parameters.txt")+"')>"])
+    pf.close()
+    htmlcode = HTML.table(table)
+    for line in htmlcode: f.write(line)
+    f.close()
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -330,27 +358,8 @@ class projection:
         self.fig = f
 
     def gen_html(self,outputname, title):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'projection.html'),'w')
-        table = []
-        # Header 
-        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><font size="7">' + title + "</font>"])
-        # Each row is a plot with its data
-        table.append(["<img src='projection_test.png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
+        rowdata = ["<img src='projection_test.png' width=800 >"]
+        gen_html(outputname, title, htmlname="projection", rows=rowdata)
         
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
@@ -449,27 +458,9 @@ class jaccard:
         self.fig = f
         
     def gen_html(self,outputname, title):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'jaccard.html'),'w')
-        table = []
-        # Header 
-        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><font size="7">' + title + "</font>"])
-        # Each row is a plot with its data
-        table.append(["<img src='jaccard_test.png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
+        rowdata = ["<img src='jaccard_test.png' width=800 >"]
+        gen_html(outputname, title, htmlname="jaccard", rows=rowdata)
+
 ###########################################################################################
 #                    Inersection test
 ###########################################################################################
@@ -650,29 +641,10 @@ class intersect:
         self.percentagebar = f
 
     def gen_html(self,outputname, title):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'intersection.html'),'w')
-        table = []
-        # Header 
-        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><font size="7">' + title + "</font>"])
-        # Each row is a plot with its data
-        if self.bar: table.append(["<img src='intersection_bar.png' width=800 >"])
-        if self.stackedbar: table.append(["<img src='intersection_stackedbar.png' width=800 >"])
-        if self.percentagebar: table.append(["<img src='intersection_percentagebar.png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
+        rowdata = ['<img src="intersection_bar.png" width=800 align="middle">',
+                   '<img src="intersection_stackedbar.png" width=800 align="middle">',
+                   '<img src="intersection_percentagebar.png" width=800 align="middle">']
+        gen_html(outputname, title, htmlname="intersection", rows=rowdata)
 
     def combinatorial(self):
         new_refs = OrderedDict()
@@ -909,37 +881,18 @@ class boxplot:
         self.fig = f
         
     def gen_html(self,outputname, title, pvalue):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'boxplot.html'),'w')
-        table = []
-        # Header
-        table.append(['<font size="7">' + title + "</font>"])
-        # Each row is a plot with its data
-        table.append(["<img src='boxplot.png' width=800 >"])
-        
+        rowdata = ["<img src='boxplot.png' width=800 >"]
         #### Calculate p value ####
-            
         for g in self.group_tags:
             table.append(['<font size="5">' + g + "</font>"])
             indM = 0
             header = []
             data_p = []
             arr = []
-            
             for s in self.sort_tags:
                 for c in self.color_tags:
                     header.append("{0}: {1}".format(s,c))
                     data_p.append(self.sortDict[g][s][c])
-
                     for i, d in enumerate(data_p[:indM]):
                         u, p_value = mannwhitneyu(data_p[indM], d)
                         arr.append(p_value)
@@ -954,7 +907,6 @@ class boxplot:
                     for i, d in enumerate(header[:k]):
                         ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
                     k = k + 1
-                        
             nrows, ncols = ar.shape
             subtable = '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
             </style><table style="width:100%">'
@@ -973,11 +925,9 @@ class boxplot:
                             else: subtable += '<td>'+ar[r-1,c-1]+'</td>'
                 subtable += '</tr>'
             subtable += '</table>'
-            table.append([subtable])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
+            rowdata.append(subtable)
+        
+        gen_html(outputname, title, htmlname="boxplot", rows=rowdata)
 
 ###########################################################################################
 #                    Lineplot 
@@ -1136,27 +1086,8 @@ class lineplot:
         self.fig = f
 
     def gen_html(self,outputname, title):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'lineplot.html'),'w')
-        table = []
-        # Header 
-        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><font size="7">' + title + "</font>"])
-        # Each row is a plot with its data
-        table.append(["<img src='lineplot.png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
+        rowdata = ["<img src='lineplot.png' width=800 >"]
+        gen_html(outputname, title, htmlname="lineplot", rows=rowdata)
                     
     def hmsort(self,sort):
         if sort == None:
@@ -1262,29 +1193,11 @@ class lineplot:
             self.hmfiles.append("heatmap"+ "_" + t)
     
     def gen_htmlhm(self, outputname, title):
-        ########## HTML ###################
-        pd = os.path.join(dir,outputname,title)
-        try:
-            os.stat(os.path.dirname(pd))
-        except:
-            os.mkdir(os.path.dirname(pd))
-        try:
-            os.stat(pd)
-        except:
-            os.mkdir(pd)    
-        f = open(os.path.join(pd,'heatmap.html'),'w')
-        table = []
-        # Header 
-        table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><font size="7">' + title + "</font>"])
+        rowdata = ["<img src='lineplot.png' width=800 >"]
         # Each row is a plot with its data
         for name in self.hmfiles:
-            table.append(["<img src='" + name + ".png' width=800 >"])
-        table.append(["<a href='"+os.path.join(dir, outputname,title,"parameters.txt")+" '><font size="+'"5"'+">Parameters</a>"])
-        htmlcode = HTML.table(table)
-        for line in htmlcode: f.write(line)
-        f.close()
-        
+            rowdata.append(["<img src='" + name + ".png' width=800 >"])
+        gen_html(outputname, title, htmlname="heatmap", rows=rowdata)
     
 ###########################################################################################
 #                    Heatmap 

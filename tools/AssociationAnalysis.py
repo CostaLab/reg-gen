@@ -537,7 +537,7 @@ if args.mode=='integration':
         for root, dirnames, filenames in os.walk(os.path.join(dir,directory)):
             for filename in fnmatch.filter(filenames, '*.html'):
                 if filename != 'index.html':
-                    table.append(["<a href='"+os.path.join(root, filename)+"'><font size="+'"5"'+">"+root.split('/')[-1]+"</a>"])
+                    table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"5"'+'>'+root.split('/')[-1]+"</a>"])
         htmlcode = HTML.table(table)
         for line in htmlcode: f.write(line)
         f.close()
