@@ -53,7 +53,7 @@ class ExperimentalMatrix:
             line = line.split("\t")
             if len(line) < 3:  # Skip the row which has insufficient information
                 continue
-            print(line)
+            print("Reading: ", line, file=sys.stderr)
             self.names.append(line[0])
             self.files[line[0]] = line[2] #dict: filename -> filepath
             self.types.append(line[1])
@@ -90,6 +90,9 @@ class ExperimentalMatrix:
         """Load files and initialize object"""
         for i, t in enumerate(self.types):
             print("Loading file ", self.files[self.names[i]], file = sys.stderr)
+            
+            if t not in ["regions", "genes"]:
+                print("Cannot load objects", file=sys.stderr)
             
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
