@@ -100,7 +100,7 @@ class GenomicRegionSet:
                     line = line.split("\t")
                     assert len(line) == 4
 
-                    chrom, start, end, data = line[0], int(line[1]), int(line[2]), float(line[3])
+                    chrom, start, end, data = line[0], int(line[1]), int(line[2]), str(line[3])
 
                     self.add( GenomicRegion(chrom=chrom, initial=start, final=end, data=data) )
                 except:
@@ -459,7 +459,7 @@ class GenomicRegionSet:
                 if prev_region.overlap(cur_region):
                     prev_region.initial = min(prev_region.initial, cur_region.initial)
                     prev_region.final = max(prev_region.final, cur_region.final)
-                    #prev_region.data += '_$_' + cur_region.data #use extra character to distinguish data sets
+                    prev_region.data += '_$_' + cur_region.data #use extra character to distinguish data sets
                 else:
                     z.add(prev_region)
                     prev_region = cur_region
