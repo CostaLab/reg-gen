@@ -28,6 +28,15 @@ class GenomicRegion:
         self.orientation = orientation
         self.data = data
 
+    def get_data(self, as_list=False):
+        """Return data as string (with special separating character (_$_)) 
+        or as list"""
+        if not as_list:
+            return self.data
+        else:
+            tmp = self.data.split("_$_")
+            return tmp
+
     def __len__(self):
         """Return length of GenomicRegion"""
         return self.final - self.initial
@@ -40,7 +49,7 @@ class GenomicRegion:
         if self.orientation is not None:
             s += '\t' + self.orientation
         if self.data is not None:
-            s += '\t' + self.data
+            s += '\t' + str(self.data)
         return s
 
     def toString(self):
