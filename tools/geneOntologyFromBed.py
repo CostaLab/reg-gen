@@ -14,6 +14,10 @@ mode 2:
 Output for each region of M the associated genes.
 Create *.data file for each row in M.
 
+mode 3:
+Assign to each gene a list of peaks.
+Create *.data file for each row in M.
+
 @Author: Ivan Costa, Manuel Allhoff
 
 """
@@ -67,23 +71,57 @@ def mode_2(exp_matrix):
             print(chr, start, end, value[(chr, start, end)], list, sep='\t', file = f)
         
         f.close()
+
+def mode_3(exp_matrix):
+    genes = {}
+    
+    #remember value of bedgraph, ugly way
+    score = {}
+    for regions in exp_matrix.get_regionsets():
+        for region in regions:
+            score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
+    
+    
+    for region in exp_matrix.get_regionsets():
+        f = open("region_" + str(region.name) + ".data", 'w')
         
+        region_set = GenomicRegionSet("")
+        _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
+        
+        avg_score = {}
+        
+        for peak, gene_list in gene_peaks_mapping.items():
+            for gen in gene_list:
+                if not gen:
+                    continue
+                genes[gen] = genes.get(gen, set())
+                genes[gen].add(peak)
+                
+                avg_score[gen] = avg_score.get(gen, [])
+                avg_score[gen].append(score[peak])
+                
+        for gen in genes.keys():
+            avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
+            print(gen, avg, ", ".join(str(t) for t in genes[gen]), sep='\t', file = f)
+               
+        f.close()
+     
 
 if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
-    parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
+#    parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     (options, args) = parser.parse_args()
+#    
+#    i = 2
+#    if len(args) != i:
+#        parser.error("Exactly %s parameters are needed" %i)
+#    
+#    path_exp_matrix = args[0]
+#    path_annotation = args[1]
     
-    i = 2
-    if len(args) != i:
-        parser.error("Exactly %s parameters are needed" %i)
-    
-    path_exp_matrix = args[0]
-    path_annotation = args[1]
-    
-#    options.mode = 2
-#    path_exp_matrix = '/home/manuel/test_exp_matrix'
-#    path_annotation = '/home/manuel/data/rgtdata/mm9'
+    options.mode = 3
+    path_exp_matrix = '/home/manuel/exp_m_test'
+    path_annotation = '/home/manuel/data/rgtdata/mm9'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
@@ -95,4 +133,6 @@ if __name__ == '__main__':
         mode_1(exp_matrix)
     elif options.mode is 2:
         mode_2(exp_matrix)
+    elif options.mode is 3:
+        mode_3(exp_matrix)
 
