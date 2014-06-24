@@ -24,7 +24,7 @@ class ExperimentalMatrix:
         self.fieldsDict = {} # its keys are just self.fields, and the values are extra informations        
         self.objectsDict = {} # key is the names; value is GenomicRegionSet or GeneSet
         
-    def read(self, file_path):
+    def read(self, file_path, is_bedgraph=False):
         """Read Experimental matrix file, which looks like:
         name    type    file    further1
         MPP_PU1    regions    fil21.bed    addidional_info1
@@ -67,7 +67,7 @@ class ExperimentalMatrix:
         
         self.types = numpy.array(self.types)
         self.names = numpy.array(self.names)
-        self.load_objects()
+        self.load_objects(is_bedgraph)
 
     def get_genesets(self):
         """Return GeneSets"""
@@ -86,7 +86,7 @@ class ExperimentalMatrix:
     def get_readsnames(self):
         return [i for i in self.names[self.types=="reads"]]
 
-    def load_objects(self):
+    def load_objects(self, is_bedgraph):
         """Load files and initialize object"""
         for i, t in enumerate(self.types):
             print("Loading file ", self.files[self.names[i]], file = sys.stderr)
@@ -96,7 +96,10 @@ class ExperimentalMatrix:
             
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
-                regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
+                if is_bedgraph:
+                    regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
+                else:
+                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
                 self.objectsDict[self.names[i]] = regions
             
             if t == "genes":

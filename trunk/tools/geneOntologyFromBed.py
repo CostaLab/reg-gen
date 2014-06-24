@@ -41,11 +41,19 @@ def mode_1(exp_matrix):
         print(region.name+"\t"+("\t".join(region_set.genes)))
 
 def mode_2(exp_matrix):
+    
+    #remember value of bedgraph, ugly way
+    value = {}
+    for regions in exp_matrix.get_regionsets():
+        for region in regions:
+            value[(region.chrom, region.initial, region.final)] = region.data
+    
     for region in exp_matrix.get_regionsets():
         f = open("region_" + str(region.name) + ".data", 'w')
         
         region_set = GenomicRegionSet("")
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
+        
         for k in gene_peaks_mapping.keys():
             chr, raw_positions = k.split(':')
             start, end = map(lambda x: int(x), raw_positions.split('-'))
@@ -56,7 +64,7 @@ def mode_2(exp_matrix):
             
             list = 'NA' if not gene_peaks_mapping[k] else ','.join(gene_peaks_mapping[k])
             
-            print(chr, start, end, list, sep='\t', file = f)
+            print(chr, start, end, value[(chr, start, end)], list, sep='\t', file = f)
         
         f.close()
         
@@ -81,7 +89,7 @@ if __name__ == '__main__':
     gene_file = os.path.join(path_annotation, "association_file.bed")
     
     exp_matrix = ExperimentalMatrix()
-    exp_matrix.read(path_exp_matrix)
+    exp_matrix.read(path_exp_matrix, is_bedgraph=True)
     
     if options.mode is 1:
         mode_1(exp_matrix)
