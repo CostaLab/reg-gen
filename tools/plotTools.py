@@ -773,12 +773,13 @@ class intersect:
             nonset.name = "!("+"+".join([r.name for r in self.groupedreference[ty]]) + ")"
             new_refs[ty].append(nonset)
             ref_names.append(nonset.name)
-                        
-                    
+        
         #self.comb_reference = new_refs
         self.groupedreference = copy.deepcopy(new_refs)
         self.referencenames = list(set(ref_names))
             
+    #def stest(self,repeat):
+        
 
 ###########################################################################################
 #                    Boxplot 
@@ -902,30 +903,42 @@ class boxplot:
 
     def group_data(self, tables):  
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
-        cues = OrderedDict()   # Storing the cues for back tracking
+        cuesbed = OrderedDict()   # Storing the cues for back tracking
+        cuesbam = OrderedDict()
         for bedname in tables.keys():
             plotDict[bedname] = OrderedDict()
             mt = numpy.array(tables[bedname])
+            
+            cuesbed[bedname] = [tag for tag in self.exps.get_types(bedname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+            
             for i,readname in enumerate(self.readsnames):
                 plotDict[bedname][readname] = mt[:,i]
                 #print(plotDict[bedname][readname])
-                x = tuple(self.exps.get_types(readname) + self.exps.get_types(bedname))
-                cues[x] = [bedname, readname]
+                
+                cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+                
         #print(cues.keys())
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
             print("    "+g)
             sortDict[g] = OrderedDict()
             for a in self.sort_tags:
-                print("        "+c)
+                print("        "+a)
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
-                    print("            "+a)
+                    print("            "+c)
                     sortDict[g][a][c] = []
-                    for k in cues.keys():
-                        if set([g,a,c]).difference(set(['All'])) <= set(k):
-                            print("                "+ cues[k][0] + " + "+ cues[k][1])
-                            sortDict[g][a][c] = plotDict[cues[k][0]][cues[k][1]]
+                    for bed in cuesbed.keys():
+                        #print(bed)
+                        #print(set([g,a,c]))
+                        #print(set(cuesbed[bed]))
+                        if set([g,a,c]) >= set(cuesbed[bed]):
+                            for bam in cuesbam.keys():
+                                if set([g,a,c]) >= set(cuesbam[bam]):
+                                    print("                "+ bed + " + "+ bam)
+                                    sortDict[g][a][c] = plotDict[bed][bam]
+                                    #break
+                            #break
         self.sortDict = sortDict
 
     def color_map(self, colorby, definedinEM):
@@ -1016,7 +1029,7 @@ class boxplot:
         rowdata = ["<img src='boxplot.png' width=800 >"]
         #### Calculate p value ####
         for g in self.group_tags:
-            table.append(['<font size="5">' + g + "</font>"])
+            rowdata.append('<font size="5">' + g + "</font>")
             indM = 0
             header = []
             data_p = []
