@@ -203,7 +203,7 @@ class GenomicRegionSet:
             Result                                ------
         """
         if len(self) == 0 or len(y) == 0:
-            return GenomicRegionSet('None region')
+            return GenomicRegionSet(self.name + '_' + y.name)
         z = GenomicRegionSet(self.name + '_' + y.name)
         
         # If there is overlap within self or y, they should be merged first. 
@@ -361,11 +361,11 @@ class GenomicRegionSet:
         
         """
         if len(self) == 0:
-            return GenomicRegionSet('None region')
+            return GenomicRegionSet(self.name + '-' + y.name)
         elif len(y) == 0:
             return self
         else:
-            z = GenomicRegionSet('Subtracted RegionSet')
+            z = GenomicRegionSet(self.name + '-' + y.name)
             self.sort()
             y.sort()
             con_self = self.__iter__()
@@ -721,7 +721,7 @@ class GenomicRegionSet:
             possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
 
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
-        intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
+        intersect_regions = self.intersect(nqury,mode=OverlapType.OVERLAP)
         n = len(nquery)
         k = len(intersect_regions)
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)

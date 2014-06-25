@@ -510,7 +510,7 @@ class jaccard:
 ###########################################################################################
 
 class intersect:
-    def __init__(self, referenceEM, queryEM, mode_intersect, organism):
+    def __init__(self, referenceEM, queryEM, mode_intersect, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
         self.qEM.read(queryEM)
@@ -520,7 +520,10 @@ class intersect:
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
         self.mode_intersect = mode_intersect
+        self.mode_count = mode_count
         self.organism = organism
+        self.sbar = None
+        self.pbar = None
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
@@ -542,28 +545,28 @@ class intersect:
         else:
             self.color_tags = gen_tags(self.qEM, colorby)
         
-    def count_intersect(self,mode_intersection, mode_count,threshold):
+    def count_intersect(self, threshold):
         self.counts = OrderedDict()
-        if mode_count == "bp":
+        if self.mode_count == "bp":
             print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
-        elif mode_count == "count":
+        elif self.mode_count == "count":
             print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
         
-            for ty in self.groupedreference.keys():
-                self.counts[ty] = OrderedDict()
+        for ty in self.groupedreference.keys():
+            self.counts[ty] = OrderedDict()
+            
+            for r in self.groupedreference[ty]:
+                self.counts[ty][r.name] = OrderedDict()
+                if self.mode_count == "bp": rlen = r.total_coverage()
+                elif self.mode_count == "count": rlen = len(r)
                 
-                for r in self.groupedreference[ty]:
-                    self.counts[ty][r.name] = OrderedDict()
-                    if mode_count == "bp": rlen = r.total_coverage()
-                    elif mode_count == "count": rlen = len(r)
-                    
-                    for q in self.groupedquery[ty]:
-                        if mode_count == "bp": qlen = q.total_coverage()
-                        elif mode_count == "count": qlen = len(q)
-                        # Define different mode of intersection and count here
-                        c = count_intersect(r,q,mode_intersection= mode_intersection,mode_count=mode_count, threshold=threshold)
-                        self.counts[ty][r.name][q.name] = c
-                        print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
+                for q in self.groupedquery[ty]:
+                    if self.mode_count == "bp": qlen = q.total_coverage()
+                    elif self.mode_count == "count": qlen = len(q)
+                    # Define different mode of intersection and count here
+                    c = count_intersect(r,q,mode_intersection= self.mode_intersect, mode_count=self.mode_count, threshold=threshold)
+                    self.counts[ty][r.name][q.name] = c
+                    print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
 
     def barplot(self, logt=None):
         f, axs = plt.subplots(len(self.counts.keys()),1)
@@ -612,8 +615,11 @@ class intersect:
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
-    
+        if self.mode_count == "bp":
+            f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
+        elif self.mode_count == "count":
+            f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
+            
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.bar = f
 
@@ -653,10 +659,13 @@ class intersect:
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
+        if self.mode_count == "bp":
+            f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
+        elif self.mode_count == "count":
+            f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
     
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
-        self.stackedbar = f
+        self.sbar = f
 
     def percentagebar(self):
         self.color_list["No intersection"] = "0.7"
@@ -701,12 +710,12 @@ class intersect:
         f.text(-0.025, 0.5, "Proportion of intersected regions (%)", rotation="vertical", va="center")
     
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
-        self.percentagebar = f
+        self.pbar = f
 
     def gen_html(self,outputname, title):
-        rowdata = ['<img src="intersection_bar.png" width=800 align="middle">',
-                   '<img src="intersection_stackedbar.png" width=800 align="middle">',
-                   '<img src="intersection_percentagebar.png" width=800 align="middle">']
+        rowdata = ['<img src="intersection_bar.png" width=800 align="middle">']
+        if self.sbar: rowdata.append('<img src="intersection_stackedbar.png" width=800 align="middle">')
+        if self.pbar: rowdata.append('<img src="intersection_percentagebar.png" width=800 align="middle">')
         gen_html(outputname, title, htmlname="intersection", rows=rowdata)
 
     def posi2region(self, regions, p):
@@ -770,11 +779,6 @@ class intersect:
         self.groupedreference = copy.deepcopy(new_refs)
         self.referencenames = list(set(ref_names))
             
-###########################################################################################
-#                    Combinatorial test 
-###########################################################################################
-
-            
 
 ###########################################################################################
 #                    Boxplot 
@@ -826,7 +830,6 @@ class boxplot:
     def quantile_normalization(self,matrix):
         """ Return the np.array which contains the normalized values
         """
-        
         rank_matrix = []
         for c in range(matrix.shape[1]):
             col = matrix[:,c]
@@ -911,16 +914,17 @@ class boxplot:
         #print(cues.keys())
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
-            #print("    "+g)
+            print("    "+g)
             sortDict[g] = OrderedDict()
             for a in self.sort_tags:
-                #print("        "+c)
+                print("        "+c)
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
-                    #print("            "+a)
+                    print("            "+a)
                     sortDict[g][a][c] = []
                     for k in cues.keys():
                         if set([g,a,c]).difference(set(['All'])) <= set(k):
+                            print("                "+ cues[k][0] + " + "+ cues[k][1])
                             sortDict[g][a][c] = plotDict[cues[k][0]][cues[k][1]]
         self.sortDict = sortDict
 
@@ -935,7 +939,7 @@ class boxplot:
             for k, a in enumerate(self.sort_tags):
                 for j, c in enumerate(self.color_tags):
                     table.append([g, a, c] + [str(x) for x in self.sortDict[g][a][c]])
-        print(table)
+        #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
     def plot(self, title, html=False, logT=False):
