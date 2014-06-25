@@ -180,6 +180,8 @@ parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot i
 parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_intersect.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
 parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+parser_intersect.add_argument('-stest', type=int, default= 100, help='Define the repetition time of random subregion test between reference and query. Default: 100')
+
 
 ################### Boxplot ##########################################
 
@@ -346,24 +348,28 @@ if args.mode == "jaccard":
 ################### Intersect Test ##########################################
 if args.mode == 'intersection':
     # Fetching reference and query EM
-    inter = intersect(args.reference,args.query,mode_intersect = args.m, organism=args.organism)
+    inter = intersect(args.reference,args.query,mode_intersect = args.mi, mode_count=args.m, organism=args.organism)
     inter.background(args.bg)
     inter.group_refque(args.g)
     if args.comb:
         print("Generating all combinatorial regions for further analysis...")
         inter.combinatorial()
     inter.colors(args.c, args.color)
-    inter.count_intersect(mode_count=args.m, mode_intersection=args.mi, threshold=args.tc)
+    inter.count_intersect(threshold=args.tc)
     
     if args.pdf:
         inter.barplot(args.log)
         output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci())
         if args.stackedbar:
             inter.stackedbar()
-            output(f=inter.stackedbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
+            output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci())
         if args.pbar:
             inter.percentagebar()
-            output(f=inter.percentagebar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
+            output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
+    
+    if args.stest:
+        inter.stest(repeat=args.stest)
+    
     if args.html:
         inter.gen_html(args.output, args.title)
     parameter = parameter + inter.parameter
