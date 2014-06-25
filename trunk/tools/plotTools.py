@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+import itertools
 
 # Local Libraries
 # Distal Libraries
@@ -161,7 +162,7 @@ def output_array(array, directory, folder, filename):
     for i,line in enumerate(array):
         f.write(("\t".join(j for j in line))+"\n")
     f.close()
-    
+
 def group_refque(rEM, qEM, groupby):
     """ Group regionsets of rEM and qEM according to groupby """
     groupedreference = OrderedDict()  # Store all bed names according to their types
@@ -181,15 +182,21 @@ def group_refque(rEM, qEM, groupby):
         groupedquery["All"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
-def count_intersect(bed1, bed2, m="OVERLAP"):
-    mode = eval("OverlapType."+m)
+def count_intersect(bed1, bed2, mode_intersection="OVERLAP", mode_count="count", threshold=0):
+    mode = eval("OverlapType." + mode_intersection)
     intersect_r = bed1.intersect(bed2, mode)
-    len_inter = intersect_r.total_coverage()
-    allbed1 = bed1.total_coverage()
-    allbed2 = bed2.total_coverage()
-    len_12 = allbed1 - len_inter
-    len_21 = allbed2 - len_inter
-    return len_12, len_21, len_inter
+    if mode_count=="count":
+        c_inter = len(intersect_r)
+        c_12 = len(bed1) - c_inter
+        c_21 = len(bed2) - c_inter
+        return c_12, c_21, c_inter
+    elif mode_count=="bp":
+        len_inter = intersect_r.total_coverage()
+        allbed1 = bed1.total_coverage()
+        allbed2 = bed2.total_coverage()
+        len_12 = allbed1 - len_inter
+        len_21 = allbed2 - len_inter
+        return len_12, len_21, len_inter
 
 def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
     mode = eval("OverlapType."+m)
@@ -210,6 +217,17 @@ def combset(regions):
     """ Input a list of regions, and return a list of regions with extra combinatorial sets
     """
     n = len(regions)
+    
+    # in_p: intersection part
+    # un_p: union part
+    # All combinatorial sets have a common form: in_p - un_p, for example, intersect(1,2) - union(3,4)
+    in_p = []
+    for l_in in range(1,n+1): # l is the length of in_p
+        
+        while l_in > 0:
+            for i in range(n):
+                in_p.append([i])        
+            l_in = l_in - 1
     arr = numpy.empty(shape=(n,n),dtype=object)
     newlist = []
     for i in range(n):
@@ -246,11 +264,7 @@ def gen_html(outputname, title, htmlname, rows):
     for r in rows:
         table.append([r])
     
-    pf = open(os.path.join(dir, outputname,title,"parameters.txt"), 'rU')
-    l = "<br>".join(pf.readlines())
-    table.append(["<font size="+'"3"'+' align="left">' + "{}".format(l)+ "</font>"])
-    #table.append(["<font size="+'"5"'+"><src='"+os.path.join(dir, outputname,title,"parameters.txt")+"')>"])
-    pf.close()
+    table.append(['<object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
     htmlcode = HTML.table(table)
     for line in htmlcode: f.write(line)
     f.close()
@@ -310,13 +324,13 @@ class projection:
                     #if r in self.backgrounds.keys(): pass
                     #else: self.backgrounds[r] = bg
                     if len(q) == 0:
-                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tEmpty query!".format(r.name,bg,q.name,ratio,p))
+                        print2(self.parameter, "{0:s}\t{1:f}\t{2:s}\t{3:f}\t{4:.2e}\tEmpty query!".format(r.name,bg,q.name,ratio,p))
                     elif p < 0.05 and bg > ratio: 
-                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tSignificantly unassociated!".format(r.name,bg,q.name,ratio,p))
+                        print2(self.parameter, "{0:s}\t{1:f}\t{2:s}\t{3:f}\t{4:.2e}\tNegatively unassociated!".format(r.name,bg,q.name,ratio,p))
                     elif p < 0.05 and bg < ratio:
-                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}\tSignificantly associated!".format(r.name,bg,q.name,ratio,p))
+                        print2(self.parameter, "{0:s}\t{1:f}\t{2:s}\t{3:f}\t{4:.2e}\tPositively associated!".format(r.name,bg,q.name,ratio,p))
                     else:
-                        print2(self.parameter, "{0:s}\t{1:.2e}\t{2:s}\t{3:.2e}\t{4:.2e}".format(r.name,bg,q.name,ratio,p))
+                        print2(self.parameter, "{0:s}\t{1:f}\t{2:s}\t{3:f}\t{4:.2e}".format(r.name,bg,q.name,ratio,p))
                 self.qlist[ty][r.name]['Background'] = bg
 
     def plot(self, logt=None):
@@ -413,52 +427,82 @@ class jaccard:
                     # How many randomizations have higher jaccard index than the real index?
                     p = len([x for x in self.jlist[ty][r.name][q.name] if x > self.realj[ty][r.name][q.name]])/runtime
                     te = time.time()
-                    print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:.2e}\t{4:.2e}\t{5:s}".format(r.name,q.name,"x"+str(runtime),self.realj[ty][r.name][q.name], p,str(datetime.timedelta(seconds=round(te-ts)))))  
+                    print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:f}\t{4:f}\t{5:s}".format(r.name,q.name,"x"+str(runtime),self.realj[ty][r.name][q.name], p,str(datetime.timedelta(seconds=round(te-ts)))))  
     
-    def plot(self, logt,):
-        f, ax = plt.subplots(len(self.jlist.keys()), 1)
-        try: ax = ax.reshape(-1)
-        except: ax = [ax]
+    def plot(self, logT=False):
+        """ Return boxplot from the given tables.
         
-        g_label = []
-        for ind_ty, ty in enumerate(self.jlist.keys()):
-            g_label.append(ty)
-            r_label = []   
-            legs = []
-            for ind_r,r in enumerate(self.jlist[ty].keys()):
-                r_label.append(r)
-                nq = len(self.jlist[ty][r].keys())
-                for ind_q, q in enumerate(self.jlist[ty][r].keys()):
-                    y = self.jlist[ty][r][q]
-                    x = ind_r + ind_q*0.8/nq -0.4
-                    #for y in self.jlist[ty][r][q]: 
-                    sc = ax[ind_ty].scatter([x]*len(y), y, color=self.color_list[q], s=5,edgecolor='none')
-                    if ind_r == 0: legs.append(sc)
-                    ax[ind_ty].plot([x-0.2/nq, x+0.2/nq], [self.realj[ty][r][q], self.realj[ty][r][q]], color='r', linestyle='-', linewidth=0.5)
-                    #ax[ind_ty].scatter(x[0], self.realj[ty][r][q], color='red',s=10,edgecolor='none')
-                    #matplotlib.artist.getp(sc)
-            if logt: ax[ind_ty].set_yscale('log')
-            else: 
-                ax[ind_ty].locator_params(axis = 'y', nbins = 4)
-                ax[ind_ty].set_ylim([0,ax[ind_ty].get_ylim()[1]])
+        """
+        self.fig = []
+        
+        for it, t in enumerate(self.jlist.keys()):
+            f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey = True)
+            try: axarr = axarr.reshape(-1)
+            except: axarr = [axarr]
+            plt.subplots_adjust(bottom=0.3)
+            if logT:
+                axarr[0].set_ylabel("Jaccard index (log)")
+            else:
+                axarr[0].set_ylabel("Jaccard index (Intersect/Union)")
             
-            ax[ind_ty].set_title(ty)
-            ax[ind_ty].yaxis.tick_left()
-            ax[ind_ty].set_xticks([i-0.1 for i in range(len(r_label))])
-            ax[ind_ty].set_xticklabels(r_label,rotation=0, ha="center")
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-            ax[ind_ty].legend(legs, self.jlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
-                              columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-            
-            
-            for spine in ['top', 'right']:  # 'left', 'bottom'
-                ax[ind_ty].spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Jaccard index (Intersect/Union)",fontsize=12, rotation="vertical", va="center")
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        self.fig = f
+            for i, r in enumerate(self.jlist[t].keys()):
+                #axarr[i].set_title(r, y=0.94)
+                if logT:
+                    axarr[i].set_yscale('log')
+                axarr[i].tick_params(axis='y', direction='out')
+                axarr[i].yaxis.tick_left()
+                axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
+                d = []  # Store data within group
+                color_t = []  # Store tag for coloring boxes
+                #x_ticklabels = []  # Store ticklabels
+                axarr[i].set_xlabel(r)
+                
+                for j,q in enumerate(self.jlist[t][r].keys()):
+                    d.append(self.jlist[t][r][q])
+                    color_t.append(self.color_list[q])
+                    #x_ticklabels.append(q)
+                # Fine tuning boxplot
+                axarr[i].scatter(x=range(len(self.jlist[t][r].keys())), y=[y for y in self.realj[t][r].values()], s=2, c="red", edgecolors='none')
+                bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
+                                      patch_artist=True, bootstrap=None)
+                z = 10 # zorder for bosplot
+                plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
+                plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8,zorder=z)
+                plt.setp(bp['caps'],color='none',zorder=z)
+                plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
+                legends = []
+                for patch, color in zip(bp['boxes'], color_t):
+                    patch.set_facecolor(color) # When missing the data, the color patch will exceeds
+                    patch.set_zorder(z)
+                    legends.append(patch)
+                
+                # Fine tuning subplot
+                #axarr[i].set_xticks(range(len(self.jlist[t][r].keys())))
+                #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
+                #axarr[i].set_xticklabels(self.jlist[t][r].keys(), rotation=0, fontsize=10)
+                
+                #axarr[i].set_ylim(bottom=0.95)
+                for spine in ['top', 'right', 'left', 'bottom']:
+                    axarr[i].spines[spine].set_visible(False)
+                axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
+                
+                if i > 0:
+                    plt.setp(axarr[i].get_yticklabels(),visible=False)
+                    #plt.setp(axarr[i].get_yticks(),visible=False)
+                    axarr[i].minorticks_off()
+                    axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
+                    
+            plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
+            axarr[-1].legend(legends[0:len(self.jlist[t][r].keys())], self.jlist[t][r].keys(), loc='center left', handlelength=1, 
+                     handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
+                     bbox_to_anchor=(1.05, 0.5))
+            f.tight_layout(pad=2, h_pad=None, w_pad=None)
+            self.fig.append(f)
         
     def gen_html(self,outputname, title):
-        rowdata = ["<img src='jaccard_test.png' width=800 >"]
+        rowdata = []
+        for i in range(len(self.fig)):
+            rowdata.append("<img src='jaccard_test"+str(i+1)+".png' width=800 >")
         gen_html(outputname, title, htmlname="jaccard", rows=rowdata)
 
 ###########################################################################################
@@ -466,7 +510,7 @@ class jaccard:
 ###########################################################################################
 
 class intersect:
-    def __init__(self, referenceEM, queryEM, mode_intersect):
+    def __init__(self, referenceEM, queryEM, mode_intersect, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
         self.qEM.read(queryEM)
@@ -476,6 +520,16 @@ class intersect:
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
         self.mode_intersect = mode_intersect
+        self.organism = organism
+
+    def background(self,path=None):
+        """Given a bed file as the background for analysis"""
+        bgbed = GenomicRegionSet(name="Background")
+        if path:
+            bgbed.read_bed(path)
+        else:
+            bgbed.get_genome_data(organism=self.organism)
+        self.backgroung = bgbed
 
     def group_refque(self, groupby):
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
@@ -488,19 +542,28 @@ class intersect:
         else:
             self.color_tags = gen_tags(self.qEM, colorby)
         
-    def count_intersect(self):
+    def count_intersect(self,mode_intersection, mode_count,threshold):
         self.counts = OrderedDict()
-        print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
-        for ty in self.groupedreference.keys():
-            self.counts[ty] = OrderedDict()
-            for r in self.groupedreference[ty]:
-                self.counts[ty][r.name] = OrderedDict()
-                rlen = r.total_coverage()
-                for q in self.groupedquery[ty]:
-                    qlen = q.total_coverage()
-                    c = count_intersect(r,q,m= self.mode_intersect)
-                    self.counts[ty][r.name][q.name] = c
-                    print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
+        if mode_count == "bp":
+            print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
+        elif mode_count == "count":
+            print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
+        
+            for ty in self.groupedreference.keys():
+                self.counts[ty] = OrderedDict()
+                
+                for r in self.groupedreference[ty]:
+                    self.counts[ty][r.name] = OrderedDict()
+                    if mode_count == "bp": rlen = r.total_coverage()
+                    elif mode_count == "count": rlen = len(r)
+                    
+                    for q in self.groupedquery[ty]:
+                        if mode_count == "bp": qlen = q.total_coverage()
+                        elif mode_count == "count": qlen = len(q)
+                        # Define different mode of intersection and count here
+                        c = count_intersect(r,q,mode_intersection= mode_intersection,mode_count=mode_count, threshold=threshold)
+                        self.counts[ty][r.name][q.name] = c
+                        print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
 
     def barplot(self, logt=None):
         f, axs = plt.subplots(len(self.counts.keys()),1)
@@ -646,13 +709,67 @@ class intersect:
                    '<img src="intersection_percentagebar.png" width=800 align="middle">']
         gen_html(outputname, title, htmlname="intersection", rows=rowdata)
 
-    def combinatorial(self):
+    def posi2region(self, regions, p):
+        all = range(len(regions))
+        inters = GenomicRegionSet(name="")
+        inters.get_genome_data(organism=self.organism, chrom_X=False, chrom_M=False)
+        for r in p:
+            inters = inters.intersect(regions[r])
+            #print(len(inters))
+        inters.name = "_".join([regions[i].name for i in p])
+        np = [j for j in all if j not in p] # position for union
+        unions = GenomicRegionSet(name="")
+        for r in np:
+            #print("np "+ str(r))
+            unions.combine(regions[r])
+            #print(len(unions))
+        unions.name = "+".join([regions[i].name for i in np])
+        res = inters.subtract(unions)
+        return res
+    
+    def combinatorial(self, background=None):
+        new_refsp = OrderedDict()
         new_refs = OrderedDict()
-        new_ques = OrderedDict()
+        ref_names = []
+        
         for ty in self.groupedreference.keys():
-            self.groupedreference[ty] = combset(self.groupedreference[ty])
-            self.groupedquery[ty] = combset(self.groupedquery[ty])
-
+            n = len(self.groupedreference[ty])
+            new_refs[ty] = []
+            new_refsp[ty] = []
+            for i in range(1,n):
+                new_refsp[ty].append(itertools.combinations(range(n),i))
+            for posi in new_refsp[ty]:
+                posi = [list(i) for i in posi]
+                for p in posi:
+                    #print("   " + str(p))
+                    pr = self.posi2region(self.groupedreference[ty],p)
+                    new_refs[ty].append(pr)
+                    ref_names.append(pr.name)
+            
+            # All intersection
+            alint = GenomicRegionSet(name="_".join([r.name for r in self.groupedreference[ty]]))
+            for r in self.groupedreference[ty]:
+                alint.intersect(r)
+            alint.name = "_".join([r.name for r in self.groupedreference[ty]])
+            new_refs[ty].append(alint)
+            ref_names.append(alint.name)
+            
+            # Background
+            unions = GenomicRegionSet(name="")
+            for r in self.groupedreference[ty]:
+                unions.combine(r)
+            unions.name = "+".join([r.name for r in self.groupedreference[ty]])
+            
+            nonset = self.backgroung.subtract(unions)
+            nonset.name = "!("+"+".join([r.name for r in self.groupedreference[ty]]) + ")"
+            new_refs[ty].append(nonset)
+            ref_names.append(nonset.name)
+                        
+                    
+        #self.comb_reference = new_refs
+        self.groupedreference = copy.deepcopy(new_refs)
+        self.referencenames = list(set(ref_names))
+            
 ###########################################################################################
 #                    Combinatorial test 
 ###########################################################################################
@@ -809,7 +926,18 @@ class boxplot:
 
     def color_map(self, colorby, definedinEM):
         self.colors = colormap(self.exps, colorby, definedinEM)
-        
+    
+    def print_table(self, directory, folder):
+        self.printtable = OrderedDict()
+        table = []
+        table.append(["#group_tag", "sort_tag", "color_tag", "Signals"])
+        for i, g in enumerate(self.group_tags):
+            for k, a in enumerate(self.sort_tags):
+                for j, c in enumerate(self.color_tags):
+                    table.append([g, a, c] + [str(x) for x in self.sortDict[g][a][c]])
+        print(table)
+        output_array(table, directory, folder, filename="output_table.txt")  
+                    
     def plot(self, title, html=False, logT=False):
         """ Return boxplot from the given tables.
         
@@ -1038,7 +1166,7 @@ class lineplot:
     def colormap(self, colorby, definedinEM):
         self.colors = colormap(self.exps, colorby, definedinEM)
         
-    def plot(self, groupby, colorby, output, printtable=False):
+    def plot(self, groupby, colorby, output, printtable=False, sy=False):
         rot = 50
         ticklabelsize = 7
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
@@ -1079,8 +1207,9 @@ class lineplot:
                 
         for it,ty in enumerate(self.data.keys()):
             axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
-            for i,g in enumerate(self.data[ty].keys()):
-                axs[it,i].set_ylim([0, yaxmax[i]])
+            if sy:
+                for i,g in enumerate(self.data[ty].keys()):
+                    axs[it,i].set_ylim([0, yaxmax[i]*1.2])
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f

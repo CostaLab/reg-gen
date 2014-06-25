@@ -161,7 +161,13 @@ parser_intersect.add_argument('-t','--title', default='intersection_test', help=
 parser_intersect.add_argument('-g', type=str, help=helpgroup +" (Default:None)")
 parser_intersect.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
 parser_intersect.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-parser_intersect.add_argument('-m', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
+parser_intersect.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+parser_intersect.add_argument('-m', default="count", choices=['count','bp'],
+                              help="Define the mode of calculating intersection. \
+                              'count' outputs the number of overlapped regions.\
+                              'bp' outputs the coverage(basepair) of intersection.")
+parser_intersect.add_argument('-tc', type=int, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps 20%(or more) of reference is counted as intersection.")
+parser_intersect.add_argument('-mi', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
                               help="Define the mode for intersection. \
                               'OVERLAP' defines the true intersections which are included in both reference and query, \
                               'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
@@ -191,6 +197,7 @@ parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure i
 parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_boxplot.add_argument('-p','--pvalue', type=float, default=0.05, help='Define the significance level for multiple test. Default: 0.01')
 parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+parser_boxplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 
 ################### Lineplot ##########################################
 parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
@@ -210,6 +217,7 @@ parser_lineplot.add_argument('-e', type=int, default=2000, help='Define the exte
 parser_lineplot.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
 parser_lineplot.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
 parser_lineplot.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
 parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -327,8 +335,9 @@ if args.mode == "jaccard":
     parameter = parameter + jaccard.parameter
     t1 = time.time()
     if args.pdf:
-        jaccard.plot(args.log)
-        output(f=jaccard.fig, directory = args.output, folder = args.title, filename="jaccard_test",extra=plt.gci())
+        jaccard.plot(logT=args.log)
+    for i,f in enumerate(jaccard.fig):
+        output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci())
     if args.html:
         jaccard.gen_html(args.output, args.title)
     print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -337,13 +346,14 @@ if args.mode == "jaccard":
 ################### Intersect Test ##########################################
 if args.mode == 'intersection':
     # Fetching reference and query EM
-    inter = intersect(args.reference,args.query,mode_intersect = args.m)
+    inter = intersect(args.reference,args.query,mode_intersect = args.m, organism=args.organism)
+    inter.background(args.bg)
     inter.group_refque(args.g)
     if args.comb:
         print("Generating all combinatorial regions for further analysis...")
         inter.combinatorial()
     inter.colors(args.c, args.color)
-    inter.count_intersect()
+    inter.count_intersect(mode_count=args.m, mode_intersection=args.mi, threshold=args.tc)
     
     if args.pdf:
         inter.barplot(args.log)
@@ -402,6 +412,7 @@ if args.mode == 'boxplot':
     boxplot.group_data(tables=tables)
     boxplot.color_map(colorby=args.c, definedinEM=args.color)
     boxplot.plot(title=args.title,html=args.html, logT=args.log)
+    if args.table: boxplot.print_table(directory=args.output, folder=args.title)
     output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci())
     # HTML
     if args.html: boxplot.gen_html(args.output, args.title, args.pvalue)
@@ -445,7 +456,7 @@ if args.mode == 'lineplot':
     # Plotting
     print2(parameter, "\nStep 3/3: Plotting the lineplots")
     lineplot.colormap(colorby = args.c, definedinEM = args.color)
-    lineplot.plot(groupby=args.g, colorby=args.c, output=args.output, printtable=args.table)
+    lineplot.plot(groupby=args.g, colorby=args.c, output=args.output, printtable=args.table, sy=args.sy)
     output(f=lineplot.fig, directory = args.output, folder = args.title, filename="lineplot",extra=plt.gci())
     if args.html: lineplot.gen_html(args.output, args.title)
     t3 = time.time()
