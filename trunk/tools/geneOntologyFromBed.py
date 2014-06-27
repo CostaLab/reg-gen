@@ -73,8 +73,6 @@ def mode_2(exp_matrix):
         f.close()
 
 def mode_3(exp_matrix):
-    genes = {}
-    
     #remember value of bedgraph, ugly way
     score = {}
     for regions in exp_matrix.get_regionsets():
@@ -88,18 +86,18 @@ def mode_3(exp_matrix):
         region_set = GenomicRegionSet("")
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
         
-        avg_score = {}
+        avg_score = {} #score per peak
+        genes = {}
         
         for peak, gene_list in gene_peaks_mapping.items():
-            for gen in gene_list:
+            for gen in gene_list: #reverse mapping peak -> gene to gene -> peak
                 if not gen:
                     continue
                 genes[gen] = genes.get(gen, set())
                 genes[gen].add(peak)
-                
                 avg_score[gen] = avg_score.get(gen, [])
-                avg_score[gen].append(score[peak])
-                
+                avg_score[gen].append(score[peak]) #join all scores of peaks assigned to a gen
+        
         for gen in genes.keys():
             avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
             print(gen, avg, ", ".join(str(t) for t in genes[gen]), sep='\t', file = f)
@@ -115,13 +113,13 @@ if __name__ == '__main__':
     i = 2
     if len(args) != i:
         parser.error("Exactly %s parameters are needed" %i)
-    
+      
     path_exp_matrix = args[0]
     path_annotation = args[1]
     
     #options.mode = 3
-    #path_exp_matrix = '/home/manuel/exp_m_test'
-    #path_annotation = '/home/manuel/data/rgtdata/mm9'
+    #path_exp_matrix = '/workspace/cluster_p/hematology/exp/exp03_rerun_chipseq/assign_peak/exp_matrix_peak_assign_chipseq'
+    #path_annotation = '/home/manuel/data/rgt-data/mm9/'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
