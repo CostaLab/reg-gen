@@ -124,8 +124,28 @@ class GenomicRegionSet:
                 print(s, file=f)
 
     def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-        """code based on eduardos functions. This should be  integrated in the core framework soon
-        TODO: Eduardo should check this!"""
+        """Associates genomic regions to genes given the following rules:
+             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
+             2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
+             3. If peak is between two genes (not overlapping neither), then both genes are annotated.
+             4. If the distance between peak and gene is greater than a threshold distance, then it is not annotated.
+
+           Keyword arguments:
+             fileName -- TODO
+             geneSet -- TODO
+             geneAnnotation -- TODO
+             genomeSize -- TODO
+             promoterLength -- Length of the promoter region. (default 1000)
+             threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+
+           Returns:
+             le -- TODO
+             len(self.genes) -- TODO
+             mappedGenes -- TODO
+             totalPeaks -- TODO
+             regionsToGenes -- TODO
+       """
+        # TODO: Eduardo should check this!
         from rgt.motifanalysis.util import bedFunctions, sort
         from rgt.motifanalysis.enrichment.geneAssociation import *
         self.fileName=fileName
