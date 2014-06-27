@@ -105,8 +105,10 @@ helpinput = 'The file name of the input Experimental Matrix file. Recommended to
 helpoutput = 'The directory name for the output files. For example, project name.'
 helptitle = 'The title shown on the top of the plot and also the folder name.'
 helpgroup = "Group the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+helpgroupbb = "Group the data by any optional column (for example, 'cell') of experimental matrix, or None."
 helpsort = "Sort the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
 helpcolor = "Color the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+helpcolorbb = "Color the data by any optional column (for example, 'cell') of experimental matrix, or None."
 helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB.'
 helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable.'
 helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable.'
@@ -122,11 +124,11 @@ parser_projection.add_argument('output', help=helpoutput)
 parser_projection.add_argument('-r', '--reference',help=helpreference)
 parser_projection.add_argument('-q', '--query', help=helpquery)
 parser_projection.add_argument('-t','--title', default='projection_test', help=helptitle)
-parser_projection.add_argument('-g', default=None, help=helpgroup +" (Default:None)")
-parser_projection.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_projection.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
 parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
 parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_projection.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
 parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -141,37 +143,37 @@ parser_jaccard.add_argument('output', help=helpoutput)
 parser_jaccard.add_argument('-r', '--reference',help=helpreference)
 parser_jaccard.add_argument('-q', '--query', help=helpquery)
 parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
-parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization.')
-parser_jaccard.add_argument('-g', default=None, help=helpgroup +" (Default:None)")
-parser_jaccard.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
+parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
 parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-parser_jaccard.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
 parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
 parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 
 ################### Intersect Test ##########################################
-parser_intersect = subparsers.add_parser('intersection',help='Intersection test provides various modes of intersection to test the association between references and queries.')
+parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
 
 parser_intersect.add_argument('output', help=helpoutput)
 parser_intersect.add_argument('-r', '--reference',help=helpreference)
 parser_intersect.add_argument('-q', '--query', help=helpquery)
 parser_intersect.add_argument('-t','--title', default='intersection_test', help=helptitle)
-parser_intersect.add_argument('-g', type=str, help=helpgroup +" (Default:None)")
-parser_intersect.add_argument('-c', default="regions", help=helpcolor +' (Default: regions)')
+parser_intersect.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+parser_intersect.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
 parser_intersect.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
 parser_intersect.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
 parser_intersect.add_argument('-m', default="count", choices=['count','bp'],
                               help="Define the mode of calculating intersection. \
                               'count' outputs the number of overlapped regions.\
                               'bp' outputs the coverage(basepair) of intersection.")
-parser_intersect.add_argument('-tc', type=int, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps 20%(or more) of reference is counted as intersection.")
-parser_intersect.add_argument('-mi', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
-                              help="Define the mode for intersection. \
-                              'OVERLAP' defines the true intersections which are included in both reference and query, \
-                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
-                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
+parser_intersect.add_argument('-tc', type=int, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
+#parser_intersect.add_argument('-mi', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
+#                              help="Define the mode for intersection. \
+#                              'OVERLAP' defines the true intersections which are included in both reference and query, \
+#                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
+#                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
 parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
 parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
 parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -180,7 +182,7 @@ parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot i
 parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_intersect.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
 parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-parser_intersect.add_argument('-stest', type=int, default= 100, help='Define the repetition time of random subregion test between reference and query. Default: 100')
+parser_intersect.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
 
 
 ################### Boxplot ##########################################
@@ -188,11 +190,12 @@ parser_intersect.add_argument('-stest', type=int, default= 100, help='Define the
 parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
 parser_boxplot.add_argument('input',help=helpinput)
 parser_boxplot.add_argument('output', help=helpoutput)
-parser_boxplot.add_argument('-t','--title', default='Boxplot', help=helptitle)
+parser_boxplot.add_argument('-t','--title', default='boxplot', help=helptitle)
 parser_boxplot.add_argument('-g', default='reads', help=helpgroup + " (Default:reads)")
 parser_boxplot.add_argument('-c', default='regions', help=helpcolor + " (Default:regions)")
 parser_boxplot.add_argument('-s', default='cell', help=helpsort + " (Default:cell)")
-parser_boxplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+parser_boxplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
+parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
 parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
 parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
@@ -208,7 +211,7 @@ choice_center = ['midpoint','leftend','rightend','bothends'] # Be consist as the
 
 parser_lineplot.add_argument('input', help=helpinput)
 parser_lineplot.add_argument('output', help=helpoutput)
-parser_lineplot.add_argument('-t','--title', default='Lineplot', help=helptitle)
+parser_lineplot.add_argument('-t','--title', default='lineplot', help=helptitle)
 parser_lineplot.add_argument('-center', choices=choice_center, default='midpoint', 
                              help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                              '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
@@ -220,6 +223,7 @@ parser_lineplot.add_argument('-rs', type=int, default=200, help='Define the read
 parser_lineplot.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
 parser_lineplot.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
 parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
+#parser_lineplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
 parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
 parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
 parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -233,7 +237,7 @@ choice_center = ['midpoint','leftend','rightend','bothends'] # Be consist as the
 
 parser_heatmap.add_argument('input', help=helpinput)
 parser_heatmap.add_argument('output', help=helpoutput)
-parser_heatmap.add_argument('-t', '--title', default='Heatmap', help=helptitle)
+parser_heatmap.add_argument('-t', '--title', default='heatmap', help=helptitle)
 parser_heatmap.add_argument('-center', choices=choice_center, default='midpoint', 
                              help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                              '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
@@ -254,6 +258,7 @@ parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure i
 parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
 parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
 parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+
 ################### Integration ##########################################
 parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
 parser_integration.add_argument('-ihtml', help='Integrate all the html files within the given directory and generate index.html for all plots.')
@@ -307,7 +312,7 @@ if args.mode == 'projection':
         qlist = projection.projection_test(organism = args.organism)
 
     if args.pdf:
-        projection.plot(args.log)
+        projection.plot(args.nlog)
         output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci())
     if args.html:
         projection.gen_html(args.output, args.title)
@@ -337,7 +342,7 @@ if args.mode == "jaccard":
     parameter = parameter + jaccard.parameter
     t1 = time.time()
     if args.pdf:
-        jaccard.plot(logT=args.log)
+        jaccard.plot(logT=args.nlog)
     for i,f in enumerate(jaccard.fig):
         output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci())
     if args.html:
@@ -346,9 +351,9 @@ if args.mode == "jaccard":
     output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
 ################### Intersect Test ##########################################
-if args.mode == 'intersection':
+if args.mode == 'intersect':
     # Fetching reference and query EM
-    inter = intersect(args.reference,args.query,mode_intersect = args.mi, mode_count=args.m, organism=args.organism)
+    inter = intersect(args.reference,args.query,mode_intersect = "OVERLAP", mode_count=args.m, organism=args.organism)
     inter.background(args.bg)
     inter.group_refque(args.g)
     if args.comb:
@@ -367,7 +372,7 @@ if args.mode == 'intersection':
             inter.percentagebar()
             output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci())
     
-    if args.stest:
+    if args.stest > 0:
         inter.stest(repeat=args.stest)
     
     if args.html:
@@ -380,19 +385,17 @@ if args.mode == 'intersection':
 
 ################### Boxplot ##########################################
 if args.mode == 'boxplot':
-    exps = ExperimentalMatrix()
-    exps.read(args.input)
-    boxplot = boxplot(exps, title="Boxplot")
+    boxplot = boxplot(args.input, title="Boxplot")
     
     print2(parameter,"\nStep 1/5: Combining all regions")
-    all_bed = boxplot.combine_allregions()
-    print2(parameter,"    " + str(len(all_bed.sequences)) + " regions from all bed files are combined.")
+    boxplot.combine_allregions()
+    print2(parameter,"    " + str(len(boxplot.all_bed)) + " regions from all bed files are combined.")
     t1 = time.time()
     print2(parameter,"    --- finished in {0:.3f} secs\n".format(t1-t0))
     
     # Coverage of reads on all_bed
     print2(parameter,"Step 2/5: Calculating coverage of each bam file on all regions")
-    all_table = boxplot.bedCoverage(all_bed) 
+    boxplot.bedCoverage() 
     t2 = time.time()
     print2(parameter,"    --- finished in {0:.3f} secs\n".format(t2-t1))
     
@@ -400,24 +403,23 @@ if args.mode == 'boxplot':
     print2(parameter,"Step 3/5: Quantile normalization of all coverage table")
     if args.nqn:
         print2(parameter,"    No quantile normalization.")
-        norm_table = all_table
-    else:
-        norm_table = boxplot.quantile_normalization(all_table)
+        boxplot.norm_table = boxplot.all_table
+    else: boxplot.quantile_normalization()
     t3 = time.time()
     print2(parameter,"    --- finished in {0:.3f} secs\n".format(t3-t2))
     
     # Generate individual table for each bed
     print2(parameter,"Step 4/5: Constructing different tables for box plot")
-    tables = boxplot.tables_for_plot(norm_table,all_bed)
+    boxplot.tables_for_plot()
     t4 = time.time()
     print2(parameter,"    --- finished in {0:.3f} secs\n".format(t4-t3))
     
     # Plotting
     print2(parameter,"Step 5/5: Plotting")
     boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
-    boxplot.group_data(tables=tables)
+    boxplot.group_data()
     boxplot.color_map(colorby=args.c, definedinEM=args.color)
-    boxplot.plot(title=args.title,html=args.html, logT=args.log)
+    boxplot.plot(title=args.title,html=args.html, logT=args.nlog, sy=args.sy)
     if args.table: boxplot.print_table(directory=args.output, folder=args.title)
     output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci())
     # HTML

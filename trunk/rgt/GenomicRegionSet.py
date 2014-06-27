@@ -489,7 +489,7 @@ class GenomicRegionSet:
     def combine(self,region_set):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
         self.sequences.extend(region_set.sequences)
-        self.name = self.name + "+" + region_set.name
+        #self.name = self.name + "+" + region_set.name
         self.sorted = False
         
     def cluster(self,max_distance):
@@ -741,7 +741,7 @@ class GenomicRegionSet:
             possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
 
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
-        intersect_regions = self.intersect(nqury,mode=OverlapType.OVERLAP)
+        intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
         n = len(nquery)
         k = len(intersect_regions)
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)

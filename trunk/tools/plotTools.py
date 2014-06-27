@@ -268,6 +268,13 @@ def gen_html(outputname, title, htmlname, rows):
     htmlcode = HTML.table(table)
     for line in htmlcode: f.write(line)
     f.close()
+
+def subtable_format(ty):
+    subtable = '<font size="5">'+ty+'</font>'
+    subtable += '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:left;table-layout: fixed;font-size:8pt;}\</style><table cellpadding="10">' #width=800
+    return subtable
+
+    
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -351,7 +358,7 @@ class projection:
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     y = self.qlist[ty][r][q]
-                    ax[ind_ty].bar(x, y, width=width, color=self.color_list[q],align='edge')
+                    ax[ind_ty].bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
             if logt:
                 ax[ind_ty].set_yscale('log')
             else:
@@ -371,8 +378,20 @@ class projection:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
+
     def gen_html(self,outputname, title):
         rowdata = ["<img src='projection_test.png' width=800 >"]
+        for ind_ty, ty in enumerate(self.plist.keys()):
+            subtable = subtable_format(ty)
+            subtable += '<tr><td>Reference</td><td>Query</td><td>Background</td><td>Proportion</td><td>p-value</td></tr>'
+            for ind_r,r in enumerate(self.plist[ty].keys()):
+                for ind_q, q in enumerate(self.plist[ty][r].keys()):
+                    if self.plist[ty][r][q] < 0.05:
+                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2:.4f}</td><td>{3:.4f}</td><td><font color="red">{4:.2e}</font></td></tr>'.format(r,q,self.qlist[ty][r]['Background'],self.qlist[ty][r][q],self.plist[ty][r][q])
+                    else:
+                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2:.4f}</td><td>{3:.4f}</td><td>{4:.2e}</td></tr>'.format(r,q,self.qlist[ty][r]['Background'],self.qlist[ty][r][q],self.plist[ty][r][q])
+            subtable += '</table>'
+            rowdata.append(subtable)
         gen_html(outputname, title, htmlname="projection", rows=rowdata)
         
     def table(self, directory, folder):
@@ -408,15 +427,18 @@ class jaccard:
     def jaccard_test(self, runtime, organism):
         self.jlist = OrderedDict()
         self.realj = OrderedDict()
+        self.plist = OrderedDict()
+        self.rt = runtime
         print2(self.parameter, "\nJaccard Test")
         print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}\t{5:s}".format("Reference","Query","Repeats", "True_Jaccard_index", "p-value", "Time"))
         for ty in self.groupedreference.keys():
             self.jlist[ty] = OrderedDict()
             self.realj[ty] = OrderedDict()
-            
+            self.plist[ty] = OrderedDict()
             for i, r in enumerate(self.groupedreference[ty]):
                 self.jlist[ty][r.name] = OrderedDict()
                 self.realj[ty][r.name] = OrderedDict()
+                self.plist[ty][r.name] = OrderedDict()
                 for j, q in enumerate(self.groupedquery[ty]):
                     ts = time.time()
                     self.jlist[ty][r.name][q.name] = []
@@ -426,8 +448,9 @@ class jaccard:
                         self.jlist[ty][r.name][q.name].append(r.jaccard(random))
                     # How many randomizations have higher jaccard index than the real index?
                     p = len([x for x in self.jlist[ty][r.name][q.name] if x > self.realj[ty][r.name][q.name]])/runtime
+                    self.plist[ty][r.name][q.name] = p
                     te = time.time()
-                    print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:f}\t{4:f}\t{5:s}".format(r.name,q.name,"x"+str(runtime),self.realj[ty][r.name][q.name], p,str(datetime.timedelta(seconds=round(te-ts)))))  
+                    print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:f}\t{4:e}\t{5:s}".format(r.name,q.name,"x"+str(runtime),self.realj[ty][r.name][q.name], p,str(datetime.timedelta(seconds=round(te-ts)))))  
     
     def plot(self, logT=False):
         """ Return boxplot from the given tables.
@@ -503,6 +526,23 @@ class jaccard:
         rowdata = []
         for i in range(len(self.fig)):
             rowdata.append("<img src='jaccard_test"+str(i+1)+".png' width=800 >")
+            
+        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+            subtable = subtable_format(ty)
+            subtable += '<tr><td>{0:s}</td><td>{1:s}</td><td>{2:s}</td><td>{3:s}</td><td>{4:s}</td></tr>'\
+                        .format("Reference","Query","Repeats", "True_Jaccard_index", "p-value")
+            for ind_r,ri in enumerate(self.groupedreference[ty]):
+                r = ri.name
+                for ind_q, qi in enumerate(self.groupedquery[ty]):
+                    q = qi.name
+                    if self.plist[ty][r][q] < 0.05:
+                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3:.4f}</td><td><font color="red">{4:.2e}</font></td></tr>'\
+                                     .format(r,q,"x"+str(self.rt),self.realj[ty][r][q],self.plist[ty][r][q])
+                    else:
+                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3:.4f}</td><td>{4:.2e}</td></tr>'\
+                                     .format(r,q,"x"+str(self.rt),self.realj[ty][r][q],self.plist[ty][r][q])
+            subtable += '</table>'
+            rowdata.append(subtable)        
         gen_html(outputname, title, htmlname="jaccard", rows=rowdata)
 
 ###########################################################################################
@@ -524,6 +564,7 @@ class intersect:
         self.organism = organism
         self.sbar = None
         self.pbar = None
+        self.test_d = None
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
@@ -547,6 +588,7 @@ class intersect:
         
     def count_intersect(self, threshold):
         self.counts = OrderedDict()
+        self.rlen, self.qlen = {}, {}
         if self.mode_count == "bp":
             print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         elif self.mode_count == "count":
@@ -554,21 +596,24 @@ class intersect:
         
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
+            self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
             
             for r in self.groupedreference[ty]:
                 self.counts[ty][r.name] = OrderedDict()
                 if self.mode_count == "bp": rlen = r.total_coverage()
                 elif self.mode_count == "count": rlen = len(r)
+                self.rlen[ty][r.name] = rlen
                 
                 for q in self.groupedquery[ty]:
                     if self.mode_count == "bp": qlen = q.total_coverage()
                     elif self.mode_count == "count": qlen = len(q)
+                    self.qlen[ty][q.name] = qlen
                     # Define different mode of intersection and count here
                     c = count_intersect(r,q,mode_intersection= self.mode_intersect, mode_count=self.mode_count, threshold=threshold)
                     self.counts[ty][r.name][q.name] = c
                     print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
 
-    def barplot(self, logt=None):
+    def barplot(self, logt=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
         xtickrotation, xtickalign = 0,"center"
@@ -581,9 +626,9 @@ class intersect:
                 ax.set_yscale('log')
                 plus = 1
             else:
-                ax.locator_params(axis = 'y', nbins = 2)
+                ax.locator_params(axis = 'y', nbins = 4)
                 plus = 0
-            ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+                ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.set_title(self.counts.keys()[ai], y=0.9)
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
@@ -598,14 +643,9 @@ class intersect:
                     x = ind_r + ind_q*width + 0.1
                     y = self.counts.values()[ai][r][q][2] + plus # intersect number
                     
-                    ax.bar(x, y, width=width, color=self.color_list[q],align='edge')
-                    #except:
-                    #    colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.counts[ty][r].keys()))).tolist()
-                    #    ax.bar(x, y, width=width, color=colors[ind_q],align='edge')
-            
-            #ax.set_ylabel("Counts of intersected regions",fontsize=12)
+                    ax.bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
+                    
             ax.yaxis.tick_left()
-            
             ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
             ax.set_xticklabels(r_label,fontsize=9, rotation=xtickrotation, ha=xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
@@ -634,7 +674,7 @@ class intersect:
         for ai, ax in enumerate(axs):
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
-            ax.set_title(self.counts.keys()[ai], y=0.9)
+            ax.set_title(self.counts.keys()[ai], y=0.95)
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 if len(axs) == 1: r_label.append(r)
@@ -675,12 +715,14 @@ class intersect:
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
+        self.percentage = []
         
         for ai, ax in enumerate(axs):
             #ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
             ax.set_title(self.counts.keys()[ai], y=1.05)
-            r_label = []   
+            r_label = []
+            self.percentage.append({})
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 if len(axs) == 1: r_label.append(r)
                 else: 
@@ -688,13 +730,19 @@ class intersect:
                     except: r_label.append(r)
                 width = 0.6
                 bottom = 0
-                sumlength = self.rEM.objectsDict[r].total_coverage()
+                if self.mode_count == "bp":
+                    sumlength = self.rEM.objectsDict[r].total_coverage()
+                elif self.mode_count == "count":
+                    sumlength = len(self.rEM.objectsDict[r])
                 if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
+                self.percentage[ai][r] = {}
+                
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r
                     y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
                     ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
                     bottom = bottom + y
+                    self.percentage[ai][r][q] = y
                 ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
@@ -716,6 +764,40 @@ class intersect:
         rowdata = ['<img src="intersection_bar.png" width=800 align="middle">']
         if self.sbar: rowdata.append('<img src="intersection_stackedbar.png" width=800 align="middle">')
         if self.pbar: rowdata.append('<img src="intersection_percentagebar.png" width=800 align="middle">')
+        
+        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+            subtable = subtable_format(ty)
+            if self.mode_count == "bp":
+                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'\
+                            .format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)", "Proportion of reference")
+            elif self.mode_count == "count":
+                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'\
+                            .format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection", "Proportion of reference")
+            for ind_r,ri in enumerate(self.groupedreference[ty]):
+                r = ri.name
+                for ind_q, qi in enumerate(self.groupedquery[ty]):
+                    q = qi.name
+                    subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td></tr>'\
+                                 .format(r,self.rlen[ty][r], q, self.qlen[ty][q],self.counts[ty][r][q][2], self.percentage[ind_ty][r][q])
+            subtable += '</table>'
+            rowdata.append(subtable)
+            
+        if self.test_d:
+            for ind_ty, ty in enumerate(self.test_d.keys()):
+                subtable = subtable_format("Random sampling intersection test: " + ty + " (Run "+ str(self.test_time) + " times)")
+                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>'\
+                            .format("Reference","Regions", "Query", "Regions", "Aver_inter_regions", "Chi-sq_statistic", "p_value")
+                
+                for ind_r,r in enumerate(self.test_d[ty].keys()):
+                    for ind_q, q in enumerate(self.test_d[ty][r].keys()):
+                        if self.test_d[ty][r][q][6] < 0.05:
+                            subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td><td><font color="red">{6:.2e}</font></td></tr>'\
+                                         .format(*self.test_d[ty][r][q])
+                        else:
+                            subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td><td>{6:.2e}</td></tr>'\
+                                         .format(*self.test_d[ty][r][q])
+                subtable += '</table>'
+                rowdata.append(subtable)                        
         gen_html(outputname, title, htmlname="intersection", rows=rowdata)
 
     def posi2region(self, regions, p):
@@ -778,9 +860,39 @@ class intersect:
         self.groupedreference = copy.deepcopy(new_refs)
         self.referencenames = list(set(ref_names))
             
-    #def stest(self,repeat):
+    def stest(self,repeat):
+        print2(self.parameter,"\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
+        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format("#reference","ref_number","query","que_number", "aver_inter_number","chisq_statistic", "p_value"))
+        self.test_time = repeat
+        self.test_d = {}
         
+        for ty in self.groupedreference.keys():
+            self.test_d[ty] = {}
+            
+            for r in self.groupedreference[ty]:
+                self.test_d[ty][r] = {}
+                nr = len(r)
+                for q in self.groupedquery[ty]:
+                    nq = len(q)
+                    #print(len(q))
+                    qn = q.name
+                    q.combine(r)
+                    n = len(q)
+                    d = []
+                    for i in range(repeat):
+                        random = q.random_subregions(size=len(r))
+                        inter = random.intersect(r,mode=OverlapType.ORIGINAL)
+                        ni = len(inter)
+                        d.append(ni/n)
+                    # Possibility of r 
+                    posib = nr/n
+                    # Chi-squire test
+                    chisq, p = mstats.chisquare(d,f_exp=[posib]*repeat)
+                    self.test_d[ty][r][q] = [r.name,nr,qn,nq,ni,chisq,p]
+                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r][q]))
+                    
 
+                    
 ###########################################################################################
 #                    Boxplot 
 ###########################################################################################
@@ -796,44 +908,46 @@ class boxplot:
         parameters: list of records
         figs: a list of figure(s)
     """
-    def __init__(self,exps, title="Boxplot"):
+    def __init__(self,EMpath, title="Boxplot"):
         # Read the Experimental Matrix
         self.title = title
-        self.exps = exps
-        self.beds = exps.get_regionsets() # A list of GenomicRegionSets
-        self.bednames = exps.get_regionsnames()
-        self.reads = exps.get_readsfiles()
-        self.readsnames = exps.get_readsnames()
-        self.fieldsDict = exps.fieldsDict
+        self.exps = ExperimentalMatrix()
+        self.exps.read(EMpath)
+        self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
+        self.bednames = self.exps.get_regionsnames()
+        self.reads = self.exps.get_readsfiles()
+        self.readsnames = self.exps.get_readsnames()
+        self.fieldsDict = self.exps.fieldsDict
         self.parameter = []
     
     def combine_allregions(self):
-        all_bed = GenomicRegionSet("All regions")
+        
+        self.all_bed = GenomicRegionSet("All regions")
         for bed in self.beds:
-            all_bed.combine(bed)
-        all_bed.remove_duplicates() #all_bed is sorted!!
-        return all_bed
+            self.all_bed.combine(bed)
+        self.all_bed.remove_duplicates() #all_bed is sorted!!
+        
     
-    def bedCoverage(self,bed):
+    def bedCoverage(self):
         """ Return coverage matrix of multiple reads on one bed. 
         bed --> GenomicRegionSet
         """
         c=[]
         for rp in self.reads:
             r = os.path.abspath(rp)   # Here change the relative path into absolute path
-            cov = CoverageSet(r,bed)
+            cov = CoverageSet(r,self.all_bed)
             cov.coverage_from_genomicset(r)
             cov.normRPM()
             c.append(cov.coverage)
             print("    processing: "+rp)
-        return numpy.transpose(c)
+        self.all_table = numpy.transpose(c)
       
-    def quantile_normalization(self,matrix):
+    def quantile_normalization(self):
         """ Return the np.array which contains the normalized values
         """
         rank_matrix = []
-        for c in range(matrix.shape[1]):
-            col = matrix[:,c]
+        for c in range(self.all_table.shape[1]):
+            col = self.all_table[:,c]
             rank_col = mstats.rankdata(col)
             rank_matrix.append(rank_col)
     
@@ -842,9 +956,9 @@ class boxplot:
         
         # Calculate for means of ranks
         print("    Calculating for the mean of ranked data...")
-        sort_matrix = numpy.sort(matrix,axis=0)
+        sort_matrix = numpy.sort(self.all_table,axis=0)
         means = []
-        for r in range(matrix.shape[0]):
+        for r in range(self.all_table.shape[0]):
             row = [x for x in sort_matrix[r,:]]
             means.append(numpy.mean(row))
     
@@ -854,21 +968,21 @@ class boxplot:
         for i, v  in enumerate(means):
             normalized_table[normalized_table == i+1] = v
         #print(rounded_rank)
-        return normalized_table
+        self.norm_table = normalized_table
 
-    def tables_for_plot(self,norm_table,all_bed):
+    def tables_for_plot(self):
         """ Return a Dict which stores all tables for each bed with file path(more unique) as its key. """
-        tableDict = OrderedDict() # Storage all tables for each bed with bedname as the key
+        self.tableDict = OrderedDict() # Storage all tables for each bed with bedname as the key
         conList = []   # Store containers of beds
         iterList = []
         
         for i,bed in enumerate(self.beds):
-            tableDict[bed.name] = []
+            self.tableDict[bed.name] = []
             bed.sort()
             conList.append(bed.__iter__())
             iterList.append(conList[-1].next())
             
-        for i, r in enumerate(all_bed.sequences):
+        for i, r in enumerate(self.all_bed.sequences):
             for j in range(len(self.beds)):
                 while r > iterList[j]:
                     try:
@@ -876,10 +990,9 @@ class boxplot:
                     except:
                         break
                 if r == iterList[j]:
-                    tableDict[self.beds[j].name].append(norm_table[i])
+                    self.tableDict[self.beds[j].name].append(self.norm_table[i])
                 elif r < iterList[j]:
                     continue
-        return tableDict
 
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -901,13 +1014,13 @@ class boxplot:
         else:
             self.color_tags = gen_tags(self.exps, colorby)
 
-    def group_data(self, tables):  
+    def group_data(self):  
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cuesbed = OrderedDict()   # Storing the cues for back tracking
         cuesbam = OrderedDict()
-        for bedname in tables.keys():
+        for bedname in self.tableDict.keys():
             plotDict[bedname] = OrderedDict()
-            mt = numpy.array(tables[bedname])
+            mt = numpy.array(self.tableDict[bedname])
             
             cuesbed[bedname] = [tag for tag in self.exps.get_types(bedname) if tag in self.group_tags + self.sort_tags + self.color_tags]
             
@@ -920,13 +1033,13 @@ class boxplot:
         #print(cues.keys())
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
-            print("    "+g)
+            #print("    "+g)
             sortDict[g] = OrderedDict()
             for a in self.sort_tags:
-                print("        "+a)
+                #print("        "+a)
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
-                    print("            "+c)
+                    #print("            "+c)
                     sortDict[g][a][c] = []
                     for bed in cuesbed.keys():
                         #print(bed)
@@ -935,7 +1048,7 @@ class boxplot:
                         if set([g,a,c]) >= set(cuesbed[bed]):
                             for bam in cuesbam.keys():
                                 if set([g,a,c]) >= set(cuesbam[bam]):
-                                    print("                "+ bed + " + "+ bam)
+                                    #print("                "+ bed + " + "+ bam)
                                     sortDict[g][a][c] = plotDict[bed][bam]
                                     #break
                             #break
@@ -955,11 +1068,11 @@ class boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, html=False, logT=False):
+    def plot(self, title, sy, html=False, logT=False):
         """ Return boxplot from the given tables.
         
         """
-        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = True)
+        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = sy)
         canvas = FigureCanvas(f)
         canvas.set_window_title(title)
         try: axarr = axarr.reshape(-1)
@@ -971,8 +1084,7 @@ class boxplot:
             axarr[0].set_ylabel("Count number")
         for i, g in enumerate(self.group_tags):
             axarr[i].set_title(g, y=0.94)
-            if logT:
-                axarr[i].set_yscale('log')
+            if logT: axarr[i].set_yscale('log')
             axarr[i].tick_params(axis='y', direction='out')
             axarr[i].yaxis.tick_left()
             axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
@@ -1012,12 +1124,17 @@ class boxplot:
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
             
             if i > 0:
-                plt.setp(axarr[i].get_yticklabels(),visible=False)
+                if sy: 
+                    plt.setp(axarr[i].get_yticklabels(),visible=False)
+                    axarr[i].minorticks_off()
+                    axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
+                else: 
+                    plt.setp(axarr[i].get_yticklabels(),visible=True)
+                    axarr[i].tick_params(axis='y', which='both', left='on', right='off', labelbottom='on')
                 #plt.setp(axarr[i].get_yticks(),visible=False)
-                axarr[i].minorticks_off()
-                axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
-                    
-        plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
+                
+        if sy:            
+            plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
         #plt.legend(colors, color_tags, loc=7)
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
                  handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
@@ -1029,7 +1146,6 @@ class boxplot:
         rowdata = ["<img src='boxplot.png' width=800 >"]
         #### Calculate p value ####
         for g in self.group_tags:
-            rowdata.append('<font size="5">' + g + "</font>")
             indM = 0
             header = []
             data_p = []
@@ -1053,8 +1169,8 @@ class boxplot:
                         ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
                     k = k + 1
             nrows, ncols = ar.shape
-            subtable = '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-            </style><table style="width:100%">'
+            subtable = subtable_format(ty=g)
+
             for r in range(nrows+1):
                 subtable += '<tr>'
                 for c in range(ncols+1):
@@ -1197,7 +1313,7 @@ class lineplot:
                 if printtable:
                     pArr = numpy.array(["Name","X","Y"]) # Header
                     
-                for j, c in enumerate(self.data[s][g].keys()): 
+                for j, c in enumerate(self.data[s][g].keys()):
                     y = self.data[s][g][c]
                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                     x = numpy.linspace(-self.extend, self.extend, len(y))
@@ -1339,10 +1455,10 @@ class lineplot:
             self.hmfiles.append("heatmap"+ "_" + t)
     
     def gen_htmlhm(self, outputname, title):
-        rowdata = ["<img src='lineplot.png' width=800 >"]
+        rowdata = []
         # Each row is a plot with its data
         for name in self.hmfiles:
-            rowdata.append(["<img src='" + name + ".png' width=800 >"])
+            rowdata.append("<img src='" + name + ".png' width=800 >")
         gen_html(outputname, title, htmlname="heatmap", rows=rowdata)
     
 ###########################################################################################
