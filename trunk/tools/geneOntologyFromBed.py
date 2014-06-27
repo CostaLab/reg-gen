@@ -109,19 +109,19 @@ def mode_3(exp_matrix):
 
 if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
-#    parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
+    parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     (options, args) = parser.parse_args()
-#    
-#    i = 2
-#    if len(args) != i:
-#        parser.error("Exactly %s parameters are needed" %i)
-#    
-#    path_exp_matrix = args[0]
-#    path_annotation = args[1]
     
-    options.mode = 3
-    path_exp_matrix = '/home/manuel/exp_m_test'
-    path_annotation = '/home/manuel/data/rgtdata/mm9'
+    i = 2
+    if len(args) != i:
+        parser.error("Exactly %s parameters are needed" %i)
+    
+    path_exp_matrix = args[0]
+    path_annotation = args[1]
+    
+    #options.mode = 3
+    #path_exp_matrix = '/home/manuel/exp_m_test'
+    #path_annotation = '/home/manuel/data/rgtdata/mm9'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
