@@ -1,1 +1,1 @@
-__all__ = ["footprint","signalProcessing"]
+__all__ = ["hmm","signalProcessing"]
