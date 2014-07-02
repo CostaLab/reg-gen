@@ -196,6 +196,33 @@ class MotifData(ConfigurationFile):
         """
         return self.mtf_list
 
+class HmmData(ConfigurationFile):
+    """
+    Represent HMM data.
+
+    Authors: Eduardo G. Gusmao.
+
+    Inherits ConfigurationFile.
+
+    Methods:
+
+    get_default_hmm():
+    Returns the current repository list.
+
+    """
+
+    def __init__(self):
+        """
+        Initializes HmmData.
+        """
+        ConfigurationFile.__init__(self)
+        self.default_hmm = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm'))
+
+    def get_default_hmm(self):
+        """
+        Returns the current default hmm.
+        """
+        return self.default_hmm
 
 class OverlapType:
     """

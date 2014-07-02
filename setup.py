@@ -57,7 +57,7 @@ tools_dictionary = {
 ), 
 "footprint": (
   "rgt-footprint",
-  "rgt.footprint.main:main",
+  "rgt.footprint.Main:main",
   []
 ), 
 "ODIN": (
@@ -175,6 +175,8 @@ data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
 data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
+data_config_file.write("[HmmData]\n")
+data_config_file.write("default_hmm: fp_hmms/H3K4me3_proximal.hmm\n\n")
 data_config_file.close()
 
 # Creating data.config.path
@@ -193,7 +195,8 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 "hg19": ["association_file.bed","chrom.sizes"],
-"mm9": ["association_file.bed","chrom.sizes"]
+"mm9": ["association_file.bed","chrom.sizes"],
+"fp_hmms": ["H3K4me3_proximal.hmm"],
 }
 for copy_folder in copy_files_dictionary.keys():
     copy_dest_path = os.path.join(options.param_rgt_data_location,copy_folder)
