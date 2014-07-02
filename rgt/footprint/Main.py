@@ -52,9 +52,13 @@ def main():
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'footprint' program predicts TFBSs given open chromatin data.\n"
                      "In order to use this tools, please type: \n\n"
-                     "%prog [options] <data_matrix>\n\n"
-                     "Where <data matrix> should contain the regions/reads\n"
-                     "and [options] are the analysis-specific arguments.\n\n"
+                     "%prog [options] <experiment_matrix>\n\n"
+                     "The <experiment matrix> should contain:\n"
+                     "- One region file representing the regions in which the HMM\n"
+                     "  will be applied. It should contain 'regions' in the type field\n"
+                     "- One DNase aligned reads file (bam) file with 'DNASE' in the name field.\n"
+                     "- One to Three histone modification aligned reads file (bam).\n\n"
+
                      "For more information, please refer to our wiki:\n"
                      "https://code.google.com/p/reg-gen/wiki/RegGen\n"
                      "--------------------------------------------------")
@@ -264,6 +268,6 @@ def main():
         try:
             system(" ".join("bedToBigBed",output_file_name,chrom_sizes_file,output_bb_name))
             #remove(output_file_name)
-        except Exception: continue # TODO ERROR
+        except Exception: pass # TODO ERROR
         
 
