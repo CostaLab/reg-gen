@@ -14,7 +14,19 @@ The HMM has as input a normalized and a slope signal of DNase-seq and one of the
 
 == Requirements ==
 
-Under construction.
+This tool requires a few extra Python packages:
+* [http://www.numpy.org/ numpy]
+* [http://www.scipy.org/ scipy] 
+* [http://scikit-learn.org/stable/ scikit]
+* [http://code.google.com/p/pysam/ pysam]
+
+If you have sudo privileges, the first three packages from the list above can be installed with the following commands:
+{{{
+sudo apt-get install build-essential python-dev python-numpy python-setuptools python-scipy libatlas-dev libatlas3-base
+pip install -U scikit-learn
+}}}
+
+However, if you are not the administrator. Please visit the project's websites by clicking in the links above and search for the python installation with the "prefix" scheme.
 
 == Installation ==
 
