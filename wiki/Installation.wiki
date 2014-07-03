@@ -54,11 +54,7 @@ Also, it is possible to install individual tools or only the core project by add
 to your installation command.
 
 Here is a list of available options for the above argument. You can use multiple options separated by comma (without spaces):
-
-- core -- Installs only the core project for regulatory data manipulation.
-
-- ODIN -- Installs One step DIffereNtial peak caller tool.
-
-- motifanalysis -- Installs motifanalysis toolkit.
-
-- footprint -- Installs footprint tool.
+  * core -- Installs only the core project for regulatory data manipulation.
+  * ODIN -- Installs One step DIffereNtial peak caller tool.
+  * motifanalysis -- Installs motifanalysis toolkit.
+  * footprint -- Installs footprint tool.
