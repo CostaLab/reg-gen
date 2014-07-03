@@ -84,6 +84,8 @@ Under construction.
 
 == Example ==
 
+We provide an example of the application of the footprint tool in DNase Hypersensitive regions of the human chromosome 22. The example contains aligned reads (.bam files) for DNase-seq and ChIP-seq for histone modifications H3K4me1 and H3K4me3. Also, it contains the DNase Hypersensitive regions (.bed file) and a set-up experimental matrix. A proper execution will generate a file called `footprints.bed` in the `Output` folder.
+
 You can download an example containing all the required input data in the correct format and run it with the following commands:
 
 {{{
@@ -97,4 +99,4 @@ cd ~/RGT_Footprint_Test/
 rgt-footprint --output-location ./Output/ ./InputMatrix.txt
 }}}
 
-This example takes about 25 minutes to run.
+This example contains about 290 MB and takes about 25 minutes to run.
