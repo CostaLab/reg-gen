@@ -120,6 +120,7 @@ class BamFile:
         bam -- Pysam's bam representation.
         sg_coefs -- Savitzky-Golay coefficients (list). Should be loaded after class initialization.
         """
+        self.file_name = file_name
         self.bam = Samfile(file_name,"rb")
         self.sg_coefs = None
 

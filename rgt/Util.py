@@ -288,8 +288,18 @@ class ErrorHandler():
         """
         self.error_dictionary = {
             "DEFAULT_ERROR": [0,0,"Undefined error. Program terminated with exit status 0."],
+
             "MOTIF_ANALYSIS_OPTION_ERROR": [1,0,"You must define one specific analysis. Run '"+self.program_name+" -h' for help."],
-            "ERROR2": [2,0,"Aaaa"],
+
+            "FP_WRONG_ARGUMENT": [2,0,"You must provide at least one and no more than one experimental matrix as input argument."],
+            "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted."],
+            "FP_ONE_REGION": [4,0,"You must provide one 'regions' bed file in the experiment matrix."],
+            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE in the experiment matrix"],
+            "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE (histone modification) in the experiment matrix."],
+            "FP_NB_HMMS": [7,0,"You must provide one HMM file or X HMM files where X is the number of histone tracks detected in the experiment matrix."],
+            "FP_HMM_FILES": [8,0,"Your HMM file could not be read. If you did not provide any HMM file, you may not have installed scikit correctly."],
+            "FP_BB_CREATION": [9,0,"Big Bed file (.bb) could not be created. Check if you have the bedToBigBed script in $PATH."],
+            "XXXXXXX": [10,0,"Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
@@ -306,11 +316,20 @@ class ErrorHandler():
             "DEFAULT_WARNING": [0,"Undefined warning."],
             "WARNING1": [1,"Warning 1 Test"],
             "WARNING2": [2,"Warning 2 Test"],
+
+            "FP_ONE_REGION": [3,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
+            "FP_MANY_DNASE": [4,"There are more than one DNASE 'reads' file. Only the first one will be used."],
+            "FP_MANY_HISTONE": [5,"It is recomended that no more than three histone modifications should be used."],
+            "FP_DNASE_PROC": [6,"The DNase file could not be processed"],
+            "FP_HISTONE_PROC": [7,"The Histone file could not be processed"],
+            "FP_SEQ_FORMAT": [8,"The DNase+Histone sequence could not be formatted to be input for scikit"],
+            "FP_HMM_APPLIC": [9,"The scikit HMM encountered errors when applied"],
+            "XXXXXXX": [10,"Xxxxxx"]
         }
         self.warning_number = 0
         self.warning_message = 1
 
-    def throw_error(self,error_type):
+    def throw_error(self, error_type, add_msg = ""):
         """
         Throws the specified error type. If the error type does not
         exist, throws a default error message and exits.
@@ -330,13 +349,13 @@ class ErrorHandler():
         complete_error_message = ("--------------------------------------------------\n"
                                   "Error Number: "+str(error_number)+".\n"
                                   "Program: "+self.program_name+".\n"
-                                  "Report: "+error_message+"\n"
+                                  "Report: "+error_message+" "+add_msg+"\n"
                                   "Behaviour: The program will quit with exit status "+str(exit_status)+".\n"
                                   "--------------------------------------------------")
         print(complete_error_message, file=sys.stderr)
         sys.exit(exit_status)
 
-    def throw_warning(self,warning_type):
+    def throw_warning(self, warning_type, add_msg = ""):
         """
         Throws the specified warning type. If the warning type does not
         exist, throws a default warning message and exits.
@@ -354,7 +373,7 @@ class ErrorHandler():
         complete_warning_message = ("--------------------------------------------------\n"
                                     "Warning Number: "+str(warning_number)+".\n"
                                     "Program: "+self.program_name+".\n"
-                                    "Report: "+warning_message+"\n"
+                                    "Report: "+warning_message+" "+add_msg+"\n"
                                     "--------------------------------------------------")
         print(complete_warning_message, file=sys.stderr)
 
