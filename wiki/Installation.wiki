@@ -1,4 +1,3 @@
-
 = Download =
 
 The easiest way to obtain the package is using svn checkout:
@@ -47,3 +46,13 @@ During the usual installation, a folder named `rgtdata` will be created in your 
 to your installation command.
 
 This folder contains a file named `data.config` which will define the default auxiliary data that will be used. Also, default auxiliary data will be provided for some selected organisms.
+
+Also, it is possible to install individual tools or only the core project by adding:
+{{{
+--rgt-data-path=<data_folder>
+}}}
+to your installation command.
+
+Here is a list of available options for the above argument:
+* core -- Installs only the core project for regulatory data manipulation.
+* b -- a.
