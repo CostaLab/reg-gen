@@ -48,6 +48,8 @@ export PYTHONPATH=$PYTHONPATH:~/app/lib/pythonX.X/:~/app/lib64/pythonX.X/
 python setup.py install --prefix=~/app --rgt-tool=footprint
 }}}
 
+For more details on the installation please go to the [ installation] section.
+
 == Input ==
 
 ==== Required Input: ====
