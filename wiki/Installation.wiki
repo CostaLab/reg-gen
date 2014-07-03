@@ -55,6 +55,6 @@ to your installation command.
 
 Here is a list of available options for the above argument:
 
-*core -- Installs only the core project for regulatory data manipulation.
+# core -- Installs only the core project for regulatory data manipulation.
 
-*b -- a.
+# b -- a.
