@@ -12,6 +12,14 @@ Within transcription factor binding sites, there is a specific grammar of DNase 
 
 The HMM has as input a normalized and a slope signal of DNase-seq and one of the histone marks. It can therefore detect the increase, top and decrease regions of either histone modification and DNase signals. The genomic regions annotated with the 'footprint' HMM state are considered our predictions and represent likely binding sites within that cell's context.
 
+== Requirements ==
+
+Under construction.
+
+== Installation ==
+
+Under construction.
+
 == Input ==
 
 ==== Required Input: ====
@@ -30,6 +38,20 @@ The HMM has as input a normalized and a slope signal of DNase-seq and one of the
 ==== Output Options: ====
 || `-output_location=<PATH>` || Path where the output files will be written.<br>Default: current directory.||
 
+== Input Format Definition ==
+
+=== Experimental Matrix ===
+
+Under construction.
+
+=== HMM File ===
+
+Under construction.
+
 == Output ==
+
+Under construction.
+
+== Example ==
 
 Under construction.
