@@ -15,14 +15,10 @@ The HMM has as input a normalized and a slope signal of DNase-seq and one of the
 == Requirements ==
 
 This tool requires a few extra Python packages:
-
-[http://www.numpy.org/ numpy]
-
-[http://www.scipy.org/ scipy] 
-
-[http://scikit-learn.org/stable/ scikit]
-
-[http://code.google.com/p/pysam/ pysam]
+  * [http://www.numpy.org/ numpy]
+  * [http://www.scipy.org/ scipy] 
+  * [http://scikit-learn.org/stable/ scikit]
+  * [http://code.google.com/p/pysam/ pysam]
 
 If you have sudo privileges, the first three packages from the list above can be installed with the following commands:
 {{{
