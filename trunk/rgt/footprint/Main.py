@@ -6,10 +6,12 @@
 # Python
 from os import remove, system, getcwd
 from sys import exit
+from copy import deepcopy
 
 # Internal
-from .. Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData
+from .. Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
 from .. ExperimentalMatrix import ExperimentalMatrix
+from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
 from signalProcessing import BamFile
 from hmm import HMM
@@ -30,6 +32,7 @@ Dependencies:
 - scipy
 - scikit
 - pysam
+- bedToBigBed script in $PATH (if the option is used)
 
 Authors: Eduardo G. Gusmao.
 """
@@ -47,6 +50,9 @@ def main():
     # Processing Input Arguments
     ###################################################################################################
 
+    # Initializing ErrorHandler
+    error_handler = ErrorHandler()
+ 
     # Parameters
     current_version = "0.0.1"
     usage_message = ("\n--------------------------------------------------\n"
@@ -91,6 +97,7 @@ def main():
 
     # Processing Options
     options, arguments = parser.parse_args()
+    if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
     # Fixed Parameters ################
     region_total_ext = 10000
@@ -116,12 +123,12 @@ def main():
 
     # Reading input argument
     input_matrix = arguments[0]
-    if(not input_matrix): # TODO ERROR
-        exit(0)
 
     # Create experimental matrix
-    exp_matrix = ExperimentalMatrix()
-    exp_matrix.read(input_matrix)
+    try:
+        exp_matrix = ExperimentalMatrix()
+        exp_matrix.read(input_matrix)
+    except Exception: error_handler.throw_error("FP_WRONG_EXPMAT")
 
     ###################################################################################################
     # Reading Regions
@@ -129,14 +136,14 @@ def main():
 
     # Fetching region file
     region_set_list = exp_matrix.get_regionsets()
-    if(len(region_set_list) != 1): # TODO ERROR
-        exit(0)
+    if(len(region_set_list) == 0): error_handler.throw_error("FP_ONE_REGION")
+    elif(len(region_set_list) > 1): error_handler.throw_warning("FP_ONE_REGION")
     regions = region_set_list[0]
-    
-    # Sorting + Extending + Merging + Unique
-    regions.sort()
-    # TODO Extend, merge and unique 
-    # Use region_total_ext
+
+    # Extending + Sorting + Merging / keeping an original copy
+    original_regions = deepcopy(regions)
+    regions.extend(int(region_total_ext/2),int(region_total_ext/2)) # Extending
+    regions.merge() # Sort & Merge
 
     ###################################################################################################
     # Reading Signals
@@ -154,12 +161,19 @@ def main():
     for i in range(0,len(name_list)):
         if(type_list[i] == "regions"): continue
         if(name_list[i].upper() == dnase_label): # DNase signal
-            dnase_file = BamFile(file_dict[name_list[i]])
-            dnase_file.load_sg_coefs(dnase_sg_window_size)
+            if(not dnase_file):
+                dnase_file = BamFile(file_dict[name_list[i]])
+                dnase_file.load_sg_coefs(dnase_sg_window_size)
+            else: error_handler.throw_warning("FP_MANY_DNASE")
         else: # Histone signal
             histone_file = BamFile(file_dict[name_list[i]])
             histone_file.load_sg_coefs(histone_sg_window_size)
             histone_file_list.append(histone_file)
+
+    # Handling errors
+    if(not dnase_file): error_handler.throw_error("FP_NO_DNASE")
+    if(len(histone_file_list) == 0): error_handler.throw_error("FP_NO_HISTONE")
+    elif(len(histone_file_list) > 3): error_handler.throw_warning("FP_MANY_HISTONE")
 
     ###################################################################################################
     # Creating HMM list
@@ -175,8 +189,7 @@ def main():
         # Verifying HMM application mode (one HMM or multiple HMM files)
         if(len(hmm_file_list) == 1): flag_multiple_hmms = False # One HMM file only
         elif(len(hmm_file_list) == len(histone_file_name_list)): flag_multiple_hmms = True # One HMM file for each histone
-        else: # TODO ERROR - Incorrect number of HMMs passed
-            exit(0)
+        else: error_handler.throw_error("FP_NB_HMMS")
 
     else: # Argument was not passed
         flag_multiple_hmms = False
@@ -187,21 +200,22 @@ def main():
     hmm_list = []
     for hmm_file_name in hmm_file_list:
 
-        hmm_scaffold = HMM()
-        hmm_scaffold.load_hmm(hmm_file_name)
-        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
-                                 transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-        scikit_hmm.means_ = array(hmm_scaffold.means)
-        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        try:
+            hmm_scaffold = HMM()
+            hmm_scaffold.load_hmm(hmm_file_name)
+            scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
+                                     transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+            scikit_hmm.means_ = array(hmm_scaffold.means)
+            scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        except Exception: error_handler.throw_error("FP_HMM_FILES")
         hmm_list.append(scikit_hmm)
 
     ###################################################################################################
     # Main Pipeline
     ###################################################################################################
 
-    # Creating output file
-    output_file_name = options.output_location+options.footprint_name+".bed"
-    output_file = open(output_file_name,"w")
+    # Initializing result set
+    footprints = GenomicRegionSet("footprints")
 
     # Iterating over regions
     for r in regions.sequences:
@@ -210,7 +224,9 @@ def main():
         try:
             dnase_norm, dnase_slope = dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                       dnase_frag_ext, dnase_initial_clip, dnase_norm_per, dnase_slope_per)
-        except Exception: continue # TODO ERROR
+        except Exception:
+            error_handler.throw_warning("FP_DNASE_PROC",add_msg="for region ("+",".join([r.chrom, str(r.initial), str(r.final)])+"). This iteration will be skipped.")
+            continue
 
         # Iterating over histone modifications
         for i in range(0,len(histone_file_list)):
@@ -220,19 +236,25 @@ def main():
                 histone_file = histone_file_list[i]
                 histone_norm, histone_slope = histone_file.get_signal(r.chrom, r.initial, r.final, 
                                               histone_frag_ext, histone_initial_clip, histone_norm_per, histone_slope_per)
-            except Exception: continue # TODO ERROR
+            except Exception:
+                error_handler.throw_warning("FP_HISTONE_PROC",add_msg="for region ("+",".join([r.chrom, str(r.initial), str(r.final)])+") and histone modification "+histone_file.file_name+". This iteration will be skipped for this histone.")
+                continue
 
             # Formatting sequence
             try:
                 input_sequence = array([dnase_norm,dnase_slope,histone_norm,histone_slope]).T
-            except Exception: continue # TODO ERROR
+            except Exception:
+                error_handler.throw_warning("FP_SEQ_FORMAT",add_msg="for region ("+",".join([r.chrom, str(r.initial), str(r.final)])+") and histone modification "+histone_file.file_name+". This iteration will be skipped.")
+                continue
 
             # Applying HMM
             if(flag_multiple_hmms): current_hmm = hmm_list[i]
             else: current_hmm = hmm_list[0]
             try:
                 posterior_list = current_hmm.predict(input_sequence)
-            except Exception: continue # TODO ERROR
+            except Exception:
+                error_handler.throw_warning("FP_HMM_APPLIC",add_msg="in region ("+",".join([r.chrom, str(r.initial), str(r.final)])+") and histone modification "+histone_file.file_name+". This iteration will be skipped.")
+                continue
 
             # Writing results
             start_pos = 0
@@ -241,20 +263,31 @@ def main():
                 curr_index = k - r.initial
                 if(flag_start):
                     if(posterior_list[curr_index] != fp_state_nb):
-                        if(k-start_pos < fp_limit_size): output_file.write("\t".join([r.chrom,str(start_pos),str(k)])+"\n")
+                        if(k-start_pos < fp_limit_size):
+                            fp = GenomicRegion(r.chrom, str(start_pos), str(k))
+                            footprints.add(fp)
                         flag_start = False
                 else:
                     if(posterior_list[curr_index] == fp_state_nb):
                         flag_start = True
                         start_pos = k
-            if(flag_start): output_file.write("\t".join([r.chrom,str(start_pos),str(r.final)])+"\n")
+            if(flag_start): 
+                fp = GenomicRegion(r.chrom, str(start_pos), str(r.final))
+                footprints.add(fp)
 
-    # Sorting + Merging + Unique on footprint results
-    # TODO
+    # Sorting and Merging
+    #footprints.merge() # Sort & Merge # TODO - Report bug to Joseph
+
+    # Overlapping results with original regions
+    #footprints = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
 
     ###################################################################################################
-    # Converting to big bed
+    # Writing output
     ###################################################################################################
+
+    # Creating output file
+    output_file_name = options.output_location+options.footprint_name+".bed"
+    footprints.write_bed(output_file_name)
 
     # Verifying condition to write bb
     if(options.print_bb):
@@ -268,6 +301,6 @@ def main():
         try:
             system(" ".join("bedToBigBed",output_file_name,chrom_sizes_file,output_bb_name))
             #remove(output_file_name)
-        except Exception: pass # TODO ERROR
+        except Exception: error_handler.throw_error("FP_BB_CREATION")
         
 
