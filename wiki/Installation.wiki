@@ -49,7 +49,7 @@ This folder contains a file named `data.config` which will define the default au
 
 Also, it is possible to install individual tools or only the core project by adding:
 {{{
---rgt-data-path=<data_folder>
+--rgt-tool=<option>
 }}}
 to your installation command.
 
