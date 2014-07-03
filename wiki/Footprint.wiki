@@ -30,7 +30,23 @@ However, if you are not the administrator. Please visit the project's websites b
 
 == Installation ==
 
-Under construction.
+Given that you have all the required packages. The tool can be easily installed locally by executing the following commands:
+{{{
+# Installing subversion (SVN)
+apt-get install subversion
+
+# Downloading code and change to the code's directory.
+svn checkout http://reg-gen.googlecode.com/svn/trunk/ ~/reg-gen/
+cd ~/reg-gen/
+
+# Setting up environmental variables for local installation
+# Please also add the following two lines to your ~/.bashrc file.
+export PATH=$PATH:~/app/bin/
+export PYTHONPATH=$PYTHONPATH:~/app/lib/pythonX.X/:~/app/lib64/pythonX.X/
+
+# Installation command
+python setup.py install --prefix=~/app --rgt-tool=footprint
+}}}
 
 == Input ==
 
