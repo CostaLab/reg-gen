@@ -90,7 +90,7 @@ You can download an example containing all the required input data in the correc
 # Downloading file and changing to example's directory
 wget -P ~/ <TODO XXX>
 cd ~
-gunzip RGT_Footprint_Test.tar.gz
+tar -zxvf RGT_Footprint_Test.tar.gz
 cd ~/RGT_Footprint_Test/
 
 # Running the footprint tool
