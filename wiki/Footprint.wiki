@@ -84,4 +84,17 @@ Under construction.
 
 == Example ==
 
-Under construction.
+You can download an example containing all the required input data in the correct format and run it with the following commands:
+
+{{{
+# Downloading file and changing to example's directory
+wget -P ~/ <TODO XXX>
+cd ~
+gunzip RGT_Footprint_Test.tar.gz
+cd ~/RGT_Footprint_Test/
+
+# Running the footprint tool
+rgt-footprint --output-location ./Output/ ./InputMatrix.txt
+}}}
+
+This example takes about 25 minutes to run.
