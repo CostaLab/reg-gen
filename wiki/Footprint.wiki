@@ -73,7 +73,7 @@ The `experiment matrix` should contain:
 ==== Optional Input: ====
 
 || *Option name* || *Type* || *Default* || *Description* ||
-|| --hmm-file || FILE_1[,FILE_2,...,FILE_N] || Internal HMM file trained using data from`*`DNase+H3K4me3 in cell type K562 || List of HMM files separated by comma. If one file only, then this HMM will be applied for all histone signals, otherwise, the list must have the same number of histone files given. The order of the list should be the order of the histones in the input_matrix file. ||
+|| --hmm-file || FILE_1[,FILE_2,...,FILE_N] || Internal HMM file trained using data from <br> DNase+H3K4me3 in cell type K562 || List of HMM files separated by comma. If one file only, then this HMM will be applied for all histone signals, otherwise, the list must have the same number of histone files given. The order of the list should be the order of the histones in the input_matrix file. ||
 
 ==== Optional Parameters: ====
 
