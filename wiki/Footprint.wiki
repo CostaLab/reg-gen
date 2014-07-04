@@ -52,6 +52,18 @@ For more details on the installation please go to the [https://code.google.com/p
 
 == Input ==
 
+In order to use this tools, please type:
+{{{
+rgt-footprint [options] <experiment_matrix>
+}}}
+
+The `experiment matrix` should contain:
+  * One 'regions' file representing the regions in which the HMM will be applied. It should contain 'regions' in the TYPE field.
+  * One DNase aligned reads file (bam) file with 'DNASE' in the NAME field and 'reads' in the TYPE field.
+  * One to Three histone modification aligned reads file (bam) with 'reads' in the TYPE field.
+
+Below you will find detailed instructions for all the available `options`. In the following section, we provide detailed explanation on the format of all RGT-specific input files.
+
 ==== Required Input: ====
 || `-dnase_file=<FILE>` || File containing the DNase-seq signal. The file consists of the genomic coverage (read overlap) of the aligned reads. A high-resolution signal should be given correspoding to the overlap of all the 5' read base pairs.<br>Format: bigwig.<br> Default: None.||
 || `-histone_file=<FILE>` || File containing the ChIP-seq signal from histone modifications. The file consists of the genomic coverage of the aligned reads. Each read should be extended to the average length of immunoprecipitated fragments.<br>Format: bigwig.<br>Default: None.||
@@ -68,11 +80,11 @@ For more details on the installation please go to the [https://code.google.com/p
 ==== Output Options: ====
 || `-output_location=<PATH>` || Path where the output files will be written.<br>Default: current directory.||
 
-== Input Format Definition ==
+== RGT-specific Input Format Definition ==
 
 === Experimental Matrix ===
 
-Under construction.
+
 
 === HMM File ===
 
