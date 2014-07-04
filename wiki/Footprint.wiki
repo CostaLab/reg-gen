@@ -57,28 +57,34 @@ In order to use this tools, please type:
 rgt-footprint [options] <experiment_matrix>
 }}}
 
+Below you will find detailed instructions for all the available `options`. In the following section, we provide detailed explanation on the format of all RGT-specific input files.
+
+==== Required Input: ====
+
+The tool requires only one experimental matrix file.
+
 The `experiment matrix` should contain:
   * One 'regions' file representing the regions in which the HMM will be applied. It should contain 'regions' in the TYPE field.
   * One DNase aligned reads file (bam) file with 'DNASE' in the NAME field and 'reads' in the TYPE field.
   * One to Three histone modification aligned reads file (bam) with 'reads' in the TYPE field.
 
-Below you will find detailed instructions for all the available `options`. In the following section, we provide detailed explanation on the format of all RGT-specific input files.
-
-==== Required Input: ====
-|| `-dnase_file=<FILE>` || File containing the DNase-seq signal. The file consists of the genomic coverage (read overlap) of the aligned reads. A high-resolution signal should be given correspoding to the overlap of all the 5' read base pairs.<br>Format: bigwig.<br> Default: None.||
-|| `-histone_file=<FILE>` || File containing the ChIP-seq signal from histone modifications. The file consists of the genomic coverage of the aligned reads. Each read should be extended to the average length of immunoprecipitated fragments.<br>Format: bigwig.<br>Default: None.||
-|| `-hmm_file=<FILE>` || File containing the HMM parameters. Check the manual for more information on the format and how to obtain these models.<br>Format: hmm.<br>Default: None.||
-
 ==== Optional Input: ====
-|| `-coord_file=<FILE>` || Coordinate file containing the regions of the genome where the footprinting will be performed. If None, the footprinting is applied to the complete genome.<br>Format: bed.<br>Default: Complete genome tiled in 10000bp regions.||
 
+|| Option name || Type || Default || Description ||
+|| --hmm-file || FILE_1[,FILE_2,...,FILE_N] || Internal HMM file trained using data from DNase+H3K4me3 in cell type K562 || List of HMM files separated by comma. If one file only, then this HMM will be applied for all histone signals, otherwise, the list must have the same number of histone files given. The order of the list should be the order of the histones in the input_matrix file. ||
 
-==== Input Parameters: ====
-|| `-organism=<STRING>` || Organism considered on the analysis. Can be 'hg19'  or 'mm9'. All the default files are going to be based on the chosen organism.<br>Default: hg19||
+==== Optional Parameters: ====
 
+|| Option name || Type || Default || Description ||
+|| --organism || STRING || hg19 || Organism considered on the analysis. Currently we made available human (hg19) and mouse (mm9). All default files such as genomes will be based on the chosen organism and the data.config file. This option is used only if a bigbed output is asked. ||
 
-==== Output Options: ====
-|| `-output_location=<PATH>` || Path where the output files will be written.<br>Default: current directory.||
+==== Optional Output: ====
+
+|| Option name || Type || Default || Description ||
+|| AAAA || BBBB || CCCC || DDDD ||
+|| AAAA || BBBB || CCCC || DDDD ||
+|| AAAA || BBBB || CCCC || DDDD ||
+
 
 == RGT-specific Input Format Definition ==
 
