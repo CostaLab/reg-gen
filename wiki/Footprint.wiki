@@ -78,14 +78,14 @@ The `experiment matrix` should contain:
 ==== Optional Parameters: ====
 
 || *Option name* || *Type* || *Default* || *Description* ||
-|| --organism || STRING || hg19 || Organism considered on the analysis. Currently we made available human (hg19) and mouse (mm9). All default files such as genomes will be based <br> on the chosen organism and the data.config file. This option is used only if a bigbed output is asked. ||
+|| --organism || STRING || hg19 || Organism considered on the analysis. Currently we made available human (hg19) and mouse (mm9). All default files such as genomes will be <br> based on the chosen organism and the data.config file. This option is used only if a bigbed output is asked. ||
 
 ==== Optional Output: ====
 
 || *Option name* || *Type* || *Default* || *Description* ||
 || --output-location || PATH || Current directory || Path where the output files will be written. ||
 || --footprint-name || STRING || footprints || Name of the footprint file (without extension). ||
-|| --print-bb || BOOL || Option is not used || If used, the output will be a bigbed (.bb) file. For this option to run successfully, you must have the [http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed bedToBigBed] script from UCSC utilities in any folder in your `$PATH` variable. ||
+|| --print-bb || BOOL || Option is not used || If used, the output will be a bigbed (.bb) file. For this option to run successfully, you must have the [http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed bedToBigBed] script from UCSC <br> utilities in any folder in your `$PATH` variable. ||
 
 == RGT-specific Input Format Definition ==
 
