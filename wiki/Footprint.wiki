@@ -85,7 +85,7 @@ The `experiment matrix` should contain:
 || *Option name* || *Type* || *Default* || *Description* ||
 || --output-location || PATH || Current directory || Path where the output files will be written. ||
 || --footprint-name || STRING || footprints || Name of the footprint file (without extension). ||
-|| --print-bb || BOOL || Option is not used || If used, the output will be a bigbed (.bb) file. For this option to run successfully, you must have the [bedToBigBed http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed] script from UCSC utilities in any folder in your `$PATH` variable. ||
+|| --print-bb || BOOL || Option is not used || If used, the output will be a bigbed (.bb) file. For this option to run successfully, you must have the [http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/bedToBigBed bedToBigBed] script from UCSC utilities in any folder in your `$PATH` variable. ||
 
 == RGT-specific Input Format Definition ==
 
