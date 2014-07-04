@@ -91,7 +91,20 @@ The `experiment matrix` should contain:
 
 === Experimental Matrix ===
 
-Under construction.
+The experimental matrix consists of a text file containing columns separated by tab. It starts with a header:
+{{{
+name	type	file	<label1>	<label2>
+}}}
+In which the user may specify the last two labels that best suits their analyses.
+
+Then, all the other lines consist of data regarding these columns descriptions. An example of a complete experiment matrix that is a valid input for footprint tool can be seen below:
+{{{
+name	type	file	cell	factor
+HS	regions	./Input/regions.bed	K562	HS_regions
+DNase	reads	./Input/DNase_chr22.bam	K562	DNase
+H3K4me1	reads	./Input/H3K4me1_chr22.bam	K562	H3K4me1
+H3K4me3	reads	./Input/H3K4me3_chr22.bam	K562	H3K4me3
+}}}
 
 === HMM File ===
 
