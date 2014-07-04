@@ -13,7 +13,6 @@ Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo, Ivan G. Costa.
 
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
-
 """
 
 ###################################################################################################
@@ -58,7 +57,7 @@ tools_dictionary = {
 "footprint": (
   "rgt-footprint",
   "rgt.footprint.Main:main",
-  []
+  ['numpy>=1.4.1','scipy>=0.7.2','scikit-learn>=0.12.1','pysam>=0.7.5']
 ), 
 "ODIN": (
   "rgt-ODIN",
