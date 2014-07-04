@@ -2,8 +2,6 @@
 
 = Footprints =
 
-Command: *rgt-footprint*
-
 == Method ==
 
 We propose an HMM-based approach to integrate both DNase I hypersensitivity and histone modifications for the detection of open chromatin regions and active binding sites.
