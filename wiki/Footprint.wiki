@@ -108,22 +108,15 @@ H3K4me3	reads	./Input/H3K4me3_chr22.bam	K562	H3K4me3
 
 === HMM File ===
 
-Each HMM file describes a multivariate (four dimensions) HMM containing data regarding the normalized and slope signals of the DNase and histone modification signals.
+Each HMM file (with extension .hmm) describes a multivariate (four dimensions) HMM containing data regarding the normalized and slope signals of the DNase and histone modification signals.
 
 A valid HMM file follows these rules:
   * The first line describes the number of states.
-  * The next two lines describe the initial probabilities. It consists of a space-separated list
-of numbers ordered by the HMM states (see order below).
-  * The following lines starting at the line containing "transitions" until the line containing
-"emissions" contain the transition matrix. Each line contains the probability of going from
-the state number represented by that line (first matrix line = first state, etc.) (see order below)
+  * The next two lines describe the initial probabilities. It consists of a space-separated list of numbers ordered by the HMM states (see order below).
+  * The following lines starting at the line containing "transitions" until the line containing "emissions" contain the transition matrix. Each line contains the probability of going from the state number represented by that line (first matrix line = first state, etc.) (see order below)
 to the state number represented by the column number (given a space-separated list of numbers).
-  * The following lines starting at the line containing "emissions" until the end of the file
-contain the emission probabilities. Each line represents the emissions of a particular state
-given the order of states (see below). Within a line, the numbers before the '#' symbol represent
-the signal distribution's means in a certain order of signals (see order below). The numbers after
-the '#' symbol represent a vectorized form (by row) of the covariance matrix given all the signals.
-Rows and columns of the covariance matrix also follow the order of the signals presented below.
+  * The following lines starting at the line containing "emissions" until the end of the file contain the emission probabilities. Each line represents the emissions of a particular state given the order of states (see below). Within a line, the numbers before the `#` symbol represent
+the signal distribution's means in a certain order of signals (see order below). The numbers after the `#` symbol represent a vectorized form (by row) of the covariance matrix given all the signals. Rows and columns of the covariance matrix also follow the order of the signals presented below.
   * The order of the states in the file above is always:
     * DH-HMM: BACKGROUND - UP(H) - TOP(H) - DOWN(H) - UP(D) - TOP(D) - DOWN(D) - FOOTPRINT
     * H-HMM: BACKGROUND - UP(H) - TOP(H) - DOWN(H) - FOOTPRINT
@@ -131,7 +124,7 @@ Rows and columns of the covariance matrix also follow the order of the signals p
     * DH-HMM: DNase normalized - DNase slope - Histone normalized - Histone slope.
     * H-HMM: Histone normalized - Histone slope.
 
-An example of such file can be seen below:
+An example of HMM file trained using DNase+H3K4me3 in cell type K562 can be seen below:
 {{{
 states 8
 initial
