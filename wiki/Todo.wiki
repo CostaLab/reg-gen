@@ -1,22 +1,20 @@
+#summary Future functionalities and bug correction.
+
 = TO-DO =
-# This page contains information on functions that should be implemented.
 
 == GenomicRegion ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || - || - || - || Implement bed fields: score, thickStart, thickEnd, itemRgb (explanation [http://bit.ly/1hdVNjA here]). ||
 || || || || || ||
 
 == GenomicRegionSet ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || general_sort || (GenomicRegion attribute) `*`fields || - || Sorts GenomicRegionSet by a defined order of fields. ||
-|| || get_chrom || bool non_redundant || list chrom_list || Returns chromosome names of all genomic regions without repetition. ||
-|| || get_chrom_sizes || - || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with sizes of all chromosomes that occurs in self. ||
 || || read_bigbed || - || - || Create self based on bigbed (.bb) format. ||
-|| || read_fasta || - || - || Create self based on fasta (.fa) format. ||
 || || write_bigbed || - || - || Writes self in bigbed (.bb) format. ||
 || || write_fasta || - || - || Writes self in fasta (.fa) format. ||
+|| JK || overlap() || || || Correct bug (talk to EG). ||
+|| JK || merge() || || || Correct bug (talk to EG). ||
 || || || || || ||
 
 == CoverageSet ==
@@ -32,7 +30,7 @@
 == ExperimentalMatrix ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || || || || ||
+|| JK ||  || || || Add verbose flag to prevent writing status in sys.err. || || || || || ||
 
 == GeneSet ==
 
@@ -42,20 +40,22 @@
 == GeneMapping ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| EG || gene_coord_association || GenomicRegionSet coordinates<br>GeneSet gene_set<br>(GenomicRegionSet) gene_locations<br>(ChromSizes) chrom_sizes<br>int promoter_length<br>int thresh_dist || GenomicRegionSet associated_coordinates || Associates coordinates with gene_locations based on gene_set. ||
 || || || || || ||
 
 == Util ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || get_chrom || string organism || list chrom_list || Returns a list of all chromosomes for a particular organism. ||
-|| || get_chrom_sizes || string organism || GenomicRegionSet chrom_sizes_list || Returns a GenomicRegionSet with all chromosome sizes for a particular organism. ||
-|| EG || print_html || list html_table<br>list col_types<br>string output_file || - || Writes a table on HTML format. ||
-|| EG || sort_row_by_col || list table<br>list col_list || list sorted_table || Sorts rows of a table by column attributes. ||
 || || || || || ||
 
 == Tools ==
 
-associationAnalysis
-- include the coverageFromBed function and box plot function
-- include the geneCogerageFromBed tool and box plot function
+=== associationAnalysis ===
+  * include the coverageFromBed function and box plot function
+  * include the geneCogerageFromBed tool and box plot function
+
+=== footprint ===
+  * EG - Include overlap and merge in code again after bug correction.
+
+== Data ==
+
+  * EG - Include UCSC binaries.
