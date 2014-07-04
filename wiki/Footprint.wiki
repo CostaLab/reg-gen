@@ -78,7 +78,7 @@ The `experiment matrix` should contain:
 ==== Optional Parameters: ====
 
 || *Option name* || *Type* || *Default* || *Description* ||
-|| --organism || STRING || hg19 || Organism considered on the analysis. Currently we made available human (hg19) and mouse (mm9). All default files such as genomes will be based on the chosen organism and the data.config file. This option is used only if a bigbed output is asked. ||
+|| --organism || STRING || hg19 || Organism considered on the analysis. Currently we made available human (hg19) and mouse (mm9). All default files such as genomes will be based <br> on the chosen organism and the data.config file. This option is used only if a bigbed output is asked. ||
 
 ==== Optional Output: ====
 
