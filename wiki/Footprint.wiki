@@ -18,6 +18,8 @@ This tool requires a few extra Python packages:
   * [http://scikit-learn.org/stable/ scikit]
   * [http://code.google.com/p/pysam/ pysam]
 
+Our tool automatically tries to download and install the requirements. In case you encounter any installation problem, please try to manually install these packages.
+
 If you have sudo privileges, the first three packages from the list above can be installed with the following commands:
 {{{
 sudo apt-get install build-essential python-dev python-numpy python-setuptools python-scipy libatlas-dev libatlas3-base
