@@ -147,13 +147,13 @@ emissions
 
 == Output ==
 
-Under construction.
+This tool outputs a bed file (or bigbed file, if requested by the user) containing all the footprints found by our method.
 
 == Example ==
 
 We provide an example of the application of the footprint tool in DNase Hypersensitive regions of the human chromosome 22. The example contains aligned reads (.bam files) for DNase-seq and ChIP-seq for histone modifications H3K4me1 and H3K4me3. Also, it contains the DNase Hypersensitive regions (.bed file) and a set-up experimental matrix. A proper execution will generate a file called `footprints.bed` in the `Output` folder.
 
-You can download an example containing all the required input data in the correct format and run it with the following commands:
+You can download the example containing all the required input data in the correct format and run it with the following commands:
 
 {{{
 # Downloading file and changing to example's directory
