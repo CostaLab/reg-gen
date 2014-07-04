@@ -76,7 +76,7 @@ def main():
     # Optional Input Options
     parser.add_option("--hmm-file", dest = "hmm_file", type = "string", metavar="FILE_1[,FILE_2,...,FILE_N]", default = None,
                       help = ("List of HMM files separated by comma. If one file only, then this HMM will be "
-                              "applied for all histone signals, otherwise, the list must have the same number."
+                              "applied for all histone signals, otherwise, the list must have the same number"
                               "of histone files given. The order of the list should be the order of the"
                               "histones in the input_matrix file. If the argument is not given, then an HMM"
                               "trained with H3K4me3 in K562 will be used."))
