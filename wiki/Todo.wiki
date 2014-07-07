@@ -15,6 +15,7 @@
 || || write_fasta || - || - || Writes self in fasta (.fa) format. ||
 || JK || overlap() || || || Correct bug (talk to EG). ||
 || JK || merge() || || || Correct bug (talk to EG). ||
+|| JK || random_regions() || || || Put flag for chrY ||
 || || || || || ||
 
 == CoverageSet ==
