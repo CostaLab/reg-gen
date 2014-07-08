@@ -264,7 +264,8 @@ class PassThroughOptionParser(HelpfulOptionParser):
             try:
                 HelpfulOptionParser._process_args(self,largs,rargs,values)
             except (BadOptionError,AmbiguousOptionError), e:
-                largs.append(e.opt_str)
+                pass
+                #largs.append(e.opt_str)
 
 class ErrorHandler():
     """
