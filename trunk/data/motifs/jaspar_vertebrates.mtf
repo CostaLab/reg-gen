@@ -127,7 +127,7 @@ MA0258	MA0258.2.ESR2	jaspar_vertebrates	1	ESR2	.
 MA0259	MA0259.1.HIF1A::ARNT	jaspar_vertebrates	1	HIF1A;ARNT	.
 MA0442	MA0442.1.SOX10	jaspar_vertebrates	1	SOX10	.
 MA0461	MA0461.1.Atoh1	jaspar_vertebrates	1	Atoh1	.
-MA0462	MA0462.1.BATF::JUN	jaspar_vertebrates	1	BATF;JUN	.
+MA0462	MA0462.1.BATF::JUN	jaspar_vertebrates	1	BATF;BATF3;JUN	.
 MA0463	MA0463.1.Bcl6	jaspar_vertebrates	1	Bcl6	.
 MA0464	MA0464.1.Bhlhe40	jaspar_vertebrates	1	Bhlhe40	.
 MA0465	MA0465.1.CDX2	jaspar_vertebrates	1	CDX2	.
