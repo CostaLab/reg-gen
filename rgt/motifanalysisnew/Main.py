@@ -7,17 +7,22 @@
 import os
 import sys
 from glob import glob
+from multiprocessing import Pool
+from pickle import load, dump
 
 # Internal
-from Motif import Motif
-from .. Util import PassThroughOptionParser, ErrorHandler, MotifData
+from .. Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData
 from .. ExperimentalMatrix import ExperimentalMatrix
 from .. GeneSet import GeneSet
+from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
+from Motif import Motif
+from Match import match
 
 # External
 from Bio import motifs
 from Bio.Seq import Seq
+from pysam import Fastafile
 
 """
 Contains functions to common motif analyses.
@@ -117,15 +122,12 @@ def main_matching():
                       help = ("Score distribution precision for motif matching."))
     parser.add_option("--pseudocounts", dest = "pseudocounts", type = "float", metavar="FLOAT", default = 0.1,
                       help = ("Pseudocounts to be added to raw counts of each PWM."))
-    parser.add_option("--prom-len", dest = "prom_len", type = "int", metavar="INT", default = 1000,
-                      help = ("Length of the promoter region (in bp) considered on the creation of the regions-gene association."))
-    parser.add_option("--max-len", dest = "max_len", type = "int", metavar="INT", default = 50000,
-                      help = ("Maximum distance between a coordinate and a gene (in bp) in order for the former to "
-                              "be considered associated with the latter."))
     parser.add_option("--rand-proportion", dest = "rand_proportion", type = "float", metavar="FLOAT", default = 10.0,
                       help = ("If random coordinates need to be created, then it will be created a number of "
                               "coordinates that equals this parameter x the number of input regions. If zero (0) "
                               "is passed, then no random coordinates are created."))
+    parser.add_option("--processes", dest = "processes", type = "int", metavar="INT", default = 1,
+                      help = ("Number of processes for multi-CPU based machines."))
 
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = os.getcwd(),
@@ -135,6 +137,20 @@ def main_matching():
 
     # Processing Options
     options, arguments = parser.parse_args()
+
+    # Additional Parameters
+    matching_folder_name = "Match"
+    random_region_name = "random_regions"
+    dump_file_name = "dump.p"
+
+    ###################################################################################################
+    # Creating output matching folder
+    ###################################################################################################
+
+    matching_output_location = os.path.join(options.output_location,matching_folder_name)
+    try:
+        if(not os.path.isdir(matching_output_location)): os.makedirs(matching_output_location)
+    except Exception: pass # TODO ERROR
 
     ###################################################################################################
     # Reading Input Matrix
@@ -156,58 +172,31 @@ def main_matching():
     # Reading Regions & Gene Lists
     ###################################################################################################
 
-    # Auxiliary object to store input
-    class InputRegions:
-        def __init__(self):
-            self.gene_set = None
-            self.region_list = []
-            self.label_list = []
-
     # Initialization
     max_region_len = 0
     max_region = None
-    input_regions_list = []
-    try:
-        exp_matrix_genelist_dict = exp_matrix.fieldsDict["genelist"]
-    except Exception: pass # TODO ERROR
+    input_regions = []
+
     try:
         exp_matrix_objects_dict = exp_matrix.objectsDict
     except Exception: pass # TODO ERROR
 
-    # Iterating on experimental matrix dictionary
-    for g in exp_matrix_genelist_dict.keys():
+    # Iterating on experimental matrix objects
+    for k in exp_matrix_objects_dict.keys():
 
-        # Initialization
-        new_input_regions = InputRegions()
-        flagGeneSet = False
+        curr_genomic_region = exp_matrix_objects_dict[k]
 
-        # Iterating on experimental matrix objects
-        for k in exp_matrix_genelist_dict[g]:
+        # If the object is a GenomicRegionSet
+        if(isinstance(curr_genomic_region,GenomicRegionSet)):
 
-            # If the object is a GenomicRegionSet
-            if(isinstance(exp_matrix_objects_dict[k],GenomicRegionSet)):
+            # Append label and GenomicRegionSet
+            input_regions.append(curr_genomic_region)
 
-                # Append label and GenomicRegionSet
-                new_input_regions.label_list.append(k)
-                new_input_regions.region_list.append(exp_matrix_objects_dict[k])
-                curr_len = len(exp_matrix_objects_dict[k])
-                if(curr_len > max_region_len):
-                    max_region_len = curr_len
-                    max_region = exp_matrix_objects_dict[k]
-
-            # If the object is a GeneSet
-            elif(isinstance(exp_matrix_objects_dict[k],GeneSet)):
-
-                # Initialize GeneSet and gives warning if there are more than one genesets
-                new_input_regions.gene_set = exp_matrix_objects_dict[k]
-                if(not flagGeneSet): flagGeneSet = True
-                else: pass # TODO WARNING
-
-            # Warning if any additional file type
-            else: pass # TODO WARNING
-
-        # Append new_input_regions in input_regions_list
-        input_regions_list.append(new_input_regions)
+            # Verifying max_region_len for random region generation
+            curr_len = len(curr_genomic_region)
+            if(curr_len > max_region_len):
+                max_region_len = curr_len
+                max_region = exp_matrix_objects_dict[k]
 
     ###################################################################################################
     # Creating random region
@@ -216,7 +205,33 @@ def main_matching():
     # Create random coordinates
     rand_region = None
     if(options.rand_proportion > 0):
-        rand_region = max_region.random_regions(options.organism, multiply_factor=float(options.rand_proportion), chrom_X=True)
+
+        # Create random coordinates and name it random_regions
+        rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
+        rand_region.name = random_region_name
+
+        # Put random regions in the end of the input regions
+        input_regions.append(rand_region)
+
+        # Writing random regions
+        output_file_name = os.path.join(matching_output_location, random_region_name)
+        rand_bed_file_name = output_file_name+".bed"
+        rand_region.write_bed(rand_bed_file_name)
+
+        # Verifying condition to write bb
+        if(options.bigbed):
+
+            # Fetching file with chromosome sizes
+            chrom_sizes_file = genome_data.get_chromosome_sizes()
+
+            # Converting to big bed
+            rand_bb_file_name = output_file_name+".bb"
+            try:
+                system(" ".join("bedToBigBed",rand_bed_file_name, chrom_sizes_file, rand_bb_file_name))
+                #remove(rand_bed_file_name)
+            except Exception: pass # WARNING
+
+    else: pass # TODO WARNING
 
     ###################################################################################################
     # Creating PWMs
@@ -227,32 +242,124 @@ def main_matching():
     # Initialization
     motif_data = MotifData()
     motif_list = []
-    
-    # Iterating on motif repositories
-    for motif_repository in motif_data.get_pwm_list():
 
-        # Iterating on motifs
+    # Fetching list with all motif file names
+    motif_file_names = []
+    for motif_repository in motif_data.get_pwm_list():
         for motif_file_name in glob(os.path.join(motif_repository,"*.pwm")):
-            motif = Motif(motif_file_name, float(options.pseudocounts), int(options.precision), float(options.fpr))
-            motif_list.append(motif)
+            motif_file_names.append(motif_file_name)
+
+    # Grouping motif file names by the number of processes requested
+    if(options.processes <= 0): pass # TODO ERROR
+    elif(options.processes == 1): motif_file_names = [[e] for e in motif_file_names]
+    else: motif_file_names = map(None, *(iter(motif_file_names),) * options.processes)
+
+    # Iterating on grouped file name list
+    for file_group in  motif_file_names:
+
+        # Creating input data for multiprocessing
+        curr_data_input = []
+        curr_proc_nb = 0
+        for motif_file_name in file_group:
+            if(motif_file_name):
+                curr_data_input.append([motif_file_name, options.pseudocounts, options.precision, options.fpr])
+                curr_proc_nb += 1
+
+        # Applying the Motif creation function with multiprocessing
+        pool = Pool(curr_proc_nb)
+        curr_motif_list = pool.map(Motif,curr_data_input)
+        pool.close()
+        pool.join()
+        
+        # Append curr_motif_list (motif_group -- group of Motif objects) to motif_list
+        motif_list.append(curr_motif_list)
 
     ###################################################################################################
     # Motif Matching
     ###################################################################################################
 
+    # Creating output structure
+    mpbs_output_list = []
 
+    # Creating genome file
+    genome_data = GenomeData(options.organism)
+    genome_file = Fastafile(genome_data.get_genome())
 
+    # Iterating on list of genomic regions
+    for genomic_region_set in input_regions:
+
+        # Creating output structure
+        mpbs_list = GenomicRegionSet(genomic_region_set.name)
+    
+        # Iterating on genomic regions
+        for genomic_region in genomic_region_set.sequences:
+
+            # Reading sequence associated to genomic_region
+            sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
+
+            # Iterating on motif group list
+            for motif_group in motif_list:
+
+                # Creating dataset for multiprocessing
+                curr_data_input = [[m,sequence,genomic_region] for m in motif_group]
+                curr_proc_nb = len(curr_data_input)
+
+                # Applying the Motif creation function with multiprocessing
+                pool = Pool(curr_proc_nb)
+                curr_mpbs_list = pool.map(match,curr_data_input)
+                pool.close()
+                pool.join()
+                for curr_mpbs_group in curr_mpbs_list:
+                    for grs in curr_mpbs_group:
+                        mpbs_list.add(grs)
+        
+        # Append the current set of MPBSs to the list of MPBSs sets
+        mpbs_output_list.append(mpbs_list)
+        
     ###################################################################################################
     # Writing output
     ###################################################################################################
 
+    # Dumping list of GenomicRegionSet for fast access by --enrichment operation
+    output_file_name = os.path.join(matching_output_location, dump_file_name)
+    output_file = open(output_file_name, "wb")
+    dump(mpbs_list, output_file)
+    output_file.close()
+
+    # Iterating on MPBS output list
+    for mpbs_list in mpbs_output_list:
+
+        # Initializing output file name
+        output_file_name = os.path.join(matching_output_location, mpbs_list.name+"_mpbs")
+
+        # Writing bed file
+        bed_file_name = output_file_name+".bed"
+        bed_file = open(bed_file_name,"w")
+        counter = 1
+        for e in mpbs_list:
+            bed_file.write("\t".join([e.chrom,str(e.initial),str(e.final),"m"+str(counter),str(e.data),e.orientation])+"\n")
+            counter += 1
+        bed_file.close()
+
+        # Verifying condition to write bb
+        if(options.bigbed):
+
+            # Fetching file with chromosome sizes
+            chrom_sizes_file = genome_data.get_chromosome_sizes()
+
+            # Converting to big bed
+            bb_file_name = output_file_name+".bb"
+            try:
+                system(" ".join("bedToBigBed",bed_file_name, chrom_sizes_file, bb_file_name))
+                #remove(output_file_name)
+            except Exception: pass # WARNING
 
 
 def main_enrichment():
     """
     Performs motif enrichment.
 
-    Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo, Ivan G. Costa.
+    Authors: Eduardo G. Gusmao.
     """
 
     ###################################################################################################
@@ -260,7 +367,7 @@ def main_enrichment():
     ###################################################################################################
 
     # Parameters
-    usage_message = "%prog --enrichment --input-file <FILE> [options]"
+    usage_message = "%prog --matching [options] <PATH>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage = usage_message)
@@ -332,6 +439,99 @@ def main_enrichment():
 
     # Processing Options
     options, arguments = parser.parse_args()
+
+
+
+
+
+
+
+    ###################################################################################################
+    # Reading Regions & Gene Lists
+    ###################################################################################################
+
+    # Auxiliary object to store input
+    class InputRegions:
+        def __init__(self):
+            self.gene_set_name = None
+            self.region_list = []
+            self.label_list = []
+
+    # Initialization
+    max_region_len = 0
+    max_region = None
+    input_regions_list = []
+    flag_genelist = True
+    try:
+        exp_matrix_genelist_dict = exp_matrix.fieldsDict["genelist"]
+    except Exception: # TODO WARNING
+        flag_no_genelist = False
+    try:
+        exp_matrix_objects_dict = exp_matrix.objectsDict
+    except Exception: pass # TODO ERROR
+
+    print exp_matrix_genelist_dict
+    print exp_matrix_objects_dict
+
+    # If there is genelist column - Read genes and regions
+    if(flag_genelist):
+
+        # Iterating on experimental matrix dictionary
+        for g in exp_matrix_genelist_dict.keys():
+
+            # Initialization
+            new_input_regions = InputRegions()
+            flagGeneSet = False
+
+            # Iterating on experimental matrix objects
+            for k in exp_matrix_genelist_dict[g]:
+
+                # If the object is a GenomicRegionSet
+                if(isinstance(exp_matrix_objects_dict[k],GenomicRegionSet)):
+
+                    # Append label and GenomicRegionSet
+                    new_input_regions.label_list.append(k)
+                    new_input_regions.region_list.append(exp_matrix_objects_dict[k])
+                    curr_len = len(exp_matrix_objects_dict[k])
+                    if(curr_len > max_region_len):
+                        max_region_len = curr_len
+                        max_region = exp_matrix_objects_dict[k]
+
+                # If the object is a GeneSet
+                elif(isinstance(exp_matrix_objects_dict[k],GeneSet)):
+
+                    # Initialize GeneSet and gives warning if there are more than one genesets
+                    new_input_regions.gene_set_name = exp_matrix_objects_dict[k]
+                    if(not flagGeneSet): flagGeneSet = True
+                    else: pass # TODO WARNING
+
+                # Warning if any additional file type
+                else: pass # TODO WARNING
+
+            # Append new_input_regions in input_regions_list
+            input_regions_list.append(new_input_regions)
+
+        # The analysis is valid only if genelists are provided for all or not provided for any region file
+        # TODO XXX
+
+    # If there is no genelist column - Read only regions
+    else: pass
+
+        # TODO XXX
+
+    #for e in input_regions_list:
+    #    print self.
+
+
+
+
+
+
+
+
+
+
+
 
     ###################################################################################################
     # Gene-Coordinate Association
