@@ -299,7 +299,7 @@ def main():
         # Converting to big bed
         output_bb_name = options.output_location+options.footprint_name+".bb"
         try:
-            system(" ".join("bedToBigBed",output_file_name,chrom_sizes_file,output_bb_name))
+            system(" ".join(["bedToBigBed",output_file_name,chrom_sizes_file,output_bb_name]))
             #remove(output_file_name)
         except Exception: error_handler.throw_error("FP_BB_CREATION")
         
