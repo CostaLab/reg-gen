@@ -176,7 +176,7 @@ def main_matching():
     except Exception: pass # TODO ERROR
 
     ###################################################################################################
-    # Reading Regions & Gene Lists
+    # Reading Regions
     ###################################################################################################
 
     # Initialization
@@ -332,7 +332,7 @@ def main_matching():
     # Dumping list of GenomicRegionSet for fast access by --enrichment operation
     output_file_name = os.path.join(matching_output_location, dump_file_name)
     output_file = open(output_file_name, "wb")
-    dump(mpbs_list, output_file)
+    dump(mpbs_output_list, output_file)
     output_file.close()
 
     # Iterating on MPBS output list
@@ -376,19 +376,14 @@ def main_enrichment():
     ###################################################################################################
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <PATH>"
+    usage_message = "%prog --enrichment [options] <experiment_matrix> <input_path>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage = usage_message)
 
     # Optional Input Options
-    parser.add_option("--xxxxxx", dest = "xxxxxx", type = "xxxxxx", metavar="xxxxxx", default = None,
-                      help = ("xxxxxx "
-                              "xxxxxx "
-                              "xxxxxx "
-                              "xxxxxx "
-                              "xxxxxx "
-                              "xxxxxx."))
+    #parser.add_option("--xxxxxx", dest = "xxxxxx", type = "xxxxxx", metavar="xxxxxx", default = None,
+    #                  help = ("xxxxxx "))
 
     # Parameters Options
     parser.add_option("--organism", dest = "organism", type = "string", metavar="STRING", default = "hg19",
@@ -404,8 +399,8 @@ def main_enrichment():
                       help = ("Alpha value for multiple test."))
 
     # Output Options
-    parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = "<Input PATH>",
-                      help = ("Path where the output files will be written."))
+    parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = None,
+                      help = ("Path where the output files will be written. Default is the input PATH."))
     parser.add_option("--print-thresh", dest = "print_thresh", type = "float", metavar="FLOAT", default = 0.05,
                       help = ("Only MPBSs whose factor's enrichment corrected p-value are less than equal "
                               "this option are print. Use 1.0 to print all MPBSs."))
@@ -416,26 +411,174 @@ def main_enrichment():
     options, arguments = parser.parse_args()
 
     # Additional Parameters
+    matching_folder_name = "Match"
+    random_region_name = "random_regions"
+    dump_file_name = "dump.p"
+    gene_column_name = "genegroup"
 
+    ###################################################################################################
+    # Initializations
+    ###################################################################################################
 
+    # Output folder
+    if(options.output_location): output_location = options.output_location
+    else:
+        try:
+            matrix_name_without_ext = ".".join(arguments[0].split(".")[:-1])
+            output_location = os.path.join(arguments[1],os.path.basename(matrix_name_without_ext))
+        except Exception: pass # TODO ERROR 
 
+    # Default genomic data
+    genome_data = GenomeData(options.organism)
 
+    # Default motif data
+    motif_data = MotifData()
+
+    ###################################################################################################
+    # Reading Input Matrix
+    ###################################################################################################
+
+    # Reading arguments
+    try:
+        input_matrix = arguments[0]
+        input_location = arguments[1]
+        if(len(arguments) > 2): pass # TODO WARNING
+    except Exception: pass # TODO ERROR
+
+    # Create experimental matrix
+    try:
+        exp_matrix = ExperimentalMatrix()
+        exp_matrix.read(input_matrix)
+    except Exception: pass # TODO ERROR
 
     ###################################################################################################
     # Reading Regions & Gene Lists
     ###################################################################################################
 
+    # Input Class
+    class Input:
+        def __init__(self,gene_set,region_list):
+            self.gene_set = gene_set
+            self.region_list = region_list
+
+    # Initializations
+    input_list = []
+
+    # Reading dictionary grouped by fields
+    flagGene = True
+    try:
+        exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
+    except Exception: flagGene = False
+
+    # Reading dictionary of objects
+    try:
+        exp_matrix_objects_dict = exp_matrix.objectsDict
+    except Exception: pass # TODO ERROR
+
+    if(flagGene): # Genelist and randomic analysis will be performed
+
+        # Iterating on experimental matrix fields
+        for g in exp_matrix_fields_dict.keys():
+
+            # Create input which will contain all regions associated with such gene group
+            curr_input = Input(None, [])
+
+            # This flag will be used to see if there are two gene files associated with the same gene label on genegroup column
+            flag_foundgeneset = False
+
+            # Iterating on experimental matrix objects
+            for k in exp_matrix_fields_dict[g]:
+
+                curr_object = exp_matrix_objects_dict[k]
+
+                # If the current object is a GenomicRegionSet
+                if(isinstance(curr_object,GenomicRegionSet)):
+
+                    # Sorting input region
+                    curr_object.sort()
+
+                    # Updating Input object
+                    curr_input.region_list.append(curr_object)
+
+                # If the current object is a GeneSet
+                if(isinstance(curr_object,GeneSet)):
+
+                    # Updating Input object
+                    curr_object.name = g # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    if(not flag_foundgeneset):
+                        curr_input.gene_set = curr_object
+                        flag_foundgeneset = True
+                    else: pass # TODO WARNING - Only first geneset will be used
+                    
+            if(not flag_foundgeneset): pass # TODO ERROR - There must be a valid geneset associated with each region
+
+            # Update input list
+            input_list.append(curr_input)
+
+    else: # Only randomic analysis will be performed
+
+        # Create single input which will contain all regions
+        single_input = Input(None, [])
+
+        # Iterating on experimental matrix objects
+        for k in exp_matrix_objects_dict.keys():
+
+            curr_object = exp_matrix_objects_dict[k]
+
+            # If the current object is a GenomicRegionSet
+            if(isinstance(curr_genomic_region,GenomicRegionSet)):
+
+                # Sorting input region
+                curr_object.sort()
+
+                # Updating Input object
+                single_input.region_list.append(curr_object)
+
+        # Updating input list with single input (only randomic analysis will be performed)
+        input_list = [single_input]
+
+    ###################################################################################################
+    # Reading Random Coordinates
+    ###################################################################################################
+
+    # Verifying if file exists
+    random_region_glob = glob(os.path.join(input_location,matching_folder_name,random_region_name+".*"))
+    try: random_region_file_name = random_region_glob[0]
+    except Exception: pass # TODO ERROR
+
+    # Creating GenomicRegionSet
+    random_regions = GenomicRegionSet(random_region_name)
+
+    # Reading bed file
+    if(random_region_file_name.split(".")[-1] == "bed"):
+        random_regions.read_bed(random_region_file_name)
+
+    # Reading bigbed file
+    elif(random_region_file_name.split(".")[-1] == "bb"):
+        try:
+            bed_file_name = ".".join(random_region_file_name.split(".")[:-1])
+            os.system(" ".join(["bigBedToBed", random_region_file_name, bed_file_name]))
+        except Exception: pass # TODO ERROR
+        random_regions.read_bed(bed_file_name)
+        os.remove(bed_file_name)
+
+    else: pass # TODO ERROR
+
+    ###################################################################################################
+    # Reading Motif Matching
+    ###################################################################################################
+
+    # Verifying if file exists
+    curr_dump_file_name = os.path.join(input_location,matching_folder_name,dump_file_name)
+    if(not os.path.exists(curr_dump_file_name)): pass # TODO ERROR
+    
+    # Opening dump
+    dump_file = open(curr_dump_file_name, "rb")
+    mpbs_list = load(dump_file)
+    dump_file.close()
 
     ###################################################################################################
     # Gene-Coordinate Association
-    ###################################################################################################
-
-    ###################################################################################################
-    # Random Coordinates
-    ###################################################################################################
-
-    ###################################################################################################
-    # Motif Matching
     ###################################################################################################
 
     ###################################################################################################
