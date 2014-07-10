@@ -144,13 +144,20 @@ def main_matching():
     dump_file_name = "dump.p"
 
     ###################################################################################################
-    # Creating output matching folder
+    # Initializations
     ###################################################################################################
 
+    # Output folder
     matching_output_location = os.path.join(options.output_location,matching_folder_name)
     try:
         if(not os.path.isdir(matching_output_location)): os.makedirs(matching_output_location)
     except Exception: pass # TODO ERROR
+
+    # Default genomic data
+    genome_data = GenomeData(options.organism)
+
+    # Default motif data
+    motif_data = MotifData()
 
     ###################################################################################################
     # Reading Input Matrix
@@ -189,6 +196,9 @@ def main_matching():
         # If the object is a GenomicRegionSet
         if(isinstance(curr_genomic_region,GenomicRegionSet)):
 
+            # Sorting input region
+            curr_genomic_region.sort()
+
             # Append label and GenomicRegionSet
             input_regions.append(curr_genomic_region)
 
@@ -208,6 +218,7 @@ def main_matching():
 
         # Create random coordinates and name it random_regions
         rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
+        rand_region.sort()
         rand_region.name = random_region_name
 
         # Put random regions in the end of the input regions
@@ -227,8 +238,8 @@ def main_matching():
             # Converting to big bed
             rand_bb_file_name = output_file_name+".bb"
             try:
-                system(" ".join("bedToBigBed",rand_bed_file_name, chrom_sizes_file, rand_bb_file_name))
-                #remove(rand_bed_file_name)
+                os.system(" ".join(["bedToBigBed", rand_bed_file_name, chrom_sizes_file, rand_bb_file_name, "-verbose=0"]))
+                os.remove(rand_bed_file_name)
             except Exception: pass # WARNING
 
     else: pass # TODO WARNING
@@ -240,7 +251,6 @@ def main_matching():
     # TODO XXX Alterar setup.py para colocar os repositorios corretos de volta.
 
     # Initialization
-    motif_data = MotifData()
     motif_list = []
 
     # Fetching list with all motif file names
@@ -282,7 +292,6 @@ def main_matching():
     mpbs_output_list = []
 
     # Creating genome file
-    genome_data = GenomeData(options.organism)
     genome_file = Fastafile(genome_data.get_genome())
 
     # Iterating on list of genomic regions
@@ -350,8 +359,8 @@ def main_matching():
             # Converting to big bed
             bb_file_name = output_file_name+".bb"
             try:
-                system(" ".join("bedToBigBed",bed_file_name, chrom_sizes_file, bb_file_name))
-                #remove(output_file_name)
+                os.system(" ".join(["bedToBigBed", bed_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                os.remove(bed_file_name)
             except Exception: pass # WARNING
 
 
@@ -367,80 +376,46 @@ def main_enrichment():
     ###################################################################################################
 
     # Parameters
-    usage_message = "%prog --matching [options] <PATH>"
+    usage_message = "%prog --enrichment [options] <PATH>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage = usage_message)
 
-    # Required Input Options
-    parser.add_option("--input-file", dest = "input_file", type = "string", metavar="FILE", default = None,
-                      help = ("Experimental matrix input file. This program will process only 'regions' "
-                              "and 'genes' and must contain at least one 'regions' file. In case of multiple "
-                              "'regions', the enrichment will be performed in each file separately. In case "
-                              "of multiple 'regions' and 'genes', the enrichment will be performed in every "
-                              "pairwise combination of these file types."))
-
     # Optional Input Options
-    parser.add_option("--random-regions", dest = "random_regions", type = "string", metavar="FILE", default = None,
-                      help = ("File containing the random regions for fisher's test. If None, create random "
-                              "regions. The number of regions equals the size of the input regions file x "
-                              "--random_proportion. A unique set of random regions will be created even if "
-                              "multiple files are given in the experimental matrix. In this case, the input "
-                              "file with the greatest number of regions will be used. The length of each genomic "
-                              "region will follow the lengths of such input's regions."))
+    parser.add_option("--xxxxxx", dest = "xxxxxx", type = "xxxxxx", metavar="xxxxxx", default = None,
+                      help = ("xxxxxx "
+                              "xxxxxx "
+                              "xxxxxx "
+                              "xxxxxx "
+                              "xxxxxx "
+                              "xxxxxx."))
 
     # Parameters Options
     parser.add_option("--organism", dest = "organism", type = "string", metavar="STRING", default = "hg19",
                       help = ("Organism considered on the analysis. Check our full documentation for all available "
                               "options. All default files such as genomes will be based on the chosen organism "
                               "and the data.config file."))
-    parser.add_option("--motif-match-fpr", dest = "motif_match_fpr", type = "float", metavar="FLOAT", default = 0.0001,
-                      help = ("False positive rate cutoff for motif matching."))
-    parser.add_option("--motif-match-precision", dest = "motif_match_precision", type = "int", metavar="INT", default = 10000,
-                      help = ("Score distribution precision for motif matching."))
-    parser.add_option("--motif-match-pseudocounts", dest = "motif_match_pseudocounts", type = "float", metavar="FLOAT", default = 0.0,
-                      help = ("Pseudocounts to be added to raw counts of each PWM."))
-    parser.add_option("--multiple-test-alpha", dest = "multiple_test_alpha", type = "float", metavar="FLOAT", default = 0.05,
-                      help = ("Alpha value for multiple test."))
     parser.add_option("--promoter-length", dest = "promoter_length", type = "int", metavar="INT", default = 1000,
                       help = ("Length of the promoter region (in bp) considered on the creation of the regions-gene association."))
     parser.add_option("--maximum-association-length", dest = "maximum_association_length", type = "int", metavar="INT", default = 50000,
                       help = ("Maximum distance between a coordinate and a gene (in bp) in order for the former to "
                               "be considered associated with the latter."))
-    parser.add_option("--rand-proportion", dest = "rand_proportion", type = "float", metavar="FLOAT", default = 1.0,
-                      help = ("If random coordinates need to be created, then it will be created a number of "
-                              "coordinates that equals this parameter x the number of input regions. In case of "
-                              "multiple input regions, the one with the greater number of regions will be "
-                              "considered during this calculation."))
-    parser.add_option("--all-regions", dest = "all_regions", action = "store_true", default = False,
-                      help = ("If this option is used then all input regions will be considered as the evidence "
-                              "set, i.e. it will be performed only the coordinate vs. background analysis."))
+    parser.add_option("--multiple-test-alpha", dest = "multiple_test_alpha", type = "float", metavar="FLOAT", default = 0.05,
+                      help = ("Alpha value for multiple test."))
 
     # Output Options
-    parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = os.getcwd(),
+    parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = "<Input PATH>",
                       help = ("Path where the output files will be written."))
-    parser.add_option("--print-association", dest = "print_association", type = "string", metavar="<Y|N>", default = "Y",
-                      help = ("Whether to output a bigbed file containing the coordinate-gene association + MPBSs "
-                              "that occured inside all coordinates."))
-    parser.add_option("--print-mpbs", dest = "print_mpbs", type = "string", metavar="<Y|N>", default = "Y",
-                      help = ("Whether to output a bigbed file containing all MPBSs found on input and random coordinates."))
-    parser.add_option("--print-results-text", dest = "print_results_text", type = "string", metavar="<Y|N>", default = "Y",
-                      help = ("Whether to output the fisher test results in text format."))
-    parser.add_option("--print-results-html", dest = "print_results_html", type = "string", metavar="<Y|N>", default = "Y",
-                      help = ("Whether to output the fisher test results in html format."))
-    parser.add_option("--print-rand-coordinates", dest = "print_rand_coordinates", type = "string", metavar="<Y|N>", default = "Y",
-                      help = ("Whether to output a bigbed file containing the random coordinates."))
-    parser.add_option("--print-graph-mmscore", dest = "print_graph_mmscore", type = "string", metavar="<Y|N>", default = "N",
-                      help = ("Whether to output graphs containing the motif matching score distribution for the "
-                              "MPBSs found on the input and random coordinates."))
-    parser.add_option("--print-graph-heatmap", dest = "print_graph_heatmap", type = "string", metavar="<Y|N>", default = "N",
-                      help = ("Whether to output graphs containing heatmaps created based on the corrected p-values "
-                              "of the multiple testing."))
+    parser.add_option("--print-thresh", dest = "print_thresh", type = "float", metavar="FLOAT", default = 0.05,
+                      help = ("Only MPBSs whose factor's enrichment corrected p-value are less than equal "
+                              "this option are print. Use 1.0 to print all MPBSs."))
+    parser.add_option("--bigbed", dest = "bigbed", action = "store_true", default = False,
+                      help = ("If this option is used, all bed files will be written as bigbed."))
 
     # Processing Options
     options, arguments = parser.parse_args()
 
-
+    # Additional Parameters
 
 
 
@@ -449,88 +424,6 @@ def main_enrichment():
     ###################################################################################################
     # Reading Regions & Gene Lists
     ###################################################################################################
-
-    # Auxiliary object to store input
-    class InputRegions:
-        def __init__(self):
-            self.gene_set_name = None
-            self.region_list = []
-            self.label_list = []
-
-    # Initialization
-    max_region_len = 0
-    max_region = None
-    input_regions_list = []
-    flag_genelist = True
-    try:
-        exp_matrix_genelist_dict = exp_matrix.fieldsDict["genelist"]
-    except Exception: # TODO WARNING
-        flag_no_genelist = False
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception: pass # TODO ERROR
-
-    print exp_matrix_genelist_dict
-    print exp_matrix_objects_dict
-
-    # If there is genelist column - Read genes and regions
-    if(flag_genelist):
-
-        # Iterating on experimental matrix dictionary
-        for g in exp_matrix_genelist_dict.keys():
-
-            # Initialization
-            new_input_regions = InputRegions()
-            flagGeneSet = False
-
-            # Iterating on experimental matrix objects
-            for k in exp_matrix_genelist_dict[g]:
-
-                # If the object is a GenomicRegionSet
-                if(isinstance(exp_matrix_objects_dict[k],GenomicRegionSet)):
-
-                    # Append label and GenomicRegionSet
-                    new_input_regions.label_list.append(k)
-                    new_input_regions.region_list.append(exp_matrix_objects_dict[k])
-                    curr_len = len(exp_matrix_objects_dict[k])
-                    if(curr_len > max_region_len):
-                        max_region_len = curr_len
-                        max_region = exp_matrix_objects_dict[k]
-
-                # If the object is a GeneSet
-                elif(isinstance(exp_matrix_objects_dict[k],GeneSet)):
-
-                    # Initialize GeneSet and gives warning if there are more than one genesets
-                    new_input_regions.gene_set_name = exp_matrix_objects_dict[k]
-                    if(not flagGeneSet): flagGeneSet = True
-                    else: pass # TODO WARNING
-
-                # Warning if any additional file type
-                else: pass # TODO WARNING
-
-            # Append new_input_regions in input_regions_list
-            input_regions_list.append(new_input_regions)
-
-        # The analysis is valid only if genelists are provided for all or not provided for any region file
-        # TODO XXX
-
-    # If there is no genelist column - Read only regions
-    else: pass
-
-        # TODO XXX
-
-    #for e in input_regions_list:
-    #    print self.
-
-
-
-
-
-
-
-
-
-
 
 
     ###################################################################################################
