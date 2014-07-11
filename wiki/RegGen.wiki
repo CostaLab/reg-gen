@@ -1,4 +1,4 @@
 RegGen is a toolbox for the integrative analysis of regulatory and expression data from experiments such as ChIP-Seq, RNA-Seq, DNA meyhylation and genomic sequence. The tool provides (and will) several functionalities from Chip-Seq peak calling, transcription factor binding site, to enrichment analysis and association of several genome-wide sources of data such as wig and bed files.
 
 
-[[http://costalab.org/wp/odin/|ODIN]] is a HMM-based approach to detect and analyse differential peaks in pairs of ChIP-seq data. ODIN is the first differential peak caller that performs genomic signal processing, peak calling and p-value calculation in an integrated framework.  
+[http://costalab.org/wp/odin/|ODIN] is a HMM-based approach to detect and analyse differential peaks in pairs of ChIP-seq data. ODIN is the first differential peak caller that performs genomic signal processing, peak calling and p-value calculation in an integrated framework.  
