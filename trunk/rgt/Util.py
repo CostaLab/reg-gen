@@ -412,5 +412,19 @@ class AuxiliaryFunctions:
         """ Makes score between 0 and 1000 """
         return min(max(score,0),1000)
 
+    @staticmethod
+    def overlap(t1, t2):
+        """Checks if one interval contains any overlap with another interval.
 
+        Keyword arguments:
+        t1 -- First tuple.
+        t2 -- Second tuple.
+  
+        Returns:
+        Returns -1 if i1 is before i2; 1 if i1 is after i2; and 0 if there is any overlap.
+        """
+        if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
+        if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
+        return 0 # interval1 overlaps interval2
        
+

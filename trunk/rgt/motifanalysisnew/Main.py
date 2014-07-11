@@ -581,6 +581,29 @@ def main_enrichment():
     # Gene-Coordinate Association
     ###################################################################################################
 
+    test_region = input_list[0].region_list[0]
+    test_geneset = input_list[0].gene_set
+
+    test_result = test_region.gene_association(gene_set=test_geneset)
+
+    print "--------"
+    for gr in test_result:
+        print gr.chrom, gr.initial, gr.final
+        print gr.name
+        print gr.data
+        print "--------"
+
+    print "\n"
+
+    all_genes, mapped_genes, all_proxs, mapped_proxs = test_region.filter_by_gene_association(test_geneset)
+
+    print "--------"
+    for gr in test_region:
+        print gr.chrom, gr.initial, gr.final
+        print gr.name
+        print gr.data
+        print "--------"
+
     ###################################################################################################
     # Statistics
     ###################################################################################################
