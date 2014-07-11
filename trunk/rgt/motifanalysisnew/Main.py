@@ -581,6 +581,16 @@ def main_enrichment():
     # Gene-Coordinate Association
     ###################################################################################################
 
+    # Association with input regions
+    # TODO - Account for the fact that not always a gene_set is passed
+    for curr_input in input_list
+        for grs in curr_input.region_list:
+            grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length, options.maximum_association_length)
+
+    # Creating ev and nev sets
+
+  
+    
     test_region = input_list[0].region_list[0]
     test_geneset = input_list[0].gene_set
 
@@ -597,12 +607,23 @@ def main_enrichment():
 
     all_genes, mapped_genes, all_proxs, mapped_proxs = test_region.filter_by_gene_association(test_geneset)
 
+    print test_region.name
+
     print "--------"
     for gr in test_region:
         print gr.chrom, gr.initial, gr.final
         print gr.name
         print gr.data
         print "--------"
+
+    for e in all_genes.genes: print e
+    print "--------"
+    for e in mapped_genes.genes: print e
+    print "--------"
+    for e in all_proxs: print e
+    print "--------"
+    for e in mapped_proxs: print e
+    print "--------"
 
     ###################################################################################################
     # Statistics

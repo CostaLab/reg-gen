@@ -345,10 +345,18 @@ class GenomicRegionSet:
             if(flag_assoc): updated_grs.add(deepcopy(gr))
 
         # Removing duplicates
-        all_genes.genes = list(set(all_genes.genes))
-        mapped_genes.genes = list(set(mapped_genes.genes))
-        all_proxs = list(set(all_proxs))
-        mapped_proxs = list(set(mapped_proxs))
+        all_remdup = list(set([all_genes.genes[i]+"_"+all_proxs[i] for i in range(0,len(all_genes.genes))]))
+        mapped_remdup = list(set([mapped_genes.genes[i]+"_"+mapped_proxs[i] for i in range(0,len(mapped_genes.genes))]))
+        all_genes = GeneSet("all_genes")
+        mapped_genes = GeneSet("mapped_genes")
+        all_proxs = []
+        mapped_proxs = []
+        for e in all_remdup:
+            all_genes.genes.append(e.split("_")[0])
+            all_proxs.append(e.split("_")[1])
+        for e in mapped_remdup:
+            mapped_genes.genes.append(e.split("_")[0])
+            mapped_proxs.append(e.split("_")[1])
 
         # Updating self
         self.name = updated_grs.name
