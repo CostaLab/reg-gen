@@ -51,7 +51,7 @@ def match((motif, sequence, genomic_region)):
         # Evaluating p2 and normalized score (integer between 0 and 1000 -- needed for bigbed transformation)
         p2 = p1 + motif.len
         norm_score = int( ( (score - motif.threshold) * 1000.0) / (motif.max - motif.threshold) )
-        genomic_region_list.append(GenomicRegion(genomic_region.chrom,p1,p2,orientation=strand,data=norm_score))
+        genomic_region_list.append(GenomicRegion(genomic_region.chrom,p1,p2,name=motif.name,orientation=strand,data=norm_score))
 
     return genomic_region_list
 
