@@ -18,11 +18,13 @@ from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
 from Motif import Motif
 from Match import match
+from Statistics import multiple_test_correction
 
 # External
 from Bio import motifs
 from Bio.Seq import Seq
 from pysam import Fastafile
+from fisher import pvalue
 
 """
 Contains functions to common motif analyses.
@@ -289,7 +291,8 @@ def main_matching():
     ###################################################################################################
 
     # Creating output structure
-    mpbs_output_list = []
+    # GENOMIC REGION -> FACTOR -> GENOMIC REGION SET (containing all the mpbs of FACTOR for GENOMIC REGION)
+    mpbs_output_dict = dict()
 
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
@@ -297,8 +300,8 @@ def main_matching():
     # Iterating on list of genomic regions
     for genomic_region_set in input_regions:
 
-        # Creating output structure
-        mpbs_list = GenomicRegionSet(genomic_region_set.name)
+        # Initializing factor dictionary
+        mpbs_output_dict[genomic_region_set.name] = dict()
     
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
@@ -313,17 +316,19 @@ def main_matching():
                 curr_data_input = [[m,sequence,genomic_region] for m in motif_group]
                 curr_proc_nb = len(curr_data_input)
 
-                # Applying the Motif creation function with multiprocessing
+                # Applying motif matching function with multiprocessing
                 pool = Pool(curr_proc_nb)
                 curr_mpbs_list = pool.map(match,curr_data_input)
                 pool.close()
                 pool.join()
-                for curr_mpbs_group in curr_mpbs_list:
-                    for grs in curr_mpbs_group:
-                        mpbs_list.add(grs)
-        
-        # Append the current set of MPBSs to the list of MPBSs sets
-        mpbs_output_list.append(mpbs_list)
+                for i in range(len(curr_mpbs_list)):
+                    gr_list = curr_mpbs_list[i]
+                    curr_motif_name = motif_group[i].name
+                    for gr in gr_list:
+                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                        except Exception:
+                            mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
+                            mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
         
     ###################################################################################################
     # Writing output
@@ -332,22 +337,22 @@ def main_matching():
     # Dumping list of GenomicRegionSet for fast access by --enrichment operation
     output_file_name = os.path.join(matching_output_location, dump_file_name)
     output_file = open(output_file_name, "wb")
-    dump(mpbs_output_list, output_file)
+    dump(mpbs_output_dict, output_file)
     output_file.close()
 
     # Iterating on MPBS output list
-    for mpbs_list in mpbs_output_list:
+    for k in mpbs_output_dict.keys():
 
-        # Initializing output file name
-        output_file_name = os.path.join(matching_output_location, mpbs_list.name+"_mpbs")
+        # Initializations
+        mpbs_dict = mpbs_output_dict[k]
+        output_file_name = os.path.join(matching_output_location, k+"_mpbs")
 
         # Writing bed file
         bed_file_name = output_file_name+".bed"
         bed_file = open(bed_file_name,"w")
-        counter = 1
-        for e in mpbs_list:
-            bed_file.write("\t".join([e.chrom,str(e.initial),str(e.final),"m"+str(counter),str(e.data),e.orientation])+"\n")
-            counter += 1
+        for kk in mpbs_dict.keys():
+            for e in mpbs_dict[kk]:
+                bed_file.write("\t".join([e.chrom,str(e.initial),str(e.final),e.name,str(e.data),e.orientation])+"\n")
         bed_file.close()
 
         # Verifying condition to write bb
@@ -415,6 +420,12 @@ def main_enrichment():
     random_region_name = "random_regions"
     dump_file_name = "dump.p"
     gene_column_name = "genegroup"
+    output_association_name = "coord_association"
+    output_mpbs_filtered = "mpbs.bed"
+    output_mpbs_filtered_ev = "mpbs_ev.bed"
+    output_mpbs_filtered_ev = "mpbs_nev.bed"
+    output_stat_genetest = "genetest_statistics"
+    output_stat_randtest = "randtest_statistics"
 
     ###################################################################################################
     # Initializations
@@ -465,17 +476,17 @@ def main_enrichment():
     input_list = []
 
     # Reading dictionary grouped by fields
-    flagGene = True
+    flag_gene = True
     try:
         exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
-    except Exception: flagGene = False
+    except Exception: flag_gene = False
 
     # Reading dictionary of objects
     try:
         exp_matrix_objects_dict = exp_matrix.objectsDict
     except Exception: pass # TODO ERROR
 
-    if(flagGene): # Genelist and randomic analysis will be performed
+    if(flag_gene): # Genelist and randomic analysis will be performed
 
         # Iterating on experimental matrix fields
         for g in exp_matrix_fields_dict.keys():
@@ -538,6 +549,19 @@ def main_enrichment():
         input_list = [single_input]
 
     ###################################################################################################
+    # Reading Motif Matching
+    ###################################################################################################
+
+    # Verifying if file exists
+    curr_dump_file_name = os.path.join(input_location,matching_folder_name,dump_file_name)
+    if(not os.path.exists(curr_dump_file_name)): pass # TODO ERROR
+    
+    # Opening dump
+    dump_file = open(curr_dump_file_name, "rb")
+    mpbs_dict = load(dump_file)
+    dump_file.close()
+
+    ###################################################################################################
     # Reading Random Coordinates
     ###################################################################################################
 
@@ -564,38 +588,122 @@ def main_enrichment():
 
     else: pass # TODO ERROR
 
-    ###################################################################################################
-    # Reading Motif Matching
-    ###################################################################################################
-
-    # Verifying if file exists
-    curr_dump_file_name = os.path.join(input_location,matching_folder_name,dump_file_name)
-    if(not os.path.exists(curr_dump_file_name)): pass # TODO ERROR
-    
-    # Opening dump
-    dump_file = open(curr_dump_file_name, "rb")
-    mpbs_list = load(dump_file)
-    dump_file.close()
+    # Evaluating random statistics
+    #rand_c_dict, rand_d_dict = random_regions.fishertable(mpbs_dict[random_regions.name])
 
     ###################################################################################################
-    # Gene-Coordinate Association
+    # Enrichment Statistics
     ###################################################################################################
 
-    # Association with input regions
-    # TODO - Account for the fact that not always a gene_set is passed
-    for curr_input in input_list
+    """
+
+    # TODO - APAGAR
+    output_association_name = "coord_association"
+    output_mpbs_filtered = "mpbs.bed"
+    output_mpbs_filtered_ev = "mpbs_ev.bed"
+    output_mpbs_filtered_ev = "mpbs_nev.bed"
+    output_stat_genetest = "genetest_statistics"
+    output_stat_randtest = "randtest_statistics"
+
+    # Iterating on each input object
+    for curr_input in input_list:
+
+        # Iterating on each input genomic region set
         for grs in curr_input.region_list:
-            grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length, options.maximum_association_length)
 
-    # Creating ev and nev sets
+            # Initialization
+            original_name = grs.name
 
-  
+            # Creating output folder
+            if(curr_input.gene_set): curr_output_folder_name = os.path.join(output_location,grs.name+"__"+curr_input.gene_set.name)
+            else: curr_output_folder_name = os.path.join(output_location,grs.name)
+            if(not os.path.isdir(curr_output_folder_name)): os.makedirs(curr_output_folder_name)
+
+            ###################################################################################################
+            # Gene Evidence Statistics
+            ################################################################################################### 
+
+            if(curr_input.gene_set):
+
+                # Performing association of input region with gene_set
+                grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length, options.maximum_association_length)
+
+                # Writing gene-coordinate association
+                output_file_name = os.path.join(curr_output_folder_name,output_association_name+".bed")
+                output_file = open(output_file_name,"w")
+                for gr in grs:
+                    curr_gene_list = [e if e[0]!="." else e[1:] for gr.name.split(":")]
+                    curr_prox_list = gr.data.split(":")
+                    curr_name = ":".join([e[0]+"_"+e[1] for e in zip(curr_gene_list,curr_prox_list)])
+                    output_file.write("\t".join([gr.chrom,gr.initial,gr.final,curr_name])+"\n")
+                output_file.close()
+                if(options.bigbed):
+                    chrom_sizes_file = genome_data.get_chromosome_sizes()
+                    bb_file_name = output_file_name+".bb"
+                    try:
+                        os.system(" ".join(["bedToBigBed", bed_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                        os.remove(bed_file_name)
+                    except Exception: pass # WARNING
+
+                # Creating ev and nev sets
+                curr_ev = GenomicRegionSet(grs.name+"_ev")
+                curr_nev = GenomicRegionSet(grs.name+"_nev")
+
+                # Populating ev and nev sets
+                for gr in grs:
+                    if(len([e for e in gr.name.split(":") if e[0]!="."]) > 0): curr_ev.add(gr)
+                    else: curr_nev.add(gr)
+
+                # Calculating statistics
+                fisher_a_dict, fisher_b_dict = curr_ev.fishertable(mpbs_dict[original_name])
+                fisher_c_dict, fisher_d_dict = curr_ev.fishertable(mpbs_dict[original_name])
+                
+                # Performing fisher test
+                
+
+                # Performing multiple test correction
+                
+
+                # Fetching ev and nev mpbs to write
+                curr_ev_mpbs = # TODO
+                curr_nev_mpbs = # TODO
+
+                # Printing ev and nev mpbs
+                
+
+                # Printing statistics
+
+
+            ###################################################################################################
+            # Random Statistics
+            ###################################################################################################
+
+            # Evaluating random statistics
+
+            # Iterating on grs
+
+
+
+            ###################################################################################################
+            # Writting
+            ################################################################################################### 
+
+
+
+
+
     
+
+    ###################################################################################################
+    # Heatmap
+    ###################################################################################################
+
+    """
+
+    """
     test_region = input_list[0].region_list[0]
     test_geneset = input_list[0].gene_set
-
     test_result = test_region.gene_association(gene_set=test_geneset)
-
     print "--------"
     for gr in test_result:
         print gr.chrom, gr.initial, gr.final
@@ -604,18 +712,14 @@ def main_enrichment():
         print "--------"
 
     print "\n"
-
     all_genes, mapped_genes, all_proxs, mapped_proxs = test_region.filter_by_gene_association(test_geneset)
-
     print test_region.name
-
     print "--------"
     for gr in test_region:
         print gr.chrom, gr.initial, gr.final
         print gr.name
         print gr.data
         print "--------"
-
     for e in all_genes.genes: print e
     print "--------"
     for e in mapped_genes.genes: print e
@@ -624,14 +728,34 @@ def main_enrichment():
     print "--------"
     for e in mapped_proxs: print e
     print "--------"
+    """
 
-    ###################################################################################################
-    # Statistics
-    ###################################################################################################
 
-    ###################################################################################################
-    # Graphs
-    ###################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

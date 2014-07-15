@@ -3,6 +3,9 @@
 # Libraries
 ###################################################################################################
 
+# Python
+from os.path import basename
+
 # Internal
 from .. Util import ErrorHandler
 
@@ -33,6 +36,9 @@ class Motif:
         max -- Maximum PSSM score possible.
         is_palindrome -- True if consensus is biologically palindromic.
         """
+ 
+        # Initializing name
+        self.name = ".".join(basename(input_file_name).split(".")[:-1])
 
         # Creating PFM & PWM
         input_file = open(input_file_name,"r")
