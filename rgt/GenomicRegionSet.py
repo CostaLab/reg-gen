@@ -59,7 +59,8 @@ class GenomicRegionSet:
     def sort(self):
         """Sort Elements by criteria defined by a GenomicRegion"""
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
-
+        self.sorted = True
+        
     def read_bed(self, filename):
         """Read BED file and add every row as a GenomicRegion. 
         Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. 
@@ -114,7 +115,7 @@ class GenomicRegionSet:
         samp = random.sample(range(len(self)),size)
         for i in samp:
             z.add(self.sequences[i])
-        z.sort()
+        #z.sort()
         return z                
 
     def write_bed(self,filename):
@@ -450,8 +451,8 @@ class GenomicRegionSet:
         z = GenomicRegionSet(self.name + '_' + y.name)
         
         # If there is overlap within self or y, they should be merged first. 
-        self.sort()
-        y.sort()
+        if self.sorted == False: self.sort()
+        if y.sorted == False: y.sort()
         # Iteration
         con_self = self.__iter__()
         con_y = y.__iter__()
@@ -489,7 +490,7 @@ class GenomicRegionSet:
                     except:
                         cont_loop = False   
             # When the region have no overlap
-            elif s <= ss:
+            elif s < ss:
                 try:
                     s = con_self.next()
                 except:
@@ -499,7 +500,7 @@ class GenomicRegionSet:
                     ss = con_y.next()
                 except:
                     cont_loop = False
-        z.sort()
+        #z.sort()
         return z
     
     def closest(self,y):
@@ -519,8 +520,8 @@ class GenomicRegionSet:
             return False
         else:
             z_dict = {}  # For storing the distance and the regions
-            self.sort()
-            y.sort()
+            if self.sorted == False: self.sort()
+            if y.sorted == False: y.sort()
             con_self = self.__iter__()
             con_y = y.__iter__()
             s = con_self.next()
@@ -558,7 +559,7 @@ class GenomicRegionSet:
             
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
-        self.sort()
+        if self.sorted == False: self.sort()
         for i in range(len(self.sequences) - 1):
             try:
                 if self.sequences[i] == self.sequences[i+1]:
@@ -609,8 +610,8 @@ class GenomicRegionSet:
             return self
         else:
             z = GenomicRegionSet(self.name + '-' + y.name)
-            self.sort()
-            y.sort()
+            if self.sorted == False: self.sort()
+            if y.sorted == False: y.sort()
             con_self = self.__iter__()
             con_y = y.__iter__()
             s = con_self.next()
@@ -662,7 +663,7 @@ class GenomicRegionSet:
                             pass
                         except:
                             cont_loop = False
-            z.sort()
+            #z.sort()
             return z
     
     def subtract_aregion(self,y):
@@ -691,7 +692,7 @@ class GenomicRegionSet:
     
     def merge(self):
         """Merge the regions within the GenomicRegionSet"""
-        self.sort()
+        if self.sorted == False: self.sort()
         
         if len(self.sequences) in [0, 1]:
             return
@@ -731,7 +732,8 @@ class GenomicRegionSet:
         Result(d=10)   ---------------------------------------------        
         
         """
-        self.sort()
+        if self.sorted == False: self.sort()
+        
         if len(self) == 0:
             return GenomicRegionSet('None region')
         elif len(self) == 1:
@@ -805,7 +807,8 @@ class GenomicRegionSet:
     def within_overlap(self):
         """ Check whether there is overlapping within or not. """
         refer_posi = GenomicRegion(name="reference",chrom="chr1",initial=0,final=0)
-        self.sort()
+        if self.sorted == False: self.sort()
+        
         for s in self:
             if s.overlap(refer_posi):
                 return True
@@ -819,31 +822,21 @@ class GenomicRegionSet:
             length = length + len(s)
         return length
     
-    def get_genome_data(self,organism, chrom_X=False, chrom_M=False):
+    def get_genome_data(self,organism, chrom_X=True, chrom_Y=False, chrom_M=False):
         """ Add genome data from database into the GenomicRegionSet. """
         genome = GenomeData(organism)
         chromosome_file = open(genome.get_chromosome_sizes(),'r')
         for line in chromosome_file:
-            if chrom_X and "chrX" in line and "random" not in line:
+            if "random" not in line and "_" not in line:
+                if chrom_X == False and "chrX" in line: continue
+                if chrom_Y == False and "chrY" in line: continue
+                if chrom_M == False and "chrM" in line: continue
                 chrom_region = GenomicRegion(chrom=line.split("\t")[0],
                                              initial=0,
                                              final=int(line.split("\t")[1]))
                 self.add(chrom_region)
                 continue
-            elif chrom_M and "chrM" in line and "random" not in line:
-                chrom_region = GenomicRegion(chrom=line.split("\t")[0],
-                                             initial=0,
-                                             final=int(line.split("\t")[1]))
-                self.add(chrom_region)
-                continue
-            elif "random" not in line and "_" not in line and "chrX" not in line and "chrM" not in line: 
-                chrom_region = GenomicRegion(chrom=line.split("\t")[0],
-                                             initial=0,
-                                             final=int(line.split("\t")[1]))
-                self.add(chrom_region)
-                continue
-            else:
-                continue
+
         chromosome_file.close()
         
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
