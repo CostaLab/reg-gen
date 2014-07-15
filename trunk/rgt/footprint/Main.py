@@ -278,8 +278,15 @@ def main():
     # Sorting and Merging
     #footprints.merge() # Sort & Merge # TODO - Report bug to Joseph
 
+    for gr in footprints: print gr.chrom, gr.initial, gr.final
+    print "--------"
+    for gr in original_regions: print gr.chrom, gr.initial, gr.final
+
     # Overlapping results with original regions
-    #footprints = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
+    rrr = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
+
+    print "--------"
+    for gr in rrr: print gr.chrom, gr.initial, gr.final
 
     ###################################################################################################
     # Writing output
