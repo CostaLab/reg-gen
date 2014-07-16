@@ -18,7 +18,7 @@ from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
 from Motif import Motif
 from Match import match
-from Statistics import multiple_test_correction
+from Statistics import multiple_test_correction, get_fisher_dict
 
 # External
 from Bio import motifs
@@ -270,12 +270,8 @@ def main_matching():
     for file_group in  motif_file_names:
 
         # Creating input data for multiprocessing
-        curr_data_input = []
-        curr_proc_nb = 0
-        for motif_file_name in file_group:
-            if(motif_file_name):
-                curr_data_input.append([motif_file_name, options.pseudocounts, options.precision, options.fpr])
-                curr_proc_nb += 1
+        curr_data_input = [[m, options.pseudocounts, options.precision, options.fpr] for m in file_group if m]
+        curr_proc_nb = len(curr_data_input)
 
         # Applying the Motif creation function with multiprocessing
         pool = Pool(curr_proc_nb)
@@ -402,6 +398,8 @@ def main_enrichment():
                               "be considered associated with the latter."))
     parser.add_option("--multiple-test-alpha", dest = "multiple_test_alpha", type = "float", metavar="FLOAT", default = 0.05,
                       help = ("Alpha value for multiple test."))
+    parser.add_option("--processes", dest = "processes", type = "int", metavar="INT", default = 1,
+                      help = ("Number of processes for multi-CPU based machines."))
 
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = None,
@@ -423,9 +421,12 @@ def main_enrichment():
     output_association_name = "coord_association"
     output_mpbs_filtered = "mpbs.bed"
     output_mpbs_filtered_ev = "mpbs_ev.bed"
-    output_mpbs_filtered_ev = "mpbs_nev.bed"
+    output_mpbs_filtered_nev = "mpbs_nev.bed"
     output_stat_genetest = "genetest_statistics"
     output_stat_randtest = "randtest_statistics"
+    ev_color = "0,130,0"
+    nev_color = "130,0,0"
+    results_header_text = "\t".join(["FACTOR","P-VALUE","CORR.P-VALUE","A","B","C","D","PERCENT","BACK.PER.","GENES"])
 
     ###################################################################################################
     # Initializations
@@ -561,6 +562,17 @@ def main_enrichment():
     mpbs_dict = load(dump_file)
     dump_file.close()
 
+    # Sorting dictionary keys
+    try:
+        sorted_mpbs_dict_keys = mpbs_dict[mpbs_dict.keys()[0]].keys()
+        sorted_mpbs_dict_keys.sort()
+    except Exception: pass # TODO ERROR
+
+    # Creating groups of motifs given the number of processes
+    if(options.processes <= 0): pass # TODO ERROR
+    elif(options.processes == 1): grouped_mpbs_dict_keys = [[e] for e in sorted_mpbs_dict_keys]
+    else: grouped_mpbs_dict_keys = map(None, *(iter(sorted_mpbs_dict_keys),) * options.processes)
+
     ###################################################################################################
     # Reading Random Coordinates
     ###################################################################################################
@@ -585,25 +597,32 @@ def main_enrichment():
         except Exception: pass # TODO ERROR
         random_regions.read_bed(bed_file_name)
         os.remove(bed_file_name)
-
     else: pass # TODO ERROR
 
-    # Evaluating random statistics
-    #rand_c_dict, rand_d_dict = random_regions.fishertable(mpbs_dict[random_regions.name])
-
+    # Evaluating random statistics - The gene set and mpbss are not needed (None)
+    rand_c_dict, rand_d_dict, rand_geneset, rand_mpbs_dict = get_fisher_dict(grouped_mpbs_dict_keys, random_regions, mpbs_dict[random_regions.name])
+    rand_geneset = None; rand_mpbs_dict = None
+    
     ###################################################################################################
     # Enrichment Statistics
     ###################################################################################################
 
-    """
-
-    # TODO - APAGAR
-    output_association_name = "coord_association"
-    output_mpbs_filtered = "mpbs.bed"
-    output_mpbs_filtered_ev = "mpbs_ev.bed"
-    output_mpbs_filtered_ev = "mpbs_nev.bed"
-    output_stat_genetest = "genetest_statistics"
-    output_stat_randtest = "randtest_statistics"
+    # Result Class
+    class Result:
+        def __init__(self):
+            self.name = ""
+            self.p_value = 0
+            self.corr_p_value = 0
+            self.a = 0
+            self.b = 0
+            self.c = 0
+            self.d = 0
+            self.percent = 0
+            self.back_percent = 0
+            self.genes = ""
+        def __str__(self):
+            return "\t".join([str(e) for e in [self.name,self.p_value,self.corr_p_value,self.a,self.b,self.c,self.d,
+                                               self.percent,self.back_percent,self.genes]])
 
     # Iterating on each input object
     for curr_input in input_list:
@@ -632,17 +651,17 @@ def main_enrichment():
                 output_file_name = os.path.join(curr_output_folder_name,output_association_name+".bed")
                 output_file = open(output_file_name,"w")
                 for gr in grs:
-                    curr_gene_list = [e if e[0]!="." else e[1:] for gr.name.split(":")]
+                    curr_gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
                     curr_prox_list = gr.data.split(":")
                     curr_name = ":".join([e[0]+"_"+e[1] for e in zip(curr_gene_list,curr_prox_list)])
-                    output_file.write("\t".join([gr.chrom,gr.initial,gr.final,curr_name])+"\n")
+                    output_file.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,curr_name]])+"\n")
                 output_file.close()
                 if(options.bigbed):
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     bb_file_name = output_file_name+".bb"
                     try:
-                        os.system(" ".join(["bedToBigBed", bed_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
-                        os.remove(bed_file_name)
+                        os.system(" ".join(["bedToBigBed", output_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                        os.remove(output_file_name)
                     except Exception: pass # WARNING
 
                 # Creating ev and nev sets
@@ -655,50 +674,99 @@ def main_enrichment():
                     else: curr_nev.add(gr)
 
                 # Calculating statistics
-                fisher_a_dict, fisher_b_dict = curr_ev.fishertable(mpbs_dict[original_name])
-                fisher_c_dict, fisher_d_dict = curr_ev.fishertable(mpbs_dict[original_name])
-                
+                curr_a_dict, curr_b_dict, ev_genelist_dict, ev_mpbs_dict = get_fisher_dict(grouped_mpbs_dict_keys, curr_ev, mpbs_dict[original_name])
+                curr_c_dict, curr_d_dict, nev_genelist_dict, nev_mpbs_dict = get_fisher_dict(grouped_mpbs_dict_keys, curr_nev, mpbs_dict[original_name])
+
                 # Performing fisher test
+                result_list = []
+                for k in sorted_mpbs_dict_keys:
+                    r = Result()
+                    r.name = k; r.a = curr_a_dict[k]; r.b = curr_b_dict[k]; r.c = curr_c_dict[k]; r.d = curr_d_dict[k]
+                    r.percent = float(r.a)/float(r.a+r.b); r.back_percent = float(r.c)/float(r.c+r.d) 
+                    try:
+                        p = pvalue(r.a,r.b,r.c,r.d)
+                        r.p_value = p.right_tail
+                    except Exception: r.p_value = 1.0
+                    result_list.append(r)
                 
-
                 # Performing multiple test correction
-                
+                multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list], 
+                                                        alpha=options.multiple_test_alpha, method='indep')
+                corr_pvalue_dict = dict() # Needed to filter the mpbs in a fast way
+                for i in range(0,len(multiple_corr_list)):
+                    result_list[i].corr_p_value = multiple_corr_list[i]
+                    corr_pvalue_dict[result_list[i].name] = result_list[i].corr_p_value
 
-                # Fetching ev and nev mpbs to write
-                curr_ev_mpbs = # TODO
-                curr_nev_mpbs = # TODO
+                # Sorting result list
+                result_list = sorted(result_list, key=lambda x: x.name)
+                result_list = sorted(result_list, key=lambda x: x.percent)
+                result_list = sorted(result_list, key=lambda x: x.p_value)
+                result_list = sorted(result_list, key=lambda x: x.corr_p_value)
 
                 # Printing ev and nev mpbs
-                
+                output_file_name_ev = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bedT")
+                output_file_name_nev = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev+".bedT")
+                output_file_ev = open(output_file_name_ev,"w")
+                output_file_nev = open(output_file_name_nev,"w")
+                for k in sorted_mpbs_dict_keys:
+                    if(corr_pvalue_dict[k] > options.print_thresh): continue
+                    for gr in ev_mpbs_dict[k]: output_file_ev.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,
+                                            gr.name,gr.data,gr.orientation,gr.initial,gr.final,ev_color]])+"\n")
+                    for gr in nev_mpbs_dict[k]: output_file_nev.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,
+                                             gr.name,gr.data,gr.orientation,gr.initial,gr.final,nev_color]])+"\n")
+                output_file_ev.close()
+                output_file_nev.close()
+                output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bed")
+                output_file_name_nev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev+".bed")
+                os.system("sort -k1,1 -k2,2n "+output_file_name_ev+" > "+output_file_name_ev_bed) # Sorting ev file
+                os.system("sort -k1,1 -k2,2n "+output_file_name_nev+" > "+output_file_name_nev_bed) # Sorting nev file
+                os.remove(output_file_name_ev)
+                os.remove(output_file_name_nev)
+                if(options.bigbed):
+                    chrom_sizes_file = genome_data.get_chromosome_sizes()
+                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bb")
+                    output_file_name_nev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev+".bb")
+                    try:
+                        os.system(" ".join(["bedToBigBed",output_file_name_ev_bed,chrom_sizes_file,output_file_name_ev_bb,"-verbose=0"]))
+                        os.system(" ".join(["bedToBigBed",output_file_name_nev_bed,chrom_sizes_file,output_file_name_nev_bb,"-verbose=0"]))
+                        os.remove(output_file_name_ev_bed)
+                        os.remove(output_file_name_nev_bed)
+                    except Exception: pass # WARNING
 
-                # Printing statistics
+
+                # Printing statistics text
+                output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest+".txt")
+                output_file = open(output_file_name_stat_text,"w")
+                output_file.write(results_header_text+"\n")
+                for r in result_list: output_file.write(str(r)+"\n")
+                output_file.close()
+
+                # Printing statistics html
+                # TODO                
+
+            else: pass
+
+                # Association still needs to be done with all genes in order to print gene list of random test
+                #grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length, options.maximum_association_length)
+
+                # If there is no gene list, then the current evidence set consists of all coordinates
+                #curr_ev = grs
 
 
             ###################################################################################################
             # Random Statistics
             ###################################################################################################
 
-            # Evaluating random statistics
+            # Performing fisher test
 
-            # Iterating on grs
+            # Performing multiple test correction
 
+            # Printing statistics
 
-
-            ###################################################################################################
-            # Writting
-            ################################################################################################### 
-
-
-
-
-
-    
 
     ###################################################################################################
     # Heatmap
     ###################################################################################################
-
-    """
 
     """
     test_region = input_list[0].region_list[0]
