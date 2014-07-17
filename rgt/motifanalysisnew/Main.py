@@ -610,19 +610,19 @@ def main_enrichment():
     # Result Class
     class Result:
         def __init__(self):
-            self.name = ""
-            self.p_value = 0
-            self.corr_p_value = 0
-            self.a = 0
-            self.b = 0
-            self.c = 0
-            self.d = 0
-            self.percent = 0
-            self.back_percent = 0
-            self.genes = ""
+            self.name = "" # String
+            self.p_value = 0.0 # Float
+            self.corr_p_value = 0.0 # Float
+            self.a = 0 # Integer
+            self.b = 0 # Integer
+            self.c = 0 # Integer
+            self.d = 0 # Integer
+            self.percent = 0.0 # Float
+            self.back_percent = 0.0 # Float
+            self.genes = None # GeneSet
         def __str__(self):
             return "\t".join([str(e) for e in [self.name,self.p_value,self.corr_p_value,self.a,self.b,self.c,self.d,
-                                               self.percent,self.back_percent,self.genes]])
+                                               self.percent,self.back_percent,",".join(self.genes.genes)]])
 
     # Iterating on each input object
     for curr_input in input_list:
@@ -682,7 +682,8 @@ def main_enrichment():
                 for k in sorted_mpbs_dict_keys:
                     r = Result()
                     r.name = k; r.a = curr_a_dict[k]; r.b = curr_b_dict[k]; r.c = curr_c_dict[k]; r.d = curr_d_dict[k]
-                    r.percent = float(r.a)/float(r.a+r.b); r.back_percent = float(r.c)/float(r.c+r.d) 
+                    r.percent = float(r.a)/float(r.a+r.b); r.back_percent = float(r.c)/float(r.c+r.d)
+                    r.genes = ev_genelist_dict[k]
                     try:
                         p = pvalue(r.a,r.b,r.c,r.d)
                         r.p_value = p.right_tail
@@ -733,7 +734,6 @@ def main_enrichment():
                         os.remove(output_file_name_nev_bed)
                     except Exception: pass # WARNING
 
-
                 # Printing statistics text
                 output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest+".txt")
                 output_file = open(output_file_name_stat_text,"w")
@@ -747,84 +747,86 @@ def main_enrichment():
             else: pass
 
                 # Association still needs to be done with all genes in order to print gene list of random test
-                #grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length, options.maximum_association_length)
+                grs = grs.gene_association(None, options.organism, options.promoter_length, options.maximum_association_length)
 
                 # If there is no gene list, then the current evidence set consists of all coordinates
-                #curr_ev = grs
+                curr_ev = grs
 
+                # Calculating statistics
+                curr_a_dict, curr_b_dict, ev_genelist_dict, ev_mpbs_dict = get_fisher_dict(grouped_mpbs_dict_keys, curr_ev, mpbs_dict[original_name])
 
             ###################################################################################################
             # Random Statistics
             ###################################################################################################
 
             # Performing fisher test
-
+            result_list = []
+            for k in sorted_mpbs_dict_keys:
+                r = Result()
+                r.name = k; r.a = curr_a_dict[k]; r.b = curr_b_dict[k]; r.c = rand_c_dict[k]; r.d = rand_d_dict[k]
+                r.percent = float(r.a)/float(r.a+r.b); r.back_percent = float(r.c)/float(r.c+r.d)
+                r.genes = ev_genelist_dict[k]
+                try:
+                    p = pvalue(r.a,r.b,r.c,r.d)
+                    r.p_value = p.right_tail
+                except Exception: r.p_value = 1.0
+                result_list.append(r)
+                
             # Performing multiple test correction
+            multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list], 
+                                                    alpha=options.multiple_test_alpha, method='indep')
+            corr_pvalue_dict = dict() # Needed to filter the mpbs in a fast way
+            for i in range(0,len(multiple_corr_list)):
+                result_list[i].corr_p_value = multiple_corr_list[i]
+                corr_pvalue_dict[result_list[i].name] = result_list[i].corr_p_value
 
-            # Printing statistics
+            # Sorting result list
+            result_list = sorted(result_list, key=lambda x: x.name)
+            result_list = sorted(result_list, key=lambda x: x.percent)
+            result_list = sorted(result_list, key=lambda x: x.p_value)
+            result_list = sorted(result_list, key=lambda x: x.corr_p_value)
+
+            # Printing ev if it was not already print in geneset
+            if(not curr_input.gene_set):
+                output_file_name_ev = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bedT")
+                output_file_ev = open(output_file_name_ev,"w")
+                for k in sorted_mpbs_dict_keys:
+                    if(corr_pvalue_dict[k] > options.print_thresh): continue
+                    for gr in ev_mpbs_dict[k]: output_file_ev.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,
+                                               gr.name,gr.data,gr.orientation,gr.initial,gr.final,ev_color]])+"\n")
+                output_file_ev.close()
+                output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bed")
+                os.system("sort -k1,1 -k2,2n "+output_file_name_ev+" > "+output_file_name_ev_bed) # Sorting ev file
+                os.remove(output_file_name_ev)
+                if(options.bigbed):
+                    chrom_sizes_file = genome_data.get_chromosome_sizes()
+                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bb")
+                    try:
+                        os.system(" ".join(["bedToBigBed",output_file_name_ev_bed,chrom_sizes_file,output_file_name_ev_bb,"-verbose=0"]))
+                        os.remove(output_file_name_ev_bed)
+                    except Exception: pass # WARNING
+
+            # Printing statistics text
+            output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_randtest+".txt")
+            output_file = open(output_file_name_stat_text,"w")
+            output_file.write(results_header_text+"\n")
+            for r in result_list: output_file.write(str(r)+"\n")
+            output_file.close()
+
+            # Printing statistics html
+            # TODO      
 
 
     ###################################################################################################
     # Heatmap
     ###################################################################################################
 
-    """
-    test_region = input_list[0].region_list[0]
-    test_geneset = input_list[0].gene_set
-    test_result = test_region.gene_association(gene_set=test_geneset)
-    print "--------"
-    for gr in test_result:
-        print gr.chrom, gr.initial, gr.final
-        print gr.name
-        print gr.data
-        print "--------"
+    # TODO
 
-    print "\n"
-    all_genes, mapped_genes, all_proxs, mapped_proxs = test_region.filter_by_gene_association(test_geneset)
-    print test_region.name
-    print "--------"
-    for gr in test_region:
-        print gr.chrom, gr.initial, gr.final
-        print gr.name
-        print gr.data
-        print "--------"
-    for e in all_genes.genes: print e
-    print "--------"
-    for e in mapped_genes.genes: print e
-    print "--------"
-    for e in all_proxs: print e
-    print "--------"
-    for e in mapped_proxs: print e
-    print "--------"
-    """
+    ###################################################################################################
+    # Network
+    ###################################################################################################
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    # TODO
 
 
