@@ -8,6 +8,7 @@ sys.path.append(lib_path)
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
+from matplotlib.backends.backend_pdf import PdfPages
 import numpy
 import time, datetime, getpass, fnmatch, HTML
 
@@ -62,9 +63,9 @@ def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
         pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
     
         # Set the file's metadata via the PdfPages object:
-        d = pp.infodict()
-        d['Title'] = args.title
-        d['CreationDate'] = datetime.datetime.today()
+        #d = pp.infodict()
+        #d['Title'] = args.title
+        #d['CreationDate'] = datetime.datetime.today()
         pp.close()
     
     if show:
