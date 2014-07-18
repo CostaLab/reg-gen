@@ -764,21 +764,25 @@ class Intersect:
         
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             subtable = subtable_format(ty)
+            stest_header = ""
+            if self.test_d: stest_header =  "<td>Aver_inter_regions</td><td>Chi-sq_statistic</td><td>p_value</td>"
             if self.mode_count == "bp":
-                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'\
+                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'+stest_header\
                             .format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)", "Proportion of reference")
             elif self.mode_count == "count":
-                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'\
+                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'+stest_header\
                             .format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection", "Proportion of reference")
             for ind_r,ri in enumerate(self.groupedreference[ty]):
                 r = ri.name
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
-                    subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td></tr>'\
+                    stest_data = ""
+                    if self.test_d: stest_data = "<td>{0}</td><td>{1:.2f}</td><td>{2:.2e}</td>".format(*self.test_d[ty][ri][qi][4:])
+                    subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td>'+stest_data+'</tr>'\
                                  .format(r,self.rlen[ty][r], q, self.qlen[ty][q],self.counts[ty][r][q][2], self.percentage[ind_ty][r][q])
             subtable += '</table>'
             rowdata.append(subtable)
-            
+        """    
         if self.test_d:
             for ind_ty, ty in enumerate(self.test_d.keys()):
                 subtable = subtable_format("Random sampling intersection test: " + ty + " (Run "+ str(self.test_time) + " times)")
@@ -796,7 +800,7 @@ class Intersect:
                 subtable += '</table>'
                 rowdata.append(subtable)                        
         gen_html(outputname, title, htmlname="intersection", rows=rowdata)
-
+    """
     def posi2region(self, regions, p):
         all = range(len(regions))
         inters = GenomicRegionSet(name="")
@@ -884,7 +888,7 @@ class Intersect:
                     # Possibility of r 
                     posib = nr/n
                     # Chi-squire test
-                    chisq, p = mstats.chisquare(d,f_exp=[posib]*repeat)
+                    chisq, p = mstats.chisquare(f_exp=d,f_obs=[posib]*repeat)
                     self.test_d[ty][r][q] = [r.name,nr,qn,nq,ni,chisq,p]
                     print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r][q]))
                     
