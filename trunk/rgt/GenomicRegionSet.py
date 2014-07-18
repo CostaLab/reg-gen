@@ -69,6 +69,7 @@ class GenomicRegionSet:
         See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
         self.fileName=filename
         with open(filename) as f:
+            error_line = 0 # Count error line
             for line in f:
                 try:
                     name, orientation, data = None, None, None
@@ -87,7 +88,8 @@ class GenomicRegionSet:
                         data = "\t".join( [line[4]] + line[6:] )
                     self.add( GenomicRegion(chrom, start, end, name, orientation, data) )
                 except:
-                    print("Error at line",line,self.fileName)
+                    error_line += 1
+                    if error_line >1: print("Error at line",line,self.fileName) # Skip the first error line which contains the track information
             self.sort()
   
     def read_bedgraph(self, filename):
@@ -703,7 +705,7 @@ class GenomicRegionSet:
                 if prev_region.overlap(cur_region):
                     prev_region.initial = min(prev_region.initial, cur_region.initial)
                     prev_region.final = max(prev_region.final, cur_region.final)
-                    prev_region.data += '_$_' + cur_region.data #use extra character to distinguish data sets
+                    if cur_region.name: prev_region.name += '_' + cur_region.name #use extra character to distinguish data sets
                 else:
                     z.add(prev_region)
                     prev_region = cur_region

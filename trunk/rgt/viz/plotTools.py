@@ -7,9 +7,7 @@ lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
 import numpy
 from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
-import time, datetime
-import argparse
-import HTML
+import time, datetime, argparse, HTML
 from collections import *
 import statsmodels.sandbox.stats.multicomp as sm
 import matplotlib.pyplot as plt
@@ -279,7 +277,7 @@ def subtable_format(ty):
 #                    Projection test
 ###########################################################################################
 
-class projection:
+class Projection:
     def __init__(self, referenceEM, queryEM):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
@@ -289,7 +287,7 @@ class projection:
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
-    
+        
     def group_refque(self, groupby=False):
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
     
@@ -378,7 +376,6 @@ class projection:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
-
     def gen_html(self,outputname, title):
         rowdata = ["<img src='projection_test.png' width=800 >"]
         for ind_ty, ty in enumerate(self.plist.keys()):
@@ -406,7 +403,7 @@ class projection:
 #                    Jaccard test
 ###########################################################################################
 
-class jaccard:
+class Jaccard:
     def __init__(self, referenceEM, queryEM):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
@@ -549,7 +546,7 @@ class jaccard:
 #                    Inersection test
 ###########################################################################################
 
-class intersect:
+class Intersect:
     def __init__(self, referenceEM, queryEM, mode_intersect, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
@@ -897,7 +894,7 @@ class intersect:
 #                    Boxplot 
 ###########################################################################################
 
-class boxplot:
+class Boxplot:
     """
     input:
         exps: input experimental matrix
@@ -1194,16 +1191,17 @@ class boxplot:
 #                    Lineplot 
 ###########################################################################################
 
-class lineplot:
-    def __init__(self,exps, title, center, extend, rs, bs, ss):
+class Lineplot:
+    def __init__(self, EMpath, title, center, extend, rs, bs, ss):
         # Read the Experimental Matrix
         self.title = title
-        self.exps = exps
-        self.beds = exps.get_regionsets() # A list of GenomicRegionSets
-        self.bednames = exps.get_regionsnames()
-        self.reads = exps.get_readsfiles()
-        self.readsnames = exps.get_readsnames()
-        self.fieldsDict = exps.fieldsDict
+        self.exps = ExperimentalMatrix()
+        self.exps.read(EMpath)
+        self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
+        self.bednames = self.exps.get_regionsnames()
+        self.reads = self.exps.get_readsfiles()
+        self.readsnames = self.exps.get_readsnames()
+        self.fieldsDict = self.exps.fieldsDict
         self.parameter = []
         self.center = center
         self.extend = extend
