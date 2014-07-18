@@ -11,7 +11,7 @@ from multiprocessing import Pool
 from pickle import load, dump
 
 # Internal
-from .. Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData
+from .. Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
 from .. ExperimentalMatrix import ExperimentalMatrix
 from .. GeneSet import GeneSet
 from .. GenomicRegion import GenomicRegion
@@ -19,6 +19,7 @@ from .. GenomicRegionSet import GenomicRegionSet
 from Motif import Motif
 from Match import match
 from Statistics import multiple_test_correction, get_fisher_dict
+from Util import Input, Result
 
 # External
 from Bio import motifs
@@ -427,6 +428,12 @@ def main_enrichment():
     ev_color = "0,130,0"
     nev_color = "130,0,0"
     results_header_text = "\t".join(["FACTOR","P-VALUE","CORR.P-VALUE","A","B","C","D","PERCENT","BACK.PER.","GENES"])
+    cluster_path_fix = "/home/egg" # TODO REMOVE TO EMPTY STRING
+    html_header = ["FACTOR","MOTIF","P-VALUE","CORR.P-VALUE","A","B","C","D","PERCENT","BACK.PER.","GO"]
+    html_type_list = "sissssssssl"
+    logo_width = 200
+    if("hg" in options.organism): gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
+    else: gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
 
     ###################################################################################################
     # Initializations
@@ -445,6 +452,9 @@ def main_enrichment():
 
     # Default motif data
     motif_data = MotifData()
+
+    # Default image data
+    image_data = ImageData()
 
     ###################################################################################################
     # Reading Input Matrix
@@ -466,12 +476,6 @@ def main_enrichment():
     ###################################################################################################
     # Reading Regions & Gene Lists
     ###################################################################################################
-
-    # Input Class
-    class Input:
-        def __init__(self,gene_set,region_list):
-            self.gene_set = gene_set
-            self.region_list = region_list
 
     # Initializations
     input_list = []
@@ -607,22 +611,19 @@ def main_enrichment():
     # Enrichment Statistics
     ###################################################################################################
 
-    # Result Class
-    class Result:
-        def __init__(self):
-            self.name = "" # String
-            self.p_value = 0.0 # Float
-            self.corr_p_value = 0.0 # Float
-            self.a = 0 # Integer
-            self.b = 0 # Integer
-            self.c = 0 # Integer
-            self.d = 0 # Integer
-            self.percent = 0.0 # Float
-            self.back_percent = 0.0 # Float
-            self.genes = None # GeneSet
-        def __str__(self):
-            return "\t".join([str(e) for e in [self.name,self.p_value,self.corr_p_value,self.a,self.b,self.c,self.d,
-                                               self.percent,self.back_percent,",".join(self.genes.genes)]])
+    # Creating link dictionary for HTML file
+    genetest_link_dict = dict()
+    randtest_link_dict = dict()
+    for curr_input in input_list:
+        for grs in curr_input.region_list:
+            if(curr_input.gene_set):
+                link_name = grs.name+" ("+curr_input.gene_set.name+")"
+                genetest_link_dict[link_name] = os.path.join(output_location,grs.name+"__"+curr_input.gene_set.name,output_stat_genetest+".html")
+                randtest_link_dict[link_name] = os.path.join(output_location,grs.name+"__"+curr_input.gene_set.name,output_stat_randtest+".html")
+            else: 
+                link_name = grs.name
+                randtest_link_dict[link_name] = os.path.join(output_location,link_name,output_stat_randtest+".html")
+
 
     # Iterating on each input object
     for curr_input in input_list:
@@ -741,10 +742,27 @@ def main_enrichment():
                 for r in result_list: output_file.write(str(r)+"\n")
                 output_file.close()
 
-                # Printing statistics html
-                # TODO                
+                # Printing statistics html - Creating data table
+                data_table = []
+                for r in result_list:
+                    curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
+                    for rep in motif_data.get_logo_list():
+                        logo_file_name = os.path.join(rep,r.name+".png")
+                        if(os.path.isfile(logo_file_name)):
+                            motif_logo = [logo_file_name, logo_width]
+                            break
+                    curr_gene_tuple = ["View",gprofiler_link+",".join(r.genes.genes)]
+                    data_table.append([r.name,curr_motif_tuple,str(r.p_value),str(r.corr_p_value),str(r.a),str(r.b),
+                                       str(r.c),str(r.d),str(r.percent),str(r.back_percent),curr_gene_tuple])
 
-            else: pass
+                # Printing statistics html - Writing to HTML
+                output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest+".html")
+                html = Html("Motif Enrichment Analysis", genetest_link_dict, cluster_path_fix=cluster_path_fix)
+                html.add_heading("Results for <b>"+original_name+"</b> region using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+                html.add_zebra_table(html_header, html_type_list, data_table, align = "center")
+                html.write(output_file_name_html)         
+
+            else:
 
                 # Association still needs to be done with all genes in order to print gene list of random test
                 grs = grs.gene_association(None, options.organism, options.promoter_length, options.maximum_association_length)
@@ -816,6 +834,15 @@ def main_enrichment():
             # Printing statistics html
             # TODO      
 
+    # HTML TEST
+    link_dict = {"link1":"http://www.google.com", "link2":"http://www.google.com"}
+    html = Html("Motif Enrichment Analysis",link_dict,cluster_path_fix="/home/egg")
+    html.add_heading("Heading", align = "center")
+    header_list = ["Header1","Header2","Header3"]
+    type_list = "sss"
+    data_table = [["Teste1","Teste2","Teste3"],["Teste4","Teste5","Teste6"]]
+    html.add_zebra_table(header_list, type_list, data_table, align = "center")
+    html.write("./test.html")
 
     ###################################################################################################
     # Heatmap

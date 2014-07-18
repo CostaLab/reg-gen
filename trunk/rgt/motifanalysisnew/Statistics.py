@@ -103,6 +103,9 @@ def fisher_table((grs1, grs2)):
             gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
             for g in gene_list: gene_set.genes.append(g)
 
+    # Keep only unique genes
+    gene_set.genes = list(set(gene_set.genes))
+
     # Fetching mpbs
     intersect_grs2 = grs2.intersect(grs1, mode=OverlapType.ORIGINAL)
 
