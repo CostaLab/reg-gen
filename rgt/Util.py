@@ -224,6 +224,53 @@ class HmmData(ConfigurationFile):
         """
         return self.default_hmm
 
+class ImageData(ConfigurationFile):
+    """
+    Represent image data.
+
+    Authors: Eduardo G. Gusmao.
+
+    Inherits ConfigurationFile.
+
+    Methods:
+
+    get_rgt_logo():
+    Returns the rgt logo image file location.
+
+    get_css_file():
+    Returns the css file location.
+
+    get_default_motif_logo():
+    Returns the default motif logo file location.
+    """
+
+    def __init__(self):
+        """
+        Initializes ImageData.
+        """
+        ConfigurationFile.__init__(self)
+        self.rgt_logo = os.path.join(self.data_dir,"fig","rgt_logo.gif")
+        self.css_file = os.path.join(self.data_dir,"fig","style.css")
+        self.default_motif_logo = os.path.join(self.data_dir,"fig","default_motif_logo.png")
+
+    def get_rgt_logo(self):
+        """
+        Returns the rgt logo image file location.
+        """
+        return self.rgt_logo
+
+    def get_css_file(self):
+        """
+        Returns the css file location.
+        """
+        return self.css_file
+
+    def get_default_motif_logo(self):
+        """
+        Returns the default motif logo file location.
+        """
+        return self.default_motif_logo
+
 class OverlapType:
     """
     Class of overlap type constants.
@@ -377,6 +424,211 @@ class ErrorHandler():
                                     "Report: "+warning_message+" "+add_msg+"\n"
                                     "--------------------------------------------------")
         print(complete_warning_message, file=sys.stderr)
+
+class Html:
+    """
+    Represent an HTML file.
+
+    Authors: Eduardo G. Gusmao.
+    """
+
+    def __init__(self, name, links_dict, cluster_path_fix=""):
+        """ 
+        Initializes Html.
+
+        Variables:
+        xxxxx -- Position Frequency Matrix.
+        """
+
+        # Variable initializations
+        self.name = name
+        self.links_dict = links_dict
+        self.cluster_path_fix = cluster_path_fix
+        self.document = []
+        self.image_data = ImageData()
+
+        # Initialize document
+        self.create_header()
+        self.add_links()
+        
+    def create_header(self):
+        """ 
+        Creates default document header.
+        
+        Return:
+        None -- Appends content to the document.
+        """
+        self.document.append("<html>")
+        self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
+
+        self.document.append("<style type=\"text/css\">")
+        self.document.append("<!--")
+        self.document.append("@import url(\""+self.cluster_path_fix+self.image_data.get_css_file()+"\");")
+        self.document.append("-->")
+        self.document.append("</style></head>")
+        self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")
+        self.document.append("<h3 style=\"background-color:white; border-top:5px solid black; border-bottom: 5px solid black;\">")
+        self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
+        self.document.append("  <tr>")
+        self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+        self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+        self.document.append("  </tr>")
+        self.document.append("</table>")
+        self.document.append("</h3>")
+
+    def add_links(self):
+        """ 
+        Adds all the links.
+        
+        Return:
+        None -- Appends links to the document.
+        """
+        self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
+        self.document.append("  <tr>")
+        self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
+        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=file://\""+self.cluster_path_fix+self.links_dict[k]+"\">"+k+"</a>" for k in self.links_dict.keys()])
+        self.document.append(link_str)
+        self.document.append("    </b></font></td>")
+        self.document.append("  </tr>")
+        self.document.append("</table>")
+
+    def create_footer(self):
+        """ 
+        Adds footer.
+        
+        Return:
+        None -- Appends footer to the document.
+        """
+        self.document.append("<br><br>")
+        self.document.append("<p align=\"center\"><font face=\"Arial\" color=\"#000000\" size=\"2\">")
+        self.document.append("For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
+        self.document.append("</font></p>")
+        self.document.append("<h3 style=\"background-color:white; border-top:10px solid black;\"></h3>")
+        self.document.append("</body>")
+        self.document.append("</html>")
+
+    def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True):
+        """ 
+        Creates a heading.
+        
+        Keyword arguments:
+        heading -- The heading title.
+        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
+                 or string (interpreted as HTML positional argument). (default 50)
+        color -- Color of the heading. (default "black")
+        face -- Font of the heading. (default "Arial")
+        size -- Size of the heading (HTML units [1,7]). (default 5)
+        bold -- Whether the heading is bold. (default True)
+
+        Return:
+        None -- Appends heading to the document.
+        """
+
+        # Creating header
+        content_str = ""
+        if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\">"
+        elif(isinstance(align,str)): content_str += "<p align=\""+align+"\">"
+        else: pass # ERROR
+        content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\">"
+        if(bold): content_str += "<b>"
+        self.document.append(content_str)
+
+        # Printing heading name
+        self.document.append(heading)
+
+        # Creating footing
+        end_str = ""
+        if(bold): end_str += "</b>"
+        end_str += "</font></p>"
+        self.document.append(end_str)
+
+    def add_zebra_table(self, header_list, type_list, data_table, align = 50):
+        """ 
+        Creates a zebra table.
+
+        Keyword arguments:
+        header_list -- A list with the table headers in correct order.
+        type_list -- A string in which each character represents the type of each row.
+                     s = string (regular word or number)
+                     i = image
+                     l = link 
+        data_table -- A table containing the data to be input according to each data type defined.
+                      s = string
+                      i = tuple containing: ("file name", width) width = an integer
+                      l = tuple containing: ("Name","Link")
+        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
+                 or string (interpreted as HTML positional argument). (default 50)
+        Return:
+        None -- Appends table to the document.
+        """
+
+        # Starting table
+        type_list = type_list.lower()
+        if(isinstance(align,int)): self.document.append("<p style=\"margin-left: "+str(align)+"\">")
+        elif(isinstance(align,str)): self.document.append("<p align=\""+align+"\">") 
+        else: pass # TODO ERROR
+        
+        # Table header
+        self.document.append("<table id=\"hor-zebra\">")
+        self.document.append("  <thead><tr>")
+        header_str = "    "+"\n    ".join(["<th scope=\"col\">"+e+"</th>" for e in header_list])
+        self.document.append(header_str)
+        self.document.append("  </tr></thead>")
+
+        # Table body
+        self.document.append("  <tbody>")
+        for i in range(0,len(data_table)):
+
+            # Row type
+            if(i%2==0): self.document.append("    <tr class=\"odd\">")
+            else: self.document.append("    <tr>")
+
+            # Body data
+            for j in range(0,len(data_table[i])):
+                if(type_list[j] == "s"):
+                    self.document.append("      <td>"+data_table[i][j]+"</td>")
+                elif(type_list[j] == "i"): 
+                    self.document.append("      <td><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
+                elif(type_list[j] == "l"):
+                    self.document.append("      <td><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
+                else: pass # TODO ERROR
+
+            # Row ending
+            self.document.append("    </tr>")
+        
+        # Finishing table
+        self.document.append("</tbody></table></p>")
+
+    def add_free_content(self, content_list):
+        """ 
+        Adds free HTML to the document.
+
+        Keyword arguments:
+        content_list -- List of strings. Each string is interpreted as a line in the HTML document.
+        
+        Return:
+        None -- Appends content to the document.
+        """
+        for e in content_list: self.document.append(e)
+
+    def write(self, file_name):
+        """ 
+        Write HTML document to file name.
+
+        Keyword arguments:
+        file_name -- Complete file name to write this HTML document.
+        
+        Return:
+        None -- Creates file with this HTML document.
+        """
+
+        # Add footer - finalize document
+        self.create_footer()
+
+        # Writing document to file
+        f = open(file_name,"w")
+        for e in self.document: f.write(e+"\n")
+        f.close()
 
 class AuxiliaryFunctions:
     """
