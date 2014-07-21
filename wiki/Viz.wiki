@@ -1,12 +1,26 @@
-#summary One-sentence summary of this page.
+=General tasks:=
+===To be done===
+  *Modify to Html class by Eduardo
+  *
+===Finished===
+  *Installation setup
+  *
 
-= Introduction =
+==Projection test==
+===To be done===
+  *
+  *
+===Finished===
+  *
+  *
 
-Everything about Viz
 
-= Details =
+==Jaccard test==
 
-Add your content here.  Format your content with:
-  * Text in *bold* or _italic_
-  * Headings, paragraphs, and lists
-  * Automatic links to other wiki pages
+==Intersection test==
+
+==Boxplot==
+
+==Lineplot==
+
+==Heatmap==
