@@ -427,13 +427,14 @@ def main_enrichment():
     output_stat_randtest = "randtest_statistics"
     ev_color = "0,130,0"
     nev_color = "130,0,0"
-    results_header_text = "\t".join(["FACTOR","P-VALUE","CORR.P-VALUE","A","B","C","D","PERCENT","BACK.PER.","GENES"])
+    results_header_text = "\t".join(["FACTOR","P-VALUE","CORR.P-VALUE","A","B","C","D","FREQ","BACK.FREQ.","GENES"])
     cluster_path_fix = "/home/egg" # TODO REMOVE TO EMPTY STRING
-    html_header = ["FACTOR","MOTIF","P-VALUE","CORR.P-VALUE","A","B","C","D","PERCENT","BACK.PER.","GO"]
+    html_header = ["FACTOR","MOTIF","P-VALUE","CORRECTED P-VALUE","A","B","C","D","FREQUENCY","BACKGROUND FREQUENCY","GO"]
     html_type_list = "sissssssssl"
     logo_width = 200
     if("hg" in options.organism): gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
     else: gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
+    html_col_size = [300,logo_width,100,100,50,50,50,50,100,100,50]
 
     ###################################################################################################
     # Initializations
@@ -705,6 +706,13 @@ def main_enrichment():
                 result_list = sorted(result_list, key=lambda x: x.p_value)
                 result_list = sorted(result_list, key=lambda x: x.corr_p_value)
 
+                # Preparing results for printing
+                for r in result_list:
+                    r.p_value = "%.4e" % r.p_value
+                    r.corr_p_value = "%.4e" % r.corr_p_value
+                    r.percent = str(round(r.percent,4)*100)+"%"
+                    r.back_percent = str(round(r.back_percent,4)*100)+"%"
+
                 # Printing ev and nev mpbs
                 output_file_name_ev = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bedT")
                 output_file_name_nev = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev+".bedT")
@@ -749,7 +757,7 @@ def main_enrichment():
                     for rep in motif_data.get_logo_list():
                         logo_file_name = os.path.join(rep,r.name+".png")
                         if(os.path.isfile(logo_file_name)):
-                            motif_logo = [logo_file_name, logo_width]
+                            curr_motif_tuple = [logo_file_name, logo_width]
                             break
                     curr_gene_tuple = ["View",gprofiler_link+",".join(r.genes.genes)]
                     data_table.append([r.name,curr_motif_tuple,str(r.p_value),str(r.corr_p_value),str(r.a),str(r.b),
@@ -759,7 +767,7 @@ def main_enrichment():
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest+".html")
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, cluster_path_fix=cluster_path_fix)
                 html.add_heading("Results for <b>"+original_name+"</b> region using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
-                html.add_zebra_table(html_header, html_type_list, data_table, align = "center")
+                html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align = "center")
                 html.write(output_file_name_html)         
 
             else:
@@ -804,6 +812,13 @@ def main_enrichment():
             result_list = sorted(result_list, key=lambda x: x.p_value)
             result_list = sorted(result_list, key=lambda x: x.corr_p_value)
 
+            # Preparing results for printing
+            for r in result_list:
+                r.p_value = "%.4e" % r.p_value
+                r.corr_p_value = "%.4e" % r.corr_p_value
+                r.percent = str(round(r.percent,4)*100)+"%"
+                r.back_percent = str(round(r.back_percent,4)*100)+"%"
+
             # Printing ev if it was not already print in geneset
             if(not curr_input.gene_set):
                 output_file_name_ev = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bedT")
@@ -831,18 +846,25 @@ def main_enrichment():
             for r in result_list: output_file.write(str(r)+"\n")
             output_file.close()
 
-            # Printing statistics html
-            # TODO      
+            # Printing statistics html - Creating data table
+            data_table = []
+            for r in result_list:
+                curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
+                for rep in motif_data.get_logo_list():
+                    logo_file_name = os.path.join(rep,r.name+".png")
+                    if(os.path.isfile(logo_file_name)):
+                        curr_motif_tuple = [logo_file_name, logo_width]
+                        break
+                curr_gene_tuple = ["View",gprofiler_link+",".join(r.genes.genes)]
+                data_table.append([r.name,curr_motif_tuple,str(r.p_value),str(r.corr_p_value),str(r.a),str(r.b),
+                                   str(r.c),str(r.d),str(r.percent),str(r.back_percent),curr_gene_tuple])
 
-    # HTML TEST
-    link_dict = {"link1":"http://www.google.com", "link2":"http://www.google.com"}
-    html = Html("Motif Enrichment Analysis",link_dict,cluster_path_fix="/home/egg")
-    html.add_heading("Heading", align = "center")
-    header_list = ["Header1","Header2","Header3"]
-    type_list = "sss"
-    data_table = [["Teste1","Teste2","Teste3"],["Teste4","Teste5","Teste6"]]
-    html.add_zebra_table(header_list, type_list, data_table, align = "center")
-    html.write("./test.html")
+            # Printing statistics html
+            output_file_name_html = os.path.join(curr_output_folder_name, output_stat_randtest+".html")
+            html = Html("Motif Enrichment Analysis", genetest_link_dict, cluster_path_fix=cluster_path_fix)
+            html.add_heading("Results for <b>"+original_name+"</b> region using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+            html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align = "center")
+            html.write(output_file_name_html)
 
     ###################################################################################################
     # Heatmap

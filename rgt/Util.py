@@ -435,6 +435,7 @@ class Html:
     def __init__(self, name, links_dict, cluster_path_fix=""):
         """ 
         Initializes Html.
+        IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
 
         Variables:
         xxxxx -- Position Frequency Matrix.
@@ -486,7 +487,7 @@ class Html:
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
         self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=file://\""+self.cluster_path_fix+self.links_dict[k]+"\">"+k+"</a>" for k in self.links_dict.keys()])
+        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\"file://"+os.path.join(self.cluster_path_fix,os.path.abspath(self.links_dict[k]))+"\">"+k+"</a>" for k in self.links_dict.keys()])
         self.document.append(link_str)
         self.document.append("    </b></font></td>")
         self.document.append("  </tr>")
@@ -542,12 +543,13 @@ class Html:
         end_str += "</font></p>"
         self.document.append(end_str)
 
-    def add_zebra_table(self, header_list, type_list, data_table, align = 50):
+    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50):
         """ 
         Creates a zebra table.
 
         Keyword arguments:
         header_list -- A list with the table headers in correct order.
+        col_size_list -- A list with the column sizes (integers).
         type_list -- A string in which each character represents the type of each row.
                      s = string (regular word or number)
                      i = image
@@ -571,7 +573,10 @@ class Html:
         # Table header
         self.document.append("<table id=\"hor-zebra\">")
         self.document.append("  <thead><tr>")
-        header_str = "    "+"\n    ".join(["<th scope=\"col\">"+e+"</th>" for e in header_list])
+        header_str = []
+        for i in range(0,len(header_list)):
+            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\"center\">"+header_list[i]+"</th>")
+        header_str = "    "+"\n    ".join(header_str)
         self.document.append(header_str)
         self.document.append("  </tr></thead>")
 
@@ -586,11 +591,11 @@ class Html:
             # Body data
             for j in range(0,len(data_table[i])):
                 if(type_list[j] == "s"):
-                    self.document.append("      <td>"+data_table[i][j]+"</td>")
+                    self.document.append("      <td align=\"center\">"+data_table[i][j]+"</td>")
                 elif(type_list[j] == "i"): 
-                    self.document.append("      <td><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
+                    self.document.append("      <td align=\"center\"><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
                 elif(type_list[j] == "l"):
-                    self.document.append("      <td><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
+                    self.document.append("      <td align=\"center\"><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
                 else: pass # TODO ERROR
 
             # Row ending
