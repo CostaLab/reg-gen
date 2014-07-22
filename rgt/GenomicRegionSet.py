@@ -165,8 +165,9 @@ class GenomicRegionSet:
         assocDict = dict()
         geneFlagDict = dict()
         for gr in gene_regions:
-            geneFlagDict[gr.name.upper()] = False
-            curr_region = [gr.initial,gr.final,gr.name,0,gr.orientation]
+            curr_gene_name = gr.name.upper()
+            geneFlagDict[curr_gene_name] = False
+            curr_region = [gr.initial,gr.final,curr_gene_name,0,gr.orientation]
             try: assocDict[gr.chrom].append(curr_region)
             except Exception: assocDict[gr.chrom] = [curr_region]
        
@@ -280,13 +281,17 @@ class GenomicRegionSet:
                 new_genes_list = []
                 new_prox_list = []
                 for curr_gene in curr_genes_list:
-                    new_genes_list.append("_".join(curr_gene.split("_")[:-1]))
-                    new_prox_list.append(curr_gene.split("_")[-1])
+                    if(curr_gene == "."):
+                        new_genes_list.append(curr_gene)
+                        new_prox_list.append(curr_gene)
+                    else:
+                        new_genes_list.append("_".join(curr_gene.split("_")[:-1]))
+                        new_prox_list.append(curr_gene.split("_")[-1])
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
                 result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list))
              
-            return result_grs
+        return result_grs
 
     def filter_by_gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
         """Updates self in order to keep only the coordinates associated to genes which are in gene_set.
