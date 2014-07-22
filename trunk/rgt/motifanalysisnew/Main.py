@@ -299,15 +299,23 @@ def main_matching():
 
         # Initializing factor dictionary
         mpbs_output_dict[genomic_region_set.name] = dict()
+
+        counter = 0 # TODO REMOVE
     
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
+
+            counter += 1 # TODO REMOVE
+            print genomic_region_set.name, counter # TODO REMOVE
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
             # Iterating on motif group list
             for motif_group in motif_list:
+
+                #for m in motif_group:
+                #    grl = match([m,sequence,genomic_region])
 
                 # Creating dataset for multiprocessing
                 curr_data_input = [[m,sequence,genomic_region] for m in motif_group]
@@ -361,8 +369,10 @@ def main_matching():
             # Converting to big bed
             bb_file_name = output_file_name+".bb"
             try:
-                os.system(" ".join(["bedToBigBed", bed_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
-                os.remove(bed_file_name)
+                sort_file_name = output_file_name+"_sort.bed"
+                os.system("sort -k1,1 -k2,2n "+bed_file_name+" > "+sort_file_name)
+                os.system(" ".join(["bedToBigBed", sort_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                os.remove(bed_file_name); os.remove(sort_file_name)
             except Exception: pass # WARNING
 
 
@@ -543,7 +553,7 @@ def main_enrichment():
             curr_object = exp_matrix_objects_dict[k]
 
             # If the current object is a GenomicRegionSet
-            if(isinstance(curr_genomic_region,GenomicRegionSet)):
+            if(isinstance(curr_object,GenomicRegionSet)):
 
                 # Sorting input region
                 curr_object.sort()
@@ -577,6 +587,9 @@ def main_enrichment():
     if(options.processes <= 0): pass # TODO ERROR
     elif(options.processes == 1): grouped_mpbs_dict_keys = [[e] for e in sorted_mpbs_dict_keys]
     else: grouped_mpbs_dict_keys = map(None, *(iter(sorted_mpbs_dict_keys),) * options.processes)
+    corrected_grouped = []
+    for vec in grouped_mpbs_dict_keys: corrected_grouped.append([e for e in vec if e])
+    grouped_mpbs_dict_keys = corrected_grouped
 
     ###################################################################################################
     # Reading Random Coordinates
@@ -653,9 +666,11 @@ def main_enrichment():
                 output_file_name = os.path.join(curr_output_folder_name,output_association_name+".bed")
                 output_file = open(output_file_name,"w")
                 for gr in grs:
-                    curr_gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
-                    curr_prox_list = gr.data.split(":")
-                    curr_name = ":".join([e[0]+"_"+e[1] for e in zip(curr_gene_list,curr_prox_list)])
+                    if(gr.name == "."): curr_name = "."
+                    else:
+                        curr_gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
+                        curr_prox_list = gr.data.split(":")
+                        curr_name = ":".join([e[0]+"_"+e[1] for e in zip(curr_gene_list,curr_prox_list)])
                     output_file.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,curr_name]])+"\n")
                 output_file.close()
                 if(options.bigbed):
@@ -702,7 +717,7 @@ def main_enrichment():
 
                 # Sorting result list
                 result_list = sorted(result_list, key=lambda x: x.name)
-                result_list = sorted(result_list, key=lambda x: x.percent)
+                result_list = sorted(result_list, key=lambda x: x.percent, reverse=True)
                 result_list = sorted(result_list, key=lambda x: x.p_value)
                 result_list = sorted(result_list, key=lambda x: x.corr_p_value)
 
@@ -808,7 +823,7 @@ def main_enrichment():
 
             # Sorting result list
             result_list = sorted(result_list, key=lambda x: x.name)
-            result_list = sorted(result_list, key=lambda x: x.percent)
+            result_list = sorted(result_list, key=lambda x: x.percent, reverse=True)
             result_list = sorted(result_list, key=lambda x: x.p_value)
             result_list = sorted(result_list, key=lambda x: x.corr_p_value)
 
