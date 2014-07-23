@@ -604,6 +604,39 @@ class Html:
         # Finishing table
         self.document.append("</tbody></table></p>")
 
+    def add_figure(self, figure_path, notes=None, align = 50, color = "black", face = "Arial", size = 3, bold = False):
+        """ 
+        Add a figure with notes underneath.
+        
+        Keyword arguments:
+        figure_path -- The path to the figure.
+        notes -- A list of strings for further explanation
+        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
+                 or string (interpreted as HTML positional argument). (default 50)
+        
+        Return:
+        None -- Appends the figure to the document.
+        """        
+        if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"+'<img src="'+ figure_path +'" width=800></p>'
+        elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"+'<img src="'+ figure_path +'" width=800></p>'
+        else: pass # TODO ERROR
+        
+        
+        self.document.append(img_str)
+        if notes:
+            if(isinstance(align,int)): 
+                note_str = "<p style=\"margin-left: "+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"
+            elif(isinstance(align,str)):
+                note_str = "<p align=\""+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"            
+            else: pass # TODO ERROR
+            
+            if(bold): note_str += "<b>"
+            for line in notes:
+                note_str += line + "<br>" 
+            if(bold): note_str += "</b>"
+            note_str += "</font></p>"
+            self.document.append(note_str)
+
     def add_free_content(self, content_list):
         """ 
         Adds free HTML to the document.

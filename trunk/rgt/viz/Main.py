@@ -168,8 +168,8 @@ def main():
     #                              'OVERLAP' defines the true intersections which are included in both reference and query, \
     #                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
     #                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
-    parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
-    parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
+    #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
+    #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
@@ -362,18 +362,18 @@ def main():
         if args.pdf:
             inter.barplot(args.log)
             output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=args.pdf,show=args.show)
-            if args.stackedbar:
-                inter.stackedbar()
-                output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=args.pdf,show=args.show)
-            if args.pbar:
-                inter.percentagebar()
-                output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci(),pdf=args.pdf,show=args.show)
+            #if args.stackedbar:
+            inter.stackedbar()
+            output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=args.pdf,show=args.show)
+            #if args.pbar:
+            inter.percentagebar()
+            output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci(),pdf=args.pdf,show=args.show)
         
         if args.stest > 0:
             inter.stest(repeat=args.stest)
         
         if args.html:
-            inter.gen_html(args.output, args.title)
+            inter.gen_html(args.output, args.title, align=50)
         parameter = parameter + inter.parameter
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))

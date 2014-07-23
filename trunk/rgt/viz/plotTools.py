@@ -21,7 +21,7 @@ import itertools
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
-from rgt.Util import *
+from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
 
 # Local test
@@ -242,7 +242,7 @@ def combset(regions):
                 arr[i,j].merge()
                 newlist.append(arr[i,j])
     return newlist
-
+    
 def gen_html(outputname, title, htmlname, rows):
     ########## HTML ###################
     pd = os.path.join(dir,outputname,title)
@@ -272,7 +272,13 @@ def subtable_format(ty):
     subtable += '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:left;table-layout: fixed;font-size:8pt;}\</style><table cellpadding="10">' #width=800
     return subtable
 
-    
+def value2str(value):
+    if(isinstance(value,int)): r = str(value)
+    elif(isinstance(value,float)):
+        if value > 0.0001: r = "{:.4f}".format(value)
+        else: r = "{:.2e}".format(value)
+    return r
+
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -376,21 +382,46 @@ class Projection:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
-    def gen_html(self,outputname, title):
-        rowdata = ["<img src='projection_test.png' width=800 >"]
-        for ind_ty, ty in enumerate(self.plist.keys()):
-            subtable = subtable_format(ty)
-            subtable += '<tr><td>Reference</td><td>Query</td><td>Background</td><td>Proportion</td><td>p-value</td></tr>'
-            for ind_r,r in enumerate(self.plist[ty].keys()):
-                for ind_q, q in enumerate(self.plist[ty][r].keys()):
-                    if self.plist[ty][r][q] < 0.05:
-                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2:.4f}</td><td>{3:.4f}</td><td><font color="red">{4:.2e}</font></td></tr>'.format(r,q,self.qlist[ty][r]['Background'],self.qlist[ty][r][q],self.plist[ty][r][q])
-                    else:
-                        subtable += '<tr><td>{0}</td><td>{1}</td><td>{2:.4f}</td><td>{3:.4f}</td><td>{4:.2e}</td></tr>'.format(r,q,self.qlist[ty][r]['Background'],self.qlist[ty][r][q],self.plist[ty][r][q])
-            subtable += '</table>'
-            rowdata.append(subtable)
-        gen_html(outputname, title, htmlname="projection", rows=rowdata)
+    def gen_html(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d)
+        html.add_figure("projection_test.png", align="center")
         
+        header_list = ["Reference<br>name",
+                       "Ref<br>number", 
+                       "Query<br>name", 
+                       "Que<br>number", 
+                       "Background<br>possibility",
+                       "Proportion",
+                       "p-value"]
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
+        
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,10,10,15]
+        data_table = []
+        for ind_ty, ty in enumerate(self.plist.keys()):
+            html.add_heading(ty, size = 4, bold = False)
+            for ind_r,r in enumerate(self.plist[ty].keys()):
+                rlen = str(len(self.references[ind_r]))
+                for ind_q, q in enumerate(self.plist[ty][r].keys()):
+                    qlen = str(len(self.query[ind_q]))
+                    backv = value2str(self.qlist[ty][r]['Background'])
+                    propor = value2str(self.qlist[ty][r][q])
+                    pv = value2str(self.plist[ty][r][q])
+                    
+                    if self.plist[ty][r][q] < 0.05:
+                        data_table.append([r,rlen,q,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>"])
+                    else:
+                        data_table.append([r,q,backv,propor,pv])
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.write(os.path.join(fp,"projection.html"))
+    
+    
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
         for ty in self.plist.keys():
@@ -454,6 +485,10 @@ class Jaccard:
         
         """
         self.fig = []
+        #if len(self.jlist.values[1].keys())*len(self.jlist.values[1].values()[1].keys()) > 15: 
+        #    self.xtickrotation, self.xtickalign = 70,"right"
+        #else:
+        #    self.xtickrotation, self.xtickalign = 0,"center"
         
         for it, t in enumerate(self.jlist.keys()):
             f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey = True)
@@ -476,6 +511,8 @@ class Jaccard:
                 color_t = []  # Store tag for coloring boxes
                 #x_ticklabels = []  # Store ticklabels
                 axarr[i].set_xlabel(r)
+                
+                
                 
                 for j,q in enumerate(self.jlist[t][r].keys()):
                     d.append(self.jlist[t][r][q])
@@ -518,7 +555,7 @@ class Jaccard:
                      bbox_to_anchor=(1.05, 0.5))
             f.tight_layout(pad=2, h_pad=None, w_pad=None)
             self.fig.append(f)
-        
+    """    
     def gen_html(self,outputname, title):
         rowdata = []
         for i in range(len(self.fig)):
@@ -541,6 +578,48 @@ class Jaccard:
             subtable += '</table>'
             rowdata.append(subtable)        
         gen_html(outputname, title, htmlname="jaccard", rows=rowdata)
+    """
+    def gen_html(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d)
+        for i in range(len(self.fig)):
+            html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
+        
+        header_list = ["Reference<br>name",
+                       "Ref<br>number", 
+                       "Query<br>name", 
+                       "Que<br>number", 
+                       "Randomization<br>repeats",
+                       "True<br>Jaccard<br>index",
+                       "p-value"]
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
+        
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,10,10,15]
+        data_table = []
+        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+            html.add_heading(ty, size = 4, bold = False)
+            for ind_r,ri in enumerate(self.groupedreference[ty]):
+                r = ri.name
+                rlen = str(len(ri))
+                for ind_q, qi in enumerate(self.groupedquery[ty]):
+                    q = qi.name
+                    qlen = str(len(qi))
+                    if self.plist[ty][r][q] < 0.05:
+                        data_table.append([r,rlen,q,qlen,"x"+str(self.rt),
+                                           value2str(self.realj[ty][r][q]),
+                                           "<font color=\"red\">"+value2str(self.plist[ty][r][q])+"</font>"])
+                    else:
+                        data_table.append([r,q,"x"+str(self.rt),
+                                           value2str(self.realj[ty][r][q]),
+                                           value2str(self.plist[ty][r][q])])
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.write(os.path.join(fp,"jaccard.html"))
 
 ###########################################################################################
 #                    Inersection test
@@ -613,7 +692,7 @@ class Intersect:
     def barplot(self, logt=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
-        xtickrotation, xtickalign = 0,"center"
+        self.xtickrotation, self.xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
@@ -634,7 +713,8 @@ class Intersect:
                 else: 
                     try: r_label.append(self.rEM.get_type(r,"factor"))
                     except: r_label.append(r)
-                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
+                if len(r_label[-1]) > 15 or len(self.counts.values()[ai][r].keys())*len(self.counts.values()[ai].keys()) > 8: 
+                    self.xtickrotation, self.xtickalign = 70,"right"
                 width = 0.8/(len(self.counts.values()[ai][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
@@ -644,7 +724,7 @@ class Intersect:
                     
             ax.yaxis.tick_left()
             ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            ax.set_xticklabels(r_label,fontsize=9, rotation=xtickrotation, ha=xtickalign)
+            ax.set_xticklabels(r_label,fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([0, len(self.counts.values()[ai].keys())-0.1])
             
@@ -663,7 +743,6 @@ class Intersect:
     def stackedbar(self):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
-        xtickrotation, xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
@@ -678,7 +757,6 @@ class Intersect:
                 else: 
                     try: r_label.append(self.rEM.get_type(r,"factor"))
                     except: r_label.append(r)
-                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
                 width = 0.6
                 bottom = 0
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
@@ -688,7 +766,7 @@ class Intersect:
                     bottom = bottom + y
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
-            ax.set_xticklabels(r_label, fontsize=9, rotation=xtickrotation, ha=xtickalign)
+            ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             
@@ -708,7 +786,6 @@ class Intersect:
         self.color_list["No intersection"] = "0.7"
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
-        xtickrotation, xtickalign = 0,"center"
         #if len(axs) == 1: axs = [axs]
         try: axs = axs.reshape(-1)
         except: axs = [axs]
@@ -731,7 +808,6 @@ class Intersect:
                     sumlength = self.rEM.objectsDict[r].total_coverage()
                 elif self.mode_count == "count":
                     sumlength = len(self.rEM.objectsDict[r])
-                if len(r_label[-1]) > 15: xtickrotation, xtickalign = 70,"right"
                 self.percentage[ai][r] = {}
                 
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
@@ -743,7 +819,7 @@ class Intersect:
                 ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
-            ax.set_xticklabels(r_label, fontsize=9, rotation=xtickrotation, ha=xtickalign)
+            ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             ax.set_ylim([0,1])
@@ -757,50 +833,71 @@ class Intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.pbar = f
 
-    def gen_html(self,outputname, title):
-        rowdata = ['<img src="intersection_bar.png" width=800 align="middle">']
-        if self.sbar: rowdata.append('<img src="intersection_stackedbar.png" width=800 align="middle">')
-        if self.pbar: rowdata.append('<img src="intersection_percentagebar.png" width=800 align="middle">')
+    def gen_html(self, outputname, title, align):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d)
+        #html.create_header()
+        #html.add_heading(title)
+        html.add_figure("intersection_bar.png", align="center")
+        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
+        if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
+        
+        header_list = ["Reference<br>name",
+                       "Ref<br>number", 
+                       "Query<br>name", 
+                       "Que<br>number", 
+                       "Intersection<br>(% of Ref)",
+                       "Ref+<br>Que-",
+                       "Ref-<br>Que+"]
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
+        
+        if self.test_d: 
+            header_list += ["Average<br>intersect.", "Chi-square<br>statistic", "p-value"]
+            html.add_free_content(['<p style=\"margin-left: '+str(align)+'"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
+        else: pass
+        
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,15,5,5,10,10,15]
+        data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
-            subtable = subtable_format(ty)
-            stest_header = ""
-            if self.test_d: stest_header =  "<td>Aver_inter_regions</td><td>Chi-sq_statistic</td><td>p_value</td>"
-            if self.mode_count == "bp":
-                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'+stest_header\
-                            .format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)", "Proportion of reference")
-            elif self.mode_count == "count":
-                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td></tr>'+stest_header\
-                            .format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection", "Proportion of reference")
+            html.add_heading(ty, size = 4, bold = False)
             for ind_r,ri in enumerate(self.groupedreference[ty]):
                 r = ri.name
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
-                    stest_data = ""
-                    if self.test_d: stest_data = "<td>{0}</td><td>{1:.2f}</td><td>{2:.2e}</td>".format(*self.test_d[ty][ri][qi][4:])
-                    subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td>'+stest_data+'</tr>'\
-                                 .format(r,self.rlen[ty][r], q, self.qlen[ty][q],self.counts[ty][r][q][2], self.percentage[ind_ty][r][q])
-            subtable += '</table>'
-            rowdata.append(subtable)
-        """    
-        if self.test_d:
-            for ind_ty, ty in enumerate(self.test_d.keys()):
-                subtable = subtable_format("Random sampling intersection test: " + ty + " (Run "+ str(self.test_time) + " times)")
-                subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5}</td><td>{6}</td></tr>'\
-                            .format("Reference","Regions", "Query", "Regions", "Aver_inter_regions", "Chi-sq_statistic", "p_value")
-                
-                for ind_r,r in enumerate(self.test_d[ty].keys()):
-                    for ind_q, q in enumerate(self.test_d[ty][r].keys()):
-                        if self.test_d[ty][r][q][6] < 0.05:
-                            subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td><td><font color="red">{6:.2e}</font></td></tr>'\
-                                         .format(*self.test_d[ty][r][q])
-                        else:
-                            subtable += '<tr><td>{0}</td><td>{1}</td><td>{2}</td><td>{3}</td><td>{4}</td><td>{5:.2f}</td><td>{6:.2e}</td></tr>'\
-                                         .format(*self.test_d[ty][r][q])
-                subtable += '</table>'
-                rowdata.append(subtable)                        
-        gen_html(outputname, title, htmlname="intersection", rows=rowdata)
-    """
+                    aveinter = str(self.test_d[ty][r][q][4])
+                    chisqua = "{:.2f}".format(self.test_d[ty][r][q][5])
+                    if self.test_d[ty][r][q][6] > 0.0001: pv = "{:.2f}".format(self.test_d[ty][r][q][6])
+                    else: pv = "{:.2e}".format(self.test_d[ty][r][q][6])
+                    
+                    if self.test_d and self.test_d[ty][r][q][6] < 0.05:
+                         data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
+                                           aveinter, 
+                                           chisqua, 
+                                           "<font color=\"red\">"+pv+"</font>"])
+                    elif self.test_d and self.test_d[ty][r][q][6] >= 0.05:
+                        data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
+                                           aveinter, 
+                                           chisqua, 
+                                           pv])
+                    else:
+                        data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2])])
+        
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.write(os.path.join(fp,"intersection.html"))
+        
+    
     def posi2region(self, regions, p):
         all = range(len(regions))
         inters = GenomicRegionSet(name="")
@@ -871,7 +968,7 @@ class Intersect:
             self.test_d[ty] = {}
             
             for r in self.groupedreference[ty]:
-                self.test_d[ty][r] = {}
+                self.test_d[ty][r.name] = {}
                 nr = len(r)
                 for q in self.groupedquery[ty]:
                     nq = len(q)
@@ -889,8 +986,9 @@ class Intersect:
                     posib = nr/n
                     # Chi-squire test
                     chisq, p = mstats.chisquare(f_exp=d,f_obs=[posib]*repeat)
-                    self.test_d[ty][r][q] = [r.name,nr,qn,nq,ni,chisq,p]
-                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r][q]))
+                    
+                    self.test_d[ty][r.name][qn] = [r.name,nr,qn,nq,ni,chisq,p]
+                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
                     
 
                     
@@ -1191,6 +1289,79 @@ class Boxplot:
         
         gen_html(outputname, title, htmlname="boxplot", rows=rowdata)
 
+    def gen_html(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d)
+        html.add_figure("boxplot.png", align="center")
+        
+        header_list = ["Reference<br>name",
+                       "Ref<br>number", 
+                       "Query<br>name", 
+                       "Que<br>number", 
+                       "Background<br>possibility",
+                       "Proportion",
+                       "p-value"]
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
+        
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,10,10,15]
+        data_table = []
+        
+        
+        #### Calculate p value ####
+        for g in self.group_tags:
+            indM = 0
+            header = []
+            data_p = []
+            arr = []
+            for s in self.sort_tags:
+                for c in self.color_tags:
+                    header.append("{0}: {1}".format(s,c))
+                    data_p.append(self.sortDict[g][s][c])
+                    for i, d in enumerate(data_p[:indM]):
+                        u, p_value = mannwhitneyu(data_p[indM], d)
+                        arr.append(p_value)
+                    indM = indM + 1
+            #print(len(arr))
+            [h,pc,a,b] = sm.multipletests(arr, alpha=pvalue, returnsorted=False)
+            ar = numpy.chararray([len(self.color_tags)*len(self.sort_tags),len(self.color_tags)*len(self.sort_tags)], itemsize=10)
+            ar[:] = "-"
+            k = 0
+            for c in self.color_tags:
+                for s in self.sort_tags:
+                    for i, d in enumerate(header[:k]):
+                        ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
+                    k = k + 1
+            nrows, ncols = ar.shape
+            subtable = subtable_format(ty=g)
+
+            for r in range(nrows+1):
+                subtable += '<tr>'
+                for c in range(ncols+1):
+                    if r == 0:
+                        if c == 0: subtable += '<td><i>p-value</i></td>'
+                        elif c > 0: subtable += '<td>'+header[c-1]+'</td>'
+                    if r > 0:
+                        if c == 0: subtable += '<td>'+header[r-1]+'</td>'
+                        elif c > 0:
+                            #print(r,"  ",c,"   ", int(0.5*(r-1)*(r-2) + c -1))
+                            if c < r and h[int(0.5*(r-1)*(r-2) + c -1)]:
+                                subtable += '<td><font color="red">'+ar[r-1,c-1]+'</font></td>'
+                            else: subtable += '<td>'+ar[r-1,c-1]+'</td>'
+        
+                    
+                    if self.plist[ty][r][q] < 0.05:
+                        data_table.append([r,rlen,q,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>"])
+                    else:
+                        data_table.append([r,q,backv,propor,pv])
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.write(os.path.join(fp,"projection.html"))
+    
 ###########################################################################################
 #                    Lineplot 
 ###########################################################################################
