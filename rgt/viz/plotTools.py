@@ -276,7 +276,7 @@ def value2str(value):
     if(isinstance(value,int)): r = str(value)
     elif(isinstance(value,float)):
         if value > 0.0001: r = "{:.4f}".format(value)
-        else: r = "{:.2e}".format(value)
+        else: r = "{:.4e}".format(value)
     return r
 
 ###########################################################################################
@@ -385,14 +385,14 @@ class Projection:
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d)
+        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
         html.add_figure("projection_test.png", align="center")
         
         header_list = ["Reference<br>name",
                        "Ref<br>number", 
                        "Query<br>name", 
                        "Que<br>number", 
-                       "Background<br>possibility",
+                       "Background<br>proportion",
                        "Proportion",
                        "p-value"]
         
@@ -418,7 +418,7 @@ class Projection:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"projection.html"))
     
     
@@ -582,7 +582,7 @@ class Jaccard:
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d)
+        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
         
@@ -590,14 +590,13 @@ class Jaccard:
                        "Ref<br>number", 
                        "Query<br>name", 
                        "Que<br>number", 
-                       "Randomization<br>repeats",
                        "True<br>Jaccard<br>index",
                        "p-value"]
         
         html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
         
         type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,10,10,15]
+        col_size_list = [10,10,10,10,10,15]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -608,17 +607,17 @@ class Jaccard:
                     q = qi.name
                     qlen = str(len(qi))
                     if self.plist[ty][r][q] < 0.05:
-                        data_table.append([r,rlen,q,qlen,"x"+str(self.rt),
+                        data_table.append([r,rlen,q,qlen,
                                            value2str(self.realj[ty][r][q]),
                                            "<font color=\"red\">"+value2str(self.plist[ty][r][q])+"</font>"])
                     else:
-                        data_table.append([r,q,"x"+str(self.rt),
+                        data_table.append([r,q,
                                            value2str(self.realj[ty][r][q]),
                                            value2str(self.plist[ty][r][q])])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"jaccard.html"))
 
 ###########################################################################################
@@ -836,19 +835,19 @@ class Intersect:
     def gen_html(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d)
+        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
         #html.create_header()
         #html.add_heading(title)
         html.add_figure("intersection_bar.png", align="center")
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
-        
         header_list = ["Reference<br>name",
                        "Ref<br>number", 
                        "Query<br>name", 
                        "Que<br>number", 
-                       "Intersection<br>(% of Ref)",
+                       "Intersect.",
+                       "Proportion <br>of Ref",
                        "Ref+<br>Que-",
                        "Ref-<br>Que+"]
         
@@ -859,8 +858,8 @@ class Intersect:
             html.add_free_content(['<p style=\"margin-left: '+str(align)+'"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         else: pass
         
-        type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,15,5,5,10,10,15]
+        type_list = 'ssssssssssss'
+        col_size_list = [10,10,10,10,15,10,5,5,10,10,15]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -869,32 +868,31 @@ class Intersect:
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
                     aveinter = str(self.test_d[ty][r][q][4])
-                    chisqua = "{:.2f}".format(self.test_d[ty][r][q][5])
-                    if self.test_d[ty][r][q][6] > 0.0001: pv = "{:.2f}".format(self.test_d[ty][r][q][6])
-                    else: pv = "{:.2e}".format(self.test_d[ty][r][q][6])
+                    chisqua = value2str(self.test_d[ty][r][q][5])
+                    pv = value2str(self.test_d[ty][r][q][6])
                     
                     if self.test_d and self.test_d[ty][r][q][6] < 0.05:
                          data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
                                            str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
                                            aveinter, 
                                            chisqua, 
                                            "<font color=\"red\">"+pv+"</font>"])
                     elif self.test_d and self.test_d[ty][r][q][6] >= 0.05:
                         data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
                                            str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
                                            aveinter, 
                                            chisqua, 
                                            pv])
                     else:
                         data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]) + "({:.2f}%)".format(100*self.percentage[ind_ty][r][q]),
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
                                            str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2])])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"intersection.html"))
         
     
@@ -972,20 +970,26 @@ class Intersect:
                 nr = len(r)
                 for q in self.groupedquery[ty]:
                     nq = len(q)
-                    #print(len(q))
                     qn = q.name
                     q.combine(r)
                     n = len(q)
+                    #print("r: "+str(nr) + "  q:"+str(nq) +"   total:"+str(n))
+                    # True intersection
+                    c = self.counts[ty][r.name][q.name][2]
+                    obs = [c, nr-c, nq-c]
+                    #obs = [o/n for o in obs]
+                    # Randomization
                     d = []
                     for i in range(repeat):
                         random = q.random_subregions(size=len(r))
                         inter = random.intersect(r,mode=OverlapType.ORIGINAL)
                         ni = len(inter)
-                        d.append(ni/n)
-                    # Possibility of r 
-                    posib = nr/n
+                        d.append([ni, nr-ni, nq-ni])
+                    da = numpy.array(d)
+                    exp_m = numpy.mean(da, axis=0)
+                    #exp_m = [m/n for m in exp_m] # into frequency
                     # Chi-squire test
-                    chisq, p = mstats.chisquare(f_exp=d,f_obs=[posib]*repeat)
+                    chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
                     
                     self.test_d[ty][r.name][qn] = [r.name,nr,qn,nq,ni,chisq,p]
                     print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))

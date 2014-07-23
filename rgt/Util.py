@@ -3,6 +3,7 @@ import os
 import sys
 import ConfigParser
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
+import shutil
 
 """
 The Util classes contains many utilities needed by other classes
@@ -432,13 +433,14 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, cluster_path_fix=""):
+    def __init__(self, name, links_dict, relative_dir=None, cluster_path_fix=""):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
 
         Variables:
         xxxxx -- Position Frequency Matrix.
+        relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it. Default is None.
         """
 
         # Variable initializations
@@ -447,12 +449,26 @@ class Html:
         self.cluster_path_fix = cluster_path_fix
         self.document = []
         self.image_data = ImageData()
-
+        
         # Initialize document
-        self.create_header()
+        if relative_dir:
+            pf = relative_dir
+            self.copy_relevent_files(os.path.join(pf,"fig"))
+            self.create_header(relative_dir="../fig")
+        else:
+            self.create_header()
         self.add_links()
         
-    def create_header(self):
+        
+    def copy_relevent_files(self, target_dir):
+        try:
+            os.stat(target_dir)
+        except:
+            os.mkdir(target_dir)
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
+        
+    def create_header(self, relative_dir=None):
         """ 
         Creates default document header.
         
@@ -464,14 +480,25 @@ class Html:
 
         self.document.append("<style type=\"text/css\">")
         self.document.append("<!--")
-        self.document.append("@import url(\""+self.cluster_path_fix+self.image_data.get_css_file()+"\");")
+        
+        if relative_dir:
+            self.document.append("@import url(\""+relative_dir+"/style.css\");")
+        else:
+            self.document.append("@import url(\""+self.cluster_path_fix+self.image_data.get_css_file()+"\");")
+        
         self.document.append("-->")
         self.document.append("</style></head>")
         self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")
         self.document.append("<h3 style=\"background-color:white; border-top:5px solid black; border-bottom: 5px solid black;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
-        self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+        
+        if relative_dir:
+            self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
+            print("ggg")
+        else:
+            self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+        
         self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
         self.document.append("  </tr>")
         self.document.append("</table>")
