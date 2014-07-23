@@ -3,10 +3,12 @@
 # Libraries
 ###################################################################################################
 
+# Python
+from multiprocessing import Pool
+
 # Internal
 from .. GeneSet import GeneSet
 from .. Util import ErrorHandler, OverlapType
-from multiprocessing import Pool
 
 # External
 from numpy import asarray, argsort, sum, arange, nonzero, minimum, maximum, int64, any, nan, inf, abs
