@@ -58,6 +58,11 @@
 === footprint ===
   * EG - Include overlap and merge in code again after bug correction.
 
+=== motifanalysisnew ===
+  * EG - Keep original gene names for GO search.
+  * EG - --enrichment is using too much memory.
+  * EG - Separate randtest from genetest (links and labels)
+
 == Data ==
 
   * EG - Include UCSC binaries.
