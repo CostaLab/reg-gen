@@ -50,7 +50,8 @@ class ExperimentalMatrix:
         for line in f:
             line = line.strip("\n")
             line = line.strip(" ")
-            line = line.split("\t")
+            line = line.split()
+            
             if len(line) < 3:  # Skip the row which has insufficient information
                 print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                 continue

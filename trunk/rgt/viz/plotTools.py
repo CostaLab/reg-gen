@@ -23,6 +23,7 @@ from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
+from rgt.motifanalysisnew.Statistics import multiple_test_correction
 
 # Local test
 dir = os.getcwd()
@@ -180,15 +181,16 @@ def group_refque(rEM, qEM, groupby):
         groupedquery["All"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
-def count_intersect(bed1, bed2, mode_intersection="OVERLAP", mode_count="count", threshold=0):
-    mode = eval("OverlapType." + mode_intersection)
-    intersect_r = bed1.intersect(bed2, mode)
+def count_intersect(bed1, bed2, mode_count="count", threshold=0):
+    
     if mode_count=="count":
+        intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
         c_inter = len(intersect_r)
         c_12 = len(bed1) - c_inter
         c_21 = len(bed2) - c_inter
         return c_12, c_21, c_inter
     elif mode_count=="bp":
+        intersect_r = bed1.intersect(bed2, mode=OverlapType.OVERLAP)
         len_inter = intersect_r.total_coverage()
         allbed1 = bed1.total_coverage()
         allbed2 = bed2.total_coverage()
@@ -275,8 +277,11 @@ def subtable_format(ty):
 def value2str(value):
     if(isinstance(value,int)): r = str(value)
     elif(isinstance(value,float)):
-        if value > 0.0001: r = "{:.4f}".format(value)
-        else: r = "{:.4e}".format(value)
+        if value >= 1000: r = "{}".format(int(value))
+        elif 1000 > value > 10: r = "{:.1f}".format(value)
+        elif 10 > value >= 1: r = "{:.2f}".format(value)
+        elif 1 > value > 0.0001: r = "{:.4f}".format(value)
+        else: r = "{:.2e}".format(value)
     return r
 
 ###########################################################################################
@@ -362,6 +367,8 @@ class Projection:
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     y = self.qlist[ty][r][q]
+                    if y == 0 and logt == True: y = 0.000001
+                    print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
                     ax[ind_ty].bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
             if logt:
                 ax[ind_ty].set_yscale('log')
@@ -389,17 +396,18 @@ class Projection:
         html.add_figure("projection_test.png", align="center")
         
         header_list = ["Reference<br>name",
-                       "Ref<br>number", 
                        "Query<br>name", 
+                       "Ref<br>number",
                        "Que<br>number", 
                        "Background<br>proportion",
                        "Proportion",
-                       "p-value"]
+                       "Positive<br>association<br>p-value",
+                       "Negative<br>association<br>p-value"]
         
         html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
         
-        type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,10,10,15]
+        type_list = 'sssssssssss'
+        col_size_list = [10,10,10,10,10,10,15,15]
         data_table = []
         for ind_ty, ty in enumerate(self.plist.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -410,11 +418,15 @@ class Projection:
                     backv = value2str(self.qlist[ty][r]['Background'])
                     propor = value2str(self.qlist[ty][r][q])
                     pv = value2str(self.plist[ty][r][q])
+                    pvn = value2str(1 - self.plist[ty][r][q])
                     
                     if self.plist[ty][r][q] < 0.05:
-                        data_table.append([r,rlen,q,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>"])
+                        if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
+                            data_table.append([r,q,rlen,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>", pvn])
+                        else:
+                            data_table.append([r,q,rlen,qlen,backv,propor,pvn, "<font color=\"red\">"+pv+"</font>"])
                     else:
-                        data_table.append([r,q,backv,propor,pv])
+                        data_table.append([r,q,rlen,qlen,backv,propor,pv,"-"])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -625,7 +637,7 @@ class Jaccard:
 ###########################################################################################
 
 class Intersect:
-    def __init__(self, referenceEM, queryEM, mode_intersect, mode_count, organism):
+    def __init__(self, referenceEM, queryEM, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(referenceEM)
         self.qEM.read(queryEM)
@@ -634,7 +646,6 @@ class Intersect:
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
-        self.mode_intersect = mode_intersect
         self.mode_count = mode_count
         self.organism = organism
         self.sbar = None
@@ -684,7 +695,7 @@ class Intersect:
                     elif self.mode_count == "count": qlen = len(q)
                     self.qlen[ty][q.name] = qlen
                     # Define different mode of intersection and count here
-                    c = count_intersect(r,q,mode_intersection= self.mode_intersect, mode_count=self.mode_count, threshold=threshold)
+                    c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
                     self.counts[ty][r.name][q.name] = c
                     print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
 
@@ -809,12 +820,16 @@ class Intersect:
                     sumlength = len(self.rEM.objectsDict[r])
                 self.percentage[ai][r] = {}
                 
-                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
-                    x = ind_r
-                    y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
-                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
-                    bottom = bottom + y
-                    self.percentage[ai][r][q] = y
+                if sumlength == 0:
+                    for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                        self.percentage[ai][r][q] = "ref is empty"
+                else:
+                    for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                        x = ind_r
+                        y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
+                        ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
+                        bottom = bottom + y
+                        self.percentage[ai][r][q] = y
                 ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
@@ -843,13 +858,11 @@ class Intersect:
         if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
         header_list = ["Reference<br>name",
-                       "Ref<br>number", 
                        "Query<br>name", 
+                       "Ref<br>number", 
                        "Que<br>number", 
                        "Intersect.",
-                       "Proportion <br>of Ref",
-                       "Ref+<br>Que-",
-                       "Ref-<br>Que+"]
+                       "Proportion <br>of Ref"]
         
         html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
         
@@ -858,8 +871,8 @@ class Intersect:
             html.add_free_content(['<p style=\"margin-left: '+str(align)+'"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         else: pass
         
-        type_list = 'ssssssssssss'
-        col_size_list = [10,10,10,10,15,10,5,5,10,10,15]
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,15,10,10,10,15]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -872,23 +885,20 @@ class Intersect:
                     pv = value2str(self.test_d[ty][r][q][6])
                     
                     if self.test_d and self.test_d[ty][r][q][6] < 0.05:
-                         data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
+                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
-                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
                                            aveinter, 
                                            chisqua, 
                                            "<font color=\"red\">"+pv+"</font>"])
                     elif self.test_d and self.test_d[ty][r][q][6] >= 0.05:
-                        data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
+                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
-                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2]),
                                            aveinter, 
                                            chisqua, 
                                            pv])
                     else:
-                        data_table.append([r,str(self.rlen[ty][r]), q, str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
-                                           str(self.rlen[ty][r]-self.counts[ty][r][q][2]), str(self.qlen[ty][q]-self.counts[ty][r][q][2])])
+                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q])])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -964,7 +974,7 @@ class Intersect:
         
         for ty in self.groupedreference.keys():
             self.test_d[ty] = {}
-            
+            plist = []
             for r in self.groupedreference[ty]:
                 self.test_d[ty][r.name] = {}
                 nr = len(r)
@@ -975,8 +985,8 @@ class Intersect:
                     n = len(q)
                     #print("r: "+str(nr) + "  q:"+str(nq) +"   total:"+str(n))
                     # True intersection
-                    c = self.counts[ty][r.name][q.name][2]
-                    obs = [c, nr-c, nq-c]
+                    
+                    obs = self.counts[ty][r.name][q.name]
                     #obs = [o/n for o in obs]
                     # Randomization
                     d = []
@@ -984,16 +994,30 @@ class Intersect:
                         random = q.random_subregions(size=len(r))
                         inter = random.intersect(r,mode=OverlapType.ORIGINAL)
                         ni = len(inter)
-                        d.append([ni, nr-ni, nq-ni])
+                        d.append([nr-ni, nq-ni, ni])
                     da = numpy.array(d)
+                    
                     exp_m = numpy.mean(da, axis=0)
                     #exp_m = [m/n for m in exp_m] # into frequency
                     # Chi-squire test
-                    chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
+                    print("    exp: "+ str(exp_m) + "obs: "+str(obs))
+                    #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
+                    chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                     
+                    plist.append(p)
                     self.test_d[ty][r.name][qn] = [r.name,nr,qn,nq,ni,chisq,p]
-                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
-                    
+                    #print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
+            
+            reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
+            c_p = 0
+            print2(self.parameter,"*** Permutational test with Multitest correction ***")
+            for r in self.groupedreference[ty]:
+                for q in self.groupedquery[ty]:
+                    self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
+                    c_p += 1
+            
+                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][q.name]))
+                  
 
                     
 ###########################################################################################
