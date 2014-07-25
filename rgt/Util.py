@@ -253,6 +253,8 @@ class ImageData(ConfigurationFile):
         self.rgt_logo = os.path.join(self.data_dir,"fig","rgt_logo.gif")
         self.css_file = os.path.join(self.data_dir,"fig","style.css")
         self.default_motif_logo = os.path.join(self.data_dir,"fig","default_motif_logo.png")
+        self.sorttable_code = os.path.join(self.data_dir,"fig","sorttable.js")
+        
 
     def get_rgt_logo(self):
         """
@@ -269,6 +271,12 @@ class ImageData(ConfigurationFile):
     def get_default_motif_logo(self):
         """
         Returns the default motif logo file location.
+        """
+        return self.default_motif_logo
+    
+    def get_sorttable_file(self):
+        """
+        Returns the default sorttable code location.
         """
         return self.default_motif_logo
 
@@ -467,6 +475,8 @@ class Html:
             os.mkdir(target_dir)
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"sorttable.js"))
+        
         
     def create_header(self, relative_dir=None):
         """ 
@@ -475,6 +485,9 @@ class Html:
         Return:
         None -- Appends content to the document.
         """
+        
+        
+        
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
 
@@ -489,13 +502,21 @@ class Html:
         self.document.append("-->")
         self.document.append("</style></head>")
         self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")
+        
+        # sorting codes
+        if relative_dir:
+            self.document.append("<script src=\""+relative_dir+"/sorttable.js\"></script>")
+        else:
+            self.document.append("<script src=\""+self.cluster_path_fix+self.image_data.sorttable_code()+"\"></script>")
+        
+        
         self.document.append("<h3 style=\"background-color:white; border-top:5px solid black; border-bottom: 5px solid black;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
         
         if relative_dir:
             self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
-            print("ggg")
+
         else:
             self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
         
@@ -598,7 +619,7 @@ class Html:
         else: pass # TODO ERROR
         
         # Table header
-        self.document.append("<table id=\"hor-zebra\">")
+        self.document.append("<table id=\"hor-zebra\" class=\"sortable\">")
         self.document.append("  <thead><tr>")
         header_str = []
         for i in range(0,len(header_list)):

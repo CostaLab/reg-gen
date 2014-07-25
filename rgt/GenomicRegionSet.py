@@ -74,7 +74,7 @@ class GenomicRegionSet:
                 try:
                     name, orientation, data = None, None, None
                     line = line.strip("\n")
-                    line = line.split("\t")
+                    line = line.split()
                     size = len(line)
                     chrom = line[0]
                     start, end = int(line[1]), int(line[2])
@@ -408,7 +408,7 @@ class GenomicRegionSet:
         return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
     """
 
-    def intersect(self,y,mode=OverlapType.OVERLAP):
+    def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
         
         (mode = OverlapType.OVERLAP) 
@@ -486,6 +486,7 @@ class GenomicRegionSet:
                         z.add(s)
                     else:
                         pass    
+                
                 if s.final >= ss.final:
                     try:
                         ss = con_y.next()
@@ -507,6 +508,13 @@ class GenomicRegionSet:
                     ss = con_y.next()
                 except:
                     cont_loop = False
+            elif s == ss:
+                try: s = con_self.next() 
+                except:
+                    try: ss = con_y.next()
+                    except: cont_loop = False
+        
+        if rm_duplicates: z.remove_duplicates()
         #z.sort()
         return z
     

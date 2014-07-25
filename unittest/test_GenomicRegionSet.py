@@ -177,20 +177,20 @@ class TestGenomicRegionSet(unittest.TestCase):
         B : ------
         R : ------
         """
-        self.region_sets([['chr1',1,10]],
-                         [['chr1',1,10]])
-        result = self.setA.intersect(self.setB)
-        self.assertEqual(len(result.sequences), 1)
+        self.region_sets([['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]],
+                         [['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]])
+        result = self.setA.intersect(self.setB, mode=OverlapType.OVERLAP, rm_duplicates=True)
+        self.assertEqual(len(result.sequences), 6)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         
         result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
-        self.assertEqual(len(result.sequences), 1)
+        self.assertEqual(len(result.sequences), 5)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
-        self.assertEqual(len(result.sequences), 1)
+        self.assertEqual(len(result.sequences), 5)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
         """

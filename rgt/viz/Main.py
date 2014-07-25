@@ -163,11 +163,6 @@ def main():
                                   'count' outputs the number of overlapped regions.\
                                   'bp' outputs the coverage(basepair) of intersection.")
     parser_intersect.add_argument('-tc', type=int, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    #parser_intersect.add_argument('-mi', default="OVERLAP", choices=['OVERLAP','ORIGINAL','COMP_INCL'], 
-    #                              help="Define the mode for intersection. \
-    #                              'OVERLAP' defines the true intersections which are included in both reference and query, \
-    #                              'ORIGINAL' defines the intersection as the regions of reference which have any intersections with query,\
-    #                              'COMP_INCL' defines the intersection as the regions of query which are completely included by reference.")
     #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
     #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -350,7 +345,7 @@ def main():
     if args.mode == 'intersect':
         print("\n############ Intersection Test ############")
         # Fetching reference and query EM
-        inter = Intersect(args.reference,args.query,mode_intersect = "OVERLAP", mode_count=args.m, organism=args.organism)
+        inter = Intersect(args.reference,args.query, mode_count=args.m, organism=args.organism)
         inter.background(args.bg)
         inter.group_refque(args.g)
         if args.comb:
