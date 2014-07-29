@@ -253,7 +253,8 @@ class ImageData(ConfigurationFile):
         self.rgt_logo = os.path.join(self.data_dir,"fig","rgt_logo.gif")
         self.css_file = os.path.join(self.data_dir,"fig","style.css")
         self.default_motif_logo = os.path.join(self.data_dir,"fig","default_motif_logo.png")
-        self.sorttable_code = os.path.join(self.data_dir,"fig","sorttable.js")
+        self.tablesorter = os.path.join(self.data_dir,"fig","jquery.tablesorter.min.js")
+        self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
         
 
     def get_rgt_logo(self):
@@ -279,7 +280,20 @@ class ImageData(ConfigurationFile):
         Returns the default sorttable code location.
         """
         return self.default_motif_logo
+    
+    def get_jquery(self):
+        """
+        Returns the default sorttable code location.
+        """
+        return self.jquery
 
+    def get_tablesorter(self):
+        """
+        Returns the default sorttable code location.
+        """
+        return self.tablesorter
+    
+    
 class OverlapType:
     """
     Class of overlap type constants.
@@ -475,7 +489,9 @@ class Html:
             os.mkdir(target_dir)
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"sorttable.js"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
+        
         
         
     def create_header(self, relative_dir=None):
@@ -486,7 +502,21 @@ class Html:
         None -- Appends content to the document.
         """
         
+                # sorting codes
+        if relative_dir:
+            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
+            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
+        else:
+            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
+            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
         
+        self.document.append('<script type="text/javascript">') 
+        self.document.append('$(document).ready(function()') 
+        self.document.append('    { ') 
+        self.document.append('        $("#hor-zebra").tablesorter(); ') 
+        self.document.append('    } ') 
+        self.document.append('); ') 
+        self.document.append('</script>') 
         
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
@@ -501,15 +531,7 @@ class Html:
         
         self.document.append("-->")
         self.document.append("</style></head>")
-        self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")
-        
-        # sorting codes
-        if relative_dir:
-            self.document.append("<script src=\""+relative_dir+"/sorttable.js\"></script>")
-        else:
-            self.document.append("<script src=\""+self.cluster_path_fix+self.image_data.sorttable_code()+"\"></script>")
-        
-        
+        self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")        
         self.document.append("<h3 style=\"background-color:white; border-top:5px solid black; border-bottom: 5px solid black;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
@@ -619,7 +641,8 @@ class Html:
         else: pass # TODO ERROR
         
         # Table header
-        self.document.append("<table id=\"hor-zebra\" class=\"sortable\">")
+        #self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
+        self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\">")
         self.document.append("  <thead><tr>")
         header_str = []
         for i in range(0,len(header_list)):
