@@ -61,7 +61,8 @@
 === motifanalysisnew ===
   * EG - Keep original gene names for GO search.
   * EG - --enrichment is using too much memory.
-  * EG - Separate randtest from genetest (links and labels)
+  * EG - Separate randtest from genetest (links and labels).
+  * EG - Create new table with javascript from JK.
 
 == Data ==
 
