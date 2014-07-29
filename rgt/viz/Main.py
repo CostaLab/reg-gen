@@ -117,21 +117,21 @@ def main():
     parser_projection.add_argument('output', help=helpoutput) 
     parser_projection.add_argument('-r', '--reference',help=helpreference)
     parser_projection.add_argument('-q', '--query', help=helpquery)
-    parser_projection.add_argument('-t','--title', default='projection_test', help=helptitle)
+    parser_projection.add_argument('-t', '--title', default='projection_test', help=helptitle)
     parser_projection.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    #parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+    #parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
     ################### Jaccard test ##########################################
     
-    parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluate the association level by comparing with jaccard index from repeating randomization.')
+    parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.')
     
     parser_jaccard.add_argument('output', help=helpoutput) 
     parser_jaccard.add_argument('-r', '--reference',help=helpreference)
@@ -143,9 +143,10 @@ def main():
     parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    #parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+    #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+    parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -282,9 +283,10 @@ def main():
     
     parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     parameter.append("User: " + getpass.getuser())
-    try: parameter.append("Project: " + args.output)
-    except: pass
-    parameter.append("\nCommand:\n   $ python " + " ".join(sys.argv))
+    parameter.append("Project: " + args.output)
+    parameter.append("Title: " + args.title)
+    
+    parameter.append("\nCommand:\n   $ " + " ".join(sys.argv))
     parameter.append("")
     
     ################### Projection test ##########################################
@@ -296,19 +298,23 @@ def main():
         projection.colors(args.c, args.color)
         if args.intersect: 
             projection.ref_inter()
-            qlist = projection.projection_test(organism = args.organism)
+            projection.projection_test(organism = args.organism)
             print2(projection.parameter, "Taking intersect of references as the background. ")
         else:
-            qlist = projection.projection_test(organism = args.organism)
-    
-        if args.pdf:
-            projection.plot(args.nlog)
-            output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci(),pdf=args.pdf,show=args.show)
-        if args.html:
-            projection.gen_html(args.output, args.title)
+            projection.projection_test(organism = args.organism)
+        
+        # generate pdf
+        projection.plot(args.nlog)
+        output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci(),pdf=True,show=args.show)
+        
+        # generate html 
+        projection.gen_html(args.output, args.title)
+        
         if args.table:
             projection.table(directory = args.output, folder = args.title)
+            
         parameter = parameter + projection.parameter
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
@@ -328,16 +334,20 @@ def main():
         jaccard.group_refque(args.g)
         jaccard.colors(args.c, args.color)
         
-        
+        # jaccard test
         jaccard.jaccard_test(args.runtime, args.organism)
         parameter = parameter + jaccard.parameter
         t1 = time.time()
-        if args.pdf:
-            jaccard.plot(logT=args.nlog)
-            for i,f in enumerate(jaccard.fig):
-                output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci(),pdf=args.pdf,show=args.show)
-        if args.html:
-            jaccard.gen_html(args.output, args.title)
+        # ploting and generate pdf
+        jaccard.plot(logT=args.nlog)
+        for i,f in enumerate(jaccard.fig):
+            output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci(),pdf=True,show=args.show)
+        # generate html
+        jaccard.gen_html(args.output, args.title)
+        
+        if args.table:
+            jaccard.table(directory = args.output, folder = args.title)
+        
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         
