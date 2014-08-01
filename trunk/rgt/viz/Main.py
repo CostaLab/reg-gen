@@ -163,18 +163,47 @@ def main():
                                   help="Define the mode of calculating intersection. \
                                   'count' outputs the number of overlapped regions.\
                                   'bp' outputs the coverage(basepair) of intersection.")
-    parser_intersect.add_argument('-tc', type=int, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
+    parser_intersect.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
+    parser_intersect.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
     #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
     #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
-    parser_intersect.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
+    #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+    #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_intersect.add_argument('-comb', action="store_true", help='Calculate intersections of all combinations of references.')
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
+
+    ################### Combinatorial Test ##########################################
+    parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
     
+    parser_combinatorial.add_argument('output', help=helpoutput)
+    parser_combinatorial.add_argument('-r', '--reference',help=helpreference)
+    parser_combinatorial.add_argument('-q', '--query', help=helpquery)
+    parser_combinatorial.add_argument('-t','--title', default='combinatorial_test', help=helptitle)
+    parser_combinatorial.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+    parser_combinatorial.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
+    parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_combinatorial.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    parser_combinatorial.add_argument('-m', default="count", choices=['count','bp'],
+                                      help="Define the mode of calculating intersection. \
+                                      'count' outputs the number of overlapped regions.\
+                                      'bp' outputs the coverage(basepair) of intersection.")
+    parser_combinatorial.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
+    parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
+    #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
+    #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
+    parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+    parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
+    #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+    #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_combinatorial.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
+    parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+    #parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    
+
     ################### Boxplot ##########################################
     
     parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
@@ -188,8 +217,8 @@ def main():
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
-    parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    #parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+    #parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_boxplot.add_argument('-p','--pvalue', type=float, default=0.05, help='Define the significance level for multiple test. Default: 0.01')
     parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_boxplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
@@ -215,8 +244,8 @@ def main():
     parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
     #parser_lineplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    #parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+    #parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -244,8 +273,8 @@ def main():
     parser_heatmap.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
     parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
-    parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    #parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
+    #parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -356,34 +385,81 @@ def main():
         print("\n############ Intersection Test ############")
         # Fetching reference and query EM
         inter = Intersect(args.reference,args.query, mode_count=args.m, organism=args.organism)
+        # Setting background
         inter.background(args.bg)
+        # Grouping
         inter.group_refque(args.g)
+        
+        # Extension
+        if args.ex == 0: pass
+        elif args.ex > 0: inter.extend_ref(args.ex)
+        elif args.ex < 0: 
+            print("\n**** extension percentage(-ex) should be positive value, not negative.\n")
+            sys.exit(1)
+        # Combinatorial 
         if args.comb:
             print("Generating all combinatorial regions for further analysis...")
             inter.combinatorial()
         inter.colors(args.c, args.color)
         inter.count_intersect(threshold=args.tc)
         
-        if args.pdf:
-            inter.barplot(args.log)
-            output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=args.pdf,show=args.show)
-            #if args.stackedbar:
-            inter.stackedbar()
-            output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=args.pdf,show=args.show)
-            #if args.pbar:
-            inter.percentagebar()
-            output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci(),pdf=args.pdf,show=args.show)
+        # generate pdf
+        inter.barplot(args.log)
+        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
+        #if args.stackedbar:
+        inter.stackedbar()
+        output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
+        #if args.pbar:
+        #inter.percentagebar()
+        #output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci(),pdf=True,show=args.show)
         
         if args.stest > 0:
-            inter.stest(repeat=args.stest)
+            inter.stest(repeat=args.stest,threshold=args.tc)
         
-        if args.html:
-            inter.gen_html(args.output, args.title, align=50)
+        # generate html
+        inter.gen_html(args.output, args.title, align=50)
+        
         parameter = parameter + inter.parameter
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
+    ################### Combinatorial Test ##########################################
+    if args.mode == 'combinatorial':
+        print("\n############ Combinatorial Test ############")
+        # Fetching reference and query EM
+        inter = Intersect(args.reference,args.query, mode_count=args.m, organism=args.organism)
+        # Setting background
+        inter.background(args.bg)
+        # Grouping
+        inter.group_refque(args.g)
+        
+        # Extension
+        if args.ex == 0: pass
+        elif args.ex > 0: inter.extend_ref(args.ex)
+        elif args.ex < 0: 
+            print("\n**** extension percentage(-ex) should be positive value, not negative.\n")
+            sys.exit(1)
+        # Combinatorial 
+        print2(parameter, "Generating all combinatorial regions for further analysis...")
+        inter.combinatorial()
+        inter.colors(args.c, args.color)
+        inter.count_intersect(threshold=args.tc)
+        
+        # generate pdf
+        inter.barplot(args.log)
+        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
+        #if args.stackedbar:
+        inter.stackedbar()
+        output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
+        
+        # generate html
+        inter.gen_html_comb(args.output, args.title, align=50)
+        
+        parameter = parameter + inter.parameter
+        t1 = time.time()
+        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Boxplot ##########################################
     if args.mode == 'boxplot':
@@ -422,11 +498,11 @@ def main():
         boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         boxplot.group_data()
         boxplot.color_map(colorby=args.c, definedinEM=args.color)
-        boxplot.plot(title=args.title,html=args.html, logT=args.nlog, sy=args.sy)
+        boxplot.plot(title=args.title,html=True, logT=args.nlog, sy=args.sy)
         if args.table: boxplot.print_table(directory=args.output, folder=args.title)
-        output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci(),pdf=args.pdf,show=args.show)
+        output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
         # HTML
-        if args.html: boxplot.gen_html(args.output, args.title, args.pvalue)
+        boxplot.gen_html(args.output, args.title, args.pvalue)
         t5 = time.time()
         print2(parameter,"    --- finished in {0:.3f} secs\n".format(t5-t4))
         print2(parameter,"Total running time is : " + str(datetime.timedelta(seconds=round(t5-t0))))
@@ -467,8 +543,8 @@ def main():
         print2(parameter, "\nStep 3/3: Plotting the lineplots")
         lineplot.colormap(colorby = args.c, definedinEM = args.color)
         lineplot.plot(groupby=args.g, colorby=args.c, output=args.output, printtable=args.table, sy=args.sy)
-        output(f=lineplot.fig, directory = args.output, folder = args.title, filename="lineplot",extra=plt.gci(),pdf=args.pdf,show=args.show)
-        if args.html: lineplot.gen_html(args.output, args.title)
+        output(f=lineplot.fig, directory = args.output, folder = args.title, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
+        lineplot.gen_html(args.output, args.title)
         t3 = time.time()
         print2(parameter, "    --- finished in {0:.2f} secs".format(t3-t2))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
@@ -517,8 +593,8 @@ def main():
         lineplot.hmcmlist(colorby = args.c, definedinEM = args.color)
         lineplot.heatmap(args.log)
         for i, name in enumerate(lineplot.hmfiles):
-            output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name,pdf=args.pdf,show=args.show)
-        if args.html: lineplot.gen_htmlhm(args.output, args.title)
+            output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name,pdf=True,show=args.show)
+        lineplot.gen_htmlhm(args.output, args.title)
         t4 = time.time()
         print2(parameter, "    --- finished in {0:.2f} secs".format(t4-t3))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=t4-t0)))

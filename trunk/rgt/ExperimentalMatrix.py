@@ -65,8 +65,10 @@ class ExperimentalMatrix:
                 try:
                     d[line[fi]].append(line[0])
                 except:
-                    d[line[fi]] = [line[0]]
-        
+                    try:
+                        d[line[fi]] = [line[0]]
+                    except:
+                        continue
         self.types = numpy.array(self.types)
         self.names = numpy.array(self.names)
         self.load_objects(is_bedgraph, verbose=verbose)
