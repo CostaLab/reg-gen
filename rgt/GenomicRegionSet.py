@@ -51,11 +51,18 @@ class GenomicRegionSet:
     def __iter__(self):
         return iter(self.sequences)
 
-    def extend(self,left,right):
-        """Perform extend step for every element"""
-        for s in self.sequences:
-            s.extend(left,right)
-
+    def extend(self,left,right, percentage=False):
+        """Perform extend step for every element
+        
+        percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
+        """
+        if percentage > -50:
+            for s in self.sequences:
+                s.extend(int(len(s)*left/100),int(len(s)*right/100))
+        else:
+            for s in self.sequences:
+                s.extend(left,right)
+    
     def sort(self):
         """Sort Elements by criteria defined by a GenomicRegion"""
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
@@ -453,10 +460,9 @@ class GenomicRegionSet:
             y              ----------      ---------------              ----
             Result                                ------
         """
-        if len(self) == 0 or len(y) == 0:
-            return GenomicRegionSet(self.name + '_' + y.name)
-        z = GenomicRegionSet(self.name + '_' + y.name)
         
+        z = GenomicRegionSet(self.name + ' & ' + y.name)
+        if len(self) == 0 or len(y) == 0: return z
         # If there is overlap within self or y, they should be merged first. 
         if self.sorted == False: self.sort()
         if y.sorted == False: y.sort()
@@ -604,12 +610,12 @@ class GenomicRegionSet:
         # Find their intersections
         return extended_self.intersect(y)
     
-    def subtract(self,y):
+    def subtract(self,y,whole_region=False):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
         Keyword arguments:
         y -- the GenomicRegionSet which to subtract by
-        
+        whole_region -- subtract the whole region, not partially
         Return:
         z -- the remaining regions of self after subtraction
         
@@ -620,11 +626,11 @@ class GenomicRegionSet:
         
         """
         if len(self) == 0:
-            return GenomicRegionSet(self.name + '-' + y.name)
+            return GenomicRegionSet(self.name + ' - ' + y.name)
         elif len(y) == 0:
             return self
         else:
-            z = GenomicRegionSet(self.name + '-' + y.name)
+            z = GenomicRegionSet(self.name + ' - ' + y.name)
             if self.sorted == False: self.sort()
             if y.sorted == False: y.sort()
             con_self = self.__iter__()
@@ -635,49 +641,35 @@ class GenomicRegionSet:
             while cont_loop:
                 # When the regions overlap
                 if s.overlap(ss):
-                    if s.initial < ss.initial:
-                        z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=ss.initial))
-                    if s.final > ss.final:
-                        s.initial = ss.final
-                        try:
-                            ss = con_y.next()
-                            pass
-                        except:
-                            z.add(GenomicRegion(chrom=s.chrom, initial=ss.final, final=s.final))
-                            try:
-                                s = con_self.next()
-                                pass
-                            except:
-                                cont_loop = False
+                    if whole_region:
+                        try: s = con_self.next()
+                        except:  cont_loop = False
                     else:
-                        try:
-                            s = con_self.next()
-                            pass
-                        except:
-                            cont_loop = False 
+                        if s.initial < ss.initial:
+                            z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=ss.initial))
+                        if s.final > ss.final:
+                            s.initial = ss.final
+                            try: ss = con_y.next()
+                            except:
+                                z.add(GenomicRegion(chrom=s.chrom, initial=ss.final, final=s.final))
+                                try: s = con_self.next()
+                                except: cont_loop = False
+                        else:
+                            try: s = con_self.next()
+                            except: cont_loop = False 
                 # When the region have no overlap
                 elif s < ss:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final))
-                    try:
-                        s = con_self.next()
-                        pass
+                    try: s = con_self.next()
                     except:
-                        try:
-                            ss = con_y.next()
-                            pass
-                        except:
-                            cont_loop = False
+                        try: ss = con_y.next()
+                        except: cont_loop = False
                 elif s > ss:
-                    try:
-                        ss = con_y.next()
-                        pass
+                    try: ss = con_y.next()
                     except:
                         z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final))
-                        try:
-                            s = con_self.next()
-                            pass
-                        except:
-                            cont_loop = False
+                        try: s = con_self.next()
+                        except: cont_loop = False
             #z.sort()
             return z
     
@@ -725,10 +717,12 @@ class GenomicRegionSet:
             z.add(prev_region)
             self.sequences = z.sequences
     
-    def combine(self,region_set):
+    def combine(self,region_set, change_name=True):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
         self.sequences.extend(region_set.sequences)
-        #self.name = self.name + "+" + region_set.name
+        if change_name:
+            if self.name == "" : self.name = region_set.name
+            else: self.name = self.name + " + " + region_set.name
         self.sorted = False
         
     def cluster(self,max_distance):

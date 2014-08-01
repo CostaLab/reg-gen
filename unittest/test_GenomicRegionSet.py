@@ -85,6 +85,18 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[3].initial, 60)
         self.assertEqual(result.sequences[3].final, 80)
         self.assertEqual(result.sequences[3].chrom, 'chr4')
+        """
+        One region
+        A :   -----
+        R : ---------
+        """
+        self.region_sets([['chr1',100,200]],
+                         [])
+        result = self.setA
+        result.extend(10,10,percentage=True)
+        self.assertEqual(len(result.sequences), 1)
+        self.assertEqual(result.sequences[0].initial, 90)
+        self.assertEqual(result.sequences[0].final, 210)
         
     def test_sort(self):
         self.region_sets([['chr1',15,20],['chr1',40,50],['chr1',65,75],['chr1',5,10]],

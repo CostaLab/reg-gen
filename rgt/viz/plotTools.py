@@ -9,6 +9,7 @@ import numpy
 from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse, HTML
 from collections import *
+import copy
 import statsmodels.sandbox.stats.multicomp as sm
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -181,14 +182,21 @@ def group_refque(rEM, qEM, groupby):
         groupedquery["All"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
-def count_intersect(bed1, bed2, mode_count="count", threshold=0):
+def count_intersect(bed1, bed2, mode_count="count", threshold=False):
     
     if mode_count=="count":
+        if 50 >= threshold > 0:
+            bed1.extend(-threshold,-threshold,percentage=True)
+        elif threshold > 50 or threshold < 0:
+            print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
+            sys.exit(1)
         intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
+        #intersect_r.remove_duplicates()
         c_inter = len(intersect_r)
         c_12 = len(bed1) - c_inter
         c_21 = len(bed2) - c_inter
         return c_12, c_21, c_inter
+        
     elif mode_count=="bp":
         intersect_r = bed1.intersect(bed2, mode=OverlapType.OVERLAP)
         len_inter = intersect_r.total_coverage()
@@ -213,38 +221,6 @@ def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
     aBC = BC.subtract(ABC)
     return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
-def combset(regions):
-    """ Input a list of regions, and return a list of regions with extra combinatorial sets
-    """
-    n = len(regions)
-    
-    # in_p: intersection part
-    # un_p: union part
-    # All combinatorial sets have a common form: in_p - un_p, for example, intersect(1,2) - union(3,4)
-    in_p = []
-    for l_in in range(1,n+1): # l is the length of in_p
-        
-        while l_in > 0:
-            for i in range(n):
-                in_p.append([i])        
-            l_in = l_in - 1
-    arr = numpy.empty(shape=(n,n),dtype=object)
-    newlist = []
-    for i in range(n):
-        for j in range(n):
-            arr[i,j] = copy.deepcopy(regions[i-j])
-            if j > 0 and j != n-1:
-                #print("+   "+arr[i,j].name)
-                #print("+   "+arr[i,j-1].name)
-                arr[i,j].combine(arr[i,j-1])
-                arr[i,j].merge()
-                newlist.append(arr[i,j])
-            if i == 0 and j == n-1:
-                arr[i,j].combine(arr[i,j-1])
-                arr[i,j].merge()
-                newlist.append(arr[i,j])
-    return newlist
-    
 def gen_html(outputname, title, htmlname, rows):
     ########## HTML ###################
     pd = os.path.join(dir,outputname,title)
@@ -703,6 +679,12 @@ class Intersect:
             self.color_tags = [n.name for n in self.groupedquery["All"]]
         else:
             self.color_tags = gen_tags(self.qEM, colorby)
+    
+    def extend_ref(self,percentage):
+        """percentage must be positive value"""
+        for ty in self.groupedreference:
+            for r in self.groupedreference[ty]:
+                r.extend(left=percentage,right=percentage,percentage=True)
         
     def count_intersect(self, threshold):
         self.counts = OrderedDict()
@@ -887,7 +869,7 @@ class Intersect:
         #html.add_heading(title)
         html.add_figure("intersection_bar.png", align="center")
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
-        if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
+        #if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
         header_list = ["Reference<br>name",
                        "Query<br>name", 
@@ -896,11 +878,13 @@ class Intersect:
                        "Intersect.",
                        "Proportion <br>of Ref"]
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
         
         if self.test_d: 
             header_list += ["Average<br>intersect.", "Chi-square<br>statistic", "p-value"]
-            html.add_free_content(['<p style=\"margin-left: '+str(align)+'"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
+            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
+                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         else: pass
         
         type_list = 'ssssssssss'
@@ -912,49 +896,101 @@ class Intersect:
                 r = ri.name
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
-                    aveinter = str(self.test_d[ty][r][q][4])
-                    chisqua = value2str(self.test_d[ty][r][q][5])
-                    pv = value2str(self.test_d[ty][r][q][6])
+                    pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
+                    if self.test_d:
+                        aveinter = str(self.test_d[ty][r][q][0])
+                        chisqua = value2str(self.test_d[ty][r][q][1])
+                        pv = value2str(self.test_d[ty][r][q][2])
+                        
                     
-                    if self.test_d and self.test_d[ty][r][q][6] < 0.05:
-                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
-                                           aveinter, 
-                                           chisqua, 
-                                           "<font color=\"red\">"+pv+"</font>"])
-                    elif self.test_d and self.test_d[ty][r][q][6] >= 0.05:
-                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q]),
-                                           aveinter, 
-                                           chisqua, 
-                                           pv])
+                        if self.test_d[ty][r][q][2] < 0.05:
+                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                               str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt),
+                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
+                        elif self.test_d[ty][r][q][2] >= 0.05:
+                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                               str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt),
+                                               aveinter, chisqua, pv])
                     else:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*self.percentage[ind_ty][r][q])])
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"intersection.html"))
+    
+    def gen_html_comb(self, outputname, title, align):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
+        #html.create_header()
+        #html.add_heading(title)
+        html.add_figure("intersection_bar.png", align="center")
+        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
+        header_list = ["Reference<br>name",
+                       "Query<br>name", 
+                       "Ref<br>number", 
+                       "Que<br>number", 
+                       "Intersect.",
+                       "Proportion <br>of Ref"]
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** </p>'])
+        
+        type_list = 'ssssssssss'
+        col_size_list = [10,10,10,10,15,10,10,10,15]
+        data_table = []
+        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+            html.add_heading(ty, size = 4, bold = False)
+            for ind_r,ri in enumerate(self.groupedreference[ty]):
+                r = ri.name
+                for ind_q, qi in enumerate(self.groupedquery[ty]):
+                    q = qi.name
+                    pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
+                    if self.test_d:
+                        aveinter = str(self.test_d[ty][r][q][0])
+                        chisqua = value2str(self.test_d[ty][r][q][1])
+                        pv = value2str(self.test_d[ty][r][q][2])
+                    
+                        if self.test_d[ty][r][q][2] < 0.05:
+                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                               str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
+                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
+                        elif self.test_d[ty][r][q][2] >= 0.05:
+                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                               str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
+                                               aveinter, chisqua, pv])
+                    else:
+                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
+        
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(fp,"combinatorial.html"))
     
     def posi2region(self, regions, p):
         all = range(len(regions))
-        inters = GenomicRegionSet(name="")
-        inters.get_genome_data(organism=self.organism, chrom_X=False, chrom_M=False)
+        new_r = GenomicRegionSet(name="")
         for r in p:
-            inters = inters.intersect(regions[r])
-            #print(len(inters))
-        inters.name = "_".join([regions[i].name for i in p])
-        np = [j for j in all if j not in p] # position for union
-        unions = GenomicRegionSet(name="")
-        for r in np:
-            #print("np "+ str(r))
-            unions.combine(regions[r])
-            #print(len(unions))
-        unions.name = "+".join([regions[i].name for i in np])
-        res = inters.subtract(unions)
-        return res
+            new_r.combine(regions[r])
+        return new_r
+    
+    def posi2set(self,regions, p):
+        all = range(len(regions))
+        inter_r = copy.deepcopy(regions[p[0]])
+
+        for i in all:
+            #print("inter_r: "+inter_r.name)
+            if i in p[1:]:
+                inter_r = inter_r.intersect(regions[i],mode=OverlapType.ORIGINAL)
+            elif i == p[0]: pass
+            else:
+                inter_r = inter_r.subtract(regions[i], whole_region=True)
+        #print("inter_r: "+inter_r.name)
+        return inter_r
     
     def combinatorial(self, background=None):
         new_refsp = OrderedDict()
@@ -971,34 +1007,48 @@ class Intersect:
                 posi = [list(i) for i in posi]
                 for p in posi:
                     #print("   " + str(p))
-                    pr = self.posi2region(self.groupedreference[ty],p)
+                    pr = self.posi2set(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
-            
-            # All intersection
-            alint = GenomicRegionSet(name="_".join([r.name for r in self.groupedreference[ty]]))
-            for r in self.groupedreference[ty]:
-                alint.intersect(r)
-            alint.name = "_".join([r.name for r in self.groupedreference[ty]])
-            new_refs[ty].append(alint)
-            ref_names.append(alint.name)
-            
+            all_int = self.posi2set(self.groupedreference[ty],range(n))
+            new_refs[ty].append(all_int)
+            ref_names.append(all_int.name)
+            """
             # Background
             unions = GenomicRegionSet(name="")
             for r in self.groupedreference[ty]:
                 unions.combine(r)
-            unions.name = "+".join([r.name for r in self.groupedreference[ty]])
+            unions.name = " + ".join([r.name for r in self.groupedreference[ty]])
             
             nonset = self.backgroung.subtract(unions)
             nonset.name = "!("+"+".join([r.name for r in self.groupedreference[ty]]) + ")"
             new_refs[ty].append(nonset)
             ref_names.append(nonset.name)
-        
+            """
         #self.comb_reference = new_refs
         self.groupedreference = copy.deepcopy(new_refs)
         self.referencenames = list(set(ref_names))
-            
-    def stest(self,repeat):
+    
+    def combine_regions(self, background=None):
+        new_refsp = OrderedDict()
+        new_refs = OrderedDict()
+        ref_names = []
+        
+        for ty in self.groupedreference.keys():
+            n = len(self.groupedreference[ty])
+            new_refs[ty] = []
+            new_refsp[ty] = []
+            for i in range(1,n):
+                new_refsp[ty].append(itertools.combinations(range(n),i))
+            for posi in new_refsp[ty]:
+                posi = [list(i) for i in posi]
+                for p in posi:
+                    print("   " + str(p))
+                    pr = self.posi2region(self.groupedreference[ty],p)
+                    new_refs[ty].append(pr)
+                    ref_names.append(pr.name)
+    
+    def stest(self,repeat,threshold):
         print2(self.parameter,"\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
         print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format("#reference","ref_number","query","que_number", "aver_inter_number","chisq_statistic", "p_value"))
         self.test_time = repeat
@@ -1013,7 +1063,7 @@ class Intersect:
                 for q in self.groupedquery[ty]:
                     nq = len(q)
                     qn = q.name
-                    q.combine(r)
+                    q.combine(r, change_name=False)
                     n = len(q)
                     #print("r: "+str(nr) + "  q:"+str(nq) +"   total:"+str(n))
                     # True intersection
@@ -1023,10 +1073,8 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        random = q.random_subregions(size=len(r))
-                        inter = random.intersect(r,mode=OverlapType.ORIGINAL)
-                        ni = len(inter)
-                        d.append([nr-ni, nq-ni, ni])
+                        random = q.random_subregions(size=len(r))                        
+                        d.append(count_intersect(r, random, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
                     exp_m = numpy.mean(da, axis=0)
@@ -1037,7 +1085,7 @@ class Intersect:
                     chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                     
                     plist.append(p)
-                    self.test_d[ty][r.name][qn] = [r.name,nr,qn,nq,ni,chisq,p]
+                    self.test_d[ty][r.name][qn] = [exp_m[2],chisq,p]
                     #print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
             
             reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
@@ -1047,10 +1095,57 @@ class Intersect:
                 for q in self.groupedquery[ty]:
                     self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
                     c_p += 1
-            
-                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][q.name]))
+                    print2(self.parameter,r.name +"\t"+ q.name +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r.name][q.name]))
                   
-
+    def comb_lineplot(self):
+        pass
+    def plot(self, printtable=False, sy=False):
+        rot = 50
+        ticklabelsize = 7
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
+        if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: axs=[axs]
+        yaxmax = [0]*len(self.data.values()[0])
+        
+        for it, s in enumerate(self.data.keys()):
+            for i,g in enumerate(self.data[s].keys()):
+                if it == 0: axs[it,i].set_title(g,fontsize=11)
+                # Processing for future output
+                if printtable:
+                    pArr = numpy.array(["Name","X","Y"]) # Header
+                    
+                for j, c in enumerate(self.data[s][g].keys()):
+                    y = self.data[s][g][c]
+                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                    x = numpy.linspace(-self.extend, self.extend, len(y))
+                    axs[it, i].plot(x,y, color=self.colors[j], lw=1)
+                    # Processing for future output
+                    if printtable:
+                        [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
+                        name = numpy.array(*len(x))
+                        xvalue = numpy.array(x)
+                        yvalue = numpy.array(y)
+                        conArr = numpy.vstack([name,xvalue,yvalue])
+                        conArr = numpy.transpose(conArr)
+                        pArr = numpy.vstack([pArr, conArr])
+                if printtable:
+                    [bam] = [bam for bam in self.readsnames if [g,c,s] in self.cuebam[bam]]
+                    output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
+                
+                axs[it,i].set_xlim([-self.extend, self.extend])
+                plt.setp(axs[it, i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(axs[it, i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[it, i].locator_params(axis = 'x', nbins = 4)
+                axs[it, i].locator_params(axis = 'y', nbins = 4)
+                axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                
+        for it,ty in enumerate(self.data.keys()):
+            axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+            if sy:
+                for i,g in enumerate(self.data[ty].keys()):
+                    axs[it,i].set_ylim([0, yaxmax[i]*1.2])
+                
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        self.fig = f
                     
 ###########################################################################################
 #                    Boxplot 
@@ -1301,7 +1396,8 @@ class Boxplot:
         f.tight_layout(pad=2, h_pad=None, w_pad=None)
         self.fig = f
         
-    def gen_html(self,outputname, title, pvalue):
+      
+    def calculate_p(self,outputname, title, pvalue):
         rowdata = ["<img src='boxplot.png' width=800 >"]
         #### Calculate p value ####
         for g in self.group_tags:
@@ -1363,7 +1459,7 @@ class Boxplot:
                        "Proportion",
                        "p-value"]
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align)+'">** </p>'])
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
         
         type_list = 'ssssssssss'
         col_size_list = [10,10,10,10,10,10,15]
