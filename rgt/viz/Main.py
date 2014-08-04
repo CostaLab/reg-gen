@@ -16,7 +16,7 @@ import time, datetime, getpass, fnmatch, HTML
 # Distal Libraries
 from .. GenomicRegionSet import *
 from .. ExperimentalMatrix import *
-from .. Util import GenomeData
+from rgt.Util import GenomeData, OverlapType, Html
 from plotTools import Projection, Jaccard, Intersect, Boxplot, Lineplot
 
 dir = os.getcwd()
@@ -280,9 +280,9 @@ def main():
     
     ################### Integration ##########################################
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
-    parser_integration.add_argument('-ihtml', help='Integrate all the html files within the given directory and generate index.html for all plots.')
+    parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
     parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
-    parser_integration.add_argument('-output', help='Define the folder of the output file.') 
+    parser_integration.add_argument('output', help='Define the folder of the output file.') 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -305,19 +305,19 @@ def main():
     #################################################################################################
     ##### Main #####################################################################################
     #################################################################################################
-    
-    t0 = time.time()
-    # Input parameters dictionary
-    parameter = [] 
-    
-    parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    parameter.append("User: " + getpass.getuser())
-    parameter.append("Project: " + args.output)
-    parameter.append("Title: " + args.title)
-    
-    parameter.append("\nCommand:\n   $ " + " ".join(sys.argv))
-    parameter.append("")
-    
+    if args.mode != 'integration':
+        t0 = time.time()
+        # Input parameters dictionary
+        parameter = [] 
+        
+        parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        parameter.append("User: " + getpass.getuser())
+        parameter.append("Project: " + args.output)
+        parameter.append("Title: " + args.title)
+        
+        parameter.append("\nCommand:\n   $ " + " ".join(sys.argv))
+        parameter.append("")
+
     ################### Projection test ##########################################
     if args.mode == 'projection':
         # Fetching reference and query EM
@@ -619,23 +619,22 @@ def main():
             f2.close()
             
         if args.ihtml:
-            directory = args.ihtml
+            fp = os.path.join(dir,args.output)
             try:
-                os.stat(os.path.join(dir,directory))
+                os.stat(fp)
             except:
                 sys.exit("No such directory.")
-            f = open(os.path.join(dir,directory,"index.html"),'w')
-            table = []
-            # Header
             
-            table.append(['<style>table{width:100%;border:1px solid black;border-collapse:collapse;text-align:center;table-layout: fixed;font-size:8pt;}\
-                </style><font size="7">' + directory + "</font>"])
             # Each row is a plot with its data
-            for root, dirnames, filenames in os.walk(os.path.join(dir,directory)):
+            link_d = OrderedDict()
+            link_d["Home"] = os.path.join(fp,"index.html")
+            for root, dirnames, filenames in os.walk(fp):
                 for filename in fnmatch.filter(filenames, '*.html'):
                     if filename != 'index.html':
-                        table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"5"'+'>'+root.split('/')[-1]+"</a>"])
-            htmlcode = HTML.table(table)
-            for line in htmlcode: f.write(line)
-            f.close()
-            sys.exit("Integration finished.")
+                        #table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"5"'+'>'+root.split('/')[-1]+"</a>"])
+                        link_d[root.split('/')[-1]] = os.path.join(root.split('/')[-2],root.split('/')[-1], filename)
+            
+            html = Html(name="Viz", links_dict=link_d)
+            html.write(os.path.join(fp,"index.html"))
+            
+            sys.exit("Integration finished.\n")

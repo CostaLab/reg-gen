@@ -34,41 +34,58 @@ class ExperimentalMatrix:
         f = open(file_path,'rU')
         
         #read and check header
-        header = f.readline()
-        header = header.strip("\n")
-        header = header.split("\t")
+        #header = f.readline()
+        #header = header.strip("\n")
+        #header = header.split("\t")
         
-        assert(header[0] == "name")
-        assert(header[1] == "type")
-        assert(header[2] == "file")
-        self.fields = header
+        #assert(header[0] == "name")
+        #assert(header[1] == "type")
+        #assert(header[2] == "file")
+        #self.fields = header
         
         #initialize further header files        
         for fi in range(3,len(self.fields)):
             self.fieldsDict[ header[fi] ] = OrderedDict()
         
         for line in f:
-            line = line.strip("\n")
-            line = line.strip(" ")
-            line = line.split()
+            # Neglect comment lines
+            if line[0] == "#": continue
             
-            if len(line) < 3:  # Skip the row which has insufficient information
-                print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
-                continue
-            if verbose: print("Reading: ", line, file=sys.stderr)
-            self.names.append(line[0])
-            self.files[line[0]] = line[2] #dict: filename -> filepath
-            self.types.append(line[1])
+            # Read header
+            elif line[0:3] == "name":
+                header = line.strip("\n")
+                header = line.strip(" ")
+                header = line.split()
+                
+                assert(header[0] == "name")
+                assert(header[1] == "type")
+                assert(header[2] == "file")
+                self.fields = header
             
-            for fi in range(3, len(self.fields)): #read further information
-                d = self.fieldsDict[ header[fi] ]
-                try:
-                    d[line[fi]].append(line[0])
-                except:
+            # Read further information    
+            else:
+                line = line.strip("\n")
+                line = line.strip(" ")
+                line = line.split()
+            
+                if len(line) < 3:  # Skip the row which has insufficient information
+                    print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
+                    continue
+                if verbose: print("Reading: ", line, file=sys.stderr)
+                
+                self.names.append(line[0])
+                self.files[line[0]] = line[2] #dict: filename -> filepath
+                self.types.append(line[1])
+                
+                for fi in range(3, len(self.fields)): #read further information
+                    d = self.fieldsDict[ header[fi] ]
                     try:
-                        d[line[fi]] = [line[0]]
+                        d[line[fi]].append(line[0])
                     except:
-                        continue
+                        try:
+                            d[line[fi]] = [line[0]]
+                        except:
+                            continue
         self.types = numpy.array(self.types)
         self.names = numpy.array(self.names)
         self.load_objects(is_bedgraph, verbose=verbose)
