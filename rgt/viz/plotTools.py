@@ -61,6 +61,15 @@ def gen_tags(exps, tag):
             sys.exit(1)
     return unique(l)
 
+def tag_from_r(exps, tag_type, name):
+    tags = []
+    for type in tag_type:
+        if type == "reads" or type == "regions": type = "factor" 
+        try:
+            tags.append(exps.get_type(name,type))
+        except: pass
+    return tags
+        
 def colormap(exps, colorby, definedinEM):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
@@ -261,7 +270,9 @@ def value2str(value):
     return r
 
 def multiple_correction(dic):
-    
+    """
+    dic[ty][r][q] = p
+    """
     for ty in dic.keys():
         all_p = []
         rn = len(dic[ty].keys())
@@ -278,6 +289,8 @@ def multiple_correction(dic):
         for ir, r in enumerate(dic[ty].keys()):
             for iq, q in enumerate(dic[ty][r].keys()):
                 dic[ty][r][q] = pvals_corrected[ir*qn + iq]
+
+
 
 ###########################################################################################
 #                    Projection test
@@ -406,7 +419,7 @@ class Projection:
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("projection_test.png", align="center")
         
         header_list = ["Reference<br>name",
@@ -451,7 +464,6 @@ class Projection:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"projection.html"))
     
-    
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
         for ty in self.plist.keys():
@@ -460,6 +472,65 @@ class Projection:
                     ar = numpy.array([[r, q, self.qlist[ty][r]['Background'], self.qlist[ty][r][q],self.plist[ty][r][q]]])
                     arr = numpy.vstack((arr, ar))
         output_array(arr, directory, folder, filename="output_table.txt")
+        
+    def distribution(self, organism):
+        genome = GenomicRegionSet("genome")
+        genome.get_genome_data(organism)
+        self.chrom_list = []
+        for ss in genome:
+            chrom_list.append(ss.chrom)
+            
+        self.distriDict = OrderedDict()
+        self.disperDict = OrderedDict()
+        
+        for ty in self.groupedreference.keys():
+            self.distriDict[ty] = OrderedDict()
+            self.disperDict[ty] = OrderedDict()
+            # Reference
+            for r in self.groupedreference[ty]:
+                len_r = r.total_coverage()
+                self.distriDict[ty][r.name] = []
+                self.disperDict[ty][r.name] = []
+                
+                for ch in self.chrom_list:
+                    rc = r.any_chrom(chrom=chr)
+                    nr = sum([len(s) for s in rc])
+                    self.distriDict[ty][r.name].append(nr)
+                    self.disperDict[ty][r.name].append(nr/len_r)
+                    
+            # Genome
+            self.distriDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in chrom_list]
+            #self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in chrom_list]
+            # Query
+            for q in self.groupedquery[ty]:
+                len_q = q.total_coverage()
+                self.distriDict[ty][q.name] = []
+                self.disperDict[ty][q.name] = []
+                
+                for ch in self.chrom_list:
+                    qc = q.any_chrom(chrom=chr)
+                    nq = sum([len(s) for s in qc])
+                    self.distriDict[ty][q.name].append(nq)
+                    self.disperDict[ty][q.name].append(nq/len_q)
+        
+        
+    def plot_distribution(self):
+        
+        for ty in self.distriDict.keys():
+            f, ax = plt.subplot()
+            
+            width = 0.9/len(self.distriDict[ty].keys())
+            ind = np.arange(len(self.chrom_list))
+            coverage = self.distriDict[ty]
+            
+            for ind_r, r in self.distriDict[ty].keys():
+            
+                ax.bar(ind + width*ind_r, self.distriDict[ty][r], width, color=self.color_list[ind_r])    
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        self.fig = f
+
+        
+        
 ###########################################################################################
 #                    Jaccard test
 ###########################################################################################
@@ -497,8 +568,13 @@ class Jaccard:
                 self.jlist[ty][r.name] = OrderedDict()
                 self.realj[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
+                if r.total_coverage() == 0:
+                    r.relocate_regions(center='midpoint', left_length=10, right_length=10)
                 for j, q in enumerate(self.groupedquery[ty]):
+                    if q.total_coverage() == 0:
+                        q.relocate_regions(center='midpoint', left_length=10, right_length=10)
                     ts = time.time()
+                    #print(q.name + "      " + str(len(q.sepuences[0])))
                     self.jlist[ty][r.name][q.name] = []
                     self.realj[ty][r.name][q.name] = q.jaccard(r) # The real jaccard index from r and q
                     for k in range(runtime):
@@ -590,7 +666,7 @@ class Jaccard:
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
         
@@ -864,7 +940,7 @@ class Intersect:
     def gen_html(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         #html.create_header()
         #html.add_heading(title)
         html.add_figure("intersection_bar.png", align="center")
@@ -923,7 +999,7 @@ class Intersect:
     def gen_html_comb(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d, relative_dir=os.path.dirname(fp))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         #html.create_header()
         #html.add_heading(title)
         html.add_figure("intersection_bar.png", align="center")
@@ -939,8 +1015,15 @@ class Intersect:
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** </p>'])
         
-        type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,15,10,10,10,15]
+        if self.test_d: 
+            header_list += ["Average<br>intersect.", "Chi-square<br>statistic", "p-value"]
+            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
+                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
+        else: pass
+        header_list += self.orig_refs
+        
+        type_list = 'ssssssssssssssssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -949,6 +1032,7 @@ class Intersect:
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
+                    
                     if self.test_d:
                         aveinter = str(self.test_d[ty][r][q][0])
                         chisqua = value2str(self.test_d[ty][r][q][1])
@@ -957,14 +1041,17 @@ class Intersect:
                         if self.test_d[ty][r][q][2] < 0.05:
                             data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
+                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"]+
+                                               self.comb_ref_infor[r])
                         elif self.test_d[ty][r][q][2] >= 0.05:
                             data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, pv])
+                                               aveinter, chisqua, pv]+
+                                               self.comb_ref_infor[r])
                     else:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)]+
+                                          self.comb_ref_infor[r])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -993,6 +1080,12 @@ class Intersect:
         return inter_r
     
     def combinatorial(self, background=None):
+        def p2sign(plist, length):
+            output = ["-"] * length
+            for p in plist:
+                output[p] = "+"
+            return output
+            
         new_refsp = OrderedDict()
         new_refs = OrderedDict()
         ref_names = []
@@ -1001,6 +1094,7 @@ class Intersect:
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
+            self.comb_ref_infor = {}
             for i in range(1,n):
                 new_refsp[ty].append(itertools.combinations(range(n),i))
             for posi in new_refsp[ty]:
@@ -1010,9 +1104,11 @@ class Intersect:
                     pr = self.posi2set(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
+                    self.comb_ref_infor[pr.name] = p2sign(p,n)
             all_int = self.posi2set(self.groupedreference[ty],range(n))
             new_refs[ty].append(all_int)
             ref_names.append(all_int.name)
+            self.comb_ref_infor[all_int.name] = p2sign(range(n),n)
             """
             # Background
             unions = GenomicRegionSet(name="")
@@ -1027,6 +1123,7 @@ class Intersect:
             """
         #self.comb_reference = new_refs
         self.groupedreference = copy.deepcopy(new_refs)
+        self.orig_refs = copy.deepcopy(self.referencenames)
         self.referencenames = list(set(ref_names))
     
     def combine_regions(self, background=None):
@@ -1080,7 +1177,7 @@ class Intersect:
                     exp_m = numpy.mean(da, axis=0)
                     #exp_m = [m/n for m in exp_m] # into frequency
                     # Chi-squire test
-                    print("    exp: "+ str(exp_m) + "obs: "+str(obs))
+                    #print("    exp: "+ str(exp_m) + "obs: "+str(obs))
                     #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
                     chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                     
@@ -1096,10 +1193,15 @@ class Intersect:
                     self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
                     c_p += 1
                     print2(self.parameter,r.name +"\t"+ q.name +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r.name][q.name]))
-                  
-    def comb_lineplot(self):
-        pass
-    def plot(self, printtable=False, sy=False):
+    """ 
+    def comb_lineplot_group(self):
+        # R1, R2, R3,
+        self.data = OrderedDict()
+        for ty in self.groupedreference.keys():
+            for r in self.groupedreference[ty]:
+    
+    def comb_lineplot(self, printtable=False, sy=False):
+        # self.data[R1][R2][R3]
         rot = 50
         ticklabelsize = 7
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
@@ -1146,7 +1248,7 @@ class Intersect:
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
-                    
+    """
 ###########################################################################################
 #                    Boxplot 
 ###########################################################################################
@@ -1225,7 +1327,7 @@ class Boxplot:
         self.norm_table = normalized_table
 
     def tables_for_plot(self):
-        """ Return a Dict which stores all tables for each bed with file path(more unique) as its key. """
+        """ Return a Dict which stores all tables for each bed with file name as its key. """
         self.tableDict = OrderedDict() # Storage all tables for each bed with bedname as the key
         conList = []   # Store containers of beds
         iterList = []
@@ -1255,6 +1357,8 @@ class Boxplot:
             colorby = 'reads','regions','cell',or 'factor'
             sortby = 'reads','regions','cell',or 'factor'
         """
+        self.tag_type = [groupby, sortby, colorby]
+        
         if groupby == "None":
             self.group_tags = ["All"]
         else:
@@ -1267,7 +1371,7 @@ class Boxplot:
             self.color_tags = ["All"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
-
+        
     def group_data(self):  
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cuesbed = OrderedDict()   # Storing the cues for back tracking
@@ -1276,14 +1380,15 @@ class Boxplot:
             plotDict[bedname] = OrderedDict()
             mt = numpy.array(self.tableDict[bedname])
             
-            cuesbed[bedname] = [tag for tag in self.exps.get_types(bedname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+            cuesbed[bedname] = set(tag_from_r(self.exps, self.tag_type, bedname))
+            #cuesbed[bedname] = [tag for tag in self.exps.get_types(bedname) if tag in self.group_tags + self.sort_tags + self.color_tags]
             
             for i,readname in enumerate(self.readsnames):
                 plotDict[bedname][readname] = mt[:,i]
                 #print(plotDict[bedname][readname])
-                
-                cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
-                
+                cuesbam[readname] = set(tag_from_r(self.exps, self.tag_type, readname))
+                #cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+        
         #print(cues.keys())
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
@@ -1293,19 +1398,19 @@ class Boxplot:
                 #print("        "+a)
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
+                    sortDict[g][a][c] = None
                     #print("            "+c)
-                    sortDict[g][a][c] = []
+                    
                     for bed in cuesbed.keys():
                         #print(bed)
                         #print(set([g,a,c]))
-                        #print(set(cuesbed[bed]))
-                        if set([g,a,c]) >= set(cuesbed[bed]):
+                        print(cuesbed[bed])
+                        print(set([g,a,c]))
+                        if set([g,a,c]) >= cuesbed[bed]:
                             for bam in cuesbam.keys():
-                                if set([g,a,c]) >= set(cuesbam[bam]):
+                                if set([g,a,c]) >= cuesbam[bam]:
                                     #print("                "+ bed + " + "+ bam)
                                     sortDict[g][a][c] = plotDict[bed][bam]
-                                    #break
-                            #break
         self.sortDict = sortDict
 
     def color_map(self, colorby, definedinEM):
@@ -1336,7 +1441,8 @@ class Boxplot:
             axarr[0].set_ylabel("Count number (log)")
         else:
             axarr[0].set_ylabel("Count number")
-        for i, g in enumerate(self.group_tags):
+            
+        for i, g in enumerate(self.sortDict.keys()):
             axarr[i].set_title(g, y=0.94)
             if logT: axarr[i].set_yscale('log')
             axarr[i].tick_params(axis='y', direction='out')
@@ -1345,17 +1451,17 @@ class Boxplot:
             d = []  # Store data within group
             color_t = []  # Store tag for coloring boxes
             x_ticklabels = []  # Store ticklabels
-            for k, a in enumerate(self.sort_tags):
-                for j, c in enumerate(self.color_tags):
-                    if self.sortDict[g][a][c] == []:  # When there is no matching data, skip it
+            for j, a in enumerate(self.sortDict[g].keys()):
+                for k, c in enumerate(self.sortDict[g][a].keys()):
+                    if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
                         continue
                     else:
                         d.append([x+1 for x in self.sortDict[g][a][c]])
-                        color_t.append(self.colors[j])
+                        color_t.append(self.colors[k])
                         x_ticklabels.append(a)  #  + "." + c
             # Fine tuning boxplot
-            bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
-                                  patch_artist=True, bootstrap=None)
+            #print(d)
+            bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, patch_artist=True, bootstrap=None)
             z = 10 # zorder for bosplot
             plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
             plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8,zorder=z)
@@ -1368,9 +1474,9 @@ class Boxplot:
                 legends.append(patch)
                 
             # Fine tuning subplot
-            axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sort_tags)])
+            axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sortDict[g].keys())])
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sort_tags, rotation=0, fontsize=10)
+            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=0, fontsize=10)
             
             axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
@@ -1395,129 +1501,62 @@ class Boxplot:
                  bbox_to_anchor=(1.05, 0.5))
         f.tight_layout(pad=2, h_pad=None, w_pad=None)
         self.fig = f
-        
-      
-    def calculate_p(self,outputname, title, pvalue):
-        rowdata = ["<img src='boxplot.png' width=800 >"]
-        #### Calculate p value ####
-        for g in self.group_tags:
-            indM = 0
-            header = []
-            data_p = []
-            arr = []
-            for s in self.sort_tags:
-                for c in self.color_tags:
-                    header.append("{0}: {1}".format(s,c))
-                    data_p.append(self.sortDict[g][s][c])
-                    for i, d in enumerate(data_p[:indM]):
-                        u, p_value = mannwhitneyu(data_p[indM], d)
-                        arr.append(p_value)
-                    indM = indM + 1
-            #print(len(arr))
-            [h,pc,a,b] = sm.multipletests(arr, alpha=pvalue, returnsorted=False)
-            ar = numpy.chararray([len(self.color_tags)*len(self.sort_tags),len(self.color_tags)*len(self.sort_tags)], itemsize=10)
-            ar[:] = "-"
-            k = 0
-            for c in self.color_tags:
-                for s in self.sort_tags:
-                    for i, d in enumerate(header[:k]):
-                        ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
-                    k = k + 1
-            nrows, ncols = ar.shape
-            subtable = subtable_format(ty=g)
-
-            for r in range(nrows+1):
-                subtable += '<tr>'
-                for c in range(ncols+1):
-                    if r == 0:
-                        if c == 0: subtable += '<td><i>p-value</i></td>'
-                        elif c > 0: subtable += '<td>'+header[c-1]+'</td>'
-                    if r > 0:
-                        if c == 0: subtable += '<td>'+header[r-1]+'</td>'
-                        elif c > 0:
-                            #print(r,"  ",c,"   ", int(0.5*(r-1)*(r-2) + c -1))
-                            if c < r and h[int(0.5*(r-1)*(r-2) + c -1)]:
-                                subtable += '<td><font color="red">'+ar[r-1,c-1]+'</font></td>'
-                            else: subtable += '<td>'+ar[r-1,c-1]+'</td>'
-                subtable += '</tr>'
-            subtable += '</table>'
-            rowdata.append(subtable)
-        
-        gen_html(outputname, title, htmlname="boxplot", rows=rowdata)
-
+    
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:fp}
-        html = Html(name="Viz", links_dict=link_d)
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("boxplot.png", align="center")
         
-        header_list = ["Reference<br>name",
-                       "Ref<br>number", 
-                       "Query<br>name", 
-                       "Que<br>number", 
-                       "Background<br>possibility",
-                       "Proportion",
-                       "p-value"]
+        header_list = self.tag_type + ["p-value"] + self.tag_type
+        print(header_list)
         
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
         
         type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,10,10,15]
-        data_table = []
+        col_size_list = [20,20,20,40,20,20,20,20,20]
         
         
         #### Calculate p value ####
-        for g in self.group_tags:
-            indM = 0
-            header = []
-            data_p = []
-            arr = []
-            for s in self.sort_tags:
-                for c in self.color_tags:
-                    header.append("{0}: {1}".format(s,c))
-                    data_p.append(self.sortDict[g][s][c])
-                    for i, d in enumerate(data_p[:indM]):
-                        u, p_value = mannwhitneyu(data_p[indM], d)
-                        arr.append(p_value)
-                    indM = indM + 1
-            #print(len(arr))
-            [h,pc,a,b] = sm.multipletests(arr, alpha=pvalue, returnsorted=False)
-            ar = numpy.chararray([len(self.color_tags)*len(self.sort_tags),len(self.color_tags)*len(self.sort_tags)], itemsize=10)
-            ar[:] = "-"
-            k = 0
-            for c in self.color_tags:
-                for s in self.sort_tags:
-                    for i, d in enumerate(header[:k]):
-                        ar[k,i] = "{:3.1e}".format(pc[0.5*k*(k-1) + i])
-                    k = k + 1
-            nrows, ncols = ar.shape
-            subtable = subtable_format(ty=g)
-
-            for r in range(nrows+1):
-                subtable += '<tr>'
-                for c in range(ncols+1):
-                    if r == 0:
-                        if c == 0: subtable += '<td><i>p-value</i></td>'
-                        elif c > 0: subtable += '<td>'+header[c-1]+'</td>'
-                    if r > 0:
-                        if c == 0: subtable += '<td>'+header[r-1]+'</td>'
-                        elif c > 0:
-                            #print(r,"  ",c,"   ", int(0.5*(r-1)*(r-2) + c -1))
-                            if c < r and h[int(0.5*(r-1)*(r-2) + c -1)]:
-                                subtable += '<td><font color="red">'+ar[r-1,c-1]+'</font></td>'
-                            else: subtable += '<td>'+ar[r-1,c-1]+'</td>'
+        plist = {}
+        for g in self.sortDict.keys():
+            plist[g] = {}
+            for s1 in self.sortDict[g].keys():
+                for c1 in self.sortDict[g][s1].keys():
+                    data1 = self.sortDict[g][s1][c1]
+                    plist[g][s1+c1] = {}
+                    for s2 in self.sortDict[g].keys():
+                        for c2 in self.sortDict[g][s2].keys():
+                            if s2 == s1 and c2 == c1: pass
+                            else:
+                                data2 = self.sortDict[g][s2][c2]
+                                u, p_value = mannwhitneyu(data1, data2)
+                                plist[g][s1+c1][s2+c2] = p_value
         
-                    
-                    if self.plist[ty][r][q] < 0.05:
-                        data_table.append([r,rlen,q,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>"])
-                    else:
-                        data_table.append([r,q,backv,propor,pv])
-
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        print("Multiple test correction.")
+        multiple_correction(plist)
         
-        html.add_free_content(['<p align="center"><object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
-        html.write(os.path.join(fp,"projection.html"))
-    
+        for g in self.sortDict.keys():
+            html.add_heading(g, size = 4, bold = False)
+            data_table = []
+            for s1 in self.sortDict[g].keys():
+                for c1 in self.sortDict[g][s1].keys():
+                    for s2 in self.sortDict[g].keys():
+                        for c2 in self.sortDict[g][s2].keys():
+                            if s2 == s1 and c2 == c1: pass
+                            else:
+                                p = plist[g][s1+c1][s2+c2]
+                                if p > 0.05:
+                                    data_table.append([g,s1,c1,value2str(p),g,s2,c2])
+                                else:
+                                    data_table.append([g,s1, c1,
+                                                       "<font color=\"red\">"+value2str(p)+"</font>",
+                                                       g,s2, c2])
+        
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
+        
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(fp,"boxplot.html"))
 ###########################################################################################
 #                    Lineplot 
 ###########################################################################################
@@ -1562,6 +1601,7 @@ class Lineplot:
             colorby = 'reads','regions','cell',or 'factor'
             sortby = 'reads','regions','cell',or 'factor'
         """
+        self.tag_type = [sortby, groupby, colorby]
         if groupby == "None":
             self.group_tags = ["All"]
         else:
@@ -1574,14 +1614,14 @@ class Lineplot:
             self.color_tags = ["All"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
-    
+        
     def gen_cues(self):
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
         for bed in self.bednames:
-            self.cuebed[bed] = set(self.exps.get_types(bed))
+            self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type,bed))
         for bam in self.readsnames:
-            self.cuebam[bam] = set(self.exps.get_types(bam))
+            self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type,bam))
         
     def coverage(self, sortby, heatmap=False, logt=False):
         # Calculate for coverage
@@ -1594,14 +1634,16 @@ class Lineplot:
                 data[s][g] = OrderedDict()
                 for c in self.color_tags:
                     for bed in self.cuebed.keys():
-                        if len(set([g,s,c]).intersection(self.cuebed[bed])) == 2:
+                        if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
-                                if len(set([g,s,c]).intersection(self.cuebam[bam])) == 2:
+                                if self.cuebam[bam] <= set([s,g,c]):
+                                    #print("\n    "+s+"\t"+g+"\t"+c)
+                                    #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
                                     ts = time.time()
                                     i = self.bednames.index(bed)
                                     j = self.readsnames.index(bam)
                                     cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
-                                    cov.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                    cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                     cov.normRPM()
                                     # When bothends, consider the fliping end
                                     if self.center == 'bothends':
@@ -1616,6 +1658,7 @@ class Lineplot:
                                         else:
                                             data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
                                     else:
+                                        
                                         avearr = numpy.array(cov.coverage)
                                         avearr = numpy.average(avearr, axis=0)
                                         numpy.transpose(avearr)
@@ -1676,10 +1719,18 @@ class Lineplot:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
-    def gen_html(self,outputname, title):
-        rowdata = ["<img src='lineplot.png' width=800 >"]
-        gen_html(outputname, title, htmlname="lineplot", rows=rowdata)
-                    
+    def gen_html(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        html.add_figure("lineplot.png", align="center")
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
+        
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(fp,"lineplot.html"))
+
+        
     def hmsort(self,sort):
         if sort == None:
             pass
@@ -1782,14 +1833,21 @@ class Lineplot:
             fig.tight_layout(pad=1, h_pad=1, w_pad=1)
             self.figs.append(fig)
             self.hmfiles.append("heatmap"+ "_" + t)
-    
-    def gen_htmlhm(self, outputname, title):
-        rowdata = []
+
+    def gen_htmlhm(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        #html = Html(name="Viz", links_dict="fig/links.txt", fig_dir=os.path.join(dir,outputname,"fig"), links_file=True)
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        
         # Each row is a plot with its data
         for name in self.hmfiles:
-            rowdata.append("<img src='" + name + ".png' width=800 >")
-        gen_html(outputname, title, htmlname="heatmap", rows=rowdata)
-    
+            html.add_figure(name+".png", align="center")
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
+        
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(fp,"heatmap.html"))
 ###########################################################################################
 #                    Heatmap 
 ###########################################################################################

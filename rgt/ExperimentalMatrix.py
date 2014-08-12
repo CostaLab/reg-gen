@@ -43,16 +43,14 @@ class ExperimentalMatrix:
         #assert(header[2] == "file")
         #self.fields = header
         
-        #initialize further header files        
-        for fi in range(3,len(self.fields)):
-            self.fieldsDict[ header[fi] ] = OrderedDict()
+        
         
         for line in f:
             # Neglect comment lines
             if line[0] == "#": continue
             
             # Read header
-            elif line[0:3] == "name":
+            elif line[:4] == "name":
                 header = line.strip("\n")
                 header = line.strip(" ")
                 header = line.split()
@@ -61,7 +59,11 @@ class ExperimentalMatrix:
                 assert(header[1] == "type")
                 assert(header[2] == "file")
                 self.fields = header
-            
+                
+                #initialize further header files        
+                for fi in range(3,len(header)):
+                    self.fieldsDict[ header[fi] ] = OrderedDict()
+                
             # Read further information    
             else:
                 line = line.strip("\n")
@@ -78,7 +80,7 @@ class ExperimentalMatrix:
                 self.types.append(line[1])
                 
                 for fi in range(3, len(self.fields)): #read further information
-                    d = self.fieldsDict[ header[fi] ]
+                    d = self.fieldsDict[ self.fields[fi] ]
                     try:
                         d[line[fi]].append(line[0])
                     except:
