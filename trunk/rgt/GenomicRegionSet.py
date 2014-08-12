@@ -5,6 +5,7 @@ import random
 from copy import deepcopy
 import os
 import time
+import copy
 from scipy import stats
 from Util import GenomeData, OverlapType, AuxiliaryFunctions
 from GeneSet import GeneSet
@@ -56,9 +57,13 @@ class GenomicRegionSet:
         
         percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
         """
-        if percentage > -50:
-            for s in self.sequences:
-                s.extend(int(len(s)*left/100),int(len(s)*right/100))
+        if percentage:
+            if percentage > -50:
+                for s in self.sequences:
+                    s.extend(int(len(s)*left/100),int(len(s)*right/100))
+            else: 
+                print("Percentage for extension must be larger than 50%%.")
+                sys.exit(0)
         else:
             for s in self.sequences:
                 s.extend(left,right)
@@ -710,7 +715,7 @@ class GenomicRegionSet:
                 if prev_region.overlap(cur_region):
                     prev_region.initial = min(prev_region.initial, cur_region.initial)
                     prev_region.final = max(prev_region.final, cur_region.final)
-                    if cur_region.name: prev_region.name += '_' + cur_region.name #use extra character to distinguish data sets
+                    #if cur_region.name: prev_region.name += '_' + cur_region.name #use extra character to distinguish data sets
                 else:
                     z.add(prev_region)
                     prev_region = cur_region
@@ -810,7 +815,14 @@ class GenomicRegionSet:
         """
         intersects = self.intersect(query)
         #print(intersects.total_coverage(),self.total_coverage(), query.total_coverage(),sep="\t")
-        similarity = intersects.total_coverage()/(self.total_coverage() + query.total_coverage() - intersects.total_coverage())
+        intersects.merge()
+        inter = intersects.total_coverage()
+        union = copy.deepcopy(self)
+        union.combine(query, change_name=False)
+        union.merge()
+        uni = union.total_coverage()
+        #print(self.name+"   "+query.name+"   "+str(inter)+"   "+str(uni))
+        similarity = inter / uni
         return similarity
     
     def within_overlap(self):

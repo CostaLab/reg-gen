@@ -111,6 +111,23 @@ def main():
     \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
     
+    ################### Distribution test ##########################################
+    parser_distribution = subparsers.add_parser('distribution',help='Projection test evaluates the association level by comparing to the random binomial model. \
+    The null hypothesis is that no association between reference and query and their distribution is random.')
+    parser_distribution.add_argument('output', help=helpoutput) 
+    parser_distribution.add_argument('-r', '--reference',help=helpreference)
+    parser_distribution.add_argument('-q', '--query', help=helpquery)
+    parser_distribution.add_argument('-t', '--title', default='projection_test', help=helptitle)
+    parser_distribution.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+    #parser_distribution.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
+    #parser_distribution.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
+    parser_distribution.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    #parser_distribution.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
+    parser_distribution.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_distribution.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+    parser_distribution.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    
+    
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
     The null hypothesis is that no association between reference and query and their distribution is random.')
@@ -201,8 +218,8 @@ def main():
     #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_combinatorial.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    #parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
-    
+    parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    parser_combinatorial.add_argument('-lineplot', action="store_true", default= 0, help='Define the repetition time of random subregion test between reference and query.')
 
     ################### Boxplot ##########################################
     
@@ -318,6 +335,31 @@ def main():
         parameter.append("\nCommand:\n   $ " + " ".join(sys.argv))
         parameter.append("")
 
+
+    ################### Distribution test ##########################################
+    if args.mode == 'distribution':
+        # Fetching reference and query EM
+        print("\n############# Distribution Test #############")
+        distribution = Projection(args.reference,args.query)
+        distribution.group_refque(args.g)
+        distribution.colors(args.c, args.color)
+        
+        distribution.distribution(args.organism)
+        # generate pdf
+        projection.plot(args.nlog)
+        output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci(),pdf=True,show=args.show)
+        
+        # generate html 
+        projection.gen_html(args.output, args.title)
+        
+            
+        parameter = parameter + projection.parameter
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
+        t1 = time.time()
+        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+            
+    
     ################### Projection test ##########################################
     if args.mode == 'projection':
         # Fetching reference and query EM
@@ -452,7 +494,10 @@ def main():
         #if args.stackedbar:
         inter.stackedbar()
         output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
-        
+        if args.lineplot:
+            inter.comb_lineplot()
+        if args.stest > 0:
+            inter.stest(repeat=args.stest,threshold=args.tc)
         # generate html
         inter.gen_html_comb(args.output, args.title, align=50)
         
@@ -495,14 +540,16 @@ def main():
         
         # Plotting
         print2(parameter,"Step 5/5: Plotting")
+        print("3333")
         boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
+        
         boxplot.group_data()
         boxplot.color_map(colorby=args.c, definedinEM=args.color)
         boxplot.plot(title=args.title,html=True, logT=args.nlog, sy=args.sy)
         if args.table: boxplot.print_table(directory=args.output, folder=args.title)
         output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
         # HTML
-        boxplot.gen_html(args.output, args.title, args.pvalue)
+        boxplot.gen_html(args.output, args.title, align = 50)
         t5 = time.time()
         print2(parameter,"    --- finished in {0:.3f} secs\n".format(t5-t4))
         print2(parameter,"Total running time is : " + str(datetime.timedelta(seconds=round(t5-t0))))

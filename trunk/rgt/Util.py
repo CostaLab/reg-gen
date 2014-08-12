@@ -455,7 +455,7 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, relative_dir=None, cluster_path_fix=""):
+    def __init__(self, name, links_dict, fig_dir=None, cluster_path_fix="", links_file=False):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
@@ -463,6 +463,7 @@ class Html:
         Variables:
         xxxxx -- Position Frequency Matrix.
         relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it. Default is None.
+        links_file -- Load the links from external file
         """
 
         # Variable initializations
@@ -473,13 +474,24 @@ class Html:
         self.image_data = ImageData()
         
         # Initialize document
-        if relative_dir:
-            pf = relative_dir
-            self.copy_relevent_files(os.path.join(pf,"fig"))
+        if fig_dir:
+            self.copy_relevent_files(fig_dir)
             self.create_header(relative_dir="../fig")
         else:
             self.create_header()
-        self.add_links()
+        
+        if links_file and fig_dir:
+            self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
+            self.document.append("  <tr>")
+            self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
+           
+            self.document.append('<?php include "../fig/links.txt";?>')
+            
+            self.document.append("    </b></font></td>")
+            self.document.append("  </tr>")
+            self.document.append("</table>")
+        else:
+            self.add_links()
         
         
     def copy_relevent_files(self, target_dir):
@@ -562,7 +574,8 @@ class Html:
         self.document.append("    </b></font></td>")
         self.document.append("  </tr>")
         self.document.append("</table>")
-
+            
+    
     def create_footer(self):
         """ 
         Adds footer.
