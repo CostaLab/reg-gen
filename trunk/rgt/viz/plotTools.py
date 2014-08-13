@@ -14,8 +14,9 @@ import statsmodels.sandbox.stats.multicomp as sm
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter
+from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
 import itertools
+import pprint
 
 # Local Libraries
 # Distal Libraries
@@ -476,60 +477,112 @@ class Projection:
     def distribution(self, organism):
         genome = GenomicRegionSet("genome")
         genome.get_genome_data(organism)
+        all_cov = genome.total_coverage()
         self.chrom_list = []
         for ss in genome:
-            chrom_list.append(ss.chrom)
-            
-        self.distriDict = OrderedDict()
+            self.chrom_list.append(ss.chrom)
+        self.chrom_list.sort()
+        
+        #self.distriDict = OrderedDict()
         self.disperDict = OrderedDict()
         
         for ty in self.groupedreference.keys():
-            self.distriDict[ty] = OrderedDict()
+            #self.distriDict[ty] = OrderedDict()
             self.disperDict[ty] = OrderedDict()
             # Reference
             for r in self.groupedreference[ty]:
+                r.merge()
                 len_r = r.total_coverage()
-                self.distriDict[ty][r.name] = []
+                #self.distriDict[ty][r.name] = []
                 self.disperDict[ty][r.name] = []
                 
                 for ch in self.chrom_list:
-                    rc = r.any_chrom(chrom=chr)
+                    rc = r.any_chrom(chrom=ch)
                     nr = sum([len(s) for s in rc])
-                    self.distriDict[ty][r.name].append(nr)
+                    #self.distriDict[ty][r.name].append(nr)
                     self.disperDict[ty][r.name].append(nr/len_r)
                     
-            # Genome
-            self.distriDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in chrom_list]
-            #self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in chrom_list]
             # Query
             for q in self.groupedquery[ty]:
+                q.merge()
                 len_q = q.total_coverage()
-                self.distriDict[ty][q.name] = []
+                #self.distriDict[ty][q.name] = []
                 self.disperDict[ty][q.name] = []
                 
                 for ch in self.chrom_list:
                     qc = q.any_chrom(chrom=chr)
                     nq = sum([len(s) for s in qc])
-                    self.distriDict[ty][q.name].append(nq)
+                    #self.distriDict[ty][q.name].append(nq)
                     self.disperDict[ty][q.name].append(nq/len_q)
-        
+            # Genome
+            #self.distriDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in self.chrom_list]
+            
+            self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)[0])/all_cov for chr in self.chrom_list]
+            
+        #pp = pprint.PrettyPrinter(depth=6)
+        #pp.pprint(self.distriDict)
         
     def plot_distribution(self):
+        def to_percentage(x, pos=0): 
+            return '{:.2f} %'.format(100*x)
+         
+        self.fig = []
         
-        for ty in self.distriDict.keys():
-            f, ax = plt.subplot()
+        for ty in self.disperDict.keys():
+            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.disperDict[ty].keys()))).tolist()
             
-            width = 0.9/len(self.distriDict[ty].keys())
+            f, ax = plt.subplots()
+            f.set_size_inches(10.5, 30)
+            width = 0.9/len(self.disperDict[ty].keys())
             ind = np.arange(len(self.chrom_list))
-            coverage = self.distriDict[ty]
+            coverage = self.disperDict[ty]
             
-            for ind_r, r in self.distriDict[ty].keys():
+            for ind_r, r in enumerate(self.disperDict[ty].keys()):
             
-                ax.bar(ind + width*ind_r, self.distriDict[ty][r], width, color=self.color_list[ind_r])    
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        self.fig = f
+                ax.barh(ind + width*ind_r, self.disperDict[ty][r], width, color=colors[ind_r])
+            
+            plt.xlabel('Percentage')
+            ax.xaxis.set_major_formatter(FuncFormatter(to_percentage)) 
+            
+            ax.minorticks_off()
+            ax.set_yticks([ x + 0.5 for x in range(len(self.chrom_list))])
+            ax.set_yticklabels(self.chrom_list,rotation=0, ha="right")
+            ax.tick_params(axis='y', which='both', top='off', bottom='off', labelbottom='on')
+            
+            ax.legend(self.disperDict[ty].keys(), loc='center left', handlelength=1, handletextpad=1, 
+                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            for spine in ['top', 'right', 'left', 'bottom']:
+                ax.spines[spine].set_visible(False)
+            f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+            self.fig.append(f)
 
+    def gen_html_distribution(self, outputname, title, align=50):
+        fp = os.path.join(dir,outputname,title)
+        link_d = {title:fp}
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        for i, f in enumerate(self.fig):
+            html.add_figure("distribution_test_"+str(i)+".png", align="center")
         
+        
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** </p>'])
+        
+        type_list = 'ssssssssssssssssssssssssssssssssssssssssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
+        data_table = []
+        for ind_ty, ty in enumerate(self.disperDict.keys()):
+            header_list = ["Chromosome"] + self.disperDict[ty].keys()
+            html.add_heading(ty, size = 4, bold = False)
+            for i, ch in enumerate(self.chrom_list):
+            #for ind_r,r in enumerate(self.disperDict[ty].keys()):
+            
+                data_table.append([ch]+["{:.3f} %".format(100 * self.disperDict[ty][r][i]) for r in self.disperDict[ty].keys()])
+                  
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(fp,"projection.html"))
         
 ###########################################################################################
 #                    Jaccard test

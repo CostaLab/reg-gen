@@ -11,6 +11,57 @@ Authors: Eduardo G. Gusmao.
 
 """
 
+class ReadGTF:
+    def __init__(self, source_file, organism):
+        """
+        Initialize ReadGTF
+        
+        Keyword arguments:
+        source_file -- the path of *.gtf
+        organism -- define the organism
+        
+        """
+        
+        
+    def readGTF(self, file_name):
+        # Opening GTF file
+        try: gtf_file = open(file_name,"r")
+        except Exception: pass # TODO
+
+        # Data storing
+        self.geneID_dict = OrderedDict()
+
+        # Reading GTF file
+        for line in gtf_file:
+
+            # Processing line
+            line = line.strip()
+            if(line[0] == "#"): continue
+            line_list = line.split("\t")
+            addt_list = line_list[8].split(";")
+            addt_list = filter(None,addt_list)
+            
+            # Processing additional list of options
+            addt_dict = dict()
+            for addt_element in addt_list:
+                addt_element_list = addt_element.split(" ")
+                addt_element_list = filter(None,addt_element_list)
+                addt_element_list[1] = addt_element_list[1].replace("\"","") # Removing " symbol from string options
+                addt_dict[addt_element_list[0]] = addt_element_list[1]
+                print(addt_element_list[0])
+            
+            # Creating GenomicRegion
+            genomic_region = GenomicRegion(chrom = line_list[0], 
+                                           initial = int(line_list[3])-1, 
+                                           final = int(line_list[4]), 
+                                           orientation = line_list[6], 
+                                           data = current_score)
+            self.geneID_dict[addt_element_list[0]] = genomic_region
+        # Termination
+        gtf_file.close()
+        
+        
+        
 class AnnotationSet:
     """
     Annotation of genes and TFs' PWMs.
@@ -100,7 +151,7 @@ class AnnotationSet:
                 addt_element_list = filter(None,addt_element_list)
                 addt_element_list[1] = addt_element_list[1].replace("\"","") # Removing " symbol from string options
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
-
+                
             # Creating final version of additional arguments
             final_addt_list = []
             for addt_key in ["gene_id", "transcript_id", "gene_type", "gene_status", "gene_name", 
