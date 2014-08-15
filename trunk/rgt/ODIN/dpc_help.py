@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-%prog <BAM> <BAM> <FASTA>
+%prog <BAM> <BAM> <REGIONS> <FASTA> <CHROM SIZES>
 
 Find differential peaks between two <BAM> files in <FASTA> genome.
 
@@ -11,10 +11,9 @@ Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
 from __future__ import print_function
 from optparse import OptionParser
-from .. CoverageSet import CoverageSet
-from .. GenomicRegion import GenomicRegion
-from .. GenomicRegionSet import GenomicRegionSet
-from .. Util import GenomeData
+from rgt.CoverageSet import CoverageSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 from HTSeq import FastaReader
 from get_extension_size import get_extension_size
@@ -254,69 +253,99 @@ class HelpfulOptionParser(OptionParser):
 def input(laptop):
     parser = HelpfulOptionParser(usage=__doc__)
     
-    parser.add_option("--input-1", dest="input_1", default=None, \
-                      help="Input control file for first parameter [default: %default]")
-    parser.add_option("--input-2", dest="input_2", default=None, \
-                      help="Input control file for second parameter [default: %default]")
-    parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
-                      help="Call only peaks with p-value lower than cutoff. [default: %default]")
-    parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                      help="Size of underlying bins for creating the signal.  [default: %default]")
-    parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                      help="Stepsize with which the window consecutively slides across the genome to create the HMM signal.")
-    parser.add_option("-n", "--name", default=None, dest="name", type="string",\
-                      help="Experiment's name and prefix for all files that are created.")
-    parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
-                      help="Read's extension size for first BAM file. If None, estimate extension size. [default: %default]")
-    parser.add_option("--ext-2", default=None, dest="ext_2", type="int",\
-                      help="Read's extension size for second BAM file. If None, estimate extension size [default: %default]")
-    parser.add_option("--ext-input-1", default=None, dest="ext_input_1", type="int",\
-                      help="Read's extension size for first input file. If None, estimate extension size. [default: %default]")
-    parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",\
-                      help="Read's extension size for second input file. If None, estimate extension size. [default: %default]")
-    parser.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
-                      help="Normalization factor for first input. If None, estimate factor. [default: %default]")
-    parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
-                      help="Normalization factor for first input. If None, estimate factor. [default: %default]")
-    parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
-                      help="Output among others initial state distribution, putative differential peaks and genomic signal. [default: %default]")
-    parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
-    #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
-    parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                      help="Do not compute GC content model  [default: %default]")
-    parser.add_option("-r", "--regions", default=None, dest="regions", \
-                     help="Regions where to search for differential peaks.  [default: %default]")
-    parser.add_option("-c", "--chrom-sizes", default=None, dest="chrom_sizes", \
-                      help="Sizes of chromosomes.  [default: %default]")
-#     parser.add_option("--deadzones", dest="deadzones", default=None, \
-#                       help="Deadzones (BED) [default: %default]")
-    
-    (options, args) = parser.parse_args()
-    options.norm_strategy = 5
-    
-    if options.version:
-        version = "version \"0.01alpha\""
-        print("")
-        print(version)
-        sys.exit()
-    
-    if len(args) != 3:
-        parser.error("Exactly three parameters are needed")
+    if laptop:
+        (options, args) = parser.parse_args()
+#        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bam'
+        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_10k.bam'
+#        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_chr1-2.bam'
+#        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1m.bam'
+#        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_100000.bam'
+        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_10k.bam'
+#        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_chr1-2.bam'
+
+        regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
+        genome = '/home/manuel/data/mm/mm9/mm9.fa'
+        options.ext_1 = 200
+        options.ext_2 = 200
+        options.ext_input_1 = None #200
+        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.ext_input_2 = None #200
+        options.confidence_threshold=0.7
+        options.foldchange=1.05
+        options.pcutoff = 1
+        options.name='mit_dz2'
+        options.stepsize=50
+        options.binsize=100
+        options.input_factor_1= None #0.7
+        options.input_factor_2= None #0.7
+        options.norm_strategy = 5
+        options.verbose=True
+        chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
+        options.no_gc_content = True
+        options.deadzones = None #"/home/manuel/dz.bed"
+        options.version=False
+    else:
         
-    bamfile_1 = args[0]
-    bamfile_2 = args[1]
-    genome = args[2]
+        parser.add_option("--input-1", dest="input_1", default=None, \
+                          help="Input control file for first parameter [default: %default]")
+        parser.add_option("--input-2", dest="input_2", default=None, \
+                          help="Input control file for second parameter [default: %default]")
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
+                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+                          help="Size of underlying bins for creating the signal.  [default: %default]")
+        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal.")
+        parser.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
+                          help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
+        parser.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
+                          help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
+        parser.add_option("-n", "--name", default=None, dest="name", type="string",\
+                          help="Experiment's name and prefix for all files that are created.")
+        parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
+                          help="Read's extension size for first BAM file. If option is not chosen, estimate extension size. [default: %default]")
+        parser.add_option("--ext-2", default=None, dest="ext_2", type="int",\
+                          help="Read's extension size for second BAM file. If option is not chosen, estimate extension size [default: %default]")
+        parser.add_option("--ext-input-1", default=None, dest="ext_input_1", type="int",\
+                          help="Read's extension size for first input file. If option is not chosen, estimate extension size. [default: %default]")
+        parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",\
+                          help="Read's extension size for second input file. If option is not chosen, estimate extension size. [default: %default]")
+        parser.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
+                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+        parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
+                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+        parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
+                          help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
+        parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
+        parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
+        parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+                          help="turn of GC content calculation")
+        parser.add_option("--deadzones", dest="deadzones", default=None, \
+                          help="Deadzones (BED) [default: %default]")
     
-    if options.chrom_sizes is not None and not os.path.isfile(options.chrom_sizes):
-        parser.error("Please give a proper file for chromosome files.")
+    if not laptop:
+        (options, args) = parser.parse_args()
+        
+        
+        if options.version:
+            version = "version \"0.1alpha\""
+            print("")
+            print(version)
+            sys.exit()
+        
+        if len(args) != 5:
+            parser.error("Exactly five parameters are needed")
+            
+        bamfile_1 = args[0]
+        bamfile_2 = args[1]
+        regions = args[2]
+        genome = args[3]
+        chrom_sizes = args[4]
+
     
-    if options.chrom_sizes is None:
-        options.chrom_sizes = GenomeData.CHROMOSOME_SIZES
-    
-    if options.regions is not None and not os.path.isfile(options.regions):
-        parser.error("Please give a proper region file.")
-    
-    if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2):
+    if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
+        or not os.path.isfile(regions) or not os.path.isfile(genome):
         parser.error("At least one input parameter is not a file")
     
     if options.name is None:
@@ -330,7 +359,11 @@ def input(laptop):
     
     if options.input_1 is None and options.input_2 is None:
         print("GC content is not calculated as there is no input file.", file=sys.stderr)
-        
+        options.no_gc_content = True
+    
+    if options.input_1 is None and options.input_2 is None:
+        options.norm_strategy = 1
+    
     if options.norm_strategy in [2, 4, 5] and (options.input_1 is None or options.input_2 is None):
         parser.error("Please define input files for this normalization strategy!")
         
@@ -340,9 +373,8 @@ def input(laptop):
     if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
         parser.error("GC content can only be computed with both input files.")
     
-#     if options.deadzones is not None:
-#         #check the ordering of deadzones and region
-#         _check_order(options.deadzones, regions, parser)
+    if options.deadzones is not None:
+        #check the ordering of deadzones and region
+        _check_order(options.deadzones, regions, parser)
     
-    return options, bamfile_1, bamfile_2, genome
-
+    return options, bamfile_1, bamfile_2, regions, genome, chrom_sizes
