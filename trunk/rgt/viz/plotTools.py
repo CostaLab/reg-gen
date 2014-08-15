@@ -123,13 +123,13 @@ def colormaps(exps, colorby, definedinEM):
             colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
-def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
+def color_groupded_region(EM, grouped_region, colorby, definedinEM):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
         colors = OrderedDict()
-        for ty in groupedquery.keys():
-            for q in groupedquery[ty].keys():
-                c = qEM.get_type(q.name,"color")
+        for ty in grouped_region.keys():
+            for q in grouped_region[ty].keys():
+                c = EM.get_type(q.name,"color")
                 if c[0] == "(":
                     rgb = [ eval(j) for j in c.strip('()').split(',')]
                     colors[q.name] = rgb
@@ -140,19 +140,19 @@ def color_groupdedquery(qEM, groupedquery, colorby, definedinEM):
         qs = []
         
         if colorby == "regions":
-            for ty in groupedquery.keys():
-                for q in groupedquery[ty]:            
+            for ty in grouped_region.keys():
+                for q in grouped_region[ty]:            
                     qs.append(q.name)
             qs = list(set(qs))
             colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(qs))).tolist()
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
-            types = qEM.fieldsDict[colorby].keys()
+            types = EM.fieldsDict[colorby].keys()
             colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
-            for ty in groupedquery.keys():
-                for q in groupedquery[ty]: 
-                    i = types.index(qEM.get_type(q.name, colorby))
+            for ty in grouped_region.keys():
+                for q in grouped_region[ty]: 
+                    i = types.index(EM.get_type(q.name, colorby))
                     colors[q.name] = colormap[i]
     return colors 
 
@@ -173,6 +173,11 @@ def output_array(array, directory, folder, filename):
         f.write(("\t".join(j for j in line))+"\n")
     f.close()
 
+def remove_duplicates(grouped_dict):
+    for ty in grouped_dict:
+        for r in grouped_dict[ty]:
+            r.remove_duplicates()
+
 def group_refque(rEM, qEM, groupby):
     """ Group regionsets of rEM and qEM according to groupby """
     groupedreference = OrderedDict()  # Store all bed names according to their types
@@ -188,8 +193,8 @@ def group_refque(rEM, qEM, groupby):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference["All"] = rEM.get_regionsets()
-        groupedquery["All"] = qEM.get_regionsets()
+        groupedreference["All region sets without grouping"] = rEM.get_regionsets()
+        groupedquery["All region sets without grouping"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
 def count_intersect(bed1, bed2, mode_count="count", threshold=False):
@@ -205,6 +210,7 @@ def count_intersect(bed1, bed2, mode_count="count", threshold=False):
         c_inter = len(intersect_r)
         c_12 = len(bed1) - c_inter
         c_21 = len(bed2) - c_inter
+        #print(c_12, c_21, c_inter)
         return c_12, c_21, c_inter
         
     elif mode_count=="bp":
@@ -231,6 +237,7 @@ def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
     aBC = BC.subtract(ABC)
     return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
+"""
 def gen_html(outputname, title, htmlname, rows):
     ########## HTML ###################
     pd = os.path.join(dir,outputname,title)
@@ -259,8 +266,10 @@ def subtable_format(ty):
     subtable = '<font size="5">'+ty+'</font>'
     subtable += '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:left;table-layout: fixed;font-size:8pt;}\</style><table cellpadding="10">' #width=800
     return subtable
+"""
 
 def value2str(value):
+    if value == 0: return "0"
     if(isinstance(value,int)): r = str(value)
     elif(isinstance(value,float)):
         if value >= 1000: r = "{}".format(int(value))
@@ -314,7 +323,7 @@ class Projection:
     def colors(self, colorby, definedinEM):
         ############# Color #####################################
         #self.color_list = colormap(self.qEM, colorby, definedinEM)
-        self.color_list = color_groupdedquery(self.qEM, self.groupedquery, colorby, definedinEM)
+        self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
         #self.color_tags = gen_tags(self.qEM, colorby)
         #self.color_tags.append('Background')
         self.color_list['Background'] = '0.70'
@@ -427,8 +436,8 @@ class Projection:
                        "Query<br>name", 
                        "Ref<br>number",
                        "Que<br>number", 
-                       "Background<br>proportion",
                        "Proportion",
+                       "Background<br>proportion",
                        "Positive<br>association<br>p-value",
                        "Negative<br>association<br>p-value"]
         
@@ -454,11 +463,11 @@ class Projection:
                     
                     if self.plist[ty][r][q] < 0.05:
                         if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
-                            data_table.append([r,q,rlen,qlen,backv,propor,"<font color=\"red\">"+pv+"</font>", pvn])
+                            data_table.append([r,q,rlen,qlen,propor,backv,"<font color=\"red\">"+pv+"</font>", pvn])
                         else:
-                            data_table.append([r,q,rlen,qlen,backv,propor,pvn, "<font color=\"red\">"+pv+"</font>"])
+                            data_table.append([r,q,rlen,qlen,propor,backv,pvn, "<font color=\"red\">"+pv+"</font>"])
                     else:
-                        data_table.append([r,q,rlen,qlen,backv,propor,pv,"-"])
+                        data_table.append([r,q,rlen,qlen,propor,backv,pv,"-"])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -603,7 +612,7 @@ class Jaccard:
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
     
     def colors(self, colorby, definedinEM):
-        self.color_list = color_groupdedquery(self.qEM, self.groupedquery, colorby, definedinEM)
+        self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
         #self.color_list['Background'] = '0.70'
     
     def jaccard_test(self, runtime, organism):
@@ -729,14 +738,11 @@ class Jaccard:
                        "Que<br>number", 
                        "True<br>Jaccard<br>index",
                        "Average<br>random<br>Jaccard",
-                       "p-value"]
+                       "Positive<br>Association<br>p-value",
+                       "Negative<br>Association<br>p-value"]
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** Randomization was performed '+ str(self.rt)+' times<br>'+
-                               '</p>'])
-        
-        type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,10,15,10]
+        type_list = 'sssssssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -746,17 +752,28 @@ class Jaccard:
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
                     qlen = str(len(qi))
+                    rej = self.realj[ty][r][q]
+                    rj = numpy.mean(self.jlist[ty][r][q])
+                    p = self.plist[ty][r][q]
+                    np = 1-p
+                    
                     if self.plist[ty][r][q] < 0.05:
-                        data_table.append([r,q,rlen,qlen,
-                                           value2str(self.realj[ty][r][q]),
-                                           value2str(numpy.mean(self.jlist[ty][r][q])),
-                                           "<font color=\"red\">"+value2str(self.plist[ty][r][q])+"</font>"])
+                        if self.realj[ty][r][q] > rj:
+                            data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj),
+                                               "<font color=\"red\">"+value2str(p)+"</font>",
+                                               value2str(np)])
+                        else:
+                            data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj),
+                                               value2str(np),
+                                               "<font color=\"red\">"+value2str(p)+"</font>"])
                     else:
-                        data_table.append([r,q,rlen,qlen,
-                                           value2str(self.realj[ty][r][q]),
-                                           value2str(self.plist[ty][r][q])])
+                        data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj), value2str(p),"-"])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** Randomization was performed '+ str(self.rt)+' times<br>'+
+                               '</p>'])
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"jaccard.html"))
@@ -800,14 +817,23 @@ class Intersect:
 
     def group_refque(self, groupby):
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
-
-    def colors(self, colorby, definedinEM):
+        remove_duplicates(self.groupedreference)
+        remove_duplicates(self.groupedquery)
+        
+    def colors(self, colorby, definedinEM, ref_que = "que"):
         """color_list is a Dict [query] : color """
-        self.color_list = color_groupdedquery(self.qEM, self.groupedquery, colorby, definedinEM)
-        if self.groupedquery.keys()[0] == "All":
-            self.color_tags = [n.name for n in self.groupedquery["All"]]
-        else:
-            self.color_tags = gen_tags(self.qEM, colorby)
+        if ref_que == "que":
+            self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
+            if self.groupedquery.keys()[0] == "All region sets without grouping":
+                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            else:
+                self.color_tags = gen_tags(self.qEM, colorby)
+        elif ref_que == "ref":
+            self.color_list = color_groupded_region(self.rEM, self.groupedreference, colorby, definedinEM)
+            if self.groupedquery.keys()[0] == "All region sets without grouping":
+                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            else:
+                self.color_tags = gen_tags(self.qEM, colorby)
     
     def extend_ref(self,percentage):
         """percentage must be positive value"""
@@ -1007,17 +1033,14 @@ class Intersect:
                        "Intersect.",
                        "Proportion <br>of Ref"]
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
-        
+       
         if self.test_d: 
-            header_list += ["Average<br>intersect.", "Chi-square<br>statistic", "p-value"]
-            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
-                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
+            header_list += ["Average<br>intersect.", "Chi-square<br>statistic", 
+                            "Positive<br>Association<br>p-value", "Negative<br>Association<br>p-value"]
         else: pass
         
-        type_list = 'ssssssssss'
-        col_size_list = [10,10,10,10,15,10,10,10,15]
+        type_list = 'ssssssssssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
         data_table = []
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -1026,25 +1049,38 @@ class Intersect:
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
+                    intern = self.counts[ty][r][q][2]
                     if self.test_d:
                         aveinter = str(self.test_d[ty][r][q][0])
                         chisqua = value2str(self.test_d[ty][r][q][1])
-                        pv = value2str(self.test_d[ty][r][q][2])
+                        pv = self.test_d[ty][r][q][2]
+                        npv = 1 - pv
                         
                     
-                        if self.test_d[ty][r][q][2] < 0.05:
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                               str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
+                        if pv < 0.05:
+                            if intern > aveinter:
+                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                   str(intern), "{:.2f}%".format(100*pt),
+                                                   aveinter, chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                            else:
+                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                   str(intern), "{:.2f}%".format(100*pt),
+                                                   aveinter, chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
                         elif self.test_d[ty][r][q][2] >= 0.05:
                             data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                               str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, pv])
+                                               str(intern), "{:.2f}%".format(100*pt),
+                                               aveinter, chisqua, value2str(pv),"-"])
                     else:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
+                                           str(intern), "{:.2f}%".format(100*pt)])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
+        if self.test_d:
+            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
+                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"intersection.html"))
@@ -1058,12 +1094,11 @@ class Intersect:
         html.add_figure("intersection_bar.png", align="center")
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        header_list = ["Reference<br>name",
-                       "Query<br>name", 
-                       "Ref<br>number", 
-                       "Que<br>number", 
-                       "Intersect.",
-                       "Proportion <br>of Ref"]
+        header_list = ["Query<br>name", 
+                       "Reference<br>number", 
+                       "Query<br>number", 
+                       "Intersection",
+                       "Proportion of<br>Reference"]
         
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** </p>'])
@@ -1073,7 +1108,7 @@ class Intersect:
             html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
                                    '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         else: pass
-        header_list += self.orig_refs
+        header_list = self.orig_refs + header_list
         
         type_list = 'ssssssssssssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
@@ -1092,19 +1127,16 @@ class Intersect:
                         pv = value2str(self.test_d[ty][r][q][2])
                     
                         if self.test_d[ty][r][q][2] < 0.05:
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                               str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"]+
-                                               self.comb_ref_infor[r])
+                            data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                              str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
+                                              aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
                         elif self.test_d[ty][r][q][2] >= 0.05:
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                            data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, pv]+
-                                               self.comb_ref_infor[r])
+                                               aveinter, chisqua, pv])
                     else:
-                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)]+
-                                          self.comb_ref_infor[r])
+                        data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -1198,6 +1230,56 @@ class Intersect:
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
     
+    def comb_stacked_plot(self):
+        f, axs = plt.subplots(len(self.counts.keys()),1)
+        f.subplots_adjust(left=0.3)
+        #f.set_size_inches(18.5,15)
+        #if len(axs) == 1: axs = [axs]
+        try: axs = axs.reshape(-1)
+        except: axs = [axs]
+        
+        for ai, ax in enumerate(axs):
+            #ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+            ax.locator_params(axis = 'y', nbins = 10)
+            ax.set_title(self.counts.keys()[ai], y=0.95)
+            r_label = []
+            q_label = []   
+            bottom = [0] * len(self.groupedquery[self.counts.keys()[ai]])
+            legends = []
+            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                if len(axs) == 1: 
+                    r_label.append(r)
+                    
+                else: 
+                    try: r_label.append(self.rEM.get_type(r,"factor"))
+                    except: r_label.append(r)
+                width = 0.6
+                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                    if ind_r == 0: q_label.append(q)
+                    x = ind_q
+                    y = self.counts.values()[ai][r][q][2] # intersect number
+                    bar = ax.bar(x, y, width=width, bottom=bottom[ind_q], color=self.color_list[r], align='center')
+                    bottom[ind_q] = bottom[ind_q] + y
+                    if ind_q == 0: legends.append(bar) 
+            ax.yaxis.tick_left()
+            ax.set_xticks(range(len(q_label)))
+            ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
+            ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax.set_xlim([-0.5, ind_q+0.5])
+            
+            ax.legend(legends, r_label, loc='center left', handlelength=1, handletextpad=1, 
+                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            for spine in ['top', 'right']:  # 'left', 'bottom'
+                ax.spines[spine].set_visible(False)
+        if self.mode_count == "bp":
+            f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
+        elif self.mode_count == "count":
+            f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
+    
+        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        self.sbar = f
+        
+        
     def stest(self,repeat,threshold):
         print2(self.parameter,"\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
         print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format("#reference","ref_number","query","que_number", "aver_inter_number","chisq_statistic", "p_value"))
@@ -1246,62 +1328,7 @@ class Intersect:
                     self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
                     c_p += 1
                     print2(self.parameter,r.name +"\t"+ q.name +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r.name][q.name]))
-    """ 
-    def comb_lineplot_group(self):
-        # R1, R2, R3,
-        self.data = OrderedDict()
-        for ty in self.groupedreference.keys():
-            for r in self.groupedreference[ty]:
     
-    def comb_lineplot(self, printtable=False, sy=False):
-        # self.data[R1][R2][R3]
-        rot = 50
-        ticklabelsize = 7
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
-        if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: axs=[axs]
-        yaxmax = [0]*len(self.data.values()[0])
-        
-        for it, s in enumerate(self.data.keys()):
-            for i,g in enumerate(self.data[s].keys()):
-                if it == 0: axs[it,i].set_title(g,fontsize=11)
-                # Processing for future output
-                if printtable:
-                    pArr = numpy.array(["Name","X","Y"]) # Header
-                    
-                for j, c in enumerate(self.data[s][g].keys()):
-                    y = self.data[s][g][c]
-                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                    x = numpy.linspace(-self.extend, self.extend, len(y))
-                    axs[it, i].plot(x,y, color=self.colors[j], lw=1)
-                    # Processing for future output
-                    if printtable:
-                        [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
-                        name = numpy.array(*len(x))
-                        xvalue = numpy.array(x)
-                        yvalue = numpy.array(y)
-                        conArr = numpy.vstack([name,xvalue,yvalue])
-                        conArr = numpy.transpose(conArr)
-                        pArr = numpy.vstack([pArr, conArr])
-                if printtable:
-                    [bam] = [bam for bam in self.readsnames if [g,c,s] in self.cuebam[bam]]
-                    output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
-                
-                axs[it,i].set_xlim([-self.extend, self.extend])
-                plt.setp(axs[it, i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
-                plt.setp(axs[it, i].get_yticklabels(), fontsize=ticklabelsize)
-                axs[it, i].locator_params(axis = 'x', nbins = 4)
-                axs[it, i].locator_params(axis = 'y', nbins = 4)
-                axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-                
-        for it,ty in enumerate(self.data.keys()):
-            axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
-            if sy:
-                for i,g in enumerate(self.data[ty].keys()):
-                    axs[it,i].set_ylim([0, yaxmax[i]*1.2])
-                
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        self.fig = f
-    """
 ###########################################################################################
 #                    Boxplot 
 ###########################################################################################
@@ -1413,15 +1440,15 @@ class Boxplot:
         self.tag_type = [groupby, sortby, colorby]
         
         if groupby == "None":
-            self.group_tags = ["All"]
+            self.group_tags = ["All region sets without grouping"]
         else:
             self.group_tags = gen_tags(self.exps, groupby)
         if sortby == "None":
-            self.sort_tags = ["All"]
+            self.sort_tags = ["All region sets without grouping"]
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
         if colorby == "None":
-            self.color_tags = ["All"]
+            self.color_tags = ["All region sets without grouping"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
@@ -1656,15 +1683,15 @@ class Lineplot:
         """
         self.tag_type = [sortby, groupby, colorby]
         if groupby == "None":
-            self.group_tags = ["All"]
+            self.group_tags = ["All region sets without grouping"]
         else:
             self.group_tags = gen_tags(self.exps, groupby)
         if sortby == "None":
-            self.sort_tags = ["All"]
+            self.sort_tags = ["All region sets without grouping"]
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
         if colorby == "None":
-            self.color_tags = ["All"]
+            self.color_tags = ["All region sets without grouping"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         

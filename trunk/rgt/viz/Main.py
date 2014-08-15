@@ -187,7 +187,6 @@ def main():
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
     #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
-    parser_intersect.add_argument('-comb', action="store_true", help='Calculate intersections of all combinations of references.')
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
@@ -439,10 +438,7 @@ def main():
         elif args.ex < 0: 
             print("\n**** extension percentage(-ex) should be positive value, not negative.\n")
             sys.exit(1)
-        # Combinatorial 
-        if args.comb:
-            print("Generating all combinatorial regions for further analysis...")
-            inter.combinatorial()
+        
         inter.colors(args.c, args.color)
         inter.count_intersect(threshold=args.tc)
         
@@ -486,14 +482,15 @@ def main():
         # Combinatorial 
         print2(parameter, "Generating all combinatorial regions for further analysis...")
         inter.combinatorial()
-        inter.colors(args.c, args.color)
         inter.count_intersect(threshold=args.tc)
         
         # generate pdf
+        inter.colors(args.c, args.color)
         inter.barplot(args.log)
         output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
         #if args.stackedbar:
-        inter.stackedbar()
+        inter.colors(args.c, args.color,ref_que = "ref")
+        inter.comb_stacked_plot()
         output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
         if args.lineplot:
             inter.comb_lineplot()
@@ -675,13 +672,15 @@ def main():
             
             # Each row is a plot with its data
             link_d = OrderedDict()
-            link_d["Home"] = os.path.join(fp,"index.html")
+            link_d["Home"] = os.path.join(args.output,"index.html")
             for root, dirnames, filenames in os.walk(fp):
+                roots = root.split('/')
                 for filename in fnmatch.filter(filenames, '*.html'):
                     if filename != 'index.html':
                         #table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"5"'+'>'+root.split('/')[-1]+"</a>"])
-                        link_d[root.split('/')[-1]] = os.path.join(root.split('/')[-2],root.split('/')[-1], filename)
-            
+                        link_d[roots[-1]] = os.path.join("..",roots[-3],roots[-2],roots[-1], filename)
+                        
+            print(link_d)
             html = Html(name="Viz", links_dict=link_d)
             html.write(os.path.join(fp,"index.html"))
             

@@ -203,7 +203,7 @@ class HmmData(ConfigurationFile):
 
     Authors: Eduardo G. Gusmao.
 
-    Inherits ConfigurationFile.
+    Inherits Co7nfigurationFile.
 
     Methods:
 
