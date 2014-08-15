@@ -69,7 +69,7 @@ class GenomicRegion:
     def overlap(self, region):
         """Return True, if GenomicRegion overlaps with region, else False."""
         if region.chrom == self.chrom:
-            if self.initial < region.initial:
+            if self.initial <= region.initial:
                 if self.final > region.initial:
                     return True
             else:
