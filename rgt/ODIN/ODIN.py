@@ -10,7 +10,6 @@ from dpc_help import get_peaks
 from dpc_help import input
 from hmm_binom_2d3s import BinomialHMM2d3s
 from random import sample
-from .. Util import GenomeData
 
 def write(name, l):
     f = open(name, 'w')
@@ -75,27 +74,26 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     
     return n_, p_
  
-def main():
+if __name__ == '__main__':
     test = False
-    options, bamfile_1, bamfile_2, genome = input(test)
-    
+    options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
+    #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
-    exp_data = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
+    exp_data = initialize(name=options.name, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
                           bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
                           input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2, \
-                          chrom_sizes = options.chrom_sizes,
-                          verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=None)
-
-    #print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
+                          chrom_sizes = chrom_sizes,
+                          verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones)
+    print('done', file=sys.stderr)
+    print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     
     if options.verbose:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
-    
-    print('Computing training set...',file=sys.stderr)
+    print('Compute training set...',file=sys.stderr)
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
          
@@ -106,23 +104,25 @@ def main():
       
     if options.verbose:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
-    
+      
     m.fit([training_set_obs])
      
+    #m.merge_distr()
+     
+    print('...done', file=sys.stderr)
     if options.verbose:
-        #print('p', m.p, file=sys.stderr)
+        print('p', m.p, file=sys.stderr)
         print("Final HMM's transition matrix: ", file=sys.stderr)
         print(m._get_transmat(), file=sys.stderr)
          
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
+    print("...done", file=sys.stderr)
      
     if options.verbose: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
+    print('t', m.n, m.p, file=sys.stderr)
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
-    
-if __name__ == '__main__':
-    main()
     

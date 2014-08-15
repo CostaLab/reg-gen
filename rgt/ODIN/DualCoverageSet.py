@@ -1,5 +1,5 @@
 from __future__ import print_function
-from .. CoverageSet import CoverageSet
+from rgt.CoverageSet import CoverageSet
 import numpy as np
 from random import sample, randrange
 from time import time
@@ -37,7 +37,7 @@ class DualCoverageSet():
             
             if verbose:
                 input['cov-ip'].write_bigwig(name + '-gc-s%s-1.bw' %i, chrom_sizes)
-                #input['cov-ip'].write_bed(name + '-gc-s%s-1.bed' %i)
+                input['cov-ip'].write_bed(name + '-gc-s%s-1.bed' %i)
             
             if input['input'] is not None:
                 input['cov-input'] = CoverageSet('%s file' %input['input'], region)
@@ -56,9 +56,9 @@ class DualCoverageSet():
                         self.print_gc_hist(name + '-s%s-' %i, gc_hist)
                     if input['input'] is not None:
                         input['cov-input'].write_bigwig(name + '-gc-s%s-input-2.bw' %i, chrom_sizes)
-                        #input['cov-input'].write_bed(name + '-gc-s%s-input-2.bed' %i)
+                        input['cov-input'].write_bed(name + '-gc-s%s-input-2.bed' %i)
                     input['cov-ip'].write_bigwig(name + '-gc-s%s-2.bw' %i, chrom_sizes)
-                    #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
+                    input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
         
         norm_done = False
         for i in [1, 2]:
@@ -72,9 +72,9 @@ class DualCoverageSet():
             if verbose:
                 if input['input'] is not None:
                     input['cov-input'].write_bigwig(name + '-gc-s%s-input-3'%i, chrom_sizes)
-                    #input['cov-input'].write_bed(name + '-gc-s%s-input-3.bed'%i)
+                    input['cov-input'].write_bed(name + '-gc-s%s-input-3.bed'%i)
                 input['cov-ip'].write_bigwig(name + '-gc-s%s-3.bw'%i, chrom_sizes)
-                #input['cov-ip'].write_bed(name + '-gc-s%s-3.bed'%i)
+                input['cov-ip'].write_bed(name + '-gc-s%s-3.bed'%i)
                 
         #make one array for the coverage
         self.first_overall_coverage = reduce(lambda x,y: np.concatenate((x,y)), [self.cov1.coverage[i] for i in range(len(self.cov1.genomicRegions))])
@@ -248,24 +248,29 @@ class DualCoverageSet():
         - score must be > 2/(m*n) (m=#obs, n=0.9 (default) )
         - overall coverage in library 1 and 2 must be > 3
         - extend resulting sites by l steps in both directions. """
+        np.save("1",self.first_overall_coverage)
+        np.save("2",self.second_overall_coverage)
+        
         m = len(self.first_overall_coverage)
         n = 0.9
         self._compute_score()
-        #print('before filter step:', len(self.scores), file=sys.stderr)
+        print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
-        #print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
+        print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(self.first_overall_coverage + self.second_overall_coverage > 3)[0]
+        print("H")
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
-        #print('length of intersection set: ', len(tmp), file=sys.stderr)
+        print('length of intersection set: ', len(tmp), file=sys.stderr)
         self.indices_of_interest = tmp2
-        #print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
+        print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
         #extend regions by l steps
         tmp = set()
         for i in self.indices_of_interest:
             for j in range(max(0, i-l), i+l+1):
                 tmp.add(j)
-
+        print("H2")
         tmp = list(tmp)
+        print("H3")
         tmp.sort()
         self.indices_of_interest = np.array(tmp)
 
