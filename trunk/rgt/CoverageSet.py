@@ -154,28 +154,29 @@ class CoverageSet:
             positions = []
             j = 0
             read_length = -1
-            for read in bam.fetch(region.chrom, max(0, region.initial-read_size), region.final+read_size):
-
-                j += 1
-                read_length = read.rlen 
-                if not read.is_unmapped:
-                    pos = read.pos - read_size if read.is_reverse else read.pos
-                    pos_help = read.pos - read.qlen if read.is_reverse else read.pos
-                    
-                    #if position in mask region, then ignore
-                    if mask:
-                        while next_it and c_help not in chrom_regions: #do not consider this deadzone
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
-                            while next_it and c_help != region.chrom: #get right chromosome
+            try:
+                for read in bam.fetch(region.chrom, max(0, region.initial-read_size), region.final+read_size):
+                    j += 1
+                    read_length = read.rlen 
+                    if not read.is_unmapped:
+                        pos = read.pos - read_size if read.is_reverse else read.pos
+                        pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                        
+                        #if position in mask region, then ignore
+                        if mask:
+                            while next_it and c_help not in chrom_regions: #do not consider this deadzone
                                 c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if next_it and s_help <= pos_help and c_help == region.chrom:
-                            continue #pos in mask region
-                    
-                    positions.append(pos)
-
+                            if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
+                                while next_it and c_help != region.chrom: #get right chromosome
+                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
+                                c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            if next_it and s_help <= pos_help and c_help == region.chrom:
+                                continue #pos in mask region
+                        
+                        positions.append(pos)
+            except ValueError:
+                pass
             if rmdup:
                 positions = list(set(positions))
             positions.sort()
