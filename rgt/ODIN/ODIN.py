@@ -49,10 +49,10 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
         i += 1
     
     if verbose:
-        write(name + 's0', s0)
-        write(name + 's1', s1)
-        write(name + 's2', s2)
-        write(name + 'soverall', so)
+        write(name + '-s0', s0)
+        write(name + '-s1', s1)
+        write(name + '-s2', s2)
+        write(name + '-soverall', so)
     
     
     #get observation that occurs most often:
