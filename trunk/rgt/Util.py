@@ -363,7 +363,7 @@ class ErrorHandler():
             "MOTIF_ANALYSIS_OPTION_ERROR": [1,0,"You must define one specific analysis. Run '"+self.program_name+" -h' for help."],
 
             "FP_WRONG_ARGUMENT": [2,0,"You must provide at least one and no more than one experimental matrix as input argument."],
-            "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted."],
+            "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
             "FP_ONE_REGION": [4,0,"You must provide one 'regions' bed file in the experiment matrix."],
             "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE in the experiment matrix"],
             "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE (histone modification) in the experiment matrix."],

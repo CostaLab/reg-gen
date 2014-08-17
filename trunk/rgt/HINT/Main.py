@@ -7,6 +7,8 @@
 from os import remove, system, getcwd
 from sys import exit
 from copy import deepcopy
+import warnings
+warnings.filterwarnings("ignore")
 
 # Internal
 from .. Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
@@ -30,7 +32,7 @@ Basic Input:
 Dependencies:
 - numpy
 - scipy
-- scikit
+- scikit = 0.12.1
 - pysam
 - bedToBigBed script in $PATH (if the option is used)
 
@@ -204,7 +206,7 @@ def main():
             hmm_scaffold = HMM()
             hmm_scaffold.load_hmm(hmm_file_name)
             scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
-                                     transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+                                         transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
             scikit_hmm.means_ = array(hmm_scaffold.means)
             scikit_hmm.covars_ = array(hmm_scaffold.covs)
         except Exception: error_handler.throw_error("FP_HMM_FILES")
@@ -276,17 +278,15 @@ def main():
                 footprints.add(fp)
 
     # Sorting and Merging
-    #footprints.merge() # Sort & Merge # TODO - Report bug to Joseph
-
-    for gr in footprints: print gr.chrom, gr.initial, gr.final
-    print "--------"
-    for gr in original_regions: print gr.chrom, gr.initial, gr.final
+    footprints.merge()
 
     # Overlapping results with original regions
-    rrr = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
-
-    print "--------"
-    for gr in rrr: print gr.chrom, gr.initial, gr.final
+    #for gr in footprints: print gr.chrom, gr.initial, gr.final
+    #print "--------"
+    #for gr in original_regions: print gr.chrom, gr.initial, gr.final
+    #rrr = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
+    #print "--------"
+    #for gr in rrr: print gr.chrom, gr.initial, gr.final
 
     ###################################################################################################
     # Writing output
