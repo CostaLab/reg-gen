@@ -45,7 +45,7 @@ export PATH=$PATH:~/app/bin/
 export PYTHONPATH=$PYTHONPATH:~/app/lib/pythonX.X/:~/app/lib64/pythonX.X/
 
 # Installation command
-python setup.py install --prefix=~/app --rgt-tool=footprint
+python setup.py install --prefix=~/app --rgt-tool=hint
 }}}
 
 For more details on the installation please go to the [https://code.google.com/p/reg-gen/wiki/Installation installation] section.
@@ -54,7 +54,7 @@ For more details on the installation please go to the [https://code.google.com/p
 
 In order to use this tools, please type:
 {{{
-rgt-footprint [options] <experiment_matrix>
+rgt-hint [options] <experiment_matrix>
 }}}
 
 Below you will find detailed instructions for all the available `options`. In the following section, we provide detailed explanation on the format of all RGT-specific input files.
@@ -97,7 +97,7 @@ name	type	file	<label1>	<label2>
 }}}
 In which the user may specify the last two labels that best suits their analyses.
 
-Then, all the other lines consist of data regarding these columns descriptions. An example of a complete experiment matrix that is a valid input for footprint tool can be seen below:
+Then, all the other lines consist of data regarding these columns descriptions. An example of a complete experiment matrix that is a valid input for HINT tool can be seen below:
 {{{
 name	type	file	cell	factor
 HS	regions	./Input/regions.bed	K562	HS_regions
@@ -147,12 +147,12 @@ emissions
 
 == Output ==
 
-This tool outputs a bed file (or bigbed file, if requested by the user) containing all the footprints found by our method.
+This tool outputs a bed file (or bigbed file, if requested by the user) containing all the footprints found by HINT.
 
 == Example ==
 
 
-Please download our  [https://drive.google.com/file/d/0B77RY6Xty6pSUmJtazhHRkx3RUU/edit?usp=sharing example] of the application of the footprint tool in DNase Hypersensitive regions of the human chromosome 22. The example contains aligned reads (.bam files) for DNase-seq and ChIP-seq for histone modifications H3K4me1 and H3K4me3. Also, it contains the DNase Hypersensitive regions (.bed file) and a set-up experimental matrix. A proper execution will generate a file called `footprints.bed` in the `Output` folder. 
+Please download our  [https://drive.google.com/file/d/0B77RY6Xty6pSUmJtazhHRkx3RUU/edit?usp=sharing example] of the application of HINT in DNase Hypersensitive regions of the human chromosome 22. The example contains aligned reads (.bam files) for DNase-seq and ChIP-seq for histone modifications H3K4me1 and H3K4me3. Also, it contains the DNase Hypersensitive regions (.bed file) and a set-up experimental matrix. A proper execution will generate a file called `footprints.bed` in the `Output` folder. 
 
 After downloading the example execute the following commands in order to run the tool:
 
@@ -161,8 +161,8 @@ After downloading the example execute the following commands in order to run the
 tar -zxvf RGT_Footprint_Test.tar.gz
 cd ~/RGT_Footprint_Test/
 
-# Running the footprint tool
-rgt-footprint --output-location ./Output/ ./InputMatrix.txt
+# Running HINT
+rgt-hint --output-location ./Output/ ./InputMatrix.txt
 }}}
 
 This example contains about 290 MB and takes about 25 minutes to run.
