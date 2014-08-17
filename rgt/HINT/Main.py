@@ -23,17 +23,18 @@ from numpy import array
 from sklearn.hmm import GaussianHMM
 
 """
-Finds footprints in open chromatin data.
+HINT - HMM-based Identification of TF Footprints.
+Finds TF footprints given open chromatin data.
 
 Basic Input:
 - Regions (bed) in which to find footprints (i.e. enriched regions or hypersensitivity regions).
 - Reads (bam) containing the open chromatin signal for DNase and 1 <= N <= 3 histone modifications.
 
 Dependencies:
-- numpy
-- scipy
+- numpy >= 1.4.1
+- scipy >= 0.7.2
 - scikit = 0.12.1
-- pysam
+- pysam >= 0.7.5
 - bedToBigBed script in $PATH (if the option is used)
 
 Authors: Eduardo G. Gusmao.
@@ -58,7 +59,7 @@ def main():
     # Parameters
     current_version = "0.0.1"
     usage_message = ("\n--------------------------------------------------\n"
-                     "The 'footprint' program predicts TFBSs given open chromatin data.\n"
+                     "The 'hint' program predicts TFBSs given open chromatin data.\n"
                      "In order to use this tools, please type: \n\n"
                      "%prog [options] <experiment_matrix>\n\n"
                      "The <experiment matrix> should contain:\n"
@@ -67,10 +68,10 @@ def main():
                      "- One DNase aligned reads file (bam) file with 'DNASE' in the name field.\n"
                      "- One to Three histone modification aligned reads file (bam).\n\n"
 
-                     "For more information, please refer to our wiki:\n"
-                     "https://code.google.com/p/reg-gen/wiki/RegGen\n"
+                     "For more information, please refer to:\n"
+                     "http://www.regulatory-genomics.org/dnasefootprints/\n"
                      "--------------------------------------------------")
-    version_message = "Footprint - Regulatory Analysis Toolbox (RGT). Version: "+str(current_version)
+    version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: "+str(current_version)
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage = usage_message, version = version_message)

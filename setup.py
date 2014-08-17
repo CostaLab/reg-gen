@@ -54,10 +54,10 @@ tools_dictionary = {
   "rgt.motifanalysisnew.Main:main",
   []
 ), 
-"footprint": (
-  "rgt-footprint",
-  "rgt.footprint.Main:main",
-  ['numpy>=1.4.1','scipy>=0.7.2','scikit-learn>=0.12.1','pysam>=0.7.5']
+"hint": (
+  "rgt-hint",
+  "rgt.HINT.Main:main",
+  ['numpy>=1.4.1','scipy>=0.7.2','scikit-learn=0.12.1','pysam>=0.7.5']
 ), 
 "ODIN": (
   "rgt-ODIN",
@@ -178,8 +178,7 @@ data_config_file.write("gencode_annotation: gencode_annotation.gtf\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
-#data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
-data_config_file.write("repositories: test\n\n") # TODO XXX XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm: fp_hmms/H3K4me3_proximal.hmm\n\n")
 data_config_file.close()
