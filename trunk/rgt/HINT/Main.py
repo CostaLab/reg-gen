@@ -31,9 +31,10 @@ Basic Input:
 - Reads (bam) containing the open chromatin signal for DNase and 1 <= N <= 3 histone modifications.
 
 Dependencies:
+- python >= 2.7
 - numpy >= 1.4.1
 - scipy >= 0.7.2
-- scikit = 0.12.1
+- scikit <= 0.14
 - pysam >= 0.7.5
 - bedToBigBed script in $PATH (if the option is used)
 
