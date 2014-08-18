@@ -75,9 +75,6 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     return n_, p_
 
 def main():
-    main()
-
-if __name__ == '__main__':
     test = False
     options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
@@ -128,4 +125,7 @@ if __name__ == '__main__':
  
     print('t', m.n, m.p, file=sys.stderr)
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
-    
+
+
+if __name__ == '__main__':
+    main()
