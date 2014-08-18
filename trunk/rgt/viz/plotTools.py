@@ -1305,19 +1305,21 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        random = q.random_subregions(size=len(r))                        
+                        random = q.random_subregions(size=nq)                        
                         d.append(count_intersect(r, random, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
                     exp_m = numpy.mean(da, axis=0)
                     #exp_m = [m/n for m in exp_m] # into frequency
                     # Chi-squire test
-                    #print("    exp: "+ str(exp_m) + "obs: "+str(obs))
+                    
                     #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
                     chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
+                    #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
                     
+                    print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
                     plist.append(p)
-                    self.test_d[ty][r.name][qn] = [exp_m[2],chisq,p]
+                    self.test_d[ty][r.name][qn] = [exp_m[2], chisq, p]
                     #print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
             
             reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')

@@ -52,6 +52,9 @@ class GenomicRegionSet:
     def __iter__(self):
         return iter(self.sequences)
 
+    def __getitem__(self, key):
+        return self.sequences[key]
+        
     def extend(self,left,right, percentage=False):
         """Perform extend step for every element
         
@@ -470,252 +473,105 @@ class GenomicRegionSet:
         
         z = GenomicRegionSet(a.name + ' & ' + b.name)
         if len(a) == 0 or len(b) == 0: return z
-        # If there is overlap within self or y, they should be merged first. 
-        if a.sorted == False: a.sort()
-        if b.sorted == False: b.sort()
         
-        if mode == OverlapType.OVERLAP:
-            a.merge()
-            b.merge()
-        
-        # Iteration
-        con_a = a.__iter__()
-        con_b = b.__iter__()
-        s = con_a.next()
-        ss = con_b.next()
-        cont_loop = True
-        #pre_s = GenomicRegion(chrom="chr0",initial=0,final=0) # Store the previous region which add in z
-        #pre_ss = GenomicRegion(chrom="chr0",initial=1,final=1) # Store the previous region which add in z
-        pre_z = GenomicRegion(chrom="chr0",initial=2,final=2)
-        
-        ########################### OverlapType.OVERLAP ###################################
-        if mode == OverlapType.OVERLAP:
-            while cont_loop:
-                # When the regions overlap
-                if s.overlap(ss):
-                    sss = GenomicRegion(chrom=s.chrom, 
-                                        initial=max(s.initial, ss.initial), 
-                                        final=min(s.final, ss.final))
-                    z.add(sss)
-                    
-                    if s.final > ss.final:
-                        try:
-                            ss = con_b.next()
-                        except:
-                            cont_loop = False
-                    else:
-                        try:
-                            s = con_a.next()
-                        except:
-                            cont_loop = False 
-                # When the region have no overlap
-                elif s < ss:
-                    try:
-                        s = con_a.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:      
-                        ss = con_b.next()
-                    except:
-                        cont_loop = False
+        else:
+            # If there is overlap within self or y, they should be merged first. 
+            if a.sorted == False: a.sort()
+            if b.sorted == False: b.sort()
             
-        ########################### OverlapType.ORIGINAL ###################################
-        if mode == OverlapType.ORIGINAL:
-            while cont_loop:
-                # When the regions overlap
-                if s.overlap(ss):
-                    z.add(s)
-                    #pre_z = s
-                    try:
-                        s = con_a.next()
-                    except:
-                        cont_loop = False
-                # When the region have no overlap
-                elif s <= ss:
-                    try:
-                        s = con_a.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:      
-                        ss = con_b.next()
-                    except:
-                        cont_loop = False
-                    
-        if mode == OverlapType.COMP_INCL:     
-            while cont_loop:
-                # When the regions overlap
-                if s.overlap(ss):
-                    if s.initial >= ss.initial and s.final <= ss.final:
-                        z.add(s)
-                    else:
-                        pass    
-                
-                    if s.final > ss.final:
-                        try:
-                            ss = con_b.next()
-                        except:
-                            cont_loop = False
-                    else:
-                        try:
-                            s = con_a.next()
-                        except:
-                            cont_loop = False   
-                # When the region have no overlap
-                elif s < ss:
-                    try:
-                        s = con_a.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:      
-                        ss = con_b.next()
-                    except:
-                        cont_loop = False
-        
-        if rm_duplicates: z.remove_duplicates()
-        #z.sort()
-        return z
-        """
-        if mode == OverlapType.OVERLAP:
+            if mode == OverlapType.OVERLAP:
+                a.merge()
+                b.merge()
             
-            while cont_loop:
-                # Overlap with previous region
-                if s.overlap(pre_s):
-                    if s.overlap(pre_ss):
-                        sss = GenomicRegion(chrom=s.chrom, initial=max(s.initial, pre_ss.initial), final=min(s.final, pre_ss.final))
-                        z.add(sss)
-                    if ss.overlap(pre_s):
-                        sss = GenomicRegion(chrom=ss.chrom, initial=max(ss.initial, pre_s.initial), final=min(ss.final, pre_s.final))
-                        z.add(sss)
+            last_i, last_j = len(a)-1, len(b)-1
+            i, j = 0, 0
+            cont_loop = True
+            pre_inter = 0
+            cont_overlap = False
+            ########################### OverlapType.OVERLAP ###################################
+            if mode == OverlapType.OVERLAP:
+                while cont_loop:
+                    # When the regions overlap
+                    if a[i].overlap(b[j]):
+                        c = GenomicRegion(chrom=a[i].chrom, 
+                                          initial=max(a[i].initial, b[j].initial), 
+                                          final=min(a[i].final, b[j].final))
+                        z.add(c)
                         
-                # When the regions overlap
-                if s.overlap(ss):
-                    sss = GenomicRegion(chrom=s.chrom, initial=max(s.initial, ss.initial), final=min(s.final, ss.final))
-                    z.add(sss)
-                
-                    # Iterate next region
-                    if s.final > ss.final:
-                        try:
-                            pre_ss = ss
-                            ss = con_y.next()
-                        except:
-                            try: 
-                                pre_s = s
-                                s = con_self.next()
-                            except: cont_loop = False
-                    else:
-                        try:
-                            pre_s = s
-                            s = con_self.next()
-                        except:
-                            try: 
-                                pre_ss = ss
-                                ss = con_y.next()
-                            except: cont_loop = False   
-                
-                # When the region have no overlap
-                elif s < ss:
-                    try:
-                        pre_s = s
-                        s = con_self.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:
-                        pre_ss = ss
-                        ss = con_y.next()
-                    except:
-                        try:
-                            pre_s = s 
-                            s = con_self.next()
-                        except: cont_loop = False
-        
-        elif mode == OverlapType.ORIGINAL:
-            while cont_loop:
-                if s.overlap(ss):
-                    if s == pre_z: pass
-                    else: 
-                        z.add(s)
-                        pre_z = s
-                    # Iterate next region
-                    if s.final > ss.final:
-                        try:
-                            pre_ss = ss
-                            ss = con_y.next()
-                        except:
-                            try: 
-                                pre_s = s
-                                s = con_self.next()
-                            except: cont_loop = False
-                    else:
-                        try:
-                            pre_s = s
-                            s = con_self.next()
-                        except:
-                            try: 
-                                pre_ss = ss
-                                ss = con_y.next()
-                            except: cont_loop = False   
-                
-                # When the region have no overlap
-                elif s < ss:
-                    try:
-                        pre_s = s
-                        s = con_self.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:
-                        pre_ss = ss
-                        ss = con_y.next()
-                    except:
-                        try:
-                            pre_s = s 
-                            s = con_self.next()
-                        except: cont_loop = False
+                        if cont_overlap == False: pre_inter = j
+                        if j == last_j: 
+                            if i < last_i: i = i + 1
+                            else: cont_loop = False 
+                        else: j = j + 1
+                        cont_overlap = True
                     
-        elif mode == OverlapType.COMP_INCL:
-            while cont_loop:
-                # When the regions overlap
-                if s.overlap(ss):
-                    if s.initial >= ss.initial and s.final <= ss.final:
-                        z.add(s)
-                    else:
-                        pass    
-                    # Iterate next region
-                    if s.final >= ss.final:
-                        try:
-                            ss = con_y.next()
-                        except:
-                            try: s = con_self.next()
-                            except: cont_loop = False
-                    else:
-                        try:
-                            s = con_self.next()
-                        except:
-                            try: ss = con_y.next()
-                            except: cont_loop = False   
-                # When the region have no overlap
-                elif s < ss:
-                    try:
-                        s = con_self.next()
-                    except:
-                        cont_loop = False
-                elif s > ss:
-                    try:      
-                        ss = con_y.next()
-                    except:
-                        try: s = con_self.next()
-                        except: cont_loop = False
-                elif s == ss:
-                    try: s = con_self.next() 
-                    except:
-                        try: ss = con_y.next()
-                        except: cont_loop = False
-        """
-       
+                    elif a[i] < b[j]:
+                        if i == last_i:
+                            cont_loop = False
+                        else:
+                            i = i + 1
+                            j = pre_inter
+                            cont_overlap = False
+                    
+                    elif a[i] > b[j]:
+                        if j == last_j:
+                            cont_loop = False
+                        else:
+                            j = j + 1
+                            cont_overlap = False
+                 
+            ########################### OverlapType.ORIGINAL ###################################
+            if mode == OverlapType.ORIGINAL:
+                while cont_loop:
+                    
+                    # When the regions overlap
+                    if a[i].overlap(b[j]):
+                        z.add(a[i])
+                        
+                        if i < last_i: i = i + 1
+                        else: cont_loop = False  
+                    
+                    elif a[i] < b[j]:
+                        if i == last_i: cont_loop = False
+                        else: i = i + 1
+                    
+                    elif a[i] > b[j]:
+                        if j == last_j: cont_loop = False
+                        else: j = j + 1
+                        
+            if mode == OverlapType.COMP_INCL:     
+                while cont_loop:
+                    # When the regions overlap
+                    if a[i].overlap(b[j]):
+                        if a[i].initial >= b[j].initial and a[i].final <= b[j].final:
+                            z.add(a[i])
+                        
+                        if cont_overlap == False: pre_inter = j
+                        if j == last_j: 
+                            if i < last_i: i = i + 1
+                            else: cont_loop = False 
+                        else: j = j + 1
+                        cont_overlap = True
+                    
+                    elif a[i] < b[j]:
+                        if i == last_i:
+                            cont_loop = False
+                        else:
+                            i = i + 1
+                            j = pre_inter
+                            cont_overlap = False
+                    
+                    elif a[i] > b[j]:
+                        if j == last_j:
+                            cont_loop = False
+                        else:
+                            j = j + 1
+                            cont_overlap = False
+            
+            if rm_duplicates: z.remove_duplicates()
+            #z.sort()
+            return z
+            
     
     def closest(self,y):
         """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 

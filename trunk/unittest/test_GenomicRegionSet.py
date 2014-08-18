@@ -192,6 +192,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.region_sets([['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]],
                          [['chr1',1,10],['chr1',500,550],['chr1',600,650],['chr1',700,750],['chr1',725,800]])
         result = self.setA.intersect(self.setB, mode=OverlapType.OVERLAP, rm_duplicates=True)
+        
         self.assertEqual(len(result.sequences), 4)
         self.assertEqual(result.sequences[0].initial, 1)
         self.assertEqual(result.sequences[0].final, 10)
