@@ -373,8 +373,8 @@ def input(laptop):
     if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
         parser.error("GC content can only be computed with both input files.")
     
-    if options.deadzones is not None:
-        #check the ordering of deadzones and region
-        _check_order(options.deadzones, regions, parser)
+#     if options.deadzones is not None:
+#         #check the ordering of deadzones and region
+#         _check_order(options.deadzones, regions, parser)
     
     return options, bamfile_1, bamfile_2, regions, genome, chrom_sizes
