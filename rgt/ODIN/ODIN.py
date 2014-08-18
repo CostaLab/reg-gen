@@ -73,7 +73,10 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     #print('p_', p_, file=sys.stderr)
     
     return n_, p_
- 
+
+def main():
+    main()
+
 if __name__ == '__main__':
     test = False
     options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
