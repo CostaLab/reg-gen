@@ -483,8 +483,10 @@ class GenomicRegionSet:
                 a.merge()
                 b.merge()
             
-            last_i, last_j = len(a)-1, len(b)-1
-            i, j = 0, 0
+            iter_a = iter(a)
+            s = iter_a.next()
+            last_j = len(b)-1
+            j = 0
             cont_loop = True
             pre_inter = 0
             cont_overlap = False
@@ -492,28 +494,27 @@ class GenomicRegionSet:
             if mode == OverlapType.OVERLAP:
                 while cont_loop:
                     # When the regions overlap
-                    if a[i].overlap(b[j]):
-                        c = GenomicRegion(chrom=a[i].chrom, 
-                                          initial=max(a[i].initial, b[j].initial), 
-                                          final=min(a[i].final, b[j].final))
+                    if s.overlap(b[j]):
+                        c = GenomicRegion(chrom=s.chrom, 
+                                          initial=max(s.initial, b[j].initial), 
+                                          final=min(s.final, b[j].final))
                         z.add(c)
                         
                         if cont_overlap == False: pre_inter = j
                         if j == last_j: 
-                            if i < last_i: i = i + 1
-                            else: cont_loop = False 
+                            try: s = iter_a.next()
+                            except: cont_loop = False 
                         else: j = j + 1
                         cont_overlap = True
                     
-                    elif a[i] < b[j]:
-                        if i == last_i:
-                            cont_loop = False
-                        else:
-                            i = i + 1
+                    elif s < b[j]:
+                        try: 
+                            s = iter_a.next()
                             j = pre_inter
                             cont_overlap = False
+                        except: cont_loop = False 
                     
-                    elif a[i] > b[j]:
+                    elif s > b[j]:
                         if j == last_j:
                             cont_loop = False
                         else:
@@ -525,43 +526,41 @@ class GenomicRegionSet:
                 while cont_loop:
                     
                     # When the regions overlap
-                    if a[i].overlap(b[j]):
-                        z.add(a[i])
+                    if s.overlap(b[j]):
+                        z.add(s)
                         
-                        if i < last_i: i = i + 1
-                        else: cont_loop = False  
-                    
-                    elif a[i] < b[j]:
-                        if i == last_i: cont_loop = False
-                        else: i = i + 1
-                    
-                    elif a[i] > b[j]:
+                        try: s = iter_a.next()
+                        except: cont_loop = False
+                        
+                    elif s < b[j]:
+                        try: s = iter_a.next()
+                        except: cont_loop = False
+                    elif s > b[j]:
                         if j == last_j: cont_loop = False
                         else: j = j + 1
                         
             if mode == OverlapType.COMP_INCL:     
                 while cont_loop:
                     # When the regions overlap
-                    if a[i].overlap(b[j]):
-                        if a[i].initial >= b[j].initial and a[i].final <= b[j].final:
-                            z.add(a[i])
+                    if s.overlap(b[j]):
+                        if s.initial >= b[j].initial and s.final <= b[j].final:
+                            z.add(s)
                         
                         if cont_overlap == False: pre_inter = j
                         if j == last_j: 
-                            if i < last_i: i = i + 1
-                            else: cont_loop = False 
+                            try: s = iter_a.next()
+                            except: cont_loop = False
                         else: j = j + 1
                         cont_overlap = True
                     
-                    elif a[i] < b[j]:
-                        if i == last_i:
-                            cont_loop = False
-                        else:
-                            i = i + 1
+                    elif s < b[j]:
+                        try: 
+                            s = iter_a.next()
                             j = pre_inter
                             cont_overlap = False
-                    
-                    elif a[i] > b[j]:
+                        except: cont_loop = False 
+                        
+                    elif s > b[j]:
                         if j == last_j:
                             cont_loop = False
                         else:
@@ -857,16 +856,21 @@ class GenomicRegionSet:
         intersect      -5-             -4-    2
         similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
                       = 11/31
-        
         """
-        intersects = self.intersect(query)
+        a = copy.deepcopy(self)
+        b = copy.deepcopy(query)
+        if a.total_coverage() == 0 and len(a) > 0:
+            a.extend(1, 1)
+        if b.total_coverage() == 0 and len(b) > 0:
+            b.extend(1, 1)
+        intersects = a.intersect(b)
         #print(intersects.total_coverage(),self.total_coverage(), query.total_coverage(),sep="\t")
         intersects.merge()
         inter = intersects.total_coverage()
-        union = copy.deepcopy(self)
-        union.combine(query, change_name=False)
-        union.merge()
-        uni = union.total_coverage()
+        
+        a.combine(b, change_name=False)
+        a.merge()
+        uni = a.total_coverage()
         #print(self.name+"   "+query.name+"   "+str(inter)+"   "+str(uni))
         similarity = inter / uni
         return similarity
@@ -1016,6 +1020,10 @@ class GenomicRegionSet:
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
+        if self.total_coverage() == 0 and len(self) > 0:
+            self.extend(1, 1)
+        #if query.total_coverage() == 0 and len(query) > 0:
+        #    query.extend(0, 1)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
         if background: #backgound should be a GenomicRegionSet
             ss = self.intersect(background, OverlapType.OVERLAP)
@@ -1024,7 +1032,8 @@ class GenomicRegionSet:
             possibility = self.total_coverage() / chrom_map.total_coverage() # The average likelihood
 
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
-        intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
+        intersect_regions = nquery.intersect(self,mode=OverlapType.ORIGINAL)
+        #intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
         n = len(nquery)
         k = len(intersect_regions)
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)

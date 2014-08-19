@@ -197,14 +197,24 @@ def group_refque(rEM, qEM, groupby):
         groupedquery["All region sets without grouping"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
-def count_intersect(bed1, bed2, mode_count="count", threshold=False):
-    
+def count_intersect(reference, query, mode_count="count", threshold=False):
+    bed1 = copy.deepcopy(reference)
+    bed2 = copy.deepcopy(query)
     if mode_count=="count":
-        if 50 >= threshold > 0:
-            bed1.extend(-threshold,-threshold,percentage=True)
-        elif threshold > 50 or threshold < 0:
-            print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
-            sys.exit(1)
+        if threshold:
+            if bed1.total_coverage() == 0:
+                print("\n ** Warning : "+ bed1.name +" has no length (only points) for finding intersection with given threshold.")
+                sys.exit(1)
+            if bed2.total_coverage() == 0:
+                print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
+                sys.exit(1)
+            if 50 >= threshold > 0:
+                bed1.extend(-threshold,-threshold,percentage=True)
+            elif threshold > 50 or threshold < 0:
+                print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
+                sys.exit(1)
+        if bed1.total_coverage() == 0: bed1.extend(1,1)
+        if bed2.total_coverage() == 0: bed2.extend(1,1)
         intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
         #intersect_r.remove_duplicates()
         c_inter = len(intersect_r)
@@ -237,47 +247,16 @@ def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
     aBC = BC.subtract(ABC)
     return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
-"""
-def gen_html(outputname, title, htmlname, rows):
-    ########## HTML ###################
-    pd = os.path.join(dir,outputname,title)
-    try:
-        os.stat(os.path.dirname(pd))
-    except:
-        os.mkdir(os.path.dirname(pd))
-    try:
-        os.stat(pd)
-    except:
-        os.mkdir(pd)    
-    f = open(os.path.join(pd,htmlname+'.html'),'w')
-    table = []
-    # Header 
-    table.append(["<head><style>h1 {text-align:center}</style></head>"+'<h1>' + title + "</h1>"])
-    # Each row is a plot with its data
-    for r in rows:
-        table.append([r])
-    
-    table.append(['<object width="800" height="600" type="text/plain" data="parameters.txt" border="0" style="overflow: hidden;"></object>'])
-    htmlcode = HTML.table(table)
-    for line in htmlcode: f.write(line)
-    f.close()
-
-def subtable_format(ty):
-    subtable = '<font size="5">'+ty+'</font>'
-    subtable += '<style>table,th,td{border:1px solid black;border-collapse:collapse;text-align:left;table-layout: fixed;font-size:8pt;}\</style><table cellpadding="10">' #width=800
-    return subtable
-"""
-
 def value2str(value):
     if value == 0: return "0"
-    if(isinstance(value,int)): r = str(value)
+    if(isinstance(value,int)): return str(value)
     elif(isinstance(value,float)):
         if value >= 1000: r = "{}".format(int(value))
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
         elif 1 > value > 0.0001: r = "{:.4f}".format(value)
         else: r = "{:.2e}".format(value)
-    return r
+        return r
 
 def multiple_correction(dic):
     """
@@ -358,13 +337,14 @@ class Projection:
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
                 for j, q in enumerate(self.groupedquery[ty]):
+                    #print(r.name, q.name, sep="\t")
                     bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
                     self.bglist[ty][r.name][q.name] = bg
                     self.qlist[ty][r.name][q.name] = ratio
                     self.plist[ty][r.name][q.name] = p
                     #if r in self.backgrounds.keys(): pass
                     #else: self.backgrounds[r] = bg
-                    
+         
         # multiple test correction       
         multiple_correction(self.plist)
         
@@ -434,18 +414,12 @@ class Projection:
         
         header_list = ["Reference<br>name",
                        "Query<br>name", 
-                       "Ref<br>number",
-                       "Que<br>number", 
+                       "Reference<br>number",
+                       "Query<br>number", 
                        "Proportion",
                        "Background<br>proportion",
                        "Positive<br>association<br>p-value",
                        "Negative<br>association<br>p-value"]
-        
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** If the background proportion is too small, it may cause bias in p value<br>'+
-                               '** P values are corrected by multiple test correction<br>'+
-                               '** Positive association: Proportion > Background<br>'+
-                               '** Negative association: Proportion < Background</p>'])
         
         type_list = 'sssssssssss'
         col_size_list = [10,10,10,10,10,10,15,15]
@@ -470,6 +444,12 @@ class Projection:
                         data_table.append([r,q,rlen,qlen,propor,backv,pv,"-"])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        
+        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
+                               '** If the background proportion is too small, it may cause bias in p value<br>'+
+                               '** P values are corrected by multiple test correction<br>'+
+                               '** Positive association: Proportion > Background<br>'+
+                               '** Negative association: Proportion < Background</p>'])
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"projection.html"))
@@ -630,11 +610,7 @@ class Jaccard:
                 self.jlist[ty][r.name] = OrderedDict()
                 self.realj[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
-                if r.total_coverage() == 0:
-                    r.relocate_regions(center='midpoint', left_length=10, right_length=10)
                 for j, q in enumerate(self.groupedquery[ty]):
-                    if q.total_coverage() == 0:
-                        q.relocate_regions(center='midpoint', left_length=10, right_length=10)
                     ts = time.time()
                     #print(q.name + "      " + str(len(q.sepuences[0])))
                     self.jlist[ty][r.name][q.name] = []
@@ -658,9 +634,16 @@ class Jaccard:
         #    self.xtickrotation, self.xtickalign = 70,"right"
         #else:
         #    self.xtickrotation, self.xtickalign = 0,"center"
+        self.xtickrotation, self.xtickalign = 0,"center"
         
         for it, t in enumerate(self.jlist.keys()):
             f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey = True)
+            legend_x = 1.05
+            nm = len(self.jlist.keys()) * len(self.jlist.values()[0]) * len(self.jlist.values()[0])
+            if nm > 40:
+                f.set_size_inches(nm * 0.1 +1 ,nm * 0.1 +1)
+                legend_x = 1.2
+                self.xtickrotation, self.xtickalign = 70,"right"
             try: axarr = axarr.reshape(-1)
             except: axarr = [axarr]
             plt.subplots_adjust(bottom=0.3)
@@ -679,7 +662,7 @@ class Jaccard:
                 d = []  # Store data within group
                 color_t = []  # Store tag for coloring boxes
                 #x_ticklabels = []  # Store ticklabels
-                axarr[i].set_xlabel(r)
+                axarr[i].set_xlabel(r, rotation=self.xtickrotation, ha=self.xtickalign)
                 
                 
                 
@@ -717,11 +700,11 @@ class Jaccard:
                     #plt.setp(axarr[i].get_yticks(),visible=False)
                     axarr[i].minorticks_off()
                     axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
-                    
+            
             plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
             axarr[-1].legend(legends[0:len(self.jlist[t][r].keys())], self.jlist[t][r].keys(), loc='center left', handlelength=1, 
                      handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
-                     bbox_to_anchor=(1.05, 0.5))
+                     bbox_to_anchor=(legend_x, 0.5))
             f.tight_layout(pad=2, h_pad=None, w_pad=None)
             self.fig.append(f)
   
@@ -734,8 +717,8 @@ class Jaccard:
         
         header_list = ["Reference<br>name",
                        "Query<br>name", 
-                       "Ref<br>number", 
-                       "Que<br>number", 
+                       "Reference<br>number", 
+                       "Query<br>number", 
                        "True<br>Jaccard<br>index",
                        "Average<br>random<br>Jaccard",
                        "Positive<br>Association<br>p-value",
@@ -1028,10 +1011,10 @@ class Intersect:
         
         header_list = ["Reference<br>name",
                        "Query<br>name", 
-                       "Ref<br>number", 
-                       "Que<br>number", 
+                       "Reference<br>number", 
+                       "Query<br>number", 
                        "Intersect.",
-                       "Proportion <br>of Ref"]
+                       "Proportion <br>of Reference"]
         
        
         if self.test_d: 
@@ -1267,6 +1250,8 @@ class Intersect:
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_q+0.5])
             
+            legends.reverse()
+            r_label.reverse()
             ax.legend(legends, r_label, loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
@@ -1317,14 +1302,14 @@ class Intersect:
                     chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                     #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
                     
-                    print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
+                    #print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
                     plist.append(p)
                     self.test_d[ty][r.name][qn] = [exp_m[2], chisq, p]
-                    #print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(*self.test_d[ty][r.name][qn]))
+                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,nr,qn,nq, *self.test_d[ty][r.name][qn]))
             
             reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
             c_p = 0
-            print2(self.parameter,"*** Permutational test with Multitest correction ***")
+            print2(self.parameter,"\n*** Permutational test with Multitest correction ***\n")
             for r in self.groupedreference[ty]:
                 for q in self.groupedquery[ty]:
                     self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
