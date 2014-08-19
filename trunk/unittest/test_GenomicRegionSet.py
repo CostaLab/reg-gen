@@ -184,6 +184,23 @@ class TestGenomicRegionSet(unittest.TestCase):
         result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
         self.assertEqual(len(result.sequences), 0)
         """
+        No length attach
+        A : .      .
+        B :    .   .
+        R : none
+        """
+        self.region_sets([['chr1',2,2],['chr1',20,20]],
+                         [['chr1',5,5],['chr1',20,20]])
+        result = self.setA.intersect(self.setB)
+        self.assertEqual(len(result.sequences), 1)
+        
+        result = self.setA.intersect(self.setB, mode=OverlapType.ORIGINAL)
+        self.assertEqual(len(result.sequences), 1)
+
+        result = self.setA.intersect(self.setB, mode=OverlapType.COMP_INCL)
+        self.assertEqual(len(result.sequences), 1)
+        
+        """
         Perfect overlapping
         A : ------
         B : ------
