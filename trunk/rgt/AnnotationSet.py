@@ -2,6 +2,7 @@ import os
 import sys
 from copy import deepcopy
 from GenomicRegion import GenomicRegion
+from GenomicRegionSet import GenomicRegionSet
 from Util import GenomeData, MotifData, AuxiliaryFunctions
 
 """
@@ -15,6 +16,62 @@ class AnnotationSet:
     """
     Annotation of genes and TFs' PWMs.
     """
+
+    class GeneField:
+        """
+        Gtf fields constants.
+        """
+
+        # Gff Fields 
+        GENOMIC_REGION = 0
+        ANNOTATION_SOURCE = 1
+        FEATURE_TYPE = 2
+        GENOMIC_PHASE = 3
+
+        # Gtf Fields
+        GENE_ID = 4
+        TRANSCRIPT_ID = 5
+        GENE_TYPE = 6
+        GENE_STATUS = 7
+        GENE_NAMES = 8
+        TRANSCRIPT_TYPE = 9
+        TRANSCRIPT_STATUS = 10
+        TRANSCRIPT_NAME = 11
+        LEVEL = 12
+
+        # Internal Fields
+        EXACT_GENE_MATCHES = 13
+        INEXACT_GENE_MATCHES = 14
+
+    class TfField:
+        """
+        Mtf fields constants.
+        """
+
+        # Mtf Fields
+        MATRIX_ID = 0
+        SOURCE = 1
+        VERSION = 2
+        GENE_NAMES = 3
+        GROUP = 4
+
+        # Internal Fields
+        EXACT_GENE_MATCHES = 5
+        INEXACT_GENE_MATCHES = 6
+
+    class DataType:
+        """
+        Data type constants.
+        """
+        GENE_LIST = 0
+        TF_LIST = 1
+
+    class ReturnType:
+        """
+        Return type constants.
+        """
+        ANNOTATION_SET = 0
+        LIST = 1
 
     def __init__(self, gene_source, tf_source=None):
         """
@@ -237,8 +294,8 @@ class AnnotationSet:
         tf_list = deepcopy(self.tf_list)
 
         # Deciding which list to be subsetted/returned
-        if(list_type == DataType.GENE_LIST): current_list = gene_list
-        elif(list_type == DataType.TF_LIST): current_list = tf_list
+        if(list_type == self.DataType.GENE_LIST): current_list = gene_list
+        elif(list_type == self.DataType.TF_LIST): current_list = tf_list
 
         # Subsetting
         if(isinstance(query,dict)):
@@ -277,66 +334,73 @@ class AnnotationSet:
                     # Resolving reference
                     current_list = result_list
 
+        # Deciding which list to be subsetted/returned
+        if(list_type == self.DataType.GENE_LIST): gene_list = current_list
+        elif(list_type == self.DataType.TF_LIST): tf_list = current_list
+
         # Return
-        if(return_type == ReturnType.ANNOTATION_SET): 
+        if(return_type == self.ReturnType.ANNOTATION_SET): 
             return AnnotationSet(gene_list, tf_list)
-        elif(return_type == ReturnType.LIST): 
+        elif(return_type == self.ReturnType.LIST): 
             return current_list
 
-    class GeneField:
+    def get_promoters(self, promoterLength=1000):
         """
-        Gtf fields constants.
-        """
+        Gets promoters of genes given a specific promoter length.
+        It returns a GenomicRegionSet with such promoters. The ID of each gene will be put
+        in the NAME field of each GenomicRegion. Each promoter includes also the coordinate of
+        the 5' base pair, therefore each promoter actual length is promoterLength+1.
 
-        # Gff Fields 
-        GENOMIC_REGION = 0
-        ANNOTATION_SOURCE = 1
-        FEATURE_TYPE = 2
-        GENOMIC_PHASE = 3
+        Keyword arguments:
+        promoterLength -- The length of the promoter region.
 
-        # Gtf Fields
-        GENE_ID = 4
-        TRANSCRIPT_ID = 5
-        GENE_TYPE = 6
-        GENE_STATUS = 7
-        GENE_NAMES = 8
-        TRANSCRIPT_TYPE = 9
-        TRANSCRIPT_STATUS = 10
-        TRANSCRIPT_NAME = 11
-        LEVEL = 12
-
-        # Internal Fields
-        EXACT_GENE_MATCHES = 13
-        INEXACT_GENE_MATCHES = 14
-
-    class TfField:
-        """
-        Mtf fields constants.
+        Return:
+        result_grs -- A GenomicRegionSet containing the promoters.
         """
 
-        # Mtf Fields
-        MATRIX_ID = 0
-        SOURCE = 1
-        VERSION = 2
-        GENE_NAMES = 3
-        GROUP = 4
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        query_annset = self.get(query_dictionary)
 
-        # Internal Fields
-        EXACT_GENE_MATCHES = 5
-        INEXACT_GENE_MATCHES = 6
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("promoters")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            if(gr.orientation == "+"):
+                gr.final = gr.initial + 1
+                gr.initial = gr.initial - promoterLength
+            else:
+                gr.initial = gr.final - 1
+                gr.final = gr.initial + promoterLength + 1
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
 
-    class DataType:
-        """
-        Data type constants.
-        """
-        GENE_LIST = 0
-        TF_LIST = 1
+        return result_grs
 
-    class ReturnType:
+    def get_exons(self):
         """
-        Return type constants.
+        Gets exons of genes.
+        It returns a GenomicRegionSet with such exons. The id of each gene will be put
+        in the NAME field of each GenomicRegion.
+
+        Keyword arguments:
+        None
+
+        Return:
+        result_grs -- A GenomicRegionSet containing the promoters.
         """
-        ANNOTATION_SET = 0
-        LIST = 1
+
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("exons")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
+
+        return result_grs
 
 
