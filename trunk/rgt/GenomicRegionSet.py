@@ -3,7 +3,7 @@ from __future__ import division
 from GenomicRegion import *
 import random
 from copy import deepcopy
-import os
+import os, sys
 import time
 import copy
 from scipy import stats
@@ -524,10 +524,11 @@ class GenomicRegionSet:
             ########################### OverlapType.ORIGINAL ###################################
             if mode == OverlapType.ORIGINAL:
                 while cont_loop:
-                    
+                    #print(str(s),"\t",str(b[j]))
                     # When the regions overlap
                     if s.overlap(b[j]):
                         z.add(s)
+                        
                         
                         try: s = iter_a.next()
                         except: cont_loop = False
@@ -538,6 +539,9 @@ class GenomicRegionSet:
                     elif s > b[j]:
                         if j == last_j: cont_loop = False
                         else: j = j + 1
+                    else:
+                        try: s = iter_a.next()
+                        except: cont_loop = False
                         
             if mode == OverlapType.COMP_INCL:     
                 while cont_loop:
@@ -767,13 +771,22 @@ class GenomicRegionSet:
             else:
                 self.sequences = z.sequences
     
-    def combine(self,region_set, change_name=True):
+    def combine(self, region_set, change_name=True, output=False):
         """ Adding another GenomicRegionSet without merging the overlapping regions. """
-        self.sequences.extend(region_set.sequences)
-        if change_name:
-            if self.name == "" : self.name = region_set.name
-            else: self.name = self.name + " + " + region_set.name
-        self.sorted = False
+        if output:
+            a = copy.deepcopy(self)
+            a.sequences.extend(region_set.sequences)
+            if change_name:
+                if a.name == "" : a.name = region_set.name
+                else: a.name = a.name + " + " + region_set.name
+            a.sorted = False
+            return a
+        else:
+            self.sequences.extend(region_set.sequences)
+            if change_name:
+                if self.name == "" : self.name = region_set.name
+                else: self.name = self.name + " + " + region_set.name
+            self.sorted = False
         
     def cluster(self,max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
@@ -1015,15 +1028,18 @@ class GenomicRegionSet:
                 z.add(new_region)
         return z
     
-    #hallo
     def projection_test(self, query, organism, extra=None, background=None):
         """" Return the p value of binomial test. """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
         if self.total_coverage() == 0 and len(self) > 0:
-            self.extend(1, 1)
-        #if query.total_coverage() == 0 and len(query) > 0:
-        #    query.extend(0, 1)
+            print(" ** Warning: \t"+ self.name+" has zero length.")
+            if extra:
+                return 0, 0, "n.a."  
+            else:
+                return "n.a."
+        if query.total_coverage() == 0 and len(query) > 0:
+            query.extend(0, 1)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
         if background: #backgound should be a GenomicRegionSet
             ss = self.intersect(background, OverlapType.OVERLAP)
