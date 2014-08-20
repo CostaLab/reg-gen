@@ -455,7 +455,7 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, fig_dir=None, cluster_path_fix="", links_file=False):
+    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
@@ -476,7 +476,7 @@ class Html:
         # Initialize document
         if fig_dir:
             self.copy_relevent_files(fig_dir)
-            self.create_header(relative_dir="../fig")
+            self.create_header(relative_dir=fig_rpath)
         else:
             self.create_header()
         
@@ -514,8 +514,8 @@ class Html:
         None -- Appends content to the document.
         """
         
-                # sorting codes
         if relative_dir:
+            print("relative")
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
         else:
@@ -569,7 +569,7 @@ class Html:
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
         self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\"file://"+os.path.join(self.cluster_path_fix,os.path.abspath(self.links_dict[k]))+"\">"+k+"</a>" for k in self.links_dict.keys()])
+        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>" for k in self.links_dict.keys()])
         self.document.append(link_str)
         self.document.append("    </b></font></td>")
         self.document.append("  </tr>")

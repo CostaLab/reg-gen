@@ -7,7 +7,7 @@ lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(lib_path)
 import numpy
 from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
-import time, datetime, argparse, HTML
+import time, datetime, argparse
 from collections import *
 import copy
 import statsmodels.sandbox.stats.multicomp as sm
@@ -213,8 +213,8 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
             elif threshold > 50 or threshold < 0:
                 print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
                 sys.exit(1)
-        if bed1.total_coverage() == 0: bed1.extend(1,1)
-        if bed2.total_coverage() == 0: bed2.extend(1,1)
+        if bed1.total_coverage() == 0: bed1.extend(0,1)
+        if bed2.total_coverage() == 0: bed2.extend(0,1)
         intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
         #intersect_r.remove_duplicates()
         c_inter = len(intersect_r)
@@ -248,6 +248,7 @@ def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
     return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
 def value2str(value):
+    if (isinstance(value,str)): return value
     if value == 0: return "0"
     if(isinstance(value,int)): return str(value)
     elif(isinstance(value,float)):
@@ -266,19 +267,27 @@ def multiple_correction(dic):
         all_p = []
         rn = len(dic[ty].keys())
         qn = len(dic[ty].values()[1].keys())
-        
+        cue = {}
+        i = 0
         if rn == 1 and qn == 1: return
         # get all p values from the dictionary
         for r in dic[ty].keys():
             for q in dic[ty][r].keys():
-                all_p.append(dic[ty][r][q])
+                
+                if isinstance(dic[ty][r][q], str):
+                    pass
+                else:
+                    all_p.append(dic[ty][r][q])
+                    cue[ty+r+q] = i
+                    i = i + 1
         # correction
         reject, pvals_corrected = multiple_test_correction(all_p, alpha=0.05, method='indep')
         # modify all p values
         for ir, r in enumerate(dic[ty].keys()):
             for iq, q in enumerate(dic[ty][r].keys()):
-                dic[ty][r][q] = pvals_corrected[ir*qn + iq]
-
+                try: dic[ty][r][q] = pvals_corrected[cue[ty+r+q]]
+                except: 
+                    pass
 
 
 ###########################################################################################
@@ -354,6 +363,7 @@ class Projection:
                     bg = self.bglist[ty][r.name][q.name]
                     ratio = self.qlist[ty][r.name][q.name]
                     p = self.plist[ty][r.name][q.name]
+                    print(p)
                     if len(q) == 0:
                         note = "Empty query!"
                     elif p < 0.05 and bg > ratio: 
@@ -384,7 +394,7 @@ class Projection:
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     y = self.qlist[ty][r][q]
-                    if y == 0 and logt == True: y = 0.000001
+                    if y == 0 and logt: y = 0.000001
                     #print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
                     ax[ind_ty].bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
             if logt:
@@ -408,7 +418,7 @@ class Projection:
 
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"projection.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("projection_test.png", align="center")
         
@@ -432,21 +442,26 @@ class Projection:
                     qlen = str(len(self.query[ind_q]))
                     backv = value2str(self.qlist[ty][r]['Background'])
                     propor = value2str(self.qlist[ty][r][q])
-                    pv = value2str(self.plist[ty][r][q])
-                    pvn = value2str(1 - self.plist[ty][r][q])
+                    pv = self.plist[ty][r][q]
+                    if isinstance(pv, str): pvn = "n.a."
+                    else: pvn = 1 - pv
                     
                     if self.plist[ty][r][q] < 0.05:
                         if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
-                            data_table.append([r,q,rlen,qlen,propor,backv,"<font color=\"red\">"+pv+"</font>", pvn])
+                            data_table.append([r,q,rlen,qlen,propor,backv,
+                                               "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
                         else:
-                            data_table.append([r,q,rlen,qlen,propor,backv,pvn, "<font color=\"red\">"+pv+"</font>"])
+                            data_table.append([r,q,rlen,qlen,propor,backv,
+                                               value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
                     else:
-                        data_table.append([r,q,rlen,qlen,propor,backv,pv,"-"])
+                        data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** If the background proportion is too small, it may cause bias in p value<br>'+
+                               '** For projection test, the reference GenomicRegionSet should have non-zero'+
+                               '   length in order to calculate its background proportion.<br>'+
                                '** P values are corrected by multiple test correction<br>'+
                                '** Positive association: Proportion > Background<br>'+
                                '** Negative association: Proportion < Background</p>'])
@@ -547,7 +562,7 @@ class Projection:
 
     def gen_html_distribution(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"distribution.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         for i, f in enumerate(self.fig):
             html.add_figure("distribution_test_"+str(i)+".png", align="center")
@@ -571,7 +586,7 @@ class Projection:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
-        html.write(os.path.join(fp,"projection.html"))
+        html.write(os.path.join(fp,"distribution.html"))
         
 ###########################################################################################
 #                    Jaccard test
@@ -710,7 +725,7 @@ class Jaccard:
   
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"jaccard.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
@@ -750,7 +765,7 @@ class Jaccard:
                                                value2str(np),
                                                "<font color=\"red\">"+value2str(p)+"</font>"])
                     else:
-                        data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj), value2str(p),"-"])
+                        data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj), value2str(p),value2str(np)])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -1001,7 +1016,7 @@ class Intersect:
 
     def gen_html(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"intersection.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         #html.create_header()
         #html.add_heading(title)
@@ -1031,10 +1046,11 @@ class Intersect:
                 r = ri.name
                 for ind_q, qi in enumerate(self.groupedquery[ty]):
                     q = qi.name
+                    if r == q: continue
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
                     intern = self.counts[ty][r][q][2]
                     if self.test_d:
-                        aveinter = str(self.test_d[ty][r][q][0])
+                        aveinter = self.test_d[ty][r][q][0]
                         chisqua = value2str(self.test_d[ty][r][q][1])
                         pv = self.test_d[ty][r][q][2]
                         npv = 1 - pv
@@ -1044,15 +1060,20 @@ class Intersect:
                             if intern > aveinter:
                                 data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                    str(intern), "{:.2f}%".format(100*pt),
-                                                   aveinter, chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                                                   value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
                             else:
                                 data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                    str(intern), "{:.2f}%".format(100*pt),
-                                                   aveinter, chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                                   value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
                         elif self.test_d[ty][r][q][2] >= 0.05:
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                               str(intern), "{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, value2str(pv),"-"])
+                            if intern > aveinter:
+                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                   str(intern), "{:.2f}%".format(100*pt),
+                                                   value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
+                            else:
+                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                   str(intern), "{:.2f}%".format(100*pt),
+                                                   value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
@@ -1070,7 +1091,7 @@ class Intersect:
     
     def gen_html_comb(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"combinatorial.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         #html.create_header()
         #html.add_heading(title)
@@ -1280,8 +1301,8 @@ class Intersect:
                 for q in self.groupedquery[ty]:
                     nq = len(q)
                     qn = q.name
-                    q.combine(r, change_name=False)
-                    n = len(q)
+                    com = q.combine(r, change_name=False, output=True)
+                    #n = len(q)
                     #print("r: "+str(nr) + "  q:"+str(nq) +"   total:"+str(n))
                     # True intersection
                     
@@ -1290,7 +1311,7 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        random = q.random_subregions(size=nq)                        
+                        random = com.random_subregions(size=nq)                        
                         d.append(count_intersect(r, random, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
@@ -1305,7 +1326,9 @@ class Intersect:
                     #print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
                     plist.append(p)
                     self.test_d[ty][r.name][qn] = [exp_m[2], chisq, p]
-                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,nr,qn,nq, *self.test_d[ty][r.name][qn]))
+                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,self.rlen[ty][r.name],
+                                                                                             qn,self.rlen[ty][qn], 
+                                                                                             *self.test_d[ty][r.name][qn]))
             
             reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
             c_p = 0
@@ -1571,7 +1594,7 @@ class Boxplot:
     
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"boxplot.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("boxplot.png", align="center")
         
@@ -1788,7 +1811,7 @@ class Lineplot:
 
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"lineplot.html"}
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("lineplot.png", align="center")
         
@@ -1903,7 +1926,7 @@ class Lineplot:
 
     def gen_htmlhm(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:fp}
+        link_d = {title:"heatmap.html"}
         #html = Html(name="Viz", links_dict="fig/links.txt", fig_dir=os.path.join(dir,outputname,"fig"), links_file=True)
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         

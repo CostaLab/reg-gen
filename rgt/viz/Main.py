@@ -678,10 +678,11 @@ def main():
                 for filename in fnmatch.filter(filenames, '*.html'):
                     if filename != 'index.html':
                         #table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"5"'+'>'+root.split('/')[-1]+"</a>"])
-                        link_d[roots[-1]] = os.path.join("..",roots[-3],roots[-2],roots[-1], filename)
-                        
-            print(link_d)
-            html = Html(name="Viz", links_dict=link_d)
+                        #link_d[roots[-1]] = os.path.join("..",roots[-3],roots[-2],roots[-1], filename)
+                        link_d[roots[-1]] = os.path.join("..",roots[-2],roots[-1], filename)
+                        print(link_d[roots[-1]])
+            #print(link_d)
+            html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,args.output,"fig"),fig_rpath="./fig")
             html.write(os.path.join(fp,"index.html"))
             
             sys.exit("Integration finished.\n")
