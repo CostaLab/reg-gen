@@ -5,7 +5,7 @@
 == GenomicRegion ==
 
 || *Developer* || *Function* || *Input* || *Output* || *Description* ||
-|| || || || || ||
+|| || overlap() || || || It doesn't work for the zero-length region. For example, (initial=20, finial=20) with the same region ||
 
 == GenomicRegionSet ==
 
