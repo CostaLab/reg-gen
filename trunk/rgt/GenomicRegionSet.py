@@ -873,9 +873,12 @@ class GenomicRegionSet:
         a = copy.deepcopy(self)
         b = copy.deepcopy(query)
         if a.total_coverage() == 0 and len(a) > 0:
-            a.extend(1, 1)
+            print(" ** Warning: \t"+ a.name+" has zero length.")
+            return a.name
         if b.total_coverage() == 0 and len(b) > 0:
-            b.extend(1, 1)
+            print(" ** Warning: \t"+ b.name+" has zero length.")
+            return b.name
+            
         intersects = a.intersect(b)
         #print(intersects.total_coverage(),self.total_coverage(), query.total_coverage(),sep="\t")
         intersects.merge()
@@ -1035,9 +1038,9 @@ class GenomicRegionSet:
         if self.total_coverage() == 0 and len(self) > 0:
             print(" ** Warning: \t"+ self.name+" has zero length.")
             if extra:
-                return 0, 0, "n.a."  
+                return 0, 0, "na"  
             else:
-                return "n.a."
+                return "na"
         if query.total_coverage() == 0 and len(query) > 0:
             query.extend(0, 1)
         #print("coverage of reference: ",self.total_coverage(),"\tcoverage of genome: ",chrom_map.total_coverage())
