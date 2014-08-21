@@ -1355,8 +1355,10 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        random = com.random_subregions(size=self.qlen[ty][qn])                        
-                        d.append(count_intersect(r, random, mode_count=self.mode_count, threshold=threshold))
+                        #qrandom = com.random_subregions(size=self.qlen[ty][qn])
+                        #rrandom = combi - qrandom
+                        [qrandom,random] = com.random_split(size=self.qlen[ty][qn])                           
+                        d.append(count_intersect(rrandom, qrandom, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
                     exp_m = numpy.mean(da, axis=0)
