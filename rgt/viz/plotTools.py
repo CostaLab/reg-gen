@@ -213,8 +213,8 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
             elif threshold > 50 or threshold < 0:
                 print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
                 sys.exit(1)
-        if bed1.total_coverage() == 0: bed1.extend(0,1)
-        if bed2.total_coverage() == 0: bed2.extend(0,1)
+        ##if bed1.total_coverage() == 0: bed1.extend(0,1)
+        #if bed2.total_coverage() == 0: bed2.extend(0,1)
         intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
         #intersect_r.remove_duplicates()
         c_inter = len(intersect_r)
@@ -434,6 +434,7 @@ class Projection:
         type_list = 'sssssssssss'
         col_size_list = [10,10,10,10,10,10,15,15]
         data_table = []
+        nalist = []
         for ind_ty, ty in enumerate(self.plist.keys()):
             html.add_heading(ty, size = 4, bold = False)
             for ind_r,r in enumerate(self.plist[ty].keys()):
@@ -443,28 +444,36 @@ class Projection:
                     backv = value2str(self.qlist[ty][r]['Background'])
                     propor = value2str(self.qlist[ty][r][q])
                     pv = self.plist[ty][r][q]
-                    if isinstance(pv, str): pvn = "n.a."
-                    else: pvn = 1 - pv
-                    
-                    if self.plist[ty][r][q] < 0.05:
-                        if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
-                            data_table.append([r,q,rlen,qlen,propor,backv,
-                                               "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
-                        else:
-                            data_table.append([r,q,rlen,qlen,propor,backv,
-                                               value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                    if pv == "na": 
+                        nalist.append(r)
+                        continue
                     else:
-                        data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
+                        pvn = 1-pv
+                    
+                        if self.plist[ty][r][q] < 0.05:
+                            if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
+                                data_table.append([r,q,rlen,qlen,propor,backv,
+                                                   "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
+                            else:
+                                data_table.append([r,q,rlen,qlen,propor,backv,
+                                                   value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                        else:
+                            data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** If the background proportion is too small, it may cause bias in p value<br>'+
-                               '** For projection test, the reference GenomicRegionSet should have non-zero'+
-                               '   length in order to calculate its background proportion.<br>'+
-                               '** P values are corrected by multiple test correction<br>'+
-                               '** Positive association: Proportion > Background<br>'+
-                               '** Negative association: Proportion < Background</p>'])
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['If the background proportion is too small, it may cause bias in p value.'],
+                      ['For projection test, the reference GenomicRegionSet should have non-zero length in order to calculate its background proportion.'],
+                      ['P values are corrected by multiple test correction.'],
+                      ['Positive association is defined by: Proportion > Background.'],
+                      ['Negative association is defined by: Proportion < Background.']]
+        
+        nalist = set(nalist)
+        if len(nalist) > 0:
+            data_table.append(['The following references contain zero-length region which cause error in proportion calculation, please check it:<br>'+
+                               '     <font color=\"red\">'+', '.join([s for s in nalist])+'</font></p>'])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"projection.html"))
@@ -614,7 +623,10 @@ class Jaccard:
         self.jlist = OrderedDict()
         self.realj = OrderedDict()
         self.plist = OrderedDict()
+        self.rlen = {}
+        self.qlen = {}
         self.rt = runtime
+        self.nalist = []
         print2(self.parameter, "\nJaccard Test")
         print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}\t{5:s}".format("Reference","Query","Repeats", "True_Jaccard_index", "p-value", "Time"))
         for ty in self.groupedreference.keys():
@@ -622,24 +634,36 @@ class Jaccard:
             self.realj[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
             for i, r in enumerate(self.groupedreference[ty]):
-                self.jlist[ty][r.name] = OrderedDict()
-                self.realj[ty][r.name] = OrderedDict()
-                self.plist[ty][r.name] = OrderedDict()
-                for j, q in enumerate(self.groupedquery[ty]):
-                    ts = time.time()
-                    #print(q.name + "      " + str(len(q.sepuences[0])))
-                    self.jlist[ty][r.name][q.name] = []
-                    self.realj[ty][r.name][q.name] = q.jaccard(r) # The real jaccard index from r and q
-                    for k in range(runtime):
-                        random = q.random_regions(organism=organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
-                        self.jlist[ty][r.name][q.name].append(r.jaccard(random))
-                    # How many randomizations have higher jaccard index than the real index?
-                    p = len([x for x in self.jlist[ty][r.name][q.name] if x > self.realj[ty][r.name][q.name]])/runtime
-                    self.plist[ty][r.name][q.name] = p
-                    te = time.time()
-                    print2(self.parameter, r.name +"\t"+ q.name +"\tx"+str(runtime)+"\t"+ 
-                           value2str(self.realj[ty][r.name][q.name]) +"\t"+ value2str(p) +"\t"+ 
-                           str(datetime.timedelta(seconds=round(te-ts))))    
+                if r.total_coverage() == 0 and len(r)>0:
+                    self.nalist.append(r.name)
+                    continue
+                else:
+                    if r.name not in self.rlen.keys(): self.rlen[r.name] = len(r)
+                    self.jlist[ty][r.name] = OrderedDict()
+                    self.realj[ty][r.name] = OrderedDict()
+                    self.plist[ty][r.name] = OrderedDict()
+                    for j, q in enumerate(self.groupedquery[ty]):
+                        ts = time.time()
+                        #print(q.name + "      " + str(len(q.sepuences[0])))
+                        
+                        # The real jaccard index from r and q
+                        if q.total_coverage() == 0 and len(q)>0:
+                            self.nalist.append(q.name)
+                            continue
+                        else:
+                            if q.name not in self.qlen.keys(): self.qlen[q.name] = len(q)
+                            self.jlist[ty][r.name][q.name] = []
+                            self.realj[ty][r.name][q.name] = q.jaccard(r)
+                            for k in range(runtime):
+                                random = q.random_regions(organism=organism, multiply_factor=1, overlap_result=True, overlap_input=True, chrom_M=False)
+                                self.jlist[ty][r.name][q.name].append(r.jaccard(random))
+                            # How many randomizations have higher jaccard index than the real index?
+                            p = len([x for x in self.jlist[ty][r.name][q.name] if x > self.realj[ty][r.name][q.name]])/runtime
+                            self.plist[ty][r.name][q.name] = p
+                            te = time.time()
+                            print2(self.parameter, r.name +"\t"+ q.name +"\tx"+str(runtime)+"\t"+ 
+                                   value2str(self.realj[ty][r.name][q.name]) +"\t"+ value2str(p) +"\t"+ 
+                                   str(datetime.timedelta(seconds=round(te-ts))))    
     def plot(self, logT=False):
         """ Return boxplot from the given tables.
         
@@ -687,6 +711,9 @@ class Jaccard:
                     #x_ticklabels.append(q)
                 # Fine tuning boxplot
                 axarr[i].scatter(x=range(len(self.jlist[t][r].keys())), y=[y for y in self.realj[t][r].values()], s=2, c="red", edgecolors='none')
+                print(len(d))
+                print(len(self.jlist[t][r].keys()))
+                print(len(self.realj[t][r].values()))
                 bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
                                       patch_artist=True, bootstrap=None)
                 z = 10 # zorder for bosplot
@@ -742,14 +769,11 @@ class Jaccard:
         type_list = 'sssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10]
         data_table = []
-        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+        
+        for ind_ty, ty in enumerate(self.jlist.keys()):
             html.add_heading(ty, size = 4, bold = False)
-            for ind_r,ri in enumerate(self.groupedreference[ty]):
-                r = ri.name
-                rlen = str(len(ri))
-                for ind_q, qi in enumerate(self.groupedquery[ty]):
-                    q = qi.name
-                    qlen = str(len(qi))
+            for ind_r,r in enumerate(self.jlist[ty].keys()):
+                for ind_q, q in enumerate(self.jlist[ty][r].keys()):
                     rej = self.realj[ty][r][q]
                     rj = numpy.mean(self.jlist[ty][r][q])
                     p = self.plist[ty][r][q]
@@ -757,21 +781,29 @@ class Jaccard:
                     
                     if self.plist[ty][r][q] < 0.05:
                         if self.realj[ty][r][q] > rj:
-                            data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj),
+                            data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj),
                                                "<font color=\"red\">"+value2str(p)+"</font>",
                                                value2str(np)])
                         else:
-                            data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj),
+                            data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj),
                                                value2str(np),
                                                "<font color=\"red\">"+value2str(p)+"</font>"])
                     else:
-                        data_table.append([r,q,rlen,qlen,value2str(rej),value2str(rj), value2str(p),value2str(np)])
+                        data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj), value2str(p),value2str(np)])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** Randomization was performed '+ str(self.rt)+' times<br>'+
-                               '</p>'])
+        
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['Randomization was performed '+ str(self.rt)+ ' times.'],
+                      ['For projection test, the reference and query should have non-zero length in order to calculate its Jaccard index.'],
+                      ['Positive association is defined by: True Jaccard index > Averaged random Jaccard.'],
+                      ['Negative association is defined by: True Jaccard index < Averaged random Jaccard.']]
+        self.nalist = set(self.nalist)
+        if len(self.nalist)>0:
+            data_table.append(['The following region sets contain zero-length regions which cause error in Jaccard index calculation, please check it:<br>'+
+                               '<font color=\"red\">'+', '.join([s for s in self.nalist])+'</font>'])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"jaccard.html"))
@@ -842,6 +874,7 @@ class Intersect:
     def count_intersect(self, threshold):
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
+        self.nalist = []
         if self.mode_count == "bp":
             print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         elif self.mode_count == "count":
@@ -852,19 +885,27 @@ class Intersect:
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
             
             for r in self.groupedreference[ty]:
-                self.counts[ty][r.name] = OrderedDict()
-                if self.mode_count == "bp": rlen = r.total_coverage()
-                elif self.mode_count == "count": rlen = len(r)
-                self.rlen[ty][r.name] = rlen
-                
-                for q in self.groupedquery[ty]:
-                    if self.mode_count == "bp": qlen = q.total_coverage()
-                    elif self.mode_count == "count": qlen = len(q)
-                    self.qlen[ty][q.name] = qlen
-                    # Define different mode of intersection and count here
-                    c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
-                    self.counts[ty][r.name][q.name] = c
-                    print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
+                if r.total_coverage() == 0 and len(r)>0:
+                    self.nalist.append(r.name)
+                    continue
+                else:
+                    self.counts[ty][r.name] = OrderedDict()
+                    if self.mode_count == "bp": rlen = r.total_coverage()
+                    elif self.mode_count == "count": rlen = len(r)
+                    self.rlen[ty][r.name] = rlen
+                    
+                    for q in self.groupedquery[ty]:
+                        if q.total_coverage() == 0 and len(q)>0:
+                            self.nalist.append(q.name)
+                            continue
+                        else:
+                            if self.mode_count == "bp": qlen = q.total_coverage()
+                            elif self.mode_count == "count": qlen = len(q)
+                            self.qlen[ty][q.name] = qlen
+                            # Define different mode of intersection and count here
+                            c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+                            self.counts[ty][r.name][q.name] = c
+                            print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
 
     def barplot(self, logt=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
@@ -1040,12 +1081,10 @@ class Intersect:
         type_list = 'ssssssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
         data_table = []
-        for ind_ty, ty in enumerate(self.groupedreference.keys()):
+        for ind_ty, ty in enumerate(self.counts.keys()):
             html.add_heading(ty, size = 4, bold = False)
-            for ind_r,ri in enumerate(self.groupedreference[ty]):
-                r = ri.name
-                for ind_q, qi in enumerate(self.groupedquery[ty]):
-                    q = qi.name
+            for ind_r,r in enumerate(self.counts[ty]):
+                for ind_q, q in enumerate(self.counts[ty][r]):
                     if r == q: continue
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
                     intern = self.counts[ty][r][q][2]
@@ -1080,12 +1119,19 @@ class Intersect:
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** If there are intersections between queries, it will cause bias in percentage barplot.</p>'])
-        if self.test_d:
-            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
-                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
         
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['Positive association is defined by: True intersection number > Averaged random intersection.'],
+                      ['Negative association is defined by: True intersection number < Averaged random intersection.']]
+        self.nalist = set(self.nalist)
+        if len(self.nalist)>0:
+            data_table.append(['The following region sets contain zero-length regions which cause error in intersection calculation, please check it:<br>'+
+                               '<font color=\"red\">'+', '.join([s for s in self.nalist])+'</font>'])
+        
+        if self.test_d:
+            data_table.append(['Randomly permutation for '+ str(self.test_time)+ ' times.'])
+        
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"intersection.html"))
     
@@ -1296,14 +1342,12 @@ class Intersect:
             self.test_d[ty] = {}
             plist = []
             for r in self.groupedreference[ty]:
+                if r.name in self.nalist: continue
                 self.test_d[ty][r.name] = {}
-                nr = len(r)
                 for q in self.groupedquery[ty]:
-                    nq = len(q)
+                    if q.name in self.nalist: continue
                     qn = q.name
                     com = q.combine(r, change_name=False, output=True)
-                    #n = len(q)
-                    #print("r: "+str(nr) + "  q:"+str(nq) +"   total:"+str(n))
                     # True intersection
                     
                     obs = self.counts[ty][r.name][q.name]
@@ -1311,7 +1355,7 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        random = com.random_subregions(size=nq)                        
+                        random = com.random_subregions(size=self.qlen[ty][qn])                        
                         d.append(count_intersect(r, random, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
@@ -1333,11 +1377,12 @@ class Intersect:
             reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
             c_p = 0
             print2(self.parameter,"\n*** Permutational test with Multitest correction ***\n")
-            for r in self.groupedreference[ty]:
-                for q in self.groupedquery[ty]:
-                    self.test_d[ty][r.name][q.name][-1] = pvals_corrected[c_p]
+            for r in self.test_d[ty].keys():
+                if r in self.nalist: continue
+                for q in self.test_d[ty][r].keys():
+                    self.test_d[ty][r][q][-1] = pvals_corrected[c_p]
                     c_p += 1
-                    print2(self.parameter,r.name +"\t"+ q.name +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r.name][q.name]))
+                    print2(self.parameter,r +"\t"+ q +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r][q]))
     
 ###########################################################################################
 #                    Boxplot 

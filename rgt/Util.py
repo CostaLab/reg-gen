@@ -255,7 +255,7 @@ class ImageData(ConfigurationFile):
         self.default_motif_logo = os.path.join(self.data_dir,"fig","default_motif_logo.png")
         self.tablesorter = os.path.join(self.data_dir,"fig","jquery.tablesorter.min.js")
         self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
-        
+        self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
 
     def get_rgt_logo(self):
         """
@@ -293,6 +293,11 @@ class ImageData(ConfigurationFile):
         """
         return self.tablesorter
     
+    def get_jquery_metadata(self):
+        """
+        Returns the default sorttable code location.
+        """
+        return self.jquery_metadata
     
 class OverlapType:
     """
@@ -503,6 +508,7 @@ class Html:
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
         
         
         
@@ -518,9 +524,11 @@ class Html:
             print("relative")
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
+            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
         else:
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
+            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
         
         self.document.append('<script type="text/javascript">') 
         self.document.append('$(document).ready(function()') 
@@ -626,7 +634,7 @@ class Html:
         end_str += "</font></p>"
         self.document.append(end_str)
 
-    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50):
+    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, cell_align = 'center'):
         """ 
         Creates a zebra table.
 
@@ -659,7 +667,7 @@ class Html:
         self.document.append("  <thead><tr>")
         header_str = []
         for i in range(0,len(header_list)):
-            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\"center\">"+header_list[i]+"</th>")
+            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+header_list[i]+"</th>")
         header_str = "    "+"\n    ".join(header_str)
         self.document.append(header_str)
         self.document.append("  </tr></thead>")
@@ -675,11 +683,11 @@ class Html:
             # Body data
             for j in range(0,len(data_table[i])):
                 if(type_list[j] == "s"):
-                    self.document.append("      <td align=\"center\">"+data_table[i][j]+"</td>")
+                    self.document.append("      <td align=\""+cell_align+"\">"+data_table[i][j]+"</td>")
                 elif(type_list[j] == "i"): 
-                    self.document.append("      <td align=\"center\"><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
+                    self.document.append("      <td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
                 elif(type_list[j] == "l"):
-                    self.document.append("      <td align=\"center\"><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
+                    self.document.append("      <td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
                 else: pass # TODO ERROR
 
             # Row ending

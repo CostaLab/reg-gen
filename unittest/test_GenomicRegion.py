@@ -44,10 +44,20 @@ class TestGenomicRegion(unittest.TestCase):
         r2 = GenomicRegion(chrom=1, initial=14, final=20)
         self.assertTrue(r.overlap(r2))
         
+        #they have zero length
         r = GenomicRegion(chrom=1, initial=10, final=10)
         r2 = GenomicRegion(chrom=1, initial=10, final=10)
+        self.assertFalse(r.overlap(r2))
+        
+        #they have zero length
+        r = GenomicRegion(chrom=1, initial=10, final=10)
+        r2 = GenomicRegion(chrom=1, initial=11, final=11)
         self.assertTrue(r.overlap(r2))
         
+        #they have zero length
+        r = GenomicRegion(chrom=1, initial=10, final=10)
+        r2 = GenomicRegion(chrom=1, initial=5, final=10)
+        self.assertTrue(r.overlap(r2))
         
     def test_extend(self):
         #normal extend
