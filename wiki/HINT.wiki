@@ -6,7 +6,7 @@
 
 We propose an HMM-based approach to integrate both DNase I hypersensitivity and histone modifications for the detection of open chromatin regions and active binding sites.
 
-Within transcription factor binding sites, there is a specific grammar of DNase I digestion and histone marks. We have therefore devised a multivariate HMM to model this regulatory grammar by simultaneous analysis of DNase-seq and the ChIP-seq profiles of H3K4me3 (indicative of promoters) or H3K4me1 (indicative of enhancers) on a genome-wide level.
+Within transcription factor binding sites, there is a specific grammar of DNase I digestion and histone marks. We have therefore devised a multivariate HMM to model this regulatory grammar by simultaneous analysis of DNase-seq and the ChIP-seq profiles of histone modifications on a genome-wide level.
 
 The HMM has as input a normalized and a slope signal of DNase-seq and one of the histone marks. It can therefore detect the increase, top and decrease regions of either histone modification and DNase signals. The genomic regions annotated with the 'footprint' HMM state are considered our predictions and represent likely binding sites within that cell's context.
 
