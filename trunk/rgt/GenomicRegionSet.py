@@ -135,6 +135,15 @@ class GenomicRegionSet:
         #z.sort()
         return z                
 
+    def random_split(self,size):
+        """Return two exclusive GenomicRegionSets from self randomly """
+        a, b = GenomicRegionSet('random_split1'), GenomicRegionSet('random_split2')
+        samp = random.sample(range(len(self)),size)
+        for i in range(len(self)):
+            if i in samp: a.add(self.sequences[i])
+            else: b.add(self.sequences[i])
+        return a, b
+    
     def write_bed(self,filename):
         """Write GenomicRegions to BED file"""
         with open(filename, 'w') as f:
