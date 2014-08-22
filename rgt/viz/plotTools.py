@@ -117,7 +117,7 @@ def colormaps(exps, colorby, definedinEM):
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     if definedinEM == False:
         if len(exps.get_regionsnames()) < 20:
-            colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples',  'YlGnBu', 'Greys','gist_yarg', 'GnBu', 
+            colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
                       'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
         else:
             colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
@@ -669,10 +669,6 @@ class Jaccard:
         
         """
         self.fig = []
-        #if len(self.jlist.values[1].keys())*len(self.jlist.values[1].values()[1].keys()) > 15: 
-        #    self.xtickrotation, self.xtickalign = 70,"right"
-        #else:
-        #    self.xtickrotation, self.xtickalign = 0,"center"
         self.xtickrotation, self.xtickalign = 0,"center"
         
         for it, t in enumerate(self.jlist.keys()):
@@ -711,9 +707,6 @@ class Jaccard:
                     #x_ticklabels.append(q)
                 # Fine tuning boxplot
                 axarr[i].scatter(x=range(len(self.jlist[t][r].keys())), y=[y for y in self.realj[t][r].values()], s=2, c="red", edgecolors='none')
-                print(len(d))
-                print(len(self.jlist[t][r].keys()))
-                print(len(self.realj[t][r].values()))
                 bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
                                       patch_artist=True, bootstrap=None)
                 z = 10 # zorder for bosplot
@@ -778,18 +771,20 @@ class Jaccard:
                     rj = numpy.mean(self.jlist[ty][r][q])
                     p = self.plist[ty][r][q]
                     np = 1-p
+                    rl = str(self.rlen[r])
+                    ql = str(self.qlen[q])
                     
                     if self.plist[ty][r][q] < 0.05:
                         if self.realj[ty][r][q] > rj:
-                            data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj),
+                            data_table.append([r,q,rl,ql,value2str(rej),value2str(rj),
                                                "<font color=\"red\">"+value2str(p)+"</font>",
                                                value2str(np)])
                         else:
-                            data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj),
+                            data_table.append([r,q,rl,ql,value2str(rej),value2str(rj),
                                                value2str(np),
                                                "<font color=\"red\">"+value2str(p)+"</font>"])
                     else:
-                        data_table.append([r,q,self.rlen[r],self.qlen[q],value2str(rej),value2str(rj), value2str(p),value2str(np)])
+                        data_table.append([r,q,rl,ql,value2str(rej),value2str(rj), value2str(p),value2str(np)])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
@@ -1355,10 +1350,8 @@ class Intersect:
                     # Randomization
                     d = []
                     for i in range(repeat):
-                        #qrandom = com.random_subregions(size=self.qlen[ty][qn])
-                        #rrandom = combi - qrandom
-                        [qrandom,random] = com.random_split(size=self.qlen[ty][qn])                           
-                        d.append(count_intersect(rrandom, qrandom, mode_count=self.mode_count, threshold=threshold))
+                        random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                        d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
                     da = numpy.array(d)
                     
                     exp_m = numpy.mean(da, axis=0)
@@ -1569,6 +1562,14 @@ class Boxplot:
         
         """
         f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = sy)
+        self.xtickrotation, self.xtickalign = 0,"center"
+
+        nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
+        if nm > 40:
+            f.set_size_inches(nm * 0.25 ,nm * 0.5)
+            #legend_x = 1.2
+            self.xtickrotation, self.xtickalign = 70,"right"
+        
         canvas = FigureCanvas(f)
         canvas.set_window_title(title)
         try: axarr = axarr.reshape(-1)
@@ -1613,7 +1614,7 @@ class Boxplot:
             # Fine tuning subplot
             axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sortDict[g].keys())])
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=0, fontsize=10)
+            axarr[i].set_xticklabels(self.sortDict[g].keys(), self.xtickrotation, ha=self.xtickalign, fontsize=10)
             
             axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
@@ -1646,13 +1647,9 @@ class Boxplot:
         html.add_figure("boxplot.png", align="center")
         
         header_list = self.tag_type + ["p-value"] + self.tag_type
-        print(header_list)
-        
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
         
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,40,20,20,20,20,20]
-        
         
         #### Calculate p value ####
         plist = {}
@@ -1691,6 +1688,10 @@ class Boxplot:
                                                        g,s2, c2])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
+        
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['']]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"boxplot.html"))
@@ -1862,7 +1863,11 @@ class Lineplot:
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("lineplot.png", align="center")
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
+        type_list = 'ssssssssss'
+        col_size_list = [20,20,20,20,20,20,20,20,20]
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['']]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"lineplot.html"))
@@ -1931,7 +1936,8 @@ class Lineplot:
                     max_value = numpy.amax(self.data[t][g][c])
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', vmin=0, 
+                                            vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
                     axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
                     #axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
@@ -1981,7 +1987,11 @@ class Lineplot:
         for name in self.hmfiles:
             html.add_figure(name+".png", align="center")
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">** </p>'])
+        type_list = 'ssssssssss'
+        col_size_list = [20,20,20,20,20,20,20,20,20]
+        header_list=["Assumptions and hypothesis"]
+        data_table = [['']]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"heatmap.html"))
