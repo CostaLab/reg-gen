@@ -689,12 +689,13 @@ class GenomicRegionSet:
         b = copy.deepcopy(y)
         
         z = GenomicRegionSet(a.name + ' - ' + b.name)
-        #if len(a) == 0 or len(b) == 0: return z
+        if len(a) == 0 or len(b) == 0: return a
         
         # If there is overlap within self or y, they should be merged first. 
-        if a.sorted == False: a.sort()
+        if a.sorted == False: 
+            a.sort()
         b.merge()
-        
+
         iter_a = iter(a)
         s = iter_a.next()
         last_j = len(b)-1
@@ -704,10 +705,12 @@ class GenomicRegionSet:
         cont_overlap = False
     
         while cont_loop:
+            #print("Compare: "+s.__repr__()+"\t"+b[j].__repr__())
             """
             ----------------------
             -----  --    ----    -----  ----
             """
+            
             # When the regions overlap
             if s.overlap(b[j]):
                 if cont_overlap == False: pre_inter = j
@@ -751,7 +754,7 @@ class GenomicRegionSet:
                          ------  
                      ------
                     """
-                    s2 = GenomicRegion(chrom=s.chrom, initial=s.final, final=b[j].final)
+                    s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final)
                     s = s2
                     if j < last_j: j = j + 1
                     cont_overlap = True
@@ -775,6 +778,7 @@ class GenomicRegionSet:
                 cont_overlap = True
             
             elif s < b[j]:
+                z.add(s)
                 try: 
                     s = iter_a.next()
                     j = pre_inter
@@ -783,6 +787,7 @@ class GenomicRegionSet:
             
             elif s > b[j]:
                 if j == last_j:
+                    z.add(s)
                     cont_loop = False
                 else:
                     j = j + 1

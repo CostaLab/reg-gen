@@ -521,7 +521,6 @@ class Html:
         """
         
         if relative_dir:
-            print("relative")
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
