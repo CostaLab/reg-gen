@@ -15,7 +15,6 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
 import itertools
-import pprint
 
 # Local Libraries
 # Distal Libraries
@@ -29,7 +28,7 @@ from rgt.motifanalysisnew.Statistics import multiple_test_correction
 # Local test
 dir = os.getcwd()
 
-
+annotation_list = ["promotor", "exon"]
 ###########################################################################################
 #                    Universal functions 
 ###########################################################################################
@@ -288,18 +287,28 @@ def multiple_correction(dic):
                 except: 
                     pass
 
-
+class ref_annotation(feature):
+    def __init__(self):
+        self.gtf = AnnotationSet(GenomeData.get_gencode_annotation())
+    def 
+    
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
 
 class Projection:
-    def __init__(self, referenceEM, queryEM):
-        self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
-        self.rEM.read(referenceEM)
-        self.qEM.read(queryEM)
-        self.references = self.rEM.get_regionsets()
-        self.referencenames = self.rEM.get_regionsnames()
+    def __init__(self, reference_path, query_path):
+        # Reference
+        if reference_path in annotation_list:
+            self.rEM = ref_annotation(reference_path) 
+        else:
+            self.rEM = ExperimentalMatrix()
+            self.rEM.read(reference_path)
+            self.references = self.rEM.get_regionsets()
+            self.referencenames = self.rEM.get_regionsnames()
+        # Query
+        self.qEM = ExperimentalMatrix()
+        self.qEM.read(query_path)
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
@@ -530,9 +539,6 @@ class Projection:
             #self.distriDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in self.chrom_list]
             
             self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)[0])/all_cov for chr in self.chrom_list]
-            
-        #pp = pprint.PrettyPrinter(depth=6)
-        #pp.pprint(self.distriDict)
         
     def plot_distribution(self):
         def to_percentage(x, pos=0): 
@@ -601,10 +607,10 @@ class Projection:
 ###########################################################################################
 
 class Jaccard:
-    def __init__(self, referenceEM, queryEM):
+    def __init__(self, reference_path, query_path):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
-        self.rEM.read(referenceEM)
-        self.qEM.read(queryEM)
+        self.rEM.read(reference_path)
+        self.qEM.read(query_path)
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         self.query = self.qEM.get_regionsets()
@@ -815,10 +821,10 @@ class Jaccard:
 ###########################################################################################
 
 class Intersect:
-    def __init__(self, referenceEM, queryEM, mode_count, organism):
+    def __init__(self, reference_path, query_path, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
-        self.rEM.read(referenceEM)
-        self.qEM.read(queryEM)
+        self.rEM.read(reference_path)
+        self.qEM.read(query_path)
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         self.query = self.qEM.get_regionsets()

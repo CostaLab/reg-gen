@@ -834,6 +834,30 @@ class TestGenomicRegionSet(unittest.TestCase):
         self.assertEqual(result.sequences[1].final, 30000)
         self.assertEqual(result.sequences[2].initial, 0)
         self.assertEqual(result.sequences[2].final, 31000)
+        """
+        A :   -----------------------------------------------------------
+        B :    ---    ---------         ----           ----
+        R :   -   ----         ---------    -----------    --------------
+        """
+        self.region_sets([['chr1',5,1000]],
+                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240]])
+        result = self.setA.subtract(self.setB)
+        self.assertEqual(len(result.sequences), 5)
+        
+        """
+        A :   -----------------------              ------
+                   -----     -----  -----------
+        B :    ---    ---------         ----           ----
+        R :   -   ----         ------              ----
+                   ---         ---  ----    ---
+        """
+        self.region_sets([['chr1',5,100],['chr1',20,40],['chr1',60,80],['chr1',95,150],['chr1',180,220]],
+                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240]])
+        result = self.setA.subtract(self.setB)
+        #print(result.sequences)
+        self.assertEqual(len(result.sequences), 8)
+        self.assertEqual(result.sequences[0].initial, 5)
+        
         
     def test_merge(self):
         """
@@ -1033,6 +1057,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         overlap_result=False, 
         overlap_input=False
         """
+        """
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
@@ -1046,10 +1071,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
         #print("Overlaps within result: ",result.within_overlap())
         """
+        """
         total_size=100,
         overlap_result=True, 
         overlap_input=False
         """
+        
         self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
