@@ -10,7 +10,6 @@ from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
 from collections import *
 import copy
-import statsmodels.sandbox.stats.multicomp as sm
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
