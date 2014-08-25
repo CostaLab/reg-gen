@@ -133,6 +133,9 @@ class CoverageSet:
         self.stepsize = stepsize
         
         bam = pysam.Samfile(bam_file, "rb" )
+        for read in bam.fetch():
+            read_size += read.rlen
+            break
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         #print("Loading reads of %s..." %self.name, file=sys.stderr)
