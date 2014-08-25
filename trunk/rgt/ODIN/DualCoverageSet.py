@@ -36,7 +36,7 @@ class DualCoverageSet():
             input = map_input[i]
             
             if verbose:
-                input['cov-ip'].write_bigwig(name + '-gc-s%s-1.bw' %i, chrom_sizes)
+                input['cov-ip'].write_bigwig(name + '-gc-s%s-1-raw.bw' %i, chrom_sizes)
                 #input['cov-ip'].write_bed(name + '-gc-s%s-1.bed' %i)
             
             if input['input'] is not None:
@@ -55,9 +55,9 @@ class DualCoverageSet():
                     if not no_gc_content:
                         self.print_gc_hist(name + '-s%s-' %i, gc_hist)
                     if input['input'] is not None:
-                        input['cov-input'].write_bigwig(name + '-gc-s%s-input-2.bw' %i, chrom_sizes)
+                        input['cov-input'].write_bigwig(name + '-gc-s%s-input-2-gc.bw' %i, chrom_sizes)
                         #input['cov-input'].write_bed(name + '-gc-s%s-input-2.bed' %i)
-                    input['cov-ip'].write_bigwig(name + '-gc-s%s-2.bw' %i, chrom_sizes)
+                    input['cov-ip'].write_bigwig(name + '-gc-s%s-2-gc.bw' %i, chrom_sizes)
                     #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
         
         norm_done = False
@@ -69,12 +69,11 @@ class DualCoverageSet():
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             
-            if verbose:
-                if input['input'] is not None:
-                    input['cov-input'].write_bigwig(name + '-gc-s%s-input-3'%i, chrom_sizes)
-                    #input['cov-input'].write_bed(name + '-gc-s%s-input-3.bed'%i)
-                input['cov-ip'].write_bigwig(name + '-gc-s%s-3.bw'%i, chrom_sizes)
-                #input['cov-ip'].write_bed(name + '-gc-s%s-3.bed'%i)
+            if input['input'] is not None:
+                input['cov-input'].write_bigwig(name + '-gc-s%s-input.bw'%i, chrom_sizes)
+                #input['cov-input'].write_bed(name + '-gc-s%s-input-3.bed'%i)
+            input['cov-ip'].write_bigwig(name + '-gc-s%s.bw'%i, chrom_sizes)
+            #input['cov-ip'].write_bed(name + '-gc-s%s-3.bed'%i)
                 
         #make one array for the coverage
         self.first_overall_coverage = reduce(lambda x,y: np.concatenate((x,y)), [self.cov1.coverage[i] for i in range(len(self.cov1.genomicRegions))])
