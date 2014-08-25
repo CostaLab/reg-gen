@@ -75,11 +75,11 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     return n_, p_
 
 def main():
-    test = False
-    options, bamfile_1, bamfile_2, regions, genome, chrom_sizes = input(test)
+    test = True
+    options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
-    exp_data = initialize(name=options.name, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
+    exp_data = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
                           bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
