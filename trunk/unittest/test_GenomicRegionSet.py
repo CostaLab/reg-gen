@@ -857,6 +857,17 @@ class TestGenomicRegionSet(unittest.TestCase):
         #print(result.sequences)
         self.assertEqual(len(result.sequences), 8)
         self.assertEqual(result.sequences[0].initial, 5)
+        """
+        A :   -----------------------------------------------------------
+        B :    ---    ---------         ----           ----
+        R :   -   ----         ---------    -----------    --------------
+        """
+        self.region_sets([['chr1',5,1000],['chr2',5,1000],['chr4',5,1000]],
+                         [['chr1',10,15],['chr1',30,70],['chr1',120,140],['chr1',200,240],
+                          ['chr2',10,15],['chr2',30,70],['chr2',120,140],['chr2',200,240],
+                          ['chr4',10,15],['chr4',30,70],['chr4',120,140],['chr4',200,240]])
+        result = self.setA.subtract(self.setB)
+        self.assertEqual(len(result.sequences), 15)
         
         
     def test_merge(self):
@@ -1057,8 +1068,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         overlap_result=False, 
         overlap_input=False
         """
-        """
-        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
                                           total_size=100, 
@@ -1071,13 +1081,12 @@ class TestGenomicRegionSet(unittest.TestCase):
         #    print("\t%s\t%10d\t%10d%10d" % (s.chrom,s.initial,s.final,s.__len__()))
         #print("Overlaps within result: ",result.within_overlap())
         """
-        """
         total_size=100,
         overlap_result=True, 
         overlap_input=False
         """
         
-        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
                                           total_size=100, 
@@ -1094,7 +1103,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         overlap_result=False, 
         overlap_input=True
         """
-        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
                                           total_size=100, 
@@ -1111,7 +1120,7 @@ class TestGenomicRegionSet(unittest.TestCase):
         overlap_result=True, 
         overlap_input=True
         """
-        self.region_sets([['chr1',0,1000000],['chr2',0,2000000],['chrX',0,3000000]],
+        self.region_sets([['chr1',0,10000],['chr2',0,20000],['chrX',0,30000]],
                          [])
         result = self.setA.random_regions(organism="mm9", 
                                           total_size=100, 
