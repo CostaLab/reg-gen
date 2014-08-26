@@ -10,12 +10,12 @@ from normalize import get_normalization_factor
 
 class DualCoverageSet():
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
-                 input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones):
+                 input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
+                 factor_input_1, factor_input_2):
         self.genomicRegions = region
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
-        
         self.cov1 = CoverageSet('first file', region)
         self.cov2 = CoverageSet('second file', region)
         
@@ -65,7 +65,7 @@ class DualCoverageSet():
             input = map_input[i]
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
-            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose)
+            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2)
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             
@@ -84,7 +84,7 @@ class DualCoverageSet():
         self.indices_of_interest = []
     
     
-    def normalization(self, map_input, i, norm_strategy, norm_done, name, verbose):
+    def normalization(self, map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2):
         input = map_input[i]
         
         #compute normalization factor
@@ -101,18 +101,23 @@ class DualCoverageSet():
 
         #naive norm.
         if not norm_done and norm_strategy == 1: 
-            
-            s1 = sum([sum(map_input[1]['cov-ip'].coverage[i]) for i in range(len(map_input[1]['cov-ip'].genomicRegions))])
-            s2 = sum([sum(map_input[2]['cov-ip'].coverage[i]) for i in range(len(map_input[2]['cov-ip'].genomicRegions))])
-            
-            if s1 > s2:
-                map_input[2]['cov-ip'].scale(s1/float(s2))
-                print("Factor: normalize file 2 by signal with factor %s: " %(s1/float(s2)), file=sys.stderr)
-            elif s2 >= s1:
-                print("Factor: normalize file 1 by signal with factor %s: " %(s2/float(s1)), file=sys.stderr)
-                map_input[1]['cov-ip'].scale(s2/float(s1))
-
-            norm_done = True
+            if factor_input_1 is None or factor_input_2 is None:
+                s1 = sum([sum(map_input[1]['cov-ip'].coverage[i]) for i in range(len(map_input[1]['cov-ip'].genomicRegions))])
+                s2 = sum([sum(map_input[2]['cov-ip'].coverage[i]) for i in range(len(map_input[2]['cov-ip'].genomicRegions))])
+                if s1 > s2:
+                    map_input[2]['cov-ip'].scale(s1/float(s2))
+                    print("Factor: normalize file 2 by signal with estimated factor %s: " %(s1/float(s2)), file=sys.stderr)
+                elif s2 >= s1:
+                    print("Factor: normalize file 1 by signal with estimated factor %s: " %(s2/float(s1)), file=sys.stderr)
+                    map_input[1]['cov-ip'].scale(s2/float(s1))
+    
+                norm_done = True
+            else:
+                map_input[1]['cov-ip'].scale(factor_input_1)
+                print("Normalize file 1 by signal with given factor %s: " %factor_input_1, file=sys.stderr)
+                map_input[2]['cov-ip'].scale(factor_input_2)
+                print("Normalize file 2 by signal with given factor %s: " %factor_input_2, file=sys.stderr)
+                norm_done = True
         
         #Diaz
         if norm_strategy == 2:
@@ -174,17 +179,22 @@ class DualCoverageSet():
             map_input[1]['cov-ip'].subtract(map_input[1]['cov-input'])
             map_input[2]['cov-ip'].subtract(map_input[2]['cov-input'])
             
-            #apply naive method
-            s1 = sum([sum(map_input[1]['cov-ip'].coverage[i]) for i in range(len(map_input[1]['cov-ip'].genomicRegions))])
-            s2 = sum([sum(map_input[2]['cov-ip'].coverage[i]) for i in range(len(map_input[2]['cov-ip'].genomicRegions))])
-            
-            if s1 > s2:
-                map_input[2]['cov-ip'].scale(s1/float(s2))
-                print("Normalize file 2 by signal with factor %s: " %(s1/float(s2)), file=sys.stderr)
-            elif s2 >= s1:
-                print("Normalize file 1 by signal with factor %s: " %(s2/float(s1)), file=sys.stderr)
-                map_input[1]['cov-ip'].scale(s2/float(s1))
-
+            if factor_input_1 is None or factor_input_2 is None:
+                #apply naive method
+                s1 = sum([sum(map_input[1]['cov-ip'].coverage[i]) for i in range(len(map_input[1]['cov-ip'].genomicRegions))])
+                s2 = sum([sum(map_input[2]['cov-ip'].coverage[i]) for i in range(len(map_input[2]['cov-ip'].genomicRegions))])
+                
+                if s1 > s2:
+                    map_input[2]['cov-ip'].scale(s1/float(s2))
+                    print("Normalize file 2 by signal with estimated factor %s: " %(s1/float(s2)), file=sys.stderr)
+                elif s2 >= s1:
+                    print("Normalize file 1 by signal with estimated factor %s: " %(s2/float(s1)), file=sys.stderr)
+                    map_input[1]['cov-ip'].scale(s2/float(s1))
+            else:
+                map_input[1]['cov-ip'].scale(factor_input_1)
+                print("Normalize file 1 by signal with given factor %s: " %factor_input_1, file=sys.stderr)
+                map_input[2]['cov-ip'].scale(factor_input_2)
+                print("Normalize file 2 by signal with given factor %s: " %factor_input_2, file=sys.stderr)
         
         return norm_done
 
