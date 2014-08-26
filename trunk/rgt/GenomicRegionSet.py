@@ -1065,7 +1065,45 @@ class GenomicRegionSet:
         z -- a GenomicRegionSet which contains the random regions
         
         """
-
+        # Dealing with positions of random regions
+        def list_max(chrom_list, result_map):
+            """ Generate a list containing maximum length for each chromosome """
+            map_max = [] # Store the minimum length corresponding to chrom_list
+            for ch in chrom_list:
+                map_max.append(max([len(s) for s in result_map.any_chrom(ch)])) 
+            return map_max
+        
+        def randoming(length, result_map, chrom_list, map_max, choices):
+            """ Return a new GenomicRegion as the result of randomization. """
+            cont_loop = True
+            candidate_chrom = [chrom_list[i] for i,l in enumerate(map_max) if l > length] # screen for the potential chromosomes which has space
+            while True:
+                ch = weighted_choice(choices)
+                if ch in candidate_chrom:
+                    break
+            
+            while cont_loop:
+                try:
+                    regions = result_map.any_chrom(ch, len_min=length)
+                    sample = random.choice(regions)
+                    random_posi = random.randint(sample.initial, sample.final - length)
+                    cont_loop = False
+                except: 
+                    continue
+            return GenomicRegion(chrom=sample.chrom,initial=random_posi,final=random_posi + length)
+            
+            #raise Exception("There is no further space for randomization on the genome.")
+            
+        def weighted_choice(choices):
+            total = sum(w for c, w in choices)
+            r = random.uniform(0, total)
+            upto = 0
+            for c, w in choices:
+                if upto + w > r:
+                    return c
+                upto += w
+            assert False, "Shouldn't get here"
+            
         # Fetching the chromosome length from data
         chrom_map = GenomicRegionSet("chrom_map")
         chrom_map.get_genome_data(organism, chrom_X=False, chrom_M=False)
@@ -1074,7 +1112,6 @@ class GenomicRegionSet:
             filter_map = GenomicRegionSet('filter')
             filter_map.read_bed(filter_path)
             chrom_map = chrom_map.subtract(filter_map)
-            #print("chrom_map length: ", len(chrom_map.sequences))
             
         # Defining input_map, result_list (containing lengths of all result regions)
         result_list = []
@@ -1089,30 +1126,7 @@ class GenomicRegionSet:
             for i in range(int(multiply_factor * input_num)):
                 result_list.append(input_list[i % input_num])
         
-        # Dealing with positions of random regions
-        def list_max(chrom_list, result_map):
-            """ Generate a list containing maximum length for each chromosome """
-            map_max = [] # Store the minimum length corresponding to chrom_list
-            for ch in chrom_list:
-                map_max.append(max([len(s) for s in result_map.any_chrom(ch)])) 
-            return map_max
         
-        def randoming(length, result_map, chrom_list, map_max):
-            """ Return a new GenomicRegion as the result of randomization. """
-            cont_loop = True
-            candidate_chrom = [chrom_list[i] for i,l in enumerate(map_max) if l > length] # screen for the potential chromosomes which has space
-            if len(candidate_chrom) > 0:
-                rt = 0
-                while cont_loop:
-                    try:
-                        regions = result_map.any_chrom(random.choice(candidate_chrom), len_min=length)
-                        sample = random.choice(regions)
-                        random_posi = random.randint(sample.initial, sample.final - length)
-                        cont_loop = False
-                    except: 
-                        continue
-                return GenomicRegion(chrom=sample.chrom,initial=random_posi,final=random_posi + length)
-            else: raise Exception("There is no further space for randomization on the genome.")
         ###################################################################
         z = GenomicRegionSet(name="random regions")
         result_map = chrom_map
@@ -1120,13 +1134,21 @@ class GenomicRegionSet:
             result_map = chrom_map.subtract(input_map)
 
         map_max = list_max(chrom_list, result_map)
+        
+        # Generate pk which stores the total length of all regions in each chromosome
+        choices = []
+        for ch in chrom_list:
+            cov = result_map.any_chrom(ch)
+            pk = sum([len(s) for s in cov])
+            choices.append([ch,pk])
+        
         for length in result_list:
-            new_region = randoming(length, result_map, chrom_list, map_max)
+            new_region = randoming(length, result_map, chrom_list, map_max, choices)
             z.add(new_region)
             if overlap_result == False:
                 result_map = result_map.subtract_aregion(new_region)
                 map_max[chrom_list.index(new_region.chrom)] = max([len(s) for s in result_map.any_chrom(new_region.chrom)])
-        
+                choices[chrom_list.index(new_region.chrom)][1] -= len(new_region)
         return z
     
     def projection_test(self, query, organism, extra=None, background=None):
