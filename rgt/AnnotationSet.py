@@ -374,10 +374,69 @@ class AnnotationSet:
                 gr.final = gr.initial + promoterLength + 1
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
-
         return result_grs
 
-    def get_exons(self):
+    def get_tss(self):
+        """
+        Gets TSS(Transcription start site) of genes.
+        It returns a GenomicRegionSet with such TSS. The ID of each gene will be put
+        in the NAME field of each GenomicRegion.
+
+        Keyword arguments:
+        
+        Return:
+        result_grs -- A GenomicRegionSet containing TSS.
+        """
+
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("tss")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            if(gr.orientation == "+"):
+                gr.initial = gr.initial
+                gr.final = gr.initial + 1
+            else:
+                gr.initial = gr.final - 1
+                gr.final = gr.final
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
+        return result_grs
+
+    def get_tts(self):
+        """
+        Gets TTS(Transcription termination site) of genes.
+        It returns a GenomicRegionSet with such TSS. The ID of each gene will be put
+        in the NAME field of each GenomicRegion.
+
+        Keyword arguments:
+        
+        Return:
+        result_grs -- A GenomicRegionSet containing TSS.
+        """
+
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("tss")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            if(gr.orientation == "+"):
+                gr.initial = gr.initial
+                gr.final = gr.initial + 1
+            else:
+                gr.initial = gr.final - 1
+                gr.final = gr.final
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
+        return result_grs
+    
+    def get_exons(self, start_site=False, end_site=False):
         """
         Gets exons of genes.
         It returns a GenomicRegionSet with such exons. The id of each gene will be put
@@ -387,7 +446,7 @@ class AnnotationSet:
         None
 
         Return:
-        result_grs -- A GenomicRegionSet containing the promoters.
+        result_grs -- A GenomicRegionSet containing the exons.
         """
 
         # Fetching genes
@@ -400,7 +459,39 @@ class AnnotationSet:
             gr = e[self.GeneField.GENOMIC_REGION]
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
-
+        if start_site:
+            result_grs.relocate_regions("leftend", left_length=10, right_length=10)
+        elif end_site:
+            result_grs.relocate_regions("rightend", left_length=10, right_length=10)
         return result_grs
+    
+    def get_introns(self, start_site=False, end_site=False):
+        """
+        Gets introns of genes.
+        It returns a GenomicRegionSet with such introns. The id of each gene will be put
+        in the NAME field of each GenomicRegion.
 
+        Keyword arguments:
+        None
 
+        Return:
+        result_grs -- A GenomicRegionSet containing the introns.
+        """
+
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"intron"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("intron")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
+        if start_site:
+            result_grs.relocate_regions("leftend", left_length=10, right_length=10)
+        elif end_site:
+            result_grs.relocate_regions("rightend", left_length=10, right_length=10)
+        return result_grs
+    
+    

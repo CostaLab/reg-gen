@@ -28,7 +28,6 @@ from rgt.motifanalysisnew.Statistics import multiple_test_correction
 # Local test
 dir = os.getcwd()
 
-annotation_list = ["promotor", "exon"]
 ###########################################################################################
 #                    Universal functions 
 ###########################################################################################
@@ -287,10 +286,6 @@ def multiple_correction(dic):
                 except: 
                     pass
 
-class ref_annotation(feature):
-    def __init__(self):
-        self.gtf = AnnotationSet(GenomeData.get_gencode_annotation())
-
     
 ###########################################################################################
 #                    Projection test
@@ -299,13 +294,10 @@ class ref_annotation(feature):
 class Projection:
     def __init__(self, reference_path, query_path):
         # Reference
-        if reference_path in annotation_list:
-            self.rEM = ref_annotation(reference_path) 
-        else:
-            self.rEM = ExperimentalMatrix()
-            self.rEM.read(reference_path)
-            self.references = self.rEM.get_regionsets()
-            self.referencenames = self.rEM.get_regionsnames()
+        self.rEM = ExperimentalMatrix()
+        self.rEM.read(reference_path)
+        self.references = self.rEM.get_regionsets()
+        self.referencenames = self.rEM.get_regionsnames()
         # Query
         self.qEM = ExperimentalMatrix()
         self.qEM.read(query_path)
