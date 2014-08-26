@@ -75,7 +75,7 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
     return n_, p_
 
 def main():
-    test = True
+    test = False
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
