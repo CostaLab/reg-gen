@@ -134,7 +134,8 @@ def get_peaks(name, DCS, states, distr):
 
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
-               input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones):
+               input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
+               factor_input_1, factor_input_2):
     
     regionset = GenomicRegionSet(name)
     
@@ -208,7 +209,8 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                                   file_2=bam_file_2, ext_2=ext_2, \
                                   input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1, \
                                   input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones)
+                                  chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
+                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2)
     
     return cov_cdp_mpp
 
@@ -263,8 +265,8 @@ def input(laptop):
         options.ext_1 = 200
         options.ext_2 = 200
         options.ext_input_1 = None #200
-        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.ext_input_2 = None #200
         options.confidence_threshold=0.7
         options.foldchange=1.05
@@ -280,6 +282,8 @@ def input(laptop):
         options.no_gc_content = True
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
+        options.factor_input_1=None
+        options.factor_input_2=None
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
@@ -310,6 +314,13 @@ def input(laptop):
                           help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
         parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
                           help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+        
+        parser.add_option("--factor-1", default=None, dest="factor_input_1", type="float",\
+                          help="Factor for first BAM. [default: %default]")
+        parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
+                          help="Factor for second BAM. [default: %default]")
+        
+        
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
