@@ -293,9 +293,9 @@ def input(laptop):
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("-b", "--binsize", dest="binsize", default=50, type="int",\
-                          help="Size of underlying bins for creating the signal.  [default: %default]")
+                          help="Size of underlying bins for creating the signal. [default: %default]")
         parser.add_option("-s", "--step", dest="stepsize", default=25, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal.")
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         parser.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
                           help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
         parser.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
