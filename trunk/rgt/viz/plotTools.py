@@ -290,7 +290,7 @@ def multiple_correction(dic):
 class ref_annotation(feature):
     def __init__(self):
         self.gtf = AnnotationSet(GenomeData.get_gencode_annotation())
-    def 
+
     
 ###########################################################################################
 #                    Projection test
