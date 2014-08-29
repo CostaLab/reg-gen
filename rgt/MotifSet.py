@@ -96,6 +96,7 @@ class MotifSet:
         genes_motifs={}
         not_found_genes= [] # keep genes for inexact search
         genes=genes.genes
+        print genes
         for g in genes:
            g=g.upper()
            try:
@@ -200,36 +201,47 @@ class MotifSet:
 #              motifs[m]=[]
 #        return motifs.keys()
 
-    def write_cytoscape_network(self,genes,gene_mapping_search,out_path):
+    def write_cytoscape_network(self,genes,gene_mapping_search,out_path,targets):
         '''
         Write files to be used as input for cytoscape.
         it recieves a list of genes to map to, a mapping search strategy and path for outputting files
         '''
         #getting mapping of genes to motifs
         [motif_sets,genes_motifs,motifs_genes]=self.filter_by_genes(genes,gene_mapping_search)
+        print genes_motifs
         net_pairs={}
         net_tfs={}
         all_pairs=sets.Set()
         all_tfs=sets.Set()
         all_genes=sets.Set()
+        if targets == None:
+          filter_targets=False
+        else:
+          filter_targets=True
+          targets=[g.upper() for g in targets.genes]
+          print targets
+
+
         # using genes to motif mapping to get network in all conditions
         for net_name in self.networks.keys():
+            print net_name
             net=self.networks[net_name]
             pairs=sets.Set()
             tfs=sets.Set()
             net_pairs[net_name]=pairs
             net_tfs[net_name]=tfs
             for tf in genes_motifs.keys():
-                motifs=genes_motifs[gene]
+                motifs=genes_motifs[tf]
                 for m in motifs:
                     try:
                       for target in net[m]:
-                        pairs.add(tf,target)                          
-                        tfs.add(tf)
-                        all_genes.add(tf)
-                        all_genes.add(target)
-                    except:
-                        print "motif not in network",m, tf
+                        if (not filter_targets or (target in targets)):
+                          pairs.add((tf,target))                          
+                          tfs.add(tf)
+                          all_genes.add(tf)
+                          all_genes.add(target)
+                    except Exception, e:
+                        print "motif not in network",m, tf, e
             all_pairs=all_pairs.union(pairs)
             all_tfs=all_tfs.union(tfs)
          
@@ -240,18 +252,18 @@ class MotifSet:
             for pair in all_pairs:
               #check if pair is active in the network  
               if pair in pairs_aux:
-                f.write(pair[0]+"\t"+pair[1]+"\tactive")
+                f.write(pair[0]+"\t"+pair[1]+"\tactive\n")
               else:
-                f.write(pair[0]+"\t"+pair[1]+"\tinactive")
+                f.write(pair[0]+"\t"+pair[1]+"\tinactive\n")
             f.close()          
             f=open(out_path+"/"+net_name+"_genes.txt","w")
             for gene in all_genes:
               #check if gene is tf active in network
               if gene in net_tfs[net_name]:
-                f.write(gene+"\ttf_active")
+                f.write(gene+"\ttf_active\n")
               elif gene in all_tfs:
-                f.write(gene+"\ttf_inactive")
+                f.write(gene+"\ttf_inactive\n")
               else:
-                f.write(gene+"\ttarget")
+                f.write(gene+"\ttarget\n")
             f.close()       
               

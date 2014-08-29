@@ -56,6 +56,7 @@ print genesets
 for region in exps.get_regionsets():
     for j,n in enumerate(range(randomize)):
             if backGroundPeaks:
+              print len(backBed), len(region)
               br=backBed.random_subregions(len(region))
             else:
               br=region.random_regions('hg19',total_size=len(region),overlap_result=True, overlap_input=True)

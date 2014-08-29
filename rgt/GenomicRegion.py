@@ -72,8 +72,8 @@ class GenomicRegion:
             if self.initial <= region.initial:
                 if self.final > region.initial:
                     return True
-                elif self.initial == self.final:
-                    raise Exception(self.chrom+","+str(self.initial)+","+str(self.final)+"\tThe region length shouldn't be zero. Please extend the region.")
+                #elif self.initial == self.final:
+                #    raise Exception(self.chrom+","+str(self.initial)+","+str(self.final)+"\tThe region length shouldn't be zero. Please extend the region.")
             else:
                 if self.initial < region.final:
                     return True
