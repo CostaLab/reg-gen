@@ -1356,6 +1356,7 @@ class Intersect:
                     # Chi-squire test
                     
                     #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
+                    print(r.name,qn,exp_m,obs)
                     chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                     #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
                     
