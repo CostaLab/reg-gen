@@ -1,3 +1,8 @@
 from rgt.AnnotationSet import *
+from Util import GenomeData
 
-annot = AnnotationSet("/media/931ef578-eebe-4ee8-ac0b-0f4690f126ed/data/rgtdata/hg19/gencode_annotation.gtf")
+annot = AnnotationSet("hg19")
+
+gd = GenomeData(organism="hg19")
+print(gd.get_gencode_annotation())
+

@@ -245,6 +245,7 @@ def main():
     
     parser_lineplot.add_argument('input', help=helpinput)
     parser_lineplot.add_argument('output', help=helpoutput)
+    parser_lineplot.add_argument('-ga','--genomic_annotation', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
     parser_lineplot.add_argument('-t','--title', default='lineplot', help=helptitle)
     parser_lineplot.add_argument('-center', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
@@ -258,6 +259,7 @@ def main():
     parser_lineplot.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
     parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
     #parser_lineplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+    parser_lineplot.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     #parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
     #parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -569,8 +571,9 @@ def main():
         print2(parameter, "\t\tBin size:\t"+str(args.bs))
         print2(parameter, "\t\tStep size:\t"+str(args.ss))
         print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
-    
-        lineplot = Lineplot(EMpath=args.input, title=args.title, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
+        
+        lineplot = Lineplot(EMpath=args.input, title=args.title, annotation=args.genomic_annotation, 
+                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
         # Processing the regions by given parameters
         print2(parameter, "Step 1/3: Processing regions by given parameters")
         lineplot.relocate_bed()
