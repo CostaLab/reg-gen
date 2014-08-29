@@ -15,12 +15,14 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
 import itertools
+import pickle
 
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
+from rgt.AnnotationSet import *
 from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
 from rgt.motifanalysisnew.Statistics import multiple_test_correction
@@ -68,7 +70,7 @@ def tag_from_r(exps, tag_type, name):
         except: pass
     return tags
         
-def colormap(exps, colorby, definedinEM):
+def colormap(exps, colorby, definedinEM, annotation=None):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
         if colorby == "reads":
@@ -91,10 +93,13 @@ def colormap(exps, colorby, definedinEM):
                     colors.append(c)
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
-    if definedinEM == False:
-        #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
-        #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
-        colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
+    else:
+        if annotation:
+            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(annotation))).tolist()
+        else:
+            #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
+            #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
+            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -1084,27 +1089,30 @@ class Intersect:
                         aveinter = self.test_d[ty][r][q][0]
                         chisqua = value2str(self.test_d[ty][r][q][1])
                         pv = self.test_d[ty][r][q][2]
-                        npv = 1 - pv
-                        
-                    
-                        if pv < 0.05:
-                            if intern > aveinter:
-                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                                   str(intern), "{:.2f}%".format(100*pt),
-                                                   value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
-                            else:
-                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                                   str(intern), "{:.2f}%".format(100*pt),
-                                                   value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
-                        elif self.test_d[ty][r][q][2] >= 0.05:
-                            if intern > aveinter:
-                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                                   str(intern), "{:.2f}%".format(100*pt),
-                                                   value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
-                            else:
-                                data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                                   str(intern), "{:.2f}%".format(100*pt),
-                                                   value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
+                        if isinstance(pv, str):
+                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                              str(intern), "{:.2f}%".format(100*pt),
+                                              aveinter, chisqua, pv,"-"])
+                        else: 
+                            npv = 1 - pv
+                            if pv < 0.05:
+                                if intern > aveinter:
+                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                       str(intern), "{:.2f}%".format(100*pt),
+                                                       value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                                else:
+                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                       str(intern), "{:.2f}%".format(100*pt),
+                                                       value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                            elif self.test_d[ty][r][q][2] >= 0.05:
+                                if intern > aveinter:
+                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                       str(intern), "{:.2f}%".format(100*pt),
+                                                       value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
+                                else:
+                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                                       str(intern), "{:.2f}%".format(100*pt),
+                                                       value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
@@ -1329,53 +1337,68 @@ class Intersect:
         print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format("#reference","ref_number","query","que_number", "aver_inter_number","chisq_statistic", "p_value"))
         self.test_time = repeat
         self.test_d = {}
+        plist = OrderedDict()
         
         for ty in self.groupedreference.keys():
             self.test_d[ty] = {}
-            plist = []
+            plist[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
                 if r.name in self.nalist: continue
                 self.test_d[ty][r.name] = {}
+                plist[ty][r.name] = OrderedDict()
                 for q in self.groupedquery[ty]:
                     if q.name in self.nalist: continue
-                    qn = q.name
-                    com = q.combine(r, change_name=False, output=True)
                     # True intersection
-                    
                     obs = self.counts[ty][r.name][q.name]
-                    #obs = [o/n for o in obs]
-                    # Randomization
-                    d = []
-                    for i in range(repeat):
-                        random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
-                        d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
-                    da = numpy.array(d)
+                    qn = q.name
                     
-                    exp_m = numpy.mean(da, axis=0)
-                    #exp_m = [m/n for m in exp_m] # into frequency
-                    # Chi-squire test
+                    if obs[2] == 0:
+                        
+                        aveinter, chisq, p = "NA", "NA", "NA"
+                        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(r.name,self.rlen[ty][r.name],
+                                                                                                 qn,self.qlen[ty][qn], 
+                                                                                                 aveinter, chisq, p))
+                    else:
                     
-                    #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
-                    print(r.name,qn,exp_m,obs)
-                    chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
-                    #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
-                    
+                        
+                        com = q.combine(r, change_name=False, output=True)
+                        
+                        # Randomization
+                        d = []
+                        for i in range(repeat):
+                            random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                            d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
+                        da = numpy.array(d)
+                        
+                        exp_m = numpy.mean(da, axis=0)
+                        #exp_m = [m/n for m in exp_m] # into frequency
+                        # Chi-squire test
+                        
+                        #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
+                        print(r.name,qn,exp_m,obs)
+                        chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
+                        #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
+                        aveinter = exp_m[2]
+                        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,self.rlen[ty][r.name],
+                                                                                                 qn,self.qlen[ty][qn], 
+                                                                                                 aveinter, chisq, p))
+                        
                     #print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
-                    plist.append(p)
-                    self.test_d[ty][r.name][qn] = [exp_m[2], chisq, p]
-                    print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,self.rlen[ty][r.name],
-                                                                                             qn,self.rlen[ty][qn], 
-                                                                                             *self.test_d[ty][r.name][qn]))
+                    plist[ty][r.name][qn] = p
+                    self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
+                    
+            multiple_correction(plist)
             
-            reject, pvals_corrected = multiple_test_correction(plist, alpha=0.05, method='indep')
-            c_p = 0
+            #c_p = 0
             print2(self.parameter,"\n*** Permutational test with Multitest correction ***\n")
             for r in self.test_d[ty].keys():
                 if r in self.nalist: continue
                 for q in self.test_d[ty][r].keys():
-                    self.test_d[ty][r][q][-1] = pvals_corrected[c_p]
-                    c_p += 1
-                    print2(self.parameter,r +"\t"+ q +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r][q]))
+                    self.test_d[ty][r][q][2] = plist[ty][r][q]
+                    if isinstance(plist[ty][r][q], str):
+                        print2(self.parameter,r +"\t"+ q +"\t{0}\t{1}\t{2}".format(*self.test_d[ty][r][q]))
+                    else:
+                        print2(self.parameter,r +"\t"+ q +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r][q]))
     
 ###########################################################################################
 #                    Boxplot 
@@ -1697,14 +1720,99 @@ class Boxplot:
 #                    Lineplot 
 ###########################################################################################
 
+
+
+def annotation_dump(organism):
+    def load_dump(path, filename):
+        print("\tLoading from file: "+filename)
+        file = open(os.path.join(path,filename),'r')
+        object = pickle.load(file)
+        file.close()
+        return object
+    
+    def dump(object, path, filename):
+        print("\tDump to file: "+filename)
+        file = open(os.path.join(path,filename),'wb')
+        pickle.dump(object,file)
+        file.close()
+    
+    def read_gtf(gd, organism):
+        try:
+            anno = load_dump(gd.get_annotation_dump_dir(),"gtf.dump")
+        except:
+            anno = AnnotationSet(organism)
+            dump(anno, gd.get_annotation_dump_dir(), "gtf.dump")
+        return anno
+
+    print("\nLoading genetic annotation data...\n")
+    gd = GenomeData(organism)
+    beds = []
+    # TSS
+    try: tss = load_dump(gd.get_annotation_dump_dir(),"tss.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        tss = anno.get_tss()
+        dump(tss, gd.get_annotation_dump_dir(),"tss.dump")
+    beds.append(tss)
+    # TTS
+    try: tts = load_dump(gd.get_annotation_dump_dir(),"tts.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        tts = anno.get_tts()
+        dump(tts, gd.get_annotation_dump_dir(),"tts.dump")
+    beds.append(tts)
+    
+    # exons
+    try: exons = load_dump(gd.get_annotation_dump_dir(),"exons.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        exons = anno.get_exons(start_site=True, end_site=False)
+        dump(exons, gd.get_annotation_dump_dir(),"exons.dump")
+    beds.append(exons)
+    
+    # exone
+    try: exone = load_dump(gd.get_annotation_dump_dir(),"exone.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        exone = anno.get_exons(start_site=False, end_site=True)
+        dump(exone, gd.get_annotation_dump_dir(),"exone.dump")
+    beds.append(exone)
+    
+    #introns
+    try: introns = load_dump(gd.get_annotation_dump_dir(),"introns.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        introns = anno.get_introns(start_site=True, end_site=False)
+        dump(introns, gd.get_annotation_dump_dir(),"introns.dump")
+    beds.append(introns)
+    
+    # introne
+    try: introne = load_dump(gd.get_annotation_dump_dir(),"introne.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        introne = anno.get_introns(start_site=False, end_site=True)
+        dump(introne, gd.get_annotation_dump_dir(),"introne.dump")
+    beds.append(introne)
+    
+    bednames = ["TSS", "TTS", "Exon start site", "Exon end site", "Intron start site", "Intron end site"]
+    annotation = bednames
+
+    return beds, bednames, annotation
+
+
 class Lineplot:
-    def __init__(self, EMpath, title, center, extend, rs, bs, ss):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
-        self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
-        self.bednames = self.exps.get_regionsnames()
+        if annotation:
+            self.beds, self.bednames, self.annotation = annotation_dump(organism)
+
+        else:
+            self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
+            self.bednames = self.exps.get_regionsnames()
+            self.annotation = None
         self.reads = self.exps.get_readsfiles()
         self.readsnames = self.exps.get_readsnames()
         self.fieldsDict = self.exps.fieldsDict
@@ -1718,14 +1826,15 @@ class Lineplot:
     def relocate_bed(self):
         processed_beds = []
         processed_bedsF = [] # Processed beds to be flapped
+        
         for bed in self.beds:
             if self.center == 'bothends':
-                newbed = bed.relocate_regions(center='leftend', left_length=self.extend, right_length=self.extend+int(0.5*self.bs))
+                newbed = bed.relocate_regions(center='leftend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
                 processed_beds.append(newbed)
-                newbedF = bed.relocate_regions(center='rightend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend)
+                newbedF = bed.relocate_regions(center='rightend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
                 processed_bedsF.append(newbedF)
             else:
-                newbed = bed.relocate_regions(center=self.center, left_length=self.extend, right_length=self.extend+int(0.5*self.bs))
+                newbed = bed.relocate_regions(center=self.center, left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
                 processed_beds.append(newbed)
         self.processed_beds = processed_beds
         self.processed_bedsF = processed_bedsF
@@ -1740,24 +1849,43 @@ class Lineplot:
         self.tag_type = [sortby, groupby, colorby]
         if groupby == "None":
             self.group_tags = ["All region sets without grouping"]
+        elif groupby == "regions" and self.annotation:
+            self.group_tags = self.bednames
         else:
             self.group_tags = gen_tags(self.exps, groupby)
+            
         if sortby == "None":
             self.sort_tags = ["All region sets without grouping"]
+        elif sortby == "regions" and self.annotation:
+            self.sort_tags = self.bednames
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
+            
         if colorby == "None":
             self.color_tags = ["All region sets without grouping"]
+        elif colorby == "regions" and self.annotation:
+            self.color_tags = self.bednames
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
     def gen_cues(self):
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
-        for bed in self.bednames:
-            self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type,bed))
+        
+        if self.annotation:
+            #all_tags = []
+            #for dictt in self.exps.fieldsDict.values():
+            #    for tag in dictt.keys():
+            #        all_tags.append(tag) 
+            for bed in self.bednames:
+            #    self.cuebed[bed] = set([bed]+all_tags)
+                self.cuebed[bed] = set([bed])
+        else:
+            for bed in self.bednames:
+                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type,bed))
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type,bam))
+        
         
     def coverage(self, sortby, heatmap=False, logt=False):
         # Calculate for coverage
@@ -1776,8 +1904,14 @@ class Lineplot:
                                     #print("\n    "+s+"\t"+g+"\t"+c)
                                     #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
                                     ts = time.time()
-                                    i = self.bednames.index(bed)
+                                    if self.annotation:
+                                        for ind, a in enumerate(self.bednames):
+                                            if a in [s,g,c]:
+                                                i = ind
+                                    else:
+                                        i = self.bednames.index(bed)
                                     j = self.readsnames.index(bam)
+                                    #print(i+"/t"+j)
                                     cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                     cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                     cov.normRPM()
@@ -1794,10 +1928,21 @@ class Lineplot:
                                         else:
                                             data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
                                     else:
-                                        
-                                        avearr = numpy.array(cov.coverage)
+                                        #print(cov.coverage)
+                                        for i, car in enumerate(cov.coverage):
+                                            car = numpy.delete(car, [0,1])
+                                            if i == 0:
+                                                avearr = np.array(car)
+                                                lenr = car.shape[0]
+                                            elif car.shape[0] == lenr:
+                                                avearr = numpy.vstack((avearr, car))
+                                            else:
+                                                pass
+                                        #avearr = numpy.array(cov.coverage)
+                                        #print(avearr)
+                                        #print(avearr.shape)
                                         avearr = numpy.average(avearr, axis=0)
-                                        numpy.transpose(avearr)
+                                        #numpy.transpose(avearr)
                                         data[s][g][c] = avearr # Store the array into data list
                                     bi += 1
                                     te = time.time()
@@ -1805,7 +1950,7 @@ class Lineplot:
         self.data = data
         
     def colormap(self, colorby, definedinEM):
-        self.colors = colormap(self.exps, colorby, definedinEM)
+        self.colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
         
     def plot(self, groupby, colorby, output, printtable=False, sy=False):
         rot = 50

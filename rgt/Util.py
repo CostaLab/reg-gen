@@ -86,6 +86,7 @@ class GenomeData(ConfigurationFile):
         self.chromosome_sizes = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','chromosome_sizes'))
         self.association_file = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','association_file'))
         self.gencode_annotation = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gencode_annotation'))
+        self.annotation_dump_dir = os.path.join(self.data_dir,self.organism)
 
     def get_organism(self):
         """
@@ -116,6 +117,12 @@ class GenomeData(ConfigurationFile):
         Returns the current path to the gencode annotation gtf file.
         """
         return self.gencode_annotation
+
+    def get_annotation_dump_dir(self):
+        """
+        Returns the current path to the gencode annotation gtf file.
+        """
+        return self.annotation_dump_dir
 
 
 class MotifData(ConfigurationFile):

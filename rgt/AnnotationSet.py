@@ -135,7 +135,6 @@ class AnnotationSet:
         
         Return: void.
         """
-        
         # Opening GTF file
         try: gtf_file = open(file_name,"r")
         except Exception: pass # TODO
@@ -393,7 +392,7 @@ class AnnotationSet:
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
-        result_grs = GenomicRegionSet("tss")
+        result_grs = GenomicRegionSet("TSS")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
             if(gr.orientation == "+"):
@@ -409,13 +408,13 @@ class AnnotationSet:
     def get_tts(self):
         """
         Gets TTS(Transcription termination site) of genes.
-        It returns a GenomicRegionSet with such TSS. The ID of each gene will be put
+        It returns a GenomicRegionSet with such TTS. The ID of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
         
         Return:
-        result_grs -- A GenomicRegionSet containing TSS.
+        result_grs -- A GenomicRegionSet containing TTS.
         """
 
         # Fetching genes
@@ -423,7 +422,7 @@ class AnnotationSet:
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
-        result_grs = GenomicRegionSet("tss")
+        result_grs = GenomicRegionSet("TTS")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
             if(gr.orientation == "+"):
@@ -454,7 +453,7 @@ class AnnotationSet:
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
-        result_grs = GenomicRegionSet("exons")
+        result_grs = GenomicRegionSet("exon")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
             gr.name = e[self.GeneField.GENE_ID]

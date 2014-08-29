@@ -71,7 +71,7 @@ class ExperimentalMatrix:
                 line = line.split()
             
                 if len(line) < 3:  # Skip the row which has insufficient information
-                    print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
+                    #print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                     continue
                 if verbose: print("Reading: ", line, file=sys.stderr)
                 
