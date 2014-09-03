@@ -18,7 +18,7 @@ from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 
 class BinomialHMM2d3s(_BaseHMM):
-    def __init__(self, n, init_state_seq=None, p = [[0.4, 0.2, 0.3], [0.6, 0.8, 0.7]], n_components=2, covariance_type='diag', startprob=None,
+    def __init__(self, n, init_state_seq=None, p = [[[0.1, 0.1], [0.2, 0.9], [0.9, 0.2]], [[0.1, 0.1], [0.2, 0.9], [0.9, 0.2]]], a=[0.5, 0.5], n_components=2, covariance_type='diag', startprob=None,
                  transmat=None, startprob_prior=None, transmat_prior=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
@@ -32,12 +32,13 @@ class BinomialHMM2d3s(_BaseHMM):
                           random_state=random_state, n_iter=n_iter,
                           thresh=thresh, params=params,
                           init_params=init_params)
-        
+        self.a = a
         self.n = n
         self.p = p
         self.n_features = 2 #emission dimension
         self.init_state_seq = init_state_seq
         self.count_s1, self.count_s2 = 0, 0
+        self.distr_magnitude = 2 #
 
     def _get_emissionprob(self):
         return self.p
@@ -49,28 +50,29 @@ class BinomialHMM2d3s(_BaseHMM):
         k = 0
         for x in X:
             row = []
-            for i in range(self.n_components):
+            for i in range(self.n_components): #state
                 sum = 0
-                for j in range(2):
-                    index = (x[j], self.n[j], self.p[j][i])
-                    if lookup.has_key( index ):
-                        sum += lookup[index]
-                        k += 1
-                    else:
-                        y = binom.logpmf(x[j], self.n[j], self.p[j][i])
-                        lookup[index] = y
-                        sum += y
+                for j in range(self.n_features): #dim
+                    for l in range(self.distr_magnitude):
+                        index = (x[j], self.n[j], self.p[j][i][l])
+                        if lookup.has_key( index ):
+                            sum += lookup[index] * self.a[l]
+                            k += 1
+                        else:
+                            y = binom.logpmf(x[j], self.n[j], self.p[j][i][l])
+                            lookup[index] = y
+                            sum += y * self.a[l]
                 row.append(sum)
-                  
+                
             matrix.append(row)
 #         print('time to compute log-likelihood matrix (compute_log_likelihood): ',\
 #               time()-t, file=sys.stderr)
-        print("HALLO")
-        print(np.asarray(matrix))
+        #print("HALLO")
+        #print(np.asarray(matrix))
         return np.asarray(matrix)
 
     def _generate_sample_from_state(self, state, random_state=None):
-        return np.array( [binom.rvs(self.n[0], self.p[0][state]), binom.rvs(self.n[1], self.p[1][state])] )
+        return np.array( map(lambda x: round(x), [sum([binom.rvs(self.n[i], self.p[i][state][j]) * self.a[i] for i in range(self.distr_magnitude)]) for j in range(self.n_features)]) )
     
     def _initialize_sufficient_statistics(self):
         stats = super(BinomialHMM2d3s, self)._initialize_sufficient_statistics()
@@ -156,13 +158,14 @@ class BinomialHMM2d3s(_BaseHMM):
 if __name__ == '__main__':
 #    transmat_ = np.array(([[0.7, 0.2, 0.1], [0.1, 0.8, 0.1], [0.2,0.2,0.6]]))
     tmp = [[0.000001, 0.0000098, 0.000001], [0.000001, 0.000001, 0.0000098]]
+    tmp = p = [[[0.3, 0.2], [0.6, 0.8], [0.7, 0.8]], [[0.2, 0.2], [0.6, 0.8], [0.7, 0.8]]]
     #[[0.01, 0.98, 0.01], [0.01, 0.01, 0.98]]
     p_ = np.array(tmp)
     n_ = np.array([2000000, 2000000])
     
-    m = BinomialHMM2d3s(n_components=3, p = p_, startprob=[1,0,0], n = n_)
+    m = BinomialHMM2d3s(n_components=3, startprob=[1,0,0], n = [100, 100])
 
-    X, Z = m.sample(40) #returns (obs, hidden_states)
+    X, Z = m.sample(10) #returns (obs, hidden_states)
     
 #    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
 #    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
@@ -179,10 +182,9 @@ if __name__ == '__main__':
 #    print('posteriors:', posteriors)
     
     print('estim. states ', m2.predict(X))
-    print(m2.predict_proba(X))
-    print(m2.n)
-    print(m2.p)
-    print(m2._get_transmat())
+#     print(m2.n)
+#     print(m2.p)
+#     print(m2._get_transmat())
 #     init_state = m2.predict(X)
 #     m3 = BinomialHMM2d3s(n_components=3, n=n_)
 #     m3.fit([X], init_params='advanced')
