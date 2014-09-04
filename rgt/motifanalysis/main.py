@@ -19,7 +19,7 @@ def main():
     # Parameters
     params = []
 
-    params.append("\nRegulatoryGenomicsToolbox -- Version 0.0.1")
+    params.append("\nRegulatoryGenomicsToolbox -- Version 0.0.3")
     params.append("Toolkit to perform common analysis of regulatory genomics data.")
     params.append("For full documentation visit the following webpage:")
     params.append("www.followingwebpage.com")
