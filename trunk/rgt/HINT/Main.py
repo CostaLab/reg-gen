@@ -268,7 +268,7 @@ def main():
                 if(flag_start):
                     if(posterior_list[curr_index] != fp_state_nb):
                         if(k-start_pos < fp_limit_size):
-                            fp = GenomicRegion(r.chrom, str(start_pos), str(k))
+                            fp = GenomicRegion(r.chrom, start_pos, k)
                             footprints.add(fp)
                         flag_start = False
                 else:
@@ -276,19 +276,14 @@ def main():
                         flag_start = True
                         start_pos = k
             if(flag_start): 
-                fp = GenomicRegion(r.chrom, str(start_pos), str(r.final))
+                fp = GenomicRegion(r.chrom, start_pos, r.final)
                 footprints.add(fp)
 
     # Sorting and Merging
     footprints.merge()
 
     # Overlapping results with original regions
-    #for gr in footprints: print gr.chrom, gr.initial, gr.final
-    #print "--------"
-    #for gr in original_regions: print gr.chrom, gr.initial, gr.final
-    #rrr = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL) # TODO - Report bug to Joseph
-    #print "--------"
-    #for gr in rrr: print gr.chrom, gr.initial, gr.final
+    footprints = footprints.intersect(original_regions,mode=OverlapType.ORIGINAL)
 
     ###################################################################################################
     # Writing output
