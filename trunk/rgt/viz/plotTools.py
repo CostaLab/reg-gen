@@ -16,6 +16,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
 import itertools
 import pickle
+import multiprocessing
 
 # Local Libraries
 # Distal Libraries
@@ -291,7 +292,44 @@ def multiple_correction(dic):
                 except: 
                     pass
 
-    
+def compute_coverage(input):
+    """
+    bed, bam, rs, bs, ss, center, heatmap, logt
+    """
+    print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name)
+    cov = CoverageSet(input[0].name+".", input[0])
+    cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+    cov.normRPM()
+    # When bothends, consider the fliping end
+    if input[5] == 'bothends':
+        flap = CoverageSet("for flap", input[0])
+        flap.coverage_from_bam(input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+        ffcoverage = numpy.fliplr(flap.coverage)
+        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+    # Averaging the coverage of all regions of each bed file
+    if input[6]:
+        if input[7]:
+            result = numpy.log10(numpy.vstack(cov.coverage)) # Store the array into data list
+        else:
+            result = numpy.vstack(cov.coverage) # Store the array into data list
+    else:
+        #print(cov.coverage)
+        for i, car in enumerate(cov.coverage):
+            car = numpy.delete(car, [0,1])
+            if i == 0:
+                avearr = np.array(car)
+                lenr = car.shape[0]
+            elif car.shape[0] == lenr:
+                avearr = numpy.vstack((avearr, car))
+            else:
+                pass
+        #avearr = numpy.array(cov.coverage)
+        #print(avearr)
+        #print(avearr.shape)
+        avearr = numpy.average(avearr, axis=0)
+        #numpy.transpose(avearr)
+        result = avearr # Store the array into data list
+    return result    
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -1667,7 +1705,6 @@ class Boxplot:
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         html.add_figure("boxplot.png", align="center")
         
-        header_list = self.tag_type + ["p-value"] + self.tag_type
         
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,40,20,20,20,20,20]
@@ -1694,24 +1731,33 @@ class Boxplot:
         for g in self.sortDict.keys():
             html.add_heading(g, size = 4, bold = False)
             data_table = []
+            
+            header_list = ["p-value"]
+            for s in self.sortDict[g].keys():
+                for c in self.sortDict[g][s1].keys():
+                    header_list.append(s+"."+c)        
+            
+            
             for s1 in self.sortDict[g].keys():
                 for c1 in self.sortDict[g][s1].keys():
+                    row = [s1+"."+c1]
                     for s2 in self.sortDict[g].keys():
                         for c2 in self.sortDict[g][s2].keys():
-                            if s2 == s1 and c2 == c1: pass
+                            if s2 == s1 and c2 == c1: 
+                                row.append("-")
                             else:
                                 p = plist[g][s1+c1][s2+c2]
                                 if p > 0.05:
-                                    data_table.append([g,s1,c1,value2str(p),g,s2,c2])
+                                    row.append(value2str(p))
                                 else:
-                                    data_table.append([g,s1, c1,
-                                                       "<font color=\"red\">"+value2str(p)+"</font>",
-                                                       g,s2, c2])
+                                    row.append("<font color=\"red\">"+value2str(p)+"</font>")
+                    data_table.append(row)
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
         
         header_list=["Assumptions and hypothesis"]
-        data_table = [['']]
+        data_table = [['All the regions among different BED files are normalized by quantile normalization.',
+                       'If there is any grouping problem, please check all the optional columns in input experimental matrix.',]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
@@ -1720,30 +1766,31 @@ class Boxplot:
 #                    Lineplot 
 ###########################################################################################
 
+def load_dump(path, filename):
+    print("\tLoading from file: "+filename)
+    file = open(os.path.join(path,filename),'r')
+    object = pickle.load(file)
+    file.close()
+    return object
 
+def dump(object, path, filename):
+    print("\tDump to file: "+filename)
+    file = open(os.path.join(path,filename),'wb')
+    pickle.dump(object,file)
+    file.close()
+
+def read_gtf(gd, organism):
+    try:
+        anno = load_dump(gd.get_annotation_dump_dir(),"gtf.dump")
+        print("ee")
+    except:
+        anno = AnnotationSet(organism)
+        dump(anno, gd.get_annotation_dump_dir(), "gtf.dump")
+        print("qq")
+    return anno
 
 def annotation_dump(organism):
-    def load_dump(path, filename):
-        print("\tLoading from file: "+filename)
-        file = open(os.path.join(path,filename),'r')
-        object = pickle.load(file)
-        file.close()
-        return object
     
-    def dump(object, path, filename):
-        print("\tDump to file: "+filename)
-        file = open(os.path.join(path,filename),'wb')
-        pickle.dump(object,file)
-        file.close()
-    
-    def read_gtf(gd, organism):
-        try:
-            anno = load_dump(gd.get_annotation_dump_dir(),"gtf.dump")
-        except:
-            anno = AnnotationSet(organism)
-            dump(anno, gd.get_annotation_dump_dir(), "gtf.dump")
-        return anno
-
     print("\nLoading genetic annotation data...\n")
     gd = GenomeData(organism)
     beds = []
@@ -1754,6 +1801,7 @@ def annotation_dump(organism):
         tss = anno.get_tss()
         dump(tss, gd.get_annotation_dump_dir(),"tss.dump")
     beds.append(tss)
+    print("\tTSS: "+str(len(tss)))
     # TTS
     try: tts = load_dump(gd.get_annotation_dump_dir(),"tts.dump")
     except:
@@ -1761,7 +1809,16 @@ def annotation_dump(organism):
         tts = anno.get_tts()
         dump(tts, gd.get_annotation_dump_dir(),"tts.dump")
     beds.append(tts)
+    print("\tTTS: "+str(len(tts)))
     
+    
+    # exon
+    try: exon = load_dump(gd.get_annotation_dump_dir(),"exon.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        exon = anno.get_exons(start_site=False, end_site=False)
+        dump(exon, gd.get_annotation_dump_dir(),"exon.dump")
+    print("\texon: "+str(len(exon)))
     # exons
     try: exons = load_dump(gd.get_annotation_dump_dir(),"exons.dump")
     except:
@@ -1769,7 +1826,7 @@ def annotation_dump(organism):
         exons = anno.get_exons(start_site=True, end_site=False)
         dump(exons, gd.get_annotation_dump_dir(),"exons.dump")
     beds.append(exons)
-    
+    print("\texons: "+str(len(exons)))
     # exone
     try: exone = load_dump(gd.get_annotation_dump_dir(),"exone.dump")
     except:
@@ -1777,24 +1834,45 @@ def annotation_dump(organism):
         exone = anno.get_exons(start_site=False, end_site=True)
         dump(exone, gd.get_annotation_dump_dir(),"exone.dump")
     beds.append(exone)
+    print("\texone: "+str(len(exone)))
+    """
+    # genes
+    try: gene = load_dump(gd.get_annotation_dump_dir(),"gene.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        print("gg")
+        gene = anno.get_genes()
+        dump(gene, gd.get_annotation_dump_dir(),"gene.dump")
+    beds.append(gene)
+    print("\tgene: "+str(len(gene)))
+    #intron
+    try: intron = load_dump(gd.get_annotation_dump_dir(),"intron.dump")
+    except:
+        anno = read_gtf(gd, organism)
+        intron = gene.subtract(exon)
+        dump(intron, gd.get_annotation_dump_dir(),"intron.dump")
+    beds.append(intron)
+    print("\tintron: "+str(len(intron)))
     
     #introns
     try: introns = load_dump(gd.get_annotation_dump_dir(),"introns.dump")
     except:
-        anno = read_gtf(gd, organism)
-        introns = anno.get_introns(start_site=True, end_site=False)
+        introns = intron.relocate_regions("leftend", left_length=1, right_length=1)
         dump(introns, gd.get_annotation_dump_dir(),"introns.dump")
     beds.append(introns)
-    
+    print("\tintrons: "+str(len(introns)))
     # introne
     try: introne = load_dump(gd.get_annotation_dump_dir(),"introne.dump")
     except:
-        anno = read_gtf(gd, organism)
-        introne = anno.get_introns(start_site=False, end_site=True)
+        introne = intron.relocate_regions("rightend", left_length=1, right_length=1)
         dump(introne, gd.get_annotation_dump_dir(),"introne.dump")
     beds.append(introne)
+    print("\tintrone: "+str(len(introne)))
+    """
     
-    bednames = ["TSS", "TTS", "Exon start site", "Exon end site", "Intron start site", "Intron end site"]
+    #bednames = ["TSS", "TTS", "Exon start site", "Exon end site", "Intron start site", "Intron end site"]
+    bednames = ["TSS", "TTS", "Exon start site", "Exon end site"]
+    
     annotation = bednames
 
     return beds, bednames, annotation
@@ -1887,8 +1965,10 @@ class Lineplot:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type,bam))
         
         
-    def coverage(self, sortby, heatmap=False, logt=False):
+    def coverage(self, sortby, heatmap=False, logt=False, mp=False):
+        if mp: ts = time.time()
         # Calculate for coverage
+        mp_input = []
         data = OrderedDict()
         totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
         bi = 0
@@ -1901,52 +1981,79 @@ class Lineplot:
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
                                 if self.cuebam[bam] <= set([s,g,c]):
-                                    #print("\n    "+s+"\t"+g+"\t"+c)
-                                    #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
-                                    ts = time.time()
-                                    if self.annotation:
-                                        for ind, a in enumerate(self.bednames):
-                                            if a in [s,g,c]:
-                                                i = ind
-                                    else:
-                                        i = self.bednames.index(bed)
-                                    j = self.readsnames.index(bam)
-                                    #print(i+"/t"+j)
-                                    cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
-                                    cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                    cov.normRPM()
-                                    # When bothends, consider the fliping end
-                                    if self.center == 'bothends':
-                                        flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                        flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                        ffcoverage = numpy.fliplr(flap.coverage)
-                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                    # Averaging the coverage of all regions of each bed file
-                                    if heatmap:
-                                        if logt:
-                                            data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage)) # Store the array into data list
+                                    if mp: 
+                                        if self.annotation:
+                                            for ind, a in enumerate(self.bednames):
+                                                if a in [s,g,c]:
+                                                    i = ind
                                         else:
-                                            data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
+                                            i = self.bednames.index(bed)
+                                        j = self.readsnames.index(bam)
+                                        mp_input.append([self.processed_beds[i], self.reads[j], self.rs, self.bs, self.ss, self.center, heatmap, logt])
+                                        data[s][g][c] = 0
                                     else:
-                                        #print(cov.coverage)
-                                        for i, car in enumerate(cov.coverage):
-                                            car = numpy.delete(car, [0,1])
-                                            if i == 0:
-                                                avearr = np.array(car)
-                                                lenr = car.shape[0]
-                                            elif car.shape[0] == lenr:
-                                                avearr = numpy.vstack((avearr, car))
+                                        
+                                        #print("\n    "+s+"\t"+g+"\t"+c)
+                                        #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
+                                        ts = time.time()
+                                        if self.annotation:
+                                            for ind, a in enumerate(self.bednames):
+                                                if a in [s,g,c]:
+                                                    i = ind
+                                        else:
+                                            i = self.bednames.index(bed)
+                                        j = self.readsnames.index(bam)
+                                        
+                                        cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
+                                        cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                        cov.normRPM()
+                                        # When bothends, consider the fliping end
+                                        if self.center == 'bothends':
+                                            flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                            flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                            ffcoverage = numpy.fliplr(flap.coverage)
+                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                        # Averaging the coverage of all regions of each bed file
+                                        if heatmap:
+                                            if logt:
+                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage)) # Store the array into data list
                                             else:
-                                                pass
-                                        #avearr = numpy.array(cov.coverage)
-                                        #print(avearr)
-                                        #print(avearr.shape)
-                                        avearr = numpy.average(avearr, axis=0)
-                                        #numpy.transpose(avearr)
-                                        data[s][g][c] = avearr # Store the array into data list
-                                    bi += 1
-                                    te = time.time()
-                                    print2(self.parameter, "     Computing ("+ str(bi)+"/"+str(totn)+")\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                                data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
+                                        else:
+                                            #print(cov.coverage)
+                                            for i, car in enumerate(cov.coverage):
+                                                car = numpy.delete(car, [0,1])
+                                                if i == 0:
+                                                    avearr = np.array(car)
+                                                    lenr = car.shape[0]
+                                                elif car.shape[0] == lenr:
+                                                    avearr = numpy.vstack((avearr, car))
+                                                else:
+                                                    pass
+                                            #avearr = numpy.array(cov.coverage)
+                                            #print(avearr)
+                                            #print(avearr.shape)
+                                            avearr = numpy.average(avearr, axis=0)
+                                            #numpy.transpose(avearr)
+                                            data[s][g][c] = avearr # Store the array into data list
+                                        bi += 1
+                                        te = time.time()
+                                        print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+        if mp: 
+            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            mp_output = pool.map(compute_coverage, mp_input)
+            pool.close()
+            pool.join()
+        
+            i = 0
+            for s in data.keys():
+                for g in data[s].keys():
+                    for c in data[s][g].keys():
+                        data[s][g][c] = mp_output[i]
+                        i = i + 1
+            te = time.time()
+            #print2(self.parameter, "     Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+
         self.data = data
         
     def colormap(self, colorby, definedinEM):
@@ -1955,13 +2062,17 @@ class Lineplot:
     def plot(self, groupby, colorby, output, printtable=False, sy=False):
         rot = 50
         ticklabelsize = 7
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0]), dpi=300) # figsize=(8.27, 11.69)
-        if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: axs=[axs]
+        #print(len(self.data.keys()))
+        #print(len(self.data.values()[0].keys()))
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) # figsize=(8.27, 11.69)
+        if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
+            axs=numpy.array([[axs,None],[None,None]])
         yaxmax = [0]*len(self.data.values()[0])
         
         for it, s in enumerate(self.data.keys()):
             for i,g in enumerate(self.data[s].keys()):
-                if it == 0: axs[it,i].set_title(g,fontsize=11)
+                if it == 0: 
+                    axs[it,i].set_title(g,fontsize=11)
                 # Processing for future output
                 if printtable:
                     pArr = numpy.array(["Name","X","Y"]) # Header
@@ -1970,7 +2081,7 @@ class Lineplot:
                     y = self.data[s][g][c]
                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                    axs[it, i].plot(x,y, color=self.colors[j], lw=1)
+                    axs[it,i].plot(x,y, color=self.colors[j], lw=1)
                     # Processing for future output
                     if printtable:
                         [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
@@ -1985,10 +2096,10 @@ class Lineplot:
                     output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
                 
                 axs[it,i].set_xlim([-self.extend, self.extend])
-                plt.setp(axs[it, i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
-                plt.setp(axs[it, i].get_yticklabels(), fontsize=ticklabelsize)
-                axs[it, i].locator_params(axis = 'x', nbins = 4)
-                axs[it, i].locator_params(axis = 'y', nbins = 4)
+                plt.setp(axs[it,i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(axs[it,i].get_yticklabels(), fontsize=ticklabelsize)
+                axs[it,i].locator_params(axis = 'x', nbins = 4)
+                axs[it,i].locator_params(axis = 'y', nbins = 4)
                 axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
         for it,ty in enumerate(self.data.keys()):
@@ -2009,7 +2120,10 @@ class Lineplot:
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,20,20,20,20,20,20]
         header_list=["Assumptions and hypothesis"]
-        data_table = [['']]
+        data_table = [['Multitest correction was performed.']]
+        if self.annotation:
+            data_table.append("Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site.")
+            
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])

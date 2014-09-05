@@ -403,6 +403,7 @@ class AnnotationSet:
                 gr.final = gr.final
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
+        result_grs.merge()
         return result_grs
 
     def get_tts(self):
@@ -433,6 +434,7 @@ class AnnotationSet:
                 gr.final = gr.final
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
+        result_grs.merge()
         return result_grs
     
     def get_exons(self, start_site=False, end_site=False):
@@ -459,9 +461,37 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         if start_site:
-            result_grs.relocate_regions("leftend", left_length=10, right_length=10)
+            result_grs.relocate_regions("leftend", left_length=1, right_length=1)
         elif end_site:
-            result_grs.relocate_regions("rightend", left_length=10, right_length=10)
+            result_grs.relocate_regions("rightend", left_length=1, right_length=1)
+        result_grs.merge()
+        return result_grs
+    
+    def get_genes(self):
+        """
+        Gets regions of genes.
+        It returns a GenomicRegionSet with such genes. The id of each gene will be put
+        in the NAME field of each GenomicRegion.
+
+        Keyword arguments:
+        None
+
+        Return:
+        result_grs -- A GenomicRegionSet containing the genes.
+        """
+
+        # Fetching genes
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("genes")
+        for e in query_annset.gene_list:
+            print("gogogo!!")
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.GENE_ID]
+            result_grs.add(gr)
+        result_grs.merge()
         return result_grs
     
     def get_introns(self, start_site=False, end_site=False):
@@ -477,20 +507,14 @@ class AnnotationSet:
         result_grs -- A GenomicRegionSet containing the introns.
         """
 
-        # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"intron"}
-        query_annset = self.get(query_dictionary)
-
-        # Creating GenomicRegionSet
-        result_grs = GenomicRegionSet("intron")
-        for e in query_annset.gene_list:
-            gr = e[self.GeneField.GENOMIC_REGION]
-            gr.name = e[self.GeneField.GENE_ID]
-            result_grs.add(gr)
+        genes = self.get_genes()
+        exons = self.get_exons()
+        
+        result_grs = genes.subtract(exons)
         if start_site:
-            result_grs.relocate_regions("leftend", left_length=10, right_length=10)
+            result_grs.relocate_regions("leftend", left_length=1, right_length=1)
         elif end_site:
-            result_grs.relocate_regions("rightend", left_length=10, right_length=10)
+            result_grs.relocate_regions("rightend", left_length=1, right_length=1)
         return result_grs
     
     

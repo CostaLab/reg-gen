@@ -263,6 +263,7 @@ def main():
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     #parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
     #parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -292,6 +293,7 @@ def main():
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
     #parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
     #parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_heatmap.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -540,7 +542,6 @@ def main():
         
         # Plotting
         print2(parameter,"Step 5/5: Plotting")
-        print("3333")
         boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         
         boxplot.group_data()
@@ -578,14 +579,15 @@ def main():
         print2(parameter, "Step 1/3: Processing regions by given parameters")
         lineplot.relocate_bed()
         t1 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t1-t0))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t1-t0))))
         
-        print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging ")
+        if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
+        else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
         lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         lineplot.gen_cues()
-        lineplot.coverage(sortby=args.s)
+        lineplot.coverage(sortby=args.s, mp=args.mp)
         t2 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t2-t1))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t2-t1))))
         
         # Plotting
         print2(parameter, "\nStep 3/3: Plotting the lineplots")
@@ -594,7 +596,7 @@ def main():
         output(f=lineplot.fig, directory = args.output, folder = args.title, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
         lineplot.gen_html(args.output, args.title)
         t3 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t3-t2))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t3-t2))))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
@@ -621,20 +623,21 @@ def main():
         print2(parameter, "Step 1/4: Processing regions by given parameters")
         lineplot.relocate_bed()
         t1 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t1-t0))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t1-t0))))
         
-        print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging ")
+        if args.mp: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging with multiprocessing ")
+        else: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging")
         lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         lineplot.gen_cues()
-        lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log)
+        lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log, mp=args.mp)
         t2 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t2-t1))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t2-t1))))
         
         # Sorting 
         print2(parameter, "\nStep 3/4: Sorting the data for heatmap")
         lineplot.hmsort(sort=args.sort)
         t3 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t3-t2))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t3-t2))))
         
         # Plotting
         print2(parameter, "\nStep 4/4: Plotting the heatmap")
@@ -644,7 +647,7 @@ def main():
             output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name,pdf=True,show=args.show)
         lineplot.gen_htmlhm(args.output, args.title)
         t4 = time.time()
-        print2(parameter, "    --- finished in {0:.2f} secs".format(t4-t3))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t4-t3))))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=t4-t0)))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         
