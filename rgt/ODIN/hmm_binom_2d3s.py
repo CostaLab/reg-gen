@@ -18,7 +18,7 @@ from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 
 
-def get_init_parameters(s1, s2, x = 10000, threshold = 2.0, diff_cov = 10, **info):
+def get_init_parameters(s1, s2, **info):
     
     #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
     n_ = np.array([info['count'], info['count']])
@@ -93,8 +93,8 @@ class BinomialHMM2d3s(_BaseHMM):
             matrix.append(row)
 #         print('time to compute log-likelihood matrix (compute_log_likelihood): ',\
 #               time()-t, file=sys.stderr)
-        print("HALLO")
-        print(np.asarray(matrix))
+        #print("HALLO")
+        #print(np.asarray(matrix))
         return np.asarray(matrix)
 
     def _generate_sample_from_state(self, state, random_state=None):
