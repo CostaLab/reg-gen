@@ -8,7 +8,7 @@ from dpc_help import initialize
 from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
-from hmm_binom_2d3s import BinomialHMM2d3s
+from hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
 from random import sample
 
 def write(name, l):
@@ -18,13 +18,8 @@ def write(name, l):
         print(el, file=f)
     f.close()
 
-def get_init_parameters(name, indices_of_interest, first_overall_coverage, second_overall_coverage, \
-                        verbose, x = 10000, threshold = 2.0, diff_cov = 10):
-
-    tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
-    n_ = np.array([tmp, tmp])
-    #print('n_: ', n_, file=sys.stderr)
-    
+def _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x, threshold, diff_cov):
+    """Return s0,s1,s2 (list of tuples) with initial peaks"""
     s0 = []
     s1 = []
     s2 = []
@@ -53,26 +48,8 @@ def get_init_parameters(name, indices_of_interest, first_overall_coverage, secon
         write(name + '-s1', s1)
         write(name + '-s2', s2)
         write(name + '-soverall', so)
-    
-    
-    #get observation that occurs most often:
-    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
-    #print('m_', m_, file=sys.stderr)
-    
-    p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
-    
-    p_[0][0] = 1. / n_[0]
-    p_[1][0] = 1. / n_[1]
-       
-    p_[0][1] = m_[0] / n_[0]
-    p_[1][1] = p_[1][0]
-    
-    p_[0][2] = p_[0][0]
-    p_[1][2] = m_[1] / n_[1]
-    
-    #print('p_', p_, file=sys.stderr)
-    
-    return n_, p_
+
+
 
 def main():
     test = False
@@ -97,8 +74,11 @@ def main():
     print('Compute training set...',file=sys.stderr)
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
-         
-    n_, p_ = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.verbose)
+    
+    #for binomial distribution
+    _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.verbose)
+    tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
+    n_, p_ = get_init_parameters(s1, s2, count=tmp)
      
     print('Training HMM...', file=sys.stderr)
     m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)

@@ -104,7 +104,10 @@ def _init(self, obs, params):
     print(self._get_emissionprob(), file=sys.stderr)
     
 def _add_pseudo_counts(arr):
-    return np.asarray( [1e-323 if x < 1e-323 else x for x in arr] )
+    if type(arr) is np.ndarray:
+        return np.asarray( [1e-323 if x < 1e-323 else x for x in arr] )
+    else:
+        return 1e-323 if arr < 1e-323 else arr
 
 def sub_neginf(m):
     return 1e-323 if m == -np.inf else m
