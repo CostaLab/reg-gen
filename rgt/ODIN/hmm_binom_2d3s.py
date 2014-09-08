@@ -17,6 +17,34 @@ from math import fabs
 from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 
+
+def get_init_parameters(s1, s2, x = 10000, threshold = 2.0, diff_cov = 10, **info):
+    
+    #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
+    n_ = np.array([info['count'], info['count']])
+    #print('n_: ', n_, file=sys.stderr)
+    
+    #_, s1, s2 = _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x, threshold, diff_cov)
+    
+    #get observation that occurs most often:
+    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
+    #print('m_', m_, file=sys.stderr)
+    
+    p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
+    
+    p_[0][0] = 1. / n_[0]
+    p_[1][0] = 1. / n_[1]
+       
+    p_[0][1] = m_[0] / n_[0]
+    p_[1][1] = p_[1][0]
+    
+    p_[0][2] = p_[0][0]
+    p_[1][2] = m_[1] / n_[1]
+    
+    #print('p_', p_, file=sys.stderr)
+    
+    return n_, p_
+
 class BinomialHMM2d3s(_BaseHMM):
     def __init__(self, n, init_state_seq=None, p = [[0.4, 0.2, 0.3], [0.6, 0.8, 0.7]], n_components=2, covariance_type='diag', startprob=None,
                  transmat=None, startprob_prior=None, transmat_prior=None,
@@ -162,7 +190,7 @@ if __name__ == '__main__':
     
     m = BinomialHMM2d3s(n_components=3, p = p_, startprob=[1,0,0], n = n_)
 
-    X, Z = m.sample(40) #returns (obs, hidden_states)
+    X, Z = m.sample(100) #returns (obs, hidden_states)
     
 #    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
 #    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
