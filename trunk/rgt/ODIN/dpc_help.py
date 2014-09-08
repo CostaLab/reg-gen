@@ -265,25 +265,27 @@ def input(laptop):
         options.ext_1 = 200
         options.ext_2 = 200
         options.ext_input_1 = None #200
-        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.ext_input_2 = None #200
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 1
-        options.name='testODIN'
+        options.name='testODIN-poisson'
+        options.distr='poisson'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
-        options.verbose=False
+        options.verbose=True
         chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         options.no_gc_content = True
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
         options.factor_input_1=None
         options.factor_input_2=None
+        
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
@@ -320,6 +322,7 @@ def input(laptop):
         parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
                           help="Factor for second BAM. [default: %default]")
         
+        parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")

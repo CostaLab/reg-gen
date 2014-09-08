@@ -8,7 +8,7 @@ from dpc_help import initialize
 from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
-from hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
+
 from random import sample
 
 def write(name, l):
@@ -18,7 +18,7 @@ def write(name, l):
         print(el, file=f)
     f.close()
 
-def _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x, threshold, diff_cov):
+def _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x = 10000, threshold = 2.0, diff_cov = 10):
     """Return s0,s1,s2 (list of tuples) with initial peaks"""
     s0 = []
     s1 = []
@@ -48,7 +48,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
         write(name + '-s1', s1)
         write(name + '-s2', s2)
         write(name + '-soverall', so)
-
+    return s0, s1, s2
 
 
 def main():
@@ -75,18 +75,43 @@ def main():
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
     
-    #for binomial distribution
     _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.verbose)
-    tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
-    n_, p_ = get_init_parameters(s1, s2, count=tmp)
-     
+    
+    #choose proper HMM
     print('Training HMM...', file=sys.stderr)
-    m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
-      
+    if options.distr == 'binom':
+        #for binomial distribution
+        from hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
+        tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
+        n_, p_ = get_init_parameters(s1, s2, count=tmp)
+        m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
+        m.fit([training_set_obs])
+        print(m.n[0], m.p[0][1], file=sys.stderr)
+        distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
+    elif options.distr == 'poisson':
+        from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
+        distr_magnitude = 3
+        n_components = 3
+        n_features = 2
+        initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
+        m = PoissonHMM2d3s(c=initial_c, distr_magnitude=distr_magnitude, factors=map(lambda x: x+1, range(distr_magnitude)), p=initial_p)
+        
+        m.fit([training_set_obs])
+        n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
+        mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
+        p = mean / float(n)
+        print('Poisson P', file=sys.stderr)
+        print(m.p, file=sys.stderr)
+        print('Poisson C', file=sys.stderr)
+        print(m.c, file=sys.stderr)
+        print('Poisson p-value settings', file=sys.stderr)
+        print(n, p, file=sys.stderr)
+        distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
+        
     if options.verbose:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
       
-    m.fit([training_set_obs])
+    
      
     #m.merge_distr()
      
@@ -104,8 +129,7 @@ def main():
     if options.verbose: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
-    print('t', m.n, m.p, file=sys.stderr)
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue)
 
 
 if __name__ == '__main__':
