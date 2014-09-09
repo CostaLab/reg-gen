@@ -16,7 +16,7 @@ from time import time
 from math import fabs
 from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
-
+import cProfile
 
 def get_init_parameters(s1, s2, **info):
     
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     
     m = BinomialHMM2d3s(n_components=3, p = p_, startprob=[1,0,0], n = n_)
 
-    X, Z = m.sample(100) #returns (obs, hidden_states)
+    X, Z = m.sample(2000) #returns (obs, hidden_states)
     
 #    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
 #    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
@@ -199,18 +199,18 @@ if __name__ == '__main__':
     print('hidden states ', Z)
 #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
     m2 = BinomialHMM2d3s(n_components=3, n=n_, p=tmp)
-    m2.fit([X])
+    cProfile.run("m2.fit([X])")
     
     
 #    logprob, posteriors = m2.eval(X)
 #    print('logprob:', logprob)
 #    print('posteriors:', posteriors)
     
-    print('estim. states ', m2.predict(X))
-    print(m2.predict_proba(X))
-    print(m2.n)
-    print(m2.p)
-    print(m2._get_transmat())
+#     print('estim. states ', m2.predict(X))
+#     print(m2.predict_proba(X))
+#     print(m2.n)
+#     print(m2.p)
+#     print(m2._get_transmat())
 #     init_state = m2.predict(X)
 #     m3 = BinomialHMM2d3s(n_components=3, n=n_)
 #     m3.fit([X], init_params='advanced')
