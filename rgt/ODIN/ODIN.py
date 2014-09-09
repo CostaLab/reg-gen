@@ -86,7 +86,12 @@ def main():
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
         m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
         m.fit([training_set_obs])
-        print(m.n[0], m.p[0][1], file=sys.stderr)
+        if options.verbose:
+            f = open(options.name + '-setup.info', 'w')
+            f.write('Binomial n, p\n')
+            f.write("%s %s\n" %(m.n, m.p), file=sys.stderr)
+            f.write('p-value settings\n')
+            f.write("%s %s\n" %(m.n[0], m.p[0][1]), file=sys.stderr)
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
@@ -100,21 +105,19 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        print('Poisson P', file=sys.stderr)
-        print(m.p, file=sys.stderr)
-        print('Poisson C', file=sys.stderr)
-        print(m.c, file=sys.stderr)
-        print('Poisson p-value settings', file=sys.stderr)
-        print(n, p, file=sys.stderr)
+        if options.verbose:
+            f = open(options.name + '-setup.info', 'w')
+            f.write('Poisson P\n')
+            f.write("%s \n" %m.p)
+            f.write('Poisson C\n')
+            f.write("%s \n" %m.c)
+            f.write('Poisson p-value settings\n')
+            f.write("%s %s\n" %(n, p))
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
     if options.verbose:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
       
-    
-     
-    #m.merge_distr()
-     
     print('...done', file=sys.stderr)
     if options.verbose:
         print('p', m.p, file=sys.stderr)
