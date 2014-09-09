@@ -123,7 +123,7 @@ class PoissonHMM2d3s(_BaseHMM):
         
         return stats
     
-    def _get_value(self, state, symbol, dim, stats):
+    def _get_value(self, state, symbol, dim):
         erg = 0
         for comp in range(self.distr_magnitude):
             erg += self.c[dim][comp][state] * poisson.pmf(symbol[dim], self.p[dim][comp][state])
@@ -136,19 +136,28 @@ class PoissonHMM2d3s(_BaseHMM):
             for state in range(self.n_components):
                 for comp in range(self.distr_magnitude):
                     stats['post_l'][dim][comp][state] = [0] * len(obs)
-
+        i = 0
         for t, symbol in enumerate(obs):
             stats['post'] += posteriors[t]
             for dim in range(self.n_features):
                 for comp in range(self.distr_magnitude):
-                    #for state in range(self.n_components):
                     h = np.array([poisson.pmf(symbol[dim], self.p[dim][comp][state]) for state in range(self.n_components)])
-                    enum = self.c[dim][comp] * h
-                    denum = np.array([self._get_value(state, symbol, dim, stats) for state in range(self.n_components)])
-                    help = posteriors[t] * enum / denum
+                    enum = _add_pseudo_counts(self.c[dim][comp] * h)
+                    denum = _add_pseudo_counts(np.array([self._get_value(state, symbol, dim) for state in range(self.n_components)]))
+                    i += 1
+                    try:
+                        help = _add_pseudo_counts(posteriors[t] * enum / denum)
+                    except:
+                        print("%s \n" %i, file=sys.stderr)
+                        print("%s %s %s \n" %(denum, symbol, dim), file=sys.stderr)
+                        print("%s \n" %(self.c), file=sys.stderr)
+                        print("%s \n" %(self.p), file=sys.stderr)
+                        print("%s \n" %(posteriors[t]), file=sys.stderr)
+                        print("%s \n" %(enum), file=sys.stderr)
+                        help = np.array([1.0/self.distr_magnitude, 1.0/self.distr_magnitude, 1.0/self.distr_magnitude])
                     stats['post_sum_l'][dim][comp] += help
-                    stats['post_sum_l_emisson'][dim][comp] += help * symbol[dim]
-                    stats['post_sum_l_factor'][dim][comp] += help * self.factors[comp]
+                    stats['post_sum_l_emisson'][dim][comp] += _add_pseudo_counts(help * symbol[dim])
+                    stats['post_sum_l_factor'][dim][comp] += _add_pseudo_counts(help * self.factors[comp])
                     
                     stats['post_l'][dim][comp][0][t] = help[0]
                     stats['post_l'][dim][comp][1][t] = help[1]
@@ -244,22 +253,22 @@ if __name__ == '__main__':
 #     tmp2 = [[[4, 4], [15, 16], [2, 2]], [[3, 1], [1, 2], [12, 13]]]
 #     c2 = [[[0.5, 0.4], [0.5, 0.4], [0.5, 0.4]], [[0.5, 0.4], [0.5, 0.4], [0.5, 0.4]]]
     
+        
+    #a, b = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
+    #print(b)
     
-    a, b = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
-    print(b)
     
-    
-    #m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
+    m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
 
-    #X, Z = m.sample(100) #returns (obs, hidden_states)
+    X, Z = m.sample(100) #returns (obs, hidden_states)
     
-    #m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
-    #m2.fit([X])
+    m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
+    m2.fit([X])
       
-    #print('obs', 'states', 'estimated states', sep='\t')
-    #e = m2.predict(X)
-    #for i, el in enumerate(X):
-    #    print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
+    print('obs', 'states', 'estimated states', sep='\t')
+    e = m2.predict(X)
+    for i, el in enumerate(X):
+        print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
     #print(m.p)
     #print(m2.p)
     #print(m2.c)
