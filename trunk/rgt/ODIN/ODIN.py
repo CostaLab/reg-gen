@@ -95,7 +95,7 @@ def main():
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
-        distr_magnitude = 3
+        distr_magnitude = 2
         n_components = 3
         n_features = 2
         initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
