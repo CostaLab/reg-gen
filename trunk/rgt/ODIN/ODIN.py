@@ -52,7 +52,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = False
+    test = True
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
@@ -89,9 +89,9 @@ def main():
         if options.verbose:
             f = open(options.name + '-setup.info', 'w')
             f.write('Binomial n, p\n')
-            f.write("%s %s\n" %(m.n, m.p), file=sys.stderr)
+            f.write("%s %s\n" %(m.n, m.p))
             f.write('p-value settings\n')
-            f.write("%s %s\n" %(m.n[0], m.p[0][1]), file=sys.stderr)
+            f.write("%s %s\n" %(m.n[0], m.p[0][1]))
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
