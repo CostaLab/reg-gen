@@ -22,6 +22,9 @@ from memory_profiler import profile
 from array import array
 
 lookup_poisson = {}
+lookup_state = {}
+lookup_poisson_state = {}
+lookup_denum = {}
 
 def get_init_parameters(s1, s2, **info):
     #get observation that occurs most often:
@@ -82,7 +85,6 @@ class PoissonHMM2d3s(_BaseHMM):
         self.weights = 0 #weigths for merging distributions
         
     def _compute_log_likelihood(self, X):
-        #t = time()
         matrix = []
         lookup = {}
         k = 0
@@ -103,10 +105,6 @@ class PoissonHMM2d3s(_BaseHMM):
                 row.append(res)
                 
             matrix.append(row)
-#         print('time to compute log-likelihood matrix (compute_log_likelihood): ',\
-#               time()-t, file=sys.stderr)
-        #print("HALLO")
-        #print(np.asarray(matrix))
         return np.asarray(matrix)
 
     def _generate_sample_from_state(self, state, random_state=None):
@@ -123,12 +121,11 @@ class PoissonHMM2d3s(_BaseHMM):
         stats['post_sum_l'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_emisson'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_factor'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
-        stats['post_l'] = [[[0]*self.n_components for _ in range(self.distr_magnitude)] for _ in range(self.n_features)]
+        stats['weights'] = [[[[1, 1] for _ in range(self.n_components)] for _ in range(self.distr_magnitude)] for _ in range(self.n_features)]
         
         return stats
     
     def _get_poisson(self, x, p):
-        global value_poisson
         if lookup_poisson.has_key((x, p)):
                 value_poisson = lookup_poisson[(x, p)]
         else:
@@ -137,11 +134,16 @@ class PoissonHMM2d3s(_BaseHMM):
         return value_poisson    
     
     def _get_value(self, state, symbol, dim):
-        erg = 0
+        help_i = [self.c[dim][i][state] for i in range(self.distr_magnitude)]
+        index = (state, symbol[dim], tuple(help_i))
         
-        for comp in range(self.distr_magnitude):
-            erg += self.c[dim][comp][state] * self._get_poisson(symbol[dim], self.p[dim][comp][state])
-        return erg
+        if index not in lookup_state:
+            res = 0
+            for comp in range(self.distr_magnitude):
+                res += self.c[dim][comp][state] * self._get_poisson(symbol[dim], self.p[dim][comp][state])
+            lookup_state[index] = res
+        
+        return lookup_state[index]
     
     
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
@@ -151,12 +153,19 @@ class PoissonHMM2d3s(_BaseHMM):
             stats['post'] += posteriors[t]
             for dim in range(self.n_features):
                 for comp in range(self.distr_magnitude):
-                    h = np.array([self._get_poisson(symbol[dim], self.p[dim][comp][state]) for state in range(self.n_components)])
-                    enum = _add_pseudo_counts(self.c[dim][comp] * h)
-                    denum = _add_pseudo_counts(np.array([self._get_value(state, symbol, dim) for state in range(self.n_components)]))
+                    #lookup
+                    index = (symbol[dim], tuple([self.p[dim][comp][state] for state in range(self.n_components)]))
+                    if index not in lookup_poisson_state: 
+                        tmp = np.array([self._get_poisson(symbol[dim], self.p[dim][comp][state]) for state in range(self.n_components)])
+                        lookup_poisson_state[index] = tmp
+                    h = lookup_poisson_state[index]
+                    
+                    enum = self.c[dim][comp] * h
+                    denum = np.array([self._get_value(state, symbol, dim) for state in range(self.n_components)])
+                    
                     i += 1
                     try:
-                        help = _add_pseudo_counts(posteriors[t] * enum / denum)
+                        help = (posteriors[t] * enum / _add_pseudo_counts(denum))
                     except:
                         print("%s \n" %i, file=sys.stderr)
                         print("%s %s %s \n" %(denum, symbol, dim), file=sys.stderr)
@@ -166,13 +175,15 @@ class PoissonHMM2d3s(_BaseHMM):
                         print("%s \n" %(enum), file=sys.stderr)
                         help = np.array([1.0/self.distr_magnitude, 1.0/self.distr_magnitude, 1.0/self.distr_magnitude])
                     stats['post_sum_l'][dim][comp] += help
-                    stats['post_sum_l_emisson'][dim][comp] += _add_pseudo_counts(help * symbol[dim])
-                    stats['post_sum_l_factor'][dim][comp] += _add_pseudo_counts(help * self.factors[comp])
+                    stats['post_sum_l_emisson'][dim][comp] += help * symbol[dim]
+                    stats['post_sum_l_factor'][dim][comp] += help * self.factors[comp]
                     
-                    #stats['post_l'][dim][comp][0][t] = help[0]
-                    #stats['post_l'][dim][comp][1][t] = help[1]
-                    #stats['post_l'][dim][comp][2][t] = help[2]
-        
+                    
+                    if help[1] >= help[2]:
+                        stats['weights'][dim][comp][1][0] += 1
+                    if help[2] > help[1]:
+                        stats['weights'][dim][comp][2][1] += 1
+                    
         stats['posterior'] = np.copy(posteriors)
     
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
@@ -182,15 +193,9 @@ class PoissonHMM2d3s(_BaseHMM):
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
         
-        #for dim in range(self.n_features):
-            #for state in range(self.n_components):
-                #for comp in range(self.distr_magnitude):
-                    #stats['post_l'][dim][comp][state] = [0] * len(obs)
-        
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
     def _help_do_mstep(self, stats):
-        #add pseudo counts for nan entries
         for dim in range(self.n_features):
             for comp in range(self.distr_magnitude):
                 for state in range(self.n_components):
@@ -200,24 +205,10 @@ class PoissonHMM2d3s(_BaseHMM):
                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
                     else:
                         self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
-        #self.merge_distr()
-    
-    def _count(self, posts_l):
-        res = [[[[1, 1] for _ in range(self.n_components)] for _ in range(self.distr_magnitude)] for _ in range(self.n_features)]
-        for dim in range(self.n_features):
-            for comp in range(self.distr_magnitude):
-                for i in range(len(posts_l[dim][comp][1])):
-                    if posts_l[dim][comp][1][i] >= posts_l[dim][comp][2][i]:
-                        res[dim][comp][1][0] += 1
-                    if posts_l[dim][comp][2][i] > posts_l[dim][comp][1][i]:
-                        res[dim][comp][2][1] += 1
-
-        return res
-        
+        self.merge_distr(stats['weights'])
     
     def _do_mstep(self, stats, params):
         super(PoissonHMM2d3s, self)._do_mstep(stats, params)
-        #self.weights = self._count(stats['post_l'])
         self._help_do_mstep(stats)
     
     def get_mean(self, state, dim):
@@ -226,23 +217,18 @@ class PoissonHMM2d3s(_BaseHMM):
             erg += self.c[dim][comp][state] * self.p[dim][comp][state]
         return erg
     
-    def merge_distr(self):
+    def merge_distr(self, weights):
         for dim in range(self.n_features):
             for comp in range(self.distr_magnitude):
                 for state1, state2 in [[1, 2], [2, 1], [0, 0]]:
                     dim2 = 1 if dim == 0 else 0
-                    c1, c2 = self.weights[dim][comp][state1][0], self.weights[dim][comp][state1][1]
+                    c1, c2 = weights[dim][comp][state1][0], weights[dim][comp][state1][1]
                     f = c2 / float(c1 + c2)
                     p_norm = self.p[dim][comp][state1] + f * fabs(self.p[dim][comp][state1] - self.p[dim2][comp][state2])
-                    #print('merge: ', f, self.p, p_norm, file=sys.stderr)
                     
                     self.p[dim][comp][state1] = p_norm
                     self.p[dim2][comp][state2] = p_norm
                 
-                #print('merge: ', f, self.p, p_high, p_low, file=sys.stderr)
-                #tmp=np.array(map(lambda x: x*self.n[0], self.p))
-                #print(np.reshape(tmp, (-1,3)), file=sys.stderr)
-
 if __name__ == '__main__':
     #3 components
     distr_magnitude = 3
@@ -269,7 +255,7 @@ if __name__ == '__main__':
     
     m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
 
-    X, Z = m.sample(10**5) #returns (obs, hidden_states)
+    X, Z = m.sample(3000) #returns (obs, hidden_states)
     m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
     
     #tracer = trace.Trace(ignoredirs = [sys.prefix, sys.exec_prefix], trace = 0)
@@ -277,8 +263,8 @@ if __name__ == '__main__':
     #r = tracer.results()
     #r.write_results(show_missing=True, coverdir="ergebnis") 
 
-    #cProfile.run("m2.fit([X])")
-    m2.fit([X])
+    cProfile.run("m2.fit([X])")
+    #m2.fit([X])
       
     #print('obs', 'states', 'estimated states', sep='\t')
     #e = m2.predict(X)
