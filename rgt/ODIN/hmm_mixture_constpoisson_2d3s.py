@@ -35,8 +35,8 @@ def get_init_parameters(s1, s2, **info):
     initial_p = [[[0 for _ in range(n_components)] for _ in range(distr_magnitude)] for _ in range(n_features)]
     
     for dim in range(n_features):
-        for comp in range(n_components):
-            for state in range(distr_magnitude):
+        for comp in range(distr_magnitude):
+            for state in range(n_components):
                 if state == 0:
                     background_value = max(1, emp_mean[dim] / 100.)
                     if comp == 0:
@@ -260,8 +260,30 @@ if __name__ == '__main__':
 #       
 #     tmp2 = np.array([[[2, 9, 1], [3, 10, 2]], [[4, 2, 12], [2, 2, 12]]], np.float64)
 #     c2 = np.array([[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]], [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]], np.float64)
-        
-    a, b = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
+    
+    s1 = []
+    with open('/home/manuel/workspace/work/exp_ODIN_pu1-0-6_newvsold/ODIN-poisson-pu1-0-6-s1') as f:
+        for line in f:
+            line = line.replace(",", "")
+            line = line.replace("(", "")
+            line = line.replace(")", "")
+            line = line.strip()
+            tmp = line.split(" ")
+            c1, c2 = int(tmp[0]), int(tmp[1])
+            s1.append((c1,c2))
+    
+    s2 = []
+    with open('/home/manuel/workspace/work/exp_ODIN_pu1-0-6_newvsold/ODIN-poisson-pu1-0-6-s2') as f:
+        for line in f:
+            line = line.replace(",", "")
+            line = line.replace("(", "")
+            line = line.replace(")", "")
+            line = line.strip()
+            tmp = line.split(" ")
+            c1, c2 = int(tmp[0]), int(tmp[1])
+            s2.append((c1,c2))
+      
+    a, b = get_init_parameters(s1, s2, distr_magnitude=2, n_components=3, n_features=2)
     print(b)
     
     
