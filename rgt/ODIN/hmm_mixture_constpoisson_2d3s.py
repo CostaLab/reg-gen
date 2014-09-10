@@ -18,6 +18,8 @@ from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 import cProfile
 import trace
+from memory_profiler import profile
+from array import array
 
 lookup_poisson = {}
 
@@ -118,7 +120,6 @@ class PoissonHMM2d3s(_BaseHMM):
     def _initialize_sufficient_statistics(self):
         stats = super(PoissonHMM2d3s, self)._initialize_sufficient_statistics()
         stats['post'] = np.zeros(self.n_components)
-#         stats['post_emission'] = np.zeros([self.n_features, self.n_components])
         stats['post_sum_l'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_emisson'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_factor'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
@@ -142,13 +143,9 @@ class PoissonHMM2d3s(_BaseHMM):
             erg += self.c[dim][comp][state] * self._get_poisson(symbol[dim], self.p[dim][comp][state])
         return erg
     
+    
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
         posteriors = _valid_posteriors(posteriors, obs)
-        
-        for dim in range(self.n_features):
-            for state in range(self.n_components):
-                for comp in range(self.distr_magnitude):
-                    stats['post_l'][dim][comp][state] = [0] * len(obs)
         i = 0
         for t, symbol in enumerate(obs):
             stats['post'] += posteriors[t]
@@ -172,18 +169,23 @@ class PoissonHMM2d3s(_BaseHMM):
                     stats['post_sum_l_emisson'][dim][comp] += _add_pseudo_counts(help * symbol[dim])
                     stats['post_sum_l_factor'][dim][comp] += _add_pseudo_counts(help * self.factors[comp])
                     
-                    stats['post_l'][dim][comp][0][t] = help[0]
-                    stats['post_l'][dim][comp][1][t] = help[1]
-                    stats['post_l'][dim][comp][2][t] = help[2]
+                    #stats['post_l'][dim][comp][0][t] = help[0]
+                    #stats['post_l'][dim][comp][1][t] = help[1]
+                    #stats['post_l'][dim][comp][2][t] = help[2]
         
         stats['posterior'] = np.copy(posteriors)
-
+    
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                       posteriors, fwdlattice, bwdlattice,
                                       params):
         super(PoissonHMM2d3s, self)._accumulate_sufficient_statistics(
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
+        
+        #for dim in range(self.n_features):
+            #for state in range(self.n_components):
+                #for comp in range(self.distr_magnitude):
+                    #stats['post_l'][dim][comp][state] = [0] * len(obs)
         
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
@@ -198,7 +200,7 @@ class PoissonHMM2d3s(_BaseHMM):
                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
                     else:
                         self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
-        self.merge_distr()
+        #self.merge_distr()
     
     def _count(self, posts_l):
         res = [[[[1, 1] for _ in range(self.n_components)] for _ in range(self.distr_magnitude)] for _ in range(self.n_features)]
@@ -215,7 +217,7 @@ class PoissonHMM2d3s(_BaseHMM):
     
     def _do_mstep(self, stats, params):
         super(PoissonHMM2d3s, self)._do_mstep(stats, params)
-        self.weights = self._count(stats['post_l'])
+        #self.weights = self._count(stats['post_l'])
         self._help_do_mstep(stats)
     
     def get_mean(self, state, dim):
@@ -261,49 +263,27 @@ if __name__ == '__main__':
 #     tmp2 = np.array([[[2, 9, 1], [3, 10, 2]], [[4, 2, 12], [2, 2, 12]]], np.float64)
 #     c2 = np.array([[[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]], [[0.5, 0.5, 0.5], [0.5, 0.5, 0.5]]], np.float64)
     
-    s1 = []
-    with open('/home/manuel/workspace/work/exp_ODIN_pu1-0-6_newvsold/ODIN-poisson-pu1-0-6-s1') as f:
-        for line in f:
-            line = line.replace(",", "")
-            line = line.replace("(", "")
-            line = line.replace(")", "")
-            line = line.strip()
-            tmp = line.split(" ")
-            c1, c2 = int(tmp[0]), int(tmp[1])
-            s1.append((c1,c2))
-    
-    s2 = []
-    with open('/home/manuel/workspace/work/exp_ODIN_pu1-0-6_newvsold/ODIN-poisson-pu1-0-6-s2') as f:
-        for line in f:
-            line = line.replace(",", "")
-            line = line.replace("(", "")
-            line = line.replace(")", "")
-            line = line.strip()
-            tmp = line.split(" ")
-            c1, c2 = int(tmp[0]), int(tmp[1])
-            s2.append((c1,c2))
-      
-    a, b = get_init_parameters(s1, s2, distr_magnitude=2, n_components=3, n_features=2)
-    print(b)
+    #a, b = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=2, n_components=3, n_features=2)
+    #print(b)
     
     
-#     m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
-# 
-#     X, Z = m.sample(2000) #returns (obs, hidden_states)
-#     m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
-#     
-#     tracer = trace.Trace(ignoredirs = [sys.prefix, sys.exec_prefix], trace = 0)
-#     tracer.run("m2.fit([X])")
-#     r = tracer.results()
-#     r.write_results(show_missing=True, coverdir="ergebnis") 
+    m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
+
+    X, Z = m.sample(10**5) #returns (obs, hidden_states)
+    m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
+    
+    #tracer = trace.Trace(ignoredirs = [sys.prefix, sys.exec_prefix], trace = 0)
+    #tracer.run("m2.fit([X])")
+    #r = tracer.results()
+    #r.write_results(show_missing=True, coverdir="ergebnis") 
 
     #cProfile.run("m2.fit([X])")
-    #m2.fit([X])
+    m2.fit([X])
       
-#     print('obs', 'states', 'estimated states', sep='\t')
-#     e = m2.predict(X)
-#     for i, el in enumerate(X):
-#         print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
+    #print('obs', 'states', 'estimated states', sep='\t')
+    #e = m2.predict(X)
+    #for i, el in enumerate(X):
+    #    print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
     #print(m.p)
     #print(m2.p)
     #print(m2.c)
