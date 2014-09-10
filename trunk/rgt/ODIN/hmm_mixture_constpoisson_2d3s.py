@@ -149,7 +149,7 @@ class PoissonHMM2d3s(_BaseHMM):
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
         posteriors = _valid_posteriors(posteriors, obs)
         i = 0
-        print("run...!", file=sys.stderr)
+        print("run...! start at " + str(time()), file=sys.stderr)
         for t, symbol in enumerate(obs):
             stats['post'] += posteriors[t]
             for dim in range(self.n_features):
@@ -256,7 +256,7 @@ if __name__ == '__main__':
     
     m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
 
-    X, Z = m.sample(3000) #returns (obs, hidden_states)
+    X, Z = m.sample(10) #returns (obs, hidden_states)
     m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
     
     #tracer = trace.Trace(ignoredirs = [sys.prefix, sys.exec_prefix], trace = 0)
