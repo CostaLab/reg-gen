@@ -166,7 +166,7 @@ class PoissonHMM2d3s(_BaseHMM):
                     
                     i += 1
                     try:
-                        help = (posteriors[t] * enum / _add_pseudo_counts(denum))
+                        help = _add_pseudo_counts(posteriors[t] * enum / _add_pseudo_counts(denum))
                     except:
                         print("%s \n" %i, file=sys.stderr)
                         print("%s %s %s \n" %(denum, symbol, dim), file=sys.stderr)
