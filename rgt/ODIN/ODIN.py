@@ -81,6 +81,7 @@ def main():
     print('Training HMM...', file=sys.stderr)
     if options.distr == 'binom':
         #for binomial distribution
+        print("Use binomial HMM", file=sys.stderr)
         from hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
         tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
@@ -94,6 +95,7 @@ def main():
             f.write("%s %s\n" %(m.n[0], m.p[0][1]))
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
+        print("Use poisson mixture HMM", file=sys.stderr)
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
         distr_magnitude = 3
         n_components = 3

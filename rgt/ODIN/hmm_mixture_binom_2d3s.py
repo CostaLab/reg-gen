@@ -16,6 +16,7 @@ from time import time
 from math import fabs
 from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
+import cProfile
 
 class BinomialHMM2d3s(_BaseHMM):
     def __init__(self, n, init_state_seq=None, p = [[[0.1, 0.1, 0.2], [0.8, 0.9, 0.7], [0.3, 0.2, 0.25]], [[0.1, 0.1, 0.12], [0.2, 0.2, 0.3], [0.9, 0.7, 0.8]]], \
@@ -183,17 +184,17 @@ if __name__ == '__main__':
     
     m = BinomialHMM2d3s(startprob=[1,0,0], n = [100, 100])
 
-    X, Z = m.sample(100) #returns (obs, hidden_states)
-    print(X,Z)
+    X, Z = m.sample(2000) #returns (obs, hidden_states)
+    #print(X,Z)
     
     m2 = BinomialHMM2d3s(n=[100, 100], p=tmp, startprob=[1,0,0])
-    m2.fit([X])
-     
-    print('obs', 'states', 'estimated states', sep='\t')
-    e = m2.predict(X)
-    for i, el in enumerate(X):
-        print(el, Z[i], e[i], sep='\t')
-    print(m.p)
-    print(m2.p)
+    cProfile.run("m2.fit([X])")
+    #m2.fit([X])
+    #print('obs', 'states', 'estimated states', sep='\t')
+    #e = m2.predict(X)
+    #for i, el in enumerate(X):
+    #    print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
+    #print(m.p)
+    #print(m2.p)
 
     

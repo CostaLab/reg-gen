@@ -190,17 +190,20 @@ if __name__ == '__main__':
     
     m = BinomialHMM2d3s(n_components=3, p = p_, startprob=[1,0,0], n = n_)
 
-    X, Z = m.sample(2000) #returns (obs, hidden_states)
+    X, Z = m.sample(3000) #returns (obs, hidden_states)
     
 #    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
 #    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
 #    X=np.array([[46,5],[41, 3],[43,4],[43,2],[45,4],[39,3],[18,36],[28,28],[43,1],[23,35]])
-    print('obs           ', X)
-    print('hidden states ', Z)
+    #print('obs           ', X)
+    #print('hidden states ', Z)
 #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
     m2 = BinomialHMM2d3s(n_components=3, n=n_, p=tmp)
     cProfile.run("m2.fit([X])")
-    
+    #m2.fit([X])
+    #e = m2.predict(X)
+    #for i, el in enumerate(X):
+    #    print(el, Z[i], e[i], Z[i] == e[i], sep='\t')
     
 #    logprob, posteriors = m2.eval(X)
 #    print('logprob:', logprob)
