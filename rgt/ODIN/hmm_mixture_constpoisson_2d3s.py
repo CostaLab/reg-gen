@@ -149,6 +149,7 @@ class PoissonHMM2d3s(_BaseHMM):
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
         posteriors = _valid_posteriors(posteriors, obs)
         i = 0
+        print("run...!", file=sys.stderr)
         for t, symbol in enumerate(obs):
             stats['post'] += posteriors[t]
             for dim in range(self.n_features):
