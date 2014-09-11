@@ -11,7 +11,7 @@ from HTSeq import FastaReader
 
 class help_content():
     def __init__(self):
-        self.content = [[] for _ in range(100)]
+        self.content = [[] for _ in range(101)]
         self.g_gc = []
         self.g = -1
         
@@ -52,7 +52,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
             count = seq.count("C") + seq.count("G")
             if len(seq) > 0:
                 gc_content = float(count) / len(seq)
-                print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
+                #print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
                 content.add(cov[i], gc_content)
                 cur_gc_value.append(int(gc_content*100))
             else:
