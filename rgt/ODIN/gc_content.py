@@ -52,6 +52,7 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
             count = seq.count("C") + seq.count("G")
             if len(seq) > 0:
                 gc_content = float(count) / len(seq)
+                print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
                 content.add(cov[i], gc_content)
                 cur_gc_value.append(int(gc_content*100))
             else:
@@ -68,8 +69,4 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list):
         r.append(tmp)
     
     return r, content.g, content.g_gc
-    
-
-    
-    
     
