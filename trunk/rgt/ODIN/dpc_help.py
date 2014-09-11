@@ -331,7 +331,7 @@ def input(laptop):
         
         parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
-        parser.add_option("-m", "--merge", default=False, dest="verbose", action="store_true", help="merge peaks (recommended for histones)")
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
         
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
