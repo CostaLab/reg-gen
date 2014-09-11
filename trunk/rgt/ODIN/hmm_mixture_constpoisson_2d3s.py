@@ -200,7 +200,7 @@ class PoissonHMM2d3s(_BaseHMM):
         for dim in range(self.n_features):
             for comp in range(self.distr_magnitude):
                 for state in range(self.n_components):
-                    self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / stats['post'][state]
+                    self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / _add_pseudo_counts(stats['post'][state])
                     if comp == 0:
                         self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
