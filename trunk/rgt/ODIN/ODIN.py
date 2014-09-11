@@ -8,6 +8,7 @@ from dpc_help import initialize
 from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
+import numpy as np
 
 from random import sample
 
@@ -52,11 +53,11 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = False
+    test = True
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
-    exp_data = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
+    exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
                           bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
@@ -97,7 +98,7 @@ def main():
     elif options.distr == 'poisson':
         print("Use poisson mixture HMM", file=sys.stderr)
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
-        distr_magnitude = 3
+        distr_magnitude = options.mag
         n_components = 3
         n_features = 2
         initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
@@ -134,7 +135,7 @@ def main():
     if options.verbose: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue, ext_size=np.mean(ext_sizes), merge=options.merge)
 
 
 if __name__ == '__main__':

@@ -21,6 +21,7 @@ import os.path
 import sys
 from DualCoverageSet import DualCoverageSet
 from get_fast_gen_pvalue import get_log_pvalue_new
+from postprocessing import merge_delete
 
 SIGNAL_CUTOFF = 10000
 
@@ -56,14 +57,13 @@ def _compute_pvalue((x, y, side, distr)):
     else:
         return -get_log_pvalue_new(x, y, side, distr)
     
-def get_peaks(name, DCS, states, distr):
+def get_peaks(name, DCS, states, ext_size, merge, distr):
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
     second_overall_coverage = DCS.second_overall_coverage
     
     c1 = list(first_overall_coverage)
     c2 = list(second_overall_coverage)
-    
     
     tmp_peaks = []
     
@@ -79,7 +79,7 @@ def get_peaks(name, DCS, states, distr):
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
 
-    i, j, r = 0, 0, 0
+    i, j = 0, 0
     
     peaks = []
     pvalues = []
@@ -118,19 +118,23 @@ def get_peaks(name, DCS, states, distr):
     
     assert len(pvalues) == len(peaks)
     
-    f = open(name + '-diffpeaks.bed', 'w')
+    merge_delete(ext_size, merge, peaks, pvalues, name)
     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
-    bedscore = 1000
+    #peaks = [(c, s, e, s1, s2, strand)]
     
-    for i in range(len(pvalues)):
-        c, s, e, c1, c2, strand = peaks[i]
-        color = colors[strand]
-
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
-              color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
-
-    f.close()
+#     f = open(name + '-diffpeaks.bed', 'w')
+#     
+#     colors = {'+': '255,0,0', '-': '0,255,0'}
+#     bedscore = 1000
+#     
+#     for i in range(len(pvalues)):
+#         c, s, e, c1, c2, strand = peaks[i]
+#         color = colors[strand]
+# 
+#         print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
+#               color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
+# 
+#     f.close()
 
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
@@ -212,7 +216,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                                   chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
                                   factor_input_1=factor_input_1, factor_input_2=factor_input_2)
     
-    return cov_cdp_mpp
+    return cov_cdp_mpp, [ext_1, ext_2]
 
 
 def _get_chrom_list(file):
@@ -260,6 +264,8 @@ def input(laptop):
 #        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_chr1-2.bam'
 
         #options.regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
+        options.merge=True
+        options.mag = 3
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
@@ -272,7 +278,7 @@ def input(laptop):
         options.foldchange=1.05
         options.pcutoff = 1
         options.name='testODIN-poisson'
-        options.distr='poisson'
+        options.distr='binom'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
@@ -285,6 +291,7 @@ def input(laptop):
         options.version=False
         options.factor_input_1=None
         options.factor_input_2=None
+        
         
     else:
         
@@ -323,6 +330,9 @@ def input(laptop):
                           help="Factor for second BAM. [default: %default]")
         
         parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
+        parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
+        parser.add_option("-m", "--merge", default=False, dest="verbose", action="store_true", help="merge peaks (recommended for histones)")
+        
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
