@@ -106,12 +106,12 @@ def _init(self, obs, params):
 def _add_pseudo_counts(arr):
     if type(arr) is np.ndarray:
         tmp = np.array([1e-323 if x < 1e-323 else x for x in arr], np.float64)
-        tmp2 = np.array([1.0 - 1.0e-5 if x == 1.0 else x for x in tmp], np.float64)
-        return tmp2
+        #tmp2 = np.array([1.0 - 1.0e-5 if x == 1.0 else x for x in tmp], np.float64)
+        return tmp
     else:
         tmp = 1e-323 if arr < 1e-323 else arr
-        tmp2 = 1.0 - 1.0e-10 if tmp == 1.0 else tmp
-        return tmp2
+        #tmp2 = 1.0 - 1.0e-10 if tmp == 1.0 else tmp
+        return tmp
 
 def sub_neginf(m):
     return 1e-323 if m == -np.inf else m
