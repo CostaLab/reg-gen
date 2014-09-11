@@ -18,8 +18,6 @@ from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 import cProfile
 import trace
-from memory_profiler import profile
-from array import array
 
 lookup_poisson = {}
 lookup_state = {}
