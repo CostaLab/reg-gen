@@ -6,8 +6,8 @@ Created on Mar 6, 2013
 @author: manuel
 '''
 from __future__ import print_function
-from GenomicRegion import GenomicRegion
-from GenomicRegionSet import GenomicRegionSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
 
 def merge_data(regions):
