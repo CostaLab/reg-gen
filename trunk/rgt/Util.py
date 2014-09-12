@@ -371,18 +371,31 @@ class ErrorHandler():
         """
         self.error_dictionary = {
             "DEFAULT_ERROR": [0,0,"Undefined error. Program terminated with exit status 0."],
-
             "MOTIF_ANALYSIS_OPTION_ERROR": [1,0,"You must define one specific analysis. Run '"+self.program_name+" -h' for help."],
 
             "FP_WRONG_ARGUMENT": [2,0,"You must provide at least one and no more than one experimental matrix as input argument."],
             "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
             "FP_ONE_REGION": [4,0,"You must provide one 'regions' bed file in the experiment matrix."],
-            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE in the experiment matrix"],
+            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE in the experiment matrix."],
             "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE (histone modification) in the experiment matrix."],
             "FP_NB_HMMS": [7,0,"You must provide one HMM file or X HMM files where X is the number of histone tracks detected in the experiment matrix."],
             "FP_HMM_FILES": [8,0,"Your HMM file could not be read. If you did not provide any HMM file, you may not have installed scikit correctly."],
             "FP_BB_CREATION": [9,0,"Big Bed file (.bb) could not be created. Check if you have the bedToBigBed script in $PATH."],
-            "XXXXXXX": [10,0,"Xxxxxx"]
+            "MM_OUT_FOLDER_CREATION": [10,0,"Could not create output folder."],
+            "MM_NO_ARGUMENT": [11,0,"Could not read the arguments. Make sure you provided an experimental matrix."],
+            "MM_WRONG_EXPMAT": [12,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
+            "MM_WRONG_RANDPROP": [13,0,"Proportion of random regions is too low (<= 0)."],
+            "MM_LOW_NPROC": [14,0,"Number of processor is too low (<= 0)."],
+            "ME_OUT_FOLDER_CREATION": [15,0,"Could not create output folder."],
+            "ME_FEW_ARG": [16,0,"There are too few arguments. Please use -h option in order to verify command usage."],
+            "ME_WRONG_EXPMAT": [17,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
+            "ME_MATCH_NOTFOUND": [18,0,"Motif matching file was not found. Are you sure you performed --matching before --enrichment?"],
+            "ME_BAD_MATCH": [19,0,"Motif matching file is incorrect. Please perform --matching again."],
+            "ME_LOW_NPROC": [20,0,"Number of processor is too low (<= 0)."],
+            "ME_RAND_NOTFOUND": [21,0,"Random regions not found. Are you sure --matching was correctly performed?"],
+            "ME_BAD_RAND": [22,0,"Could not read random regions."],
+            "ME_RAND_NOT_BED_BB": [23,0,"Random regions are not in bed or bigbed format."],
+            "XXXXXXX": [24,0,"Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
@@ -397,17 +410,18 @@ class ErrorHandler():
         """
         self.warning_dictionary = {
             "DEFAULT_WARNING": [0,"Undefined warning."],
-            "WARNING1": [1,"Warning 1 Test"],
-            "WARNING2": [2,"Warning 2 Test"],
-
-            "FP_ONE_REGION": [3,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
-            "FP_MANY_DNASE": [4,"There are more than one DNASE 'reads' file. Only the first one will be used."],
-            "FP_MANY_HISTONE": [5,"It is recomended that no more than three histone modifications should be used."],
-            "FP_DNASE_PROC": [6,"The DNase file could not be processed"],
-            "FP_HISTONE_PROC": [7,"The Histone file could not be processed"],
-            "FP_SEQ_FORMAT": [8,"The DNase+Histone sequence could not be formatted to be input for scikit"],
-            "FP_HMM_APPLIC": [9,"The scikit HMM encountered errors when applied"],
-            "XXXXXXX": [10,"Xxxxxx"]
+            "FP_ONE_REGION": [1,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
+            "FP_MANY_DNASE": [2,"There are more than one DNASE 'reads' file. Only the first one will be used."],
+            "FP_MANY_HISTONE": [3,"It is recomended that no more than three histone modifications should be used."],
+            "FP_DNASE_PROC": [4,"The DNase file could not be processed."],
+            "FP_HISTONE_PROC": [5,"The Histone file could not be processed."],
+            "FP_SEQ_FORMAT": [6,"The DNase+Histone sequence could not be formatted to be input for scikit."],
+            "FP_HMM_APPLIC": [7,"The scikit HMM encountered errors when applied."],
+            "MM_MANY_ARG": [8,"There are more than one arguments, only the first experimental matrix will be used."],
+            "ME_MANY_ARG": [9,"There are more than two arguments, only the two first arguments will be used."],
+            "ME_MANY_GENESETS": [10,"There are more than one geneset associated to a group, only the first one will be used."],
+            "ME_FEW_GENESETS": [11,"There seems to be a geneset column, but no geneset was found for some entries."],
+            "XXXXXXX": [12,"Xxxxxx"]
         }
         self.warning_number = 0
         self.warning_message = 1
