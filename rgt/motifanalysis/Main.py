@@ -32,12 +32,13 @@ from fisher import pvalue
 """
 Contains functions to common motif analyses.
 
-Basic Input:
-- XXX TODO
-
 Dependencies:
-- XXX TODO
-- bedToBigBed, XXXX scripts in $PATH (if the option is used)
+- python >= 2.7
+- numpy >= 1.4.1
+- biopython >= 1.64
+- pysam >= 0.7.5
+- fisher >= 0.1.4
+- bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
 
 Authors: Eduardo G. Gusmao.
 """
@@ -110,6 +111,9 @@ def main_matching():
     # Processing Input Arguments
     ###################################################################################################
 
+    # Initializing Error Handler
+    main_error_handler = ErrorHandler()
+
     # Parameters
     usage_message = "%prog --matching [options] <experiment_matrix>"
 
@@ -156,7 +160,7 @@ def main_matching():
     matching_output_location = os.path.join(options.output_location,matching_folder_name)
     try:
         if(not os.path.isdir(matching_output_location)): os.makedirs(matching_output_location)
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -171,14 +175,16 @@ def main_matching():
     # Reading arguments
     try:
         input_matrix = arguments[0]
-        if(len(arguments) > 1): pass # TODO WARNING
-    except Exception: pass # TODO ERROR
+        if(len(arguments) > 1): main_error_handler.throw_warning("MM_MANY_ARG")
+    except Exception: main_error_handler.throw_error("MM_NO_ARGUMENT")
 
     # Create experimental matrix
     try:
         exp_matrix = ExperimentalMatrix()
         exp_matrix.read(input_matrix)
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("MM_WRONG_EXPMAT")
+
+
 
     ###################################################################################################
     # Reading Regions
@@ -191,7 +197,7 @@ def main_matching():
 
     try:
         exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("MM_WRONG_EXPMAT")
 
     # Iterating on experimental matrix objects
     for k in exp_matrix_objects_dict.keys():
@@ -247,13 +253,11 @@ def main_matching():
                 os.remove(rand_bed_file_name)
             except Exception: pass # WARNING
 
-    else: pass # TODO WARNING
+    else: main_error_handler.throw_error("MM_WRONG_RANDPROP")
 
     ###################################################################################################
     # Creating PWMs
     ###################################################################################################
-
-    # TODO XXX Alterar setup.py para colocar os repositorios corretos de volta.
 
     # Initialization
     motif_list = []
@@ -265,7 +269,7 @@ def main_matching():
             motif_file_names.append(motif_file_name)
 
     # Grouping motif file names by the number of processes requested
-    if(options.processes <= 0): pass # TODO ERROR
+    if(options.processes <= 0): main_error_handler.throw_error("MM_LOW_NPROC")
     elif(options.processes == 1): motif_file_names = [[e] for e in motif_file_names]
     else: motif_file_names = map(None, *(iter(motif_file_names),) * options.processes)
 
@@ -301,14 +305,9 @@ def main_matching():
 
         # Initializing factor dictionary
         mpbs_output_dict[genomic_region_set.name] = dict()
-
-        counter = 0 # TODO REMOVE
     
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
-
-            counter += 1 # TODO REMOVE
-            print genomic_region_set.name, counter # TODO REMOVE
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
@@ -331,11 +330,10 @@ def main_matching():
                 for i in range(len(curr_mpbs_list)):
                     gr_list = curr_mpbs_list[i]
                     curr_motif_name = motif_group[i].name
+                    mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
                     for gr in gr_list:
-                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
-                        except Exception:
-                            mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
-                            mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                        mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                        
         
     ###################################################################################################
     # Writing output
@@ -389,6 +387,9 @@ def main_enrichment():
     # Processing Input Arguments
     ###################################################################################################
 
+    # Initializing Error Handler
+    main_error_handler = ErrorHandler()
+
     # Parameters
     usage_message = "%prog --enrichment [options] <experiment_matrix> <input_path>"
 
@@ -432,15 +433,15 @@ def main_enrichment():
     dump_file_name = "dump.p"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
-    output_mpbs_filtered = "mpbs.bed"
-    output_mpbs_filtered_ev = "mpbs_ev.bed"
-    output_mpbs_filtered_nev = "mpbs_nev.bed"
+    output_mpbs_filtered = "mpbs"
+    output_mpbs_filtered_ev = "mpbs_ev"
+    output_mpbs_filtered_nev = "mpbs_nev"
     output_stat_genetest = "genetest_statistics"
     output_stat_randtest = "randtest_statistics"
     ev_color = "0,130,0"
     nev_color = "130,0,0"
     results_header_text = "\t".join(["FACTOR","P-VALUE","CORR.P-VALUE","A","B","C","D","FREQ","BACK.FREQ.","GENES"])
-    cluster_path_fix = "" # TODO REMOVE TO EMPTY STRING
+    cluster_path_fix = ""
     html_header = ["FACTOR","MOTIF","P-VALUE","CORRECTED P-VALUE","A","B","C","D","FREQUENCY","BACKGROUND FREQUENCY","GO"]
     html_type_list = "sissssssssl"
     logo_width = 200
@@ -458,7 +459,7 @@ def main_enrichment():
         try:
             matrix_name_without_ext = ".".join(arguments[0].split(".")[:-1])
             output_location = os.path.join(arguments[1],os.path.basename(matrix_name_without_ext))
-        except Exception: pass # TODO ERROR 
+        except Exception: main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -477,14 +478,14 @@ def main_enrichment():
     try:
         input_matrix = arguments[0]
         input_location = arguments[1]
-        if(len(arguments) > 2): pass # TODO WARNING
-    except Exception: pass # TODO ERROR
+        if(len(arguments) > 2): main_error_handler.throw_warning("ME_MANY_ARG")
+    except Exception: main_error_handler.throw_error("ME_FEW_ARG")
 
     # Create experimental matrix
     try:
         exp_matrix = ExperimentalMatrix()
         exp_matrix.read(input_matrix)
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -502,7 +503,7 @@ def main_enrichment():
     # Reading dictionary of objects
     try:
         exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
     if(flag_gene): # Genelist and randomic analysis will be performed
 
@@ -537,9 +538,9 @@ def main_enrichment():
                     if(not flag_foundgeneset):
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
-                    else: pass # TODO WARNING - Only first geneset will be used
+                    else: main_error_handler.throw_warning("ME_MANY_GENESETS")
                     
-            if(not flag_foundgeneset): pass # TODO ERROR - There must be a valid geneset associated with each region
+            if(not flag_foundgeneset): main_error_handler.throw_warning("ME_FEW_GENESETS")
 
             # Update input list
             input_list.append(curr_input)
@@ -572,7 +573,7 @@ def main_enrichment():
 
     # Verifying if file exists
     curr_dump_file_name = os.path.join(input_location,matching_folder_name,dump_file_name)
-    if(not os.path.exists(curr_dump_file_name)): pass # TODO ERROR
+    if(not os.path.exists(curr_dump_file_name)): main_error_handler.throw_error("ME_MATCH_NOTFOUND")
     
     # Opening dump
     dump_file = open(curr_dump_file_name, "rb")
@@ -583,10 +584,10 @@ def main_enrichment():
     try:
         sorted_mpbs_dict_keys = mpbs_dict[mpbs_dict.keys()[0]].keys()
         sorted_mpbs_dict_keys.sort()
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("ME_BAD_MATCH")
 
     # Creating groups of motifs given the number of processes
-    if(options.processes <= 0): pass # TODO ERROR
+    if(options.processes <= 0): main_error_handler.throw_error("ME_LOW_NPROC")
     elif(options.processes == 1): grouped_mpbs_dict_keys = [[e] for e in sorted_mpbs_dict_keys]
     else: grouped_mpbs_dict_keys = map(None, *(iter(sorted_mpbs_dict_keys),) * options.processes)
     corrected_grouped = []
@@ -600,7 +601,7 @@ def main_enrichment():
     # Verifying if file exists
     random_region_glob = glob(os.path.join(input_location,matching_folder_name,random_region_name+".*"))
     try: random_region_file_name = random_region_glob[0]
-    except Exception: pass # TODO ERROR
+    except Exception: main_error_handler.throw_error("ME_RAND_NOTFOUND")
 
     # Creating GenomicRegionSet
     random_regions = GenomicRegionSet(random_region_name)
@@ -614,10 +615,10 @@ def main_enrichment():
         try:
             bed_file_name = ".".join(random_region_file_name.split(".")[:-1])
             os.system(" ".join(["bigBedToBed", random_region_file_name, bed_file_name]))
-        except Exception: pass # TODO ERROR
-        random_regions.read_bed(bed_file_name)
-        os.remove(bed_file_name)
-    else: pass # TODO ERROR
+            random_regions.read_bed(bed_file_name)
+            os.remove(bed_file_name)
+        except Exception: main_error_handler.throw_error("ME_BAD_RAND")
+    else: main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
 
     # Evaluating random statistics - The gene set and mpbss are not needed (None)
     rand_c_dict, rand_d_dict, rand_geneset, rand_mpbs_dict = get_fisher_dict(grouped_mpbs_dict_keys, random_regions, mpbs_dict[random_regions.name])
@@ -630,16 +631,16 @@ def main_enrichment():
     # Creating link dictionary for HTML file
     genetest_link_dict = dict()
     randtest_link_dict = dict()
+    link_location = "file://"+os.path.abspath(output_location)
     for curr_input in input_list:
         for grs in curr_input.region_list:
             if(curr_input.gene_set):
                 link_name = grs.name+" ("+curr_input.gene_set.name+")"
-                genetest_link_dict[link_name] = os.path.join(output_location,grs.name+"__"+curr_input.gene_set.name,output_stat_genetest+".html")
-                randtest_link_dict[link_name] = os.path.join(output_location,grs.name+"__"+curr_input.gene_set.name,output_stat_randtest+".html")
+                genetest_link_dict[link_name] = os.path.join(link_location,grs.name+"__"+curr_input.gene_set.name,output_stat_genetest+".html")
+                randtest_link_dict[link_name] = os.path.join(link_location,grs.name+"__"+curr_input.gene_set.name,output_stat_randtest+".html")
             else: 
                 link_name = grs.name
-                randtest_link_dict[link_name] = os.path.join(output_location,link_name,output_stat_randtest+".html")
-
+                randtest_link_dict[link_name] = os.path.join(link_location,link_name,output_stat_randtest+".html")
 
     # Iterating on each input object
     for curr_input in input_list:
@@ -783,7 +784,8 @@ def main_enrichment():
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest+".html")
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, cluster_path_fix=cluster_path_fix)
-                html.add_heading("Results for <b>"+original_name+"</b> region using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+                html.add_heading("Results for <b>"+original_name+"</b> region <b>Gene Test*</b> using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+                html.add_heading("* This gene test considered regions associated to the gene list given against regions not associated to the gene list", align = "center", bold=False, size = 3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align = "center")
                 html.write(output_file_name_html)         
 
@@ -878,8 +880,14 @@ def main_enrichment():
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_randtest+".html")
-            html = Html("Motif Enrichment Analysis", genetest_link_dict, cluster_path_fix=cluster_path_fix)
-            html.add_heading("Results for <b>"+original_name+"</b> region using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+            html = Html("Motif Enrichment Analysis", randtest_link_dict, cluster_path_fix=cluster_path_fix)
+            if(curr_input.gene_set):
+                html.add_heading("Results for <b>"+original_name+"</b> region <b>Random Test*</b> using genes from <b>"+curr_input.gene_set.name+"</b>", align = "center", bold=False)
+                html.add_heading("* This random test considered regions associated to the gene list given against background (random) regions", align = "center", bold=False, size = 3)
+            else:
+                html.add_heading("Results for <b>"+original_name+"</b> region <b>Random Test*</b> using all input regions", align = "center", bold=False)
+                html.add_heading("* This random test considered all regions against background (random) regions", align = "center", bold=False, size = 3)
+
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align = "center")
             html.write(output_file_name_html)
 
