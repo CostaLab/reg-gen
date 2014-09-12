@@ -17,7 +17,7 @@ import sys
 from rgt.ExperimentalMatrix import *
 from rgt.GenomicRegionSet import *
 from rgt.CoverageSet import *
-from rgt.GeneSet import *
+from rgt.GeneSet import GeneSet
 import numpy
 
 
