@@ -17,7 +17,7 @@ import sys
 from rgt.ExperimentalMatrix import *
 from rgt.GenomicRegionSet import *
 from rgt.CoverageSet import *
-from rgt.GeneSet import GeneSet
+import rgt.GeneSet
 import numpy
 
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     for region in regionsets:
         bedNew = GenomicRegionSet("")
         [degenes, de_peak_genes, mappedGenes, totalPeaks, regionsToGenes] \
-        = bedNew.filter_by_gene_association(genes, organism='mm9')
+        = bedNew.filter_by_gene_association_old(region.fileName, genes.genes, gene_file, genome_file)
         
         [ct, labels] = averageExpression(region, genes, regionsToGenes)
         aux = region.fileName.split("/")
