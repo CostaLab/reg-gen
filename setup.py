@@ -52,7 +52,7 @@ tools_dictionary = {
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
-  ["numpy>=1.4.1","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"]
+  [] #"numpy>=1.4.1","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"
 ), 
 "hint": (
   "rgt-hint",
