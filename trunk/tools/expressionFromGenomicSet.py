@@ -85,7 +85,7 @@ if __name__ == '__main__':
     for region in regionsets:
         bedNew = GenomicRegionSet("")
         [degenes, de_peak_genes, mappedGenes, totalPeaks, regionsToGenes] \
-        = bedNew.filter_by_gene_association(region.fileName, genes.genes, gene_file, genome_file)
+        = bedNew.filter_by_gene_association(genes.genes, organism='mm9')
         
         [ct, labels] = averageExpression(region, genes, regionsToGenes)
         aux = region.fileName.split("/")
