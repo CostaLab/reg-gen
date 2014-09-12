@@ -52,7 +52,7 @@ tools_dictionary = {
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
-  []
+  ["numpy>=1.4.1","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"]
 ), 
 "hint": (
   "rgt-hint",
@@ -201,7 +201,7 @@ copy_files_dictionary = {
 "hg19": ["association_file.bed","chrom.sizes"],
 "mm9": ["association_file.bed","chrom.sizes"],
 "fp_hmms": ["H3K4me3_proximal.hmm"],
-"motifs": ["jaspar_vertebrates"],
+"motifs": ["jaspar_vertebrates","uniprobe_primary","uniprobe_secondary","hocomoco"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js"],
 }
 for copy_folder in copy_files_dictionary.keys():
