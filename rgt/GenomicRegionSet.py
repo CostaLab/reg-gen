@@ -401,10 +401,9 @@ class GenomicRegionSet:
 
         return all_genes, mapped_genes, all_proxs, mapped_proxs
 
-    """
-    def filter_by_gene_association(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-        from rgt.motifanalysis.util import bedFunctions, sort
-        from rgt.motifanalysis.enrichment.geneAssociation import *
+    def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
+        from rgt.motifanalysisold.util import bedFunctions, sort
+        from rgt.motifanalysisold.enrichment.geneAssociation import *
         self.fileName=fileName
         regionsToGenes={}
         coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
@@ -434,7 +433,6 @@ class GenomicRegionSet:
           le=len(geneSet)
 
         return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
-    """
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
