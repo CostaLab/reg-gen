@@ -108,14 +108,14 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        if options.verbose:
-            f = open(options.name + '-setup.info', 'w')
-            f.write('Poisson P\n')
-            f.write("%s \n" %m.p)
-            f.write('Poisson C\n')
-            f.write("%s \n" %m.c)
-            f.write('Poisson p-value settings\n')
-            f.write("%s %s\n" %(n, p))
+        #if options.verbose:
+        f = open(options.name + '-setup.info', 'w')
+        f.write('Poisson P\n')
+        f.write("%s \n" %m.p)
+        f.write('Poisson C\n')
+        f.write("%s \n" %m.c)
+        f.write('Poisson p-value settings\n')
+        f.write("%s %s\n" %(n, p))
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
     if options.verbose:
