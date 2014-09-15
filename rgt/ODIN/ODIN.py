@@ -53,7 +53,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = False
+    test = True
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
@@ -88,13 +88,7 @@ def main():
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
         m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
         m.fit([training_set_obs])
-        #if options.verbose:
-        f = open(options.name + '-setup.info', 'w')
-        f.write('Binomial n, p\n')
-        f.write("%s %s\n" %(m.n, m.p))
-        f.write('p-value settings\n')
-        f.write("%s %s\n" %(m.n[0], m.p[0][1]))
-        f.close()
+        m.save_setup(options.name)
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
         print("Use poisson mixture HMM", file=sys.stderr)
@@ -109,15 +103,7 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        #if options.verbose:
-        f = open(options.name + '-setup.info', 'w')
-        f.write('Poisson P\n')
-        f.write("%s \n" %m.p)
-        f.write('Poisson C\n')
-        f.write("%s \n" %m.c)
-        f.write('Poisson p-value settings\n')
-        f.write("%s %s\n" %(n, p))
-        f.close()
+        m.save_setup(options.name, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
     if options.verbose:

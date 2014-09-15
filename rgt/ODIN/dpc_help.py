@@ -265,7 +265,7 @@ def input(laptop):
 
         #options.regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
         options.merge=True
-        options.mag = 3
+        options.mag = 1
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
@@ -278,13 +278,13 @@ def input(laptop):
         options.foldchange=1.05
         options.pcutoff = 1
         options.name='testODIN-poisson'
-        options.distr='binom'
+        options.distr='poisson'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
-        options.verbose=True
+        options.verbose=False
         chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         options.no_gc_content = True
         options.deadzones = None #"/home/manuel/dz.bed"
