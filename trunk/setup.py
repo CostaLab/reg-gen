@@ -47,17 +47,17 @@ tools_dictionary = {
 "motifanalysisold": (
   "rgt-motifanalysisold",
   "rgt.motifanalysisold.main:main",
-  ['numpy>=1.4.0','scipy>=0.7.0','Biopython>=1.60','pandas==0.7.1','fisher>=0.1.0','statsmodels>=0.4.0','HTML>=0.04','matplotlib>=1.1.0']
+  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"]
 ), 
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
-  ["numpy>=1.4.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"]
+  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"]
 ), 
 "hint": (
   "rgt-hint",
   "rgt.HINT.Main:main",
-  ['numpy>=1.4.0','scipy>=0.7.2','scikit-learn<=0.14','pysam>=0.7.5']
+  ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn<=0.14","pysam>=0.7.5"]
 ), 
 "ODIN": (
   "rgt-ODIN",
@@ -67,7 +67,7 @@ tools_dictionary = {
 "viz": (
   "rgt-viz",
   "rgt.viz.Main:main",
-  ['numpy>=1.4.0','scipy>=0.7.0','HTML>=0.04','matplotlib>=1.1.0']
+  ["numpy>=1.4.0","scipy>=0.7.0","HTML>=0.04","matplotlib>=1.1.0"]
 )
 }
 
