@@ -57,7 +57,7 @@ def main():
     ###################################################################################################
 
     # Parameters
-    current_version = "0.0.1"
+    current_version = "0.1.0"
     usage_message = ("\n--------------------------------------------------\n"
                      "The motif analysis program performs various motif-based analyses. "
                      "In order to use these tools, please type: \n\n"
