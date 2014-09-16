@@ -102,7 +102,9 @@ def _init(self, obs, params):
     print(self.transmat_, file=sys.stderr)
     print("emission distributin parameters", file=sys.stderr)
     print(self._get_emissionprob(), file=sys.stderr)
-    
+
+
+
 def _add_pseudo_counts(arr):
     if type(arr) is np.ndarray:
         tmp = np.array([1e-323 if x < 1e-323 else x for x in arr], np.float64)
