@@ -172,7 +172,6 @@ class PoissonHMM2d3s(_BaseHMM):
                     h = lookup_poisson_state[index]
                     enum = self.c[dim][comp] * h
                     denum = np.array([self._get_value(state, symbol, dim) for state in range(self.n_components)])
-                    print(enum, denum)
                     
                     i += 1
                     try:
@@ -207,18 +206,13 @@ class PoissonHMM2d3s(_BaseHMM):
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
     def _help_do_mstep(self, stats):
-        factor=self.distr_magnitude/sum([i+1 for i in range(self.distr_magnitude)])
         for dim in range(self.n_features):
             for comp in range(self.distr_magnitude):
                 for state in range(self.n_components):
-                    self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state]/_add_pseudo_counts(stats['post'][state])
+                    self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / _add_pseudo_counts(stats['post'][state])
                     if comp == 0:
-                       acc1=0
-                       acc2=0
-                       for comp1 in range(self.distr_magnitude):                        
-                         acc1+=stats['post_sum_l_emisson'][dim][comp1][state] 
-                         acc2+=stats['post_sum_l_factor'][dim][comp1][state]
-                       self.p[dim][comp][state] = factor*acc1/_add_pseudo_counts(acc2)
+                        self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+                        self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
                     else:
                         self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
         self.merge_distr(stats['weights'])
