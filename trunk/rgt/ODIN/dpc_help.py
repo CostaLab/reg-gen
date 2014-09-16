@@ -265,7 +265,7 @@ def input(laptop):
 
         #options.regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
         options.merge=True
-        options.mag = 1
+        options.mag = 2
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
