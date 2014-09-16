@@ -194,7 +194,7 @@ class PoissonHMM2d3s(_BaseHMM):
                         if posteriors[t][2] > posteriors[t][1]:
                             stats['weights'][dim][state][1] += 1
                         
-                    
+        #print(self.p)        
         stats['posterior'] = np.copy(posteriors)
     
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
@@ -238,12 +238,15 @@ class PoissonHMM2d3s(_BaseHMM):
             for comp in range(self.distr_magnitude):
                 for state1, state2 in [[1, 2], [2, 1], [0, 0]]:
                     dim2 = 1 if dim == 0 else 0
-                    c1, c2 = weights[dim][comp][state1][0], weights[dim][comp][state1][1]
-                    f = c2 / float(c1 + c2)
-                    p_norm = self.p[dim][comp][state1] + f * fabs(self.p[dim][comp][state1] - self.p[dim2][comp][state2])
+                    c1, c2 = weights[dim][state1][0], weights[dim][state2][1]
+                    f = c1 / float(c1 + c2)
+                    p_norm = self.p[dim2][comp][state2] + f * fabs(self.p[dim][comp][state1] - self.p[dim2][comp][state2])
+                    c_norm = self.c[dim2][comp][state2] + f * fabs(self.c[dim][comp][state1] - self.c[dim2][comp][state2])
                     
                     self.p[dim][comp][state1] = p_norm
                     self.p[dim2][comp][state2] = p_norm
+                    self.c[dim][comp][state1] = c_norm
+                    self.c[dim2][comp][state2] = c_norm
 
 def test(c = 30, verbose=False):
     res = [True] * 4
@@ -329,7 +332,7 @@ def test(c = 30, verbose=False):
     return res, errors/c
                 
 if __name__ == '__main__':
-    #print(test(c=100, verbose=True))
+    print(test(c=200, verbose=True))
     
     #c, p = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
     #print(p)
