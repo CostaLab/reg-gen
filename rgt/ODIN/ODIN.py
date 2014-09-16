@@ -97,9 +97,10 @@ def main():
         n_components = 3
         n_features = 2
         initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
+        
+        f = map(lambda x: x+1, range(distr_magnitude))
         g = map(lambda x: x+1, range(distr_magnitude))
-        #f = map(lambda x: x+1, range(distr_magnitude))
-        f = map(lambda x: x/(float(distr_magnitude)), g)
+        #f = map(lambda x: x/(float(distr_magnitude)), g)
         m = PoissonHMM2d3s(c=initial_c, distr_magnitude=distr_magnitude, factors=f, p=initial_p)
         
         m.fit([training_set_obs])
