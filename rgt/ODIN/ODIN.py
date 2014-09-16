@@ -53,7 +53,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = True
+    test = False
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########
@@ -97,7 +97,10 @@ def main():
         n_components = 3
         n_features = 2
         initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
-        m = PoissonHMM2d3s(c=initial_c, distr_magnitude=distr_magnitude, factors=map(lambda x: x+1, range(distr_magnitude)), p=initial_p)
+        g = map(lambda x: x+1, range(distr_magnitude))
+        #f = map(lambda x: x+1, range(distr_magnitude))
+        f = map(lambda x: x/(float(distr_magnitude)), g)
+        m = PoissonHMM2d3s(c=initial_c, distr_magnitude=distr_magnitude, factors=f, p=initial_p)
         
         m.fit([training_set_obs])
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2

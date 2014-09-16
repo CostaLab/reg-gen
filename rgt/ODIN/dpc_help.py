@@ -284,7 +284,7 @@ def input(laptop):
         options.input_factor_1= None #0.7
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
-        options.verbose=False
+        options.verbose=True
         chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         options.no_gc_content = True
         options.deadzones = None #"/home/manuel/dz.bed"

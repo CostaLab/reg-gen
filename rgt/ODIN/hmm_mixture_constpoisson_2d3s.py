@@ -193,6 +193,7 @@ class PoissonHMM2d3s(_BaseHMM):
                         stats['weights'][dim][comp][1][0] += 1
                     if help[2] > help[1]:
                         stats['weights'][dim][comp][2][1] += 1
+                        
                     
         stats['posterior'] = np.copy(posteriors)
     
@@ -211,10 +212,10 @@ class PoissonHMM2d3s(_BaseHMM):
                 for state in range(self.n_components):
                     self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / _add_pseudo_counts(stats['post'][state])
                     if comp == 0:
-                        self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+                        self.p[dim][comp][state] = self.factors[comp] * stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
                     else:
-                        self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
+                        self.p[dim][comp][state] = (comp+1) * self.p[dim][0][state]
         self.merge_distr(stats['weights'])
     
     def _do_mstep(self, stats, params):
@@ -325,21 +326,30 @@ def test(c = 30, verbose=False):
 if __name__ == '__main__':
     #print(test(c=100, verbose=True))
     
-#     c, p = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=1, n_components=3, n_features=2)
-#     print(p)
+    #c, p = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
+    #print(p)
 
-    #1 compnent
-    c=10
-    distr_magnitude = 1
-    factors = [1]
+    #3 components
+    c= 100
+    distr_magnitude = 3
+    factors = map(lambda x: x/(float(distr_magnitude)), [1,2,3])
+    #factors = np.array(factors) + np.array([2/float(distr_magnitude)]*3)
+    
+    #factors = map(lambda x: x*float(distr_magnitude), [1,2,3])
+    #factors[0]=1
+    #factors = np.array(factors) + np.array([2/float(distr_magnitude)]*3)
+    
+    #factors = [1,2,3]
+    print(factors)
+    
+    
+    tmp1 = np.array([[[3, 12, 2], [2, 15, 1], [1, 20, 1]], [[3, 4, 15], [2, 2, 16], [3, 1, 18]]], np.float64)
+    c1 = np.array([[[0.2, 0.3, 0.4], [0.3, 0.4, 0.3], [0.5, 0.3, 0.3]], [[0.5, 0.4, 0.6], [0.4, 0.4, 0.3], [0.1, 0.2, 0.1]]], np.float64)
           
-    tmp1 = np.array([[[1, 15, 2]], [[2, 1, 16]]], np.float64)
-    c1 = np.array([[[1, 1, 1]], [[1, 1, 1]]], np.float64)
+    tmp2 = np.array([[[2, 10, 4], [2, 11, 3], [3, 14, 1]], [[1, 4, 14], [3, 3, 15], [2, 12, 20]]], np.float64)
+    c2 = np.array([[[0.1, 0.5, 0.3], [0.4, 0.3, 0.4], [0.5, 0.2, 0.3]], [[0.4, 0.3, 0.6], [0.4, 0.5, 0.3], [0.2, 0.2, 0.1]]], np.float64)
     
-    tmp2 = np.array([[[2, 14, 1]], [[4, 2, 17]]], np.float64)
-    c2 = np.array([[[1, 1, 1]], [[1, 1, 1]]], np.float64)
-    
-    m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = factors)
+    m = PoissonHMM2d3s(p=tmp1, c=c1, distr_magnitude=distr_magnitude, factors = [1,2,3])
 
     X, Z = m.sample(c) #returns (obs, hidden_states)
     m2 = PoissonHMM2d3s(p=tmp2, c=c2, distr_magnitude=distr_magnitude, factors = factors)
@@ -347,9 +357,14 @@ if __name__ == '__main__':
     m2.fit([X])
     
     e = m2.predict(X)
+    s1 = []
+    s2 = []
     for i, el in enumerate(X):
-        print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
-    print(m2.p)
+        if e[i] == 1:
+            s1.append(el[0])
+            s2.append(el[1])
+            
+        #print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
+    print(np.mean(s1), np.mean(s2))
     print(m2.c)
-
-    
+    print(m2.p)
