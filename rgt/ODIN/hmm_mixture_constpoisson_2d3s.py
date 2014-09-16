@@ -131,7 +131,7 @@ class PoissonHMM2d3s(_BaseHMM):
         stats['post_sum_l'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_emisson'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
         stats['post_sum_l_factor'] = np.zeros([self.n_features, self.distr_magnitude, self.n_components])
-        stats['weights'] = [[[[1, 1] for _ in range(self.n_components)] for _ in range(self.distr_magnitude)] for _ in range(self.n_features)]
+        stats['weights'] = [[[1, 1] for _ in range(self.n_components)] for _ in range(self.n_features)]
         
         return stats
     
@@ -188,11 +188,11 @@ class PoissonHMM2d3s(_BaseHMM):
                     stats['post_sum_l_emisson'][dim][comp] += help * symbol[dim]
                     stats['post_sum_l_factor'][dim][comp] += help * self.factors[comp]
                     
-                    
-                    if help[1] >= help[2]:
-                        stats['weights'][dim][comp][1][0] += 1
-                    if help[2] > help[1]:
-                        stats['weights'][dim][comp][2][1] += 1
+                    if posteriors[t][1] > 0.5 or posteriors[t][2] > 0.5:
+                        if posteriors[t][1] >= posteriors[t][2]:
+                            stats['weights'][dim][state][0] += 1
+                        if posteriors[t][2] > posteriors[t][1]:
+                            stats['weights'][dim][state][1] += 1
                         
                     
         stats['posterior'] = np.copy(posteriors)
@@ -211,11 +211,16 @@ class PoissonHMM2d3s(_BaseHMM):
             for comp in range(self.distr_magnitude):
                 for state in range(self.n_components):
                     self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / _add_pseudo_counts(stats['post'][state])
+#                     if comp == 0:
+#                         self.p[dim][comp][state] = self.factors[comp] * stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+#                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
+#                     else:
+#                         self.p[dim][comp][state] = (comp+1) * self.p[dim][0][state]
                     if comp == 0:
-                        self.p[dim][comp][state] = self.factors[comp] * stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+                        self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
                     else:
-                        self.p[dim][comp][state] = (comp+1) * self.p[dim][0][state]
+                        self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
         self.merge_distr(stats['weights'])
     
     def _do_mstep(self, stats, params):
@@ -339,7 +344,7 @@ if __name__ == '__main__':
     #factors[0]=1
     #factors = np.array(factors) + np.array([2/float(distr_magnitude)]*3)
     
-    #factors = [1,2,3]
+    factors = [1,2,3]
     print(factors)
     
     
