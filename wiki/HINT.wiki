@@ -1,4 +1,4 @@
-#summary Prediction of transcription factor binding sites using HMMs on DNase-seq and histone modification ChIP-seq data.
+#summary Instructions on how to use HINT
 
 = HINT - HMM-based IdeNtification of Tf footprints =
 
