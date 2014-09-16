@@ -395,7 +395,8 @@ class ErrorHandler():
             "ME_RAND_NOTFOUND": [21,0,"Random regions not found. Are you sure --matching was correctly performed?"],
             "ME_BAD_RAND": [22,0,"Could not read random regions."],
             "ME_RAND_NOT_BED_BB": [23,0,"Random regions are not in bed or bigbed format."],
-            "XXXXXXX": [24,0,"Xxxxxx"]
+            "MM_PSEUDOCOUNT_0": [24,0,"There were errors involved in the creation of Position Weight Matrices. Some distributions of numpy  and/or scipy does not allow for pseudocounts == 0. Please increase the pseudocount (or use default value of 0.1) and try again."],
+            "XXXXXXX": [25,0,"Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
