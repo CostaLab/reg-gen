@@ -36,6 +36,9 @@ class Motif:
         max -- Maximum PSSM score possible.
         is_palindrome -- True if consensus is biologically palindromic.
         """
+
+        # Initializing error handler
+        main_error_handler = ErrorHandler()       
  
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
@@ -53,7 +56,8 @@ class Motif:
         self.max = self.pssm.max
 
         # Evaluating threshold
-        distribution = self.pssm.distribution(background=background, precision=precision)
+        try: distribution = self.pssm.distribution(background=background, precision=precision)
+        except Exception: main_error_handler.throw_error("MM_PSEUDOCOUNT_0")
         self.threshold = distribution.threshold_fpr(fpr)
 
         # Evaluating if motf is palindromic
