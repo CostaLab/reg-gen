@@ -291,8 +291,6 @@ def input(laptop):
         options.version=False
         options.factor_input_1=None
         options.factor_input_2=None
-        
-        
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
