@@ -211,16 +211,16 @@ class PoissonHMM2d3s(_BaseHMM):
             for comp in range(self.distr_magnitude):
                 for state in range(self.n_components):
                     self.c[dim][comp][state] = stats['post_sum_l'][dim][comp][state] / _add_pseudo_counts(stats['post'][state])
-                    if comp == 0:
-                        self.p[dim][comp][state] = self.factors[comp] * stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
-                        self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
-                    else:
-                        self.p[dim][comp][state] = (comp+1) * self.p[dim][0][state]
 #                     if comp == 0:
-#                         self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+#                         self.p[dim][comp][state] = self.factors[comp] * stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
 #                         self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
 #                     else:
-#                         self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
+#                         self.p[dim][comp][state] = (comp+1) * self.p[dim][0][state]
+                    if comp == 0:
+                        self.p[dim][comp][state] = stats['post_sum_l_emisson'][dim][comp][state] / (_add_pseudo_counts(stats['post_sum_l_factor'][dim][comp][state])) 
+                        self.p[dim][comp][state] = _add_pseudo_counts(self.p[dim][comp][state])
+                    else:
+                        self.p[dim][comp][state] = self.factors[comp] * self.p[dim][0][state]
         self.merge_distr(stats['weights'])
     
     def _do_mstep(self, stats, params):
