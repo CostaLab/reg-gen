@@ -25,7 +25,7 @@ X: Major RGT release.
 Y: Major Specific-Tool release.
 Z: Minor RGT/Specific-Tool bug corrections.
 """
-current_version = "0.0.1"
+current_version = "0.1.1"
 
 """
 Tools Dictionary:
