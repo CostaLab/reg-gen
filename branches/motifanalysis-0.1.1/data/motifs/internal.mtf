@@ -1,0 +1,10 @@
+Ash2l_hand	Ash2l_hand	internal	1	ASH2L	ASH2
+E2A-Homer	E2A-Homer	internal	1	E2A;TCF3	E2A
+IRF8_AICS	IRF8_AICS	internal	1	IRF8	IRF;ETS
+IRF8_IECS_HAND_KANO	IRF8_IECS_HAND_KANO	internal	1	IRF8	IRF;ETS
+IRF8_ISRE_KANNO	IRF8_ISRE_KANNO	internal	1	IRF8	IRF8
+klf4_homer	klf4_homer	internal	1	KLF4	KLF
+novel_est_irf	novel_est_irf	internal	1	IRF8	ETS;IRF
+novel_irf_est_irf	novel_irf_est_irf	internal	1	IRF8;SFPI1;SPI1	IRF;SPI;ETS
+novel_irf_ets	novel_irf_ets	internal	1	IRF8;SFPI1;SPI1	IRF;SPI;ETS
+novel_pu1	novel_pu1	internal	1	SFPI1;SPI1	SPI;ETS
