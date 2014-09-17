@@ -34,11 +34,13 @@ Contains functions to common motif analyses.
 
 Dependencies:
 - python >= 2.7
-- numpy >= 1.4.1
+- numpy >= 1.4.0
+- scipy >= 0.7.0
 - biopython >= 1.64
 - pysam >= 0.7.5
 - fisher >= 0.1.4
 - bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
+
 
 Authors: Eduardo G. Gusmao.
 """
@@ -128,13 +130,14 @@ def main_matching():
     parser.add_option("--fpr", dest = "fpr", type = "float", metavar="FLOAT", default = 0.0001,
                       help = ("False positive rate cutoff for motif matching."))
     parser.add_option("--precision", dest = "precision", type = "int", metavar="INT", default = 10000,
-                      help = ("Score distribution precision for motif matching."))
+                      help = ("Score distribution precision for determining false positive rate cutoff."))
     parser.add_option("--pseudocounts", dest = "pseudocounts", type = "float", metavar="FLOAT", default = 0.1,
-                      help = ("Pseudocounts to be added to raw counts of each PWM."))
+                      help = ("Pseudocounts to be added to raw counts of each PFM."))
     parser.add_option("--rand-proportion", dest = "rand_proportion", type = "float", metavar="FLOAT", default = 10.0,
-                      help = ("If random coordinates need to be created, then it will be created a number of "
-                              "coordinates that equals this parameter x the number of input regions. If zero (0) "
-                              "is passed, then no random coordinates are created."))
+                      help = ("If random coordinates need to be created (for further motif enrichment),"
+                              "then it will be created a number of coordinates that equals this"
+                              "parameter x the number of input regions (in case of multiple regions, the"
+                              "larger is considered). If zero (0) is passed, then no random coordinates are created."))
     parser.add_option("--processes", dest = "processes", type = "int", metavar="INT", default = 1,
                       help = ("Number of processes for multi-CPU based machines."))
 
