@@ -62,7 +62,7 @@ tools_dictionary = {
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  []
+  ["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0"]
 ), 
 "viz": (
   "rgt-viz",
