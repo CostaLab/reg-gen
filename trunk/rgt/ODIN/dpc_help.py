@@ -256,16 +256,18 @@ def input(laptop):
     if laptop:
         (options, args) = parser.parse_args()
 #        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bam'
-        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_10k.bam'
+        #bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_10k.bam'
 #        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_chr1-2.bam'
 #        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1m.bam'
+        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/pu1_mpp_1-12-18.bam'
 #        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_100000.bam'
-        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_10k.bam'
+       # bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_MPP_10k.bam'
 #        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_chr1-2.bam'
+        bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/pu1_cdp_1-12-18.bam'
 
         #options.regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
         options.merge=True
-        options.mag = 2
+        options.mag = 3
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
@@ -277,8 +279,9 @@ def input(laptop):
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 1
-        options.name='testODIN-poisson'
+        options.name='testODIN-poisson-chr1'
         options.distr='poisson'
+        options.constchrom = 'chr1'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
@@ -331,6 +334,8 @@ def input(laptop):
         parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
         
+        parser.add_option("--const-chrom", default=None, dest="constchrom", type="string",\
+                          help="Constrain HMM to learn chromosome. [default: %default = each chromosome]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
