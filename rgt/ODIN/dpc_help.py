@@ -281,7 +281,7 @@ def input(laptop):
         options.pcutoff = 1
         options.name='testODIN-poisson-chr1'
         options.distr='poisson'
-        options.constchrom = 'chr1'
+        options.constchrom = None #'chr1'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
