@@ -110,7 +110,7 @@ def main():
         m.save_setup(options.name, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
     elif options.distr == 'poisson-c':
-        print("Use poisson mixture HMM", file=sys.stderr)
+        print("Use poisson constrained mixture HMM", file=sys.stderr)
         from hmm_mixture_constpoisson_2d3s import PoissonHMM2d3s, get_init_parameters
         distr_magnitude = options.mag
         n_components = 3
