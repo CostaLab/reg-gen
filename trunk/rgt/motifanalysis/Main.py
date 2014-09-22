@@ -41,7 +41,6 @@ Dependencies:
 - fisher >= 0.1.4
 - bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
 
-
 Authors: Eduardo G. Gusmao.
 """
 
@@ -330,11 +329,15 @@ def main_matching():
                 for i in range(len(curr_mpbs_list)):
                     gr_list = curr_mpbs_list[i]
                     curr_motif_name = motif_group[i].name
-                    for gr in gr_list:
-                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
-                        except Exception:
-                            mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
-                            mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                    if(gr_list):
+                        for gr in gr_list:
+                            try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                            except Exception:
+                                mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
+                                mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                    else:
+                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name]
+                        except Exception: mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
 
     ###################################################################################################
     # Writing output
