@@ -318,9 +318,6 @@ def main_matching():
             # Iterating on motif group list
             for motif_group in motif_list:
 
-                #for m in motif_group:
-                #    grl = match([m,sequence,genomic_region])
-
                 # Creating dataset for multiprocessing
                 curr_data_input = [[m,sequence,genomic_region] for m in motif_group]
                 curr_proc_nb = len(curr_data_input)
@@ -333,11 +330,12 @@ def main_matching():
                 for i in range(len(curr_mpbs_list)):
                     gr_list = curr_mpbs_list[i]
                     curr_motif_name = motif_group[i].name
-                    mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
                     for gr in gr_list:
-                        mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
-                        
-        
+                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+                        except Exception:
+                            mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
+                            mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
+
     ###################################################################################################
     # Writing output
     ###################################################################################################

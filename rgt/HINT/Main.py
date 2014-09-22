@@ -32,8 +32,8 @@ Basic Input:
 
 Dependencies:
 - python >= 2.7
-- numpy >= 1.4.1
-- scipy >= 0.7.2
+- numpy >= 1.4.0
+- scipy >= 0.7.0
 - scikit <= 0.14
 - pysam >= 0.7.5
 - bedToBigBed script in $PATH (if the option is used)
