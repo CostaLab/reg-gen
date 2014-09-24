@@ -56,13 +56,13 @@
   * include the geneCogerageFromBed tool and box plot function
 
 === footprint ===
-  * EG - Include overlap and merge in code again after bug correction.
 
-=== motifanalysisnew ===
-  * EG - Keep original gene names for GO search.
-  * EG - --enrichment is using too much memory.
-  * EG - Separate randtest from genetest (links and labels).
-  * EG - Create new table with javascript from JK.
+=== motifanalysis ===
+  * EG - Make heatmap
+  * EG - Make network
+  * EG - Full profiling (time and memory)
+  * EG - Motif clustering (see HOCOMOCO and consider tomtom)
+  * EG - Keep original gene names for GO search. [low]
 
 == Data ==
 
