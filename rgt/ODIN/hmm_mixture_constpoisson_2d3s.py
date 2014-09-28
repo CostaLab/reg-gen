@@ -327,7 +327,7 @@ def test(c = 30, verbose=False):
     return res, errors/c
                 
 if __name__ == '__main__':
-    print(test(c=500, verbose=True))
+    print(test(c=500, verbose=False))
     
     #c, p = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
     #print(p)
