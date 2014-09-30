@@ -208,7 +208,11 @@ class MotifSet:
         '''
         #getting mapping of genes to motifs
         [motif_sets,genes_motifs,motifs_genes]=self.filter_by_genes(genes,gene_mapping_search)
-        print genes_motifs
+        #print genes_motifs
+        for gene in genes_motifs.keys():
+          motifs = genes_motifs[gene]
+          for m in motifs:
+            print gene,m
         net_pairs={}
         net_tfs={}
         all_pairs=sets.Set()
