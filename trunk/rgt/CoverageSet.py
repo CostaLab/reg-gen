@@ -74,7 +74,7 @@ class CoverageSet:
         factor=1000000/float(self.reads)
         self.coverage=np.array(self.coverage)*factor
 
-    def write_bed(self, filename):
+    def write_bed(self, filename, zero=False):
         """Output coverage in BED format"""
         with open(filename, 'w') as f:
             i = 0
@@ -82,9 +82,13 @@ class CoverageSet:
                 c = self.coverage[i]
                 i += 1
                 for j in range(len(c)):
-                    if c[j] != 0:
+                    if zero:
                         print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
                               j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
+                    else:
+                        if c[j] != 0:
+                            print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
+                                  j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
                         
     def write_wig(self, filename):
         with open(filename, 'w') as f:
