@@ -13,7 +13,7 @@ UP00011	UP00011_1_Irf6_primary	uniprobe_primary	1	Irf6	.
 UP00012	UP00012_1_Bbx_primary	uniprobe_primary	1	Bbx	.
 UP00014	UP00014_1_Sox17_primary	uniprobe_primary	1	Sox17	.
 UP00015	UP00015_1_Ehf_primary	uniprobe_primary	1	Ehf	.
-UP00016	UP00016_1_Sry_primary	uniprobe_primary	1	Sry	.
+UP00016	UP00016_1_Sry_primary	uniprobe_primary	1	Sry;Sox5	.
 UP00017	UP00017_1_Nkx3-1_primary	uniprobe_primary	1	Nkx3-1	.
 UP00018	UP00018_1_Irf4_primary	uniprobe_primary	1	Irf4	.
 UP00019	UP00019_1_Zbtb12_primary	uniprobe_primary	1	Zbtb12	.
@@ -27,7 +27,7 @@ UP00026	UP00026_1_Zscan4_primary	uniprobe_primary	1	Zscan4	.
 UP00027	UP00027_1_Osr1_primary	uniprobe_primary	1	Osr1	.
 UP00028	UP00028_1_Tcfap2e_primary	uniprobe_primary	1	Tcfap2e	.
 UP00029	UP00029_1_Tbp_primary	uniprobe_primary	1	Tbp	.
-UP00030	UP00030_1_Sox11_primary	uniprobe_primary	1	Sox11	.
+UP00030	UP00030_1_Sox11_primary	uniprobe_primary	1	Sox11;Sox5	.
 UP00031	UP00031_1_Zbtb3_primary	uniprobe_primary	1	Zbtb3	.
 UP00032	UP00032_1_Gata3_primary	uniprobe_primary	1	Gata3	.
 UP00033	UP00033_1_Zfp410_primary	uniprobe_primary	1	Zfp410	.
@@ -95,7 +95,7 @@ UP00097	UP00097_1_Mtf1_primary	uniprobe_primary	1	Mtf1	.
 UP00098	UP00098_1_Rfx3_primary	uniprobe_primary	1	Rfx3	.
 UP00099	UP00099_1_Ascl2_primary	uniprobe_primary	1	Ascl2	.
 UP00100	UP00100_1_Gata6_primary	uniprobe_primary	1	Gata6	.
-UP00101	UP00101_1_Sox12_primary	uniprobe_primary	1	Sox12	.
+UP00101	UP00101_1_Sox12_primary	uniprobe_primary	1	Sox12;Sox5	.
 UP00102	UP00102_1_Zic1_primary	uniprobe_primary	1	Zic1	.
 UP00103	UP00103_1_Jundm2_primary	uniprobe_primary	1	Jundm2	.
 UP00104	UP00104_1_Hmx1_3423.1	uniprobe_primary	1	Hmx1	.
@@ -120,7 +120,7 @@ UP00122	UP00122_1_Tgif1_2342.2	uniprobe_primary	1	Tgif1	.
 UP00123	UP00123_1_Hlxb9_3422.1	uniprobe_primary	1	Hlxb9	.
 UP00124	UP00124_1_Ipf1_3815.1	uniprobe_primary	1	Ipf1	.
 UP00125	UP00125_1_Pitx2_2274.3	uniprobe_primary	1	Pitx2	.
-UP00126	UP00126_1_Dlx2_2273.2	uniprobe_primary	1	Dlx2	.
+UP00126	UP00126_1_Dlx2_2273.2	uniprobe_primary	1	Dlx2;Pdx1	.
 UP00127	UP00127_1_Gsh2_3990.2	uniprobe_primary	1	Gsh2	.
 UP00128	UP00128_1_Pou3f2_2824.1	uniprobe_primary	1	Pou3f2	.
 UP00129	UP00129_1_Pou3f1_3819.1	uniprobe_primary	1	Pou3f1	.
@@ -196,7 +196,7 @@ UP00198	UP00198_1_Cphx_3484.1	uniprobe_primary	1	Cphx	.
 UP00199	UP00199_1_Six4_2860.1	uniprobe_primary	1	Six4	.
 UP00200	UP00200_1_Nkx6-1_2825.1	uniprobe_primary	1	Nkx6-1	.
 UP00201	UP00201_1_Emx2_3420.1	uniprobe_primary	1	Emx2	.
-UP00202	UP00202_1_Dlx1_1741.2	uniprobe_primary	1	Dlx1	.
+UP00202	UP00202_1_Dlx1_1741.2	uniprobe_primary	1	Dlx1;Pdx1	.
 UP00203	UP00203_1_Pknox1_2364.2	uniprobe_primary	1	Pknox1	.
 UP00204	UP00204_1_Gbx1_2883.2	uniprobe_primary	1	Gbx1	.
 UP00205	UP00205_1_Pknox2_3077.2	uniprobe_primary	1	Pknox2	.
