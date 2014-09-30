@@ -13,8 +13,8 @@ MA0025	MA0025.1.NFIL3	jaspar_vertebrates	1	NFIL3	.
 MA0027	MA0027.1.En1	jaspar_vertebrates	1	En1	.
 MA0028	MA0028.1.ELK1	jaspar_vertebrates	1	ELK1	.
 MA0029	MA0029.1.Mecom	jaspar_vertebrates	1	Mecom	.
-MA0030	MA0030.1.FOXF2	jaspar_vertebrates	1	FOXF2	.
-MA0031	MA0031.1.FOXD1	jaspar_vertebrates	1	FOXD1	.
+MA0030	MA0030.1.FOXF2	jaspar_vertebrates	1	FOXF2;Foxp2	.
+MA0031	MA0031.1.FOXD1	jaspar_vertebrates	1	FOXD1;Foxp2	.
 MA0032	MA0032.1.FOXC1	jaspar_vertebrates	1	FOXC1	.
 MA0033	MA0033.1.FOXL1	jaspar_vertebrates	1	FOXL1	.
 MA0035	MA0035.3.Gata1	jaspar_vertebrates	1	Gata1	.
@@ -57,7 +57,7 @@ MA0079	MA0079.3.SP1	jaspar_vertebrates	1	SP1	.
 MA0080	MA0080.3.Spi1	jaspar_vertebrates	1	Spi1	.
 MA0081	MA0081.1.SPIB	jaspar_vertebrates	1	SPIB	.
 MA0083	MA0083.2.SRF	jaspar_vertebrates	1	SRF	.
-MA0084	MA0084.1.SRY	jaspar_vertebrates	1	SRY	.
+MA0084	MA0084.1.SRY	jaspar_vertebrates	1	SRY;Sox5	.
 MA0087	MA0087.1.Sox5	jaspar_vertebrates	1	Sox5	.
 MA0088	MA0088.1.znf143	jaspar_vertebrates	1	znf143	.
 MA0089	MA0089.1.NFE2L1::MafG	jaspar_vertebrates	1	NFE2L1;MafG	.
@@ -88,7 +88,7 @@ MA0117	MA0117.1.Mafb	jaspar_vertebrates	1	Mafb	.
 MA0119	MA0119.1.TLX1::NFIC	jaspar_vertebrates	1	TLX1;NFIC	.
 MA0122	MA0122.1.Nkx3-2	jaspar_vertebrates	1	Nkx3-2	.
 MA0124	MA0124.1.NKX3-1	jaspar_vertebrates	1	NKX3-1	.
-MA0125	MA0125.1.Nobox	jaspar_vertebrates	1	Nobox	.
+MA0125	MA0125.1.Nobox	jaspar_vertebrates	1	Nobox;Pdx1	.
 MA0130	MA0130.1.ZNF354C	jaspar_vertebrates	1	ZNF354C	.
 MA0131	MA0131.1.HINFP	jaspar_vertebrates	1	HINFP	.
 MA0132	MA0132.1.Pdx1	jaspar_vertebrates	1	Pdx1	.
@@ -145,7 +145,7 @@ MA0476	MA0476.1.FOS	jaspar_vertebrates	1	FOS	.
 MA0477	MA0477.1.FOSL1	jaspar_vertebrates	1	FOSL1	.
 MA0478	MA0478.1.FOSL2	jaspar_vertebrates	1	FOSL2	.
 MA0479	MA0479.1.FOXH1	jaspar_vertebrates	1	FOXH1	.
-MA0480	MA0480.1.Foxo1	jaspar_vertebrates	1	Foxo1	.
+MA0480	MA0480.1.Foxo1	jaspar_vertebrates	1	Foxo1;Foxp2	.
 MA0481	MA0481.1.FOXP1	jaspar_vertebrates	1	FOXP1	.
 MA0482	MA0482.1.Gata4	jaspar_vertebrates	1	Gata4	.
 MA0483	MA0483.1.Gfi1b	jaspar_vertebrates	1	Gfi1b	.
