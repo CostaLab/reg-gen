@@ -1,0 +1,8 @@
+This document provides some style guidelines for programming in python.
+
+* please do use tabs that have the width of 4 spaces
+* use spaces between operating symbols (for example, x + y rather than x+y)
+* use docstring (see http://www.python.org/dev/peps/pep-0257/)
+* class names have CapWords convention
+* function names consists of lowercases, with words separated by underscores 
+* we should use the future print function (from __future__ import print_function)
