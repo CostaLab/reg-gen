@@ -353,7 +353,7 @@ def input(laptop):
         
         
         if options.version:
-            version = "version \"0.1alpha\""
+            version = "version \"0.1alpha-paper\""
             print("")
             print(version)
             sys.exit()
