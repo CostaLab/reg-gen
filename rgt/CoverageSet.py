@@ -3,9 +3,6 @@ from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnresolvedImport
 import numpy as np
 import numpy.ma
-import matplotlib  # @UnresolvedImport
-#matplotlib.use('Agg')
-import matplotlib.pyplot as plt  # @UnresolvedImport
 import os
 import tempfile
 
