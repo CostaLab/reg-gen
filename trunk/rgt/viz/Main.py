@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy
-import time, datetime, getpass, fnmatch, HTML
+import time, datetime, getpass, fnmatch
 
 # Local Libraries
 # Distal Libraries
