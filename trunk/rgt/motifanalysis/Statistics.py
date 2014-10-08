@@ -4,7 +4,10 @@
 ###################################################################################################
 
 # Python
+from os import remove, system
+from os.path import basename, join, dirname
 from multiprocessing import Pool
+from subprocess import check_output
 
 # Internal
 from .. GeneSet import GeneSet
@@ -80,47 +83,83 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
     pvals_corrected[pvals_corrected>1] = 1
     return reject[sortrevind], pvals_corrected[sortrevind]
 
-def fisher_table((grs1, grs2)):
+def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,output_mpbs_file)):
     """ 
     TODO
 
     Keyword arguments:
-    grs1 -- TODO
-    grs2 -- TODO
+    m -- TODO
+    region_file_name -- TODO
+    mpbs_file_name -- TODO
+    return_geneset -- TODO
+    output_mpbs_file -- TODO
         
     Return:
-    len(intersect_grs) -- TODO
-    len(subtract_grs) -- TODO
+    a -- TODO
+    b -- TODO
     gene_set -- TODO
+    mpbs_list -- TODO
     """
 
+    # Initialization
+    to_remove = []
+    return_vec = []
+
+    # Fetching motif
+    grep_file_name = mpbs_file_name+motif_name+"_grep.bed"; to_remove.append(grep_file_name)
+    system("grep \"\t\""+motif_name+"\"\t\" "+mpbs_file_name+" > "+grep_file_name)
+
     # Performing intersections
-    intersect_grs = grs1.intersect(grs2, mode=OverlapType.ORIGINAL)
-    subtract_grs = grs1.subtract(intersect_grs)
+    a_file_name = mpbs_file_name+motif_name+"_A.bed"; to_remove.append(a_file_name)
+    b_file_name = mpbs_file_name+motif_name+"_B.bed"; to_remove.append(b_file_name)
+    system("intersectBed -a "+region_file_name+" -b "+grep_file_name+" -wa -u > "+a_file_name)
+    system("intersectBed -a "+region_file_name+" -b "+grep_file_name+" -wa -v > "+b_file_name)
+
+    # Counting the number of lines
+    a = int(check_output(['wc', '-l', a_file_name]).split()[0])
+    b = int(check_output(['wc', '-l', b_file_name]).split()[0])
+    return_vec.append(a); return_vec.append(b)
 
     # Fetching genes
-    gene_set = GeneSet(grs2.name)
-    for gr in intersect_grs:
-        if(gr.name):
-            gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
-            for g in gene_list: gene_set.genes.append(g)
-
-    # Keep only unique genes
-    gene_set.genes = list(set(gene_set.genes))
+    if(return_geneset):
+        gene_set = GeneSet(motif_name)
+        a_file = open(a_file_name,"r")
+        for line in a_file:
+            ll = line.strip().split("\t")
+            if(ll[3]):
+                gene_list = [e if e[0]!="." else e[1:] for e in ll[3].split(":")]
+                for g in gene_list: gene_set.genes.append(g)
+        a_file.close()
+        gene_set.genes = list(set(gene_set.genes)) # Keep only unique genes
+        return_vec.append(gene_set)
 
     # Fetching mpbs
-    intersect_grs2 = grs2.intersect(grs1, mode=OverlapType.ORIGINAL)
+    if(output_mpbs_file):
+        mpbs_list = []
+        mpbs_temp_file_name = mpbs_file_name+motif_name+"_mpbstemp.bed"; to_remove.append(mpbs_temp_file_name)
+        system("intersectBed -a "+grep_file_name+" -b "+region_file_name+" -wa -u > "+mpbs_temp_file_name)
+        mpbs_temp_file = open(mpbs_temp_file_name,"r")
+        for line in mpbs_temp_file: mpbs_list.append(line.strip().split("\t"))
+        mpbs_temp_file.close()
+        return_vec.append(mpbs_list)
 
-    return [len(intersect_grs), len(subtract_grs), gene_set, intersect_grs2]
+    # Remove all files
+    for e in to_remove: remove(e)
 
-def get_fisher_dict(grouped_mpbs_dict_keys, region_set, mpbs_dict):
+    # Return
+    return return_vec
+
+def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, temp_file_path, return_geneset=False, output_mpbs_file=None, color="0,130,0"):
     """ 
     TODO
 
     Keyword arguments:
-    grouped_mpbs_dict_keys -- TODO
-    region_set -- TODO
-    mpbs_set -- TODO
+    motif_names -- TODO
+    region_file_name -- TODO
+    mpbs_file_name -- TODO
+    temp_file_path -- TODO
+    return_geneset -- TODO
+    output_mpbs_file -- TODO
         
     Return:
     res1_dict -- TODO
@@ -128,18 +167,29 @@ def get_fisher_dict(grouped_mpbs_dict_keys, region_set, mpbs_dict):
     geneset_dict -- TODO
     """
 
+    # Initialization
+    to_remove = []
+    region_name = ".".join(basename(region_file_name).split(".")[:-1])
+    mpbs_name = ".".join(basename(mpbs_file_name).split(".")[:-1])
+
+    # Sort region and mpbs bed files
+    region_file_name_sort = join(temp_file_path,region_name+"_sort.bed"); to_remove.append(region_file_name_sort)
+    mpbs_file_name_sort = join(temp_file_path,mpbs_name+"_sort.bed"); to_remove.append(mpbs_file_name_sort)
+    system("sort -k1,1 -k2,2n "+region_file_name+" > "+region_file_name_sort)
+    system("sort -k1,1 -k2,2n "+mpbs_file_name+" > "+mpbs_file_name_sort)
+
     # Calculating statistics for EV
     res1_dict = dict()
     res2_dict = dict()
-    geneset_dict = dict()
-    res_mpbs_dict = dict()
-    for mpbs_name_group in grouped_mpbs_dict_keys:
+    if(return_geneset): geneset_dict = dict()
+    for mpbs_name_group in motif_names:
 
         # Creating data input
-        curr_data_input = [[region_set, mpbs_dict[m]] for m in mpbs_name_group if m]
+        curr_data_input = [[m,region_file_name_sort,mpbs_file_name_sort,return_geneset,output_mpbs_file] for m in mpbs_name_group]
         curr_proc_nb = len(curr_data_input)
 
         # Evaluating randomic c and d with multiprocessing
+        #curr_res = [fisher_table(xx) for xx in curr_data_input]
         pool = Pool(curr_proc_nb)
         curr_res = pool.map(fisher_table,curr_data_input)
         pool.close()
@@ -147,9 +197,15 @@ def get_fisher_dict(grouped_mpbs_dict_keys, region_set, mpbs_dict):
         for i in range(0,len(mpbs_name_group)):
             res1_dict[mpbs_name_group[i]] = curr_res[i][0]
             res2_dict[mpbs_name_group[i]] = curr_res[i][1]
-            geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
-            res_mpbs_dict[mpbs_name_group[i]] = curr_res[i][3]
+            if(return_geneset): geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
+            if(output_mpbs_file):
+                for vec in curr_res[i][3]: output_mpbs_file.write("\t".join(vec+[vec[1],vec[2],color])+"\n")
 
-    return res1_dict, res2_dict, geneset_dict, res_mpbs_dict
+    # Remove all files
+    for e in to_remove: remove(e)
+
+    # Return
+    if(return_geneset): return res1_dict, res2_dict, geneset_dict
+    return res1_dict, res2_dict
 
 

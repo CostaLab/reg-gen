@@ -145,6 +145,14 @@ class MotifData(ConfigurationFile):
     Returns the list of current paths to the logo images of PWMs
     in the given repositories.
 
+    get_mtf_list():
+    Returns the list of current paths to the mtf (motif annotation) files
+    in the given repositories.
+
+    get_fpr_list():
+    Returns the list of current paths to the fpr (motif thresholds) files
+    in the given repositories.
+
     """
 
     def __init__(self):
@@ -156,10 +164,12 @@ class MotifData(ConfigurationFile):
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
+        self.fpr_list = []
         for current_repository in self.repositories_list:
             self.pwm_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository))
             self.logo_list.append(os.path.join(self.data_dir,self.config.get('MotifData','logo_dataset'),current_repository))
             self.mtf_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".mtf"))
+            self.fpr_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".fpr"))
 
     def get_repositories_list(self):
         """
@@ -203,6 +213,12 @@ class MotifData(ConfigurationFile):
         Returns the list of current paths to the mtf files.
         """
         return self.mtf_list
+
+    def get_fpr_list(self):
+        """
+        Returns the list of current paths to the fpr files.
+        """
+        return self.fpr_list
 
 class HmmData(ConfigurationFile):
     """
