@@ -29,11 +29,12 @@ current_version = "0.0.1"
 
 """
 Tools Dictionary:
-  * Insert in the dictionary bellow a key+tuple X: (Y,Z,W) representing:
+  * Insert in the dictionary bellow a key+tuple X: (Y,Z,W,K) representing:
     - X: A string representing the name the user should provide for this script in order to install the tool.
     - Y: A string representing the name of the program which the user should type in the terminal in order to execute the tool.
     - Z: A string representing the path to the main function that executes the program.
     - W: A list with the package requirements for that program.
+    - K: A list with external binary files that will be copied by the setup installation function to the user's bin folder.
 Tools Dictionary Standard:
   * All programs should start with "rgt-" followed by the program name.
   * The main function called within the script must be termed "main".
@@ -42,32 +43,38 @@ tools_dictionary = {
 "core": (
   None,
   None,
+  [],
   []
 ),
 "motifanalysisold": (
   "rgt-motifanalysisold",
   "rgt.motifanalysisold.main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"]
+  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"],
+  []
 ), 
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"]
+  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
+  ["data/bin/bedToBigBed","data/bin/bigBedToBed"]
 ), 
 "hint": (
   "rgt-hint",
   "rgt.HINT.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn<=0.14","pysam>=0.7.5"]
+  ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn<=0.14","pysam>=0.7.5"],
+  []
 ), 
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  ["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"]
+  ["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+  []
 ), 
 "viz": (
   "rgt-viz",
   "rgt.viz.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","HTML>=0.04","matplotlib>=1.1.0"]
+  ["numpy>=1.4.0","scipy>=0.7.0","HTML>=0.04","matplotlib>=1.1.0"],
+  []
 )
 }
 
@@ -201,7 +208,7 @@ copy_files_dictionary = {
 "hg19": ["association_file.bed","chrom.sizes"],
 "mm9": ["association_file.bed","chrom.sizes"],
 "fp_hmms": ["H3K4me3_proximal.hmm"],
-"motifs": ["jaspar_vertebrates","uniprobe_primary","uniprobe_secondary","hocomoco"],
+"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js"],
 }
 for copy_folder in copy_files_dictionary.keys():
@@ -217,10 +224,10 @@ for copy_folder in copy_files_dictionary.keys():
                 else: raise
 
 # Creating packagePathFile - TODO DEPRECATED
-packagePathFileName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rgt", "packagePathFile.txt")
-packagePathFile = open(packagePathFileName,"w")
-packagePathFile.write(os.path.dirname(os.path.abspath(__file__))+"/")
-packagePathFile.close()
+#packagePathFileName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rgt", "packagePathFile.txt")
+#packagePathFile = open(packagePathFileName,"w")
+#packagePathFile.write(os.path.dirname(os.path.abspath(__file__))+"/")
+#packagePathFile.close()
 
 ###################################################################################################
 # Setup Function
@@ -234,7 +241,13 @@ keywords_list = ["ChIP-seq","DNase-seq","Peak Calling","Motif Discovery","Motif 
 author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Joseph Kuo","Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
-package_data_dictionary = {"rgt": [os.path.basename(data_config_path_file_name), os.path.basename(packagePathFileName)]}
+#package_data_dictionary = {"rgt": [os.path.basename(data_config_path_file_name), os.path.basename(packagePathFileName)]} TODO DEPRECATED
+package_data_dictionary = {"rgt": [os.path.basename(data_config_path_file_name)]}
+
+# External scripts
+external_scripts=[]
+for tool_option in options.param_rgt_tool:
+    for e in tools_dictionary[tool_option][3]: external_scripts.append(e)
 
 # Fetching Additional Structural Files
 readme_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.txt")
@@ -257,7 +270,8 @@ setup(name = "RGT",
       packages = find_packages(),
       package_data = package_data_dictionary,
       entry_points = current_entry_points,
-      install_requires = current_install_requires
+      install_requires = current_install_requires,
+      scripts = external_scripts
 )
 
 ###################################################################################################
