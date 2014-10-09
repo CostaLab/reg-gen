@@ -54,9 +54,11 @@ def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
     
     # Saving 
     if extra == None:
-        f.savefig(os.path.join(pd,filename), bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_inches='tight',dpi=300)
     else:
-        f.savefig(os.path.join(pd,filename), bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
     
     if pdf:
         pp = PdfPages(os.path.join(pd,filename) + '.pdf')
@@ -111,22 +113,6 @@ def main():
     \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
     
-    ################### Distribution test ##########################################
-    parser_distribution = subparsers.add_parser('distribution',help='Distribution test maps the proportion of regions on chromosomes.')
-    parser_distribution.add_argument('output', help=helpoutput) 
-    parser_distribution.add_argument('-r', '--reference',help=helpreference)
-    parser_distribution.add_argument('-q', '--query', help=helpquery)
-    parser_distribution.add_argument('-t', '--title', default='distribution_test', help=helptitle)
-    parser_distribution.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
-    parser_distribution.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    #parser_distribution.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
-    parser_distribution.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    #parser_distribution.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
-    parser_distribution.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_distribution.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_distribution.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    
-    
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model. \
     The null hypothesis is that no association between reference and query and their distribution is random.')
@@ -138,7 +124,7 @@ def main():
     parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_projection.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
+    parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
     #parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
     #parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
@@ -214,11 +200,10 @@ def main():
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
     #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
     #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
-    parser_combinatorial.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
+    #parser_combinatorial.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
-    parser_combinatorial.add_argument('-lineplot', action="store_true", default= 0, help='Define the repetition time of random subregion test between reference and query.')
-
+    
     ################### Boxplot ##########################################
     
     parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
@@ -337,33 +322,6 @@ def main():
         parameter.append("\nCommand:\n   $ " + " ".join(sys.argv))
         parameter.append("")
 
-
-    ################### Distribution test ##########################################
-    if args.mode == 'distribution':
-        # Fetching reference and query EM
-        print("\n############# Distribution Test #############")
-        distribution = Projection(args.reference,args.query)
-        distribution.group_refque(args.g)
-        distribution.colors(args.c, args.color)
-        
-        distribution.distribution(args.organism)
-        # generate pdf
-        distribution.plot_distribution()
-        for i, f in enumerate(distribution.fig):
-            output(f=f, directory = args.output, folder = args.title, filename="distribution_test_"+str(i) ,
-                   extra=plt.gci(), pdf=True, show=args.show)
-        
-        # generate html 
-        distribution.gen_html_distribution(args.output, args.title)
-        
-            
-        parameter = parameter + distribution.parameter
-        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
-        t1 = time.time()
-        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-            
-    
     ################### Projection test ##########################################
     if args.mode == 'projection':
         # Fetching reference and query EM
@@ -379,7 +337,7 @@ def main():
             projection.projection_test(organism = args.organism)
         
         # generate pdf
-        projection.plot(args.nlog)
+        projection.plot(args.log)
         output(f=projection.fig, directory = args.output, folder = args.title, filename="projection_test",extra=plt.gci(),pdf=True,show=args.show)
         
         # generate html 

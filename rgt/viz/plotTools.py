@@ -26,7 +26,7 @@ from rgt.ExperimentalMatrix import *
 from rgt.AnnotationSet import *
 from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
-from rgt.motifanalysisnew.Statistics import multiple_test_correction
+from rgt.motifanalysis.Statistics import multiple_test_correction
 
 # Local test
 dir = os.getcwd()
@@ -259,7 +259,7 @@ def value2str(value):
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
         elif 1 > value > 0.0001: r = "{:.4f}".format(value)
-        else: r = "{:.2e}".format(value)
+        else: r = "{:.1e}".format(value)
         return r
 
 def multiple_correction(dic):
@@ -1413,7 +1413,7 @@ class Intersect:
                         # Chi-squire test
                         
                         #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
-                        print(r.name,qn,exp_m,obs)
+                        #print(r.name,qn,exp_m,obs)
                         chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                         #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
                         aveinter = exp_m[2]
@@ -1593,8 +1593,8 @@ class Boxplot:
                     for bed in cuesbed.keys():
                         #print(bed)
                         #print(set([g,a,c]))
-                        print(cuesbed[bed])
-                        print(set([g,a,c]))
+                        #print(cuesbed[bed])
+                        #print(set([g,a,c]))
                         if set([g,a,c]) >= cuesbed[bed]:
                             for bam in cuesbam.keys():
                                 if set([g,a,c]) >= cuesbam[bam]:
@@ -1625,7 +1625,7 @@ class Boxplot:
 
         nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
         if nm > 40:
-            f.set_size_inches(nm * 0.25 ,nm * 0.5)
+            f.set_size_inches(nm * 0.25 ,nm * 0.15)
             #legend_x = 1.2
             self.xtickrotation, self.xtickalign = 70,"right"
         
@@ -1661,8 +1661,8 @@ class Boxplot:
             bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, patch_artist=True, bootstrap=None)
             z = 10 # zorder for bosplot
             plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
-            plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8,zorder=z)
-            plt.setp(bp['caps'],color='none',zorder=z)
+            plt.setp(bp['fliers'], markerfacecolor='gray',color='white',alpha=0.3,markersize=1.8,zorder=z)
+            plt.setp(bp['caps'],color='white',zorder=z)
             plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
             legends = []
             for patch, color in zip(bp['boxes'], color_t):
@@ -1707,7 +1707,7 @@ class Boxplot:
         
         
         type_list = 'ssssssssss'
-        col_size_list = [20,20,20,40,20,20,20,20,20]
+        
         
         #### Calculate p value ####
         plist = {}
@@ -1731,16 +1731,16 @@ class Boxplot:
         for g in self.sortDict.keys():
             html.add_heading(g, size = 4, bold = False)
             data_table = []
-            
+            col_size_list = [10]
             header_list = ["p-value"]
             for s in self.sortDict[g].keys():
                 for c in self.sortDict[g][s1].keys():
-                    header_list.append(s+"."+c)        
-            
+                    header_list.append(s+"\n"+c)        
+                    col_size_list.append(10)
             
             for s1 in self.sortDict[g].keys():
                 for c1 in self.sortDict[g][s1].keys():
-                    row = [s1+"."+c1]
+                    row = [s1+"\n"+c1]
                     for s2 in self.sortDict[g].keys():
                         for c2 in self.sortDict[g][s2].keys():
                             if s2 == s1 and c2 == c1: 
@@ -1756,6 +1756,7 @@ class Boxplot:
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
         
         header_list=["Assumptions and hypothesis"]
+        col_size_list = [50]
         data_table = [['All the regions among different BED files are normalized by quantile normalization.',
                        'If there is any grouping problem, please check all the optional columns in input experimental matrix.',]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
