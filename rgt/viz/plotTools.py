@@ -123,7 +123,7 @@ def colormaps(exps, colorby, definedinEM):
             colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
                       'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
         else:
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+            colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
 def color_groupded_region(EM, grouped_region, colorby, definedinEM):
@@ -147,12 +147,12 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                 for q in grouped_region[ty]:            
                     qs.append(q.name)
             qs = list(set(qs))
-            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(qs))).tolist()
+            colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(qs))).tolist()
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
-            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
+            colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(types))).tolist()
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]: 
                     i = types.index(EM.get_type(q.name, colorby))
@@ -269,7 +269,7 @@ def multiple_correction(dic):
     for ty in dic.keys():
         all_p = []
         rn = len(dic[ty].keys())
-        qn = len(dic[ty].values()[1].keys())
+        qn = len(dic[ty].values()[0].keys())
         cue = {}
         i = 0
         if rn == 1 and qn == 1: return
@@ -899,6 +899,20 @@ class Intersect:
                 self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
+            
+    def colors_comb(self):
+        """color_list is a list : color """
+        
+        if self.groupedquery.keys()[0] == "All region sets without grouping":
+            self.color_tags = self.referencenames
+        else:
+            tags = []
+            for t in [n.name for n in self.groupedreference.values()[0]]:
+                nt = t.replace(self.groupedreference.keys()[0],"")
+                nt = nt.replace("_","")
+                tags.append(nt)
+            self.color_tags = tags
+        self.color_list = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.color_tags))).tolist()
     
     def extend_ref(self,percentage):
         """percentage must be positive value"""
@@ -906,10 +920,12 @@ class Intersect:
             for r in self.groupedreference[ty]:
                 r.extend(left=percentage,right=percentage,percentage=True)
         
-    def count_intersect(self, threshold):
+    def count_intersect(self, threshold, frequency=False):
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
         self.nalist = []
+        if frequency: self.frequency = OrderedDict()
+        
         if self.mode_count == "bp":
             print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         elif self.mode_count == "count":
@@ -918,6 +934,7 @@ class Intersect:
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
+            if frequency: self.frequency[ty] = OrderedDict()
             
             for r in self.groupedreference[ty]:
                 if r.total_coverage() == 0 and len(r)>0:
@@ -928,6 +945,7 @@ class Intersect:
                     if self.mode_count == "bp": rlen = r.total_coverage()
                     elif self.mode_count == "count": rlen = len(r)
                     self.rlen[ty][r.name] = rlen
+                    
                     
                     for q in self.groupedquery[ty]:
                         if q.total_coverage() == 0 and len(q)>0:
@@ -940,8 +958,13 @@ class Intersect:
                             # Define different mode of intersection and count here
                             c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
                             self.counts[ty][r.name][q.name] = c
+                            if frequency: 
+                                try: self.frequency[ty][q.name].append(c[2])
+                                except: 
+                                    self.frequency[ty][q.name] = [c[2]]
+                            
                             print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
-
+            
     def barplot(self, logt=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
@@ -1155,7 +1178,7 @@ class Intersect:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
         
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         
         header_list=["Assumptions and hypothesis"]
@@ -1179,54 +1202,53 @@ class Intersect:
         html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
         #html.create_header()
         #html.add_heading(title)
-        html.add_figure("intersection_bar.png", align="center")
+        
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        header_list = ["Query<br>name", 
-                       "Reference<br>number", 
-                       "Query<br>number", 
-                       "Intersection",
-                       "Proportion of<br>Reference"]
+        
         
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** </p>'])
         
-        if self.test_d: 
-            header_list += ["Average<br>intersect.", "Chi-square<br>statistic", "p-value"]
-            html.add_free_content(['<p style=\"margin-left: '+str(align+150)+
-                                   '"> Randomly permutation for '+str(self.test_time)+' times.</p>'])
-        else: pass
-        header_list = self.orig_refs + header_list
         
-        type_list = 'ssssssssssssssssssssss'
-        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
-        data_table = []
+        
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
-            for ind_r,ri in enumerate(self.groupedreference[ty]):
-                r = ri.name
-                for ind_q, qi in enumerate(self.groupedquery[ty]):
-                    q = qi.name
-                    pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
-                    
-                    if self.test_d:
-                        aveinter = str(self.test_d[ty][r][q][0])
-                        chisqua = value2str(self.test_d[ty][r][q][1])
-                        pv = value2str(self.test_d[ty][r][q][2])
-                    
-                        if self.test_d[ty][r][q][2] < 0.05:
-                            data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                              str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                              aveinter, chisqua, "<font color=\"red\">"+pv+"</font>"])
-                        elif self.test_d[ty][r][q][2] >= 0.05:
-                            data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                               str(self.counts[ty][r][q][2]),"{:.2f}%".format(100*pt),
-                                               aveinter, chisqua, pv])
-                    else:
-                        data_table.append(self.comb_ref_infor[r] + [q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
-                                           str(self.counts[ty][r][q][2]), "{:.2f}%".format(100*pt)])
+            
+            data_table = []
+            header_list = ["Query<br>name", "Query<br>number", "Frequencies"]
+            type_list = 'sssss'
+            col_size_list = [10,10,30,10] 
         
+            for ind_q, q in enumerate(self.frequency[ty].keys()):
+                data_table.append([q,  str(self.qlen[ty][q]), ",".join(["%05d" % v for v in self.frequency[ty][q]])])
+                
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            
+            header_list = ["Query 1", "Query 2", "Chi square", "p value"]
+            data_table = []  
+            for ind_q1, q1 in enumerate(self.frequency[ty].keys()[:-1]):
+                for ind_q2, q2 in enumerate(self.frequency[ty].keys()[ind_q1+1:]):
+                    if q1 == q2: continue
+                    else:
+                        chisq, p, dof, expected = stats.chi2_contingency([self.frequency[ty][q1],self.frequency[ty][q2]])
+                        if p < 0.05:
+                            data_table.append([q1,q2,value2str(chisq), "<font color=\"red\">"+value2str(p)+"</font>"])
+                        else:
+                            data_table.append([q1,q2,value2str(chisq), value2str(p)])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            
+        """
+        header_list = ["Order"] + self.orig_refs 
+        type_list = 'sssss' * len(self.referencenames)
+        col_size_list = [10,10,10,10] * len(self.referencenames)
+        data_table = []
+        print(self.referencenames)
+        print(self.comb_ref_infor.keys())
+        for i in range(len(self.referencenames)):
+            data_table.append([i+1] + self.comb_ref_infor.values()[i])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+        """
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"combinatorial.html"))
@@ -1245,10 +1267,10 @@ class Intersect:
         for i in all:
             #print("inter_r: "+inter_r.name)
             if i in p[1:]:
-                inter_r = inter_r.intersect(regions[i],mode=OverlapType.ORIGINAL)
+                inter_r = inter_r.intersect(regions[i],mode=OverlapType.OVERLAP)
             elif i == p[0]: pass
             else:
-                inter_r = inter_r.subtract(regions[i], whole_region=True)
+                inter_r = inter_r.subtract(regions[i], whole_region=False)
         #print("inter_r: "+inter_r.name)
         return inter_r
     
@@ -1262,16 +1284,18 @@ class Intersect:
         new_refsp = OrderedDict()
         new_refs = OrderedDict()
         ref_names = []
+        self.comb_ref_infor = {}
         
         for ty in self.groupedreference.keys():
             n = len(self.groupedreference[ty])
             new_refs[ty] = []
             new_refsp[ty] = []
-            self.comb_ref_infor = {}
+            
             for i in range(1,n):
                 new_refsp[ty].append(itertools.combinations(range(n),i))
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
+                
                 for p in posi:
                     #print("   " + str(p))
                     pr = self.posi2set(self.groupedreference[ty],p)
@@ -1319,7 +1343,8 @@ class Intersect:
                     ref_names.append(pr.name)
     
     def comb_stacked_plot(self):
-        f, axs = plt.subplots(len(self.counts.keys()),1)
+        self.xtickrotation, self.xtickalign = 0,"center"
+        f, axs = plt.subplots(len(self.frequency.keys()),1)
         f.subplots_adjust(left=0.3)
         #f.set_size_inches(18.5,15)
         #if len(axs) == 1: axs = [axs]
@@ -1328,26 +1353,29 @@ class Intersect:
         
         for ai, ax in enumerate(axs):
             #ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            ax.locator_params(axis = 'y', nbins = 10)
-            ax.set_title(self.counts.keys()[ai], y=0.95)
+            ty = self.frequency.keys()[ai]
+            ax.locator_params(axis = 'y', nbins = 4)
+            ax.set_title(self.frequency.keys()[ai], y=0.95)
             r_label = []
             q_label = []   
-            bottom = [0] * len(self.groupedquery[self.counts.keys()[ai]])
             legends = []
-            for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+            
+            for ind_q,q in enumerate(self.frequency[ty].keys()):
                 if len(axs) == 1: 
-                    r_label.append(r)
-                    
+                    q_label.append(q)
                 else: 
-                    try: r_label.append(self.rEM.get_type(r,"factor"))
-                    except: r_label.append(r)
+                    try: q_label.append(self.qEM.get_type(q,"factor"))
+                    except: q_label.append(q)
                 width = 0.6
-                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
-                    if ind_r == 0: q_label.append(q)
+                bottom = 0
+                for ind_r, rc in enumerate(self.frequency[ty][q]):
+                    if ind_q == 0: 
+                        r = self.groupedreference[ty][ind_r].name
+                        r_label.append(r)
                     x = ind_q
-                    y = self.counts.values()[ai][r][q][2] # intersect number
-                    bar = ax.bar(x, y, width=width, bottom=bottom[ind_q], color=self.color_list[r], align='center')
-                    bottom[ind_q] = bottom[ind_q] + y
+                    y = rc # intersect number
+                    bar = ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[ind_r], align='center')
+                    bottom = bottom + y
                     if ind_q == 0: legends.append(bar) 
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(q_label)))
@@ -1357,10 +1385,12 @@ class Intersect:
             
             legends.reverse()
             r_label.reverse()
-            ax.legend(legends, r_label, loc='center left', handlelength=1, handletextpad=1, 
-                      columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
+                
+        axs[0].legend(legends, self.color_tags, loc='upper left', handlelength=1, handletextpad=1, 
+                  columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 1))
         if self.mode_count == "bp":
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
         elif self.mode_count == "count":

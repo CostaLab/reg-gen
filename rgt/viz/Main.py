@@ -405,7 +405,7 @@ def main():
         inter.count_intersect(threshold=args.tc)
         
         # generate pdf
-        inter.barplot(args.log)
+        inter.barplot(logt=args.log)
         output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
         #if args.stackedbar:
         inter.stackedbar()
@@ -444,18 +444,18 @@ def main():
         # Combinatorial 
         print2(parameter, "Generating all combinatorial regions for further analysis...")
         inter.combinatorial()
-        inter.count_intersect(threshold=args.tc)
+        inter.count_intersect(threshold=args.tc, frequency=True)
         
         # generate pdf
-        inter.colors(args.c, args.color)
-        inter.barplot(args.log)
-        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
+        inter.colors_comb()
+        #inter.barplot(args.log)
+        #output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_bar",extra=plt.gci(),pdf=True,show=args.show)
         #if args.stackedbar:
-        inter.colors(args.c, args.color,ref_que = "ref")
+        #inter.colors(args.c, args.color,ref_que = "ref")
         inter.comb_stacked_plot()
         output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
-        if args.lineplot:
-            inter.comb_lineplot()
+        #if args.lineplot:
+        #    inter.comb_lineplot()
         if args.stest > 0:
             inter.stest(repeat=args.stest,threshold=args.tc)
         # generate html
