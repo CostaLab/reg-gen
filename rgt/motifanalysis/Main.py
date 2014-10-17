@@ -7,8 +7,6 @@
 import os
 import sys
 from glob import glob
-from multiprocessing import Pool
-from pickle import load, dump
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -19,13 +17,11 @@ from .. GeneSet import GeneSet
 from .. GenomicRegion import GenomicRegion
 from .. GenomicRegionSet import GenomicRegionSet
 from Motif import Motif, Thresholds
-from Match import match
+from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
 from Util import Input, Result
 
 # External
-from Bio import motifs
-from Bio.Seq import Seq
 from pysam import Fastafile
 from fisher import pvalue
 
@@ -139,8 +135,6 @@ def main_matching():
                               "then it will be created a number of coordinates that equals this"
                               "parameter x the number of input regions (in case of multiple regions, the"
                               "larger is considered). If zero (0) is passed, then no random coordinates are created."))
-    parser.add_option("--processes", dest = "processes", type = "int", metavar="INT", default = 1,
-                      help = ("Number of processes for multi-CPU based machines."))
 
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = os.getcwd(),
@@ -154,7 +148,6 @@ def main_matching():
     # Additional Parameters
     matching_folder_name = "Match"
     random_region_name = "random_regions"
-    dump_file_name = "dump.p"
 
     ###################################################################################################
     # Initializations
@@ -273,34 +266,15 @@ def main_matching():
         for motif_file_name in glob(os.path.join(motif_repository,"*.pwm")):
             motif_file_names.append(motif_file_name)
 
-    # Grouping motif file names by the number of processes requested
-    if(options.processes <= 0): main_error_handler.throw_error("MM_LOW_NPROC")
-    elif(options.processes == 1): motif_file_names = [[e] for e in motif_file_names]
-    else: motif_file_names = map(None, *(iter(motif_file_names),) * options.processes)
-
     # Iterating on grouped file name list
-    for file_group in  motif_file_names:
+    for motif_file_name in motif_file_names:
 
-        # Creating input data for multiprocessing
-        curr_data_input = [[m, options.pseudocounts, options.precision, options.fpr, thresholds] for m in file_group if m]
-        curr_proc_nb = len(curr_data_input)
-
-        # Applying the Motif creation function with multiprocessing
-        pool = Pool(curr_proc_nb)
-        curr_motif_list = pool.map(Motif,curr_data_input)
-        pool.close()
-        pool.join()
-        
-        # Append curr_motif_list (motif_group -- group of Motif objects) to motif_list
-        motif_list.append(curr_motif_list)
+        # Append motif motif_list
+        motif_list.append(Motif(motif_file_name, options.pseudocounts, options.precision, options.fpr, thresholds))
 
     ###################################################################################################
     # Motif Matching
     ###################################################################################################
-
-    # Creating output structure
-    # GENOMIC REGION -> FACTOR -> GENOMIC REGION SET (containing all the mpbs of FACTOR for GENOMIC REGION)
-    mpbs_output_dict = dict()
 
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
@@ -308,8 +282,10 @@ def main_matching():
     # Iterating on list of genomic regions
     for genomic_region_set in input_regions:
 
-        # Initializing factor dictionary
-        mpbs_output_dict[genomic_region_set.name] = dict()
+        # Initializing output bed file
+        output_file_name = os.path.join(matching_output_location, genomic_region_set.name+"_mpbs")
+        bed_file_name = output_file_name+".bed"
+        output_file = open(bed_file_name,"w")
     
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
@@ -317,55 +293,11 @@ def main_matching():
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            # Iterating on motif group list
-            for motif_group in motif_list:
+            # Perform motif matching
+            for motif in motif_list: match_single(motif, sequence, genomic_region, output_file)
 
-                # Creating dataset for multiprocessing
-                curr_data_input = [[m,sequence,genomic_region] for m in motif_group]
-                curr_proc_nb = len(curr_data_input)
-
-                # Applying motif matching function with multiprocessing
-                pool = Pool(curr_proc_nb)
-                curr_mpbs_list = pool.map(match,curr_data_input)
-                pool.close()
-                pool.join()
-                for i in range(len(curr_mpbs_list)):
-                    gr_list = curr_mpbs_list[i]
-                    curr_motif_name = motif_group[i].name
-                    if(gr_list):
-                        for gr in gr_list:
-                            try: mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
-                            except Exception:
-                                mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
-                                mpbs_output_dict[genomic_region_set.name][curr_motif_name].add(gr)
-                    else:
-                        try: mpbs_output_dict[genomic_region_set.name][curr_motif_name]
-                        except Exception: mpbs_output_dict[genomic_region_set.name][curr_motif_name] = GenomicRegionSet(curr_motif_name)
-
-    ###################################################################################################
-    # Writing output
-    ###################################################################################################
-
-    # Dumping list of GenomicRegionSet for fast access by --enrichment operation
-    output_file_name = os.path.join(matching_output_location, dump_file_name)
-    output_file = open(output_file_name, "wb")
-    dump(mpbs_output_dict, output_file)
-    output_file.close()
-
-    # Iterating on MPBS output list
-    for k in mpbs_output_dict.keys():
-
-        # Initializations
-        mpbs_dict = mpbs_output_dict[k]
-        output_file_name = os.path.join(matching_output_location, k+"_mpbs")
-
-        # Writing bed file
-        bed_file_name = output_file_name+".bed"
-        bed_file = open(bed_file_name,"w")
-        for kk in mpbs_dict.keys():
-            for e in mpbs_dict[kk]:
-                bed_file.write("\t".join([e.chrom,str(e.initial),str(e.final),e.name,str(e.data),e.orientation])+"\n")
-        bed_file.close()
+        # Closing file
+        output_file.close()
 
         # Verifying condition to write bb
         if(options.bigbed):
@@ -374,13 +306,11 @@ def main_matching():
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
             # Converting to big bed
+            sort_file_name = output_file_name+"_sort.bed"
             bb_file_name = output_file_name+".bb"
-            try:
-                sort_file_name = output_file_name+"_sort.bed"
-                os.system("sort -k1,1 -k2,2n "+bed_file_name+" > "+sort_file_name)
-                os.system(" ".join(["bedToBigBed", sort_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
-                os.remove(bed_file_name); os.remove(sort_file_name)
-            except Exception: pass # WARNING
+            os.system("sort -k1,1 -k2,2n "+bed_file_name+" > "+sort_file_name)
+            os.system(" ".join(["bedToBigBed", sort_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+            os.remove(bed_file_name); os.remove(sort_file_name)
 
 def main_enrichment():
     """

@@ -23,7 +23,7 @@ class Motif:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, (input_file_name, pseudocounts, precision, fpr, thresholds)):
+    def __init__(self, input_file_name, pseudocounts, precision, fpr, thresholds):
         """ 
         Initializes Motif.
 
