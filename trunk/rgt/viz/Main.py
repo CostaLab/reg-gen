@@ -259,6 +259,7 @@ def main():
     
     parser_heatmap.add_argument('input', help=helpinput)
     parser_heatmap.add_argument('output', help=helpoutput)
+    parser_heatmap.add_argument('-ga','--genomic_annotation', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
     parser_heatmap.add_argument('-t', '--title', default='heatmap', help=helptitle)
     parser_heatmap.add_argument('-center', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
@@ -274,6 +275,7 @@ def main():
     parser_heatmap.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_heatmap.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_heatmap.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+    parser_heatmap.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
     #parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
@@ -475,13 +477,13 @@ def main():
         boxplot.combine_allregions()
         print2(parameter,"    " + str(len(boxplot.all_bed)) + " regions from all bed files are combined.")
         t1 = time.time()
-        print2(parameter,"    --- finished in {0:.3f} secs\n".format(t1-t0))
+        print2(parameter,"    --- finished in {0} secs\n".format(round(t1-t0)))
         
         # Coverage of reads on all_bed
         print2(parameter,"Step 2/5: Calculating coverage of each bam file on all regions")
         boxplot.bedCoverage() 
         t2 = time.time()
-        print2(parameter,"    --- finished in {0:.3f} secs\n".format(t2-t1))
+        print2(parameter,"    --- finished in {0} (H:M:S)\n".format(datetime.timedelta(seconds=round(t2-t1))))
         
         # Quantile normalization
         print2(parameter,"Step 3/5: Quantile normalization of all coverage table")
@@ -490,13 +492,13 @@ def main():
             boxplot.norm_table = boxplot.all_table
         else: boxplot.quantile_normalization()
         t3 = time.time()
-        print2(parameter,"    --- finished in {0:.3f} secs\n".format(t3-t2))
+        print2(parameter,"    --- finished in {0} secs\n".format(round(t3-t2)))
         
         # Generate individual table for each bed
         print2(parameter,"Step 4/5: Constructing different tables for box plot")
         boxplot.tables_for_plot()
         t4 = time.time()
-        print2(parameter,"    --- finished in {0:.3f} secs\n".format(t4-t3))
+        print2(parameter,"    --- finished in {0} secs\n".format(round(t4-t3)))
         
         # Plotting
         print2(parameter,"Step 5/5: Plotting")
@@ -510,8 +512,8 @@ def main():
         # HTML
         boxplot.gen_html(args.output, args.title, align = 50)
         t5 = time.time()
-        print2(parameter,"    --- finished in {0:.3f} secs\n".format(t5-t4))
-        print2(parameter,"Total running time is : " + str(datetime.timedelta(seconds=round(t5-t0))))
+        print2(parameter,"    --- finished in {0} secs\n".format(round(t5-t4)))
+        print2(parameter,"Total running time is: " + str(datetime.timedelta(seconds=round(t5-t0))) + " (H:M:S)\n")
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Lineplot #########################################
@@ -537,7 +539,7 @@ def main():
         print2(parameter, "Step 1/3: Processing regions by given parameters")
         lineplot.relocate_bed()
         t1 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t1-t0))))
+        print2(parameter, "    --- finished in {0} secs".format(str(round(t1-t0))))
         
         if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
         else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
@@ -545,7 +547,7 @@ def main():
         lineplot.gen_cues()
         lineplot.coverage(sortby=args.s, mp=args.mp)
         t2 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t2-t1))))
+        print2(parameter, "    --- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
         
         # Plotting
         print2(parameter, "\nStep 3/3: Plotting the lineplots")
@@ -554,8 +556,8 @@ def main():
         output(f=lineplot.fig, directory = args.output, folder = args.title, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
         lineplot.gen_html(args.output, args.title)
         t3 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t3-t2))))
-        print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
+        print2(parameter, "    --- finished in {0} secs".format(str(round(t3-t2))))
+        print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))) + "(H:M:S)\n")
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Heatmap ##########################################
@@ -576,12 +578,13 @@ def main():
         print2(parameter, "\t\tStep size:\t"+str(args.ss))
         print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
     
-        lineplot = Lineplot(EMpath=args.input, title=args.title, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
+        lineplot = Lineplot(EMpath=args.input, title=args.title, annotation=args.genomic_annotation, 
+                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
         # Processing the regions by given parameters
         print2(parameter, "Step 1/4: Processing regions by given parameters")
         lineplot.relocate_bed()
         t1 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t1-t0))))
+        print2(parameter, "    --- finished in {0} secs".format(str(round(t1-t0))))
         
         if args.mp: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging with multiprocessing ")
         else: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging")
@@ -589,13 +592,13 @@ def main():
         lineplot.gen_cues()
         lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log, mp=args.mp)
         t2 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t2-t1))))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
         
         # Sorting 
         print2(parameter, "\nStep 3/4: Sorting the data for heatmap")
         lineplot.hmsort(sort=args.sort)
         t3 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t3-t2))))
+        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(seconds=round(t3-t2)))))
         
         # Plotting
         print2(parameter, "\nStep 4/4: Plotting the heatmap")
@@ -605,8 +608,8 @@ def main():
             output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name,pdf=True,show=args.show)
         lineplot.gen_htmlhm(args.output, args.title)
         t4 = time.time()
-        print2(parameter, "    --- finished in {0} (h:m:s)".format(str(datetime.timedelta(t4-t3))))
-        print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=t4-t0)))
+        print2(parameter, "    --- finished in {0} secs".format(str(round(t4-t3))))
+        print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))) + "(H:M:S)\n")
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         
     ################### Integration ######################################
