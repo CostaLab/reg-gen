@@ -371,6 +371,7 @@ class Projection:
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
+        self.lenlist = {}
         #self.backgrounds = {}
         print2(self.parameter, "\nProjection test")
         print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
@@ -388,12 +389,14 @@ class Projection:
                 self.bglist[ty][r.name] = OrderedDict()
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
+                self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
                     #print(r.name, q.name, sep="\t")
                     bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
                     self.bglist[ty][r.name][q.name] = bg
                     self.qlist[ty][r.name][q.name] = ratio
                     self.plist[ty][r.name][q.name] = p
+                    self.lenlist[q.name] = len(q)
                     #if r in self.backgrounds.keys(): pass
                     #else: self.backgrounds[r] = bg
          
@@ -476,14 +479,15 @@ class Projection:
         
         type_list = 'sssssssssss'
         col_size_list = [10,10,10,10,10,10,15,15]
-        data_table = []
+        
         nalist = []
         for ind_ty, ty in enumerate(self.plist.keys()):
             html.add_heading(ty, size = 4, bold = False)
+            data_table = []
             for ind_r,r in enumerate(self.plist[ty].keys()):
-                rlen = str(len(self.references[ind_r]))
+                rlen = str(self.lenlist[r])
                 for ind_q, q in enumerate(self.plist[ty][r].keys()):
-                    qlen = str(len(self.query[ind_q]))
+                    qlen = str(self.lenlist[q])
                     backv = value2str(self.qlist[ty][r]['Background'])
                     propor = value2str(self.qlist[ty][r][q])
                     pv = self.plist[ty][r][q]
@@ -503,7 +507,7 @@ class Projection:
                         else:
                             data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         header_list=["Assumptions and hypothesis"]
         data_table = [['If the background proportion is too small, it may cause bias in p value.'],
@@ -1138,9 +1142,10 @@ class Intersect:
         
         type_list = 'ssssssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
-        data_table = []
+        
         for ind_ty, ty in enumerate(self.counts.keys()):
             html.add_heading(ty, size = 4, bold = False)
+            data_table = []
             for ind_r,r in enumerate(self.counts[ty]):
                 for ind_q, q in enumerate(self.counts[ty][r]):
                     if r == q: continue
@@ -1654,7 +1659,7 @@ class Boxplot:
         self.xtickrotation, self.xtickalign = 0,"center"
 
         nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
-        if nm > 40:
+        if nm > 30:
             f.set_size_inches(nm * 0.25 ,nm * 0.15)
             #legend_x = 1.2
             self.xtickrotation, self.xtickalign = 70,"right"

@@ -69,7 +69,7 @@ class ExperimentalMatrix:
                 line = line.strip("\n")
                 line = line.strip(" ")
                 line = line.split()
-            
+                
                 if len(line) < 3:  # Skip the row which has insufficient information
                     #print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                     continue
@@ -91,7 +91,7 @@ class ExperimentalMatrix:
         self.types = numpy.array(self.types)
         self.names = numpy.array(self.names)
         self.load_objects(is_bedgraph, verbose=verbose)
-
+        
     def get_genesets(self):
         """Return GeneSets"""
         return [self.objectsDict[i] for i in self.names[self.types=="genes"]]
@@ -126,11 +126,11 @@ class ExperimentalMatrix:
                     regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
                 self.objectsDict[self.names[i]] = regions
             
-            if t == "genes":
+            elif t == "genes":
                 genes = GeneSet(self.names[i])
                 genes.read(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
                 self.objectsDict[self.names[i]] = genes
-                
+            
     def get_type(self,name,field):
         """ Return the type according to the given name and field. """
         for f in self.fieldsDict.keys():
