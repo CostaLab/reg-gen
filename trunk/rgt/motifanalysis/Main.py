@@ -530,18 +530,20 @@ def main_enrichment():
     # Converting regions bigbed file
     random_region_bed_name = ".".join(random_region_file_name.split(".")[:-1])+".bed"
     if(random_region_file_name.split(".")[-1] == "bb"):
+        random_region_bed_name = os.path.join(output_location_results,random_region_name+".bed")
         os.system(" ".join(["bigBedToBed", random_region_file_name, random_region_bed_name]))
     elif(random_region_file_name.split(".")[-1] != "bed"): main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
 
     # Converting mpbs bigbed file
     random_mpbs_bed_name = ".".join(random_mpbs_file_name.split(".")[:-1])+".bed"
     if(random_mpbs_file_name.split(".")[-1] == "bb"):
+        random_mpbs_bed_name = os.path.join(output_location_results,random_region_name+"_mpbs.bed")
         os.system(" ".join(["bigBedToBed", random_mpbs_file_name, random_mpbs_bed_name]))
     elif(random_mpbs_file_name.split(".")[-1] != "bed"): pass # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
 
+    # Evaluating random statistics
     rand_c_dict, rand_d_dict = get_fisher_dict(motif_names_grouped, random_region_bed_name, random_mpbs_bed_name, output_location_results,
                                                return_geneset=False)
-    # Evaluating random statistics
 
     # Removing bed files if bb exist
     if(random_region_file_name.split(".")[-1] == "bb"): os.remove(random_region_bed_name)
@@ -575,6 +577,11 @@ def main_enrichment():
             original_name = grs.name
             to_remove_list = []
 
+            # Creating output folder
+            if(curr_input.gene_set): curr_output_folder_name = os.path.join(output_location_results,grs.name+"__"+curr_input.gene_set.name)
+            else: curr_output_folder_name = os.path.join(output_location_results,grs.name)
+            if(not os.path.isdir(curr_output_folder_name)): os.makedirs(curr_output_folder_name)
+
             # Verifying if MPBS file exists
             curr_mpbs_glob = glob(os.path.join(input_location,matching_folder_name,original_name+"_mpbs.*"))
             try: curr_mpbs_file_name = curr_mpbs_glob[0]
@@ -583,14 +590,10 @@ def main_enrichment():
             # Converting ev mpbs bigbed file
             curr_mpbs_bed_name = ".".join(curr_mpbs_file_name.split(".")[:-1])+".bed"
             if(curr_mpbs_file_name.split(".")[-1] == "bb"):
+                curr_mpbs_bed_name = os.path.join(curr_output_folder_name,original_name+"_mpbs.bed")
                 os.system(" ".join(["bigBedToBed", curr_mpbs_file_name, curr_mpbs_bed_name]))
                 to_remove_list.append(curr_mpbs_bed_name)
             elif(curr_mpbs_file_name.split(".")[-1] != "bed"): pass # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
-
-            # Creating output folder
-            if(curr_input.gene_set): curr_output_folder_name = os.path.join(output_location_results,grs.name+"__"+curr_input.gene_set.name)
-            else: curr_output_folder_name = os.path.join(output_location_results,grs.name)
-            if(not os.path.isdir(curr_output_folder_name)): os.makedirs(curr_output_folder_name)
 
             ###################################################################################################
             # Gene Evidence Statistics
@@ -824,7 +827,7 @@ def main_enrichment():
                 output_file_ev.close()
                 to_remove_list.append(ev_mpbs_file_name_thresh)
 
-                # Sorting ev and nev mpbs
+                # Sorting ev mpbs
                 output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev+".bed")
                 os.system("sort -k1,1 -k2,2n "+ev_mpbs_file_name_thresh+" > "+output_file_name_ev_bed) # Sorting ev file
 

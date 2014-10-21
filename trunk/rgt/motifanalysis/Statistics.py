@@ -188,7 +188,7 @@ def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, temp_file_pat
         curr_data_input = [[m,region_file_name_sort,mpbs_file_name_sort,return_geneset,output_mpbs_file] for m in mpbs_name_group]
         curr_proc_nb = len(curr_data_input)
 
-        # Evaluating randomic c and d with multiprocessing
+        # Evaluating fisher table with multiprocessing
         #curr_res = [fisher_table(xx) for xx in curr_data_input]
         pool = Pool(curr_proc_nb)
         curr_res = pool.map(fisher_table,curr_data_input)
