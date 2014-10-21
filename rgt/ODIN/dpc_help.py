@@ -91,11 +91,11 @@ def get_peaks(name, DCS, states, ext_size, merge, distr):
         v2 = [c2]
         
         #merge bins
-        while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
-            e = tmp_peaks[i+1][2]
-            v1.append(tmp_peaks[i+1][3])
-            v2.append(tmp_peaks[i+1][4])
-            i += 1
+#         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
+#             e = tmp_peaks[i+1][2]
+#             v1.append(tmp_peaks[i+1][3])
+#             v2.append(tmp_peaks[i+1][4])
+#             i += 1
         
         s1 = sum(v1)
         s2 = sum(v2)
