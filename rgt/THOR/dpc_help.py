@@ -1,17 +1,18 @@
 from __future__ import print_function
 from optparse import OptionParser
-from CoverageSet import CoverageSet
-from GenomicRegion import GenomicRegion
-from GenomicRegionSet import GenomicRegionSet
-from get_extension_size import get_extension_size
+from rgt.CoverageSet import CoverageSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.ODIN.get_extension_size import get_extension_size
 import os.path
 import sys
 from MultiCoverageSet import MultiCoverageSet
 #from get_gen_pvalue import get_log_pvalue
-from get_fast_gen_pvalue import get_log_pvalue_new
+from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
 from math import log
 import multiprocessing
 from input_parser import input_parser
+#from rgt.ODIN import ODIN
 
 SIGNAL_CUTOFF = 10000
 
