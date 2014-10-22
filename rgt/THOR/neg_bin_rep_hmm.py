@@ -228,7 +228,9 @@ class NegBinRepHMM(_BaseHMM):
 
 
 if __name__ == '__main__':
-    alpha = np.matrix([[1.,1.,1.], [1.,1.,1.]])
+    from numpy.random import negative_binomial
+    
+    alpha = np.matrix([[10.,10.,10.], [10.,10.,10.]])
     mu = np.matrix([[10.,20.,30.], [40.,50.,60.]])
     dim_cond_1 = 5
     dim_cond_2 = 4
@@ -237,10 +239,17 @@ if __name__ == '__main__':
 #     tmp = [[0.000001, 0.0000098, 0.000001], [0.000001, 0.000001, 0.0000098]]
     #[[0.01, 0.98, 0.01], [0.01, 0.01, 0.98]]
     
-    m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    r = 1 / alpha[0, 0]
+    p = 1 / (1 + alpha[0,0] * mu[0,0])
     
-    X, Z = m.sample(50)
-    print(X)
+    for _ in range(10):
+        print(negative_binomial)
+    
+    
+    #m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    
+    #X, Z = m.sample(10)
+    #print(X)
     
 #     X, Z = m.sample(40) #returns (obs, hidden_states)
     
@@ -250,14 +259,14 @@ if __name__ == '__main__':
 #     print('obs           ', X)
 #     print('hidden states ', Z)
 # #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
-    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[15.,15.,15.], [14.,16.,12.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
-    m2.fit([X])
+    #m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[15.,15.,15.], [14.,16.,12.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    #m2.fit([X])
     
-    print('states        ', Z)
-    print('estim. states ', m2.predict(X))
-    print(m2.transmat_)
-    print(m2.alpha)
-    print(m2.mu)
+    #print('states        ', Z)
+    #print('estim. states ', m2.predict(X))
+    #print(m2.transmat_)
+    #print(m2.alpha)
+    #print(m2.mu)
     #print(m2.predict_proba(X))
 #     
 #     
