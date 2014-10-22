@@ -29,6 +29,33 @@ import numpy as np
 import mpmath
 from scipy.stats import rv_discrete
 
+def get_init_parameters(s1, s2, **info):
+    
+    #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
+    n_ = np.array([info['count'], info['count']])
+    #print('n_: ', n_, file=sys.stderr)
+    
+    #_, s1, s2 = _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x, threshold, diff_cov)
+    
+    #get observation that occurs most often:
+    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
+    #print('m_', m_, file=sys.stderr)
+    
+    p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
+    
+    p_[0][0] = 1. / n_[0]
+    p_[1][0] = 1. / n_[1]
+       
+    p_[0][1] = m_[0] / n_[0]
+    p_[1][1] = p_[1][0]
+    
+    p_[0][2] = p_[0][0]
+    p_[1][2] = m_[1] / n_[1]
+    
+    #print('p_', p_, file=sys.stderr)
+    
+    return n_, p_
+
 class NegBin():
     def __init__(self, alpha, mu):
         nbin_mpmath = lambda k, p, r: mpmath.gamma(k + r)/(mpmath.gamma(k+1)*mpmath.gamma(r))*np.power(1-p, r)*np.power(p, k)

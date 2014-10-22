@@ -17,7 +17,7 @@ from dpc_help import initialize
 from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
-from blueprint_hmm import BlueprintHmm
+from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
 
@@ -28,63 +28,7 @@ def write(name, l):
         print(el, file=f)
     f.close()
 
-def get_init_parameters(name, indices_of_interest, first_overall_coverage, second_overall_coverage, \
-                        x = 10000, threshold = 2.0, diff_cov = 10):
 
-    #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
-    #n_ = np.array([tmp, tmp])
-    
-    n_ = np.array([training_set_obs.shape[0], training_set_obs.shape[0]])
-    print('n_: ', n_, file=sys.stderr)
-    
-    s0 = []
-    s1 = []
-    s2 = []
-    so = []
-    i = 1
-    while i < x:
-        state = None
-        j = sample(indices_of_interest, 1)[0]
-        
-        cov1 = first_overall_coverage[j]
-        cov2 = second_overall_coverage[j]
-        
-        if cov1 + cov2 <= 3:
-            s0.append((cov1,cov2))
-            so.append((cov1,cov2))
-        elif (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-            s1.append((cov1,cov2))
-            so.append((cov1,cov2))
-        elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-            s2.append((cov1,cov2))
-            so.append((cov1,cov2))
-        i += 1
-    
-    write(name + 's0', s0)
-    write(name + 's1', s1)
-    write(name + 's2', s2)
-    write(name + 'soverall', so)
-    
-    
-    #get observation that occurs most often:
-    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
-    print('m_', m_, file=sys.stderr)
-    
-    p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
-    
-    p_[0][0] = 1. / n_[0]
-    p_[1][0] = 1. / n_[1]
-       
-    p_[0][1] = m_[0] / n_[0]
-    p_[1][1] = p_[1][0]
-    
-    p_[0][2] = p_[0][0]
-    p_[1][2] = m_[1] / n_[1]
-    
-    print('p_', p_, file=sys.stderr)
-    
-    return n_, p_
- 
 if __name__ == '__main__':
     test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)

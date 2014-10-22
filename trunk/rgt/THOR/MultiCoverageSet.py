@@ -1,11 +1,11 @@
 from __future__ import print_function
-from CoverageSet import CoverageSet
+from rgt.CoverageSet import CoverageSet
 import numpy as np
 from random import sample, randrange
 from time import time
-from gc_content import get_gc_context
+from rgt.ODIN.gc_content import get_gc_context
 import sys
-from normalize import get_normalization_factor
+from rgt.ODIN.normalize import get_normalization_factor
 
 EPSILON = 1**-320
 
@@ -133,12 +133,11 @@ class MultiCoverageSet():
         signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
         print('all signals ', signals, file=sys.stderr)
         max_index = signals.index(max(signals))
-        print('maximum ', max_index, file=sys.stderr)
-        
         
         for i in range(self.dim_1 + self.dim_2):
             #if i == max_index:
             #    continue
+            print('normalize signal', file=sys.stderr)
             avg = sum(signals)/float(len(signals))
             f = avg / float(signals[i])
             print(i, f, avg, file=sys.stderr)
