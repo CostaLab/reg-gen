@@ -21,7 +21,7 @@ def match_single(motif, sequence, genomic_region, output_file):
     mapping function.
 
     Keyword arguments:
-    motif -- TODO.   
+    motif -- TODO.
     sequence -- A DNA sequence (string).
     genomic_region -- A GenomicRegion.
     output_file -- TODO.    
