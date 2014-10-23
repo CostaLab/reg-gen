@@ -6,6 +6,8 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
+from numpy import linspace
+from matplotlib.pyplot import *
 
 EPSILON = 1**-320
 
@@ -80,8 +82,20 @@ class MultiCoverageSet():
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
         
         #output
-        np.save(str(name) + "-s1.npy", self.overall_coverage[0]*1.0)
-        np.save(str(name) + "-s2.npy", self.overall_coverage[1]*1.0)
+        self.emp_means = [np.squeeze(np.asarray(np.mean(self.overall_coverage[0]*1.0, axis=1))), np.squeeze(np.asarray(np.mean(self.overall_coverage[1]*1.0, axis=1)))]
+        self.emp_vars = [np.squeeze(np.asarray(np.var(self.overall_coverage[0]*1.0, axis=1))), np.squeeze(np.asarray(np.var(self.overall_coverage[1]*1.0, axis=1)))]
+        
+        np.save(str(name) + "-means.npy", self.emp_means)
+        np.save(str(name) + "-vars.npy", self.emp_vars)
+        for i in range(2):
+            p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
+            #p = np.polynomial.polynomial.polyfit(np.array([1,4,3,2,5,6]), np.array([2,3,3,3,6,7]), 2)
+            print(p)
+            x = linspace(0, 200, 200)
+            y=p[0] + x*p[1] + x*x*p[2]
+            plot(x, y)
+            scatter(self.emp_means[i], self.emp_vars[i])
+            savefig("plot" + str(i) + ".png")
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
