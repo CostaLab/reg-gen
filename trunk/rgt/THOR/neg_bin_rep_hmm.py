@@ -26,8 +26,7 @@ from operator import mul
 import scipy.special as special
 import scipy.optimize as optimize
 import numpy as np
-import mpmath
-from scipy.stats import rv_discrete
+from neg_bin import NegBin
 
 def get_init_parameters(s1, s2, **info):
     
@@ -56,24 +55,7 @@ def get_init_parameters(s1, s2, **info):
     
     return n_, p_
 
-class NegBin():
-    def __init__(self, alpha, mu):
-        nbin_mpmath = lambda k, p, r: mpmath.gamma(k + r)/(mpmath.gamma(k+1)*mpmath.gamma(r))*np.power(1-p, r)*np.power(p, k)
-        self.nbin = np.frompyfunc(nbin_mpmath, 3, 1)
-        self.p = (alpha * mu) /  float((1 + alpha * mu))
-        self.r = 1./alpha
-        c = 5000
-        self.dist = rv_discrete(values=([i for i in range(c)], map(lambda x: float(x), [self.pdf(i) for i in range(c)])), name='dist')
 
-    def pdf(self, k):
-        return self.nbin(k, self.p, self.r)
-    
-    def logpdf(self, k):
-        return log(self.nbin(k, self.p, self.r))
-    
-    def rvs(self, size=1):
-        return self.dist.rvs(size=size)
-    
     
     
 class NegBinRepHMM(_BaseHMM):
@@ -93,20 +75,19 @@ class NegBinRepHMM(_BaseHMM):
                           init_params=init_params)
         
         self.dim = [dim_cond_1, dim_cond_2] #dimension of one emission
-        self.n_features = 2 #emission dimension
+        self.n_features = 2 #sum(self.dim) #emission dimension
         self.alpha = alpha
         self.mu = mu
-        raw1 = [NegBin(self.alpha[0, 0], self.mu[0, 0]), NegBin(self.alpha[0, 1], self.mu[0, 1]), NegBin(self.alpha[0, 2], self.mu[0, 2])]
-        raw2 = [NegBin(self.alpha[1, 0], self.mu[1, 0]), NegBin(self.alpha[1, 1], self.mu[1, 1]), NegBin(self.alpha[1, 2], self.mu[1, 2])]
+        self.max_range = 500
+        self._update_distr(self.mu, self.alpha, self.max_range)
+        
+    def _update_distr(self, mu, alpha, max_range):
+        raw1 = [NegBin(mu[0, 0], alpha[0, 0], max_range=max_range), NegBin(mu[0, 1], alpha[0, 1], max_range=max_range), NegBin(mu[0, 2], alpha[0, 2], max_range=max_range)]
+        raw2 = [NegBin(mu[1, 0], alpha[1, 0], max_range=max_range), NegBin(mu[1, 1], alpha[1, 1], max_range=max_range), NegBin(mu[1, 2], alpha[1, 2], max_range=max_range)]
         
         self.neg_distr = np.matrix([raw1, raw2]) #matrix of all Neg. Bin. Distributions, columns=HMM's state (3), row=#samples (2)
         
-#         self.init_state_seq = init_state_seq
-#         self.count_s1, self.count_s2 = 0, 0
-
-    def _get_emissionprob(self):
-        return self.p
-    
+        
     def _compute_log_likelihood(self, X):
         #t = time()
         matrix = []
@@ -115,16 +96,16 @@ class NegBinRepHMM(_BaseHMM):
             row = []
             for i in range(self.n_components): #over number of HMM's state
                 r_sum = 0
-                for j in range(2): #over all samples
+                for j in range(self.n_features): #over dim
                     it = range(self.dim[0]) if j == 0 else range(self.dim[0], self.dim[0] + self.dim[1]) #grab proper ob
                     for k in it:
-                        index = (int(x[k]), i, j)
-                        if lookup.has_key( index ):
-                            r_sum += lookup[index]
-                        else:
-                            y = self.neg_distr[j,i].logpdf(x[k])
-                            lookup[index] = y
-                            r_sum += y
+#                         index = (int(x[k]), i, j)
+#                         if lookup.has_key( index ):
+#                             r_sum += lookup[index]
+#                         else:
+                        y = float(self.neg_distr[j,i].logpdf(x[k]))
+                            #lookup[index] = y
+                        r_sum += y
                 row.append(r_sum)
         
             matrix.append(row)
@@ -143,7 +124,7 @@ class NegBinRepHMM(_BaseHMM):
     
     def _initialize_sufficient_statistics(self):
         stats = super(NegBinRepHMM, self)._initialize_sufficient_statistics()
-        stats['post'] = np.zeros(self.n_components)
+        stats['post'] = np.zeros([self.n_features, self.n_components])
         stats['post_emission'] = np.zeros([self.n_features, self.n_components])
         
         return stats
@@ -151,12 +132,17 @@ class NegBinRepHMM(_BaseHMM):
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
         #posteriors = _valid_posteriors(posteriors, obs)
         for t, symbol in enumerate(obs):
-            stats['post'] += posteriors[t]
-            pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])]
+            stats['post'][0] += posteriors[t]
+            stats['post'][1] += posteriors[t]
+            
+            pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
-                    
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
+        
+        stats['post'][0] = stats['post'][0]*self.dim[0]
+        stats['post'][1] = stats['post'][1]*self.dim[1]
+        
         #stats['obs'] = np.copy(obs)
         #stats['posterior'] = np.copy(posteriors)
 
@@ -180,9 +166,11 @@ class NegBinRepHMM(_BaseHMM):
 #        print('m-step: ',self.p, file=sys.stderr)
 #        tmp=np.array(map(lambda x: x*self.n[0], self.p))
 #        print(np.reshape(tmp, (-1,3)), file=sys.stderr)
+        #for j in range(self.n_components):
         for i in range(self.n_features):
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
-        print(self.mu, file=sys.stderr)
+        
+        self._update_distr(self.mu, self.alpha, self.max_range)
     
     def _count(self, posts):
         c_1, c_2 = 0, 0
@@ -228,30 +216,17 @@ class NegBinRepHMM(_BaseHMM):
 
 
 if __name__ == '__main__':
-    from numpy.random import negative_binomial
-    
-    alpha = np.matrix([[10.,10.,10.], [10.,10.,10.]])
-    mu = np.matrix([[10.,20.,30.], [40.,50.,60.]])
+    alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
+    mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
     dim_cond_1 = 5
-    dim_cond_2 = 4
+    dim_cond_2 = 5
+
+    m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
     
-#    transmat_ = np.array(([[0.7, 0.2, 0.1], [0.1, 0.8, 0.1], [0.2,0.2,0.6]]))
-#     tmp = [[0.000001, 0.0000098, 0.000001], [0.000001, 0.000001, 0.0000098]]
-    #[[0.01, 0.98, 0.01], [0.01, 0.01, 0.98]]
+    X, Z = m.sample(10)
+#     for i, el in enumerate(X):
+#         print(el, Z[i], sep='\t')
     
-    r = 1 / alpha[0, 0]
-    p = 1 / (1 + alpha[0,0] * mu[0,0])
-    
-    for _ in range(10):
-        print(negative_binomial)
-    
-    
-    #m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
-    
-    #X, Z = m.sample(10)
-    #print(X)
-    
-#     X, Z = m.sample(40) #returns (obs, hidden_states)
     
 #    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
 #    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
@@ -259,11 +234,13 @@ if __name__ == '__main__':
 #     print('obs           ', X)
 #     print('hidden states ', Z)
 # #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
-    #m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[15.,15.,15.], [14.,16.,12.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
-    #m2.fit([X])
+    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[5.,60.,7.], [6.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    m2.fit([X])
+    e = m2.predict(X)
     
-    #print('states        ', Z)
-    #print('estim. states ', m2.predict(X))
+    for i, el in enumerate(X):
+        print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
+    
     #print(m2.transmat_)
     #print(m2.alpha)
     #print(m2.mu)
