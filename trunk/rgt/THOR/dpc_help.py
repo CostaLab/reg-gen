@@ -159,12 +159,24 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
-    with open(regions) as f:
-        for line in f:
-            line = line.split('\t')
-            c, s, e = line[0], int(line[1]), int(line[2])
-            regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-
+    
+    #if regions option is set, take the values, otherwise the whole set of 
+    #chromosomes as region to search for DPs
+    if regions is not None:
+        with open(regions) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                c, s, e = line[0], int(line[1]), int(line[2])
+                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+    else:
+        with open(chrom_sizes) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                chrom, end = line[0], int(line[1])
+                regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+    
     regionset.sequences.sort()
     _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
 
@@ -215,7 +227,7 @@ def input(laptop):
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-             
+        print(input_parser(config_path))
         options.exts = None #[200, 200, 200, 200]
         options.exts_inputs = None #[200, 200]
         options.pcutoff = 1
