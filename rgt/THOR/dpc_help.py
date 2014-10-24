@@ -15,10 +15,11 @@ from input_parser import input_parser
 #from rgt.ODIN import ODIN
 from numpy import linspace
 from matplotlib.pyplot import *
+from random import sample
 
 SIGNAL_CUTOFF = 10000
 
-def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0):
+def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=100):
         #list of (mean, var) points for samples 0 and 1
         data_rep = [zip(list(np.squeeze(np.asarray(np.mean(overall_coverage[i]*1.0, axis=0)))), \
                           list(np.squeeze(np.asarray(np.var(overall_coverage[i]*1.0, axis=0))))) \
@@ -28,6 +29,8 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0):
         for i in range(2): #shorten list
             data_rep[i].sort()
             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
+            data_rep[i].remove((0,0))
+            print("length: ", len(dat_rep[i]), file=sys.stderr)
         
         if verbose:
             for i in range(2):
@@ -36,7 +39,10 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0):
         res = []
         for i in range(2):
             m = map(lambda x: x[0], data_rep[i]) #means list
+            m = sample(m, sample_size)
             v = map(lambda x: x[1], data_rep[i]) #vars list
+            v = sample(v, sample_size)
+            
             p = np.polynomial.polynomial.polyfit(m, v, 2)
             res.append(p)
             
