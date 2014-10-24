@@ -29,9 +29,9 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
         for i in range(2): #shorten list
             data_rep[i].sort()
             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
-            print("length: ", len(dat_rep[i]), file=sys.stderr)
+            print("length: ", len(data_rep[i]), file=sys.stderr)
             data_rep[i].remove((0,0))
-            print("length: ", len(dat_rep[i]), file=sys.stderr)
+            print("length: ", len(data_rep[i]), file=sys.stderr)
         
         if verbose:
             for i in range(2):
@@ -290,6 +290,7 @@ def input(laptop):
         options.factors_inputs = None
         options.verbose = False
         options.no_gc_content = False
+        options.cut_obs = 1.0
     else:
 #        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
 #                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
@@ -310,6 +311,9 @@ def input(laptop):
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
         parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn of GC content calculation")
+        parser.add_option("-c", "--cut", dest="cut_obs", default=1.0, type="float",\
+                          help="Cut for observation.")
+        
         (options, args) = parser.parse_args()
 
         if options.version:
