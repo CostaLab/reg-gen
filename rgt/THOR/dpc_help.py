@@ -16,6 +16,35 @@ from input_parser import input_parser
 
 SIGNAL_CUTOFF = 10000
 
+def _fit_mean_var_distr(self, overall_coverage, name, verbose):
+        #output
+        self.emp_means = [np.squeeze(np.asarray(np.mean(overall_coverage[0]*1.0, axis=0))), \
+                          np.squeeze(np.asarray(np.mean(overall_coverage[1]*1.0, axis=0)))]
+        self.emp_vars = [np.squeeze(np.asarray(np.var(overall_coverage[0]*1.0, axis=0))), \
+                         np.squeeze(np.asarray(np.var(overall_coverage[1]*1.0, axis=0)))]
+        
+        if verbose:
+            np.save(str(name) + "-means.npy", self.emp_means)
+            np.save(str(name) + "-vars.npy", self.emp_vars)
+        
+        res = []
+        for i in range(2):
+            p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
+            res.append(p)
+            
+            if verbose:
+                print(p, file=sys.stderr)
+                print(max(self.emp_means[i]), max(self.emp_vars[i]), file=sys.stderr)
+            
+                x = linspace(0, max(self.emp_means[i]), max(self.emp_means[i])+1)
+                y = p[0] + x*p[1] + x*x*p[2]
+                plot(x, y)
+                scatter(self.emp_means[i], self.emp_vars[i])
+                savefig("plot" + str(i) + ".png")
+                close()
+        return res
+
+
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
