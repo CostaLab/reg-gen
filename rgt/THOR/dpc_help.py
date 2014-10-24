@@ -199,6 +199,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 c, s, e = line[0], int(line[1]), int(line[2])
                 regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
     else:
+        print(chrom_sizes)
         with open(chrom_sizes) as f:
             for line in f:
                 line = line.strip()
