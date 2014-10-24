@@ -88,12 +88,12 @@ class MultiCoverageSet():
         np.save(str(name) + "-means.npy", self.emp_means)
         np.save(str(name) + "-vars.npy", self.emp_vars)
         for i in range(2):
-            p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
+            #p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
             #p = np.polynomial.polynomial.polyfit(np.array([1,4,3,2,5,6]), np.array([2,3,3,3,6,7]), 2)
-            print(p)
-            x = linspace(0, 200, 200)
-            y=p[0] + x*p[1] + x*x*p[2]
-            plot(x, y)
+            #print(p)
+            #x = linspace(0, 200, 200)
+            #y=p[0] + x*p[1] + x*x*p[2]
+            #plot(x, y)
             scatter(self.emp_means[i], self.emp_vars[i])
             savefig("plot" + str(i) + ".png")
         
