@@ -30,7 +30,7 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
             data_rep[i].sort()
             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
             print("length: ", len(data_rep[i]), file=sys.stderr)
-            data_rep[i].remove((0,0))
+            data_rep[i].remove((0.0,0.0))
             print("length: ", len(data_rep[i]), file=sys.stderr)
         
         if verbose:
