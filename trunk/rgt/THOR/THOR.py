@@ -17,6 +17,7 @@ from dpc_help import initialize
 from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
+from dpc_help import _fit_mean_var_distr
 from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
@@ -30,13 +31,14 @@ def write(name, l):
 
 
 if __name__ == '__main__':
-    test = False
+    test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, \
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes)
+    _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True)
 #     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
 #     exp_data.compute_putative_region_index()
 #     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)

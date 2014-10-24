@@ -55,32 +55,7 @@ class MultiCoverageSet():
             print("Do not compute GC-content", file=sys.stderr)
     
     
-    def _fit_mean_var_distr(self, name, verbose):
-        #output
-        self.emp_means = [np.squeeze(np.asarray(np.mean(self.overall_coverage[0]*1.0, axis=0))), \
-                          np.squeeze(np.asarray(np.mean(self.overall_coverage[1]*1.0, axis=0)))]
-        self.emp_vars = [np.squeeze(np.asarray(np.var(self.overall_coverage[0]*1.0, axis=0))), \
-                         np.squeeze(np.asarray(np.var(self.overall_coverage[1]*1.0, axis=0)))]
-        
-        if verbose:
-            np.save(str(name) + "-means.npy", self.emp_means)
-            np.save(str(name) + "-vars.npy", self.emp_vars)
-        
-        res = []
-        for i in range(2):
-            p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
-            res.append(p)
-            
-            if verbose:
-                print(p, file=sys.stderr)
-                print(max(self.emp_means[i]), max(self.emp_vars[i]), file=sys.stderr)
-            
-                x = linspace(0, max(self.emp_means[i]), max(self.emp_means[i])+1)
-                y = p[0] + x*p[1] + x*x*p[2]
-                plot(x, y)
-                scatter(self.emp_means[i], self.emp_vars[i])
-                savefig("plot" + str(i) + ".png")
-                close()
+    
     
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, \
                  verbose, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs):
@@ -107,8 +82,6 @@ class MultiCoverageSet():
                 tmp[k].append(tmp_el)
             
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
-        
-        self._fit_mean_var_distr(name, verbose=True)
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
