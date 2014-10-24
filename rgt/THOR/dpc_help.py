@@ -40,9 +40,9 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
         res = []
         for i in range(2):
             m = map(lambda x: x[0], data_rep[i]) #means list
-            m = sample(m, sample_size)
+            m = sample(m, min(sample_size, len(m)))
             v = map(lambda x: x[1], data_rep[i]) #vars list
-            v = sample(v, sample_size)
+            v = sample(v, min(sample_size, len(v)))
             
             p = np.polynomial.polynomial.polyfit(m, v, 2)
             res.append(p)
