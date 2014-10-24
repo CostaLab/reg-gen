@@ -73,6 +73,7 @@ class MultiCoverageSet():
         self._normalization_by_signal(name, verbose)
         
         #make data in nice list of two matrices
+        #TODO seems to be space comsuimg! check that here!
         tmp = [[], []]
         for k in range(2):
             it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
