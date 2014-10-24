@@ -18,7 +18,7 @@ from matplotlib.pyplot import *
 
 SIGNAL_CUTOFF = 10000
 
-def _fit_mean_var_distr(self, overall_coverage, name, verbose):
+def _fit_mean_var_distr(overall_coverage, name, verbose):
         #output
         self.emp_means = [np.squeeze(np.asarray(np.mean(overall_coverage[0]*1.0, axis=0))), \
                           np.squeeze(np.asarray(np.mean(overall_coverage[1]*1.0, axis=0)))]
@@ -267,7 +267,6 @@ def input(laptop):
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        print(input_parser(config_path))
         options.exts = None #[200, 200, 200, 200]
         options.exts_inputs = None #[200, 200]
         options.pcutoff = 1
