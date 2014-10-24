@@ -13,6 +13,8 @@ from math import log
 import multiprocessing
 from input_parser import input_parser
 #from rgt.ODIN import ODIN
+from numpy import linspace
+from matplotlib.pyplot import *
 
 SIGNAL_CUTOFF = 10000
 
@@ -40,8 +42,16 @@ def _fit_mean_var_distr(self, overall_coverage, name, verbose):
                 y = p[0] + x*p[1] + x*x*p[2]
                 plot(x, y)
                 scatter(self.emp_means[i], self.emp_vars[i])
-                savefig("plot" + str(i) + ".png")
+                savefig(str(name) + "plot_original" + str(i) + ".png")
                 close()
+                
+                plot(x, y)
+                scatter(self.emp_means[i], self.emp_vars[i])
+                ylim([0, 3000])
+                xlim([0, 200])
+                savefig(str(name) + "plot" + str(i) + ".png")
+                close()
+                
         return res
 
 
