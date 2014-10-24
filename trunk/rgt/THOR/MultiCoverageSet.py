@@ -6,8 +6,7 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
-from numpy import linspace
-from matplotlib.pyplot import *
+
 
 EPSILON = 1**-320
 
