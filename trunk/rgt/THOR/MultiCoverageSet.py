@@ -90,13 +90,14 @@ class MultiCoverageSet():
         for i in range(2):
             p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
             #p = np.polynomial.polynomial.polyfit(np.array([1,4,3,2,5,6]), np.array([2,3,3,3,6,7]), 2)
-            print(p)
-            print(max(self.emp_means[i]), max(self.emp_vars[i]))
+            print(p, file=sys.stderr)
+            print(max(self.emp_means[i]), max(self.emp_vars[i]), file=sys.stderr)
             x = linspace(0, max(self.emp_means[i]), max(self.emp_means[i])+1)
             y=p[0] + x*p[1] + x*x*p[2]
             plot(x, y)
             scatter(self.emp_means[i], self.emp_vars[i])
             savefig("plot" + str(i) + ".png")
+            close()
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
