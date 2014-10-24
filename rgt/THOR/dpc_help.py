@@ -18,37 +18,41 @@ from matplotlib.pyplot import *
 
 SIGNAL_CUTOFF = 10000
 
-def _fit_mean_var_distr(overall_coverage, name, verbose):
-        #output
-        emp_means = [np.squeeze(np.asarray(np.mean(overall_coverage[0]*1.0, axis=0))), \
-                          np.squeeze(np.asarray(np.mean(overall_coverage[1]*1.0, axis=0)))]
-        emp_vars = [np.squeeze(np.asarray(np.var(overall_coverage[0]*1.0, axis=0))), \
-                         np.squeeze(np.asarray(np.var(overall_coverage[1]*1.0, axis=0)))]
+def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0):
+        #list of (mean, var) points for samples 0 and 1
+        data_rep = [zip(list(np.squeeze(np.asarray(np.mean(overall_coverage[i]*1.0, axis=0)))), \
+                          list(np.squeeze(np.asarray(np.var(overall_coverage[i]*1.0, axis=0))))) \
+                    for i in range(2)]
+        
+        
+        for i in range(2): #shorten list
+            data_rep[i].sort()
+            data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
         
         if verbose:
-            np.save(str(name) + "-means.npy", emp_means)
-            np.save(str(name) + "-vars.npy", emp_vars)
-        
-        
+            for i in range(2):
+                np.save(str(name) + "-data" + str(i) + ".npy", data_rep[i])
         
         res = []
         for i in range(2):
-            p = np.polynomial.polynomial.polyfit(emp_means[i], emp_vars[i], 2)
+            m = map(lambda x: x[0], data_rep[i]) #means list
+            v = map(lambda x: x[1], data_rep[i]) #vars list
+            p = np.polynomial.polynomial.polyfit(m, v, 2)
             res.append(p)
             
             if verbose:
                 print(p, file=sys.stderr)
-                print(max(emp_means[i]), max(emp_vars[i]), file=sys.stderr)
+                print(max(m), max(v), file=sys.stderr)
             
-                x = linspace(0, max(emp_means[i]), max(emp_means[i])+1)
+                x = linspace(0, max(m), max(m)+1)
                 y = p[0] + x*p[1] + x*x*p[2]
                 plot(x, y)
-                scatter(emp_means[i], emp_vars[i])
+                scatter(m, v)
                 savefig(str(name) + "plot_original" + str(i) + ".png")
                 close()
                 
                 plot(x, y)
-                scatter(emp_means[i], emp_vars[i])
+                scatter(m, v)
                 ylim([0, 3000])
                 xlim([0, 200])
                 savefig(str(name) + "plot" + str(i) + ".png")
@@ -266,6 +270,7 @@ def _callback_list(option, opt, value, parser):
 def input(laptop):
     parser = HelpfulOptionParser(usage=__doc__)
     if laptop:
+        print("---------- TESTING MODE ----------", file=sys.stderr)
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
