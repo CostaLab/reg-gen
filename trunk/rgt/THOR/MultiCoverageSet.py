@@ -82,8 +82,8 @@ class MultiCoverageSet():
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
         
         #output
-        self.emp_means = [np.squeeze(np.asarray(np.mean(self.overall_coverage[0]*1.0, axis=1))), np.squeeze(np.asarray(np.mean(self.overall_coverage[1]*1.0, axis=1)))]
-        self.emp_vars = [np.squeeze(np.asarray(np.var(self.overall_coverage[0]*1.0, axis=1))), np.squeeze(np.asarray(np.var(self.overall_coverage[1]*1.0, axis=1)))]
+        self.emp_means = [np.squeeze(np.asarray(np.mean(self.overall_coverage[0]*1.0, axis=0))), np.squeeze(np.asarray(np.mean(self.overall_coverage[1]*1.0, axis=0)))]
+        self.emp_vars = [np.squeeze(np.asarray(np.var(self.overall_coverage[0]*1.0, axis=0))), np.squeeze(np.asarray(np.var(self.overall_coverage[1]*1.0, axis=0)))]
         
         np.save(str(name) + "-means.npy", self.emp_means)
         np.save(str(name) + "-vars.npy", self.emp_vars)
