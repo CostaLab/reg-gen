@@ -31,7 +31,7 @@ def write(name, l):
 
 
 if __name__ == '__main__':
-    test = True
+    test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
