@@ -20,33 +20,35 @@ SIGNAL_CUTOFF = 10000
 
 def _fit_mean_var_distr(overall_coverage, name, verbose):
         #output
-        self.emp_means = [np.squeeze(np.asarray(np.mean(overall_coverage[0]*1.0, axis=0))), \
+        emp_means = [np.squeeze(np.asarray(np.mean(overall_coverage[0]*1.0, axis=0))), \
                           np.squeeze(np.asarray(np.mean(overall_coverage[1]*1.0, axis=0)))]
-        self.emp_vars = [np.squeeze(np.asarray(np.var(overall_coverage[0]*1.0, axis=0))), \
+        emp_vars = [np.squeeze(np.asarray(np.var(overall_coverage[0]*1.0, axis=0))), \
                          np.squeeze(np.asarray(np.var(overall_coverage[1]*1.0, axis=0)))]
         
         if verbose:
-            np.save(str(name) + "-means.npy", self.emp_means)
-            np.save(str(name) + "-vars.npy", self.emp_vars)
+            np.save(str(name) + "-means.npy", emp_means)
+            np.save(str(name) + "-vars.npy", emp_vars)
+        
+        
         
         res = []
         for i in range(2):
-            p = np.polynomial.polynomial.polyfit(self.emp_means[i], self.emp_vars[i], 2)
+            p = np.polynomial.polynomial.polyfit(emp_means[i], emp_vars[i], 2)
             res.append(p)
             
             if verbose:
                 print(p, file=sys.stderr)
-                print(max(self.emp_means[i]), max(self.emp_vars[i]), file=sys.stderr)
+                print(max(emp_means[i]), max(emp_vars[i]), file=sys.stderr)
             
-                x = linspace(0, max(self.emp_means[i]), max(self.emp_means[i])+1)
+                x = linspace(0, max(emp_means[i]), max(emp_means[i])+1)
                 y = p[0] + x*p[1] + x*x*p[2]
                 plot(x, y)
-                scatter(self.emp_means[i], self.emp_vars[i])
+                scatter(emp_means[i], emp_vars[i])
                 savefig(str(name) + "plot_original" + str(i) + ".png")
                 close()
                 
                 plot(x, y)
-                scatter(self.emp_means[i], self.emp_vars[i])
+                scatter(emp_means[i], emp_vars[i])
                 ylim([0, 3000])
                 xlim([0, 200])
                 savefig(str(name) + "plot" + str(i) + ".png")
