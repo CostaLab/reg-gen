@@ -260,7 +260,7 @@ def input(laptop):
         options.exts = None #[200, 200, 200, 200]
         options.exts_inputs = None #[200, 200]
         options.pcutoff = 1
-        options.name='test'
+        options.name='test2'
         options.stepsize=50
         options.binsize=100
         options.factors_inputs = None
