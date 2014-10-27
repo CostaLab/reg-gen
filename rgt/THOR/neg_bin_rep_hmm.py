@@ -29,6 +29,11 @@ import numpy as np
 from neg_bin import NegBin
 
 def get_init_parameters(s1, s2, **info):
+    alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
+    mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
+    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
+    
+    return alpha, mu, para_func
     
     #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
     n_ = np.array([info['count'], info['count']])
@@ -65,7 +70,7 @@ class NegBinRepHMM(_BaseHMM):
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=10, thresh=1e-2,
                  params=string.ascii_letters,
-                 init_params=string.ascii_letters):
+                 init_params=string.ascii_letters, para_func=[[1,1,1], [1,1,1]]):
     
         _BaseHMM.__init__(self, n_components, startprob, transmat,
                           startprob_prior=startprob_prior,
@@ -80,6 +85,7 @@ class NegBinRepHMM(_BaseHMM):
         self.mu = mu
         self.max_range = 500
         self._update_distr(self.mu, self.alpha, self.max_range)
+        self.para_func = para_func
         
     def _update_distr(self, mu, alpha, max_range):
         raw1 = [NegBin(mu[0, 0], alpha[0, 0], max_range=max_range), NegBin(mu[0, 1], alpha[0, 1], max_range=max_range), NegBin(mu[0, 2], alpha[0, 2], max_range=max_range)]
@@ -87,7 +93,11 @@ class NegBinRepHMM(_BaseHMM):
         
         self.neg_distr = np.matrix([raw1, raw2]) #matrix of all Neg. Bin. Distributions, columns=HMM's state (3), row=#samples (2)
         
-        
+    def get_alpha(self, sample, m):
+        var = self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2]
+        return (var - m) / m**2 
+    
+    
     def _compute_log_likelihood(self, X):
         #t = time()
         matrix = []
@@ -144,7 +154,7 @@ class NegBinRepHMM(_BaseHMM):
         stats['post'][1] = stats['post'][1]*self.dim[1]
         
         #stats['obs'] = np.copy(obs)
-        #stats['posterior'] = np.copy(posteriors)
+        stats['posterior'] = np.copy(posteriors)
 
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                       posteriors, fwdlattice, bwdlattice,
@@ -167,9 +177,13 @@ class NegBinRepHMM(_BaseHMM):
 #        tmp=np.array(map(lambda x: x*self.n[0], self.p))
 #        print(np.reshape(tmp, (-1,3)), file=sys.stderr)
         #for j in range(self.n_components):
+        
         for i in range(self.n_features):
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
+        tmp_a = [map(lambda m: self.get_alpha(i, m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
+        
+        self.alpha = np.matrix(tmp_a)
         self._update_distr(self.mu, self.alpha, self.max_range)
     
     def _count(self, posts):
@@ -190,40 +204,50 @@ class NegBinRepHMM(_BaseHMM):
     def _do_mstep(self, stats, params):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
         self._help_do_mstep(stats)
-#        self.count_s1, self.count_s2 = self._count(stats['posterior'])
-#        self._help_do_mstep(stats)
-        
-        
+        self.count_s1, self.count_s2 = self._count(stats['posterior'])
+        self.merge_distr()
        
     def merge_distr(self):
         f = self.count_s2 / float(self.count_s1 + self.count_s2)
-        p_high = self.p[0][1] + f * fabs(self.p[0][1] - self.p[1][2])
-        #print('merge: ', f, self.p, p_high, file=sys.stderr)
         
-        self.p[0][1] = p_high
-        self.p[1][2] = p_high
+        for el in [self.mu, self.alpha]:
+            high = el[0,1] + f * fabs(el[0,1] - el[1,2])
+            low = el[1,1] + f * fabs(el[1,1] - el[0,2])
+            med = np.mean([el[0,0], el[1,0]])
+            el[0,1] = high
+            el[1,2] = high
+            el[1,1] = low
+            el[0,2] = low
+            el[0,0] = med
+            el[1,0] = med
         
-        p_low = self.p[1][1] + f * fabs(self.p[1][1] - self.p[0][2])
-        self.p[1][1] = p_low
-        self.p[0][2] = p_low
-        #print('merge: ', f, self.p, p_high, p_low, file=sys.stderr)
-        tmp=np.array(map(lambda x: x*self.n[0], self.p))
-        #print(np.reshape(tmp, (-1,3)), file=sys.stderr)
+        self._update_distr(self.mu, self.alpha, self.max_range)
+
+
+def get_alpha(para_func, sample, m):
+    var = para_func[sample][0] + m * para_func[sample][1] + m**2 * para_func[sample][2] 
+    return (var - m) / m**2 
     
-#    def _init(self, obs, params):
-#        _init(self, obs, params)
-
-
-
 if __name__ == '__main__':
     alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
     mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
+    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
+    
+    tmp_a = []
+    for i in range(2):
+        tmp_a.append(map(lambda m: get_alpha(para_func, i, m), np.asarray(mu[i])[0]))
+    
+    alpha = np.matrix(tmp_a)
+    print(mu)
+    print(alpha)
+    
     dim_cond_1 = 5
     dim_cond_2 = 5
 
     m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
     
-    X, Z = m.sample(10)
+    X, Z = m.sample(5)
+    print(type(X))
 #     for i, el in enumerate(X):
 #         print(el, Z[i], sep='\t')
     
@@ -234,7 +258,8 @@ if __name__ == '__main__':
 #     print('obs           ', X)
 #     print('hidden states ', Z)
 # #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
-    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[5.,60.,7.], [6.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    
+    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[5.,60.,7.], [6.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
     m2.fit([X])
     e = m2.predict(X)
     

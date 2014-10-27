@@ -21,17 +21,26 @@ SIGNAL_CUTOFF = 10000
 
 def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=100):
         #list of (mean, var) points for samples 0 and 1
-        data_rep = [zip(list(np.squeeze(np.asarray(np.mean(overall_coverage[i]*1.0, axis=0)))), \
-                          list(np.squeeze(np.asarray(np.var(overall_coverage[i]*1.0, axis=0))))) \
-                    for i in range(2)]
-        
+        data_rep = []
+        for i in range(2):
+            cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
+            h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
+            cov = cov[:,h] #remove 0-columns
+            r = np.random.randint(cov.shape[1], size=sample_size)
+            r.sort()
+            cov = cov[:,r]
+                 
+            m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
+            n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
+            
+            assert len(m) == len(n)
+
+            data_rep.append(zip(m, n))
+            data_rep[i].append((0,0))
         
         for i in range(2): #shorten list
             data_rep[i].sort()
             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
-            print("length: ", len(data_rep[i]), file=sys.stderr)
-            data_rep[i].remove((0.0,0.0))
-            print("length: ", len(data_rep[i]), file=sys.stderr)
         
         if verbose:
             for i in range(2):
@@ -40,9 +49,9 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
         res = []
         for i in range(2):
             m = map(lambda x: x[0], data_rep[i]) #means list
-            m = sample(m, min(sample_size, len(m)))
+#             m = sample(m, min(sample_size, len(m)))
             v = map(lambda x: x[1], data_rep[i]) #vars list
-            v = sample(v, min(sample_size, len(v)))
+#             v = sample(v, min(sample_size, len(v)))
             
             p = np.polynomial.polynomial.polyfit(m, v, 2)
             res.append(p)
@@ -222,7 +231,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 c, s, e = line[0], int(line[1]), int(line[2])
                 regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
     else:
-        print(chrom_sizes)
+        print("Call DPs on whole genome.", file=sys.stderr)
         with open(chrom_sizes) as f:
             for line in f:
                 line = line.strip()
