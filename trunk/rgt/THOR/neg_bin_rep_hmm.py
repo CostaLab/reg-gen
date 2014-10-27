@@ -208,7 +208,7 @@ class NegBinRepHMM(_BaseHMM):
         self.merge_distr()
        
     def merge_distr(self):
-        f = self.count_s2 / float(self.count_s1 + self.count_s2)
+        f = self.count_s2 / float(self.count_s1 + self.count_s2) #TODO exp_data.
         
         for el in [self.mu, self.alpha]:
             high = el[0,1] + f * fabs(el[0,1] - el[1,2])
