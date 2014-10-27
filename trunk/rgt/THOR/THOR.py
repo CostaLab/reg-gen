@@ -29,6 +29,37 @@ def write(name, l):
         print(el, file=f)
     f.close()
 
+def _get_training_sets(indices_of_interest, overall_coverage, name, verbose, x = 10000, threshold = 2.0, diff_cov = 10):
+    """Return s0,s1,s2 (list of tuples) with initial peaks"""
+    s0 = []
+    s1 = []
+    s2 = []
+    so = []
+    i = 1
+    while i < x:
+        j = sample(indices_of_interest, 1)[0]
+        
+        cov1 = exp_data.overall_coverage[0][:,indices_of_interest[j]].sum()
+        cov2 = exp_data.overall_coverage[1][:,indices_of_interest[j]].sum()
+        
+        if cov1 + cov2 <= 3:
+            s0.append((cov1,cov2))
+            so.append((cov1,cov2))
+        elif (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
+            s1.append((cov1,cov2))
+            so.append((cov1,cov2))
+        elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
+            s2.append((cov1,cov2))
+            so.append((cov1,cov2))
+        i += 1
+    
+    if verbose:
+        write(name + '-s0', s0)
+        write(name + '-s1', s1)
+        write(name + '-s2', s2)
+        write(name + '-soverall', so)
+        
+    return s0, s1, s2
 
 if __name__ == '__main__':
     test = True
@@ -47,10 +78,12 @@ if __name__ == '__main__':
     if options.verbose:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
+    
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
     training_set_obs = exp_data.get_observation(training_set)
     
-    init_alpha, init_mu, init_para_func = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage)
+    _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.overall_coverage, options.name, options.verbose)
+    init_alpha, init_mu, init_para_func = get_init_parameters(s1, s2)
       
     print('Training HMM...', file=sys.stderr)
     m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = init_para_func)
