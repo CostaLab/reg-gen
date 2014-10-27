@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
+from matplotlib import cm
 import itertools
 import pickle
 import multiprocessing
@@ -969,7 +970,7 @@ class Intersect:
                             
                             print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
             
-    def barplot(self, logt=False):
+    def barplot(self, logt=False, percentage=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
         self.xtickrotation, self.xtickalign = 0,"center"
@@ -985,9 +986,12 @@ class Intersect:
                 ax.locator_params(axis = 'y', nbins = 4)
                 plus = 0
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
-            ax.set_title(self.counts.keys()[ai], y=0.9)
+            ax.set_title(self.counts.keys()[ai], y=1)
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
+                for l in self.references:
+                    if l.name == r: lr = len(l)
+                    
                 if len(axs) == 1: 
                     r_label.append(r)
                 else: 
@@ -998,7 +1002,10 @@ class Intersect:
                 width = 0.8/(len(self.counts.values()[ai][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
-                    y = self.counts.values()[ai][r][q][2] + plus # intersect number
+                    if percentage:
+                        y = (self.counts.values()[ai][r][q][2] + plus)/lr
+                    else:
+                        y = self.counts.values()[ai][r][q][2] + plus # intersect number
                     
                     ax.bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
                     
@@ -1015,7 +1022,10 @@ class Intersect:
         if self.mode_count == "bp":
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
         elif self.mode_count == "count":
-            f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
+            if percentage:
+                f.text(-0.025, 0.5, "Intersected percantage", rotation="vertical", va="center")
+            else:
+                f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
             
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.bar = f
@@ -1125,6 +1135,7 @@ class Intersect:
         #html.add_heading(title)
         html.add_figure("intersection_bar.png", align="center")
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
+        html.add_figure("intersection_barp.png", align="center")
         #if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
         header_list = ["Reference<br>name",
@@ -1349,7 +1360,7 @@ class Intersect:
     
     def comb_stacked_plot(self):
         self.xtickrotation, self.xtickalign = 0,"center"
-        f, axs = plt.subplots(len(self.frequency.keys()),1)
+        f, axs = plt.subplots(1, len(self.frequency.keys()), sharey = True)
         f.subplots_adjust(left=0.3)
         #f.set_size_inches(18.5,15)
         #if len(axs) == 1: axs = [axs]
@@ -1360,7 +1371,7 @@ class Intersect:
             #ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ty = self.frequency.keys()[ai]
             ax.locator_params(axis = 'y', nbins = 4)
-            ax.set_title(self.frequency.keys()[ai], y=0.95)
+            ax.set_title(self.frequency.keys()[ai], y=1)
             r_label = []
             q_label = []   
             legends = []
@@ -1373,12 +1384,13 @@ class Intersect:
                     except: q_label.append(q)
                 width = 0.6
                 bottom = 0
+                summ = sum(self.frequency[ty][q])
                 for ind_r, rc in enumerate(self.frequency[ty][q]):
                     if ind_q == 0: 
                         r = self.groupedreference[ty][ind_r].name
                         r_label.append(r)
                     x = ind_q
-                    y = rc # intersect number
+                    y = rc/summ # intersect number
                     bar = ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[ind_r], align='center')
                     bottom = bottom + y
                     if ind_q == 0: legends.append(bar) 
@@ -1394,12 +1406,12 @@ class Intersect:
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
                 
-        axs[0].legend(legends, self.color_tags, loc='upper left', handlelength=1, handletextpad=1, 
+        axs[-1].legend(legends, self.color_tags, loc='upper left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 1))
         if self.mode_count == "bp":
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
         elif self.mode_count == "count":
-            f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
+            f.text(-0.025, 0.5, "Percentage", rotation="vertical", va="center")
     
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.sbar = f
@@ -1676,7 +1688,13 @@ class Boxplot:
             
         for i, g in enumerate(self.sortDict.keys()):
             axarr[i].set_title(g, y=0.94)
-            if logT: axarr[i].set_yscale('log')
+            
+            if logT: 
+                axarr[i].set_yscale('log')
+                
+            else:
+                axarr[i].locator_params(axis = 'y', nbins = 4)
+
             axarr[i].tick_params(axis='y', direction='out')
             axarr[i].yaxis.tick_left()
             axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
@@ -1715,18 +1733,19 @@ class Boxplot:
                 axarr[i].spines[spine].set_visible(False)
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
             
-            if i > 0:
-                if sy: 
-                    plt.setp(axarr[i].get_yticklabels(),visible=False)
-                    axarr[i].minorticks_off()
-                    axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
-                else: 
-                    plt.setp(axarr[i].get_yticklabels(),visible=True)
-                    axarr[i].tick_params(axis='y', which='both', left='on', right='off', labelbottom='on')
-                #plt.setp(axarr[i].get_yticks(),visible=False)
+            if sy: 
+                #plt.setp(axarr[i].get_yticklabels(),visible=False)
+                axarr[i].minorticks_off()
                 
-        if sy:            
-            plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
+                #axarr[i].tick_params(axis='y', which='both', left='off', right='off', labelbottom='off')
+            else: 
+                plt.setp(axarr[i].get_yticklabels(),visible=True)
+                axarr[i].tick_params(axis='y', which='both', left='on', right='off', labelbottom='on')
+            #plt.setp(axarr[i].get_yticks(),visible=False)
+                
+                
+        #if sy:            
+        #    plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
         #plt.legend(colors, color_tags, loc=7)
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
                  handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
@@ -2229,8 +2248,10 @@ class Lineplot:
                     max_value = numpy.amax(self.data[t][g][c])
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', vmin=0, 
-                                            vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
                     axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
                     #axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
@@ -2288,9 +2309,6 @@ class Lineplot:
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.write(os.path.join(fp,"heatmap.html"))
-###########################################################################################
-#                    Heatmap 
-###########################################################################################
 
 
 

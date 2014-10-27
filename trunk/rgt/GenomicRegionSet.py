@@ -484,7 +484,7 @@ class GenomicRegionSet:
         a = copy.deepcopy(self)
         b = copy.deepcopy(y)
         
-        z = GenomicRegionSet(a.name + '_' + b.name)
+        z = GenomicRegionSet(a.name + ' + ' + b.name)
         # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
         if len(a) == 0 or len(b) == 0: return z
         
