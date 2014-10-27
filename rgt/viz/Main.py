@@ -412,6 +412,10 @@ def main():
         #if args.stackedbar:
         inter.stackedbar()
         output(f=inter.sbar, directory = args.output, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
+        
+        inter.barplot(logt=args.log, percentage=True)
+        output(f=inter.bar, directory = args.output, folder = args.title, filename="intersection_barp",extra=plt.gci(),pdf=True,show=args.show)
+        
         #if args.pbar:
         #inter.percentagebar()
         #output(f=inter.pbar, directory = args.output, folder = args.title, filename="intersection_percentagebar",extra=plt.gci(),pdf=True,show=args.show)
