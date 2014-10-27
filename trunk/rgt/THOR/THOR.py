@@ -31,7 +31,7 @@ def write(name, l):
 
 
 if __name__ == '__main__':
-    test = False
+    test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
@@ -39,30 +39,29 @@ if __name__ == '__main__':
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, \
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes)
     
-    _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=100)
-#     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
-#     exp_data.compute_putative_region_index()
-#     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
-#     
-#     if options.verbose:
-#         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
-#     print('Compute training set...',file=sys.stderr)
-#     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
-#     training_set_obs = exp_data.get_observation(training_set)
-#          
-#     n_, p_ = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage)
-#      
-#     print('Training HMM...', file=sys.stderr)
-#     m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
-#       
+    func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=200)
+    print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
+    exp_data.compute_putative_region_index()
+    print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
+
+    if options.verbose:
+        exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
+    print('Compute training set...',file=sys.stderr)
+    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name)
+    training_set_obs = exp_data.get_observation(training_set)
+    
+    init_alpha, init_mu, init_para_func = get_init_parameters(options.name, exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage)
+      
+    print('Training HMM...', file=sys.stderr)
+    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = init_para_func)
+
 #     if options.verbose:
 #         exp_data.get_initial_dist(options.name + '-initial-states.bed')
-#       
-#     m.fit([training_set_obs])
-#      
-#     #m.merge_distr()
-#      
-#     print('...done', file=sys.stderr)
+       
+    m.fit([training_set_obs])
+      
+    print('...done', file=sys.stderr)
+    
 #     if options.verbose:
 #         print('p', m.p, file=sys.stderr)
 #         print("Final HMM's transition matrix: ", file=sys.stderr)

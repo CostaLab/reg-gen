@@ -21,7 +21,7 @@ class MultiCoverageSet():
         
         if path_inputs: #inputs should be empty or len=2
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
-            for i, input in enumerate(self.inputs):
+            for i  in range(len(self.inputs)):
                 input.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
         else:
@@ -30,6 +30,7 @@ class MultiCoverageSet():
     
     def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input):
         """Compute GC-content"""
+        #TODO: check for multivariant case!
         if not no_gc_content and path_inputs:
             for i, cov in enumerate(self.covs):
                 print("Compute GC-content", file=sys.stderr)
@@ -52,8 +53,6 @@ class MultiCoverageSet():
                     #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
         else:
             print("Do not compute GC-content", file=sys.stderr)
-    
-    
     
     
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, \
@@ -81,7 +80,7 @@ class MultiCoverageSet():
                 tmp_el = reduce(lambda x,y: np.concatenate((x,y)), [self.covs[i].coverage[j] for j in range(len(self.covs[i].genomicRegions))])
                 tmp[k].append(tmp_el)
             
-        self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
+        self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
@@ -92,7 +91,6 @@ class MultiCoverageSet():
         if path_inputs:
             for i in range(len(path_bamfiles)):
                 j = 0 if i < self.dim_1 else 1
-                input = self.inputs[j]
                 cov = self.covs[i]
                 
                 print("Normalize", file=sys.stderr)
@@ -103,36 +101,17 @@ class MultiCoverageSet():
                 input.scale(n)
                 cov.subtract(input)
     
-    def _get_signal_sums(self):
-        s1 = sum([sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1)])
-        s2 = sum([sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1, self.dim_1+self.dim_2)])
-        
-        return s1, s2
+#     def _get_signal_sums(self):
+#         s1 = sum([sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1)])
+#         s2 = sum([sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1, self.dim_1+self.dim_2)])
+#         
+#         return s1, s2
+    
     def _normalization_by_signal(self, name, verbose):
         """Normalize signal"""
-        #s1, s2 = self._get_signal_sums()
-        #print('signal before: ', s1, s2, file=sys.stderr)
-        
-        #if s2 > s1: #increase s1
-        #    it = range(self.dim_1)
-        #    f = float(s2) / s1
-        #else: #increase s2
-        #    it = range(self.dim_1, self.dim_1 + self.dim_2)
-        #    f = float(s1) / s2
-        #print(f, file=sys.stderr)
-        
-        #for i in it:
-        #    c = self.covs[i]
-        #    c.scale(f)
-        
-        #s1, s2 = self._get_signal_sums()
-        #print('signal after: ', s1, s2, file=sys.stderr)
-        
-        
         #find maximum sample
         signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
         print('all signals ', signals, file=sys.stderr)
-        max_index = signals.index(max(signals))
         
         for i in range(self.dim_1 + self.dim_2):
             #if i == max_index:
@@ -189,37 +168,34 @@ class MultiCoverageSet():
     def get_observation(self, mask=np.array([])):
         """Return indices of observations. Do not consider indices contained in <mask> array"""
         if not mask.size:
-            mask = np.array([True]*len(self.first_overall_coverage))
-        return np.array([self.first_overall_coverage[mask], self.second_overall_coverage[mask]]).T
+            mask = np.array([True]*self._get_bin_number())
+        
+        return np.asarray(np.concatenate((self.overall_coverage[0][:,mask], self.overall_coverage[1][:,mask])))
     
     def _compute_score(self):
         """Compute score for each observation (based on Xu et al.)"""
-        self.scores = self.first_overall_coverage / float(sum(self.first_overall_coverage)) + \
-                        self.second_overall_coverage / float(sum(self.second_overall_coverage))
-                        
+        self.scores = sum([np.squeeze(np.asarray(np.sum(self.overall_coverage[i], axis=0))) / float(self.overall_coverage[i].sum()) for i in range(2)])
+    
+    def _get_bin_number(self):
+        return self.overall_coverage[0].shape[1]
+    
     def compute_putative_region_index(self, l=5):
         """Compute putative differential peak regions as follows: 
         - score must be > 2/(m*n) (m=#obs, n=0.9 (default) )
         - overall coverage in library 1 and 2 must be > 3
         - extend resulting sites by l steps in both directions. """
-        m = len(self.first_overall_coverage)
+        m = self._get_bin_number()
         n = 0.9
         self._compute_score()
         print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
-        tmp = np.where(self.first_overall_coverage + self.second_overall_coverage > 3)[0]
+        tmp = np.where(np.squeeze(np.asarray(sum(self.overall_coverage[0]))) + np.squeeze(np.asarray(sum(self.overall_coverage[1]))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
         print('length of intersection set: ', len(tmp), file=sys.stderr)
         self.indices_of_interest = tmp2
         print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
-        #extend regions by l steps
-#         self.indices_of_interest = list(self.indices_of_interest)
-#         tmp = self.indices_of_interest[:]
-#         for i in tmp:
-#             self.indices_of_interest += range(max(0, i-l), i+l+1) #TODO: whats about chromosome ends?
-         
-#         self.indices_of_interest = set(self.indices_of_interest)
+
         tmp = set()
         for i in self.indices_of_interest:
             for j in range(max(0, i-l), i+l+1):
@@ -228,10 +204,6 @@ class MultiCoverageSet():
         tmp = list(tmp)
         tmp.sort()
         self.indices_of_interest = np.array(tmp)
-
-#         self.indices_of_interest = list(set(self.indices_of_interest)) #remove double indices
-#         self.indices_of_interest.sort()
-#         self.indices_of_interest = np.array(self.indices_of_interest)
          
     def get_initial_dist(self, filename):
         """Write BED file with initial state distribution"""
@@ -282,8 +254,8 @@ class MultiCoverageSet():
         diff_cov = 10
 
         for i in range(len(self.indices_of_interest)):
-            cov1 = exp_data.first_overall_coverage[self.indices_of_interest[i]]
-            cov2 = exp_data.second_overall_coverage[self.indices_of_interest[i]]
+            cov1 = exp_data.overall_coverage[0][:,self.indices_of_interest[i]].sum()
+            cov2 = exp_data.overall_coverage[1][:,self.indices_of_interest[i]].sum()
             
             if cov1 / max(float(cov2), 1) > threshold or cov1-cov2 > diff_cov:
                 ts1.add(i)
