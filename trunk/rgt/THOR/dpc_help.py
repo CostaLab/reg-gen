@@ -146,8 +146,6 @@ def get_peaks(name, DCS, states, distr):
             else:
                 pvalues.append((s1, s2, 'r', distr))
         
-        print(c, s, e, s1, s2, strand, distr, file=sys.stderr)
-        
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
     
