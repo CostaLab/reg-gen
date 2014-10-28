@@ -185,6 +185,7 @@ class NegBinRepHMM(_BaseHMM):
         tmp_a = [map(lambda m: self.get_alpha(i, m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         
         self.alpha = np.matrix(tmp_a)
+        print("new alpha", self.alpha, file=sys.stderr)
         self._update_distr(self.mu, self.alpha, self.max_range)
     
     def _count(self, posts):
