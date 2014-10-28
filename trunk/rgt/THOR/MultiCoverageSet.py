@@ -277,8 +277,8 @@ class MultiCoverageSet():
             write_test_samples(name + '-s1', s1)
             write_test_samples(name + '-s2', s2)
         
-        s1 = sample(s1, y)
-        s2 = sample(s2, y)
+        s1 = sample(s1, min(y, len(s1)))
+        s2 = sample(s2, min(y, len(s1)))
         
         l = min(min(len(ts1), len(ts2)), x)
         tmp = set(sample(ts1, l)) | set(sample(ts2, l))
