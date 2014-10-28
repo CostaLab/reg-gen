@@ -58,7 +58,8 @@ if __name__ == '__main__':
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     print(exp_data.get_observation(exp_data.indices_of_interest), file=sys.stderr)
-    print(type(exp_data.get_observation(exp_data.indices_of_interest)), file=sys.stderr)
+    a=exp_data.get_observation(exp_data.indices_of_interest)
+    print(a.shape, file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
     print("...done", file=sys.stderr)
