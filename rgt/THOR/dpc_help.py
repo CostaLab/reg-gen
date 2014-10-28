@@ -78,23 +78,16 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
 
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
-    indices_of_interest = DCS.indices_of_interest
-    first_overall_coverage = DCS.first_overall_coverage
-    second_overall_coverage = DCS.second_overall_coverage
-    
-    c1 = list(first_overall_coverage)
-    c2 = list(second_overall_coverage)
-    
     print("Computing info...", file=sys.stderr)
     f = open(name + '-posts.bed', 'w')
     g = open(name + '-states-viterbi.bed', 'w')
     
-    for i in range(len(indices_of_interest)):
-        cov1 = c1[indices_of_interest[i]]
-        cov2 = c2[indices_of_interest[i]]
+    for i in range(len(DCS.indices_of_interest)):
+        cov1 = DCS.exp_data.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
+        cov2 = DCS.exp_data.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
         
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
-        chrom, start, end = DCS._index2coordinates(indices_of_interest[i])
+        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
         print(chrom, start, end, states[i], cov1, cov2, sep = '\t', file=g)
         print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep = '\t', file=f)
