@@ -60,11 +60,10 @@ if __name__ == '__main__':
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
     print("...done", file=sys.stderr)
-#      
-#     if options.verbose: 
-#         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
-#  
-#     print('t', m.n, m.p, file=sys.stderr)
+    
+    if options.verbose: 
+        dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
+
 #     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
      
      
