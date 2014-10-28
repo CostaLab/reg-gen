@@ -75,7 +75,7 @@ class MultiCoverageSet():
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
             
-            self.covs[i].write_bigwig(name + '-s%s-%s.bw' %(sig, rep), chrom_sizes)
+            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes)
             
         #make data in nice list of two matrices
         tmp = [[], []]
@@ -116,25 +116,27 @@ class MultiCoverageSet():
         """Normalize signal"""
         #find maximum sample
         signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-        print('all signals ', signals, file=sys.stderr)
+        #print('all signals ', signals, file=sys.stderr)
         
         for i in range(self.dim_1 + self.dim_2):
             #if i == max_index:
             #    continue
-            print('normalize signal', file=sys.stderr)
+            #print('normalize signal', file=sys.stderr)
             avg = sum(signals)/float(len(signals))
             f = avg / float(signals[i])
-            print(i, f, avg, file=sys.stderr)
+            #print(i, f, avg, file=sys.stderr)
             self.covs[i].scale(f)
         
         
     def print_gc_hist(self, name, gc_hist):
+        #TODO: check for multivariant case!
         f = open(name + 'gc-content.data', 'w')
         for i in range(len(gc_hist)):
             print(i, gc_hist[i], file=f)
         f.close()
     
     def _norm_gc_content(self, cov, gc_cov, gc_avg):
+        #TODO: check for multivariant case!
         for i in range(len(cov)):
             assert len(cov[i]) == len(gc_cov[i])
 #            cov[i] = gc_cov[i]

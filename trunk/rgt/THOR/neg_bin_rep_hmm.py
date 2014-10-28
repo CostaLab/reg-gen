@@ -31,9 +31,8 @@ from neg_bin import NegBin
 def get_init_parameters(s1, s2, **info):
     alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
     mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
-    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
     
-    return alpha, mu, para_func
+    return alpha, mu
     
     #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
     n_ = np.array([info['count'], info['count']])

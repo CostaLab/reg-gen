@@ -46,10 +46,10 @@ if __name__ == '__main__':
     training_set, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, 10000)
     training_set_obs = exp_data.get_observation(training_set)
     
-    init_alpha, init_mu, init_para_func = get_init_parameters(s1, s2)
+    init_alpha, init_mu = get_init_parameters(s1, s2)
       
     print('Training HMM...', file=sys.stderr)
-    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = init_para_func)
+    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = func_para)
 
 #     if options.verbose:
 #         exp_data.get_initial_dist(options.name + '-initial-states.bed')
@@ -68,7 +68,7 @@ if __name__ == '__main__':
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
 
     n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
-    p = m.mu[0,0]
+    p = m.mu[0,0] / n
     
     tracker.write(text=str(n) + " " + str(p), header="Binomial distr for p-value estimates (n,p)")
     
