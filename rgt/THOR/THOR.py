@@ -65,7 +65,7 @@ if __name__ == '__main__':
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
 
     n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
-    p = m.mu[0][0]
+    p = m.mu[0,0]
     print(n, p, file=sys.stderr)
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
      
