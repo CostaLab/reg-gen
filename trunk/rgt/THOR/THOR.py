@@ -35,7 +35,7 @@ if __name__ == '__main__':
     tracker = Tracker(options.name + '-setup.info')
     
     func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=200)
-    print(func_para)
+    print("func para", func_para, file=sys.stderr)
     #func_para=[[1, 2, 0.3], [1, 2, 0.3]]
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
