@@ -31,6 +31,7 @@ from neg_bin import NegBin
 def get_init_parameters(s1, s2, **info):
     alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
     mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
+    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
     
     return alpha, mu
     
