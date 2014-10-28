@@ -147,7 +147,7 @@ class MultiCoverageSet():
         last = 0
         i = 0
         while sum <= index * self.stepsize:
-            last += len(self.cov1.coverage[i])
+            last += len(self.covs[0].coverage[i])
             try:
                 r = iter.next()
             except StopIteration:
