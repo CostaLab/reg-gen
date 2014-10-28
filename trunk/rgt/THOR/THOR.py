@@ -57,8 +57,6 @@ if __name__ == '__main__':
     print('...done', file=sys.stderr)
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
-    #a = exp_data.get_observation(exp_data.indices_of_interest)
-    #print(a.shape, file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
     print("...done", file=sys.stderr)
@@ -66,7 +64,10 @@ if __name__ == '__main__':
     if options.verbose:
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
 
-#     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]})
+    n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
+    p = m.mu[0][0]
+    print(n, p, file=sys.stderr)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
      
      
     

@@ -85,7 +85,6 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     for i in range(len(DCS.indices_of_interest)):
         cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
         cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
-        print(posteriors.shape, file=sys.stderr)
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
@@ -104,24 +103,16 @@ def _compute_pvalue((x, y, side, distr)):
         return -get_log_pvalue_new(x, y, side, distr)
     
 def get_peaks(name, DCS, states, distr):
-    indices_of_interest = DCS.indices_of_interest
-    first_overall_coverage = DCS.first_overall_coverage
-    second_overall_coverage = DCS.second_overall_coverage
-    
-    c1 = list(first_overall_coverage)
-    c2 = list(second_overall_coverage)
-    
-    
     tmp_peaks = []
-    
     for i in range(len(indices_of_interest)):
         if states[i] not in [1,2]:
             continue #ignore background states
         
         strand = '+' if states[i] == 1 else '-'
         
-        cov1 = c1[indices_of_interest[i]]
-        cov2 = c2[indices_of_interest[i]]
+        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
+        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
+        
         chrom, start, end = DCS._index2coordinates(indices_of_interest[i])
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))

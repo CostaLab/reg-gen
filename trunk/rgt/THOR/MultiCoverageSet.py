@@ -168,8 +168,7 @@ class MultiCoverageSet():
         """Return indices of observations. Do not consider indices contained in <mask> array"""
         if not mask.size:
             mask = np.array([True]*self._get_bin_number())
-        print(self.overall_coverage[0][:,mask].T.shape)
-        print(self.overall_coverage[1][:,mask].T.shape)
+            
         return np.asarray(np.concatenate((self.overall_coverage[0][:,mask].T, self.overall_coverage[1][:,mask].T), axis=1))
     
     def _compute_score(self):
