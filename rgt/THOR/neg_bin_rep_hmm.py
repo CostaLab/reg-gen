@@ -203,8 +203,8 @@ class NegBinRepHMM(_BaseHMM):
     
     def _do_mstep(self, stats, params):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
-        print(self.mu, file=sys.stderr)
-        print(self.alpha, file=sys.stderr)
+        print("mu", self.mu, file=sys.stderr)
+        print("a", self.alpha, file=sys.stderr)
         self._help_do_mstep(stats)
         self.count_s1, self.count_s2 = self._count(stats['posterior'])
         self.merge_distr()
