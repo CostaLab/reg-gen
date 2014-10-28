@@ -187,7 +187,7 @@ class NegBinRepHMM(_BaseHMM):
         self._update_distr(self.mu, self.alpha, self.max_range)
     
     def _count(self, posts):
-        c_1, c_2 = 0, 0
+        c_1, c_2 = 1, 1
         
         for s0, s1, s2 in posts:        
             if s0 > 0.5:
