@@ -169,7 +169,7 @@ class MultiCoverageSet():
         if not mask.size:
             mask = np.array([True]*self._get_bin_number())
         
-        return np.asarray(np.concatenate((self.overall_coverage[0][:,mask], self.overall_coverage[1][:,mask]))).T
+        return np.asarray(np.concatenate((self.overall_coverage[0][:,mask], self.overall_coverage[1][:,mask])), axis=1)
     
     def _compute_score(self):
         """Compute score for each observation (based on Xu et al.)"""
