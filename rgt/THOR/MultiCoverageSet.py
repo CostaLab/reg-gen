@@ -71,6 +71,12 @@ class MultiCoverageSet():
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
+        for i in range(len(self.covs)):
+            rep = i if i < self.dim_1 else i-self.dim_1
+            sig = 1 if i < self.dim_1 else 2
+            
+            cov[i].write_bigwig(name + '-s%s-%s.bw' %(sig, rep), chrom_sizes)
+            
         #make data in nice list of two matrices
         tmp = [[], []]
         for k in range(2):
