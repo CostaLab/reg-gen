@@ -45,7 +45,7 @@ class NegBin():
         probs = []
         probs_log = []
         for i in range(max_range):
-            print(i, self.mu, 1./self.alpha, file=sys.stderr)
+            #print(i, self.mu, 1./self.alpha, file=sys.stderr)
             v = self.nbin(i, self.mu, 1./self.alpha)
             
             v_log = self.nbin_log(i, self.mu, 1./self.alpha)
