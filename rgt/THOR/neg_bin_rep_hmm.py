@@ -247,8 +247,8 @@ if __name__ == '__main__':
 
     m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
     
-    X, Z = m.sample(5)
-    print(type(X))
+    X, Z = m.sample(8)
+    print(X)
 #     for i, el in enumerate(X):
 #         print(el, Z[i], sep='\t')
     
@@ -262,8 +262,11 @@ if __name__ == '__main__':
     
     m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[5.,60.,7.], [6.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
     m2.fit([X])
-    e = m2.predict(X)
     
+    posteriors = m.predict_proba(X)
+    print("H")
+    print(posteriors)
+    e = m2.predict(X)
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
     
