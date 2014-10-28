@@ -104,7 +104,7 @@ def _compute_pvalue((x, y, side, distr)):
     
 def get_peaks(name, DCS, states, distr):
     tmp_peaks = []
-    for i in range(len(indices_of_interest)):
+    for i in range(len(DCS.indices_of_interest)):
         if states[i] not in [1,2]:
             continue #ignore background states
         
@@ -113,7 +113,7 @@ def get_peaks(name, DCS, states, distr):
         cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
         cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
         
-        chrom, start, end = DCS._index2coordinates(indices_of_interest[i])
+        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
 
