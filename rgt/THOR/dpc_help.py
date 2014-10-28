@@ -290,7 +290,7 @@ def input(laptop):
         options.stepsize=50
         options.binsize=100
         options.factors_inputs = None
-        options.verbose = False
+        options.verbose = True
         options.no_gc_content = False
         options.cut_obs = 1.0
     else:
