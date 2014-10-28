@@ -21,7 +21,7 @@ from dpc_help import _fit_mean_var_distr
 from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
-
+from tracker import Tracker
 
 if __name__ == '__main__':
     test = True
@@ -31,6 +31,8 @@ if __name__ == '__main__':
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, \
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes)
+    
+    tracker = Tracker(options.name + '-setup.info')
     
     func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=200)
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
@@ -66,7 +68,9 @@ if __name__ == '__main__':
 
     n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
     p = m.mu[0,0]
-    print(n, p, file=sys.stderr)
+    
+    tracker.write(text=str(n) + " " + str(p), header="Binomial distr for p-value estimates (n,p)")
+    
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
      
      
