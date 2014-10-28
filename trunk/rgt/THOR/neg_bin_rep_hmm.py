@@ -88,6 +88,8 @@ class NegBinRepHMM(_BaseHMM):
         self.para_func = para_func
         
     def _update_distr(self, mu, alpha, max_range):
+        print(mu)
+        print(alpha)
         raw1 = [NegBin(mu[0, 0], alpha[0, 0], max_range=max_range), NegBin(mu[0, 1], alpha[0, 1], max_range=max_range), NegBin(mu[0, 2], alpha[0, 2], max_range=max_range)]
         raw2 = [NegBin(mu[1, 0], alpha[1, 0], max_range=max_range), NegBin(mu[1, 1], alpha[1, 1], max_range=max_range), NegBin(mu[1, 2], alpha[1, 2], max_range=max_range)]
         
