@@ -249,6 +249,7 @@ if __name__ == '__main__':
     
     X, Z = m.sample(8)
     print(X)
+    print(X.shape)
 #     for i, el in enumerate(X):
 #         print(el, Z[i], sep='\t')
     
@@ -265,6 +266,7 @@ if __name__ == '__main__':
     
     posteriors = m.predict_proba(X)
     print("H")
+    print(posteriors.shape)
     print(posteriors)
     e = m2.predict(X)
     for i, el in enumerate(X):
