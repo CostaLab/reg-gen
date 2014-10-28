@@ -56,15 +56,10 @@ if __name__ == '__main__':
       
     print('...done', file=sys.stderr)
     
-#     if options.verbose:
-#         print('p', m.p, file=sys.stderr)
-#         print("Final HMM's transition matrix: ", file=sys.stderr)
-#         print(m._get_transmat(), file=sys.stderr)
-#          
-#     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
-#     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
-#     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-#     print("...done", file=sys.stderr)
+    print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
+    posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
+    states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
+    print("...done", file=sys.stderr)
 #      
 #     if options.verbose: 
 #         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
