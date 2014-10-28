@@ -13,6 +13,7 @@ from mpmath import gamma, rf, loggamma
 import numpy as np
 from math import log
 from numpy.random import random_sample
+import sys
 
 class NegBin():
     """Negative Binomial distribution (NB1) with continuous parameter r,
