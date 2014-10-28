@@ -197,7 +197,7 @@ class NegBinRepHMM(_BaseHMM):
                 c_1 += 1
             elif s2 > s1:
                 c_2 += 1
-
+        print(posts, c_1, c_2, file=sys.stderr)
         return c_1, c_2
         
     
