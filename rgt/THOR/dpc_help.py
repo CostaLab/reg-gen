@@ -83,8 +83,8 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g = open(name + '-states-viterbi.bed', 'w')
     
     for i in range(len(DCS.indices_of_interest)):
-        cov1 = DCS.exp_data.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
-        cov2 = DCS.exp_data.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
+        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
+        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
         
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
