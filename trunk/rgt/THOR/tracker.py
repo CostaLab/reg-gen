@@ -6,7 +6,7 @@ class Tracker:
         self.file = open(path, 'w')
     
     def write(self, text, header=None):
-        if header is not None:
+        if header:
             self.file.write('#' + header + '\n')
-        else:
-            self.file.write(text + '\n')
+        
+        self.file.write(text + '\n')
