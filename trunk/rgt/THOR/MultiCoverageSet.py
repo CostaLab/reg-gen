@@ -72,7 +72,6 @@ class MultiCoverageSet():
         self._normalization_by_signal(name, verbose)
         
         #make data in nice list of two matrices
-        #TODO seems to be space comsuimg! check that here!
         tmp = [[], []]
         for k in range(2):
             it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
@@ -242,25 +241,44 @@ class MultiCoverageSet():
                 chrom, start, end = self._index2coordinates(i)
                 print(chrom, start, end, file=f)
             
-
+    def write_test_samples(name, l):
+        f = open(name, 'w')
+        
+        for el in l:
+            print(el, file=f)
+        f.close()
     
-    def get_training_set(self, exp_data, x, verbose, name):
+    def get_training_set(self, exp_data, x, verbose, name, y):
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
-        ts1 = set()
-        ts2 = set()
+        ts1, ts2 = set(), set()
         threshold = 2.0
         diff_cov = 10
+        s1, s2 = set(), set()
 
         for i in range(len(self.indices_of_interest)):
             cov1 = exp_data.overall_coverage[0][:,self.indices_of_interest[i]].sum()
             cov2 = exp_data.overall_coverage[1][:,self.indices_of_interest[i]].sum()
             
+            #for parameter fitting for function
+            if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
+                s1.add((cov1, cov2))
+            if (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
+                s2.add((cov1, cov2))
+            
+            #for training set
             if cov1 / max(float(cov2), 1) > threshold or cov1-cov2 > diff_cov:
                 ts1.add(i)
             if cov1 / max(float(cov2), 1) < 1/threshold or cov2-cov1 > diff_cov:
                 ts2.add(i)
+        
+        if verbose:
+            write_test_samples(name + '-s1', s1)
+            write_test_samples(name + '-s2', s2)
+        
+        s1 = sample(s1, y)
+        s2 = sample(s2, y)
         
         l = min(min(len(ts1), len(ts2)), x)
         tmp = set(sample(ts1, l)) | set(sample(ts2, l))
@@ -276,23 +294,6 @@ class MultiCoverageSet():
                 training_set.add(self.indices_of_interest[i-1])
                 i -= 1
         
-        
-#        while len(training_set) < x:
-#            i = randrange(1, len(self.indices_of_interest)-1)
-#            
-#            if i in used:
-#                continue #todo: super ugly
-#            used.add(i)
-#            training_set.add(self.indices_of_interest[i])
-#            #search up
-#            while i+1 < len(self.indices_of_interest) and self.indices_of_interest[i+1] == self.indices_of_interest[i]+1:
-#                training_set.add(self.indices_of_interest[i+1])
-#                i += 1
-#            #search down
-#            while i-1 > 0 and self.indices_of_interest[i-1] == self.indices_of_interest[i]-1:
-#                training_set.add(self.indices_of_interest[i-1])
-#                i -= 1
-        
         training_set = list(training_set)
         training_set.sort()
         if verbose:
@@ -302,4 +303,4 @@ class MultiCoverageSet():
                 print(chrom, s, e, sep ='\t', file=f)
             f.close()
             
-        return np.array(training_set)
+        return np.array(training_set), s1, s2
