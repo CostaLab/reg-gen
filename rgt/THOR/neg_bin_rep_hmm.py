@@ -182,7 +182,7 @@ class NegBinRepHMM(_BaseHMM):
         for i in range(self.n_features):
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
-        tmp_a = [map(lambda m: self.get_alpha(i, m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
+        tmp_a = [map(lambda m: max(0.0001, self.get_alpha(i, m)), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         
         self.alpha = np.matrix(tmp_a)
         print("new alpha", self.alpha, file=sys.stderr)
