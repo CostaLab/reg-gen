@@ -55,8 +55,9 @@ if __name__ == '__main__':
 #         exp_data.get_initial_dist(options.name + '-initial-states.bed')
        
     m.fit([training_set_obs])
-      
+    
     print('...done', file=sys.stderr)
+    tracker.write(text=str(m.mu) + " " + str(m.alpha), header="HMM's Neg. Bin. Emission (mu,alpha)")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
