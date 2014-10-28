@@ -75,7 +75,7 @@ class MultiCoverageSet():
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
             
-            cov[i].write_bigwig(name + '-s%s-%s.bw' %(sig, rep), chrom_sizes)
+            self.covs[i].write_bigwig(name + '-s%s-%s.bw' %(sig, rep), chrom_sizes)
             
         #make data in nice list of two matrices
         tmp = [[], []]
