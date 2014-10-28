@@ -274,8 +274,8 @@ class MultiCoverageSet():
                 ts2.add(i)
         
         if verbose:
-            write_test_samples(name + '-s1', s1)
-            write_test_samples(name + '-s2', s2)
+            self.write_test_samples(name + '-s1', s1)
+            self.write_test_samples(name + '-s2', s2)
         
         s1 = sample(s1, min(y, len(s1)))
         s2 = sample(s2, min(y, len(s1)))
