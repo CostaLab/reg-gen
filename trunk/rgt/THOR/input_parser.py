@@ -34,7 +34,8 @@ def input_parser(filepath):
     regions = get_data_block(filepath, "regions")
     genome = get_data_block(filepath, "genome")
     chrom_sizes = get_data_block(filepath, "chrom_sizes")
-    inputs = get_data_block(filepath, "inputs")
+    inputs1 = get_data_block(filepath, "inputs1")
+    inputs2 = get_data_block(filepath, "inputs2")
         
     dims = [len(bamfiles_1), len(bamfiles_2)]
     
@@ -43,7 +44,7 @@ def input_parser(filepath):
     if not regions:
         regions = None
     
-    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs, dims
+    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs1 + inputs2, dims
 
 if __name__ == '__main__':
     print(input_parser('/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'))
