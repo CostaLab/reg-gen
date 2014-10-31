@@ -6,7 +6,7 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
-from dpc_help import _get_covs
+from rgt.THOR.dpc_help import _get_covs
 
 EPSILON = 1**-320
 
