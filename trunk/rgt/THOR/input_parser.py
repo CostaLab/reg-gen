@@ -39,14 +39,14 @@ def input_parser(filepath):
         
     dims = [len(bamfiles_1), len(bamfiles_2)]
     
-    if not inputs1:
-        inputs2 = None
-    if not inputs2:
-        inputs2 = None
+    if not inputs1 and not inputs2:
+        inputs = None
+    else:
+        inputs = inputs1 + inputs2
     if not regions:
         regions = None
     
-    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs1 + inputs2, dims
+    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs, dims
 
 if __name__ == '__main__':
     print(input_parser('/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'))
