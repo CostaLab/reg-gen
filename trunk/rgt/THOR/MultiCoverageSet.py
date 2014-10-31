@@ -200,7 +200,6 @@ class MultiCoverageSet():
         m = self._get_bin_number()
         n = 0.9
         self._compute_score()
-        print('scrore', len(self.scores), file=sys.stderr)
         print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
