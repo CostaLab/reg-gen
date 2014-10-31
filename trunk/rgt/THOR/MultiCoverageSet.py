@@ -63,7 +63,7 @@ class MultiCoverageSet():
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
         #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
+        #self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
         for i in range(len(self.covs)):
@@ -91,13 +91,15 @@ class MultiCoverageSet():
         if path_inputs:
             print("Normalize", file=sys.stderr)
             for i in range(len(path_bamfiles)):
-                print(i, file=sys.stderr)
+                rep = i if i < self.dim_1 else i-self.dim_1
+                sig = 1 if i < self.dim_1 else 2
                 j = 0 if i < self.dim_1 else 1
                 
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
                                                                   genome='mm9', filename=name + '-norm' + str(i), verbose=False, two_sample=False)
                 
-                print("Factor: normalize input with input factor %s" %n , file=sys.stderr)
+                print("Factor: normalize input with input factor %s (Signal %s, Rep %s)"\
+                       %(round(n, 3), sig, rep) , file=sys.stderr)
                 self.inputs[i].scale(n)
                 self.covs[i].subtract(self.inputs[i])
     
@@ -125,14 +127,12 @@ class MultiCoverageSet():
         
         
     def print_gc_hist(self, name, gc_hist):
-        #TODO: check for multivariant case!
         f = open(name + 'gc-content.data', 'w')
         for i in range(len(gc_hist)):
             print(i, gc_hist[i], file=f)
         f.close()
     
     def _norm_gc_content(self, cov, gc_cov, gc_avg):
-        #TODO: check for multivariant case!
         for i in range(len(cov)):
             assert len(cov[i]) == len(gc_cov[i])
 #            cov[i] = gc_cov[i]

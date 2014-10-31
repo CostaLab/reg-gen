@@ -83,8 +83,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g = open(name + '-states-viterbi.bed', 'w')
     
     for i in range(len(DCS.indices_of_interest)):
-        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
-        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
+        cov1, cov2 = _get_covs(DCS, i)
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
@@ -101,7 +100,14 @@ def _compute_pvalue((x, y, side, distr)):
         return sys.maxint
     else:
         return -get_log_pvalue_new(x, y, side, distr)
+
+def _get_covs(DCS, i):
+    """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
+    cov1 = np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]])
+    cov2 = np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]])
     
+    return cov1, cov2
+
 def get_peaks(name, DCS, states, distr):
     tmp_peaks = []
     for i in range(len(DCS.indices_of_interest)):
@@ -110,8 +116,7 @@ def get_peaks(name, DCS, states, distr):
         
         strand = '+' if states[i] == 1 else '-'
         
-        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]].sum()
-        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]].sum()
+        cov1, cov2 = _get_covs(DCS, i)
         
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
