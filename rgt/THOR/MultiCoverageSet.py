@@ -28,7 +28,7 @@ class MultiCoverageSet():
             self.inputs = []
     
     
-    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name):
+    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes):
         """Compute GC-content"""
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
@@ -63,7 +63,7 @@ class MultiCoverageSet():
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name)
+        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes)
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
@@ -92,15 +92,14 @@ class MultiCoverageSet():
         if path_inputs:
             for i in range(len(path_bamfiles)):
                 j = 0 if i < self.dim_1 else 1
-                cov = self.covs[i]
                 
                 print("Normalize", file=sys.stderr)
-                _, n = get_normalization_factor(path_bamfiles[i], path_inputs[j], step_width=1000, zero_counts=0, \
+                _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
                                                                   genome='mm9', filename=name + '-norm' + str(i), verbose=False, two_sample=False)
                 
                 print("Factor: normalize input with input factor %s" %n , file=sys.stderr)
                 input.scale(n)
-                cov.subtract(input)
+                self.covs[i].subtract(self.inputs[i])
     
 #     def _get_signal_sums(self):
 #         s1 = sum([sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1)])
