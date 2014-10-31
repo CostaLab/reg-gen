@@ -121,12 +121,12 @@ class MultiCoverageSet():
         print("Normalize by signal", file=sys.stderr)
         
         means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
-        max = means_signal.index(max(means_signal))
+        max_index = means_signal.index(max(means_signal))
         
-        if max == 1:
+        if max_index == 1:
             r = range(self.dim_1)
             f = means_signal[1] / means_signal[0]
-        if max == 0:
+        if max_index == 0:
             r = range(self.dim_1, self.dim_1 + self.dim_2)
             f = means_signal[0] / means_signal[1]
         
