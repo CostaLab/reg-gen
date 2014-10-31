@@ -44,7 +44,7 @@ class MultiCoverageSet():
                 self._norm_gc_content(input.coverage, gc_content_cov, avg_gc_content)
             
                 if verbose:
-                    self.print_gc_hist(name + '-s%s-rep%s-hist' %(sig, rep), gc_hist)
+                    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
                     input.write_bigwig(name + '-s%s-rep%s-input-gc.bw' %(sig, rep), chrom_sizes)
                     cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         else:
@@ -63,7 +63,7 @@ class MultiCoverageSet():
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes)
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
@@ -98,7 +98,7 @@ class MultiCoverageSet():
                                                                   genome='mm9', filename=name + '-norm' + str(i), verbose=False, two_sample=False)
                 
                 print("Factor: normalize input with input factor %s" %n , file=sys.stderr)
-                input.scale(n)
+                self.inputs[i].scale(n)
                 self.covs[i].subtract(self.inputs[i])
     
 #     def _get_signal_sums(self):
