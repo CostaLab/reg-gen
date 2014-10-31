@@ -24,7 +24,7 @@ class MultiCoverageSet():
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
-                print(i, file=sys.stderr)
+                print(i, exts_inputs[i], file=sys.stderr)
         else:
             self.inputs = []
     
