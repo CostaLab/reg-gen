@@ -117,6 +117,7 @@ class MultiCoverageSet():
             #if i == max_index:
             #    continue
             #print('normalize signal', file=sys.stderr)
+            print(i, file=sys.stderr)
             avg = sum(signals)/float(len(signals))
             f = avg / float(signals[i])
             #print(i, f, avg, file=sys.stderr)
