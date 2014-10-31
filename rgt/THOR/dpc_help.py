@@ -184,7 +184,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
             e, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
             exts.append(e)
         print(exts, file=sys.stderr)
-    print(inputs, exts_inputs, file=sys.stderr)
+
     if inputs and not exts_inputs:
         print("Computing read extension sizes for input-DNA...", file=sys.stderr)
         for input in inputs:
