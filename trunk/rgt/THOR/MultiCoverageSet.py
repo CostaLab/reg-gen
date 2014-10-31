@@ -117,17 +117,22 @@ class MultiCoverageSet():
     
     def _normalization_by_signal(self, name, verbose):
         """Normalize signal"""
-        #find maximum sample
         signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-        #print('all signals ', signals, file=sys.stderr)
         print("Normalize by signal", file=sys.stderr)
-        for i in range(self.dim_1 + self.dim_2):
-            #if i == max_index:
-            #    continue
-            #print('normalize signal', file=sys.stderr)
-            avg = np.mean(signals)
-            f = avg / float(signals[i])
-            #print(i, f, avg, file=sys.stderr)
+        
+        means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
+        max = means_signal.index(max(means_signal))
+        
+        if max == 1:
+            r = range(self.dim_1)
+            f = means_signal[1] / means_signal[0]
+        if max == 0:
+            r = range(self.dim_1, self.dim_1 + self.dim_2)
+            f = means_signal[0] / means_signal[1]
+        
+        print(r, f, file=sys.stderr)
+        
+        for i in r:
             self.covs[i].scale(f)
         
         
