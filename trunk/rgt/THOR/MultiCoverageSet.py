@@ -19,11 +19,12 @@ class MultiCoverageSet():
             c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
         
-        if path_inputs: #inputs should be empty or len=2
+        if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
-            for i  in range(len(self.inputs)):
-                input.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
+            for i, c in enumerate(self.inputs):
+                c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
+                print(i, file=sys.stderr)
         else:
             self.inputs = []
     
