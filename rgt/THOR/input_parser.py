@@ -39,8 +39,10 @@ def input_parser(filepath):
         
     dims = [len(bamfiles_1), len(bamfiles_2)]
     
-    if not inputs:
-        inputs = None
+    if not inputs1:
+        inputs2 = None
+    if not inputs2:
+        inputs2 = None
     if not regions:
         regions = None
     
