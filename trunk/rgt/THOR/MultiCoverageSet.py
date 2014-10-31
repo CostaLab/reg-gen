@@ -33,7 +33,6 @@ class MultiCoverageSet():
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
             for i, cov in enumerate(self.covs):
-                print(i, file=sys.stderr)
                 input = self.inputs[i] #1 to 1 mapping between input and cov
                 
                 rep = i if i < self.dim_1 else i-self.dim_1
@@ -91,6 +90,7 @@ class MultiCoverageSet():
         """Normalize with regard to input file"""
         if path_inputs:
             for i in range(len(path_bamfiles)):
+                print(i, file=sys.stderr)
                 j = 0 if i < self.dim_1 else 1
                 
                 print("Normalize", file=sys.stderr)
