@@ -6,7 +6,7 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
-from rgt.THOR.dpc_help import _get_covs
+
 
 EPSILON = 1**-320
 
@@ -27,6 +27,12 @@ class MultiCoverageSet():
         else:
             self.inputs = []
     
+    def _get_covs(DCS, i):
+        """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
+        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
+        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+    
+        return cov1, cov2
     
     def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes):
         """Compute GC-content"""
