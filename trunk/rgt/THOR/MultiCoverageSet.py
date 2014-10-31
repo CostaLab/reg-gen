@@ -120,12 +120,11 @@ class MultiCoverageSet():
         #find maximum sample
         signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
         #print('all signals ', signals, file=sys.stderr)
-        
+        print("Normalize by signal", file=sys.stderr)
         for i in range(self.dim_1 + self.dim_2):
             #if i == max_index:
             #    continue
             #print('normalize signal', file=sys.stderr)
-            print(i, file=sys.stderr)
             avg = np.mean(signals)
             f = avg / float(signals[i])
             #print(i, f, avg, file=sys.stderr)
@@ -269,7 +268,7 @@ class MultiCoverageSet():
         s1, s2 = set(), set()
 
         for i in range(len(self.indices_of_interest)):
-            cov1, cov2 = _get_covs(exp_data, i)
+            cov1, cov2 = self._get_covs(exp_data, i)
             
             #for parameter fitting for function
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
