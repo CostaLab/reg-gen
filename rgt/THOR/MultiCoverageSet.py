@@ -27,7 +27,7 @@ class MultiCoverageSet():
         else:
             self.inputs = []
     
-    def _get_covs(DCS, i):
+    def _get_covs(self, DCS, i):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
         cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
         cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
