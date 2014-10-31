@@ -103,8 +103,8 @@ def _compute_pvalue((x, y, side, distr)):
 
 def _get_covs(DCS, i):
     """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
-    cov1 = np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]])
-    cov2 = np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]])
+    cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
+    cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
     
     return cov1, cov2
 
@@ -197,6 +197,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
             exts_inputs.append(e)
         print(exts_inputs, file=sys.stderr)
     
+    return exts
 #    if verbose:
 #        if 'values_1' in locals() and values_1 is not None:
 #            with open(name + '-read-ext-1', 'w') as f:
@@ -205,7 +206,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
 
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content):
+               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -229,8 +230,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
     
     regionset.sequences.sort()
-    _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
-
+    exts = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
+    tracker.write(text=str(ext.strip('[]')), header="Extension size (rep1, rep2, input1, input2)")
+    
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content)

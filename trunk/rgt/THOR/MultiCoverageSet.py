@@ -6,7 +6,7 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
-
+from dpc_help import _get_covs
 
 EPSILON = 1**-320
 
@@ -120,7 +120,7 @@ class MultiCoverageSet():
             #    continue
             #print('normalize signal', file=sys.stderr)
             print(i, file=sys.stderr)
-            avg = sum(signals)/float(len(signals))
+            avg = np.mean(signals)
             f = avg / float(signals[i])
             #print(i, f, avg, file=sys.stderr)
             self.covs[i].scale(f)
@@ -177,7 +177,7 @@ class MultiCoverageSet():
     
     def _compute_score(self):
         """Compute score for each observation (based on Xu et al.)"""
-        self.scores = sum([np.squeeze(np.asarray(np.sum(self.overall_coverage[i], axis=0))) / float(self.overall_coverage[i].sum()) for i in range(2)])
+        self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
     
     def _get_bin_number(self):
         return self.overall_coverage[0].shape[1]
@@ -190,10 +190,11 @@ class MultiCoverageSet():
         m = self._get_bin_number()
         n = 0.9
         self._compute_score()
+        print('scrore', len(self.scores), file=sys.stderr)
         print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
-        tmp = np.where(np.squeeze(np.asarray(sum(self.overall_coverage[0]))) + np.squeeze(np.asarray(sum(self.overall_coverage[1]))) > 3)[0]
+        tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
         print('length of intersection set: ', len(tmp), file=sys.stderr)
         self.indices_of_interest = tmp2
@@ -262,8 +263,7 @@ class MultiCoverageSet():
         s1, s2 = set(), set()
 
         for i in range(len(self.indices_of_interest)):
-            cov1 = exp_data.overall_coverage[0][:,self.indices_of_interest[i]].sum()
-            cov2 = exp_data.overall_coverage[1][:,self.indices_of_interest[i]].sum()
+            cov1, cov2 = _get_covs(exp_data, i)
             
             #for parameter fitting for function
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
