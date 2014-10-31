@@ -24,34 +24,29 @@ class MultiCoverageSet():
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
-                print(i, exts_inputs[i], file=sys.stderr)
         else:
             self.inputs = []
     
     
-    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input):
+    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name):
         """Compute GC-content"""
-        #TODO: check for multivariant case!
         if not no_gc_content and path_inputs:
+            print("Compute GC-content", file=sys.stderr)
             for i, cov in enumerate(self.covs):
-                print("Compute GC-content", file=sys.stderr)
-                if not no_gc_content and self.inputs: #if exists, load proper input file
-                    j = 0 if i < self.dim_1 else 1 
-                    input = self.inputs[j]
-                    
-                if verbose:
-                    cov.write_bigwig(name + '-gc-s%s-1.bw' %i, chrom_sizes)
+                print(i, file=sys.stderr)
+                input = self.inputs[i] #1 to 1 mapping between input and cov
                 
+                rep = i if i < self.dim_1 else i-self.dim_1
+                sig = 1 if i < self.dim_1 else 2
+                  
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input.coverage)
                 self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(input.coverage, gc_content_cov, avg_gc_content)
             
                 if verbose:
-                    self.print_gc_hist(name + '-s%s-' %i, gc_hist)
-                    if path_inputs:
-                        input.write_bigwig(name + '-gc-s%s-input-2.bw' %i, chrom_sizes)
-                    cov.write_bigwig(name + '-gc-s%s-2.bw' %i, chrom_sizes)
-                    #input['cov-ip'].write_bed(name + '-gc-s%s-2.bed' %i)
+                    self.print_gc_hist(name + '-s%s-rep%s-hist' %(sig, rep), gc_hist)
+                    input.write_bigwig(name + '-s%s-rep%s-input-gc.bw' %(sig, rep), chrom_sizes)
+                    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         else:
             print("Do not compute GC-content", file=sys.stderr)
     
@@ -68,7 +63,7 @@ class MultiCoverageSet():
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input)
+        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name)
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
