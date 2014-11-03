@@ -269,7 +269,7 @@ class MultiCoverageSet():
         ts1, ts2 = set(), set()
         threshold = 2.0
         diff_cov = 10
-        s1, s2 = set(), set()
+        s0, s1, s2 = set(), set(), set()
 
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
@@ -277,8 +277,10 @@ class MultiCoverageSet():
             #for parameter fitting for function
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
                 s1.add((cov1, cov2))
-            if (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
+            elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                 s2.add((cov1, cov2))
+            else:
+                s0.add((cov1, cov2))
             
             #for training set
             if cov1 / max(float(cov2), 1) > threshold or cov1-cov2 > diff_cov:
@@ -290,6 +292,7 @@ class MultiCoverageSet():
             self.write_test_samples(name + '-s1', s1)
             self.write_test_samples(name + '-s2', s2)
         
+        s0 = sample(s0, min(y, len(s0)))
         s1 = sample(s1, min(y, len(s1)))
         s2 = sample(s2, min(y, len(s2)))
         
@@ -316,4 +319,4 @@ class MultiCoverageSet():
                 print(chrom, s, e, sep ='\t', file=f)
             f.close()
             
-        return np.array(training_set), s1, s2
+        return np.array(training_set), s0, s1, s2
