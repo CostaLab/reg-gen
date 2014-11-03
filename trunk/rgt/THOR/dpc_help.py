@@ -197,7 +197,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
             exts_inputs.append(e)
         print(exts_inputs, file=sys.stderr)
     
-    return exts
+    return exts, exts_inputs
 #    if verbose:
 #        if 'values_1' in locals() and values_1 is not None:
 #            with open(name + '-read-ext-1', 'w') as f:
@@ -230,7 +230,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
     
     regionset.sequences.sort()
-    exts = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
+    exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
     tracker.write(text=str(exts).strip('[]'), header="Extension size (rep1, rep2, input1, input2)")
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
