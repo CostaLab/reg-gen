@@ -24,7 +24,7 @@ import multiprocessing
 from tracker import Tracker
 
 if __name__ == '__main__':
-    test = False
+    test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
@@ -44,10 +44,10 @@ if __name__ == '__main__':
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
     
-    training_set, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 50000), options.verbose, options.name, 5000)
+    training_set, s0, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 50000), options.verbose, options.name, 5000)
     training_set_obs = exp_data.get_observation(training_set)
     
-    init_alpha, init_mu = get_init_parameters(s1, s2)
+    init_alpha, init_mu = get_init_parameters(s0, s1, s2)
       
     print('Training HMM...', file=sys.stderr)
     m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = func_para)

@@ -28,40 +28,19 @@ import scipy.optimize as optimize
 import numpy as np
 from neg_bin import NegBin
 
-def get_init_parameters(s1, s2, **info):
-    alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
-    mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
-    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
+def get_init_parameters(s0, s1, s2, **info):
+    mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
+    var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
+    
+    alpha = (var - mu) / np.square(mu)
+    alpha[alpha < 0] = min(alpha[0,1], alpha[1,2])
+    
+    print('initial:', mu, file=sys.stderr)
+    print('initial:', alpha, file=sys.stderr)
+    #alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
+    #mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
     
     return alpha, mu
-    
-    #tmp = sum( [ first_overall_coverage[i] + second_overall_coverage[i] for i in indices_of_interest]) / 2
-    n_ = np.array([info['count'], info['count']])
-    #print('n_: ', n_, file=sys.stderr)
-    
-    #_, s1, s2 = _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x, threshold, diff_cov)
-    
-    #get observation that occurs most often:
-    m_ =[float(np.argmax(np.bincount(map(lambda x: x[0], s1)))), float(np.argmax(np.bincount(map(lambda x: x[1], s2)))) ]
-    #print('m_', m_, file=sys.stderr)
-    
-    p_ = [[-1,-1,-1],[-1,-1,-1]] #first: 1. or 2. emission, second: state
-    
-    p_[0][0] = 1. / n_[0]
-    p_[1][0] = 1. / n_[1]
-       
-    p_[0][1] = m_[0] / n_[0]
-    p_[1][1] = p_[1][0]
-    
-    p_[0][2] = p_[0][0]
-    p_[1][2] = m_[1] / n_[1]
-    
-    #print('p_', p_, file=sys.stderr)
-    
-    return n_, p_
-
-
-    
     
 class NegBinRepHMM(_BaseHMM):
     def __init__(self, alpha, mu, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=3, covariance_type='diag', startprob=[1, 0, 0],
