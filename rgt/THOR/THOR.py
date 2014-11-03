@@ -44,7 +44,7 @@ if __name__ == '__main__':
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
     
-    training_set, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, 10000)
+    training_set, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 50000), options.verbose, options.name, 5000)
     training_set_obs = exp_data.get_observation(training_set)
     
     init_alpha, init_mu = get_init_parameters(s1, s2)
