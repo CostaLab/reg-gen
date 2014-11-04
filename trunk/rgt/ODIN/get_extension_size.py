@@ -64,4 +64,10 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     return max(r)[1], r
 
 
+if __name__ == '__main__':
+    a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
+    print(a, b)
+    
+    
+    
     
