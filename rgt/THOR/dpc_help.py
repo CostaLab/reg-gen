@@ -196,7 +196,8 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
         print('exts_inputs', exts_inputs, file=sys.stderr)
         
         for inp in inputs:
-            e, _ = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
+            e, b = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
+            print(b, file=sys.stderr)
             print(inp, e, file=sys.stderr)
             exts_inputs.append(e)
             print(exts_inputs, file=sys.stderr)
