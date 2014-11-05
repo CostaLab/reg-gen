@@ -3,6 +3,9 @@
 # Libraries
 ###################################################################################################
 
+# Python
+from gc import collect
+
 # Internal
 from .. Util import ErrorHandler
 
@@ -49,6 +52,8 @@ def match_single(motif, sequence, genomic_region, output_file):
             if(motif.max > motif.threshold):
                 norm_score = int( ( (score - motif.threshold) * 1000.0) / (motif.max - motif.threshold) )
             else: norm_score = 1000
+
+            # Writing motifs
             output_file.write("\t".join([genomic_region.chrom,str(p1),str(p2),motif.name,str(norm_score),strand])+"\n")
 
 def match_multiple(motif_name_list, motif_pssm_list, motif_thresh_list, motif_ispalindrome_list, motif_max_list, motif_len_list,
