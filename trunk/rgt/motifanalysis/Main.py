@@ -286,15 +286,19 @@ def main_matching():
         output_file_name = os.path.join(matching_output_location, genomic_region_set.name+"_mpbs")
         bed_file_name = output_file_name+".bed"
         output_file = open(bed_file_name,"w")
-    
+        
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            # Perform motif matching
-            for motif in motif_list: match_single(motif, sequence, genomic_region, output_file)
+            # Splitting the sequence in smaller sequences to remove the "N" regions
+            sequence_list = filter(None,sequence.split("N"))
+
+            # Perform motif matching for each motif in each sequence
+            for seq in sequence_list:
+                for motif in motif_list: match_single(motif, seq, genomic_region, output_file)
 
         # Closing file
         output_file.close()
