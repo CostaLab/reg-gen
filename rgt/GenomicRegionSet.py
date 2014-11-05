@@ -690,18 +690,16 @@ class GenomicRegionSet:
         
         """
         
-        a = copy.deepcopy(self)
-        b = copy.deepcopy(y)
         
-        z = GenomicRegionSet(a.name + ' - ' + b.name)
-        if len(a) == 0 or len(b) == 0: return a
+        z = GenomicRegionSet(self.name + ' - ' + y.name)
+        if len(self) == 0 or len(y) == 0: return self
         
         # If there is overlap within self or y, they should be merged first. 
-        if a.sorted == False: 
-            a.sort()
-        b.merge()
+        if self.sorted == False: 
+            self.sort()
+        b = y.merge(w_return=True)
 
-        iter_a = iter(a)
+        iter_a = iter(self)
         s = iter_a.next()
         last_j = len(b)-1
         j = 0
@@ -800,56 +798,7 @@ class GenomicRegionSet:
                     cont_overlap = False
                     
         return z
-        """
-        ################################
-        if len(self) == 0:
-            return GenomicRegionSet(self.name + ' - ' + y.name)
-        elif len(y) == 0:
-            return self
-        else:
-            z = GenomicRegionSet(self.name + ' - ' + y.name)
-            if self.sorted == False: self.sort()
-            if y.sorted == False: y.sort()
-            con_self = self.__iter__()
-            con_y = y.__iter__()
-            s = con_self.next()
-            ss = con_y.next()
-            cont_loop = True
-            while cont_loop:
-                # When the regions overlap
-                if s.overlap(ss):
-                    if whole_region:
-                        try: s = con_self.next()
-                        except:  cont_loop = False
-                    else:
-                        if s.initial < ss.initial:
-                            z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=ss.initial))
-                        if s.final > ss.final:
-                            s.initial = ss.final
-                            try: ss = con_y.next()
-                            except:
-                                z.add(GenomicRegion(chrom=s.chrom, initial=ss.final, final=s.final))
-                                try: s = con_self.next()
-                                except: cont_loop = False
-                        else:
-                            try: s = con_self.next()
-                            except: cont_loop = False 
-                # When the region have no overlap
-                elif s < ss:
-                    z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final))
-                    try: s = con_self.next()
-                    except:
-                        try: ss = con_y.next()
-                        except: cont_loop = False
-                elif s > ss:
-                    try: ss = con_y.next()
-                    except:
-                        z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final))
-                        try: s = con_self.next()
-                        except: cont_loop = False
-            #z.sort()
-            return z
-        """
+        
     def subtract_aregion(self,y):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         

@@ -864,9 +864,9 @@ class Intersect:
     def __init__(self, reference_path, query_path, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(reference_path)
-        self.qEM.read(query_path)
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
+        self.qEM.read(query_path)
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
@@ -1406,7 +1406,8 @@ class Intersect:
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
                 
-        axs[-1].legend(legends, self.color_tags, loc='upper left', handlelength=1, handletextpad=1, 
+        legend_name = reversed(self.color_tags)
+        axs[-1].legend(legends, legend_name, loc='upper left', handlelength=1, handletextpad=1, 
                   columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 1))
         if self.mode_count == "bp":
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
@@ -2279,8 +2280,9 @@ class Lineplot:
                         
                         #cbar = grid.cbar_axes[i//2].colorbar(im)
                         cbar = plt.colorbar(im, cax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
+                        #cbar = plt.colorbar(im, cax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
                         cbar.outline.set_linewidth(0.5)
-                        cbar.ax.xaxis.set_ticks_position('none')
+                        #cbar.ax.xaxis.set_ticks_position('none')
                         if logt:
                             cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
                             cbar.set_label('log10', fontsize=tickfontsize)
