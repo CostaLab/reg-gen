@@ -61,11 +61,12 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     
     r = map(ccf, range(start, end, stepsize) )
     
-    return max(r)[1], r
+    return max(r[1:])[1], r[1:]
 
 
 if __name__ == '__main__':
-    a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
+    #a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
+    a, b = get_extension_size('/home/manuel/data/testdata/PU1_cDC.chr1-2.bam')
     print(a, b)
     
     
