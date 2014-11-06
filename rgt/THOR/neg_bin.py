@@ -85,7 +85,7 @@ class NegBin():
     
 
 if __name__ == '__main__':
-    neg_bin = NegBin(15, 0.2, max_range=90)
+    neg_bin = NegBin(15, 0.2, max_range=50)
     s=0
     ew = 0
     for i in range(100):
