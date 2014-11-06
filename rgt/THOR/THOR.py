@@ -50,7 +50,7 @@ if __name__ == '__main__':
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
       
     print('Training HMM...', file=sys.stderr)
-    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = func_para)
+    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = func_para, max_range=5000)
 
 #     if options.verbose:
 #         exp_data.get_initial_dist(options.name + '-initial-states.bed')

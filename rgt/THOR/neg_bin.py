@@ -32,6 +32,7 @@ class NegBin():
         self.map_logpdf = {}
         self.bins = []
         mu = float(mu)
+        self.max_range = max_range
         
         self.alpha = alpha
         self.mu = mu
@@ -44,7 +45,7 @@ class NegBin():
         
         probs = []
         probs_log = []
-        for i in range(max_range):
+        for i in range(self.max_range + 1):
             #print(i, self.mu, 1./self.alpha, file=sys.stderr)
             v = self.nbin(i, self.mu, 1./self.alpha)
             
@@ -62,12 +63,20 @@ class NegBin():
         #self.dist = rv_discrete(values=([i for i in range(c)], map(lambda x: float(x), [self.pdf(i) for i in range(c)])), name='dist')
 
     def pdf(self, x):
-        global map_pdf
-        return self.map_pdf[x]
+        #global map_pdf
+        if x >= self.max_range:
+            print('overflow pdf ', x, self.max_range, file=sys.stderr)
+            return self.map_pdf[self.max_range]
+        else:
+            return self.map_pdf[x]
     
     def logpdf(self, x):
-        global map_logpdf
-        return self.map_logpdf[x]
+        #global map_logpdf
+        if x >= self.max_range:
+            print('overflow logpdf ', x, self.max_range, file=sys.stderr)
+            return self.map_logpdf[self.max_range]
+        else:
+            return self.map_logpdf[x]
     
     def rvs(self):
         return np.digitize(random_sample(1), self.bins)[0]
@@ -76,7 +85,7 @@ class NegBin():
     
 
 if __name__ == '__main__':
-    neg_bin = NegBin(15, 0.2)
+    neg_bin = NegBin(15, 0.2, max_range=90)
     s=0
     ew = 0
     for i in range(100):
