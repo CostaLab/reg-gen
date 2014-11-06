@@ -49,7 +49,7 @@ class NegBinRepHMM(_BaseHMM):
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=10, thresh=1e-2,
                  params=string.ascii_letters,
-                 init_params=string.ascii_letters, para_func=[[1,1,1], [1,1,1]]):
+                 init_params=string.ascii_letters, para_func=[[1,1,1], [1,1,1]], max_range=500):
     
         _BaseHMM.__init__(self, n_components, startprob, transmat,
                           startprob_prior=startprob_prior,
@@ -62,7 +62,7 @@ class NegBinRepHMM(_BaseHMM):
         self.n_features = 2 #sum(self.dim) #emission dimension
         self.alpha = alpha
         self.mu = mu
-        self.max_range = 500
+        self.max_range = max_range
         self._update_distr(self.mu, self.alpha, self.max_range)
         self.para_func = para_func
         
