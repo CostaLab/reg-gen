@@ -14,6 +14,8 @@ import multiprocessing
 from input_parser import input_parser
 #from rgt.ODIN import ODIN
 from numpy import linspace
+import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 from matplotlib.pyplot import *
 from random import sample
 
@@ -49,9 +51,7 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
         res = []
         for i in range(2):
             m = map(lambda x: x[0], data_rep[i]) #means list
-#             m = sample(m, min(sample_size, len(m)))
             v = map(lambda x: x[1], data_rep[i]) #vars list
-#             v = sample(v, min(sample_size, len(v)))
             
             p = np.polynomial.polynomial.polyfit(m, v, 2)
             res.append(p)
@@ -287,8 +287,8 @@ def input(laptop):
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.exts = None #[200, 200, 200, 200]
-        options.exts_inputs = None #[200, 200]
+        options.exts = [200, 200, 200, 200, 200]
+        options.exts_inputs = [200, 200, 200, 200, 200]
         options.pcutoff = 1
         options.name='test'
         options.stepsize=50
@@ -308,7 +308,7 @@ def input(laptop):
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
-        parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="float",\
+        parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
@@ -334,6 +334,12 @@ def input(laptop):
         config_path = args[0]
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         
+        if options.exts and len(options.exts) != len(bamfiles):
+            parser.error("Number of Extension Sizes must equal number of bamfiles")
+                
+        
+        if options.exts_inputs and len(options.exts_inputs) != len(inputs):
+            parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
 #        bamfile_2 = args[1]
 #        regions = args[2]
 #        genome = args[3]
