@@ -23,10 +23,10 @@ class GenomicVariant(GenomicRegion):
         self.info = info
         self.format = format
         self.genotype = genotype
-        self.sample = samples
+        self.samples = samples
         
         self.name = self.__str__
-        self.data = "_$_".join(map(lambda x: str(x), [self.id, self.ref, self.alt, self.qual, self.filter, self.info, self.format, self.genotype, self.sample]))
+        self.data = "_$_".join(map(lambda x: str(x), [self.id, self.ref, self.alt, self.qual, self.filter, self.info, self.format, self.genotype, self.samples]))
     
     def __str__(self):
         """Give informal string representation"""
