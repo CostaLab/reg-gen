@@ -45,7 +45,7 @@ class GenomicVariantSet(GenomicRegionSet):
          
         writer = vcf.Writer(open(vcf_path, 'w'), self.reader)
         for v in self.sequences:
-            record = vcf.model._Record(v.chrom, v.pos, v.id, v.ref, v.alt, v.qual, [], v.info, v.format, [], v.sample)
+            record = vcf.model._Record(v.chrom, v.pos, v.id, v.ref, v.alt, v.qual, [], v.info, v.format, [], v.samples)
             writer.write_record(record)
  
     def filter_dbSNP(self):
