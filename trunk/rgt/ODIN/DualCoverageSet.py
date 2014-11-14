@@ -10,7 +10,7 @@ from normalize import get_normalization_factor
 
 class DualCoverageSet():
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
-                 input_1, ext_input_1, input_factor_1, chrom_sizes_dict, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
+                 input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
                  factor_input_1, factor_input_2, chrom_sizes_dict):
         self.genomicRegions = region
         self.binsize = binsize
