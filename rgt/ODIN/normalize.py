@@ -14,23 +14,6 @@ from math import fabs
 import pysam, sys, operator, os.path
 from itertools import chain
  
-CHROM_LEN_MOUSE = { 'chr1' : 197195432, 'chr2':181748087,'chr3': 159599783,'chr4': 155630120,
-             'chr5': 152537259,'chr6': 149517037,'chr7': 152524553,'chr8': 131738871,
-             'chr9': 124076172,'chr10': 129993255,'chr11': 121843856,'chr12': 121257530,
-             'chr13': 120284312,'chr14': 125194864,'chr15': 103494974,'chr16': 98319150,
-             'chr17': 95272651,'chr18': 90772031,'chr19': 61342430,'chrX': 166650296,
-             'chrY': 15902555} #, 'chrM': 16299}
- 
-CHROM_LEN_HUMAN = { 'chr1' : 249250621, 'chr2': 243199373,'chr3': 198022430,'chr4': 191154276,
-             'chr5': 180915260,'chr6': 171115067,'chr7': 159138663,'chr8': 146364022,
-             'chr9': 141213431,'chr10': 135534747,'chr11': 135006516,'chr12': 133851895,
-             'chr13': 115169878,'chr14': 107349540,'chr15': 102531392,'chr16': 90354753,
-             'chr17': 81195210,'chr18': 78077248,'chr19': 59128983,'chr20': 63025520, 
-             'chr21': 48129895, 'chr22': 51304566, 'chrX': 155270560, 'chrY': 59373566}
-             
-
-# CHROM_LEN_MOUSE = { 'chr1' : 23258400, 'chr2': 4000010}
-
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
     def error(self, msg):

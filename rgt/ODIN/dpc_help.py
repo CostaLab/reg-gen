@@ -423,6 +423,6 @@ def input(laptop):
 #         _check_order(options.deadzones, regions, parser)
     
     if not which("wigToBigWig"):
-        print("wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
+        print("Warning: wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
     
     return options, bamfile_1, bamfile_2, genome, chrom_sizes
