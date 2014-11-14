@@ -65,7 +65,7 @@ class DualCoverageSet():
             input = map_input[i]
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
-            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2)
+            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict)
             #print(sum([sum(self.cov1.coverage[j]) for j in range(len(self.cov1.genomicRegions))]), file=sys.stderr)
             #print(sum([sum(self.cov2.coverage[j]) for j in range(len(self.cov2.genomicRegions))]), file=sys.stderr)
             
@@ -84,7 +84,7 @@ class DualCoverageSet():
         self.indices_of_interest = []
     
     
-    def normalization(self, map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2):
+    def normalization(self, map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict):
         input = map_input[i]
         
         #compute normalization factor
