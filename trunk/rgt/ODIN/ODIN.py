@@ -53,7 +53,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = False
+    test = True
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
     #print(options.verbose, file=sys.stderr)
     ######### WORK! ##########

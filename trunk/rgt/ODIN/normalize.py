@@ -208,9 +208,10 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     
     return _get_lists(count_list, zero_counts, two_sample)
 
-def work(first_path, second_path, step_width, zero_counts, genome, two_sample):
+def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict):
     """work"""
-    CHROM_LEN = CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
+    CHROM_LEN = chrom_sizes_dict #CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
+    print(CHROM_LEN)
     #counts_1, counts_1 is a genomicarray (HTSeq) describing chr und pos of reads
     #print("Reading first input file...", file=sys.stderr)
     counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path)
@@ -226,11 +227,11 @@ def work(first_path, second_path, step_width, zero_counts, genome, two_sample):
     
     return pq_list, max_index, max_value, factor1, factor2, chromosomes
 
-def get_normalization_factor(first_path, second_path, step_width, zero_counts, genome, filename, verbose, two_sample=False):
+def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, verbose, chrom_sizes_dict, two_sample=False):
     """Return normalization factor (see Diaz et al) for the input
     if two_sample is True: compare sample with index of 0.15"""
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
-    work(first_path, second_path, step_width, zero_counts, genome, two_sample)
+    work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict)
     
     
     
