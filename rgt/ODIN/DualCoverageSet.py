@@ -11,7 +11,7 @@ from normalize import get_normalization_factor
 class DualCoverageSet():
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
                  input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
-                 factor_input_1, factor_input_2):
+                 factor_input_1, factor_input_2, chrom_sizes_dict):
         self.genomicRegions = region
         self.binsize = binsize
         self.stepsize = stepsize
@@ -123,7 +123,7 @@ class DualCoverageSet():
         if norm_strategy == 2:
             print("Normalize by input (Diaz)", file=sys.stderr)
             _, input['input_factor'] = get_normalization_factor(input['ip'], input['input'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False) #todo: solve the genome parameter
+                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             print("Factor: normalize file %s with input normalization factor %s" %(i, input['input_factor']), file=sys.stderr)
             input['cov-input'].scale(input['input_factor']) #scale input for normalization
             input['cov-ip'].subtract(input['cov-input']) #TODO: case: multiple input files
@@ -132,7 +132,7 @@ class DualCoverageSet():
         if not norm_done and norm_strategy == 3:
             print("Normalize by own method", file=sys.stderr)
             smaller_sample, factor = get_normalization_factor(map_input[1]['ip'], map_input[2]['ip'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm'+ str(i), verbose=verbose, two_sample=True)
+                                                              filename=name + '-norm'+ str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=True)
             factor = max(1/factor, factor) #increase current
             print("Factor: normalize file %s with factor %s" %(smaller_sample, factor), file=sys.stderr)
             map_input[smaller_sample]['cov-ip'].scale(factor)
@@ -143,9 +143,9 @@ class DualCoverageSet():
             print("Normalize by input (Diaz) and our own method", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
+                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
+                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             
             print("Factor: normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
@@ -156,7 +156,7 @@ class DualCoverageSet():
             
             #apply our own
             smaller_sample, factor = get_normalization_factor(map_input[1]['ip'], map_input[2]['ip'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm-sample' + str(i), verbose=verbose, two_sample=True)
+                                                              filename=name + '-norm-sample' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=True)
             
             factor = max(1/factor, factor) #increase current
             print("Factor: normalize file %s with factor %s" %(smaller_sample, factor), file=sys.stderr)
@@ -168,9 +168,9 @@ class DualCoverageSet():
             print("Normalizing...", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
+                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'], step_width=1000, zero_counts=0, \
-                                                              genome='mm9', filename=name + '-norm' + str(i), verbose=verbose, two_sample=False)
+                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             
             print("Normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])

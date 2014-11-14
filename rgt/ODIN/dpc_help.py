@@ -142,7 +142,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                factor_input_1, factor_input_2):
     
     regionset = GenomicRegionSet(name)
-    
+    chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
     if regions is not None:
@@ -159,6 +159,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                 line = line.split('\t')
                 chrom, end = line[0], int(line[1])
                 regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                chrom_sizes_dict[chrom] = end
     
     regionset.sequences.sort()
     
@@ -214,7 +215,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                                   input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1, \
                                   input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
-                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2)
+                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict)
     
     return cov_cdp_mpp, [ext_1, ext_2]
 
@@ -250,6 +251,27 @@ class HelpfulOptionParser(OptionParser):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
+def which(program):
+    """Return path of program or None, see
+    http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python"""
+    
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            path = path.strip('"')
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+
+    return None
+
 def input(laptop):
     parser = HelpfulOptionParser(usage=__doc__)
     
@@ -273,14 +295,14 @@ def input(laptop):
         options.ext_1 = 200
         options.ext_2 = 200
         options.ext_input_1 = None #200
-        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.ext_input_2 = None #200
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 1
-        options.name='testODIN-poisson-chr1'
-        options.distr='poisson'
+        options.name='test'
+        options.distr='binom'
         options.constchrom = None #'chr1'
         options.stepsize=50
         options.binsize=100
@@ -399,5 +421,8 @@ def input(laptop):
 #     if options.deadzones is not None:
 #         #check the ordering of deadzones and region
 #         _check_order(options.deadzones, regions, parser)
+    
+    if not which("wigToBigWig"):
+        print("wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
     
     return options, bamfile_1, bamfile_2, genome, chrom_sizes
