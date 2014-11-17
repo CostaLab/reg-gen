@@ -101,7 +101,7 @@ class CoverageSet:
     def write_bigwig(self, filename, chrom_file):
         _, tmp_path = tempfile.mkstemp()
         self.write_wig(tmp_path)
-        t = ['wigToBigWig', tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
+        t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
         c = " ".join(t)
         #print(c)
         os.system(c)
