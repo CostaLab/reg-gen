@@ -122,6 +122,7 @@ def main():
     parser_projection.add_argument('-t', '--title', default='projection_test', help=helptitle)
     parser_projection.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
+    parser_projection.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
     parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -331,6 +332,7 @@ def main():
         projection = Projection(args.reference,args.query)
         projection.group_refque(args.g)
         projection.colors(args.c, args.color)
+        projection.background(args.bg)
         if args.intersect: 
             projection.ref_inter()
             projection.projection_test(organism = args.organism)

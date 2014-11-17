@@ -120,11 +120,12 @@ def colormaps(exps, colorby, definedinEM):
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     if definedinEM == False:
+        
         if len(exps.get_regionsnames()) < 20:
             colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
                       'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
         else:
-            colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+            colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
 def color_groupded_region(EM, grouped_region, colorby, definedinEM):
@@ -367,7 +368,14 @@ class Projection:
             for r in self.groupedreference[ty]:
                 self.background[ty].combine(r)
             self.background[ty].merge()
-    
+            
+    def background(self,bed_path):
+        bg = GenomicRegionSet("background")
+        bg.read_bed(bed_path)
+        self.background = OrderedDict()
+        for ty in self.groupedreference.keys():
+            self.background[ty] = bg
+        
     def projection_test(self, organism):
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
@@ -462,6 +470,26 @@ class Projection:
         f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
+
+    def heatmap(self):
+        f, ax = plt.subplots(1, len(self.plist.keys()))
+        try: ax = ax.reshape(-1)
+        except: ax = [ax]
+        
+        g_label = []
+        for ind_ty, ty in enumerate(self.plist.keys()):
+            g_label.append(ty)
+            r_label = []
+            data = []
+            for ind_r,r in enumerate(self.plist[ty].keys()):
+                r_label.append(r)
+                #data.append(self.plist[ty][r].values())
+                for ind_q, q in enumerate(self.plist[ty][r].keys()):
+                    pass
+            da = numpy.array(data)
+            da = da.transpose()
+            #im = plt.imshow(da, cmap=ax[ind_r], vmin=, vmax, origin, extent, shape, filternorm, filterrad, imlim, resample, url, hold)
+
 
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
@@ -1527,12 +1555,12 @@ class Boxplot:
         """
         c=[]
         for rp in self.reads:
+            print("    processing: "+rp)
             r = os.path.abspath(rp)   # Here change the relative path into absolute path
             cov = CoverageSet(r,self.all_bed)
             cov.coverage_from_genomicset(r)
             cov.normRPM()
             c.append(cov.coverage)
-            print("    processing: "+rp)
         self.all_table = numpy.transpose(c)
       
     def quantile_normalization(self):
@@ -2247,12 +2275,14 @@ class Lineplot:
             for bi, g in enumerate(self.data[t].keys()):
                 for bj, c in enumerate(self.data[t][g].keys()):
                     max_value = numpy.amax(self.data[t][g][c])
+                    max_value = int(max_value)
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
-                    #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
-                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    #print(self.data[t][g][c])
                     im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
-                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
+                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
                     axs[bi, bj].set_xticks([-self.extend, 0, self.extend])
                     #axs[bi, bj].set_xticklabels([-args.e, 0, args.e]
@@ -2264,6 +2294,7 @@ class Lineplot:
                         axs[bi, bj].spines[spine].set_visible(False)
                     axs[bi, bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
                     axs[bi, bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
+                    
                     #if bj > 0:
                     #    plt.setp(axs[bi, bj].get_yticklabels(),visible=False)
                     #plt.setp(axarr[i].get_yticks(),visible=False)
@@ -2275,21 +2306,39 @@ class Lineplot:
                     if bi == rows-1:
                         #divider = make_axes_locatable(axs[bi,bj])
                         #cax = divider.append_axes("bottom", size="5%", pad=0.5)
-                        axs[rows,bj] = plt.subplot2grid((rows*ratio+1, columns), (rows*ratio, bj))
-                        axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
+                        cbar_ax = plt.subplot2grid((rows*ratio+1, columns), (rows*ratio, bj))
+                        #axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
                         
-                        #cbar = grid.cbar_axes[i//2].colorbar(im)
-                        cbar = plt.colorbar(im, cax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
-                        #cbar = plt.colorbar(im, cax = axs[bi+1,bj], ticks=[0, max_value], orientation='horizontal')
-                        cbar.outline.set_linewidth(0.5)
-                        #cbar.ax.xaxis.set_ticks_position('none')
+                        
+                        #cbar = grid.cbar_axes[i//2].colorbar(im)     
+                        #cbar = plt.colorbar(im, cax = axs[rows,bj], ticks=[0, max_value], orientation='horizontal')
+                        #cbar = axs[rows,bj].imshow(range(int(max_value)), extent=[0, int(max_value),0,0], aspect=10, extent=[-self.extend, self.extend,0,0]
+                        #                           vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                        #cbar = axs[rows,bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                        #                    vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                        #cbar = axs[rows,bj].imshow([range(2*self.extend),range(2*self.extend),range(2*self.extend)], 
+                        #                           aspect='auto', vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj] )
+                        #cbar.outline.set_linewidth(0.5)
+                        #axs[rows,bj].set_ticks_position('none')
+                        #axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
+                        #axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
                         if logt:
                             cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
                             cbar.set_label('log10', fontsize=tickfontsize)
                         else:
-                            cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                            #cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                            pass
                         #cbar.set_label('Amplitute of signal')
-            fig.tight_layout(pad=1, h_pad=1, w_pad=1)
+                        max_value = int(max_value)
+                        width = 0.4/rows
+                        #cbar_ax = fig.add_axes([0.01 + bj/columns, 0, width, 0.01])
+                        cbar = plt.colorbar(im, cax=cbar_ax, ticks=[0, max_value], orientation='horizontal')
+                        cbar.ax.set_xticklabels([0, int(max_value)])
+                        cbar.outline.set_linewidth(0.5)
+                        
+                        
+            
+            #fig.tight_layout(pad=1, h_pad=1, w_pad=1)
             self.figs.append(fig)
             self.hmfiles.append("heatmap"+ "_" + t)
 
