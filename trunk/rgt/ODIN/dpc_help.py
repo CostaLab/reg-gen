@@ -254,11 +254,9 @@ class HelpfulOptionParser(OptionParser):
 def which(program):
     """Return path of program or None, see
     http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python"""
-    
     import os
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
-
     fpath, fname = os.path.split(program)
     if fpath:
         if is_exe(program):
@@ -269,7 +267,6 @@ def which(program):
             exe_file = os.path.join(path, program)
             if is_exe(exe_file):
                 return exe_file
-
     return None
 
 def input(laptop):
