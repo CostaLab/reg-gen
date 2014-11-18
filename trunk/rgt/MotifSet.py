@@ -150,8 +150,9 @@ class MotifSet:
         for file_name in file_name_list:
 
             # Opening MTF file
-            try: mtf_file = open(file_name,"r")
-            except Exception: pass # TODO
+            #try: 
+            mtf_file = open(file_name,"r")
+            #except Exception: pass # TODO
 
             # Reading file
             for line in mtf_file:
