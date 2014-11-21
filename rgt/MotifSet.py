@@ -1,11 +1,10 @@
-
-
 import os
 import sys
 import sets
 from copy import deepcopy
 from GenomicRegion import GenomicRegion
 from Util import GenomeData, MotifData, AuxiliaryFunctions
+import glob
 
 """
 Standardization of annotation.
@@ -42,6 +41,8 @@ class MotifSet:
         self.genes_map={}
         self.genes_suffix_map={}
         self.networks={}
+        self.motifs_enrichment={}
+        self.conditions=[]
         
 
     def add(self, new_motif):
@@ -172,25 +173,79 @@ class MotifSet:
             mtf_file.close()
 
 
-    def read_motif_targets(self,file_name,condition,pvalue_threshold):
-        ''' reading current output of motif enrichment analysis to get gene targets
-        This function could be made internal by integration with motif enrichment search
+    def  read_motif_targets_enrichment(self,enrichment_files,pvalue_threshold):
+        ''' reads current output of motif enrichment analysis to get gene targets
+            XXX - This function could be made internal by integration with motif enrichment search
         '''
-        network={}
-
-        for line in open(file_name):
+        # reading networks
+        for f in glob.glob(enrichment_files): 
+          # use last dir name as name for condition
+          condition=os.path.dirname(f)
+          condition=condition.split("/")[-1]
+          self.conditions.append(condition)
+          network={}
+          for line in open(f):
             line=line.strip("\n")
             values=line.split("\t")
             motif=values[0]
             try:
                 self.motifs_map[motif]  
-                pvalue=float(values[2])
+                p_value=float(values[2])
                 genes=values[9].split(",")
-                if (pvalue_threshold>=pvalue):
+                if (pvalue_threshold>=p_value):
                     network[motif]=genes
+                try:
+                  p_values=self.motifs_enrichment[motif]
+                  p_values[condition]=p_value
+                except:
+                  p_values={}                   
+                  p_values[condition]=p_value
+                  self.motifs_enrichment[motif]=p_values                     
             except Exception, e:
                 print("motif not found: "+motif+str(e))
-        self.networks[condition]=network
+
+          self.networks[condition]=network
+
+
+    def write_enrichment_table(self,threshold,out_file,motifs_map):
+      f = open(out_file,"w")
+      f.write("\t"+("\t".join(self.conditions))+"\n")
+      motifs=motifs_map.keys()       
+      for v in self.motifs_enrichment.keys():
+        values=self.motifs_enrichment[v]
+        filter_p=False
+        p_values=[]
+        for c in self.conditions:
+           try:
+             pvalue=values[c]
+             p_values.append(str(pvalue))    
+             if pvalue<=threshold:
+               filter_p=True
+           except:
+             p_values.append("1")
+        if ((filter_p) & (v in motifs)):
+          genes="|".join(motifs_map[v])
+          f.write(v+"\t"+genes+"\t"+("\t".join(p_values))+"\n")
+
+
+#    def read_motif_targets(self,file_name,condition,pvalue_threshold):
+#        ''' reads current output of motif enrichment analysis to get gene targets
+#            XXX - This function could be made internal by integration with motif enrichment search
+#        '''
+#        network={}
+#        for line in open(file_name):
+#            line=line.strip("\n")
+#            values=line.split("\t")
+#            motif=values[0]
+#            try:
+#                self.motifs_map[motif]  
+#                pvalue=float(values[2])
+#                genes=values[9].split(",")
+#                if (pvalue_threshold>=pvalue):
+#                    network[motif]=genes
+#            except Exception, e:
+#                print("motif not found: "+motif+str(e))
+#        self.networks[condition]=network
 
 #    def get_motifs_networks():
 #        '''
@@ -202,7 +257,7 @@ class MotifSet:
 #              motifs[m]=[]
 #        return motifs.keys()
 
-    def write_cytoscape_network(self,genes,gene_mapping_search,out_path,targets):
+    def write_cytoscape_network(self,genes,gene_mapping_search,out_path,targets,threshold):
         '''
         Write files to be used as input for cytoscape.
         it recieves a list of genes to map to, a mapping search strategy and path for outputting files
@@ -210,10 +265,27 @@ class MotifSet:
         #getting mapping of genes to motifs
         [motif_sets,genes_motifs,motifs_genes]=self.filter_by_genes(genes,gene_mapping_search)
         #print genes_motifs
+        print "mapping of motifs to factors"
+
+        f=open(out_path+"/mapping_tf_genes.txt","w")
+        motifs_all={}
         for gene in genes_motifs.keys():
           motifs = genes_motifs[gene]
           for m in motifs:
-            print gene,m
+            try:
+              g=motifs_all[m]
+              if gene not in g:
+                motifs_all[m].append(gene)
+            except:
+              motifs_all[m]=[gene]
+            f.write(gene+"\t"+m+"\n")
+        f.close()
+
+        import sets 
+
+        self.write_enrichment_table(threshold,out_path+"/pvalue_table_"+str(threshold*100)+".txt",motifs_all)
+
+
         net_pairs={}
         net_tfs={}
         all_pairs=sets.Set()
@@ -224,8 +296,7 @@ class MotifSet:
         else:
           filter_targets=True
           targets=[g.upper() for g in targets.genes]
-          print targets
-
+          #print targets
 
         # using genes to motif mapping to get network in all conditions
         for net_name in self.networks.keys():
