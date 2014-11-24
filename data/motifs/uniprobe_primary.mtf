@@ -17,7 +17,7 @@ UP00016	UP00016_1_Sry_primary	uniprobe_primary	1	Sry;Sox5	.
 UP00017	UP00017_1_Nkx3-1_primary	uniprobe_primary	1	Nkx3-1	.
 UP00018	UP00018_1_Irf4_primary	uniprobe_primary	1	Irf4	.
 UP00019	UP00019_1_Zbtb12_primary	uniprobe_primary	1	Zbtb12	.
-UP00020	UP00020_1_Atf1_primary	uniprobe_primary	1	Atf1	.
+UP00020	UP00020_1_Atf1_primary	uniprobe_primary	1	Atf1;Atf3	.
 UP00021	UP00021_1_Zfp281_primary	uniprobe_primary	1	Zfp281	.
 UP00022	UP00022_1_Zfp740_primary	uniprobe_primary	1	Zfp740	.
 UP00023	UP00023_1_Sox30_primary	uniprobe_primary	1	Sox30	.
