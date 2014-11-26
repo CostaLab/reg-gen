@@ -309,7 +309,7 @@ def input(laptop):
         options.verbose=True
         #chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.sizes'
-        options.no_gc_content = True
+        options.no_gc_content = False
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
         options.factor_input_1=None

@@ -215,8 +215,6 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
     work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict)
     
-    
-    
     if verbose:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
 #    write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width)

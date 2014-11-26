@@ -216,7 +216,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
-    
+    chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
     if regions is not None:
@@ -234,14 +234,15 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.split('\t')
                 chrom, end = line[0], int(line[1])
                 regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-    
+                chrom_sizes_dict[chrom] = end
+                
     regionset.sequences.sort()
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
     tracker.write(text=str(exts).strip('[]'), header="Extension size (rep1, rep2, input1, input2)")
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content)
+                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict)
     
     return multi_cov_set
 

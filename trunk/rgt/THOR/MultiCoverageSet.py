@@ -34,7 +34,7 @@ class MultiCoverageSet():
     
         return cov1, cov2
     
-    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes):
+    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict):
         """Compute GC-content"""
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
@@ -43,8 +43,7 @@ class MultiCoverageSet():
                 
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
-                  
-                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input.coverage)
+                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input.coverage, chrom_sizes_dict)
                 self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(input.coverage, gc_content_cov, avg_gc_content)
             
@@ -57,18 +56,18 @@ class MultiCoverageSet():
     
     
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, \
-                 verbose, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs):
+                 verbose, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs, chrom_sizes_dict):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
-        
+        self.chrom_sizes_dict = chrom_sizes_dict
         self.dim_1, self.dim_2 = dims
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
         self._normalization_by_signal(name, verbose)
         
@@ -102,7 +101,7 @@ class MultiCoverageSet():
                 j = 0 if i < self.dim_1 else 1
                 
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
-                                                                  genome='mm9', filename=name + '-norm' + str(i), verbose=False, two_sample=False)
+                                                filename=name + '-norm' + str(i), verbose=False, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False)
                 
                 print("Factor: normalize input with input factor %s (Signal %s, Rep %s)"\
                        %(round(n, 3), sig, rep) , file=sys.stderr)
