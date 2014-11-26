@@ -46,7 +46,7 @@ class DualCoverageSet():
             
             if not no_gc_content:
                 if input['input'] is not None:
-                    gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage)
+                    gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
                     #print("Gamma: %s" %avg_gc_content, file=sys.stderr)
                     self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                     self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
