@@ -23,7 +23,7 @@ from random import sample
 import multiprocessing
 from tracker import Tracker
 
-if __name__ == '__main__':
+def main():
     test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
@@ -75,5 +75,6 @@ if __name__ == '__main__':
     
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
      
-     
+if __name__ == '__main__':
+    main() 
     
