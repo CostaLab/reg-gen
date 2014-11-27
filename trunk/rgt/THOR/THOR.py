@@ -24,7 +24,7 @@ import multiprocessing
 from tracker import Tracker
 
 def main():
-    test = True
+    test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
