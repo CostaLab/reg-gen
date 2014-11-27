@@ -277,7 +277,7 @@ class MultiCoverageSet():
                 s1.add((cov1, cov2))
             elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                 s2.add((cov1, cov2))
-            elif cov1 + cov2 < diff_cov:
+            elif cov1 + cov2 < diff_cov/2:
                 s0.add((cov1, cov2))
             
             #for training set
@@ -309,6 +309,8 @@ class MultiCoverageSet():
                 training_set.add(self.indices_of_interest[i-1])
                 i -= 1
         
+        training_set = training_set | set(sample(s0, min(len(s0)/3, x/3)))
+        
         training_set = list(training_set)
         training_set.sort()
         if verbose:
@@ -318,6 +320,6 @@ class MultiCoverageSet():
                 print(chrom, s, e, sep ='\t', file=f)
             f.close()
         
-        training_set = training_set | set(sample(s0, min(len(s0)/3, x/3)))
+        
         
         return np.array(training_set), s0, s1, s2
