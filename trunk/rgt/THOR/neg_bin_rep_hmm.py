@@ -147,6 +147,7 @@ class NegBinRepHMM(_BaseHMM):
     
     def _help_do_mstep(self, stats):
         for i in range(self.n_features):
+            print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i])
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
         tmp_a = [map(lambda m: max(1e-300, self.get_alpha(i, m)), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
@@ -171,7 +172,7 @@ class NegBinRepHMM(_BaseHMM):
     def _do_mstep(self, stats, params):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
         print("mu", self.mu, file=sys.stderr)
-        print("a", self.alpha, file=sys.stderr)
+        #print("a", self.alpha, file=sys.stderr)
         self._help_do_mstep(stats)
         self.count_s1, self.count_s2 = self._count(stats['posterior'])
         self.merge_distr()
@@ -228,7 +229,7 @@ if __name__ == '__main__':
 #     print('hidden states ', Z)
 # #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
     
-    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,60.,7.], [60.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
+    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
     m2.fit([X])
     
     posteriors = m.predict_proba(X)
