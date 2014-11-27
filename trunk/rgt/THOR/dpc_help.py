@@ -296,7 +296,7 @@ def input(laptop):
         options.binsize=100
         options.factors_inputs = None
         options.verbose = True
-        options.no_gc_content = False
+        options.no_gc_content = True
         options.cut_obs = 1.0
     else:
 #        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
