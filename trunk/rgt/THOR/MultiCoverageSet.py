@@ -309,7 +309,9 @@ class MultiCoverageSet():
                 training_set.add(self.indices_of_interest[i-1])
                 i -= 1
         
-        training_set = training_set | set(sample(s0, min(len(s0)/3, x/3)))
+        print(min(len(s0)/3, x/3), file=sys.stderr)
+        for i in set(sample(s0, min(len(s0)/3, x/3))):
+            training_set.add(self.indices_of_interest[i])
         
         training_set = list(training_set)
         training_set.sort()
