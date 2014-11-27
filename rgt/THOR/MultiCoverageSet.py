@@ -196,7 +196,7 @@ class MultiCoverageSet():
         - overall coverage in library 1 and 2 must be > 3
         - extend resulting sites by l steps in both directions. """
         m = self._get_bin_number()
-        n = 0.9
+        n = 0.4
         self._compute_score()
         print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
