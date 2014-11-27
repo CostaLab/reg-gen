@@ -27,6 +27,20 @@ class NegBin():
     - http://www.nehalemlabs.net/prototype/blog/2013/11/11/negative-binomial-with-continuous-parameters-in-python/
     """
     
+    def _get_value_log(self, x, mu, v):
+        try:
+            return loggamma(x+v) - loggamma(x+1) - loggamma(v) + v*log(v) - v*log(v+mu) + x*log(mu) - x*log(v+mu)
+        except ValueError:
+            print(x, mu, v, file=stderr)
+            return 1
+    
+    def _get_value(self, x, mu, v):
+        try:
+            return rf(v, x) / gamma(x+1) * ( v/float(v+mu) ) ** v * ( mu/float(v+mu) ) ** x
+        except ValueError:
+            print(x, mu, v, file=stderr)
+            return 1
+            
     def __init__(self, mu, alpha, max_range=20000):
         self.map_pdf = {}
         self.map_logpdf = {}
@@ -37,11 +51,9 @@ class NegBin():
         self.alpha = alpha
         self.mu = mu
         
-        nbin_mpmath = lambda x, mu, v: rf(v, x) / gamma(x+1) * ( v/float(v+mu) ) ** v * ( mu/float(v+mu) ) ** x
-        self.nbin = np.frompyfunc(nbin_mpmath, 3, 1)
+        self.nbin = np.frompyfunc(self._get_value, 3, 1)
         
-        nbin_mpmath_log = lambda x, mu, v: loggamma(x+v) - loggamma(x+1) - loggamma(v) + v*log(v) - v*log(v+mu) + x*log(mu) - x*log(v+mu)
-        self.nbin_log = np.frompyfunc(nbin_mpmath_log, 3, 1)
+        self.nbin_log = np.frompyfunc(self._get_value_log, 3, 1)
         
         probs = []
         probs_log = []

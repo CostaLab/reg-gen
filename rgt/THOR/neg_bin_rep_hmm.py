@@ -28,6 +28,10 @@ import scipy.optimize as optimize
 import numpy as np
 from neg_bin import NegBin
 
+import warnings
+warnings.filterwarnings('error')
+
+
 def get_init_parameters(s0, s1, s2, **info):
     mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
     var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
@@ -70,7 +74,11 @@ class NegBinRepHMM(_BaseHMM):
         
     def get_alpha(self, sample, m):
         var = self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2]
-        return (var - m) / m**2 
+        try:
+            return (var - m) / m**2
+        except Warning:
+            print(sample, m, var, m, m**2, file=sys.stderr)
+            return (var - m) / m**2
     
     
     def _compute_log_likelihood(self, X):
