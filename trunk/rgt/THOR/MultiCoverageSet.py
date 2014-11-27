@@ -277,7 +277,7 @@ class MultiCoverageSet():
                 s1.add((cov1, cov2))
             elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                 s2.add((cov1, cov2))
-            else:
+            elif cov1 + cov2 < diff_cov:
                 s0.add((cov1, cov2))
             
             #for training set
