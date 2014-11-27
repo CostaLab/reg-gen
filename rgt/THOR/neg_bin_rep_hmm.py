@@ -82,7 +82,10 @@ class NegBinRepHMM(_BaseHMM):
             return max((var - m) / m**2, 1e-300)
         except Warning:
             print('log_get_alpha NO', sample, m, var, m**2, file=sys.stderr)
-            return max((var - m) / m**2, 1e-300)
+            if m != 0.0:
+                return max((var - m) / m**2, 1e-300)
+            else:
+                return 1e-300
     
     
     def _compute_log_likelihood(self, X):
