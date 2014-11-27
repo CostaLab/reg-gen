@@ -317,5 +317,7 @@ class MultiCoverageSet():
                 chrom, s, e = self._index2coordinates(l)
                 print(chrom, s, e, sep ='\t', file=f)
             f.close()
-            
+        
+        training_set = training_set | set(sample(s0, min(len(s0)/3, x/3)))
+        
         return np.array(training_set), s0, s1, s2
