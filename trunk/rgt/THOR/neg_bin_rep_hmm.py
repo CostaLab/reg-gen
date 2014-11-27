@@ -78,10 +78,10 @@ class NegBinRepHMM(_BaseHMM):
         print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, m > -1./(var - m), file=sys.stderr)
         
         try:
-            return (var - m) / m**2
+            return max((var - m) / m**2, 1e-300)
         except Warning:
             print('log_get_alpha', sample, m, var, m**2, file=sys.stderr)
-            return (var - m) / m**2
+            return max((var - m) / m**2, 1e-300)
     
     
     def _compute_log_likelihood(self, X):
