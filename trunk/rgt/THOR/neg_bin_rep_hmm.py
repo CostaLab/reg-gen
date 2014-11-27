@@ -33,8 +33,8 @@ def get_init_parameters(s0, s1, s2, **info):
     var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
     
     alpha = (var - mu) / np.square(mu)
-    alpha[alpha < 0] = min(alpha[0,1], alpha[1,2])
-    
+    alpha[alpha < 0] = 1e-300
+    #print(alpha, mu)
     return alpha, mu
     
 class NegBinRepHMM(_BaseHMM):
