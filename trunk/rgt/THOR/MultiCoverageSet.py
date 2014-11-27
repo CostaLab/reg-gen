@@ -6,7 +6,7 @@ from time import time
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
-
+from math import fabs
 
 EPSILON = 1**-320
 
@@ -264,7 +264,7 @@ class MultiCoverageSet():
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
-        ts1, ts2 = set(), set()
+        ts0, ts1, ts2 = set(), set(), set()
         threshold = 2.0
         diff_cov = 100
         s0, s1, s2 = set(), set(), set()
@@ -277,7 +277,7 @@ class MultiCoverageSet():
                 s1.add((cov1, cov2))
             elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                 s2.add((cov1, cov2))
-            elif cov1 + cov2 < diff_cov/2:
+            elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
                 s0.add((cov1, cov2))
             
             #for training set
@@ -285,6 +285,8 @@ class MultiCoverageSet():
                 ts1.add(i)
             if cov1 / max(float(cov2), 1) < 1/threshold or cov2-cov1 > diff_cov:
                 ts2.add(i)
+            if fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
+                ts0.add(i)
         
         s0 = sample(s0, min(y, len(s0)))
         s1 = sample(s1, min(y, len(s1)))
@@ -295,8 +297,8 @@ class MultiCoverageSet():
             self.write_test_samples(name + '-s1', s1)
             self.write_test_samples(name + '-s2', s2)
         
-        l = min(min(len(ts1), len(ts2)), x)
-        tmp = set(sample(ts1, l)) | set(sample(ts2, l))
+        l = np.min([len(ts1), len(ts2), len(ts0), x])
+        tmp = set(sample(ts1, l)) | set(sample(ts2, l)) | set(sample(ts0, l))
         
         for i in tmp:
             training_set.add(self.indices_of_interest[i])
@@ -308,10 +310,6 @@ class MultiCoverageSet():
             while i-1 > 0 and self.indices_of_interest[i-1] == self.indices_of_interest[i]-1:
                 training_set.add(self.indices_of_interest[i-1])
                 i -= 1
-        
-        print(min(len(s0)/3, x/3), file=sys.stderr)
-        for i in set(sample(s0, min(len(s0)/3, x/3))):
-            training_set.add(self.indices_of_interest[i])
         
         training_set = list(training_set)
         training_set.sort()
