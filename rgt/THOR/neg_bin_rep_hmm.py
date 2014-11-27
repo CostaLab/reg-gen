@@ -134,6 +134,8 @@ class NegBinRepHMM(_BaseHMM):
                 for i in it:
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
         
+        #stats['post_emission'][0] = stats['post_emission'][0] * self.dim[0]
+        #stats['post_emission'][1] = stats['post_emission'][1] * self.dim[1]
         stats['post'][0] = stats['post'][0]*self.dim[0]
         stats['post'][1] = stats['post'][1]*self.dim[1]
         

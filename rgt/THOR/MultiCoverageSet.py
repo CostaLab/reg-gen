@@ -266,7 +266,7 @@ class MultiCoverageSet():
         training_set = set()
         ts1, ts2 = set(), set()
         threshold = 2.0
-        diff_cov = 10
+        diff_cov = 100
         s0, s1, s2 = set(), set(), set()
 
         for i in range(len(self.indices_of_interest)):
