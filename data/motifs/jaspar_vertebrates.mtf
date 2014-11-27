@@ -148,7 +148,7 @@ MA0479	MA0479.1.FOXH1	jaspar_vertebrates	1	FOXH1	.
 MA0480	MA0480.1.Foxo1	jaspar_vertebrates	1	Foxo1;Foxp2	.
 MA0481	MA0481.1.FOXP1	jaspar_vertebrates	1	FOXP1	.
 MA0482	MA0482.1.Gata4	jaspar_vertebrates	1	Gata4	.
-MA0483	MA0483.1.Gfi1b	jaspar_vertebrates	1	Gfi1b	.
+MA0483	MA0483.1.Gfi1b	jaspar_vertebrates	1	Gfi1b;Gfi1	.
 MA0484	MA0484.1.HNF4G	jaspar_vertebrates	1	HNF4G	.
 MA0485	MA0485.1.Hoxc9	jaspar_vertebrates	1	Hoxc9	.
 MA0486	MA0486.1.HSF1	jaspar_vertebrates	1	HSF1	.

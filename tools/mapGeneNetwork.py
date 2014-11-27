@@ -33,7 +33,10 @@ if len(sys.argv) > 6:
 
 # starting motif databases
 motif_set = MotifSet()
-motif_set.read_file([jaspar,uniprobe,internal])
+if len(sys.argv) > 7:
+  motif_set.read_file([sys.argv[7]])
+else:
+  motif_set.read_file([jaspar,uniprobe,internal])
 
 # reading genes 
 factors=GeneSet("genes")
