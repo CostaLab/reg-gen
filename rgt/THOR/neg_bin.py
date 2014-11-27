@@ -45,10 +45,10 @@ class NegBin():
         
         probs = []
         probs_log = []
-        for i in range(self.max_range + 1):
+        for i in range(self.max_range):
             #print(i, self.mu, 1./self.alpha, file=sys.stderr)
             v = self.nbin(i, self.mu, 1./self.alpha)
-            
+            #print(i, self.mu, self.alpha)
             v_log = self.nbin_log(i, self.mu, 1./self.alpha)
             
             probs.append(v)
