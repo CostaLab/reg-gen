@@ -74,10 +74,13 @@ class NegBinRepHMM(_BaseHMM):
         
     def get_alpha(self, sample, m):
         var = self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2]
+        
+        print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, file=sys.stderr)
+        
         try:
             return (var - m) / m**2
         except Warning:
-            print(sample, m, var, m, m**2, file=sys.stderr)
+            print('log_get_alpha', sample, m, var, m**2, file=sys.stderr)
             return (var - m) / m**2
     
     
@@ -147,10 +150,10 @@ class NegBinRepHMM(_BaseHMM):
     
     def _help_do_mstep(self, stats):
         for i in range(self.n_features):
-            print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i])
+            print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
-        tmp_a = [map(lambda m: max(1e-300, self.get_alpha(i, m)), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
+        tmp_a = [map(lambda m: self.get_alpha(i, m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         
         self.alpha = np.matrix(tmp_a)
         self._update_distr(self.mu, self.alpha, self.max_range)
