@@ -225,7 +225,7 @@ class MotifSet:
              p_values.append("1")
         if ((filter_p) & (v in motifs)):
           genes="|".join(motifs_map[v])
-          f.write(v+"\t"+genes+"\t"+("\t".join(p_values))+"\n")
+          f.write(v+"|"+genes+"\t"+("\t".join(p_values))+"\n")
 
 
 #    def read_motif_targets(self,file_name,condition,pvalue_threshold):
