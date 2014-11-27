@@ -123,7 +123,7 @@ def main():
     parser_projection.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_projection.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
-    parser_projection.add_argument('-intersect', action="store_true", help='Take the intersect of references as background for binominal test.')
+    parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test.')
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
@@ -131,25 +131,6 @@ def main():
     #parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    
-    ################### Jaccard test ##########################################
-    
-    parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.')
-    
-    parser_jaccard.add_argument('output', help=helpoutput) 
-    parser_jaccard.add_argument('-r', '--reference',help=helpreference)
-    parser_jaccard.add_argument('-q', '--query', help=helpquery)
-    parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
-    parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
-    parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
-    parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
-    parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
-    parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -177,6 +158,24 @@ def main():
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
+    ################### Jaccard test ##########################################
+    
+    parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.')
+    
+    parser_jaccard.add_argument('output', help=helpoutput) 
+    parser_jaccard.add_argument('-r', '--reference',help=helpreference)
+    parser_jaccard.add_argument('-q', '--query', help=helpquery)
+    parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
+    parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
+    parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+    parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
+    parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
+    parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
+    #parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
+    #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+    parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 
     ################### Combinatorial Test ##########################################
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
@@ -333,8 +332,8 @@ def main():
         projection.group_refque(args.g)
         projection.colors(args.c, args.color)
         projection.background(args.bg)
-        if args.intersect: 
-            projection.ref_inter()
+        if args.union: 
+            projection.ref_union()
             projection.projection_test(organism = args.organism)
             print2(projection.parameter, "Taking intersect of references as the background. ")
         else:
@@ -356,38 +355,6 @@ def main():
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
             
-    ################### Jaccard test ##########################################
-    if args.mode == "jaccard":
-        """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
-        
-        Method:
-        The distribution of random jaccard index is calculated by randomizing query for given times. 
-        Then, we compare the real jaccard index to the distribution and formulate p-value as 
-        p-value = (# random jaccard > real jaccard)/(# random jaccard)
-        
-        """
-        print("\n############## Jaccard Test ###############")
-        jaccard = Jaccard(args.reference,args.query)
-        jaccard.group_refque(args.g)
-        jaccard.colors(args.c, args.color)
-        
-        # jaccard test
-        jaccard.jaccard_test(args.runtime, args.organism)
-        parameter = parameter + jaccard.parameter
-        t1 = time.time()
-        # ploting and generate pdf
-        jaccard.plot(logT=args.nlog)
-        for i,f in enumerate(jaccard.fig):
-            output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci(),pdf=True,show=args.show)
-        # generate html
-        jaccard.gen_html(args.output, args.title)
-        
-        if args.table:
-            jaccard.table(directory = args.output, folder = args.title)
-        
-        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-        
     ################### Intersect Test ##########################################
     if args.mode == 'intersect':
         print("\n############ Intersection Test ############")
@@ -433,6 +400,39 @@ def main():
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
+        ################### Jaccard test ##########################################
+    if args.mode == "jaccard":
+        """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
+        
+        Method:
+        The distribution of random jaccard index is calculated by randomizing query for given times. 
+        Then, we compare the real jaccard index to the distribution and formulate p-value as 
+        p-value = (# random jaccard > real jaccard)/(# random jaccard)
+        
+        """
+        print("\n############## Jaccard Test ###############")
+        jaccard = Jaccard(args.reference,args.query)
+        jaccard.group_refque(args.g)
+        jaccard.colors(args.c, args.color)
+        
+        # jaccard test
+        jaccard.jaccard_test(args.runtime, args.organism)
+        parameter = parameter + jaccard.parameter
+        t1 = time.time()
+        # ploting and generate pdf
+        jaccard.plot(logT=args.nlog)
+        for i,f in enumerate(jaccard.fig):
+            output(f=f, directory = args.output, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci(),pdf=True,show=args.show)
+        # generate html
+        jaccard.gen_html(args.output, args.title)
+        
+        if args.table:
+            jaccard.table(directory = args.output, folder = args.title)
+        
+        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+        
+    
     ################### Combinatorial Test ##########################################
     if args.mode == 'combinatorial':
         print("\n############ Combinatorial Test ############")
@@ -477,7 +477,7 @@ def main():
     ################### Boxplot ##########################################
     if args.mode == 'boxplot':
         print("\n################# Boxplot #################")
-        boxplot = Boxplot(args.input, title="Boxplot")
+        boxplot = Boxplot(args.input, title=args.title)
         
         print2(parameter,"\nStep 1/5: Combining all regions")
         boxplot.combine_allregions()

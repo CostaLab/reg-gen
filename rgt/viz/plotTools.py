@@ -361,10 +361,10 @@ class Projection:
         #self.color_tags.append('Background')
         self.color_list['Background'] = '0.70'
     
-    def ref_inter(self):
+    def ref_union(self):
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
-            self.background[ty] = GenomicRegionSet("intersection of references")
+            self.background[ty] = GenomicRegionSet("union of references")
             for r in self.groupedreference[ty]:
                 self.background[ty].combine(r)
             self.background[ty].merge()
@@ -1529,7 +1529,7 @@ class Boxplot:
         parameters: list of records
         figs: a list of figure(s)
     """
-    def __init__(self,EMpath, title="Boxplot"):
+    def __init__(self,EMpath, title="boxplot"):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
