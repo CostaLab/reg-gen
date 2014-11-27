@@ -31,7 +31,7 @@ class NegBin():
         try:
             return loggamma(x+v) - loggamma(x+1) - loggamma(v) + v*log(v) - v*log(v+mu) + x*log(mu) - x*log(v+mu)
         except ValueError:
-            print(x, mu, v, file=stderr)
+            print('_get_value_log ValueError', x, mu, v, file=sys.stderr)
             return 1
     
     def _get_value(self, x, mu, v):
