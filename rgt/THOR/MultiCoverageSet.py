@@ -99,7 +99,6 @@ class MultiCoverageSet():
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
                 j = 0 if i < self.dim_1 else 1
-                
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
                                                 filename=name + '-norm' + str(i), verbose=False, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False)
                 

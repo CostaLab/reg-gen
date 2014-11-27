@@ -220,12 +220,14 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
     if regions is not None:
+        print("Call DPs on specified regions.", file=sys.stderr)
         with open(regions) as f:
             for line in f:
                 line = line.strip()
                 line = line.split('\t')
                 c, s, e = line[0], int(line[1]), int(line[2])
                 regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                chrom_sizes_dict[c] = e
     else:
         print("Call DPs on whole genome.", file=sys.stderr)
         with open(chrom_sizes) as f:
