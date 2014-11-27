@@ -251,7 +251,7 @@ class MultiCoverageSet():
         with open(path, 'w') as f:
             for i in self.indices_of_interest:
                 chrom, start, end = self._index2coordinates(i)
-                print(chrom, start, end, file=f)
+                print(chrom, start, end, self.scores[i], file=f)
             
     def write_test_samples(self, name, l):
         f = open(name, 'w')
