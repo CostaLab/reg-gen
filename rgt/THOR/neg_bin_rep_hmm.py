@@ -39,7 +39,7 @@ def get_init_parameters(s0, s1, s2, **info):
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 1e-300
     
-    for el in [self.mu, self.alpha]:
+    for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])
         low = min(el[1,1], el[0,2]) + 0.5 * fabs(el[1,1] - el[0,2])
         med = np.mean([el[0,0], el[1,0]])
