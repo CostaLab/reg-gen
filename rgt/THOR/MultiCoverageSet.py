@@ -287,13 +287,14 @@ class MultiCoverageSet():
             if cov1 / max(float(cov2), 1) < 1/threshold or cov2-cov1 > diff_cov:
                 ts2.add(i)
         
-        if verbose:
-            self.write_test_samples(name + '-s1', s1)
-            self.write_test_samples(name + '-s2', s2)
-        
         s0 = sample(s0, min(y, len(s0)))
         s1 = sample(s1, min(y, len(s1)))
         s2 = sample(s2, min(y, len(s2)))
+        
+        if verbose:
+            self.write_test_samples(name + '-s0', s0)
+            self.write_test_samples(name + '-s1', s1)
+            self.write_test_samples(name + '-s2', s2)
         
         l = min(min(len(ts1), len(ts2)), x)
         tmp = set(sample(ts1, l)) | set(sample(ts2, l))

@@ -35,11 +35,6 @@ def get_init_parameters(s0, s1, s2, **info):
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = min(alpha[0,1], alpha[1,2])
     
-    print('initial:', mu, file=sys.stderr)
-    print('initial:', alpha, file=sys.stderr)
-    #alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
-    #mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
-    
     return alpha, mu
     
 class NegBinRepHMM(_BaseHMM):
@@ -79,7 +74,6 @@ class NegBinRepHMM(_BaseHMM):
     
     
     def _compute_log_likelihood(self, X):
-        #t = time()
         matrix = []
         lookup = {}
         for x in X: #over all observations
@@ -89,18 +83,16 @@ class NegBinRepHMM(_BaseHMM):
                 for j in range(self.n_features): #over dim
                     it = range(self.dim[0]) if j == 0 else range(self.dim[0], self.dim[0] + self.dim[1]) #grab proper ob
                     for k in it:
-#                         index = (int(x[k]), i, j)
-#                         if lookup.has_key( index ):
-#                             r_sum += lookup[index]
-#                         else:
-                        y = float(self.neg_distr[j,i].logpdf(x[k]))
-                            #lookup[index] = y
-                        r_sum += y
+                         index = (int(x[k]), i, j)
+                         if lookup.has_key( index ):
+                             r_sum += lookup[index]
+                         else:
+                             y = float(self.neg_distr[j,i].logpdf(x[k]))
+                             lookup[index] = y
+                             r_sum += y
                 row.append(r_sum)
         
             matrix.append(row)
-#         print('time to compute log-likelihood matrix (compute_log_likelihood): ',\
-#               time()-t, file=sys.stderr)
         return np.asarray(matrix)
     
     
@@ -146,25 +138,12 @@ class NegBinRepHMM(_BaseHMM):
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
     def _help_do_mstep(self, stats):
-        #add pseudo counts for nan entries
-#        help_denum = _add_pseudo_counts( stats['post'] )
-#        self.p[0] = stats['post_emission'][0] / (self.n[0] * help_denum)
-#        self.p[1] = stats['post_emission'][1] / (self.n[1] * help_denum)
-#        self.p[0] = _add_pseudo_counts(self.p[0])
-#        self.p[1] = _add_pseudo_counts(self.p[1])
-#        self.merge_distr()
-#        print('m-step: ',self.p, file=sys.stderr)
-#        tmp=np.array(map(lambda x: x*self.n[0], self.p))
-#        print(np.reshape(tmp, (-1,3)), file=sys.stderr)
-        #for j in range(self.n_components):
-        
         for i in range(self.n_features):
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
-        tmp_a = [map(lambda m: max(0.0001, self.get_alpha(i, m)), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
+        tmp_a = [map(lambda m: max(1e-300, self.get_alpha(i, m)), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         
         self.alpha = np.matrix(tmp_a)
-        print("new alpha", self.alpha, file=sys.stderr)
         self._update_distr(self.mu, self.alpha, self.max_range)
     
     def _count(self, posts):
@@ -221,17 +200,15 @@ if __name__ == '__main__':
         tmp_a.append(map(lambda m: get_alpha(para_func, i, m), np.asarray(mu[i])[0]))
     
     alpha = np.matrix(tmp_a)
-    print(mu)
-    print(alpha)
+    #print(mu)
+    #print(alpha)
     
     dim_cond_1 = 5
     dim_cond_2 = 5
 
     m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
     
-    X, Z = m.sample(8)
-    print(X)
-    print(X.shape)
+    X, Z = m.sample(20)
 #     for i, el in enumerate(X):
 #         print(el, Z[i], sep='\t')
     
@@ -243,13 +220,10 @@ if __name__ == '__main__':
 #     print('hidden states ', Z)
 # #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
     
-    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[5.,60.,7.], [6.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
+    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,60.,7.], [60.,3.,80.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
     m2.fit([X])
     
     posteriors = m.predict_proba(X)
-    print("H")
-    print(posteriors.shape)
-    print(posteriors)
     e = m2.predict(X)
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
