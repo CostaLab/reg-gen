@@ -199,7 +199,7 @@ class MultiCoverageSet():
         n = 0.4
         self._compute_score()
         print('before filter step:', len(self.scores), file=sys.stderr)
-        self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
+        self.indices_of_interest = np.where(self.scores > 10)[0] #2/(m*n)
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
@@ -243,15 +243,13 @@ class MultiCoverageSet():
             print(chrom, start, end, s, self.first_overall_coverage[i], self.second_overall_coverage[i], sep='\t', file=f)
             
         f.close()
-   
-    
-        
+
     def write_putative_regions(self, path):
         """Write putative regions (defined by criteria mentioned in method) as BED file."""
         with open(path, 'w') as f:
             for i in self.indices_of_interest:
                 chrom, start, end = self._index2coordinates(i)
-                print(chrom, start, end, self.scores[i], file=f)
+                print(chrom, start, end, round(self.scores[i], 1), file=f)
             
     def write_test_samples(self, name, l):
         f = open(name, 'w')
