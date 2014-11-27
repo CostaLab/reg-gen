@@ -183,7 +183,6 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     #print("Dividing genome into bins...", file=sys.stderr)
     counts_dict_2 = get_bins(chrom_len, chromosomes, count_list_2, step_width, feature_len)
     counts_dict_1 = get_bins(chrom_len, chromosomes, count_list_1, step_width, feature_len)
-    
     #merge values with zip, obtain [ [(),()...], [(),(),..] ]
     tmp_list = [zip( counts_dict_1[chrom], counts_dict_2[chrom]) for chrom in counts_dict_2.keys()]
     #convert tmp_list to [[],[],[]...]
