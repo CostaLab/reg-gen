@@ -73,14 +73,15 @@ class NegBinRepHMM(_BaseHMM):
         self.neg_distr = np.matrix([raw1, raw2]) #matrix of all Neg. Bin. Distributions, columns=HMM's state (3), row=#samples (2)
         
     def get_alpha(self, sample, m):
-        var = self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2]
+        var = max(self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2], 1e-300)
         
-        print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, m > -1./(var - m), file=sys.stderr)
+        #print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, m > -1./(var - m), file=sys.stderr)
         
         try:
+            print('log_get_alpha YES', sample, m, var, m**2, file=sys.stderr)
             return max((var - m) / m**2, 1e-300)
         except Warning:
-            print('log_get_alpha', sample, m, var, m**2, file=sys.stderr)
+            print('log_get_alpha NO', sample, m, var, m**2, file=sys.stderr)
             return max((var - m) / m**2, 1e-300)
     
     
