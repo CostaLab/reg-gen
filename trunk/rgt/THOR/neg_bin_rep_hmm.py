@@ -75,7 +75,7 @@ class NegBinRepHMM(_BaseHMM):
     def get_alpha(self, sample, m):
         var = self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2]
         
-        print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, file=sys.stderr)
+        print('check cons', (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, m > -1./(var - m), file=sys.stderr)
         
         try:
             return (var - m) / m**2
