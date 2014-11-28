@@ -13,15 +13,28 @@ from math import log
 import multiprocessing
 from input_parser import input_parser
 #from rgt.ODIN import ODIN
-from numpy import linspace
 import matplotlib as mpl #necessary to plot without x11 server (for cluster)
 mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 from matplotlib.pyplot import *
 from random import sample
+from scipy.optimize import curve_fit
+import numpy as np
+from numpy import linspace
+from math import fabs
 
 SIGNAL_CUTOFF = 10000
 
-def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=100):
+def _func_quad_2p(x, a, c):
+    res = []
+    if type(x) is np.ndarray:
+        for el in x:
+            res.append(max(el, fabs(a) * el**2 + el + fabs(c)))
+            
+        return np.asarray(res)
+    else:
+        return max(x, fabs(a) * x**2 + x + fabs(c))
+
+def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10000):
         #list of (mean, var) points for samples 0 and 1
         data_rep = []
         for i in range(2):
@@ -40,9 +53,10 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
             data_rep.append(zip(m, n))
             data_rep[i].append((0,0))
         
-        for i in range(2): #shorten list
-            data_rep[i].sort()
-            data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
+        print('cut', cut, file=sys.stderr)
+#         for i in range(2): #shorten list
+#             data_rep[i].sort()
+#             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
         
         if verbose:
             for i in range(2):
@@ -50,18 +64,21 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
         
         res = []
         for i in range(2):
-            m = map(lambda x: x[0], data_rep[i]) #means list
-            v = map(lambda x: x[1], data_rep[i]) #vars list
+            m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
+            v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
             
-            p = np.polynomial.polynomial.polyfit(m, v, 2)
+            #p = np.polynomial.polynomial.polyfit(m, v, 2)
+            p, _ = curve_fit(_func_quad_2p, m, v)
+            print('popt ', p, file=sys.stderr)
+            
             res.append(p)
-            
+            print('Length', len(m), file=sys.stderr)
             if verbose:
                 print(p, file=sys.stderr)
                 print(max(m), max(v), file=sys.stderr)
             
                 x = linspace(0, max(m), max(m)+1)
-                y = p[0] + x*p[1] + x*x*p[2]
+                y = _func_quad_2p(x, p[0], p[1])
                 plot(x, y)
                 scatter(m, v)
                 savefig(str(name) + "plot_original" + str(i) + ".png")
@@ -73,8 +90,8 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
                 xlim([0, 200])
                 savefig(str(name) + "plot" + str(i) + ".png")
                 close()
-                
-        return res
+        
+        return lambda x: _func_quad_2p(x, p[0], p[1]), res
 
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
