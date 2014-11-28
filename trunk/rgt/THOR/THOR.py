@@ -33,8 +33,10 @@ def main():
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, \
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, tracker=tracker)
     
-    func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=200)
-    print("func para", func_para, file=sys.stderr)
+    func, p = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=20000)
+    #func_para = [np.array([-0.02178527,  0.48686578,  0.21833156]), np.array([ 0.76335214, -0.94956275,  0.70959764])]
+    print('type', type(func), file=sys.stderr)
+    print("func para", p, file=sys.stderr)
 
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
@@ -44,13 +46,13 @@ def main():
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
     
-    training_set, s0, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 50000), options.verbose, options.name, 5000)
+    training_set, s0, s1, s2 = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 50000), options.verbose, options.name, 10000)
     training_set_obs = exp_data.get_observation(training_set)
     
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
       
     print('Training HMM...', file=sys.stderr)
-    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], para_func = func_para, max_range=5000)
+    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func, max_range=5000)
 
 #     if options.verbose:
 #         exp_data.get_initial_dist(options.name + '-initial-states.bed')
@@ -58,7 +60,8 @@ def main():
     m.fit([training_set_obs])
     
     print('...done', file=sys.stderr)
-    tracker.write(text=str(m.mu) + "\n" + str(m.alpha), header="HMM's Neg. Bin. Emission (mu,alpha)")
+    tracker.write(text=str(m.mu)  + str('\n') + str(m.alpha), header="HMM's Neg. Bin. Emission (mu,alpha)")
+    tracker.write(text=str(m._get_transmat()) + "\n", header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))

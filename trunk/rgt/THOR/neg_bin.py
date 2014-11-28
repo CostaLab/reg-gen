@@ -38,7 +38,7 @@ class NegBin():
         try:
             return rf(v, x) / gamma(x+1) * ( v/float(v+mu) ) ** v * ( mu/float(v+mu) ) ** x
         except ValueError:
-            print(x, mu, v, file=stderr)
+            print(x, mu, v, file=sys.stderr)
             return 1
             
     def __init__(self, mu, alpha, max_range=20000):

@@ -69,7 +69,7 @@ class MultiCoverageSet():
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
         #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, verbose)
-        self._normalization_by_signal(name, verbose)
+        #self._normalization_by_signal(name, verbose)
         
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
@@ -196,10 +196,10 @@ class MultiCoverageSet():
         - overall coverage in library 1 and 2 must be > 3
         - extend resulting sites by l steps in both directions. """
         m = self._get_bin_number()
-        n = 0.4
+        n = 0.9
         self._compute_score()
         print('before filter step:', len(self.scores), file=sys.stderr)
-        self.indices_of_interest = np.where(self.scores > 10)[0] #2/(m*n)
+        self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
@@ -262,8 +262,7 @@ class MultiCoverageSet():
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
-        ts0, ts1, ts2 = set(), set(), set()
-        threshold = 2.0
+        threshold = 3.0
         diff_cov = 100
         s0, s1, s2 = set(), set(), set()
 
@@ -272,42 +271,40 @@ class MultiCoverageSet():
             
             #for parameter fitting for function
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                s1.add((cov1, cov2))
+                s1.add((i, cov1, cov2))
             elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                s2.add((cov1, cov2))
-            elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
-                s0.add((cov1, cov2))
+                s2.add((i, cov1, cov2))
+            elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4: #fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
+                s0.add((i, cov1, cov2))
             
-            #for training set
-            if cov1 / max(float(cov2), 1) > threshold or cov1-cov2 > diff_cov:
-                ts1.add(i)
-            if cov1 / max(float(cov2), 1) < 1/threshold or cov2-cov1 > diff_cov:
-                ts2.add(i)
-            if fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
-                ts0.add(i)
+        l = np.min([len(s1), len(s2), len(s0), y])
         
-        s0 = sample(s0, min(y, len(s0)))
-        s1 = sample(s1, min(y, len(s1)))
-        s2 = sample(s2, min(y, len(s2)))
+        s0 = sample(s0, l)
+        s1 = sample(s1, l)
+        s2 = sample(s2, l)
+        
+        s0_v = map(lambda x: (x[1], x[2]), s0)
+        s1_v = map(lambda x: (x[1], x[2]), s1)
+        s2_v = map(lambda x: (x[1], x[2]), s2)
         
         if verbose:
-            self.write_test_samples(name + '-s0', s0)
-            self.write_test_samples(name + '-s1', s1)
-            self.write_test_samples(name + '-s2', s2)
+            self.write_test_samples(name + '-s0', s0_v)
+            self.write_test_samples(name + '-s1', s1_v)
+            self.write_test_samples(name + '-s2', s2_v)
         
-        l = np.min([len(ts1), len(ts2), len(ts0), x])
-        tmp = set(sample(ts1, l)) | set(sample(ts2, l)) | set(sample(ts0, l))
+        tmp = s0 + s1 + s2
+        training_set = map(lambda x: x[0], tmp)
         
-        for i in tmp:
-            training_set.add(self.indices_of_interest[i])
-            #search up
-            while i+1 < len(self.indices_of_interest) and self.indices_of_interest[i+1] == self.indices_of_interest[i]+1:
-                training_set.add(self.indices_of_interest[i+1])
-                i += 1
-            #search down
-            while i-1 > 0 and self.indices_of_interest[i-1] == self.indices_of_interest[i]-1:
-                training_set.add(self.indices_of_interest[i-1])
-                i -= 1
+#         for i in tmp:
+#             training_set.add(self.indices_of_interest[i])
+#             #search up
+#             while i+1 < len(self.indices_of_interest) and self.indices_of_interest[i+1] == self.indices_of_interest[i]+1:
+#                 training_set.add(self.indices_of_interest[i+1])
+#                 i += 1
+#             #search down
+#             while i-1 > 0 and self.indices_of_interest[i-1] == self.indices_of_interest[i]-1:
+#                 training_set.add(self.indices_of_interest[i-1])
+#                 i -= 1
         
         training_set = list(training_set)
         training_set.sort()
@@ -318,6 +315,4 @@ class MultiCoverageSet():
                 print(chrom, s, e, sep ='\t', file=f)
             f.close()
         
-        
-        
-        return np.array(training_set), s0, s1, s2
+        return np.array(training_set), s0_v, s1_v, s2_v
