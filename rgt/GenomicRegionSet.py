@@ -101,6 +101,8 @@ class GenomicRegionSet:
                     if size > 5:
                         orientation = line[5]
                         data = "\t".join( [line[4]] + line[6:] )
+                    if size == 5:
+                        data = line[4]
                     
                     if start==end:
                        raise Exception(self.chrom+","+str(self.initial)+","+str(self.final)+","+filename+"\tThe region length shouldn't be zero.")
