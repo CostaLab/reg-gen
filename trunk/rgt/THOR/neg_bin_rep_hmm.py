@@ -39,8 +39,6 @@ def get_init_parameters(s0, s1, s2, **info):
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 1e-300
     
-    alpha = np.matrix([0.01]*6).reshape(2,3)
-    
     for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])
         low = min(el[1,1], el[0,2]) + 0.5 * fabs(el[1,1] - el[0,2])
