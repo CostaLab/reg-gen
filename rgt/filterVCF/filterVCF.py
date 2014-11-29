@@ -1,9 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-%prog
+%filterVCF [options] <CONFIG> 
 
-tool describtion
+Filter VCF files by pipeline described in README.
+<CONFIG> file must be a space separated list of:
+
+<sample's name> <path to VCF>
 
 @author: Manuel Allhoff
 
@@ -15,7 +18,8 @@ import sys
 from rgt.GenomicVariantSet import GenomicVariantSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from max_density import AlgGoldwasser
-
+from itertools import combinations
+from copy import copy
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -24,6 +28,7 @@ class HelpfulOptionParser(OptionParser):
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
 def load_data(path_sample_vcf):
+    """Return list of GenomicVarientSets described by config file"""
     data = []
     with open(path_sample_vcf) as file:
         for line in file:
@@ -35,13 +40,14 @@ def load_data(path_sample_vcf):
     return data
 
 def print_length(l, info):
+    """Print length of each GenomicVariant set in list l"""
     names = map(lambda x: x.name, l)
     print(info, file=sys.stderr)
     for i, name in enumerate(names):
         print(name, len(l[i]), file=sys.stderr, sep='\t')
 
 def get_max_density(GenomicVariantSets, lowerBound=20, upperBound=50, max_it=5):
-
+    """Compute max. density of homozygous SNPs and write results to stderr"""
     for GenomicVariantSet in GenomicVariantSets:
         max_pos = 0
         for record in GenomicVariantSet:
@@ -71,6 +77,7 @@ def get_max_density(GenomicVariantSets, lowerBound=20, upperBound=50, max_it=5):
         
 
 def input():
+    """Parse options"""
     parser = HelpfulOptionParser(usage=__doc__)
      
     parser.add_option("--t-mq", dest="t_mq", default=20, help="Threshold for mapping quality (MQ)")
@@ -78,6 +85,7 @@ def input():
     parser.add_option("--dbSNP", dest="c_dbSNP", default=None, help="Check for dbSNP")
     parser.add_option("--list-WT", dest="list_wt", default=None, help="List of WildTypes")
     parser.add_option("--bed", dest="list_bed", default=None, help="Filter against BED file (e.g. TFBS)")
+    parser.add_option("--max-density", dest="max_density", default=False, action="store_true", help="Perform max. density search")
     parser.add_option("--lowerBound", dest="lower_bound", default=15000, help="lower window bound for max. density search")
     parser.add_option("--upperBound", dest="upper_bound", default=30000, help="upper window bound for max. density search")
     
@@ -92,6 +100,7 @@ def input():
     return options, vcf_list
 
 def pipeline(sample_data, options):
+    """Filter sample data by MQ, DP and dbSNP"""
     print_length(sample_data, "#unfiltered variants")
     
     #filter MQ
@@ -114,6 +123,23 @@ def pipeline(sample_data, options):
     else:
         print("#Do not filter by dbSNP", file=sys.stderr)
 
+def output_intersections(sample_data):
+    """Compute and write VCF of all possible sample data subsets' intersection."""
+    for i in range(2, len(sample_data)+1):
+        for tuple in combinations(sample_data, i): 
+        #tuples have size i and are all subsets of sample_data with size i
+            for j, sample in enumerate(list(tuple)):
+                if j == 0:
+                    intersect_variants = GenomicVariantSet(name = 'intersection')
+                    intersect_variants.reader = copy(sample.reader)
+                    intersect_variants.sequences = copy(sample.sequences)
+                else:
+                    intersect_variants.intersect(sample)
+            
+            name = "-".join(map(lambda x: x.name, list(tuple)))
+            print("Intersection:", name, len(intersect_variants), sep='\t', file=sys.stderr)  
+            intersect_variants.write_vcf('intersect-%s.vcf' %name)
+
 def main():
     options, vcf_list = input()
     
@@ -122,7 +148,6 @@ def main():
     #filter_dbSNP = True
     #tfbs_motifs_path = '/home/manuel/workspace/cluster_p/human_genetics/exp/exp01_motifsearch_sox2/humangenetics_motifs/Match/chr11_mpbs.bed'
     
-    #Load data
     sample_data = load_data(vcf_list)
     print("##Filter variants of samples", file=sys.stderr)
     pipeline(sample_data, options)
@@ -146,8 +171,11 @@ def main():
     else:
         print("#Do not filter by wildtype", file=sys.stderr)
     
-    #get_max_density(GenomicVariantSets=sample_data, options.lower_bound, upperBound=options.upper_bound)
-    
+    if options.max_density:
+        get_max_density(GenomicVariantSets=sample_data, lowerBound=options.lower_bound, upperBound=options.upper_bound)
+    else:
+        print("#Do not perform max. density search", file=sys.stderr)
+        
     if options.list_bed:
         tfbs_motifs = GenomicRegionSet('tfbs_motifs')   
         tfbs_motifs.read_bed(options.list_bed)
@@ -155,16 +183,16 @@ def main():
         for sample in sample_data:
             sample.intersect(tfbs_motifs)
     
-        print_length(sample_data, "after considering BED file")
+        print_length(sample_data, "#variants after filtering by BED file")
     else:
         print("#Do not filter by BED file", file=sys.stderr)
     
-    #p01.write_vcf('p01.final.vcf')
-    #p11.write_vcf('p11.final.vcf')
-    #p12.write_vcf('p12.final.vcf')
-    #p18.write_vcf('p18.final.vcf')
-    #p25.write_vcf('p25.final.vcf')
-    #pWT.write_vcf('pWT.final.vcf')
+    print("#Compute intersection of sample's subsets (give intersection's name and size)")
+    output_intersections(sample_data)
+    
+    print("#Write filtered sample files")
+    for sample in sample_data:
+        sample.write_vcf("%s-filtered.vcf" %sample.name)
     
 if __name__ == '__main__':
     main()   

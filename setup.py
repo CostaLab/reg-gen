@@ -79,7 +79,7 @@ tools_dictionary = {
 "filterVCF": (
 "rgt-filterVCF",
 "rgt.filterVCF.filterVCF:main",
-["vcf", "numpy>=1.4.0", "scipy>=0.7.0"],
+["PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
 []
 ),
 "viz": (
