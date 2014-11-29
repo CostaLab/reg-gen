@@ -28,16 +28,17 @@ def load_data(path_sample_vcf):
     with open(path_sample_vcf) as file:
         for line in file:
             tmp = line.split(" ")
-            path, name = tmp[0], tmp[1]
+            name, path = tmp[0], tmp[1]
+            path = path.strip()
             data.append(GenomicVariantSet(path, name=name))
             
     return data
 
 def print_length(l, info):
     names = map(lambda x: x.name, l)
+    print(info, file=sys.stderr)
     for i, name in enumerate(names):
-        print('Lengths ', info, name, len(l[i]), file=sys.stderr, sep='\t')
-    print("", file=sys.stderr)
+        print(name, len(l[i]), file=sys.stderr, sep='\t')
 
 def get_max_density(GenomicVariantSets, lowerBound=20, upperBound=50, max_it=5):
 
@@ -73,10 +74,12 @@ def input():
     parser = HelpfulOptionParser(usage=__doc__)
      
     parser.add_option("--t-mq", dest="t_mq", default=20, help="Threshold for mapping quality (MQ)")
-    parser.add_option("--t-dp", dest="t_mq", default=20, help="Threshold for combined depth (DP)")
+    parser.add_option("--t-dp", dest="t_dp", default=20, help="Threshold for combined depth (DP)")
     parser.add_option("--dbSNP", dest="c_dbSNP", default=None, help="Check for dbSNP")
     parser.add_option("--list-WT", dest="list_wt", default=None, help="List of WildTypes")
     parser.add_option("--bed", dest="list_bed", default=None, help="Filter against BED file (e.g. TFBS)")
+    parser.add_option("--lowerBound", dest="lower_bound", default=15000, help="lower window bound for max. density search")
+    parser.add_option("--upperBound", dest="upper_bound", default=30000, help="upper window bound for max. density search")
     
     (options, args) = parser.parse_args()
     
@@ -88,8 +91,30 @@ def input():
         
     return options, vcf_list
 
-if main():
+def pipeline(sample_data, options):
+    print_length(sample_data, "#unfiltered variants")
+    
+    #filter MQ
+    for sample in sample_data:
+        sample.filter('MQ', '>=', options.t_mq)
+    
+    print_length(sample_data, "#variants with MQ >= %s" %options.t_mq)
+    
+    #filter DP
+    for sample in sample_data:
+        sample.filter('DP', '>=', options.t_dp)
+    
+    print_length(sample_data, "#variants with DP >= %s" %options.t_dp)
+    
+    if options.c_dbSNP:
+        for sample in sample_data:
+            sample.filter_dbSNP()
+    
+        print_length(sample_data, "#variants after filtering by dbSNP")
+    else:
+        print("#Do not filter by dbSNP", file=sys.stderr)
 
+def main():
     options, vcf_list = input()
     
     #thres_mq = 20
@@ -99,59 +124,40 @@ if main():
     
     #Load data
     sample_data = load_data(vcf_list)
+    print("##Filter variants of samples", file=sys.stderr)
+    pipeline(sample_data, options)
     
-    print_length(sample_data, "#unfiltered variants")
+    if options.list_wt:
+        wt_data = load_data(options.list_wt)
+        print("##Filter variants of wildtypes", file=sys.stderr)
+        pipeline(wt_data, options)
+        union_wt = GenomicVariantSet(name = "union_wt")
+        for wt in wt_data:
+            union_wt.sequences += wt.sequences 
+        
+        print("#wildtype variants:", file=sys.stderr)
+        print("union WT", len(union_wt), file=sys.stderr, sep="\t")
+        
+        #delete Wildtype
+        for sample in sample_data:
+            sample.subtract(union_wt)
+        
+        print_length(sample_data, "#variants after subtracting wildtypes")
+    else:
+        print("#Do not filter by wildtype", file=sys.stderr)
     
-    #filter MQ
-    for sample in sample_data:
-        sample.filter('MQ', '>=', options.t_mq)
- 
-    print_length(sample_data, "#variants after keeping MQ >= %s" %thres_mq)
-     
-    #filter DP
-    #p01.filter('DP', '>=', thres_dp)
-    #p11.filter('DP', '>=', thres_dp)
-    #p12.filter('DP', '>=', thres_dp)
-    #p18.filter('DP', '>=', thres_dp)
-    #p25.filter('DP', '>=', thres_dp)
-    #pWT.filter('DP', '>=', thres_dp)
- 
-    #print_length([p01, p11, p12, p18, p25, pWT], "after keeping DP >= %s" %thres_dp)
-
-#     #filter dbSNP
-#     if filter_dbSNP:
-#         p01.filter_dbSNP()
-#         p11.filter_dbSNP()
-#         p12.filter_dbSNP()
-#         p18.filter_dbSNP()
-#         p25.filter_dbSNP()
-#         pWT.filter_dbSNP()
-# 
-#     print_length([p01, p11, p12, p18, p25, pWT], "after filtering with dbSNP >= %s" %thres_dp)
+    #get_max_density(GenomicVariantSets=sample_data, options.lower_bound, upperBound=options.upper_bound)
     
+    if options.list_bed:
+        tfbs_motifs = GenomicRegionSet('tfbs_motifs')   
+        tfbs_motifs.read_bed(options.list_bed)
+        
+        for sample in sample_data:
+            sample.intersect(tfbs_motifs)
     
-    #get_max_density(GenomicVariantSets=[p01, p11, p12, p18, p25], lowerBound=15000, upperBound=35000)
-    
-    #delete Wildtype
-    #p01.subtract(pWT)
-    #p11.subtract(pWT)
-    #p12.subtract(pWT)
-    #p18.subtract(pWT)
-    #p25.subtract(pWT)
- 
-    #print_length([p01, p11, p12, p18, p25, pWT], "after subtracting Wildtype")
-    
-    #TFBS sides
-    #tfbs_motifs = GenomicRegionSet('tfbs_motifs')   
-    #tfbs_motifs.read_bed(tfbs_motifs_path)
-    
-    #p01.intersect(tfbs_motifs)
-    #p11.intersect(tfbs_motifs)
-    #p12.intersect(tfbs_motifs)
-    #p18.intersect(tfbs_motifs)
-    #p25.intersect(tfbs_motifs)
-    
-    #print_length([p01, p11, p12, p18, p25, pWT], "after considering TBFS motifs")
+        print_length(sample_data, "after considering BED file")
+    else:
+        print("#Do not filter by BED file", file=sys.stderr)
     
     #p01.write_vcf('p01.final.vcf')
     #p11.write_vcf('p11.final.vcf')
