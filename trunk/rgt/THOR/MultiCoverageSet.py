@@ -254,8 +254,8 @@ class MultiCoverageSet():
     def write_test_samples(self, name, l):
         f = open(name, 'w')
         
-        for el in l:
-            print(el, file=f)
+        for el1, el2 in l:
+            print(el1, el2, sep='\t', file=f)
         f.close()
     
     def get_training_set(self, exp_data, x, verbose, name, y):
