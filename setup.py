@@ -76,6 +76,12 @@ tools_dictionary = {
 ["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
 []
 ), 
+"filterVCF": (
+"rgt-filterVCF",
+"rgt.filterVCF.filterVCF:main",
+["vcf", "numpy>=1.4.0", "scipy>=0.7.0"],
+[]
+),
 "viz": (
   "rgt-viz",
   "rgt.viz.Main:main",
