@@ -264,19 +264,29 @@ class MultiCoverageSet():
         training_set = set()
         threshold = 3.0
         diff_cov = 100
-        s0, s1, s2 = set(), set(), set()
+        s0, s1, s2 = [], [], []
 
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
             
             #for parameter fitting for function
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                s1.add((i, cov1, cov2))
+                s1.append((i, cov1, cov2))
             elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                s2.add((i, cov1, cov2))
+                s2.append((i, cov1, cov2))
             elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4: #fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
-                s0.add((i, cov1, cov2))
+                s0.append((i, cov1, cov2))
+        
+        for i, el in enumerate([s0, s1, s2]):
+            el = np.asarry(el)
+            print("percentiles", file=sys.stderr)
+            print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
             
+            el = el[el[:,1] < np.percentile(el[:,1], 90)]
+            el = el[el[:,2] < np.percentile(el[:,2], 90)]
+            
+            print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
+          
         l = np.min([len(s1), len(s2), len(s0), y])
         
         s0 = sample(s0, l)
