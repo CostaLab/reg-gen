@@ -277,6 +277,8 @@ class MultiCoverageSet():
             elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4: #fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 < diff_cov/2:
                 s0.append((i, cov1, cov2))
         
+        print("L", len(s1), file=sys.stderr)
+        
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
             print("percentiles", file=sys.stderr)
@@ -286,7 +288,9 @@ class MultiCoverageSet():
             el = el[el[:,2] < np.percentile(el[:,2], 90)]
             
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
-          
+        
+        print("L2", len(s1), file=sys.stderr)
+        
         l = np.min([len(s1), len(s2), len(s0), y])
         
         s0 = sample(s0, l)
