@@ -278,16 +278,20 @@ class MultiCoverageSet():
                 s0.append((i, cov1, cov2))
         
         print("L", len(s1), file=sys.stderr)
-        tmp = [s0, s1, s2]
-        for i, el in enumerate(tmp):
+        tmp = []
+        for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
             print("percentiles", file=sys.stderr)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
             
             el = el[el[:,1] < np.percentile(el[:,1], 90)]
             el = el[el[:,2] < np.percentile(el[:,2], 90)]
-            tmp[i] = el
+            tmp.append(el)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
+        
+        s0 = tmp[0]
+        s1 = tmp[1]
+        s2 = tmp[2]
         
         print("L2", len(s1), file=sys.stderr)
         
