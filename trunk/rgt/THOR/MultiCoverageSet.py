@@ -278,7 +278,7 @@ class MultiCoverageSet():
                 s0.append((i, cov1, cov2))
         
         for i, el in enumerate([s0, s1, s2]):
-            el = np.asarry(el)
+            el = np.asarray(el)
             print("percentiles", file=sys.stderr)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
             
