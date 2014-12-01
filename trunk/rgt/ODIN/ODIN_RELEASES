@@ -1,0 +1,34 @@
+* ODIN-0.1.2
+- get rid of option for different normalization strategies
+- add more infos to options
+
+TODO
+- we should save all relevant statistics in the .info file. Read
+extension size, normalization factor (and anything else we should
+think of).
+
+- i think the name of the bw files should be the same as the original
+name of the bam file (plus a string "normalized").
+
+- right now all the peaks have 1000 bps, although the default windows
+size is 100. Why is that?
+
+- I also missed that we should use -m for histones. We should state
+this explicitly in the example state (or include a more detailed
+tutorial with histones as well). Maybe we should put the description
+of this important parameters after the p-value, so that users don't
+miss this.
+
+- consider p-value bug
+- add debug and verbose flag
+- give out narrowPeak
+- for extra tools: use bash!
+- describe 'm' option in HP
+
+* ODIN-0.1.1
+- fix chrom size bug (take several genomes now)
+- fix bigWigConstruction bug (add new flag)
+- check whether wigToBigWig is in $PATH variable, and give warning if not
+
+* ODIN-0.1alpha
+paper version
