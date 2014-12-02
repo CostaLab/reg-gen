@@ -60,12 +60,11 @@ class DualCoverageSet():
                 self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                 
-                if debug: #0: output after GC
+                if debug: #1: output after GC
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
                     input['cov-input'].write_bigwig(name + '-debug-1-' + name_input + '.bw', chrom_sizes)
                     input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw', chrom_sizes)
         
-        print("Normalizing signals", file=sys.stderr)
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
@@ -91,14 +90,14 @@ class DualCoverageSet():
         input = map_input[i]
         #diaz and naive
         if i != 1 and norm_strategy == 5:
-            print("Normalizing...", file=sys.stderr)
+            print("Normalizing signals", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
                                                               filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'], step_width=1000, zero_counts=0, \
                                                               filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             
-            print("Normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
+            print("Normalize input with factor %s and %s" %(round(map_input[1]['input_factor'], 3), round(map_input[2]['input_factor'], 3)), file=sys.stderr)
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
             map_input[2]['cov-input'].scale(map_input[2]['input_factor'])
             
@@ -112,21 +111,21 @@ class DualCoverageSet():
                 
                 if s1 > s2:
                     map_input[2]['cov-ip'].scale(s1/float(s2))
-                    print("Normalize file 2 by signal with estimated factor %s: " %(s1/float(s2)), file=sys.stderr)
+                    print("Normalize file 2 by signal with estimated factor %s: " %(round(s1/float(s2), 3)), file=sys.stderr)
                 elif s2 >= s1:
-                    print("Normalize file 1 by signal with estimated factor %s: " %(s2/float(s1)), file=sys.stderr)
+                    print("Normalize file 1 by signal with estimated factor %s: " %(round(s2/float(s1), 3)), file=sys.stderr)
                     map_input[1]['cov-ip'].scale(s2/float(s1))
             else:
                 map_input[1]['cov-ip'].scale(factor_input_1)
-                print("Normalize file 1 by signal with given factor %s: " %factor_input_1, file=sys.stderr)
+                print("Normalize file 1 by signal with given factor %s: " %round(factor_input_1, 3), file=sys.stderr)
                 map_input[2]['cov-ip'].scale(factor_input_2)
-                print("Normalize file 2 by signal with given factor %s: " %factor_input_2, file=sys.stderr)
+                print("Normalize file 2 by signal with given factor %s: " %round(factor_input_2, 3), file=sys.stderr)
         
         return norm_done
 
     
     def print_gc_hist(self, name, gc_hist):
-        f = open(name + 'gc-content.data', 'w')
+        f = open(name + '-gc-content.data', 'w')
         for i in range(len(gc_hist)):
             print(i, gc_hist[i], file=f)
         f.close()
