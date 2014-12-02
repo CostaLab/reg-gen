@@ -305,7 +305,7 @@ def input(test):
         options.foldchange=1.05
         options.pcutoff = 0.05
         options.name='test'
-        options.distr='binom'
+        options.distr='poisson'
         options.constchrom = None #'chr1'
         options.stepsize=50
         options.binsize=100
