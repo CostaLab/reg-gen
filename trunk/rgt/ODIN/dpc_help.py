@@ -421,8 +421,8 @@ def input(test):
     if options.norm_strategy in [2, 4, 5] and (options.input_1 is None or options.input_2 is None):
         parser.error("Please define input files for this normalization strategy!")
         
-    if options.norm_strategy is not None and (options.input_factor_1 is not None or options.input_factor_1 is not None ):
-        parser.error("Input factors are not allowed for this normalization strategy!")
+    #if options.norm_strategy is not None and (options.input_factor_1 is not None or options.input_factor_1 is not None ):
+    #    parser.error("Input factors are not allowed for this normalization strategy!")
     
     if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
         parser.error("GC content can only be computed with both input files.")
