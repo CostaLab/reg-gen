@@ -309,8 +309,8 @@ def input(test):
         options.mag = 3
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
-        options.ext_1 = 200
-        options.ext_2 = 200
+        options.ext_1 = None
+        options.ext_2 = None
         options.ext_input_1 = None
         options.ext_input_2 = None
         options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
