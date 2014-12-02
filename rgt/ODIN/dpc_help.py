@@ -132,7 +132,7 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     for i in range(len(pvalues)):
         c, s, e, c1, c2, strand = peaks[i]
         color = colors[strand]
-        if pcutoff > pvalues[i]:
+        if pvalues[i] > pcutoff:
             print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
                   color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
  
@@ -325,6 +325,7 @@ def input(test):
                           help="Input control file for second parameter [default: %default]")
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
         parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal. [default: %default]")
         parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
@@ -355,7 +356,6 @@ def input(test):
         
         parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
-        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
         
         parser.add_option("--const-chrom", default=None, dest="constchrom", type="string",\
                           help="Constrain HMM to learn chromosome. [default: %default = each chromosome]")
