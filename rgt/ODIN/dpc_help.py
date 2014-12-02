@@ -319,14 +319,14 @@ def input(test):
         options.foldchange=1.05
         options.pcutoff = 0.05
         options.name='test'
-        options.distr='poisson-c'
+        options.distr='binom'
         options.constchrom = None #'chr1'
         options.stepsize=50
         options.binsize=100
         options.input_factor_1= None #0.7
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
-        options.verbose=True
+        options.verbose=False
         options.debug=False
         #chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.sizes'
