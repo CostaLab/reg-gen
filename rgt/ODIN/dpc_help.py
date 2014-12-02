@@ -346,10 +346,6 @@ def input(test):
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.05, type="float",\
                           help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
-        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal [default: %default]")
-        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
@@ -368,13 +364,17 @@ def input(test):
         parser.add_option("--distr", default="binom", dest="distr", type="string", \
                           help="HMM's emission distribution. [Binomial (binom), (constraint) mixture of poisson (poisson, poisson-c)] [default: %default]")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="Magnitude of Poisson mixture model. [default: %default]")
+        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+                          help="Size of underlying bins for creating the signal [default: %default]")
+        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output further information of DP-Calling progress [default: %default]")
-        parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
+        parser.add_option("--version", dest="version", default=False, action="store_true", help="Show version")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     
-        group = OptionGroup(parser, "Dangerous options", "Warning: These options may have an high impact on the results.")
+        group = OptionGroup(parser, "Advanced options", "Warning: These options may have an high impact on the results.")
         group.add_option("--regions", dest="regions", default=None, help="regions (BED) where to search for DPs [default: entire genome]")
         group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
         group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
