@@ -90,6 +90,7 @@ class DualCoverageSet():
     def normalization(self, map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict, tracker):
         input = map_input[i]
         #diaz and naive
+        print(i, norm_strategy, file=sys.stderr)
         if i != 1 and norm_strategy == 5:
             print("Normalizing signals", file=sys.stderr)
             #apply diaz
