@@ -395,6 +395,9 @@ def input(test):
     options.factor_input_1 = None #supposed to vary the BAM input with a predefined factor
     options.factor_input_2 = None
     
+    if options.debug:
+        options.verbose = True
+    
     if not test:
         (options, args) = parser.parse_args()
         
