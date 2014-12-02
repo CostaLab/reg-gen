@@ -10,7 +10,7 @@ Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 """
 
 from __future__ import print_function
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -341,20 +341,16 @@ def input(test):
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
-                          help="Input control file for first parameter [default: %default]")
+                          help="Input control for first parameter [default: %default]")
         parser.add_option("--input-2", dest="input_2", default=None, \
-                          help="Input control file for second parameter [default: %default]")
-        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
-                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+                          help="Input control for second parameter [default: %default]")
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.05, type="float",\
+                          help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
         parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal. [default: %default]")
+                          help="Size of underlying bins for creating the signal [default: %default]")
         parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
                           help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
-        parser.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
-                          help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
-        parser.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
-                          help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
@@ -365,37 +361,40 @@ def input(test):
                           help="Read's extension size for first input file. If option is not chosen, estimate extension size. [default: %default]")
         parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",\
                           help="Read's extension size for second input file. If option is not chosen, estimate extension size. [default: %default]")
-        parser.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
-                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
-        parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
-                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
-        
         #parser.add_option("--factor-1", default=None, dest="factor_input_1", type="float",\
         #                  help="Factor for first BAM. [default: %default]")
         #parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
         #                  help="Factor for second BAM. [default: %default]")
         
-        parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
-        parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
-        
-        parser.add_option("--const-chrom", default=None, dest="constchrom", type="string",\
-                          help="Constrain HMM to learn chromosome. [default: %default = each chromosome]")
+        parser.add_option("--distr", default="binom", dest="distr", type="string", \
+                          help="HMM's emission distribution. [Binomial (binom), (constraint) mixture of poisson (poisson, poisson-c)] [default: %default]")
+        parser.add_option("--mag", default=3, dest="mag", type="int", help="Magnitude of Poisson mixture model. [default: %default]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output further information of DP-Calling progress [default: %default]")
-        parser.add_option("--debug", default=False, dest="debug", action="store_true", \
-                          help="Output debug information. Warning: space consuming! [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
-        parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                          help="turn of GC-content calculation (faster) [default: %default]")
-        parser.add_option("--deadzones", dest="deadzones", default=None, \
-                          help="Deadzones (BED) [default: %default]")
-        parser.add_option("--regions", dest="regions", default=None, \
-                          help="regions (BED) where to search for DPs [default: entire genome]")
     
-    
-    if not test:
+        group = OptionGroup(parser, "Dangerous options", "Warning: These options may have an high impact on the results.")
+        group.add_option("--regions", dest="regions", default=None, help="regions (BED) where to search for DPs [default: entire genome]")
+        group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
+        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+                          help="turn of GC-content calculation (faster, but less accurate) [default: %default]")
+        group.add_option("--const-chrom", default=None, dest="constchrom", type="string",\
+                          help="Constrain HMM learning process to chromosome. [default: %default]")
+        group.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
+                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+        group.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
+                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+        group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
+                          help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
+        group.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
+                          help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
+        group.add_option("--debug", default=False, dest="debug", action="store_true", \
+                          help="Output debug information. Warning: space consuming! [default: %default]")
+
+        parser.add_option_group(group)
+        
         (options, args) = parser.parse_args()
         
         options.norm_strategy = 5 #get rid of other options, this is an ugly but efficient solution
@@ -423,6 +422,10 @@ def input(test):
     if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
         or (options.regions is not None and not os.path.isfile(options.regions)) or not os.path.isfile(genome):
         parser.error("At least one input parameter is not a file")
+    
+    if (options.input_1 is not None and not os.path.isfile(options.input_1)) or \
+        (options.input_2 is not None and not os.path.isfile(options.input_2)):
+        parser.error("At least one control input is not a file")
     
     if options.name is None:
         prefix = os.path.splitext(os.path.basename(bamfile_1))[0]
