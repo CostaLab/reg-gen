@@ -80,14 +80,14 @@ def input():
     """Parse options"""
     parser = HelpfulOptionParser(usage=__doc__)
      
-    parser.add_option("--t-mq", dest="t_mq", default=20, help="Threshold for mapping quality (MQ)")
-    parser.add_option("--t-dp", dest="t_dp", default=20, help="Threshold for combined depth (DP)")
-    parser.add_option("--dbSNP", dest="c_dbSNP", default=None, help="Check for dbSNP")
-    parser.add_option("--list-WT", dest="list_wt", default=None, help="List of WildTypes")
-    parser.add_option("--bed", dest="list_bed", default=None, help="Filter against BED file (e.g. TFBS)")
-    parser.add_option("--max-density", dest="max_density", default=False, action="store_true", help="Perform max. density search")
-    parser.add_option("--lowerBound", dest="lower_bound", default=15000, help="lower window bound for max. density search")
-    parser.add_option("--upperBound", dest="upper_bound", default=30000, help="upper window bound for max. density search")
+    parser.add_option("--t-mq", dest="t_mq", default=20, help="Threshold for mapping quality (MQ) [default: %default]")
+    parser.add_option("--t-dp", dest="t_dp", default=20, help="Threshold for combined depth (DP) [default: %default]")
+    parser.add_option("--dbSNP", dest="c_dbSNP", default=None, help="Check for dbSNP [default: %default]")
+    parser.add_option("--list-WT", dest="list_wt", default=None, help="List of WildTypes [default: %default]")
+    parser.add_option("--bed", dest="list_bed", default=None, help="Filter against BED file (e.g. TFBS) [default: %default]")
+    parser.add_option("--max-density", dest="max_density", default=False, action="store_true", help="Perform max. density search [default: %default]")
+    parser.add_option("--lowerBound", dest="lower_bound", default=15000, help="lower window bound for max. density search [default: %default]")
+    parser.add_option("--upperBound", dest="upper_bound", default=30000, help="upper window bound for max. density search [default: %default]")
     
     (options, args) = parser.parse_args()
     
