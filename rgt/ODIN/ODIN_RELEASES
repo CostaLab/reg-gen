@@ -23,7 +23,7 @@ miss this.
 - add debug and verbose flag
 - give out narrowPeak
 - for extra tools: use bash!
-- describe 'm' option in HP
+- describe 'm' option on HP
 
 * ODIN-0.1.1
 - fix chrom size bug (take several genomes now)
