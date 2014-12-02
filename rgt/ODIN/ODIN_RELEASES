@@ -6,18 +6,12 @@
 - remove p-values that are too high (pvalue cutoff bug)
 - describe 'm' option on HP, emphasize it in the help (done)
 - give out narrowPeak
+- add debug and verbose flag
+- more infos in setup.info (read extension, normalization factor)
 
 TODO
-- we should save all relevant statistics in the .info file. Read
-extension size, normalization factor (and anything else we should
-think of).
-
 - right now all the peaks have 1000 bps, although the default windows
 size is 100. Why is that?
-
-- add debug and verbose flag
-
-
 
 
 * ODIN-0.1.1
