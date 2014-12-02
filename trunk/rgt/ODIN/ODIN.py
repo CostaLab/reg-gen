@@ -54,8 +54,11 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 def main():
     test = True
+    if test:
+        print("---------- TEST MODE ----------", file=sys.stderr)
+    
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-    #print(options.verbose, file=sys.stderr)
+
     ######### WORK! ##########
     exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, \
