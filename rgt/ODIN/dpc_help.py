@@ -339,7 +339,6 @@ def input(test):
         if options.debug:
             options.verbose = True
     else:
-        
         parser.add_option("--input-1", dest="input_1", default=None, \
                           help="Input control for first parameter [default: %default]")
         parser.add_option("--input-2", dest="input_2", default=None, \
