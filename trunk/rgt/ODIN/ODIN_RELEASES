@@ -2,25 +2,23 @@
 - get rid of option for different normalization strategies
 - add more infos to options
 - merge DPs in output
+- rename output signal expname - bam name - normalized.bw
+- remove p-values that are too high (pvalue cutoff bug)
+- describe 'm' option on HP, emphasize it in the help (done)
 
 TODO
 - we should save all relevant statistics in the .info file. Read
 extension size, normalization factor (and anything else we should
 think of).
 
-- i think the name of the bw files should be the same as the original
-name of the bam file (plus a string "normalized").
-
 - right now all the peaks have 1000 bps, although the default windows
 size is 100. Why is that?
 
 
-- consider p-value bug (done)
-
 - add debug and verbose flag
 - give out narrowPeak
 
-- describe 'm' option on HP, emphasize it in the help (done)
+
 
 * ODIN-0.1.1
 - fix chrom size bug (take several genomes now)
