@@ -14,18 +14,13 @@ name of the bam file (plus a string "normalized").
 - right now all the peaks have 1000 bps, although the default windows
 size is 100. Why is that?
 
-- I also missed that we should use -m for histones. We should state
-this explicitly in the example state (or include a more detailed
-tutorial with histones as well). Maybe we should put the description
-of this important parameters after the p-value, so that users don't
-miss this.
 
 - consider p-value bug (done)
 
 - add debug and verbose flag
 - give out narrowPeak
-- for extra tools: use bash!
-- describe 'm' option on HP
+
+- describe 'm' option on HP, emphasize it in the help (done)
 
 * ODIN-0.1.1
 - fix chrom size bug (take several genomes now)
