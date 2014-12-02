@@ -93,8 +93,8 @@ def main():
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
         m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
         m.fit([training_set_obs])
-        #m.save_setup(options.name)
-        distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
+        m.save_setup(tracker)
+        distr_pvalue={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]}
     elif options.distr == 'poisson':
         print("Use poisson mixture HMM", file=sys.stderr)
         from hmm_mixture_poisson_2d3s import PoissonHMM2d3s, get_init_parameters
@@ -112,7 +112,7 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        #m.save_setup(options.name, n, p)
+        m.save_setup(tracker, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
     elif options.distr == 'poisson-c':
         print("Use poisson constrained mixture HMM", file=sys.stderr)
@@ -129,17 +129,12 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        #m.save_setup(options.name, n, p)
+        m.save_setup(tracker, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
     if options.debug:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
       
-    if options.verbose:
-        print('p', m.p, file=sys.stderr)
-        print("Final HMM's transition matrix: ", file=sys.stderr)
-        print(m._get_transmat(), file=sys.stderr)
-         
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))

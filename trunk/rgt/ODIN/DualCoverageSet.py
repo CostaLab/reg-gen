@@ -71,7 +71,7 @@ class DualCoverageSet():
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             #TODO: uncomment here!
-            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict)
+            #norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict)
             
             if input['input'] is not None:
                 input['cov-input'].write_bigwig(name + '-' + name_input + '-normalized.bw', chrom_sizes)

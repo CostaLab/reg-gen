@@ -83,16 +83,12 @@ class PoissonHMM2d3s(_BaseHMM):
         self.weights = 0 #weigths for merging distributions
     
     
-    def save_setup(self, name, n, p):
-        f = open(name + '-setup.info', 'w')
-        f.write('Poisson P\n')
-        f.write("%s \n" %self.p)
-        f.write('Poisson C\n')
-        f.write("%s \n" %self.c)
-        f.write('Poisson p-value settings\n')
-        f.write("%s %s\n" %(n, p))
-        f.close()
-    
+    def save_setup(self, tracker, n, p):
+        tracker.write(text=str(self.p) + '\n', header='Poisson P\n')
+        tracker.write(text=str(self.c) + '\n', header='Poisson C\n')
+        tracker.write(text=str(n) + '\n' + str(p), header='Poisson p-value settings\n')
+        tracker.write(text=str(self._get_transmat()) + "\n", header="Transmission matrix")
+        
     def _compute_log_likelihood(self, X):
         matrix = []
         lookup = {}

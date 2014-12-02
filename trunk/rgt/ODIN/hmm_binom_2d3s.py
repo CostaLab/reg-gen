@@ -68,13 +68,11 @@ class BinomialHMM2d3s(_BaseHMM):
         self.count_s1, self.count_s2 = 0, 0
 
 
-    def save_setup(self, name):
-        f = open(name + '-setup.info', 'w')
-        f.write('Binomial n, p\n')
-        f.write("%s %s\n" %(self.n, self.p))
-        f.write('p-value settings\n')
-        f.write("%s %s\n" %(self.n[0], self.p[0][1]))
-        f.close()
+    def save_setup(self, tracker):
+        tracker.write(text=str(self.n) + '\n' + str(self.p)+ "\n", header="Binomial n, p\n")
+        tracker.write(text=str(self.n[0]) + '\n' + str(self.p[0][1]) + "\n", header="p-value setting (n, p of Background state)")
+        tracker.write(text=str(self._get_transmat()) + "\n", header="Transmission matrix")
+        
 
     def _get_emissionprob(self):
         return self.p
