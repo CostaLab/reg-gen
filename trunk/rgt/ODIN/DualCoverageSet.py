@@ -7,6 +7,7 @@ from help_hmm import EPSILON
 from gc_content import get_gc_context
 import sys
 from normalize import get_normalization_factor
+from os import path
 
 class DualCoverageSet():
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
@@ -18,6 +19,11 @@ class DualCoverageSet():
         self.name = name
         self.cov1 = CoverageSet('first file', region)
         self.cov2 = CoverageSet('second file', region)
+        
+        name_bam1 = path.splitext(path.basename(file_1))[0]
+        name_bam2 = path.splitext(path.basename(file_2))[0]
+        
+        print(name_bam1, name_bam2, file=sys.stderr)
         
         print("Loading reads...", file=sys.stderr)
         self.cov1.coverage_from_bam(bam_file=file_1, read_size=ext_1, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
