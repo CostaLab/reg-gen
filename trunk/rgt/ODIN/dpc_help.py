@@ -335,6 +335,9 @@ def input(test):
         options.version=False
         options.factor_input_1=None #for BAM
         options.factor_input_2=None
+        
+        if options.debug:
+            options.verbose = True
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
@@ -391,16 +394,16 @@ def input(test):
         parser.add_option("--regions", dest="regions", default=None, \
                           help="regions (BED) where to search for DPs [default: entire genome]")
     
-    options.norm_strategy = 5 #get rid of other options, this is an ugly but efficient solution
-    options.factor_input_1 = None #supposed to vary the BAM input with a predefined factor
-    options.factor_input_2 = None
-    
-    if options.debug:
-        options.verbose = True
     
     if not test:
         (options, args) = parser.parse_args()
         
+        options.norm_strategy = 5 #get rid of other options, this is an ugly but efficient solution
+        options.factor_input_1 = None #supposed to vary the BAM input with a predefined factor
+        options.factor_input_2 = None
+        
+        if options.debug:
+            options.verbose = True
         
         if options.version:
             version = "version \"0.1alpha\""
