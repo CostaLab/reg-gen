@@ -73,7 +73,7 @@ def main():
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     
-    if options.verbose:
+    if options.debug:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
     training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom)
