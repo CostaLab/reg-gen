@@ -132,6 +132,7 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     for i in range(len(pvalues)):
         c, s, e, c1, c2, strand = peaks[i]
         color = colors[strand]
+        print(pvalues[i], pcutoff, pvalues[i] > pcutoff, file=sys.stderr)
         if pvalues[i] > pcutoff:
             print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
                   color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
