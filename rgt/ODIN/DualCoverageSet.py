@@ -15,7 +15,11 @@ class DualCoverageSet():
         name_bam = path.splitext(path.basename(ip))[0]
         if input is not None:
             name_input = path.splitext(path.basename(input))[0]
-    
+        else:
+            name_input = None
+        
+        return name_bam, name_input
+        
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
                  input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
                  factor_input_1, factor_input_2, chrom_sizes_dict, debug):
@@ -36,7 +40,7 @@ class DualCoverageSet():
         for i in [1, 2]:
             #get GC-content
             input = map_input[i]
-            
+            print(input['input'], input['ip'], file=sys.stderr)
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             if debug: #0: output raw IP
