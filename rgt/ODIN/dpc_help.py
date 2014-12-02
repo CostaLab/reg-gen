@@ -292,8 +292,8 @@ def input(laptop):
         options.ext_1 = 200
         options.ext_2 = 200
         options.ext_input_1 = None #200
-        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        #options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        #options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.ext_input_2 = None #200
         options.confidence_threshold=0.7
         options.foldchange=1.05
@@ -307,6 +307,7 @@ def input(laptop):
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
         options.verbose=True
+        options.debug=True
         #chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.sizes'
         options.no_gc_content = False
@@ -358,7 +359,9 @@ def input(laptop):
                           help="Constrain HMM to learn chromosome. [default: %default = each chromosome]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
-                          help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
+                          help="Output further information of DP-Calling progress [default: %default]")
+        parser.add_option("--debug", default=False, dest="debug", action="store_true", \
+                          help="Output debug information. Warning: space consuming! [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
         parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
