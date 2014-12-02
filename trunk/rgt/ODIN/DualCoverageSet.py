@@ -66,6 +66,7 @@ class DualCoverageSet():
                     input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw', chrom_sizes)
         
         norm_done = False
+        print("Normalizing signals", file=sys.stderr)
         for i in [1, 2]:
             input = map_input[i]
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
@@ -125,7 +126,6 @@ class DualCoverageSet():
         #diaz and naive
         print(i, norm_strategy, file=sys.stderr)
         if i != 1 and norm_strategy == 5:
-            print("Normalizing signals", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
                                                               filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
