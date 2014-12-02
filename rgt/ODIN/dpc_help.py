@@ -371,7 +371,7 @@ def input(test):
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output further information of DP-Calling progress [default: %default]")
-        parser.add_option("--version", dest="version", default=False, action="store_true", help="Show version")
+        parser.add_option("--version", dest="version", default=False, action="store_true", help="show version")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     
         group = OptionGroup(parser, "Advanced options")
