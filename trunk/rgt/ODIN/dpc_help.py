@@ -57,7 +57,32 @@ def _compute_pvalue((x, y, side, distr)):
         return sys.maxint
     else:
         return -get_log_pvalue_new(x, y, side, distr)
-    
+
+def _output_BED(name, pvalues, peaks, pcutoff):
+    f = open(name + '-diffpeaks.bed', 'w')
+     
+    colors = {'+': '255,0,0', '-': '0,255,0'}
+    bedscore = 1000
+     
+    for i in range(len(pvalues)):
+        c, s, e, c1, c2, strand = peaks[i]
+        color = colors[strand]
+        if pvalues[i] > pcutoff:
+            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
+                  color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
+ 
+    f.close()
+
+def _output_narrowPeak(name, pvalues, peaks, pcutoff):
+    """Output in narrowPeak format,
+    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
+    f = open(name + '-diffpeaks.narrowPeak', 'w')
+    for i in range(len(pvalues)):
+        c, s, e, _, _, strand = peaks[i]
+        if pvalues[i] > pcutoff:
+            print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
+    f.close()
+
 def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     pcutoff = -log10(pcutoff)
     indices_of_interest = DCS.indices_of_interest
@@ -123,20 +148,9 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     merge_delete(ext_size, merge, peaks, pvalues, name)
     
     #peaks = [(c, s, e, s1, s2, strand)]
+    self._output_BED(name, pvalues, peaks, pcutoff)
+    self._output_narrowPeak(name, pvalues, peaks, pcutoff)
     
-    f = open(name + '-diffpeaks.bed', 'w')
-     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
-    bedscore = 1000
-     
-    for i in range(len(pvalues)):
-        c, s, e, c1, c2, strand = peaks[i]
-        color = colors[strand]
-        if pvalues[i] > pcutoff:
-            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
-                  color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
- 
-    f.close()
 
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
