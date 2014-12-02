@@ -141,7 +141,7 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
                input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
-               factor_input_1, factor_input_2, debug):
+               factor_input_1, factor_input_2, debug, tracker):
     
     regionset = GenomicRegionSet(name)
     chrom_sizes_dict = {}
@@ -190,6 +190,10 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
         ext_input_2, values_input_2 = get_extension_size(input_2, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for second input file: %s" %ext_input_2, file=sys.stderr)
     
+    tracker.write(text=str(ext_1) + "," + str(ext_2) + "\n", header="Extension size IP1, IP2")
+    if input_1 is not None and input_2 is not None:
+        tracker.write(text=str(ext_input_1) + "," + str(ext_input_2) + "\n", header="Extension size Control1, Control2")
+    
     if verbose:
         if 'values_1' in locals() and values_1 is not None:
             with open(name + '-read-ext-1', 'w') as f:
@@ -217,7 +221,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                                   input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1, \
                                   input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
-                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict, debug=debug)
+                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict, debug=debug, tracker)
     
     return cov_cdp_mpp, [ext_1, ext_2]
 
