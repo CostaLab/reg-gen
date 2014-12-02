@@ -69,7 +69,7 @@ def main():
                           input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2, \
                           chrom_sizes = chrom_sizes,
                           verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones, \
-                          factor_input_1 = options.factor_input_1, factor_input_2 = options.factor_input_2, debug=options.debug)
+                          factor_input_1 = options.factor_input_1, factor_input_2 = options.factor_input_2, debug=options.debug, tracker=tracker)
     print('done', file=sys.stderr)
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()

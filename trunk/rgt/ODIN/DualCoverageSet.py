@@ -22,7 +22,7 @@ class DualCoverageSet():
         
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
                  input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
-                 factor_input_1, factor_input_2, chrom_sizes_dict, debug):
+                 factor_input_1, factor_input_2, chrom_sizes_dict, debug, tracker):
         self.genomicRegions = region
         self.binsize = binsize
         self.stepsize = stepsize
@@ -71,7 +71,7 @@ class DualCoverageSet():
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             #TODO: uncomment here!
-            #norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict)
+            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict, tracker)
             
             if input['input'] is not None:
                 input['cov-input'].write_bigwig(name + '-' + name_input + '-normalized.bw', chrom_sizes)
@@ -86,7 +86,7 @@ class DualCoverageSet():
         self.indices_of_interest = []
     
     
-    def normalization(self, map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict):
+    def normalization(self, map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict, tracker):
         input = map_input[i]
         #diaz and naive
         if i != 1 and norm_strategy == 5:
@@ -112,15 +112,18 @@ class DualCoverageSet():
                 if s1 > s2:
                     map_input[2]['cov-ip'].scale(s1/float(s2))
                     print("Normalize file 2 by signal with estimated factor %s: " %(round(s1/float(s2), 3)), file=sys.stderr)
+                    tracker.write(text=str(round(s1/float(s2), 3)) + "\n", header="Normalization factor of signal 2")
                 elif s2 >= s1:
                     print("Normalize file 1 by signal with estimated factor %s: " %(round(s2/float(s1), 3)), file=sys.stderr)
                     map_input[1]['cov-ip'].scale(s2/float(s1))
+                    tracker.write(text=str(round(s2/float(s1), 3)) + "\n", header="Normalization factor of signal 1")
             else:
                 map_input[1]['cov-ip'].scale(factor_input_1)
                 print("Normalize file 1 by signal with given factor %s: " %round(factor_input_1, 3), file=sys.stderr)
+                tracker.write(text=str(round(factor_input_1, 3)) + "\n", header="Normalization factor of signal 1")
                 map_input[2]['cov-ip'].scale(factor_input_2)
                 print("Normalize file 2 by signal with given factor %s: " %round(factor_input_2, 3), file=sys.stderr)
-        
+                tracker.write(text=str(round(factor_input_2, 3)) + "\n", header="Normalization factor of signal 2")
         return norm_done
 
     
