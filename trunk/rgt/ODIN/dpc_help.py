@@ -293,10 +293,10 @@ def input(test):
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
         options.ext_2 = 200
-        options.ext_input_1 = 200
-        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.ext_input_2 = 200
+        options.ext_input_1 = None
+        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.ext_input_2 = None
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 0.05
