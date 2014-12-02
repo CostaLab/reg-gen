@@ -10,20 +10,21 @@ from normalize import get_normalization_factor
 from os import path
 
 class DualCoverageSet():
+    def _get_BAM_names(self, input, ip):
+        #get names of BAM files for bw files
+        name_bam = path.splitext(path.basename(ip))[0]
+        if input is not None:
+            name_input = path.splitext(path.basename(input))[0]
+    
     def __init__(self, name, region, genome_path, binsize, stepsize, rmdup, file_1, ext_1, file_2, ext_2,\
                  input_1, ext_input_1, input_factor_1, input_2, ext_input_2, input_factor_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
-                 factor_input_1, factor_input_2, chrom_sizes_dict):
+                 factor_input_1, factor_input_2, chrom_sizes_dict, debug):
         self.genomicRegions = region
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
         self.cov1 = CoverageSet('first file', region)
         self.cov2 = CoverageSet('second file', region)
-        
-        name_bam1 = path.splitext(path.basename(file_1))[0]
-        name_bam2 = path.splitext(path.basename(file_2))[0]
-        
-        print(name_bam1, name_bam2, file=sys.stderr)
         
         print("Loading reads...", file=sys.stderr)
         self.cov1.coverage_from_bam(bam_file=file_1, read_size=ext_1, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
@@ -32,51 +33,45 @@ class DualCoverageSet():
         map_input = {1: {'input': input_1, 'input_factor': input_factor_1, 'ext': ext_input_1, 'cov-ip': self.cov1, 'ip': file_1}, 
                      2: {'input': input_2, 'input_factor': input_factor_2, 'ext': ext_input_2, 'cov-ip': self.cov2, 'ip': file_2}}
         
-        if no_gc_content:
-            print("Do not consider GC content model", file=sys.stderr)
-        else:
-            print("Computing GC content", file=sys.stderr)
-            
         for i in [1, 2]:
             #get GC-content
             input = map_input[i]
             
-            if verbose:
-                input['cov-ip'].write_bigwig(name + '-gc-s%s-1-raw.bw' %i, chrom_sizes)
-                #input['cov-ip'].write_bed(name + '-gc-s%s-1-raw.bed' %i)
+            name_bam, name_input = _get_BAM_names(input['input'], input['ip'])
+            
+            if debug: #0: output raw IP
+                input['cov-ip'].write_bigwig(name + 'debug-0' + name_bam + '.bw', chrom_sizes)
             
             if input['input'] is not None:
                 input['cov-input'] = CoverageSet('%s file' %input['input'], region)
                 input['cov-input'].coverage_from_bam(bam_file=input['input'], read_size=input['ext'], rmdup=rmdup, binsize=binsize, stepsize=stepsize)
                 map_input[i]['cov-input'] = input['cov-input']
+                
             
-            if not no_gc_content:
-                if input['input'] is not None:
-                    gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
-                    #print("Gamma: %s" %avg_gc_content, file=sys.stderr)
-                    self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
-                    self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
+            if not no_gc_content and input['input'] is not None:
+                print("Computing GC content", file=sys.stderr)
+                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
+                self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
+                self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                     
-                if verbose:
-                    if not no_gc_content:
-                        self.print_gc_hist(name + '-s%s-' %i, gc_hist)
-                    if input['input'] is not None:
-                        input['cov-input'].write_bigwig(name + '-gc-s%s-input-2-gc.bw' %i, chrom_sizes)
-                        #input['cov-input'].write_bed(name + '-gc-s%s-input-2-gc.bed' %i)
-                    input['cov-ip'].write_bigwig(name + '-gc-s%s-2-gc.bw' %i, chrom_sizes)
-                    #input['cov-ip'].write_bed(name + '-gc-s%s-2-gc.bed' %i)
+                if debug:
+                    self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
+                    input['cov-input'].write_bigwig(name + 'debug-1' + name_input + '.bw', chrom_sizes)
+                    input['cov-ip'].write_bigwig(name + 'debug-1' + name_bam + '.bw' %i, chrom_sizes)
+            else:
+                print("Do not consider GC content model", file=sys.stderr)
         
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
+            name_bam, name_input = _get_BAM_names(input['input'], input['ip'])
+            
             #TODO: uncomment here!
             #norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict)
             
             if input['input'] is not None:
-                input['cov-input'].write_bigwig(name + '-gc-s%s-input.bw'%i, chrom_sizes)
-                #input['cov-input'].write_bed(name + '-gc-s%s-input.bed'%i)
-            input['cov-ip'].write_bigwig(name + '-gc-s%s.bw'%i, chrom_sizes)
-            #input['cov-ip'].write_bed(name + '-gc-s%s.bed'%i)
+                input['cov-input'].write_bigwig(name + '-' + name_input + '-normalized.bw', chrom_sizes)
+            input['cov-ip'].write_bigwig(name + name_bam + '-normalized.bw', chrom_sizes)
                 
         #make one array for the coverage
         self.first_overall_coverage = reduce(lambda x,y: np.concatenate((x,y)), [self.cov1.coverage[i] for i in range(len(self.cov1.genomicRegions))])
