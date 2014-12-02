@@ -37,7 +37,7 @@ class DualCoverageSet():
             #get GC-content
             input = map_input[i]
             
-            name_bam, name_input = _get_BAM_names(input['input'], input['ip'])
+            name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             if debug: #0: output raw IP
                 input['cov-ip'].write_bigwig(name + 'debug-0' + name_bam + '.bw', chrom_sizes)
@@ -64,7 +64,7 @@ class DualCoverageSet():
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
-            name_bam, name_input = _get_BAM_names(input['input'], input['ip'])
+            name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             #TODO: uncomment here!
             #norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict)
