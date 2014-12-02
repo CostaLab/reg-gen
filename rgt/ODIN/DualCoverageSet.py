@@ -37,7 +37,7 @@ class DualCoverageSet():
         map_input = {1: {'input': input_1, 'input_factor': input_factor_1, 'ext': ext_input_1, 'cov-ip': self.cov1, 'ip': file_1}, 
                      2: {'input': input_2, 'input_factor': input_factor_2, 'ext': ext_input_2, 'cov-ip': self.cov2, 'ip': file_2}}
         
-        if not no_gc_content and input['input'] is not None:
+        if not no_gc_content and input_1 is not None and input_2 is not None:
             print("Computing GC content", file=sys.stderr)
         else:
              print("Do not compute GC content", file=sys.stderr)
@@ -59,7 +59,7 @@ class DualCoverageSet():
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
                 #self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                 #self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
-                    
+                
                 if debug: #0: output after GC
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
                     input['cov-input'].write_bigwig(name + '-debug-1-' + name_input + '.bw', chrom_sizes)
