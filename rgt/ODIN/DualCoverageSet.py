@@ -57,8 +57,8 @@ class DualCoverageSet():
             
             if not no_gc_content and input['input'] is not None:
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
-                #self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
-                #self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
+                self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
+                self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                 
                 if debug: #0: output after GC
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
