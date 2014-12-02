@@ -1,6 +1,7 @@
 * ODIN-0.1.2
 - get rid of option for different normalization strategies
 - add more infos to options
+- merge DPs in output
 
 TODO
 - we should save all relevant statistics in the .info file. Read
@@ -19,7 +20,8 @@ tutorial with histones as well). Maybe we should put the description
 of this important parameters after the p-value, so that users don't
 miss this.
 
-- consider p-value bug
+- consider p-value bug (done)
+
 - add debug and verbose flag
 - give out narrowPeak
 - for extra tools: use bash!
