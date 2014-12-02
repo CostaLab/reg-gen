@@ -40,7 +40,6 @@ class DualCoverageSet():
         for i in [1, 2]:
             #get GC-content
             input = map_input[i]
-            print(input['input'], input['ip'], file=sys.stderr)
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             if debug: #0: output raw IP
@@ -58,10 +57,10 @@ class DualCoverageSet():
                 self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                     
-                if debug:
+                if debug: #0: output after GC
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
                     input['cov-input'].write_bigwig(name + '-debug-1-' + name_input + '.bw', chrom_sizes)
-                    input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw' %i, chrom_sizes)
+                    input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw', chrom_sizes)
             else:
                 print("Do not consider GC content model", file=sys.stderr)
         
