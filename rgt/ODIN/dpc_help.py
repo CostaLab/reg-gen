@@ -221,7 +221,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                                   input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1, \
                                   input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
-                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict, debug=debug, tracker)
+                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict, debug=debug, tracker=tracker)
     
     return cov_cdp_mpp, [ext_1, ext_2]
 
