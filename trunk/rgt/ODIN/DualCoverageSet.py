@@ -96,7 +96,7 @@ class DualCoverageSet():
             print("Normalize by Diaz and pre-defined values...", input['input_factor'], file=sys.stderr)
             print("Normalize file 1 with input normalization factor %s" %(map_input[1]['input_factor']), file=sys.stderr)
             print("Normalize file 2 with input normalization factor %s" %(map_input[2]['input_factor']), file=sys.stderr)
-            tracker.write(text=str(map_input[1]['input_factor']) + ',' + map_input[2]['input_factor'] + "\n", header="Predefined Normalization factor of Input")
+            tracker.write(text=str(map_input[1]['input_factor']) + ',' + str(map_input[2]['input_factor']) + "\n", header="Predefined Normalization factor of Input")
             
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
             map_input[2]['cov-input'].scale(map_input[2]['input_factor'])
