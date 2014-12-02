@@ -367,10 +367,10 @@ def input(test):
         parser.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
                           help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
         
-        parser.add_option("--factor-1", default=None, dest="factor_input_1", type="float",\
-                          help="Factor for first BAM. [default: %default]")
-        parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
-                          help="Factor for second BAM. [default: %default]")
+        #parser.add_option("--factor-1", default=None, dest="factor_input_1", type="float",\
+        #                  help="Factor for first BAM. [default: %default]")
+        #parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
+        #                  help="Factor for second BAM. [default: %default]")
         
         parser.add_option("--distr", default="binom", dest="distr", type="string", help="distribution")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="magnitude of mixture distribution")
@@ -392,6 +392,8 @@ def input(test):
                           help="regions (BED) where to search for DPs [default: entire genome]")
     
     options.norm_strategy = 5 #get rid of other options, this is an ugly but efficient solution
+    options.factor_input_1 = None #supposed to vary the BAM input with a predefined factor
+    options.factor_input_2 = None
     
     if not test:
         (options, args) = parser.parse_args()
