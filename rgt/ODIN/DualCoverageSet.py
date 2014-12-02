@@ -114,7 +114,7 @@ class DualCoverageSet():
                     tracker.write(text=str(round(s1/float(s2), 3)) + "\n", header="Normalization factor of signal 2")
                 elif s2 >= s1:
                     print("Factor: normalize file 1 by signal with estimated factor %s: " %(round(s2/float(s1),3)), file=sys.stderr)
-                    tracker.write(text=str(round(s2/float(s1),3)) + "\n", header="Normalization factor of signal 1")
+                    tracker.write(text=str(round(s2/float(s1), 3)) + "\n", header="Normalization factor of signal 1")
                     map_input[1]['cov-ip'].scale(s2/float(s1))
     
                 norm_done = True

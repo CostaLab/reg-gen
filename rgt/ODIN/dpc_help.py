@@ -297,10 +297,10 @@ def input(test):
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
         options.ext_1 = 200
         options.ext_2 = 200
-        options.ext_input_1 = 200
-        options.ext_input_2 = 200
-        options.input_2 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
-        options.input_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.ext_input_1 = None
+        options.ext_input_2 = None
+        options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
+        options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 0.05
@@ -313,14 +313,14 @@ def input(test):
         options.input_factor_2= None #0.7
         options.norm_strategy = 5
         options.verbose=True
-        options.debug=True
+        options.debug=False
         #chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
         chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.sizes'
         options.no_gc_content = False
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
-        options.factor_input_1=None
-        options.factor_input_2=None
+        options.factor_input_1=1.0 #for BAM
+        options.factor_input_2=1.0
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
