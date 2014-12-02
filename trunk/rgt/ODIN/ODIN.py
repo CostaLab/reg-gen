@@ -70,7 +70,6 @@ def main():
                           chrom_sizes = chrom_sizes,
                           verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones, \
                           factor_input_1 = options.factor_input_1, factor_input_2 = options.factor_input_2, debug=options.debug, tracker=tracker)
-    print('done', file=sys.stderr)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     

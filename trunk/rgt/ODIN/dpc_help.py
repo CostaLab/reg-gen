@@ -148,8 +148,8 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     merge_delete(ext_size, merge, peaks, pvalues, name)
     
     #peaks = [(c, s, e, s1, s2, strand)]
-    self._output_BED(name, pvalues, peaks, pcutoff)
-    self._output_narrowPeak(name, pvalues, peaks, pcutoff)
+    _output_BED(name, pvalues, peaks, pcutoff)
+    _output_narrowPeak(name, pvalues, peaks, pcutoff)
     
 
 
@@ -333,8 +333,8 @@ def input(test):
         options.no_gc_content = False
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
-        options.factor_input_1=1.0 #for BAM
-        options.factor_input_2=1.0
+        options.factor_input_1=None #for BAM
+        options.factor_input_2=None
     else:
         
         parser.add_option("--input-1", dest="input_1", default=None, \
