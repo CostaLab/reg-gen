@@ -148,7 +148,7 @@ def main():
     if options.verbose: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue, ext_size=np.mean(ext_sizes), merge=options.merge)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue, ext_size=np.mean(ext_sizes), merge=options.merge, pcutoff=options.pcutoff)
 
 
 if __name__ == '__main__':

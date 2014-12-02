@@ -22,6 +22,7 @@ import sys
 from DualCoverageSet import DualCoverageSet
 from get_fast_gen_pvalue import get_log_pvalue_new
 from postprocessing import merge_delete
+from math import log10
 
 SIGNAL_CUTOFF = 10000
 
@@ -57,7 +58,8 @@ def _compute_pvalue((x, y, side, distr)):
     else:
         return -get_log_pvalue_new(x, y, side, distr)
     
-def get_peaks(name, DCS, states, ext_size, merge, distr):
+def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
+    pcutoff = -log10(pcutoff)
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
     second_overall_coverage = DCS.second_overall_coverage
@@ -130,9 +132,9 @@ def get_peaks(name, DCS, states, ext_size, merge, distr):
     for i in range(len(pvalues)):
         c, s, e, c1, c2, strand = peaks[i]
         color = colors[strand]
- 
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
-              color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
+        if pcutoff > pvalues[i]:
+            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
+                  color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
  
     f.close()
 
@@ -269,10 +271,10 @@ def which(program):
                 return exe_file
     return None
 
-def input(laptop):
+def input(test):
     parser = HelpfulOptionParser(usage=__doc__)
     
-    if laptop:
+    if test:
         (options, args) = parser.parse_args()
 #        bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_1000000.bam'
         #bamfile_1 = '/home/manuel/data/project_chipseq_norm/data/PU1_CDP_10k.bam'
@@ -285,7 +287,7 @@ def input(laptop):
         bamfile_2 = '/home/manuel/data/project_chipseq_norm/data/pu1_cdp_1-12-18.bam'
 
         #options.regions = '/home/manuel/data/mm9_features/mm9.extract.sizes'
-        options.merge=False
+        options.merge=True
         options.mag = 3
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
@@ -373,7 +375,7 @@ def input(laptop):
     
     options.norm_strategy = 5 #get rid of other options, this is an ugly but efficient solution
     
-    if not laptop:
+    if not test:
         (options, args) = parser.parse_args()
         
         
