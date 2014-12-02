@@ -208,13 +208,13 @@ def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_siz
     
     return pq_list, max_index, max_value, factor1, factor2, chromosomes
 
-def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, verbose, chrom_sizes_dict, two_sample=False):
+def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, debug, chrom_sizes_dict, two_sample=False):
     """Return normalization factor (see Diaz et al) for the input
     if two_sample is True: compare sample with index of 0.15"""
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
     work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict)
     
-    if verbose:
+    if debug:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
 #    write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width)
     

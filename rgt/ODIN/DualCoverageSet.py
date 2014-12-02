@@ -37,8 +37,12 @@ class DualCoverageSet():
         map_input = {1: {'input': input_1, 'input_factor': input_factor_1, 'ext': ext_input_1, 'cov-ip': self.cov1, 'ip': file_1}, 
                      2: {'input': input_2, 'input_factor': input_factor_2, 'ext': ext_input_2, 'cov-ip': self.cov2, 'ip': file_2}}
         
+        if not no_gc_content and input['input'] is not None:
+            print("Computing GC content", file=sys.stderr)
+        else:
+             print("Do not compute GC content", file=sys.stderr)
+        
         for i in [1, 2]:
-            #get GC-content
             input = map_input[i]
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
@@ -52,25 +56,23 @@ class DualCoverageSet():
                 
             
             if not no_gc_content and input['input'] is not None:
-                print("Computing GC content", file=sys.stderr)
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
-                self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
-                self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
+                #self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
+                #self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                     
                 if debug: #0: output after GC
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
                     input['cov-input'].write_bigwig(name + '-debug-1-' + name_input + '.bw', chrom_sizes)
                     input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw', chrom_sizes)
-            else:
-                print("Do not consider GC content model", file=sys.stderr)
         
+        print("Normalizing signals", file=sys.stderr)
         norm_done = False
         for i in [1, 2]:
             input = map_input[i]
             name_bam, name_input = self._get_BAM_names(input['input'], input['ip'])
             
             #TODO: uncomment here!
-            #norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict)
+            norm_done = self.normalization(map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict)
             
             if input['input'] is not None:
                 input['cov-input'].write_bigwig(name + '-' + name_input + '-normalized.bw', chrom_sizes)
@@ -85,16 +87,16 @@ class DualCoverageSet():
         self.indices_of_interest = []
     
     
-    def normalization(self, map_input, i, norm_strategy, norm_done, name, verbose, factor_input_1, factor_input_2, chrom_sizes_dict):
+    def normalization(self, map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2, chrom_sizes_dict):
         input = map_input[i]
         #diaz and naive
         if i != 1 and norm_strategy == 5:
             print("Normalizing...", file=sys.stderr)
             #apply diaz
             _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'], step_width=1000, zero_counts=0, \
-                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
+                                                              filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'], step_width=1000, zero_counts=0, \
-                                                              filename=name + '-norm' + str(i), verbose=verbose, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
+                                                              filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
             
             print("Normalize input with factor %s and %s" %(map_input[1]['input_factor'], map_input[2]['input_factor']), file=sys.stderr)
             map_input[1]['cov-input'].scale(map_input[1]['input_factor'])
@@ -236,7 +238,7 @@ class DualCoverageSet():
                 chrom, start, end = self._index2coordinates(i)
                 print(chrom, start, end, file=f)
             
-    def get_training_set(self, exp_data, x, verbose, name, constraint_chrom = None):
+    def get_training_set(self, exp_data, x, verbose, name, debug, constraint_chrom):
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
@@ -293,7 +295,7 @@ class DualCoverageSet():
         
         training_set = list(training_set)
         training_set.sort()
-        if verbose:
+        if debug:
             f=open(name + '-trainingset.bed', 'w')
             for l in training_set:
                 chrom, s, e = self._index2coordinates(l)

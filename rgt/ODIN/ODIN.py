@@ -19,7 +19,7 @@ def write(name, l):
         print(el, file=f)
     f.close()
 
-def _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, verbose, x = 10000, threshold = 2.0, diff_cov = 10):
+def _get_training_sets(indices_of_interest, first_overall_coverage, second_overall_coverage, name, debug, x = 10000, threshold = 2.0, diff_cov = 10):
     """Return s0,s1,s2 (list of tuples) with initial peaks"""
     s0 = []
     s1 = []
@@ -44,7 +44,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
             so.append((cov1,cov2))
         i += 1
     
-    if verbose:
+    if debug:
         write(name + '-s0', s0)
         write(name + '-s1', s1)
         write(name + '-s2', s2)
@@ -75,10 +75,10 @@ def main():
     if options.verbose:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
-    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.constchrom)
+    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom)
     training_set_obs = exp_data.get_observation(training_set)
     
-    _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.verbose)
+    _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.debug)
     
     #choose proper HMM
     print('Training HMM...', file=sys.stderr)
@@ -131,10 +131,9 @@ def main():
         m.save_setup(options.name, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
-    if options.verbose:
+    if options.debug:
         exp_data.get_initial_dist(options.name + '-initial-states.bed')
       
-    print('...done', file=sys.stderr)
     if options.verbose:
         print('p', m.p, file=sys.stderr)
         print("Final HMM's transition matrix: ", file=sys.stderr)
@@ -145,7 +144,7 @@ def main():
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
     print("...done", file=sys.stderr)
      
-    if options.verbose: 
+    if options.debug: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
  
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr_pvalue, ext_size=np.mean(ext_sizes), merge=options.merge, pcutoff=options.pcutoff)
