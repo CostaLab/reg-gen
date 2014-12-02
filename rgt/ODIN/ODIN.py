@@ -9,6 +9,7 @@ from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
 import numpy as np
+from rgt.THOR import tracker
 
 from random import sample
 
@@ -60,6 +61,8 @@ def main():
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
 
     ######### WORK! ##########
+    tracker = Tracker(options.name + '-setup.info')
+    
     exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
@@ -90,7 +93,7 @@ def main():
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
         m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
         m.fit([training_set_obs])
-        m.save_setup(options.name)
+        #m.save_setup(options.name)
         distr_pvalue={'distr_name': "binomial", 'n':m.n[0], 'p':m.p[0][1]}
     elif options.distr == 'poisson':
         print("Use poisson mixture HMM", file=sys.stderr)
@@ -109,7 +112,7 @@ def main():
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        m.save_setup(options.name, n, p)
+        #m.save_setup(options.name, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
     elif options.distr == 'poisson-c':
         print("Use poisson constrained mixture HMM", file=sys.stderr)
@@ -120,15 +123,13 @@ def main():
         initial_c, initial_p = get_init_parameters(s1, s2, distr_magnitude=distr_magnitude, n_components=n_components, n_features=n_features)
         
         f = map(lambda x: x+1, range(distr_magnitude))
-        #g = map(lambda x: x+1, range(distr_magnitude))
-        #f = map(lambda x: x/(float(distr_magnitude)), g)
         m = PoissonHMM2d3s(c=initial_c, distr_magnitude=distr_magnitude, factors=f, p=initial_p)
         
         m.fit([training_set_obs])
         n = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         mean = np.mean([m.get_mean(0,0), m.get_mean(0,1)])
         p = mean / float(n)
-        m.save_setup(options.name, n, p)
+        #m.save_setup(options.name, n, p)
         distr_pvalue={'distr_name': "binomial", 'n': n, 'p': p}
         
     if options.debug:
