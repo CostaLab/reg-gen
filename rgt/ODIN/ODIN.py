@@ -71,7 +71,6 @@ def main():
                           verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones, \
                           factor_input_1 = options.factor_input_1, factor_input_2 = options.factor_input_2, debug=options.debug, tracker=tracker)
     print('done', file=sys.stderr)
-    print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     
@@ -138,7 +137,6 @@ def main():
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    print("...done", file=sys.stderr)
      
     if options.debug: 
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
