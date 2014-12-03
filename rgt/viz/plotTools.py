@@ -122,7 +122,7 @@ def colormaps(exps, colorby, definedinEM):
     if definedinEM == False:
         
         if len(exps.get_regionsnames()) < 20:
-            colors = ['Blues', 'Reds', 'Greens', 'Oranges', 'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
+            colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
                       'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
         else:
             colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
@@ -175,7 +175,7 @@ def output_array(array, directory, folder, filename):
              
     f = open(os.path.join(pd,filename),"w")
     for i,line in enumerate(array):
-        f.write(("\t".join(j for j in line))+"\n")
+        f.write(("\t".join(str(j) for j in line))+"\n")
     f.close()
 
 def remove_duplicates(grouped_dict):
@@ -298,7 +298,8 @@ def compute_coverage(input):
     """
     bed, bam, rs, bs, ss, center, heatmap, logt
     """
-    print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name)
+    
+    ts = time.time()
     cov = CoverageSet(input[0].name+".", input[0])
     cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
     cov.normRPM()
@@ -331,6 +332,8 @@ def compute_coverage(input):
         avearr = numpy.average(avearr, axis=0)
         #numpy.transpose(avearr)
         result = avearr # Store the array into data list
+    te = time.time()
+    print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
 ###########################################################################################
 #                    Projection test
@@ -1529,7 +1532,7 @@ class Boxplot:
         parameters: list of records
         figs: a list of figure(s)
     """
-    def __init__(self,EMpath, title="boxplot"):
+    def __init__(self,EMpath, title="boxplot", df=False):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
@@ -1540,6 +1543,7 @@ class Boxplot:
         self.readsnames = self.exps.get_readsnames()
         self.fieldsDict = self.exps.fieldsDict
         self.parameter = []
+        self.df = df
     
     def combine_allregions(self):
         
@@ -1615,6 +1619,18 @@ class Boxplot:
                 elif r < iterList[j]:
                     continue
 
+    def print_plot_table(self, directory, folder):
+        for i,bed in enumerate(self.tableDict.keys()):
+            table = []
+            header = [bed]
+            for rp in self.reads:
+                header.append(os.path.basename(rp))
+            table.append(header)
+            for j, re in enumerate(self.beds[i]):
+                table.append([re.__repr__()] + self.tableDict[bed][j].tolist())
+            output_array(table, directory, folder, filename="table_"+bed+".txt")  
+        
+        
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
         Parameters:
@@ -1636,8 +1652,10 @@ class Boxplot:
             self.color_tags = ["All region sets without grouping"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
+    
+    
         
-    def group_data(self):  
+    def group_data(self, directory, folder, table=False, log=False):  
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cuesbed = OrderedDict()   # Storing the cues for back tracking
         cuesbam = OrderedDict()
@@ -1655,6 +1673,10 @@ class Boxplot:
                 #cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
         
         #print(cues.keys())
+        if table: 
+            header_dict = {}
+            tbed = {}
+            
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
             #print("    "+g)
@@ -1663,19 +1685,63 @@ class Boxplot:
                 #print("        "+a)
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
-                    sortDict[g][a][c] = None
+                    #sortDict[g][a][c] = None
+                    
                     #print("            "+c)
                     
-                    for bed in cuesbed.keys():
+                    for i, bed in enumerate(cuesbed.keys()):
                         #print(bed)
                         #print(set([g,a,c]))
                         #print(cuesbed[bed])
                         #print(set([g,a,c]))
                         if set([g,a,c]) >= cuesbed[bed]:
+                            sortDict[g][a][c] = []
+                            
                             for bam in cuesbam.keys():
                                 if set([g,a,c]) >= cuesbam[bam]:
+                                    
                                     #print("                "+ bed + " + "+ bam)
-                                    sortDict[g][a][c] = plotDict[bed][bam]
+                                    if self.df:
+                                        sortDict[g][a][c].append(plotDict[bed][bam])
+                                        
+                                        if len(sortDict[g][a][c]) == 2: 
+                                            bam2 = bam
+                                            if log:
+                                                sortDict[g][a][c][0] = numpy.log(sortDict[g][a][c][0])
+                                                sortDict[g][a][c][1] = numpy.log(sortDict[g][a][c][1])
+                                                sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],sortDict[g][a][c][1]).tolist()
+                                            else:
+                                                sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],sortDict[g][a][c][1]).tolist()
+                                            if table: 
+                                                
+                                                try: header_dict[bed].append("Df_"+ bam1 + "_&_" + bam2)
+                                                except: header_dict[bed] = ["regions","Df_"+ bam1 + "_&_" + bam2]
+                                                
+                                                try: tbed[bed].append(sortDict[g][a][c])
+                                                except: tbed[bed] = [sortDict[g][a][c]]
+                                        else: 
+                                            bam1 = bam
+                                    else:
+                                        sortDict[g][a][c] = plotDict[bed][bam]
+                                        tbed[bed].append(sortDict[g][a][c])
+                                        if table:
+                                            try: header_dict[bed].append(bam)
+                                            except: header_dict[bed] = ["regions", bam]
+                                            try: tbed[bed].append(sortDict[g][a][c])
+                                            except: tbed[bed] = [sortDict[g][a][c]]
+        if table:
+            for bed in tbed.keys():
+                
+                tb = numpy.transpose(numpy.array(tbed[bed])).tolist()
+                tt = [header_dict[bed]]
+                print(header_dict[bed])
+                print(bed)
+                beds = self.beds[self.bednames.index(bed)]
+                for k, s in enumerate(beds):
+                    try: tt.append([s.__repr__()] + tb[k])
+                    except: print(k+"___"+s.__repr__())
+                output_array(tt, directory, folder, filename="table_"+bed+".txt")  
+                            
         self.sortDict = sortDict
 
     def color_map(self, colorby, definedinEM):
@@ -1692,7 +1758,7 @@ class Boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, sy, html=False, logT=False):
+    def plot(self, title, sy, html=False, logT=False, ylim=False):
         """ Return boxplot from the given tables.
         
         """
@@ -1709,24 +1775,31 @@ class Boxplot:
         canvas.set_window_title(title)
         try: axarr = axarr.reshape(-1)
         except: axarr = [axarr]
-        plt.subplots_adjust(bottom=0.3)
+        #plt.subplots_adjust(bottom=0.3)
         if logT:
-            axarr[0].set_ylabel("Count number (log)")
+            if self.df: axarr[0].set_ylabel("Count number difference (log)")
+            else: axarr[0].set_ylabel("Count number (log)")
         else:
-            axarr[0].set_ylabel("Count number")
+            
+            if self.df: axarr[0].set_ylabel("Count number difference")
+            else: axarr[0].set_ylabel("Count number")
+            
             
         for i, g in enumerate(self.sortDict.keys()):
-            axarr[i].set_title(g, y=0.94)
+            if self.df: axarr[i].set_title(g+"_df", y=1.02)
+            else: axarr[i].set_title(g, y=1.02)
             
-            if logT: 
+            
+            if logT and not self.df: 
                 axarr[i].set_yscale('log')
-                
             else:
                 axarr[i].locator_params(axis = 'y', nbins = 4)
 
             axarr[i].tick_params(axis='y', direction='out')
             axarr[i].yaxis.tick_left()
             axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
+            if ylim:
+                axarr[i].set_ylim([-ylim, ylim])
             d = []  # Store data within group
             color_t = []  # Store tag for coloring boxes
             x_ticklabels = []  # Store ticklabels
@@ -1735,7 +1808,10 @@ class Boxplot:
                     if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
                         continue
                     else:
-                        d.append([x+1 for x in self.sortDict[g][a][c]])
+                        if self.df: 
+                            d.append(self.sortDict[g][a][c])
+                        else:
+                            d.append([x+1 for x in self.sortDict[g][a][c]])
                         color_t.append(self.colors[k])
                         x_ticklabels.append(a)  #  + "." + c
             # Fine tuning boxplot
@@ -1757,7 +1833,7 @@ class Boxplot:
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
             axarr[i].set_xticklabels(self.sortDict[g].keys(), self.xtickrotation, ha=self.xtickalign, fontsize=10)
             
-            axarr[i].set_ylim(bottom=0.95)
+            #axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
                 axarr[i].spines[spine].set_visible(False)
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
@@ -1840,8 +1916,8 @@ class Boxplot:
         
         header_list=["Assumptions and hypothesis"]
         col_size_list = [50]
-        data_table = [['All the regions among different BED files are normalized by quantile normalization.',
-                       'If there is any grouping problem, please check all the optional columns in input experimental matrix.',]]
+        data_table = [['All the regions among different BED files are normalized by quantile normalization.'],
+                      ['If there is any grouping problem, please check all the optional columns in input experimental matrix.']]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
@@ -1963,7 +2039,7 @@ def annotation_dump(organism):
 
 
 class Lineplot:
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
@@ -1984,6 +2060,7 @@ class Lineplot:
         self.rs = rs
         self.bs = bs
         self.ss = ss
+        self.df = df
     
     def relocate_bed(self):
         processed_beds = []
@@ -2050,42 +2127,46 @@ class Lineplot:
         
         
     def coverage(self, sortby, heatmap=False, logt=False, mp=False):
+        
+        def annot_ind(bednames, tags):
+            """Find the index for annotation tag"""
+            for ind, a in enumerate(bednames):
+                if a in tags: return ind
+                
+        
         if mp: ts = time.time()
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
         totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
+        if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
             data[s] = OrderedDict()
             for g in self.group_tags:
                 data[s][g] = OrderedDict()
                 for c in self.color_tags:
+                    #if self.df: data[s][g][c] = []
                     for bed in self.cuebed.keys():
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
                                 if self.cuebam[bam] <= set([s,g,c]):
                                     if mp: 
                                         if self.annotation:
-                                            for ind, a in enumerate(self.bednames):
-                                                if a in [s,g,c]:
-                                                    i = ind
-                                        else:
-                                            i = self.bednames.index(bed)
+                                            i = annot_ind(self.bednames, [s,g,c])
+                                        else: i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
                                         mp_input.append([self.processed_beds[i], self.reads[j], self.rs, self.bs, self.ss, self.center, heatmap, logt])
-                                        data[s][g][c] = 0
+                                        if self.df: data[s][g][c] = []
+                                        else: data[s][g][c] = 0
                                     else:
                                         
                                         #print("\n    "+s+"\t"+g+"\t"+c)
                                         #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
                                         ts = time.time()
                                         if self.annotation:
-                                            for ind, a in enumerate(self.bednames):
-                                                if a in [s,g,c]:
-                                                    i = ind
-                                        else:
-                                            i = self.bednames.index(bed)
+                                            i = annot_ind(self.bednames, [s,g,c])
+                                        else: i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
                                         
                                         cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
@@ -2119,10 +2200,14 @@ class Lineplot:
                                             #print(avearr.shape)
                                             avearr = numpy.average(avearr, axis=0)
                                             #numpy.transpose(avearr)
-                                            data[s][g][c] = avearr # Store the array into data list
+                                            
+                                            if self.df: 
+                                                try: data[s][g][c].append(avearr)
+                                                except: data[s][g][c] = [avearr]
+                                            else: data[s][g][c] = avearr # Store the array into data list
                                         bi += 1
                                         te = time.time()
-                                        print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                        print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
         if mp: 
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
@@ -2133,39 +2218,80 @@ class Lineplot:
             for s in data.keys():
                 for g in data[s].keys():
                     for c in data[s][g].keys():
-                        data[s][g][c] = mp_output[i]
-                        i = i + 1
+                        try:
+                            if self.df: 
+                                data[s][g][c].append(numpy.subtract(mp_output[i],mp_output[i+1]))
+                                i = i + 1
+                            else: 
+                                data[s][g][c] = mp_output[i]
+                            i = i + 1
+                        except:
+                            pass
             te = time.time()
             #print2(self.parameter, "     Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
 
+        if self.df:
+            for s in data.keys():
+                for g in data[s].keys():
+                    for c in data[s][g].keys():
+                        #print(s+"  "+ g+"  "+ c)
+                        #print(len(data[s][g][c]))
+                        try: 
+                            d = numpy.subtract(data[s][g][c][0],data[s][g][c][1])
+                            data[s][g][c] = d
+                        except: pass
         self.data = data
         
     def colormap(self, colorby, definedinEM):
         self.colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
         
     def plot(self, groupby, colorby, output, printtable=False, sy=False):
+        
         rot = 50
         ticklabelsize = 7
         #print(len(self.data.keys()))
         #print(len(self.data.values()[0].keys()))
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) # figsize=(8.27, 11.69)
-        if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
-            axs=numpy.array([[axs,None],[None,None]])
+        #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
+        #    axs=numpy.array([[axs,None],[None,None]])
+        
         yaxmax = [0]*len(self.data.values()[0])
+        if self.df: yaxmin = [0]*len(self.data.values()[0])
+        
         
         for it, s in enumerate(self.data.keys()):
             for i,g in enumerate(self.data[s].keys()):
-                if it == 0: 
-                    axs[it,i].set_title(g,fontsize=11)
+                
+                try: ax = axs[it,i]
+                except: 
+                    if len(self.data.keys()) == 1 and len(self.data[s].keys()) == 1:
+                        ax = axs
+                    elif len(self.data.keys()) == 1 and len(self.data[s].keys()) > 1:
+                        ax = axs[i]
+                    else:
+                        ax = axs[it]
+                        
+                
+                
+                if it == 0:
+                    if self.df:
+                        ax.set_title(g+"_df",fontsize=11)
+                    else:
+                        ax.set_title(g,fontsize=11)
+                    
                 # Processing for future output
                 if printtable:
                     pArr = numpy.array(["Name","X","Y"]) # Header
                     
                 for j, c in enumerate(self.data[s][g].keys()):
                     y = self.data[s][g][c]
-                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                    
+                    try: 
+                        yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                        if self.df: yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                    except: continue
                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                    axs[it,i].plot(x,y, color=self.colors[j], lw=1)
+                    ax.plot(x,y, color=self.colors[j], lw=1)
                     # Processing for future output
                     if printtable:
                         [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
@@ -2179,18 +2305,38 @@ class Lineplot:
                     [bam] = [bam for bam in self.readsnames if [g,c,s] in self.cuebam[bam]]
                     output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
                 
-                axs[it,i].set_xlim([-self.extend, self.extend])
-                plt.setp(axs[it,i].get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
-                plt.setp(axs[it,i].get_yticklabels(), fontsize=ticklabelsize)
-                axs[it,i].locator_params(axis = 'x', nbins = 4)
-                axs[it,i].locator_params(axis = 'y', nbins = 4)
-                axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                ax.set_xlim([-self.extend, self.extend])
+                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
+                ax.locator_params(axis = 'x', nbins = 4)
+                ax.locator_params(axis = 'y', nbins = 4)
+                try: axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                except: axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
         for it,ty in enumerate(self.data.keys()):
-            axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+            try: axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+            except:
+                if len(self.data.keys()) == 1:
+                    axs[0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+                else:
+                    axs[it].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+                
             if sy:
                 for i,g in enumerate(self.data[ty].keys()):
-                    axs[it,i].set_ylim([0, yaxmax[i]*1.2])
+                    if self.df:
+                        try: axs[it,i].set_ylim([yaxmin[i] - abs(yaxmin[i]*0.2), yaxmax[i] + abs(yaxmax[i]*0.2)])
+                        except:
+                            if len(self.data.keys()) == 1:
+                                axs[i].set_ylim([yaxmin[i] - abs(yaxmin[i]*0.2), yaxmax[i] + abs(yaxmax[i]*0.2)])
+                            else:
+                                axs[it].set_ylim([yaxmin[i] - abs(yaxmin[i]*0.2), yaxmax[i] + abs(yaxmax[i]*0.2)])
+                    else:
+                        try: axs[it,i].set_ylim([0, yaxmax[i]*1.2])
+                        except:
+                            if len(self.data.keys()) == 1:
+                                axs[i].set_ylim([0, yaxmax[i]*1.2])
+                            else:
+                                axs[it].set_ylim([0, yaxmax[i]*1.2])
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
@@ -2204,7 +2350,7 @@ class Lineplot:
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,20,20,20,20,20,20]
         header_list=["Assumptions and hypothesis"]
-        data_table = [['Multitest correction was performed.']]
+        data_table = [[]]
         if self.annotation:
             data_table.append("Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site.")
             
@@ -2255,7 +2401,7 @@ class Lineplot:
     
     def heatmap(self, logt):
         tickfontsize = 6
-        ratio = 6
+        ratio = 10
         self.hmfiles = []
         self.figs = []
         for ti, t in enumerate(self.data.keys()):
@@ -2267,7 +2413,6 @@ class Lineplot:
             fig = plt.figure(t)
             plt.suptitle("Heatmap: "+t, y=1.05)
             rows = len(self.data[t].keys())
-            
             
             #gs = gridspec.GridSpec(rows*ratio,columns)
             axs = numpy.empty(shape=(rows+1,columns), dtype=object)
@@ -2306,7 +2451,7 @@ class Lineplot:
                     if bi == rows-1:
                         #divider = make_axes_locatable(axs[bi,bj])
                         #cax = divider.append_axes("bottom", size="5%", pad=0.5)
-                        cbar_ax = plt.subplot2grid((rows*ratio+1, columns), (rows*ratio, bj))
+                        cbar_ax = plt.subplot2grid((rows*ratio+4, columns), (rows*ratio+3, bj))
                         #axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
                         
                         
