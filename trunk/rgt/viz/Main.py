@@ -11,6 +11,7 @@ from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy
 import time, datetime, getpass, fnmatch
+import shutil
 
 # Local Libraries
 # Distal Libraries
@@ -89,6 +90,8 @@ def output_parameters(parameter, directory, folder, filename):
             logp.write("{}\n".format(s))
         logp.close()
 
+#def copy_em(em, directory, folder):
+    
 
 def main():
     #################################################################################################
@@ -219,6 +222,8 @@ def main():
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
     #parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
     #parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
+    parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
+    parser_boxplot.add_argument('-ylim', type=int, default=None, help="Define the limit of y axis.")
     parser_boxplot.add_argument('-p','--pvalue', type=float, default=0.05, help='Define the significance level for multiple test. Default: 0.01')
     parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_boxplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
@@ -249,6 +254,7 @@ def main():
     #parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
     #parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
+    parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -354,6 +360,7 @@ def main():
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+        #shutil.copy2(args.reference, os.path.join(dir,directory,folder)os.path.join(dir,directory,folder))
             
     ################### Intersect Test ##########################################
     if args.mode == 'intersect':
@@ -397,6 +404,7 @@ def main():
         
         parameter = parameter + inter.parameter
         t1 = time.time()
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
@@ -429,6 +437,7 @@ def main():
         if args.table:
             jaccard.table(directory = args.output, folder = args.title)
         
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         
@@ -471,13 +480,14 @@ def main():
         
         parameter = parameter + inter.parameter
         t1 = time.time()
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Boxplot ##########################################
     if args.mode == 'boxplot':
         print("\n################# Boxplot #################")
-        boxplot = Boxplot(args.input, title=args.title)
+        boxplot = Boxplot(args.input, title=args.title, df=args.df)
         
         print2(parameter,"\nStep 1/5: Combining all regions")
         boxplot.combine_allregions()
@@ -503,6 +513,7 @@ def main():
         # Generate individual table for each bed
         print2(parameter,"Step 4/5: Constructing different tables for box plot")
         boxplot.tables_for_plot()
+        if args.table: boxplot.print_plot_table(directory = args.output, folder = args.title)
         t4 = time.time()
         print2(parameter,"    --- finished in {0} secs\n".format(round(t4-t3)))
         
@@ -510,16 +521,17 @@ def main():
         print2(parameter,"Step 5/5: Plotting")
         boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         
-        boxplot.group_data()
+        boxplot.group_data(directory = args.output, folder = args.title, table=args.table, log=args.nlog)
         boxplot.color_map(colorby=args.c, definedinEM=args.color)
-        boxplot.plot(title=args.title,html=True, logT=args.nlog, sy=args.sy)
-        if args.table: boxplot.print_table(directory=args.output, folder=args.title)
+        boxplot.plot(title=args.title,html=True, logT=args.nlog, sy=args.sy, ylim=args.ylim)
+        #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
         output(f=boxplot.fig, directory = args.output, folder = args.title, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
         # HTML
         boxplot.gen_html(args.output, args.title, align = 50)
         t5 = time.time()
         print2(parameter,"    --- finished in {0} secs\n".format(round(t5-t4)))
         print2(parameter,"Total running time is: " + str(datetime.timedelta(seconds=round(t5-t0))) + " (H:M:S)\n")
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Lineplot #########################################
@@ -540,7 +552,8 @@ def main():
         print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
         
         lineplot = Lineplot(EMpath=args.input, title=args.title, annotation=args.genomic_annotation, 
-                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
+                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss,
+                            df=args.df)
         # Processing the regions by given parameters
         print2(parameter, "Step 1/3: Processing regions by given parameters")
         lineplot.relocate_bed()
@@ -564,6 +577,7 @@ def main():
         t3 = time.time()
         print2(parameter, "    --- finished in {0} secs".format(str(round(t3-t2))))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))) + "(H:M:S)\n")
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
     
     ################### Heatmap ##########################################
@@ -585,7 +599,7 @@ def main():
         print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
     
         lineplot = Lineplot(EMpath=args.input, title=args.title, annotation=args.genomic_annotation, 
-                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss)
+                            organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss, df=False)
         # Processing the regions by given parameters
         print2(parameter, "Step 1/4: Processing regions by given parameters")
         lineplot.relocate_bed()
@@ -616,6 +630,7 @@ def main():
         t4 = time.time()
         print2(parameter, "    --- finished in {0} secs".format(str(round(t4-t3))))
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))) + "(H:M:S)\n")
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         
     ################### Integration ######################################
