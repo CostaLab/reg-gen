@@ -1,4 +1,4 @@
-* ODIN-0.1.2
+* ODIN-0.2
 - get rid of option for different normalization strategies
 - add more infos to options
 - merge DPs in output
