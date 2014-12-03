@@ -345,7 +345,8 @@ def input(test):
                           help="Input control for second parameter [default: %default]")
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.05, type="float",\
                           help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
-        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", help="merge peaks (recommended for histones)")
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
+                          help="Merge peaks which have a distance less than the estimated fragment size (recommended for histone data). [default: %default]")
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
@@ -362,12 +363,8 @@ def input(test):
         #                  help="Factor for second BAM. [default: %default]")
         
         parser.add_option("--distr", default="binom", dest="distr", type="string", \
-                          help="HMM's emission distribution. [Binomial (binom), (constraint) mixture of poisson (poisson, poisson-c)] [default: %default]")
+                          help="HMM's emission distribution. [Binomial (binom), (constraint) mixture of poisson (poisson-c)] [default: %default]")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="Magnitude of Poisson mixture model. [default: %default]")
-        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal [default: %default]")
-        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="output further information of DP-Calling progress [default: %default]")
@@ -384,11 +381,15 @@ def input(test):
         group.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
                           help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
         group.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
-                          help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
+                          help="Normalization factor for second input. If option is not chosen, estimate factor. [default: %default]")
         group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
                           help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
         group.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
                           help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
+        group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+                          help="Size of underlying bins for creating the signal [default: %default]")
+        group.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         group.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
 
