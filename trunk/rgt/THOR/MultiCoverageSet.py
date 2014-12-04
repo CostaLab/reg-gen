@@ -169,8 +169,8 @@ class MultiCoverageSet():
             sum += r.final
             i += 1
         
-        return r.chrom, (index-last) * self.stepsize + ((self.binsize-self.stepsize)/2), \
-            min((index-last) * self.stepsize + ((self.binsize+self.stepsize)/2), r.final)
+        return r.chrom, (index-last) * self.stepsize, \
+            min((index-last) * self.stepsize, r.final)
                               
     def __len__(self):
         """Return number of observations."""

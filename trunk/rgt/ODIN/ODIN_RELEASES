@@ -9,10 +9,6 @@
 - add debug and verbose flag
 - more infos in setup.info (read extension, normalization factor)
 
-TODO
-- right now all the peaks have 1000 bps, although the default windows
-size is 100. Why is that?
-
 
 * ODIN-0.1.1
 - fix chrom size bug (take several genomes now)
