@@ -54,7 +54,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = True
+    test = False
     if test:
         print("---------- TEST MODE ----------", file=sys.stderr)
     
