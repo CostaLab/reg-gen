@@ -200,6 +200,7 @@ class MultiCoverageSet():
         self._compute_score()
         print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
+        print(self.overall_coverage[0].shape, len(self.indices_of_interest), file=sys.stderr)
         print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
@@ -265,7 +266,8 @@ class MultiCoverageSet():
         threshold = 3.0
         diff_cov = 100
         s0, s1, s2 = [], [], []
-
+        extension_factor = 5 
+        
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
             
@@ -281,6 +283,7 @@ class MultiCoverageSet():
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
+            print(el.shape, file=sys.stderr)
             print("percentiles", file=sys.stderr)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
             
@@ -305,24 +308,21 @@ class MultiCoverageSet():
         s1_v = map(lambda x: (x[1], x[2]), s1)
         s2_v = map(lambda x: (x[1], x[2]), s2)
         
+        #extend, assumption everything is in indices_of_interest
+        extension_set = set()
+        for i, _, _ in s0 + s1 + s2:
+            if i % 100 == 0:
+                print(i, len(s0 + s1 + s2), file=sys.stderr)
+            for j in range(max(0, i-extension_factor), i+extension_factor+1):
+                extension_set.add(j)
+        
         if verbose:
             self.write_test_samples(name + '-s0', s0_v)
             self.write_test_samples(name + '-s1', s1_v)
             self.write_test_samples(name + '-s2', s2_v)
         
         tmp = s0 + s1 + s2
-        training_set = map(lambda x: x[0], tmp)
-        
-#         for i in tmp:
-#             training_set.add(self.indices_of_interest[i])
-#             #search up
-#             while i+1 < len(self.indices_of_interest) and self.indices_of_interest[i+1] == self.indices_of_interest[i]+1:
-#                 training_set.add(self.indices_of_interest[i+1])
-#                 i += 1
-#             #search down
-#             while i-1 > 0 and self.indices_of_interest[i-1] == self.indices_of_interest[i]-1:
-#                 training_set.add(self.indices_of_interest[i-1])
-#                 i -= 1
+        training_set = map(lambda x: x[0], tmp) + list(extension_set)
         
         training_set = list(training_set)
         training_set.sort()
