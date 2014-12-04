@@ -266,7 +266,7 @@ class MultiCoverageSet():
         threshold = 3.0
         diff_cov = 100
         s0, s1, s2 = [], [], []
-        extension_factor = 5
+        extension_factor = 2
         
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
@@ -303,8 +303,8 @@ class MultiCoverageSet():
         l = np.min([len(s1), len(s2), len(s0), y])
         
         s0 = sample(s0, l)
-        s1 = sample(s1, l/4)
-        s2 = sample(s2, l/4)
+        s1 = sample(s1, l)
+        s2 = sample(s2, l)
         
         s0_v = map(lambda x: (x[1], x[2]), s0)
         s1_v = map(lambda x: (x[1], x[2]), s1)
