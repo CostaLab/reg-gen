@@ -64,11 +64,11 @@ def main():
     tracker.write(text=str(m._get_transmat()) + "\n", header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
-    posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
     print("...done", file=sys.stderr)
     
     if options.verbose:
+        posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
 
     n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
