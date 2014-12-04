@@ -8,7 +8,7 @@
 - give out narrowPeak
 - add debug and verbose flag
 - more infos in setup.info (read extension, normalization factor)
-
+- bugfix: coordinate shift of peaks
 
 * ODIN-0.1.1
 - fix chrom size bug (take several genomes now)
