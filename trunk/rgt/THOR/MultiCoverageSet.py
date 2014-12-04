@@ -311,6 +311,7 @@ class MultiCoverageSet():
         s2_v = map(lambda x: (x[1], x[2]), s2)
         
         #extend, assumption everything is in indices_of_interest
+        extension_set = set()
         for i, _, _ in s0 + s1 + s2:
             for j in range(max(0, i-extension_factor), i+extension_factor+1):
                 extension_set.add(j)
