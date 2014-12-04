@@ -34,7 +34,11 @@ def init_cov(filename):
     
     for read in file.fetch(file.references[0]):
         if not read.is_unmapped:
-            pos = read.pos + read.rlen - len(read.seq) if read.is_reverse else read.pos
+            if not read.seq:
+                h = 0
+            else:
+                h = len(read.seq)
+            pos = read.pos + read.rlen - h if read.is_reverse else read.pos
             if read.is_reverse:
                 if not cov_r.has_key(pos):
                     cov_r[pos] = 1
