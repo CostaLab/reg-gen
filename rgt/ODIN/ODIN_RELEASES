@@ -1,3 +1,5 @@
+- fix estimate shiftsize if seq in bam file not given? really working?
+
 * ODIN-0.2
 - get rid of option for different normalization strategies
 - add more infos to options
