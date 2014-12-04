@@ -266,7 +266,7 @@ class MultiCoverageSet():
         threshold = 3.0
         diff_cov = 100
         s0, s1, s2 = [], [], []
-        extension_factor = 5 
+        extension_factor = 10
         
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
@@ -286,11 +286,13 @@ class MultiCoverageSet():
             print(el.shape, file=sys.stderr)
             print("percentiles", file=sys.stderr)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
+            print(i, np.mean(el[:,2]), np.var(el[:,2]), el.shape, file=sys.stderr)
             
             el = el[el[:,1] < np.percentile(el[:,1], 90)]
             el = el[el[:,2] < np.percentile(el[:,2], 90)]
             tmp.append(el)
             print(i, np.mean(el[:,1]), np.var(el[:,1]), el.shape, file=sys.stderr)
+            print(i, np.mean(el[:,2]), np.var(el[:,2]), el.shape, file=sys.stderr)
         
         s0 = tmp[0]
         s1 = tmp[1]
@@ -300,7 +302,7 @@ class MultiCoverageSet():
         
         l = np.min([len(s1), len(s2), len(s0), y])
         
-        s0 = sample(s0, l)
+        s0 = sample(s0, l*3)
         s1 = sample(s1, l)
         s2 = sample(s2, l)
         
@@ -310,9 +312,11 @@ class MultiCoverageSet():
         
         #extend, assumption everything is in indices_of_interest
         extension_set = set()
-        for i, _, _ in s0 + s1 + s2:
-            if i % 100 == 0:
-                print(i, len(s0 + s1 + s2), file=sys.stderr)
+        for i, _, _ in s0:
+            for j in range(max(0, i-extension_factor*2), i+extension_factor*2+1):
+                extension_set.add(j)
+        
+        for i, _, _ in s1 + s2:
             for j in range(max(0, i-extension_factor), i+extension_factor+1):
                 extension_set.add(j)
         
