@@ -33,11 +33,15 @@ warnings.filterwarnings('error')
 
 
 def get_init_parameters(s0, s1, s2, **info):
-    mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
-    var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3, order='F')
+    print("H", [np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]], file=sys.stderr)
+    print("H", [np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]], file=sys.stderr)
+    mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+    var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
     
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 1e-300
+    print('init m', mu, file=sys.stderr)
+    print('init a', alpha, file=sys.stderr)
     
     for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])
@@ -49,7 +53,8 @@ def get_init_parameters(s0, s1, s2, **info):
         el[0,2] = low
         el[0,0] = med
         el[1,0] = med
-    
+    print('init m', mu, file=sys.stderr)
+    print('init a', alpha, file=sys.stderr)
     #print(alpha, mu)
     return alpha, mu
     
@@ -76,6 +81,8 @@ class NegBinRepHMM(_BaseHMM):
         self.max_range = max_range
         self._update_distr(self.mu, self.alpha, self.max_range)
         self.func = func
+        print("mu", self.mu, file=sys.stderr)
+        print("a", self.alpha, file=sys.stderr)
         
     def _update_distr(self, mu, alpha, max_range):
         
@@ -156,6 +163,7 @@ class NegBinRepHMM(_BaseHMM):
         
         #stats['obs'] = np.copy(obs)
         stats['posterior'] = np.copy(posteriors)
+        
 
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                       posteriors, fwdlattice, bwdlattice,
