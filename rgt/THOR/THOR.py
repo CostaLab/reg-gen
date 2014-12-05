@@ -35,7 +35,6 @@ def main():
     
     func, p = _fit_mean_var_distr(exp_data.overall_coverage, options.name, verbose = True, cut=options.cut_obs, sample_size=20000)
     #func_para = [np.array([-0.02178527,  0.48686578,  0.21833156]), np.array([ 0.76335214, -0.94956275,  0.70959764])]
-    print('type', type(func), file=sys.stderr)
     print("func para", p, file=sys.stderr)
 
     print('Number of regions to be considered by the HMM:', len(exp_data), file=sys.stderr)
