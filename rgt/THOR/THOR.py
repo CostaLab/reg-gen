@@ -76,7 +76,7 @@ def main():
     tracker.write(text=str(n) + " " + str(p), header="Binomial distr for p-value estimates (n,p)")
     
     get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
-     
+    
 if __name__ == '__main__':
     main() 
     
