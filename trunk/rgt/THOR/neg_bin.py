@@ -28,6 +28,7 @@ class NegBin():
     """
     
     def _get_value_log(self, x, mu, v):
+        """log basic 2"""
         try:
             return loggamma(x+v) - loggamma(x+1) - loggamma(v) + v*log(v) - v*log(v+mu) + x*log(mu) - x*log(v+mu)
         except ValueError:

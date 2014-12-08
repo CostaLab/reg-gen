@@ -18,6 +18,7 @@ from math import log, fabs, exp
 from sklearn.utils.extmath import logsumexp
 import numpy as np
 import sys
+from rgt.THOR.neg_bin import NegBin
 
 lookup_pmf = {}
 lookup_pvalue = {}
@@ -39,6 +40,8 @@ def get_log_value(x, distr):
             v = binom.logpmf(x, distr['n'], distr['p'])
             lookup_pmf[x] = v
             return v
+    if distr['distr_name'] == 'nb':
+        return distr['distr'].logpdf(x)
 
 def _comp(i, x, side, current_p, p):
     if side == 'r':
@@ -65,6 +68,7 @@ def compute_pvalue(distr, N, side, current_p, x):
     for i in it:
         p1 = get_log_value(i, distr)
         p2 = get_log_value(N - i, distr)
+        #print("H", p1, p2)
         p = p1 + p2
         
         if _comp(i, x, side, current_p, p):
@@ -86,6 +90,10 @@ def compute_pvalue(distr, N, side, current_p, x):
         #    break
     #sum_num += sum_num
     #sum_denum += sum_denum
+    if distr['distr_name'] == 'nb':
+        sum_num = map(lambda x: float(x), sum_num)
+        sum_denum = map(lambda x: float(x), sum_denum)
+        
     return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
 
 def get_log_pvalue_new(x, y, side, distr):
@@ -107,34 +115,34 @@ if __name__ == '__main__':
     n = 30000000
     p = 0.01
     distr={'distr_name': 'binomial', 'p':p, 'n':n}
-    #side = 'l' #r bei y > x, sonst l
-    #x=870
-    #y=1123
-    #side = 'r' if y > x else 'l'
-    #rep = 1
-    
-    values = []
-    with open('/home/manuel/pvalues_cut', 'r') as f:
-        for line in f:
-            line=line.strip()
-            line=line.split(',')
-            values.append((int(line[0]), int(line[1]), float(line[2])))
-
-    i = 0
-    t = time()
-    k = 0
-    for x, y, pvalue in values:
-        k += 1
-        if k == 100:
-            break
-        side = 'r' if y > x else 'l'
-        p = -get_log_pvalue_new(x, y, side, distr)
-        print(p)
-        if fabs(pvalue - p) > 1:
-            i += 1
-            #print('r',x, y, pvalue, p, sep= '\t')
-    t2 = time()-t
-    print('new approach:', t2, i)
+#     #side = 'l' #r bei y > x, sonst l
+#     #x=870
+#     #y=1123
+#     #side = 'r' if y > x else 'l'
+#     #rep = 1
+#     
+#     values = []
+#     with open('/home/manuel/pvalues_cut', 'r') as f:
+#         for line in f:
+#             line=line.strip()
+#             line=line.split(',')
+#             values.append((int(line[0]), int(line[1]), float(line[2])))
+# 
+#     i = 0
+#     t = time()
+#     k = 0
+#     for x, y, pvalue in values:
+#         k += 1
+#         if k == 100:
+#             break
+#         side = 'r' if y > x else 'l'
+#         p = -get_log_pvalue_new(x, y, side, distr)
+#         print(p)
+#         if fabs(pvalue - p) > 1:
+#             i += 1
+#             #print('r',x, y, pvalue, p, sep= '\t')
+#     t2 = time()-t
+#     print('new approach:', t2, i)
      
 #    t = time()
 #    i = 0
@@ -176,11 +184,13 @@ if __name__ == '__main__':
     #print(get_log_pvalue(12, 3, 'r', distr_name='binomial', p=p, n=n))
     #print(get_log_pvalue(3, 12, 'l', distr_name='binomial', p=p, n=n))
     
+    m = NegBin(2.734905, 0.00251129, max_range=500)
+    distr={'distr_name': 'nb', 'distr': m}
     
-    #S = 4
-    #for x in range(S+1):
-    #    print('new', x, S-x, get_pvalue_new(x, S-x, distr, side))
-    #    #a = get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n)
-    #    #print('old', x, S-x, a, log(a, 10))
-    #    print('old', x, S-x, get_log_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n))
-    #    #print(get_pvalue_new(x, S-x, distr, side) - get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n) < 10**-10)
+    S = 10
+    for x in range(S+1):
+        print('new', x, S-x, 10**-get_log_pvalue_new(x, S-x, 'l', distr))
+        #a = get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n)
+        #print('old', x, S-x, a, log(a, 10))
+        #print('old', x, S-x, get_log_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n))
+        #print(get_pvalue_new(x, S-x, distr, side) - get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n) < 10**-10)
