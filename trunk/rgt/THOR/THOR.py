@@ -22,6 +22,7 @@ from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
 from tracker import Tracker
+from rgt.THOR.neg_bin import NegBin
 
 def main():
     test = False
@@ -70,12 +71,15 @@ def main():
         posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
 
-    n = np.mean([exp_data.overall_coverage[i][:,exp_data.indices_of_interest].sum() for i in range(2)])
-    p = m.mu[0,0] / n
+    mu = m.mu[0,0]
+    alpha = m.alpha[0,0]
     
-    tracker.write(text=str(n) + " " + str(p), header="Binomial distr for p-value estimates (n,p)")
+    tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Binomial distr for p-value estimates (mu, alpha)")
     
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr={'distr_name': "binomial", 'n': n, 'p': p})
+    nb = NegBin(mu, alpha, max_range=100000)
+    distr={'distr_name': 'nb', 'distr': nb}
+    
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr)
     
 if __name__ == '__main__':
     main() 
