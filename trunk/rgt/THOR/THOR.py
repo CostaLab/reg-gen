@@ -25,7 +25,7 @@ from tracker import Tracker
 from rgt.THOR.neg_bin import NegBin
 
 def main():
-    test = True
+    test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
