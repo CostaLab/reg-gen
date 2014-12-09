@@ -155,6 +155,8 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     else:
         pv_pass = [True] * len(pvalues)
     
+    print(pvalues, file=sys.stderr)
+    
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)
 
@@ -340,7 +342,7 @@ def input(test):
         options.version=False
         options.factor_input_1=None #for BAM
         options.factor_input_2=None
-        options.no_correction = False
+        options.no_correction = True
         
         if options.debug:
             options.verbose = True
@@ -349,7 +351,7 @@ def input(test):
                           help="Input control for first parameter [default: %default]")
         parser.add_option("--input-2", dest="input_2", default=None, \
                           help="Input control for second parameter [default: %default]")
-        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.05, type="float",\
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
         parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
                           help="No Benjamini/Hochberg p-value multiple testing correction [default: %default]")
