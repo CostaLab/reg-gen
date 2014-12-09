@@ -63,6 +63,12 @@ def main():
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     
+    tracker.write(text=str(options.pcutoff)+ "\n", header="p-value cutoff\n")
+    if options.no_correction:
+        tracker.write(text="\n", header="no p-value correction\n")
+    else:
+        tracker.write(text="\n", header="with p-value correction (Benjamini/Hochberg)\n")
+    
     exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bam_file_1 = bamfile_1, ext_1=options.ext_1, bam_file_2 = bamfile_2, ext_2=options.ext_2, \
                           input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
