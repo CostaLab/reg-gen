@@ -11,7 +11,7 @@ from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
 import numpy
 import time, datetime, getpass, fnmatch
-import shutil
+from shutil import copyfile
 
 # Local Libraries
 # Distal Libraries
@@ -90,7 +90,8 @@ def output_parameters(parameter, directory, folder, filename):
             logp.write("{}\n".format(s))
         logp.close()
 
-#def copy_em(em, directory, folder):
+def copy_em(em, directory, folder):
+    copyfile(em, os.path.join(dir,directory,folder, "experimental_matrix.txt"))
     
 
 def main():
@@ -360,7 +361,7 @@ def main():
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-        #shutil.copy2(args.reference, os.path.join(dir,directory,folder)os.path.join(dir,directory,folder))
+        copy_em()
             
     ################### Intersect Test ##########################################
     if args.mode == 'intersect':
