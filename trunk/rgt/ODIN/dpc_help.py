@@ -23,6 +23,7 @@ from DualCoverageSet import DualCoverageSet
 from get_fast_gen_pvalue import get_log_pvalue_new
 from postprocessing import merge_delete
 from math import log10
+from rgt.motifanalysis.Statistics import multiple_test_correction
 
 SIGNAL_CUTOFF = 10000
 
@@ -58,32 +59,33 @@ def _compute_pvalue((x, y, side, distr)):
     else:
         return -get_log_pvalue_new(x, y, side, distr)
 
-def _output_BED(name, pvalues, peaks, pcutoff):
+def _output_BED(name, pvalues, peaks, pv_pass):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
     bedscore = 1000
-     
+    
     for i in range(len(pvalues)):
         c, s, e, c1, c2, strand = peaks[i]
         color = colors[strand]
-        if pvalues[i] > pcutoff:
+            
+        if pv_pass[i]:
             print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
                   color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
- 
+    
     f.close()
 
-def _output_narrowPeak(name, pvalues, peaks, pcutoff):
+def _output_narrowPeak(name, pvalues, peaks, pv_pass):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
     f = open(name + '-diffpeaks.narrowPeak', 'w')
     for i in range(len(pvalues)):
         c, s, e, _, _, strand = peaks[i]
-        if pvalues[i] > pcutoff:
+        if pv_pass[i]:
             print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
     f.close()
 
-def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
+def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction):
     pcutoff = -log10(pcutoff)
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
@@ -148,10 +150,13 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff):
     merge_delete(ext_size, merge, peaks, pvalues, name)
     
     #peaks = [(c, s, e, s1, s2, strand)]
-    _output_BED(name, pvalues, peaks, pcutoff)
-    _output_narrowPeak(name, pvalues, peaks, pcutoff)
+    if not no_correction:
+        pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
+    else:
+        pv_pass = [True] * len(pvalues)
     
-
+    _output_BED(name, pvalues, peaks, pv_pass)
+    _output_narrowPeak(name, pvalues, peaks, pv_pass)
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
                input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
@@ -335,6 +340,7 @@ def input(test):
         options.version=False
         options.factor_input_1=None #for BAM
         options.factor_input_2=None
+        options.no_correction = False
         
         if options.debug:
             options.verbose = True
@@ -345,6 +351,8 @@ def input(test):
                           help="Input control for second parameter [default: %default]")
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.05, type="float",\
                           help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
+        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
+                          help="No Benjamini/Hochberg p-value multiple testing correction [default: %default]")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
                           help="Merge peaks which have a distance less than the estimated fragment size (recommended for histone data). [default: %default]")
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
