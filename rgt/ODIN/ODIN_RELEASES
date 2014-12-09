@@ -1,7 +1,6 @@
 - fix estimate shiftsize if seq in bam file not given? really working?
 
 todo:
--how to save bigwig in odin?
 -p-value correction
 -cite function
 
