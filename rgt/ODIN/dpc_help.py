@@ -27,6 +27,20 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 
 SIGNAL_CUTOFF = 10000
 
+def get_bibtex_entry():
+    print("@article{Allhoff2014ODIN,", file=sys.stderr)
+    print("    author = {Allhoff, Manuel and Seré, Kristin and Chauvistré,", file=sys.stderr)
+    print("              Heike and Lin, Qiong and Zenke, Martin and Costa, Ivan G.},", file=sys.stderr)
+    print("    title = {Detecting differential peaks in ChIP-seq signals with ODIN},", file=sys.stderr)
+    print("    journal = {Bioinformatics},", file=sys.stderr)
+    print("    year = {2014},", file=sys.stderr)
+    print("    volume = {30}, ", file=sys.stderr)
+    print("    number = {24}, ", file=sys.stderr)
+    print("    pages = {3467-3475}, ", file=sys.stderr)
+    print("    doi = {10.1093/bioinformatics/btu722}, ", file=sys.stderr)
+    print("    URL = {http://bioinformatics.oxfordjournals.org/content/30/24/3467}", file=sys.stderr)
+    print("}", file=sys.stderr)
+
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
@@ -378,7 +392,8 @@ def input(test):
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="output further information of DP-Calling progress [default: %default]")
-        parser.add_option("--version", dest="version", default=False, action="store_true", help="show version")
+        parser.add_option("--version", dest="version", default=False, action="store_true", help="show version [default: %default]")
+        parser.add_option("--bibtex", dest="bibtex", default=False, action="store_true", help="show BibTeX entry [default: %default]")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
     
         group = OptionGroup(parser, "Advanced options")
@@ -419,6 +434,10 @@ def input(test):
             print("")
             print(version)
             sys.exit()
+        
+        if options.bibtex:
+            get_bibtex_entry()
+            sys.exit(0)
         
         if len(args) != 4:
             parser.error("Exactly four parameters are needed")
