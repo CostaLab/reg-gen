@@ -1,8 +1,9 @@
 - fix estimate shiftsize if seq in bam file not given? really working?
+-cite function
 
 todo:
 -p-value correction
--cite function
+
 
 
 * ODIN-0.2

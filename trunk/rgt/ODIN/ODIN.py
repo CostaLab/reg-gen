@@ -10,6 +10,7 @@ from dpc_help import get_peaks
 from dpc_help import input
 import numpy as np
 from rgt.THOR.tracker import Tracker
+from dpc_help import get_bibtex_entry
 
 from random import sample
 
@@ -59,7 +60,7 @@ def main():
         print("---------- TEST MODE ----------", file=sys.stderr)
     
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-
+    
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     
