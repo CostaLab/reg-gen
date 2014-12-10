@@ -14,7 +14,7 @@ value y follows h2.
 from __future__ import print_function
 from time import time
 from scipy.stats import nbinom, binom
-from math import log, fabs, exp
+from math import log, fabs, exp, log10
 from sklearn.utils.extmath import logsumexp
 import numpy as np
 import sys
@@ -94,8 +94,11 @@ def compute_pvalue(distr, N, side, current_p, x):
         sum_num = map(lambda x: float(x), sum_num)
         sum_denum = map(lambda x: float(x), sum_denum)
         
-    return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
-
+        return logsumexp(np.array(sum_num)) - (log10(2) + logsumexp(np.array(sum_denum)))
+    
+    else:
+        return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
+    
 def get_log_pvalue_new(x, y, side, distr):
     N = x + y
     
@@ -184,12 +187,20 @@ if __name__ == '__main__':
     #print(get_log_pvalue(12, 3, 'r', distr_name='binomial', p=p, n=n))
     #print(get_log_pvalue(3, 12, 'l', distr_name='binomial', p=p, n=n))
     
-    m = NegBin(2.734905, 0.00251129, max_range=500)
+    m = NegBin(2.734905, 0.00251129, max_range=11000)
     distr={'distr_name': 'nb', 'distr': m}
+    from random import uniform
+    from math import exp
     
     S = 10
-    for x in range(S+1):
-        print('new', x, S-x, 10**-get_log_pvalue_new(x, S-x, 'l', distr))
+    for _ in range(1000):
+        #for x in range(S+1):
+        x = int(uniform(0, S+1))
+        y = int(uniform(0, S+1))
+        
+        if x+y == S:
+            side = 'l' if x>y else 'r'
+            print(x, S-x, 10**get_log_pvalue_new(x, y, side, distr), sep='\t')
         #a = get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n)
         #print('old', x, S-x, a, log(a, 10))
         #print('old', x, S-x, get_log_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n))
