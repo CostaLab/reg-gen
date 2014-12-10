@@ -38,14 +38,33 @@ class TestGenomicRegionSet(unittest.TestCase):
     	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
     	txp.filter_tfo(start=500,end=1000, output=False, adverse=True)
 
-    def test_filter_tfo(self):
+    def test_filter_tts(self):
     	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
     	g = GenomicRegionSet("g")
     	s = GenomicRegion(chrom="chr2", initial=74000000, final=75000000)
     	g.add(s)
     	result = txp.filter_tts(g)
-    	for i in result:
-    	    print(i)
+
+    def test_count_tfo(self):
+        txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
+    	#print(txp.count_tfo(start=500,end=1000))
+
+    def test_filter_tts(self):
+    	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
+    	g = GenomicRegionSet("g")
+    	s = GenomicRegion(chrom="chr2", initial=74000000, final=75000000)
+    	g.add(s)
+    	result = txp.count_tts(g)
+
+    def test_unique_tfo(self):
+    	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
+    	txp.unique_tfo()
+    	
+    def test_merge_tfo(self):
+    	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
+    	txp.merge_tfo()
+    	print(txp.merged)
+
     
    # def test_
    
