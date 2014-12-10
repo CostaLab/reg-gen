@@ -186,10 +186,10 @@ class RNADNAInteractionSet():
         return self.unique_tfos
 
     def merge_tfo(self):
-        """Return a list of interactions for merged TFOs 
-
-        Each element in the list follow the following layout:
-            (TFO start, TFO end), GenomicRegionSet
+        """Return a dictionary of interactions for merged TFOs 
+        (TFO start, TFO end) as the key, 
+        a GenomicRegionSet as the value
+        
         TFO start and TFO end are position after merging
         GenomicRegionSet contains all the TTSs of the merged TFOs
 

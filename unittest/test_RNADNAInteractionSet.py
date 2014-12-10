@@ -1,7 +1,6 @@
 from __future__ import print_function
 from __future__ import division
 import sys
-#print(sys.path)
 sys.path.append('/projects/reggen/reg-gen')
 import unittest
 from rgt.GenomicRegion import *
@@ -19,8 +18,6 @@ class TestGenomicRegionSet(unittest.TestCase):
     
     def test_read_txp(self):
         txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
-        for s in txp:
-        	pass
 
         a = len(txp)
         b = txp[3]
@@ -63,7 +60,8 @@ class TestGenomicRegionSet(unittest.TestCase):
     def test_merge_tfo(self):
     	txp = RNADNAInteractionSet(organism="hg19", filename=sample_txp)
     	txp.merge_tfo()
-    	print(txp.merged)
+
+    	print(map(len, txp.merged.values()))
 
     
    # def test_
