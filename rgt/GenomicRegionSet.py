@@ -2,6 +2,7 @@ from __future__ import print_function
 from __future__ import division
 from GenomicRegion import *
 import random
+print(random.__file__)
 from copy import deepcopy
 import os, sys
 import time
@@ -1195,3 +1196,18 @@ class GenomicRegionSet:
         except:
             print("There is no region in the given GenomicRegionSet, {}".format(self.name))
             return 0 
+
+    def include(self, region):
+        """Check whether the given region has intersect with the original regionset """
+        g = GenomicRegionSet("temp")
+        g.add(region)
+        inter = self.intersect(g)
+        if inter.sequences: return True
+        else: return False
+
+    def complement(self, organism, chrom_X=True, chrom_Y=False, chrom_M=False):
+        """Return the complement GenomicRegionSet for the given organism """
+        g = GenomicRegionSet("complement_"+self.name)
+        g.get_genome_data(organism, chrom_X, chrom_Y, chrom_M)
+        g.subtract(self)
+        return g
