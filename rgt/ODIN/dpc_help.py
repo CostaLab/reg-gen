@@ -173,7 +173,7 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)
 
-def _get_log10pvalue(p):
+def _get_log10pvalue(x):
     """Return -log10(p)"""
     if x < 1e-320:
         return sys.maxint
