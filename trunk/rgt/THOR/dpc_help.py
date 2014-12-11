@@ -21,8 +21,12 @@ from scipy.optimize import curve_fit
 import numpy as np
 from numpy import linspace
 from math import fabs
+from rgt.ODIN.postprocessing import merge_delete
+from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
 
 def _func_quad_2p(x, a, c):
+    """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
+    x may be an array or a single float"""
     res = []
     if type(x) is np.ndarray:
         for el in x:
@@ -32,9 +36,26 @@ def _func_quad_2p(x, a, c):
     else:
         return max(x, fabs(a) * x**2 + x + fabs(c))
 
-def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10000):
-        #list of (mean, var) points for samples 0 and 1
-        data_rep = []
+def _plot_func(m, v, p, name, xlimpara=None, ylimpara=None):
+    """Plot estimated and empirical function"""
+    x = linspace(0, max(m), max(m)+1)
+    y = _func_quad_2p(x, p[0], p[1])
+    
+    print(xlimpara, ylimpara, file=sys.stderr)
+    
+    if xlim is not None:
+        xlim([0, xlimpara])
+    if ylim is not None:
+        ylim([0, ylimpara])
+    
+    plot(x, y)
+    scatter(m, v)
+    savefig(name + ".png")
+    close()
+
+def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
+        """Estimate empirical distribution (quadr.) based on empirical distribution"""
+        data_rep = [] #list of (mean, var) points for samples 0 and 1
         for i in range(2):
             cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
             h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
@@ -51,44 +72,22 @@ def _fit_mean_var_distr(overall_coverage, name, verbose, cut=1.0, sample_size=10
             data_rep.append(zip(m, n))
             data_rep[i].append((0,0))
         
-        print('cut', cut, file=sys.stderr)
-#         for i in range(2): #shorten list
-#             data_rep[i].sort()
-#             data_rep[i] = data_rep[i][:int(len(data_rep[i]) * cut)]
-        
-        if verbose:
+        if debug:
             for i in range(2):
-                np.save(str(name) + "-data" + str(i) + ".npy", data_rep[i])
+                np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
         
         res = []
         for i in range(2):
             m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
             v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
             
-            #p = np.polynomial.polynomial.polyfit(m, v, 2)
-            p, _ = curve_fit(_func_quad_2p, m, v)
-            print('popt ', p, file=sys.stderr)
-            
+            p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
             res.append(p)
-            print('Length', len(m), file=sys.stderr)
-            if verbose:
-                print(p, file=sys.stderr)
-                print(max(m), max(v), file=sys.stderr)
             
-                x = linspace(0, max(m), max(m)+1)
-                y = _func_quad_2p(x, p[0], p[1])
-                plot(x, y)
-                scatter(m, v)
-                savefig(str(name) + "plot_original" + str(i) + ".png")
-                close()
+            #plot empirical and estimated function
+            _plot_func(m, v, p, str(name) + "-est-func" + str(i))
+            _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
                 
-                plot(x, y)
-                scatter(m, v)
-                ylim([0, 3000])
-                xlim([0, 200])
-                savefig(str(name) + "plot" + str(i) + ".png")
-                close()
-        
         return lambda x: _func_quad_2p(x, p[0], p[1]), res
 
 
@@ -114,30 +113,17 @@ def _compute_pvalue((x, y, side, distr)):
     return -get_log_pvalue_new(x, y, side, distr)
 
 def _get_covs(DCS, i):
-    """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
+    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
     cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
     cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
     
     return cov1, cov2
 
-def get_peaks(name, DCS, states, distr):
-    tmp_peaks = []
-    for i in range(len(DCS.indices_of_interest)):
-        if states[i] not in [1,2]:
-            continue #ignore background states
-        
-        strand = '+' if states[i] == 1 else '-'
-        
-        cov1, cov2 = _get_covs(DCS, i)
-        
-        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
-        
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
-
-    i, j, r = 0, 0, 0
-    
+def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
+    """Merge consecutive peaks in tmp_peaks, and compute p-value"""
     peaks = []
     pvalues = []
+    i, j, = 0, 0
     
     while i < len(tmp_peaks):
         j+=1
@@ -154,36 +140,41 @@ def get_peaks(name, DCS, states, distr):
         
         s1 = sum(v1)
         s2 = sum(v2)
-
-        if strand == '+':
-            pvalues.append((s1, s2, 'l', distr))
-        else:
-            pvalues.append((s1, s2, 'r', distr))
         
+        side = 'l' if strand == '+' else 'r'
+        pvalues.append((s1, s2, side, distr))
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
     
-    print('Number of Peaks where p-value is not calculated: ', pvalues.count(('NA', 'NA', 'NA', 'NA')), file=sys.stderr)
-    
-    #pool = multiprocessing.Pool(processes=2)#multiprocessing.cpu_count() * 3/2)
     pvalues = map(_compute_pvalue, pvalues)
-    
     assert len(pvalues) == len(peaks)
     
-    f = open(name + '-diffpeaks.bed', 'w')
+    pv_pass = np.where(np.asarray(pvalues) < pcutoff, True, False)
     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
-    bedscore = 1000
+    return pvalues, peaks, pv_pass
+
+
+def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
+    """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
+    exts = np.mean(exts)
+    tmp_peaks = []
     
-    for i in range(len(pvalues)):
-        c, s, e, c1, c2, strand = peaks[i]
-        color = colors[strand]
+    for i in range(len(DCS.indices_of_interest)):
+        if states[i] not in [1,2]:
+            continue #ignore background states
+        
+        strand = '+' if states[i] == 1 else '-'
+        cov1, cov2 = _get_covs(DCS, i)
+        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
+        tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
 
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, \
-              color, 0, str(c1) + ',' + str(c2) + ',' + str(pvalues[i]), sep='\t', file=f)
-
-    f.close()
-
+    #merge consecutive peaks and compute p-value
+    pvalues, peaks, pv_pass = _merge_consecutive_bins(tmp_peaks, distr, pcutoff)
+    
+    merge_delete(exts, merge, peaks, pvalues, name) #postprocessing
+    
+    _output_BED(name, pvalues, peaks, pv_pass)
+    _output_narrowPeak(name, pvalues, peaks, pv_pass)    
 
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     """Compute Extension sizes for bamfiles and input files"""
@@ -201,27 +192,16 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
 
     if inputs and not exts_inputs:
         print("Computing read extension sizes for input-DNA...", file=sys.stderr)
-        #print('inputs', inputs, file=sys.stderr)
-        #print('exts_inputs', exts_inputs, file=sys.stderr)
         
         for inp in inputs:
-            e, b = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
-            #print(b, file=sys.stderr)
-            #print(inp, e, file=sys.stderr)
+            e, _ = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
             exts_inputs.append(e)
-            #print(exts_inputs, file=sys.stderr)
         print(exts_inputs, file=sys.stderr)
-    
-    return exts, exts_inputs
-#    if verbose:
-#        if 'values_1' in locals() and values_1 is not None:
-#            with open(name + '-read-ext-1', 'w') as f:
-#                for v, i in values_1:
-#                    print(i, v, sep='\t', file=f)
 
+    return exts, exts_inputs
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker):
+               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker, debug):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -253,35 +233,10 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict)
+                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug)
     
     return multi_cov_set
 
-
-def _get_chrom_list(file):
-    l = []
-    with open(file) as f:
-        for line in f:
-            line = line.strip()
-            line = line.split('\t')
-            if line[0] not in l:
-                l.append(line[0])
-    return l
-
-def _check_order(deadzones, regions, parser):
-    chrom_dz = _get_chrom_list(deadzones)
-    chrom_regions= _get_chrom_list(regions)
-    #chrom_regions may be subset of chrom_dz, but in same ordering
-    pos_old = -1
-    tmp_dz = []
-    #the list should have the same element
-    for r_chrom in chrom_dz:
-        if r_chrom in chrom_regions:
-            tmp_dz.append(r_chrom)
-    #they should be in the same order
-    if not tmp_dz == chrom_regions:
-        parser.error("Please make sure the deadzone file has the same order as the region file.")
-    
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -308,10 +263,12 @@ def input(laptop):
         options.factors_inputs = None
         options.verbose = True
         options.no_gc_content = False
-        options.cut_obs = 1.0
+        options.debug = True
     else:
-#        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\
-#                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
+                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
+                          help="Merge peaks which have a distance less than the estimated fragment size (recommended for histone data). [default: %default]")
         parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal.  [default: %default]")
         parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
@@ -329,9 +286,8 @@ def input(laptop):
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
         parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn of GC content calculation")
-        parser.add_option("-c", "--cut", dest="cut_obs", default=1.0, type="float",\
-                          help="Cut for observation.")
-        
+        parser.add_option("--debug", default=False, dest="debug", action="store_true", \
+                          help="Output debug information. Warning: space consuming! [default: %default]")
         (options, args) = parser.parse_args()
 
         if options.version:
@@ -382,10 +338,6 @@ def input(laptop):
 #    
 #    if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
 #        parser.error("GC content can only be computed with both input files.")
-#    
-#    if options.deadzones is not None:
-#        #check the ordering of deadzones and region
-#        _check_order(options.deadzones, regions, parser)
     
     if options.exts is None:
         options.exts = []

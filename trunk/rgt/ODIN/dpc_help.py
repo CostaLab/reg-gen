@@ -169,8 +169,6 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     else:
         pv_pass = [True] * len(pvalues)
     
-    print(pvalues, file=sys.stderr)
-    
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)
 

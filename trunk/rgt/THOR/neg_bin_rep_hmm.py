@@ -33,15 +33,12 @@ warnings.filterwarnings('error')
 
 
 def get_init_parameters(s0, s1, s2, **info):
-    print("H", [np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]], file=sys.stderr)
-    print("H", [np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]], file=sys.stderr)
+    """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
     mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
     var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
     
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 1e-300
-    print('init m', mu, file=sys.stderr)
-    print('init a', alpha, file=sys.stderr)
     
     for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])
@@ -53,9 +50,7 @@ def get_init_parameters(s0, s1, s2, **info):
         el[0,2] = low
         el[0,0] = med
         el[1,0] = med
-    print('init m', mu, file=sys.stderr)
-    print('init a', alpha, file=sys.stderr)
-    #print(alpha, mu)
+
     return alpha, mu
     
 class NegBinRepHMM(_BaseHMM):
@@ -65,7 +60,7 @@ class NegBinRepHMM(_BaseHMM):
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=10, thresh=1e-2,
                  params=string.ascii_letters,
-                 init_params=string.ascii_letters, max_range=500):
+                 init_params=string.ascii_letters, max_range=200000):
     
         _BaseHMM.__init__(self, n_components, startprob, transmat,
                           startprob_prior=startprob_prior,
