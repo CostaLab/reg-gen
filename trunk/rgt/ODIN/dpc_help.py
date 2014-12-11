@@ -100,7 +100,6 @@ def _output_narrowPeak(name, pvalues, peaks, pv_pass):
     f.close()
 
 def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction):
-    pcutoff = -log10(pcutoff)
     indices_of_interest = DCS.indices_of_interest
     first_overall_coverage = DCS.first_overall_coverage
     second_overall_coverage = DCS.second_overall_coverage
@@ -165,7 +164,10 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     
     #peaks = [(c, s, e, s1, s2, strand)]
     if not no_correction:
+        pcutoff = -log10(pcutoff)
+        pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
+        pvalues = map(lambda x: -log10(x), pvalues)
     else:
         pv_pass = [True] * len(pvalues)
     
