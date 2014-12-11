@@ -25,7 +25,7 @@ from postprocessing import merge_delete
 from math import log10
 from rgt.motifanalysis.Statistics import multiple_test_correction
 
-SIGNAL_CUTOFF = 10000
+SIGNAL_CUTOFF = 30000
 
 def get_bibtex_entry():
     print("@article{Allhoff2014ODIN,", file=sys.stderr)
@@ -166,12 +166,19 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     if not no_correction:
         pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
-        pvalues = map(lambda x: -log10(x), pvalues)
+        pvalues = map(_get_log10pvalue, pvalues)
     else:
         pv_pass = [True] * len(pvalues)
     
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)
+
+def _get_log10pvalue(p):
+    """Return -log10(p)"""
+    if x < 1e-320:
+        return sys.maxint
+    else:
+        return -log10(x)
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
                input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
