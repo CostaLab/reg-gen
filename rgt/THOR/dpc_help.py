@@ -22,8 +22,6 @@ import numpy as np
 from numpy import linspace
 from math import fabs
 
-SIGNAL_CUTOFF = 10000
-
 def _func_quad_2p(x, a, c):
     res = []
     if type(x) is np.ndarray:
@@ -113,10 +111,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
 
 def _compute_pvalue((x, y, side, distr)):
-    if x == 'NA':
-        return sys.maxint
-    else:
-        return -get_log_pvalue_new(x, y, side, distr)
+    return -get_log_pvalue_new(x, y, side, distr)
 
 def _get_covs(DCS, i):
     """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
@@ -160,13 +155,10 @@ def get_peaks(name, DCS, states, distr):
         s1 = sum(v1)
         s2 = sum(v2)
 
-        if s1 + s2 > SIGNAL_CUTOFF:
-            pvalues.append(('NA', 'NA', 'NA', 'NA'))
+        if strand == '+':
+            pvalues.append((s1, s2, 'l', distr))
         else:
-            if strand == '+':
-                pvalues.append((s1, s2, 'l', distr))
-            else:
-                pvalues.append((s1, s2, 'r', distr))
+            pvalues.append((s1, s2, 'r', distr))
         
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
@@ -315,7 +307,7 @@ def input(laptop):
         options.binsize=100
         options.factors_inputs = None
         options.verbose = True
-        options.no_gc_content = True
+        options.no_gc_content = False
         options.cut_obs = 1.0
     else:
 #        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.01, type="float",\

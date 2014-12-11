@@ -23,6 +23,7 @@ from random import sample
 import multiprocessing
 from tracker import Tracker
 from rgt.THOR.neg_bin import NegBin
+import cProfile
 
 def main():
     test = False
@@ -76,7 +77,7 @@ def main():
     
     tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Binomial distr for p-value estimates (mu, alpha)")
     
-    nb = NegBin(mu, alpha, max_range=100000)
+    nb = NegBin(mu, alpha, max_range=m.get_max_colsum() + 10)
     distr={'distr_name': 'nb', 'distr': nb}
     
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr)
