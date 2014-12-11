@@ -1,16 +1,16 @@
 from __future__ import print_function
 from rgt.CoverageSet import CoverageSet
 import numpy as np
-from random import sample, randrange
-from time import time
+from random import sample
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
 from math import fabs
+from rgt.ODIN.DualCoverageSet import DualCoverageSet
 
 EPSILON = 1**-320
 
-class MultiCoverageSet():
+class MultiCoverageSet(DualCoverageSet):
     def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions):
         """Return self.covs and self.inputs as CoverageSet"""
         self.exts = exts
@@ -52,7 +52,7 @@ class MultiCoverageSet():
                     input.write_bigwig(name + '-s%s-rep%s-input-gc.bw' %(sig, rep), chrom_sizes)
                     cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         else:
-            print("Do not compute GC-content", file=sys.stderr)
+            print("Do not compute GC-content, as there is no input.", file=sys.stderr)
     
     
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, \
@@ -123,31 +123,13 @@ class MultiCoverageSet():
             f = means_signal[1] / means_signal[0]
             print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
         if max_index == 0:
-            print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
             r = range(self.dim_1, self.dim_1 + self.dim_2)
             f = means_signal[0] / means_signal[1]
+            print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
         
         for i in r:
             self.covs[i].scale(f)
-        
-        
-    def print_gc_hist(self, name, gc_hist):
-        f = open(name + 'gc-content.data', 'w')
-        for i in range(len(gc_hist)):
-            print(i, gc_hist[i], file=f)
-        f.close()
-    
-    def _norm_gc_content(self, cov, gc_cov, gc_avg):
-        for i in range(len(cov)):
-            assert len(cov[i]) == len(gc_cov[i])
-#            cov[i] = gc_cov[i]
-            cov[i] = np.array(cov[i])
-            gc_cov[i] = np.array(gc_cov[i])
-            gc_cov[i][gc_cov[i] < EPSILON] = gc_avg #sometimes zeros occur, do not consider
-            cov[i] = cov[i] * gc_avg / gc_cov[i]
-            cov[i] = cov[i].clip(0, max(max(cov[i]), 0)) #neg. values to 0
-            cov[i] = cov[i].astype(int)
-        
+           
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
         iter = self.genomicRegions.__iter__()
@@ -185,70 +167,28 @@ class MultiCoverageSet():
         self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
     
     def _get_bin_number(self):
+        """Return number of bins"""
         return self.overall_coverage[0].shape[1]
     
     def compute_putative_region_index(self, l=5):
         """Compute putative differential peak regions as follows: 
-        - score must be > 2/(m*n) (m=#obs, n=0.9 (default) )
-        - overall coverage in library 1 and 2 must be > 3
-        - extend resulting sites by l steps in both directions. """
-        m = self._get_bin_number()
-        n = 0.9
+        - score must be > 0, i.e. everthing
+        - overall coverage in library 1 and 2 must be > 3"""
+        
         self._compute_score()
-        print('before filter step:', len(self.scores), file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
-        print(self.overall_coverage[0].shape, len(self.indices_of_interest), file=sys.stderr)
-        print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
-        print('length of intersection set: ', len(tmp), file=sys.stderr)
         self.indices_of_interest = tmp2
-        print('after second filter step: ', len(self.indices_of_interest), file=sys.stderr)
 
-        tmp = set()
-        for i in self.indices_of_interest:
-            for j in range(max(0, i-l), i+l+1):
-                tmp.add(j)
-
-        tmp = list(tmp)
-        tmp.sort()
-        self.indices_of_interest = np.array(tmp)
+        #tmp = set()
+        #for i in self.indices_of_interest:
+        #    for j in range(max(0, i-l), i+l+1):
+        #        tmp.add(j)
+        #tmp = list(tmp)
+        #tmp.sort()
+        #self.indices_of_interest = np.array(tmp)
          
-    def get_initial_dist(self, filename):
-        """Write BED file with initial state distribution"""
-        states = []
-        threshold = 2.0
-        for i in self.indices_of_interest:
-            c1 = self.first_overall_coverage[i]
-            c2 = self.second_overall_coverage[i]
-            
-            if c1 + c2 <= 3:
-                state = 0
-            elif c1 / max(float(c2), 1) > threshold or c1-c2>10:
-                state = 1
-            elif c1 / max(float(c2), 1) < 1/threshold or c2-c1>10:
-                state = 2
-            else:
-                state = 0
-            
-            states.append(state)
-        
-        f = open(filename, 'w')
-        for j in range(len(states)):
-            i = self.indices_of_interest[j]
-            chrom, start, end = self._index2coordinates(i)
-            s = states[j]
-            print(chrom, start, end, s, self.first_overall_coverage[i], self.second_overall_coverage[i], sep='\t', file=f)
-            
-        f.close()
-
-    def write_putative_regions(self, path):
-        """Write putative regions (defined by criteria mentioned in method) as BED file."""
-        with open(path, 'w') as f:
-            for i in self.indices_of_interest:
-                chrom, start, end = self._index2coordinates(i)
-                print(chrom, start, end, round(self.scores[i], 1), file=f)
-            
     def write_test_samples(self, name, l):
         f = open(name, 'w')
         
@@ -268,15 +208,18 @@ class MultiCoverageSet():
         self.write_test_samples(name + '-s1', s1_v)
         self.write_test_samples(name + '-s2', s2_v)
     
-    def get_training_set(self, exp_data, debug, name, y=5000, ex=2):
+    def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
         threshold = 3.0
         diff_cov = 100
+        if test:
+            diff_cov = 2
+            threshold = 1.5
         s0, s1, s2 = [], [], []
         
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
-            
+
             #apply criteria for initial peak calling
             if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
                 s1.append((i, cov1, cov2))
@@ -288,8 +231,9 @@ class MultiCoverageSet():
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
-            el = el[el[:,1] < np.percentile(el[:,1], 90)]
-            el = el[el[:,2] < np.percentile(el[:,2], 90)]
+            if not test:
+                el = el[el[:,1] < np.percentile(el[:,1], 90)]
+                el = el[el[:,2] < np.percentile(el[:,2], 90)]
             tmp.append(el)
         
         s0 = tmp[0]
