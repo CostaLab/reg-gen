@@ -213,10 +213,10 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     """Return normalization factor (see Diaz et al) for the input
     if two_sample is True: compare sample with index of 0.15"""
     #take two largest chromosomes for analysis:
-    tmp = chrom_sizes_dict.items()
-    tmp.sort(key=lambda x: x[1], reverse=True)
-    tmp = dict(tmp[:min(len(tmp), 5)])
-    
+    #tmp = chrom_sizes_dict.items()
+    #tmp.sort(key=lambda x: x[1], reverse=True)
+    #tmp = dict(tmp[:min(len(tmp), 5)])
+    tmp = chrom_sizes_dict
     print("For input normalization consider chromosomes: %s" %(", ".join(tmp.keys())), file=sys.stderr)
     
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
