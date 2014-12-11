@@ -217,7 +217,7 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     #tmp.sort(key=lambda x: x[1], reverse=True)
     #tmp = dict(tmp[:min(len(tmp), 5)])
     tmp = chrom_sizes_dict
-    print("For input normalization consider chromosomes: %s" %(", ".join(tmp.keys())), file=sys.stderr)
+    #print("For input normalization consider chromosomes: %s" %(", ".join(tmp.keys())), file=sys.stderr)
     
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
     work(first_path, second_path, step_width, zero_counts, two_sample, tmp)
