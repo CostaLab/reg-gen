@@ -9,7 +9,7 @@ import sys
 from MultiCoverageSet import MultiCoverageSet
 #from get_gen_pvalue import get_log_pvalue
 from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
-from math import log
+from math import log, log10
 import multiprocessing
 from input_parser import input_parser
 #from rgt.ODIN import ODIN
@@ -41,15 +41,14 @@ def _plot_func(m, v, p, name, xlimpara=None, ylimpara=None):
     x = linspace(0, max(m), max(m)+1)
     y = _func_quad_2p(x, p[0], p[1])
     
-    print(xlimpara, ylimpara, file=sys.stderr)
-    
-    if xlim is not None:
+    if xlimpara is not None:
         xlim([0, xlimpara])
-    if ylim is not None:
+    if ylimpara is not None:
         ylim([0, ylimpara])
     
     plot(x, y)
     scatter(m, v)
+    
     savefig(name + ".png")
     close()
 
@@ -124,7 +123,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
     peaks = []
     pvalues = []
     i, j, = 0, 0
-    
+    pcutoff = -log10(pcutoff)
     while i < len(tmp_peaks):
         j+=1
         c, s, e, c1, c2, strand = tmp_peaks[i]
@@ -149,7 +148,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
     
-    pv_pass = np.where(np.asarray(pvalues) < pcutoff, True, False)
+    pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
     
     return pvalues, peaks, pv_pass
 
@@ -255,9 +254,10 @@ def input(laptop):
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         options.exts = [200, 200, 200, 200, 200]
-        options.exts_inputs = [200, 200, 200, 200, 200]
-        options.pcutoff = 1
+        options.exts_inputs = None #[200, 200, 200, 200, 200]
+        options.pcutoff = 0.1
         options.name='test'
+        options.merge=True
         options.stepsize=50
         options.binsize=100
         options.factors_inputs = None

@@ -60,7 +60,7 @@ class NegBinRepHMM(_BaseHMM):
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=10, thresh=1e-2,
                  params=string.ascii_letters,
-                 init_params=string.ascii_letters, max_range=200000):
+                 init_params=string.ascii_letters):
     
         _BaseHMM.__init__(self, n_components, startprob, transmat,
                           startprob_prior=startprob_prior,
@@ -73,29 +73,22 @@ class NegBinRepHMM(_BaseHMM):
         self.n_features = 2 #sum(self.dim) #emission dimension
         self.alpha = alpha
         self.mu = mu
-        self.max_range = max_range
-        self._update_distr(self.mu, self.alpha, self.max_range)
+        self._update_distr(self.mu, self.alpha)
         self.func = func
-        print("mu", self.mu, file=sys.stderr)
-        print("a", self.alpha, file=sys.stderr)
         
-    def _update_distr(self, mu, alpha, max_range):
-        
-        raw1 = [NegBin(mu[0, 0], alpha[0, 0], max_range=max_range), NegBin(mu[0, 1], alpha[0, 1], max_range=max_range), NegBin(mu[0, 2], alpha[0, 2], max_range=max_range)]
-        raw2 = [NegBin(mu[1, 0], alpha[1, 0], max_range=max_range), NegBin(mu[1, 1], alpha[1, 1], max_range=max_range), NegBin(mu[1, 2], alpha[1, 2], max_range=max_range)]
+    def _update_distr(self, mu, alpha):
+        """Update distributions assigned to each state with new mu and alpha"""
+        raw1 = [NegBin(mu[0, 0], alpha[0, 0]), NegBin(mu[0, 1], alpha[0, 1]), NegBin(mu[0, 2], alpha[0, 2])]
+        raw2 = [NegBin(mu[1, 0], alpha[1, 0]), NegBin(mu[1, 1], alpha[1, 1]), NegBin(mu[1, 2], alpha[1, 2])]
         
         self.neg_distr = np.matrix([raw1, raw2]) #matrix of all Neg. Bin. Distributions, columns=HMM's state (3), row=#samples (2)
         
-    def get_alpha(self, sample, m):
-        #var = max(self.para_func[sample][0] + m * self.para_func[sample][1] + m**2 * self.para_func[sample][2], 1e-300)
+    def get_alpha(self, m):
+        """Return alpha for a given mu based on empirical variance"""
         var = self.func(m)
-        #print('check cons', sample, m, var, (var - m) / m**2, -1./m, (var - m) / m**2 > -1./m, m > -1./(var - m), file=sys.stderr)
-        
         try:
-            #print('log_get_alpha YES', sample, m, var, m**2, file=sys.stderr)
             return max((var - m) / m**2, 1e-300)
         except Warning:
-            #print('log_get_alpha NO', sample, m, var, m**2, file=sys.stderr)
             if m**2 > 1e-300:
                 return max((var - m) / m**2, 1e-300)
             else:
@@ -141,7 +134,6 @@ class NegBinRepHMM(_BaseHMM):
         return stats
     
     def _help_accumulate_sufficient_statistics(self, obs, stats, posteriors):
-        #posteriors = _valid_posteriors(posteriors, obs)
         for t, symbol in enumerate(obs):
             stats['post'][0] += posteriors[t]
             stats['post'][1] += posteriors[t]
@@ -151,12 +143,9 @@ class NegBinRepHMM(_BaseHMM):
                 for i in it:
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
         
-        #stats['post_emission'][0] = stats['post_emission'][0] * self.dim[0]
-        #stats['post_emission'][1] = stats['post_emission'][1] * self.dim[1]
         stats['post'][0] = stats['post'][0]*self.dim[0]
         stats['post'][1] = stats['post'][1]*self.dim[1]
         
-        #stats['obs'] = np.copy(obs)
         stats['posterior'] = np.copy(posteriors)
         
 
@@ -171,18 +160,13 @@ class NegBinRepHMM(_BaseHMM):
     
     def _help_do_mstep(self, stats):
         for i in range(self.n_features):
-            print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
+            #print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
+            print('Perform M-step of EM algorithm (max. 20 times)', file=sys.stderr)
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         
-        #print('mu! ', self.mu, file=sys.stderr)
-        
-        tmp_a = [map(lambda m: self.get_alpha(i, m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
-        #print('tmp_a', tmp_a, file=sys.stderr)
-        
+        tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         self.alpha = np.matrix(tmp_a)
-        #print('self.alpha', self.alpha, file=sys.stderr)
-        
-        self._update_distr(self.mu, self.alpha, self.max_range)
+        self._update_distr(self.mu, self.alpha)
     
     def _count(self, posts):
         c_1, c_2 = 1, 1
@@ -200,8 +184,6 @@ class NegBinRepHMM(_BaseHMM):
     
     def _do_mstep(self, stats, params):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
-        print("mu", self.mu, file=sys.stderr)
-        print("a", self.alpha, file=sys.stderr)
         self._help_do_mstep(stats)
         self.count_s1, self.count_s2 = self._count(stats['posterior'])
         self.merge_distr()
@@ -220,12 +202,8 @@ class NegBinRepHMM(_BaseHMM):
             el[0,0] = med
             el[1,0] = med
         
-        self._update_distr(self.mu, self.alpha, self.max_range)
+        self._update_distr(self.mu, self.alpha)
 
-
-def get_alpha(para_func, sample, m):
-    var = para_func[sample][0] + m * para_func[sample][1] + m**2 * para_func[sample][2] 
-    return (var - m) / m**2 
     
 if __name__ == '__main__':
     alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
@@ -233,11 +211,11 @@ if __name__ == '__main__':
     para_func = [[1, 2, 0.3], [1, 2, 0.3]]
     para_func = [np.array([-0.02178527,  0.48686578,  0.21833156]), np.array([ 0.76335214, -0.94956275,  0.70959764])]
     
-    tmp_a = []
-    for i in range(2):
-        tmp_a.append(map(lambda m: get_alpha(para_func, i, m), np.asarray(mu[i])[0]))
+    #tmp_a = []
+    #for i in range(2):
+        #tmp_a.append(map(lambda m: get_alpha(para_func, i, m), np.asarray(mu[i])[0]))
     
-    alpha = np.matrix(tmp_a)
+    #alpha = np.matrix(tmp_a)
     #print(mu)
     #print(alpha)
     

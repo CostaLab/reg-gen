@@ -50,7 +50,7 @@ def main():
 
     print('Compute training set...',file=sys.stderr)
 
-    training_set, s0, s1, s2 = exp_data.get_training_set(exp_data, options.debug, options.name, 5000, 2)
+    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 5000, 2)
     training_set_obs = exp_data.get_observation(training_set)
     
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)

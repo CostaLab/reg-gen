@@ -164,7 +164,6 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     
     #peaks = [(c, s, e, s1, s2, strand)]
     if not no_correction:
-        pcutoff = -log10(pcutoff)
         pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
         pvalues = map(lambda x: -log10(x), pvalues)
@@ -338,7 +337,7 @@ def input(test):
         options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.confidence_threshold=0.7
         options.foldchange=1.05
-        options.pcutoff = 0.05
+        options.pcutoff = 0.1
         options.name='test'
         options.distr='binom'
         options.constchrom = None #'chr1'
@@ -356,10 +355,11 @@ def input(test):
         options.version=False
         options.factor_input_1=None #for BAM
         options.factor_input_2=None
-        options.no_correction = True
+        options.no_correction = False
         
         if options.debug:
             options.verbose = True
+        print(options, file=sys.stderr)
     else:
         parser.add_option("--input-1", dest="input_1", default=None, \
                           help="Input control for first parameter [default: %default]")
