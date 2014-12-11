@@ -1,8 +1,9 @@
 - fix estimate shiftsize if seq in bam file not given? really working?
 - cite function
+- increase threshold for pvalue calculation
 
 todo:
--p-value correction, get rid of this! not working
+-p-value correction, working?
 
 
 
