@@ -79,7 +79,7 @@ class NegBin():
         #global map_pdf
         if x >= self.max_range:
             print('overflow pdf ', x, self.max_range, file=sys.stderr)
-            return self.map_pdf[self.max_range]
+            return self.map_pdf[self.max_range-1]
         else:
             return self.map_pdf[x]
     
@@ -87,7 +87,7 @@ class NegBin():
         #global map_logpdf
         if x >= self.max_range:
             print('overflow logpdf ', x, self.max_range, file=sys.stderr)
-            return self.map_logpdf[self.max_range]
+            return self.map_logpdf[self.max_range-1]
         else:
             return self.map_logpdf[x]
     

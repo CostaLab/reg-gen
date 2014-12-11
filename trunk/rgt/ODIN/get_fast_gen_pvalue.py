@@ -61,6 +61,7 @@ def _check_side(side, i, S):
         return False
     
 def compute_pvalue(distr, N, side, current_p, x):
+    """Compute log2 pvalue"""
     sum_num = []
     sum_denum = []
     it = range(N/2+1) if side == 'r' else range(N+1, -1, -1)
@@ -94,12 +95,10 @@ def compute_pvalue(distr, N, side, current_p, x):
         sum_num = map(lambda x: float(x), sum_num)
         sum_denum = map(lambda x: float(x), sum_denum)
         
-        return logsumexp(np.array(sum_num)) - (log10(2) + logsumexp(np.array(sum_denum)))
-    
-    else:
-        return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
+    return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
     
 def get_log_pvalue_new(x, y, side, distr):
+    """compute log10 p-value"""
     N = x + y
     
     if side == 'l':
@@ -188,19 +187,23 @@ if __name__ == '__main__':
     #print(get_log_pvalue(3, 12, 'l', distr_name='binomial', p=p, n=n))
     
     m = NegBin(2.734905, 0.00251129, max_range=11000)
+    m = NegBin(1.18294009846, 0.674463011058, max_range=10000)
     distr={'distr_name': 'nb', 'distr': m}
+    
     from random import uniform
     from math import exp
+    x, y, side = 309, 502, 'r'
     
-    S = 10
-    for _ in range(1000):
-        #for x in range(S+1):
-        x = int(uniform(0, S+1))
-        y = int(uniform(0, S+1))
-        
-        if x+y == S:
-            side = 'l' if x>y else 'r'
-            print(x, S-x, 10**get_log_pvalue_new(x, y, side, distr), sep='\t')
+    print(-get_log_pvalue_new(x, y, side, distr))
+#     S = 10
+#     for _ in range(1000):
+#         #for x in range(S+1):
+#         x = int(uniform(0, S+1))
+#         y = int(uniform(0, S+1))
+#         
+#         if x+y == S:
+#             side = 'l' if x>y else 'r'
+#             print(x, S-x, 10**get_log_pvalue_new(x, y, side, distr), sep='\t')
         #a = get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n)
         #print('old', x, S-x, a, log(a, 10))
         #print('old', x, S-x, get_log_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n))

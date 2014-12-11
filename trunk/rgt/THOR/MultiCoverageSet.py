@@ -90,6 +90,9 @@ class MultiCoverageSet():
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
     
+    def get_max_colsum(self):
+        """Sum over all columns and add maximum"""
+        return self.overall_coverage[0].sum(axis=0).max() + self.overall_coverage[1].sum(axis=0).max()
     
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, verbose):
         """Normalize with regard to input file"""
