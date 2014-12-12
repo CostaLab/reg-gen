@@ -61,7 +61,7 @@ def main():
     m.fit([training_set_obs])
 
     tracker.write(text=str(m.mu)  + str('\n') + str(m.alpha), header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
-    tracker.write(text=str(m._get_transmat()) + "\n", header="Transmission matrix")
+    tracker.write(text=str(m._get_transmat()), header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
