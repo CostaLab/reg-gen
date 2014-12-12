@@ -181,13 +181,13 @@ class MultiCoverageSet(DualCoverageSet):
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
         self.indices_of_interest = tmp2
 
-        #tmp = set()
-        #for i in self.indices_of_interest:
-        #    for j in range(max(0, i-l), i+l+1):
-        #        tmp.add(j)
-        #tmp = list(tmp)
-        #tmp.sort()
-        #self.indices_of_interest = np.array(tmp)
+        tmp = set()
+        for i in self.indices_of_interest:
+            for j in range(max(0, i-l), i+l+1):
+                tmp.add(j)
+        tmp = list(tmp)
+        tmp.sort()
+        self.indices_of_interest = np.array(tmp)
          
     def write_test_samples(self, name, l):
         f = open(name, 'w')
