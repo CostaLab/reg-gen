@@ -7,6 +7,7 @@ from rgt.ODIN.gc_content import get_gc_context
 import sys
 from rgt.ODIN.normalize import get_normalization_factor
 from math import fabs
+
 EPSILON = 1**-320
 
 class MultiCoverageSet():
@@ -88,7 +89,8 @@ class MultiCoverageSet():
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
-   
+    
+    
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, verbose):
         """Normalize with regard to input file"""
         if path_inputs:
@@ -128,27 +130,9 @@ class MultiCoverageSet():
         
         print(r, f, file=sys.stderr)
         
-        
         for i in r:
             self.covs[i].scale(f)
-            
-    def print_gc_hist(self, name, gc_hist):
-        f = open(name + 'gc-content.data', 'w')
-        for i in range(len(gc_hist)):
-            print(i, gc_hist[i], file=f)
-        f.close()
-    
-    def _norm_gc_content(self, cov, gc_cov, gc_avg):
-        for i in range(len(cov)):
-            assert len(cov[i]) == len(gc_cov[i])
-#            cov[i] = gc_cov[i]
-            cov[i] = np.array(cov[i])
-            gc_cov[i] = np.array(gc_cov[i])
-            gc_cov[i][gc_cov[i] < EPSILON] = gc_avg #sometimes zeros occur, do not consider
-            cov[i] = cov[i] * gc_avg / gc_cov[i]
-            cov[i] = cov[i].clip(0, max(max(cov[i]), 0)) #neg. values to 0
-            cov[i] = cov[i].astype(int)
-                    
+        
         
     def print_gc_hist(self, name, gc_hist):
         f = open(name + 'gc-content.data', 'w')
