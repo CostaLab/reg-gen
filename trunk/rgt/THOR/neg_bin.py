@@ -43,7 +43,7 @@ class NegBin():
             print(x, mu, v, file=sys.stderr)
             return 1
             
-    def __init__(self, mu, alpha, max_range):
+    def __init__(self, mu, alpha):
         self.map_pdf = {}
         self.map_logpdf = {}
         self.bins = []
