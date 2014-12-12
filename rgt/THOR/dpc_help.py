@@ -159,14 +159,9 @@ def get_peaks(name, DCS, states, distr):
         
         s1 = sum(v1)
         s2 = sum(v2)
-
-        if s1 + s2 > SIGNAL_CUTOFF:
-            pvalues.append(('NA', 'NA', 'NA', 'NA'))
-        else:
-            if strand == '+':
-                pvalues.append((s1, s2, 'l', distr))
-            else:
-                pvalues.append((s1, s2, 'r', distr))
+        
+        side = 'l' if strand == '+' else 'r'
+        pvalues.append((s1, s2, 'l', distr))
         
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
