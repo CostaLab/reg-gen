@@ -170,7 +170,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
     #merge consecutive peaks and compute p-value
     pvalues, peaks, pv_pass = _merge_consecutive_bins(tmp_peaks, distr, pcutoff)
     
-    #merge_delete(exts, merge, peaks, pvalues, name) #postprocessing
+    merge_delete(exts, merge, peaks, pvalues, name) #postprocessing
     
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)    
