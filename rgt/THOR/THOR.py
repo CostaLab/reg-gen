@@ -26,7 +26,6 @@ from rgt.THOR.neg_bin import NegBin
 
 def main():
     test = False
-    print("HALLO", file=sys.stderr)
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########

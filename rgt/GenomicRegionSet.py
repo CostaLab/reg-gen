@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import division
 from GenomicRegion import *
 import random
-print(random.__file__)
 from copy import deepcopy
 import os, sys
 import time
