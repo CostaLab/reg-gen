@@ -35,7 +35,7 @@ def _get_pvalue_distr(mu, alpha, tracker):
     return {'distr_name': 'nb', 'distr': nb}
 
 def main():
-    test = True
+    test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     
     ######### WORK! ##########
