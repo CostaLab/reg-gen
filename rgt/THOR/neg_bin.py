@@ -14,6 +14,7 @@ import numpy as np
 from math import log
 from numpy.random import random_sample
 import sys
+from math import fabs
 
 class NegBin():
     """Negative Binomial distribution (NB1) with continuous parameter r,
@@ -42,63 +43,49 @@ class NegBin():
             print(x, mu, v, file=sys.stderr)
             return 1
             
-    def __init__(self, mu, alpha, max_range=5000):
+    def __init__(self, mu, alpha, max_range):
         self.map_pdf = {}
         self.map_logpdf = {}
         self.bins = []
         mu = float(mu)
-        self.max_range = max_range
         
         self.alpha = alpha
         self.mu = mu
         
         self.nbin = np.frompyfunc(self._get_value, 3, 1)
-        
         self.nbin_log = np.frompyfunc(self._get_value_log, 3, 1)
         
-        probs = []
-        probs_log = []
-        for i in range(self.max_range):
-            #print(i, self.mu, 1./self.alpha, file=sys.stderr)
-            v = self.nbin(i, self.mu, 1./self.alpha)
-            #print(i, self.mu, self.alpha)
-            v_log = self.nbin_log(i, self.mu, 1./self.alpha)
-            
-            probs.append(v)
-            probs_log.append(v_log)
-            
-            self.map_pdf[i] = v
-            self.map_logpdf[i] = v_log
-        
-        self.bins = map(lambda x: float(x), np.add.accumulate(probs))
-        
-        #c = 5000
-        #self.dist = rv_discrete(values=([i for i in range(c)], map(lambda x: float(x), [self.pdf(i) for i in range(c)])), name='dist')
-
     def pdf(self, x):
-        #global map_pdf
-        if x >= self.max_range:
-            print('overflow pdf ', x, self.max_range, file=sys.stderr)
-            return self.map_pdf[self.max_range]
-        else:
-            return self.map_pdf[x]
+        if not self.map_pdf.has_key(x):
+            v_log = self.nbin(x, self.mu, 1./self.alpha)
+            self.map_pdf[x] = v_log
+        
+        return self.map_pdf[x]
     
     def logpdf(self, x):
-        #global map_logpdf
-        if x >= self.max_range:
-            print('overflow logpdf ', x, self.max_range, file=sys.stderr)
-            return self.map_logpdf[self.max_range]
-        else:
-            return self.map_logpdf[x]
-    
+        if not self.map_logpdf.has_key(x):
+            v_log = self.nbin_log(x, self.mu, 1./self.alpha)
+            self.map_logpdf[x] = v_log
+        
+        return self.map_logpdf[x]
+        
     def rvs(self):
+        if not self.bins:
+            probs = []
+            i = 0
+            v_old = -1
+            while True:
+                v = self.nbin(i, self.mu, 1./self.alpha)
+                probs.append(v)
+                v_old = v
+                i += 1
+                if fabs(v_old - v) < 10**-10:
+                    break
+            self.bins = map(lambda x: float(x), np.add.accumulate(probs))
         return np.digitize(random_sample(1), self.bins)[0]
-#     def rvs(self, size=1):
-#         return self.dist.rvs(size=size)
-    
 
 if __name__ == '__main__':
-    neg_bin = NegBin(15, 0.2, max_range=50)
+    neg_bin = NegBin(15, 0.2)
     s=0
     ew = 0
     for i in range(100):
@@ -108,18 +95,3 @@ if __name__ == '__main__':
         ew += i * v
         print(i, v, log(v), v_log, sep='\t')
     print(s, ew)
-
-#     s = 0
-#     for i in range(1000):
-#         s += neg_bin.rvs()
-#     print(s)
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
