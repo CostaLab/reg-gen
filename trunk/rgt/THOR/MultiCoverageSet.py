@@ -97,15 +97,15 @@ class MultiCoverageSet(DualCoverageSet):
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, debug):
         """Normalize with regard to input file"""
         if path_inputs:
-            print("Normalize", file=sys.stderr)
+            print("Normalize by input-DNA", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 rep = i if i < self.dim_1 else i-self.dim_1
-                sig = 1 if i < self.dim_1 else 2
+                sig = 0 if i < self.dim_1 else 1
                 j = 0 if i < self.dim_1 else 1
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
                                                 filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False)
                 
-                print("Factor: normalize input with input factor %s (Signal %s, Rep %s)"\
+                print("Normalize input of Signal %s, Rep %s with factor %s"\
                        %(round(n, 3), sig, rep) , file=sys.stderr)
                 self.inputs[i].scale(n)
                 self.covs[i].subtract(self.inputs[i])
