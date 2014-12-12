@@ -85,7 +85,7 @@ class NegBin():
         return np.digitize(random_sample(1), self.bins)[0]
 
 if __name__ == '__main__':
-    neg_bin = NegBin(15, 0.2)
+    neg_bin = NegBin(15, 0.2, 5)
     s=0
     ew = 0
     for i in range(100):
