@@ -70,7 +70,13 @@ def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
 
             data_rep.append(zip(m, n))
             data_rep[i].append((0,0))
-        
+            data_rep[i] = np.asarray(data_rep[i])
+            print(data_rep[i], file=sys.stderr)
+            print(np.percentile(data_rep[i][:,0], 95), file=sys.stderr)
+            print(np.percentile(data_rep[i][:,1], 95), file=sys.stderr)
+            data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 95)]
+            data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 95)]
+            
         if debug:
             for i in range(2):
                 np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
