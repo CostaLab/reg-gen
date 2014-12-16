@@ -6,14 +6,7 @@ from collections import *
 # Distal Libraries
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
-#from rgt.ExperimentalMatrix import *
-#from rgt.AnnotationSet import *
-from rgt.Util import GenomeData, OverlapType, Html
-#from rgt.CoverageSet import *
-#from rgt.motifanalysis.Statistics import multiple_test_correction
 
-# Local test
-#dir = os.getcwd()
 
 """
 Represent list of RNA/DNA interactions (e.g. triplex formation) from txp format.
@@ -25,13 +18,21 @@ Methods:
 
 """
 
-class RNADNAInteractionSet():
+class RNABinding():
+
+class RNADNABindingSet():
 
     def __init__(self, organism, name=None, filename=None):
-        """Initialize a set of RNA/DNA interactions """
+        """Initialize a set of RNA/DNA interactions 
+
+        Input parameters:
+        organism --> define the organism
+        name --> define the RNA name
+        filename --> define the filename for file in txp format
+        """
         
         self.name = name          # RNA name
-        self.interactions = []    # All RNA/DNA interactions and extra information 
+        self.dict = {}    # All RNA/DNA interactions and extra information 
         self.sorted_tfo = False
         self.sorted_tts = False
         self.organism = organism
