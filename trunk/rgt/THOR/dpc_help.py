@@ -52,49 +52,59 @@ def _plot_func(m, v, p, name, xlimpara=None, ylimpara=None):
     savefig(name + ".png")
     close()
 
-def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
-        """Estimate empirical distribution (quadr.) based on empirical distribution"""
-        data_rep = [] #list of (mean, var) points for samples 0 and 1
-        for i in range(2):
-            cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
-            h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
-            cov = cov[:,h] #remove 0-columns
-            r = np.random.randint(cov.shape[1], size=sample_size)
-            r.sort()
-            cov = cov[:,r]
-                 
-            m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
-            n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
-            
-            assert len(m) == len(n)
-
-            data_rep.append(zip(m, n))
-            data_rep[i].append((0,0))
-            #data_rep[i] = list(set(data_rep[i]))
-            data_rep[i] = np.asarray(data_rep[i])
-            print(np.percentile(data_rep[i][:,0], 95), file=sys.stderr)
-            print(np.percentile(data_rep[i][:,1], 95), file=sys.stderr)
-            data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 95)]
-            data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 95)]
-            
-        if debug:
-            for i in range(2):
-                np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
+def _get_data_rep(overall_coverage, name, debug, sample_size):
+    """Return list of (mean, var) points for samples 0 and 1"""
+    data_rep = []
+    for i in range(2):
+        cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
+        h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
+        cov = cov[:,h] #remove 0-columns
+        r = np.random.randint(cov.shape[1], size=sample_size)
+        r.sort()
+        cov = cov[:,r]
+             
+        m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
+        n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
         
+        assert len(m) == len(n)
+
+        data_rep.append(zip(m, n))
+        data_rep[i].append((0,0))
+        data_rep[i] = np.asarray(data_rep[i])
+        
+    if debug:
+        for i in range(2):
+            np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
+    
+    for i in range(2):
+        print("percentile 99", np.percentile(data_rep[i][:,0], 99), file=sys.stderr)
+        print("percentile 99", np.percentile(data_rep[i][:,1], 99), file=sys.stderr)
+        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99)]
+        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99)]
+    
+    return data_rep
+    
+def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
+    """Estimate empirical distribution (quadr.) based on empirical distribution"""
+    done = False
+    while not done:
+        data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
         res = []
         for i in range(2):
-            m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
-            v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
-            
-            p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
-            res.append(p)
-            
-            #plot empirical and estimated function
-            _plot_func(m, v, p, str(name) + "-est-func" + str(i))
-            _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
+            try:
+                m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
+                v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
+                p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                res.append(p)
+                _plot_func(m, v, p, str(name) + "-est-func" + str(i))
+                _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
+                if i == 1:
+                    done = True
+            except RuntimeError:
+                print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
+                break #restart for loop
                 
-        return lambda x: _func_quad_2p(x, p[0], p[1]), res
-
+    return lambda x: _func_quad_2p(x, p[0], p[1]), res
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     print("Computing info...", file=sys.stderr)
