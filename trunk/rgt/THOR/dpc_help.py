@@ -77,10 +77,10 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
             np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
     
     for i in range(2):
-        print("percentile 99", np.percentile(data_rep[i][:,0], 99), file=sys.stderr)
-        print("percentile 99", np.percentile(data_rep[i][:,1], 99), file=sys.stderr)
-        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99)]
-        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99)]
+        print("percentile 99.75", np.percentile(data_rep[i][:,0], 99.75), file=sys.stderr)
+        print("percentile 99.75", np.percentile(data_rep[i][:,1], 99.75), file=sys.stderr)
+        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)]
+        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)]
     
     return data_rep
     
