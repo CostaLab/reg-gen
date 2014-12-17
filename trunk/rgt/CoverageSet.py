@@ -160,6 +160,7 @@ class CoverageSet:
             read_length = -1
             try:
                 for read in bam.fetch(region.chrom, max(0, region.initial-read_size), region.final+read_size):
+                    
                     j += 1
                     read_length = read.rlen 
                     if not read.is_unmapped:

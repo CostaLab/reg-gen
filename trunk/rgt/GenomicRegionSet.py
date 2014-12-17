@@ -93,6 +93,7 @@ class GenomicRegionSet:
                     size = len(line)
                     chrom = line[0]
                     start, end = int(line[1]), int(line[2])
+                    
                     if start > end:
                         start, end =  end, start
                     if size > 3:
@@ -700,10 +701,11 @@ class GenomicRegionSet:
         if self.sorted == False: 
             self.sort()
         b = y.merge(w_return=True)
-
+        
         iter_a = iter(self)
         s = iter_a.next()
-        last_j = len(b)-1
+        print(b)
+        last_j = len(b) - 1
         j = 0
         cont_loop = True
         pre_inter = 0
@@ -830,7 +832,7 @@ class GenomicRegionSet:
         if self.sorted == False: self.sort()
         
         if len(self.sequences) in [0, 1]:
-            return
+            return self
         else:
             z = GenomicRegionSet(name = self.name)
             prev_region = self.sequences[0]
