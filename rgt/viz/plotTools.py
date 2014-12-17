@@ -1723,8 +1723,9 @@ class Boxplot:
                                             bam1 = bam
                                     else:
                                         sortDict[g][a][c] = plotDict[bed][bam]
-                                        tbed[bed].append(sortDict[g][a][c])
+                                        
                                         if table:
+                                            tbed[bed].append(sortDict[g][a][c])
                                             try: header_dict[bed].append(bam)
                                             except: header_dict[bed] = ["regions", bam]
                                             try: tbed[bed].append(sortDict[g][a][c])
