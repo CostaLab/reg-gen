@@ -39,6 +39,9 @@ class RNABinding(GenomicRegion):
     def __len__(self):
         """Return the length of the binding site """
         return self.final - self.initial
+
+    def __hash__(self):
+        return hash(tuple([self.initial, self.final]))
 """
 if __name__ == '__main__':
     a = RNABinding('rna_blablabla', 10, 35, 20, 'd6t8d12', 'M', 'P', 0.3)

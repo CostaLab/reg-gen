@@ -43,7 +43,7 @@ def print2(parameter, string):
 
 def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
     """Output the file in the defined folder """
-    pd = os.path.join(dir,directory,folder)
+    pd = os.path.normpath(os.path.join(dir,directory,folder))
     try:
         os.stat(os.path.dirname(pd))
     except:
