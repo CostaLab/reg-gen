@@ -94,7 +94,15 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 else:
                     colors.append(c)
         else:
-            colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
+            colors = []
+            for i in exps.fieldsDict[colorby].values():
+                c = exps.get_type(i[0],"color")
+                if c[0] == "(":
+                    rgb = [ float(j) for j in c.strip('()').split(',')]
+                    colors.append([v/255 for v in rgb])
+                else:
+                    colors.append(c)
+            
     else:
         if annotation:
             colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(annotation))).tolist()
@@ -1725,7 +1733,6 @@ class Boxplot:
                                         sortDict[g][a][c] = plotDict[bed][bam]
                                         
                                         if table:
-                                            tbed[bed].append(sortDict[g][a][c])
                                             try: header_dict[bed].append(bam)
                                             except: header_dict[bed] = ["regions", bam]
                                             try: tbed[bed].append(sortDict[g][a][c])
@@ -1735,8 +1742,7 @@ class Boxplot:
                 
                 tb = numpy.transpose(numpy.array(tbed[bed])).tolist()
                 tt = [header_dict[bed]]
-                print(header_dict[bed])
-                print(bed)
+                
                 beds = self.beds[self.bednames.index(bed)]
                 for k, s in enumerate(beds):
                     try: tt.append([s.__repr__()] + tb[k])
@@ -1747,6 +1753,7 @@ class Boxplot:
 
     def color_map(self, colorby, definedinEM):
         self.colors = colormap(self.exps, colorby, definedinEM)
+        
     
     def print_table(self, directory, folder):
         self.printtable = OrderedDict()

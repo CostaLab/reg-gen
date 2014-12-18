@@ -32,7 +32,7 @@ if __name__ == '__main__':
     print(b.sequences)
     
     a.subtract(b)
-    
+    a.merge()
     print(a.sequences)
     print(b.sequences)
     
