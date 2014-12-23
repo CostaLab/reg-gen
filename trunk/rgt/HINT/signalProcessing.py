@@ -11,6 +11,7 @@ warnings.filterwarnings("ignore")
 from .. Util import ErrorHandler
 
 # External
+from pysam import __version__ as ps_version
 from pysam import Samfile
 from numpy import exp, array, abs, int, mat, linalg, convolve
 from scipy.stats import scoreatpercentile
@@ -162,7 +163,11 @@ class BamFile:
 
         # Fetch raw signal
         pileup_region = PileupRegion(start,end,ext)
-        self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
+        if(ps_version == "0.7.5"):
+            self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
+        else:
+            iter = self.bam.fetch(reference=ref, start=start, end=end)
+            for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
