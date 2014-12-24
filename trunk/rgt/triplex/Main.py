@@ -4,14 +4,10 @@ from __future__ import division
 import sys
 import os.path
 import argparse 
-lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-#sys.path.append(lib_path)
 
 # Local Libraries
 # Distal Libraries
-from rgt.GenomicRegionSet import *
-from rgt.ExperimentalMatrix import *
-from rgt.Util import GenomeData, OverlapType, Html
+from triplexTools import FischerTest
 
 dir = os.getcwd()
 """
@@ -47,11 +43,14 @@ def main():
 
     parser_search = subparsers.add_parser('search', help='Search the possible triplex loci between \
                                                           single strand (RNA) and double strand (DNA)')
-    parser_search.add_argument('-rna', help="Input file name for RNA (in fasta or bed format)")
-    parser_search.add_argument('-dna', help="Input file name for DNA (in fasta or bed format)")
+    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
+    parser_search.add_argument('-d', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
     
-    parser_search.add_argument('-it', choices= ['fasta', 'bed'], default='fasta', help="Input file type (fasta or bed)")
-    parser_search.add_argument('-o', help="Output directory name")
+    parser_search.add_argument('-rt', choices= ['fasta', 'bed'], default='fasta', 
+                               help="Input file type (fasta or bed)")
+    parser_search.add_argument('-dt', choices= ['fasta', 'bed'], default='fasta', 
+                               help="Input file type (fasta or bed)")
+    parser_search.add_argument('-o', type=str, help="Output directory name")
     parser_search.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     
     parser_search.add_argument('-min',type=int, default=4, help="Minimum length of TFO (Default: 4)")
@@ -61,6 +60,16 @@ def main():
     
     parser_search.add_argument('-bg', help="Define a BED file as background. If not defined, \
                                                 the background is whole genome according to the given organism.")
+
+    ################### Fischer exact test ##########################################
+    parser_fischertest = subparsers.add_parser('fischer', help='Test the TTS are due to chance \
+                                              or not by randomization')
+    parser_fischertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
+    parser_fischertest.add_argument('-de', help="Input file for defferentially expression gene list ")
+    parser_fischertest.add_argument('-pl', type=int, default=0, 
+                                   help="Define the promotor length (Default: 0)")
+    parser_fischertest.add_argument('-o', help="Output directory name for all the results and temporary files")
+    parser_fischertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
 
     ################### Random test ##########################################
     parser_randomtest = subparsers.add_parser('randomtest', help='Test the TTS are due to chance \
@@ -102,13 +111,19 @@ def main():
     #################################################################################################
 
     if args.mode == 'search':
-        if args.rna:
-            if args.dna:
-                os.system("triplexator -ss "+args.rna+" -ds "+args.dna+" > "+args.o)
+        if not args.o: print("Please define the output filename. ")
+        if args.r:
+            
+            if args.d:
+                os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+args.r+" -ds "+args.d+" > "+args.o)
             else:
-                os.system("triplexator -ss "+args.rna+" > "+args.o)
+                os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+args.r+" > "+args.o)
         
 
-    if args.mode == 'randomtest':
-        pass
+    if args.mode == 'fischer':
+        #print(args.de)
+        #print(args.organism)
+        #print(args.pl)
+        fischer = FischerTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
+        fischer.search_triplex(rna=args.r, temp=os.path.join(args.o,"fischer_test"))
     #if args.mode == 'search':

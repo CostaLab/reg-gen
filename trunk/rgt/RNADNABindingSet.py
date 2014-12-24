@@ -37,7 +37,23 @@ class RNADNABindingSet:
                 line = line.split()
                 
                 if len(line) < 12: continue # skip the unimportant lines in txp
-                
+                if len(line) == 12:
+                    line.insert(8,"_")
+                # Format of each line in txp
+                #     [0] Sequence-ID   
+                #     [1] TFO start   
+                #     [2] TFO end 
+                #     [3] Duplex-ID   
+                #     [4] TTS start   
+                #     [5] TTS end 
+                #     [6] Score   
+                #     [7] Error-rate  
+                #     [8] Errors  
+                #     [9] Motif   
+                #     [10] Strand  
+                #     [11] Orientation 
+                #     [12] Guanine-rate
+
                 # RNA binding site
                 if not self.name: self.name = line[0]
                 
@@ -89,6 +105,44 @@ class RNADNABindingSet:
         """Sort the dictionary by DNA"""
         self.dict = OrderedDict(sorted(self.dict.iteritems(), key=lambda x: x[1], cmp=GenomicRegion.__cmp__))
     
+    def merge_rna(self):
+        """Merge the RNA binding regions which have overlap to each other and 
+           combine their corresponding DNA binding regions.
+        
+        extend -> Define the extending length in basepair of each RNA binding regions
+        perfect_match -> Merge only the exactly same RNA binding regions
+        """
+        rna_merged = self.get_rna()
+        rna_merged.merge()
+        new_dict = OrderedDict()
+        
+        con_rna, con_dna = iter(self)
+        rna, dna = con_rna.next(), con_dna.next()
+        
+        con_rna_m = iter(rna_merged)
+        rna_m = con_rna_m.next()
+
+        con_loop = True
+        while con_loop:
+            if rna_m.overlap(rna):
+                # Add to new dictionary
+                try:
+                    new_dict[rna_m].add(dna)
+                except:
+                    z = GenomicRegionSet(str(rna_m))
+                    new_dict[rna_m] = z.add(dna)
+                # next iteration
+                try: rna, dna = con_rna.next(), con_dna.next()
+                except: con_loop = False
+            elif rna < rna_m:
+                # next RNA and DNA
+                try: rna, dna = con_rna.next(), con_dna.next()
+                except: con_loop = False
+            else:
+                # next RNA_m
+                try: rna_m = con_rna_m.next()
+                except: con_loop = False
+        self.merged_dict = new_dict
 
 if __name__ == '__main__':
     a = RNABindingSet(name="a")

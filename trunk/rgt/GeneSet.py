@@ -1,3 +1,4 @@
+from Util import GenomeData
 """
 Describe genes and their expression.
 
@@ -22,18 +23,32 @@ class GeneSet:
 
     def read(self, geneListFile):
         """Read genes"""
-        self.genes = list(set([l.strip("\n") for l in open(geneListFile)]))
+        with open(geneListFile) as f:
+            lines = (line.rstrip() for line in f) 
+            self.genes = list(set((line for line in lines if line))) # Non-blank lines in a list
 
     def read_expression(self, geneListFile, header = True):
         """Read gene expression data"""
-        f = open(geneListFile)
-        if header:
-            l = f.readline()
-            l = l.strip("\n")
-            l = l.split("\t")
-            self.cond = l[1:len(l)]
+        with open(geneListFile) as f:
+            if header:
+                l = f.readline()
+                l = l.strip("\n")
+                l = l.split("\t")
+                self.cond = l[1:len(l)]
+            for l in f.readlines():
+                l = l.strip("\n")
+                l = l.split("\t")
+                self.genes.append(l[0].upper())
+                self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
+
+    def get_all_genes(self, organism):
+        """Get all gene names for a given organism"""
+        genome = GenomeData(organism=organism)
+        self.genes = []
+        f = open(genome.get_association_file())
         for l in f.readlines():
             l = l.strip("\n")
             l = l.split("\t")
-            self.genes.append(l[0].upper())
-            self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
+            self.genes.append(l[3].upper())
+        f.close()
+        self.genes = list(set(self.genes))
