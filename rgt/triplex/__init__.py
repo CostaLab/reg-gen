@@ -1,1 +1,1 @@
-__all__ = ["tests"]
+__all__ = ["triplexTools"]
