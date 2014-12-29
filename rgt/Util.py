@@ -343,6 +343,18 @@ class OverlapType:
     ORIGINAL = 1
     COMP_INCL = 2
 
+class SequenceType:
+    """
+    Class of sequence type
+    Author: Joseph Kuo
+    
+    Constants:
+    
+    DNA, RNA
+    """
+    DNA = 0
+    RNA = 1
+
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
     def error(self, msg):
