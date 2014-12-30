@@ -58,7 +58,7 @@ def main():
     error_handler = ErrorHandler()
  
     # Parameters
-    current_version = "0.0.1"
+    current_version = "0.1.1"
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
                      "In order to use this tools, please type: \n\n"
