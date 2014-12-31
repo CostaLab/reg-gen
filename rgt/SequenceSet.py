@@ -26,24 +26,29 @@ class SequenceSet:
         
     def __iter__(self):
         return iter(self.sequences)
-        
+
+    def __getitem__(self, key):
+        return self.sequences[key]
+
     def read_fasta(self, fasta_file):
         """Read all the sequences in the given fasta file"""
         with open(fasta_file) as f:
             for line in f:
                 line.strip()
-                print(line)
                 if not line: pass
                 elif line[0] == ">":
                     try: # Save the previous sequence
                         self.sequences.append(s)
                     except: # Start to parse a new sequence
-                        print("new s")
-                        s = Sequence(seq_type=self.seq_type, info=line[1:])
+                        s = Sequence(seq_type=self.seq_type, name=line[1:])
                 else:
-                    print("s con")
                     s.seq = s.seq + line
-                
+            try: # Save the previous sequence
+                self.sequences.append(s)
+            except: # Start to parse a new sequence
+                pass
+
+
     def read_bed(self, bedfile, genome_file):
         """Read the sequences defined by BED file on the given genomce"""
         bed = GenomicRegionSet(os.path.basename(bedfile))

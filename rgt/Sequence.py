@@ -6,10 +6,10 @@ Author: JosephKuo
 """
 
 class Sequence():
-    def __init__(self, seq_type=SequenceType.DNA, info="", seq="", strand="+"):
+    def __init__(self, seq_type=SequenceType.DNA, name="", seq="", strand="+"):
         """Initiation"""
         self.seq_type = seq_type # DNA or RNA
-        self.info = info # Extra information about the sequence
+        self.name = name # Extra information about the sequence
         self.seq = seq.upper() # Convert all alphabets into upper case
         self.strand = strand
         
@@ -31,9 +31,16 @@ class Sequence():
         """Return the ratio of GC content in this sequence"""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
-        
+    
+    def find_TTS():
+        """Return a triplex target sites"""
+
+    def find_triplex_region(self, min_len, max_len, parallel):
+        """Return a dictionary of possible which takes RNABinding (or GenomicRegion when the Sequence is DNA) as the keys and its correspoinding """
+    
+
 if __name__ == '__main__':
-    a = Sequence(info="xx", seq="AGGCCTT")
+    a = Sequence(name="xx", seq="AGGCCTT")
     print(len(a))
     print(a.GC_content())
     
