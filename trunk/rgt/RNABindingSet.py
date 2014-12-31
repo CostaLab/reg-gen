@@ -18,6 +18,16 @@ class RNABindingSet(GenomicRegionSet):
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
     
+    def write_rbs(self, filename):
+        """Write the information into a file with .rbs """
+        with open(filename+".rbs", "w") as f:
+            print("# Sequence-ID\tStart\tEnd\tScore\tMotif\tError-rate\tSequence",file=f)
+            for tfo in self.sequences:
+                err_rate = 1 - tfo.score/(tfo.final - tfo.initial)
+                print("\t".join([tfo.name, str(tfo.initial), str(tfo.final), str(tfo.score), 
+                                 tfo.motif, "{0:.2f}".format(err_rate), tfo.seq]),file=f)
+                
+
 if __name__ == '__main__':
     a = RNABindingSet(name="a")
     a.add(RNABinding("a",1,5))

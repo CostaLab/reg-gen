@@ -9,15 +9,17 @@ from rgt.GenomicRegion import GenomicRegion
 
 class RNABinding(GenomicRegion):
 
-    def __init__(self, name, initial, final, score=None, errors=None, motif=None, orientation=None, guanine_rate=None):
+    def __init__(self, name, initial, final, score=None, errors=None, motif=None, 
+                 orientation=None, seq=None, guanine_rate=None):
         """Initialize"""
         GenomicRegion.__init__(self, chrom=name, initial=initial, final=final)
         
-        self.name = name
-        self.score = score
-        self.errors = errors
+        self.name = name                      # RNA name
+        self.score = score                    # Score for pattern matching
+        self.errors = errors                  
         self.motif = motif
         self.orientation = orientation
+        self.seq = seq.upper()
         self.guanine_rate = str(guanine_rate)
 
     def __str__(self):
@@ -27,7 +29,7 @@ class RNABinding(GenomicRegion):
                               self.motif, self.orientation, self.guanine_rate] )
         except:
         	return '-'.join( [self.name, str(self.initial), str(self.final)] ) 
-            
+        
     def __repr__(self):
         """Return official representation of GenomicRegion"""
         try:

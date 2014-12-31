@@ -25,7 +25,7 @@ class RNADNABindingSet:
         if filename:
             self.fileName = filename
             self.read_txp(filename)
-
+    
     def read_txp(self, filename):
         """Read txp file to load all interactions. """
         
