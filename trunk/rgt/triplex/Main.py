@@ -7,7 +7,11 @@ import argparse
 
 # Local Libraries
 # Distal Libraries
+from rgt.GenomicRegionSet import GenomicRegionSet
 from triplexTools import TriplexSearch, FischerTest, RandomTest
+from SequenceSet import Sequence, SequenceSet
+from Util import SequenceType
+
 
 dir = os.getcwd()
 """
@@ -16,15 +20,6 @@ Statistical tests and plotting tools for triplex binding site analysis
 Author: Joseph Kuo
 
 """
-
-##############################################################################
-##### FUNCTIONS ##############################################################
-##############################################################################
-    
-
-######### Universal functions
-
-
 
 def main():
     ##########################################################################
@@ -54,11 +49,11 @@ def main():
                                help="Input file type (fasta or bed)")
 
     parser_search.add_argument('-o', type=str, help="Output directory name")
-    parser_search.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_search.add_argument('-genome',type=str, help='Define the directory where the genome FASTA files locate.')
     
     parser_search.add_argument('-min',type=int, default=4, help="Minimum length of binding site (Default: 4)")
-    parser_search.add_argument('-max',type=int, default=0, help="Maxmum length of binding site (Default is infinite)")
-    
+    parser_search.add_argument('-max',type=int, default=None, help="Maxmum length of binding site (Default is infinite)")
+    parser_search.add_argument('-m',type=str, default="RYMPA", help="Define the motif for binding site searching (Default is RYMPA)")
 
     ################### Fischer exact test ##########################################
     parser_fischertest = subparsers.add_parser('fischer', help='Test the TTS are due to chance \
@@ -110,17 +105,45 @@ def main():
     #################################################################################################
 
     if args.mode == 'search':
-        if not args.o: print("Please define the output diractory name. \n")
+        if not args.o: 
+            print("Please define the output diractory name. \n")
+            sys.exit(1)
         
         # Both RNA and DNA input
         if args.r and args.d: 
-        
+            pass
+
+
         # Only RNA input
         elif args.r and not args.d:
-            triplex = 
+            rnaname = os.path.basename(args.r).split(".")[0]
+            print("Read files")
+            # Input is FASTA
+            if args.rt == 'fasta':
+                rnas = SequenceSet(name=rnaname, seq_type=SequenceType.RNA)
+                rnas.read_fasta(args.r)
+
+            # Input is BED
+            else:
+                if not args.genome: 
+                    print("Please add the directory where the genome FASTA files locate.\n")
+                    sys.exit(1)
+
+                rnas = SequenceSet(name=rnaname, seq_type=SequenceType.RNA)
+                rnas.read_bed(os.path.join(dir, args.r), args.genome)
+            
+            print("Search files")
+            triplex = TriplexSearch()
+            bs = triplex.search_bindingsites(sequence_set=rnas, seq_type=SequenceType.RNA, 
+                                             motif=args.m, min_len=args.min, max_len=args.max)
+
+            print("Write files")
+            bs.write_rbs(os.path.join(args.o, rnaname+".rbs"))
+
+
         # Only DNA input
         elif args.d and not args.r:
-        
+            pass
         # No input
         else:
             print("Please define either RNA strand or DNA strand (or both) as input\n")
