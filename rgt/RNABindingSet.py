@@ -9,6 +9,8 @@ Authors: Joseph Kuo
 
 """
 class RNABindingSet(GenomicRegionSet):
+    """A collection of RNABinding with some functions"""
+    
     def __init__(self, name):
         """Initialize"""
         GenomicRegionSet.__init__(self, name = name)
@@ -26,7 +28,10 @@ class RNABindingSet(GenomicRegionSet):
                 err_rate = 1 - tfo.score/(tfo.final - tfo.initial)
                 print("\t".join([tfo.name, str(tfo.initial), str(tfo.final), str(tfo.score), 
                                  tfo.motif, "{0:.2f}".format(err_rate), tfo.seq]),file=f)
-                
+    def concatenate(self, another_RNABindingSet):
+        """Concatenate another RNABindingSet without sorting"""
+        self.sequences = self.sequences + another_RNABindingSet.sequences
+        
 
 if __name__ == '__main__':
     a = RNABindingSet(name="a")
