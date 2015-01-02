@@ -1,39 +1,54 @@
 from __future__ import print_function
-
+import os
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 
+# Test
+from Util import SequenceType
 ####################################################################################
 ####################################################################################
 
-class RNABinding(GenomicRegion):
-    """Describes a binding region on RNA including the information regarding to this region.
+class BindingSite(GenomicRegion):
+    """Describes a binding region on DNA or RNA including the information regarding to this region.
 
     Authors: Joseph Kuo
     """
 
-    def __init__(self, name, initial, final, score=None, errors_bp=None, motif=None, 
+    def __init__(self, chrm, initial, final, name=None, score=None, errors_bp=None, motif=None, 
                  orientation=None, guanine_rate=None):
-        """Initialize"""
-        GenomicRegion.__init__(self, chrom=name, initial=initial, final=final)
+        """Initialize
+        
+        name             The name of this binding site (Default: None)
+        seq_type         DNA or RNA
+        chrm             Define the chromosome for DNA; for RNA its default is "RNA"
+        initial          Binding start position
+        final            Binding end position
+        score            Score of the binding pattern (Default: None)
+        errors_bp        Error base pair in this binding (Default: None)
+        motif            The motif for this binding (Default: None)
+        orientation      Parallel or antiparallel (Default: None)
+        guanine_rate     (Default: None)
+
+        """
+        GenomicRegion.__init__(self, chrom=chrm, initial=initial, final=final)
         
         self.name = name                      # RNA name
         self.score = score                    # Score for pattern matching
         self.errors_bp = errors_bp                  
         self.motif = motif
         self.orientation = orientation
-        self.guanine_rate = str(guanine_rate)
+        self.guanine_rate = guanine_rate
 
     def __str__(self):
         """Give informal string representation"""
-        infos = [ self.name, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.orientation, self.seq, self.guanine_rate ]
+        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
+                  self.motif, self.orientation, self.guanine_rate ]
         return '-'.join( [str(x) for x in infos if x] )
         
     def __repr__(self):
         """Return official representation of GenomicRegion"""
-        infos = [ self.name, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.orientation, self.seq, self.guanine_rate ]
+        infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
+                  self.motif, self.orientation, self.guanine_rate ]
         return ','.join( [str(x) for x in infos if x] ) 
         
     def __len__(self):
@@ -41,12 +56,12 @@ class RNABinding(GenomicRegion):
         return self.final - self.initial
 
     def __hash__(self):
-        return hash(tuple([self.initial, self.final]))
+        return hash(tuple([self.chrom, self.initial, self.final]))
 
 ####################################################################################
 ####################################################################################
 
-class RNABindingSet(GenomicRegionSet):
+class BindingSiteSet(GenomicRegionSet):
     """Represent a collection of RNABinding with some functions
 
     Authors: Joseph Kuo
@@ -63,15 +78,20 @@ class RNABindingSet(GenomicRegionSet):
     
     def write_rbs(self, filename):
         """Write the information into a file with .rbs """
-        with open(filename+".rbs", "w") as f:
+        d = os.path.dirname(filename)
+        if not os.path.exists(d):
+            os.makedirs(d)
+
+        with open(filename, "w") as f:
             print("# Sequence-ID\tStart\tEnd\tScore\tMotif\tError-rate\tSequence",file=f)
-            for tfo in self.sequences:
-                err_rate = 1 - tfo.score/(tfo.final - tfo.initial)
-                print("\t".join([tfo.name, str(tfo.initial), str(tfo.final), str(tfo.score), 
-                                 tfo.motif, "{0:.2f}".format(err_rate), tfo.seq]),file=f)
-    def concatenate(self, another_RNABindingSet):
+            for bs in self.sequences:
+                err_rate = 1 - bs.score/(bs.final - bs.initial)
+                print("\t".join([bs.name, str(bs.initial), str(bs.final), str(bs.score), 
+                                 bs.motif, "{0:.2f}".format(err_rate)]), file=f)
+
+    def concatenate(self, another_BindingSiteSet):
         """Concatenate another RNABindingSet without sorting"""
-        self.sequences = self.sequences + another_RNABindingSet.sequences
+        self.sequences = self.sequences + another_BindingSiteSet.sequences
         
 
 ####################################################################################
@@ -79,12 +99,12 @@ class RNABindingSet(GenomicRegionSet):
 ####################################################################################
 
 if __name__ == '__main__':
-    a = RNABindingSet(name="a")
-    a.add(RNABinding("a",1,5))
-    a.add(RNABinding("a",10,15))
+    a = BindingSiteSet(name="a")
+    a.add(BindingSite(SequenceType.RNA, "a",1,5))
+    a.add(BindingSite(SequenceType.RNA, "a",10,15))
     
-    b = RNABindingSet(name="b")
-    b.add(RNABinding("b",4,8))
+    b = BindingSiteSet(name="b")
+    b.add(BindingSite(SequenceType.RNA, "b",4,8))
     
     print(len(a))
     print(len(b))
