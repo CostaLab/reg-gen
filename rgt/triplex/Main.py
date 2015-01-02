@@ -7,7 +7,7 @@ import argparse
 
 # Local Libraries
 # Distal Libraries
-from triplexTools import FischerTest
+from triplexTools import TriplexSearch, FischerTest, RandomTest
 
 dir = os.getcwd()
 """
@@ -45,23 +45,20 @@ def main():
     parser_search = subparsers.add_parser('search', help='Search the possible triplex binding sites \
                                                           between single strand (RNA) and \
                                                           double strand (DNA)')
-    parser_search.add_argument('-rna', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
-    parser_search.add_argument('-dna', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
+    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
+    parser_search.add_argument('-d', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
     
     parser_search.add_argument('-rt', choices= ['fasta', 'bed'], default='fasta', 
                                help="Input file type (fasta or bed)")
     parser_search.add_argument('-dt', choices= ['fasta', 'bed'], default='fasta', 
                                help="Input file type (fasta or bed)")
+
     parser_search.add_argument('-o', type=str, help="Output directory name")
     parser_search.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     
-    parser_search.add_argument('-min',type=int, default=4, help="Minimum length of TFO (Default: 4)")
-    parser_search.add_argument('-max',type=int, default=0, help="Maxmum length of TFO (Default is infinite)")
+    parser_search.add_argument('-min',type=int, default=4, help="Minimum length of binding site (Default: 4)")
+    parser_search.add_argument('-max',type=int, default=0, help="Maxmum length of binding site (Default is infinite)")
     
-
-    
-    parser_search.add_argument('-bg', help="Define a BED file as background. If not defined, \
-                                                the background is whole genome according to the given organism.")
 
     ################### Fischer exact test ##########################################
     parser_fischertest = subparsers.add_parser('fischer', help='Test the TTS are due to chance \
@@ -113,14 +110,27 @@ def main():
     #################################################################################################
 
     if args.mode == 'search':
-        if not args.o: print("Please define the output filename. ")
-        if args.r:
-            
+        if not args.o: print("Please define the output diractory name. \n")
+        
+        # Both RNA and DNA input
+        if args.r and args.d: 
+        
+        # Only RNA input
+        elif args.r and not args.d:
+            triplex = 
+        # Only DNA input
+        elif args.d and not args.r:
+        
+        # No input
+        else:
+            print("Please define either RNA strand or DNA strand (or both) as input\n")
+        
+            """
             if args.d:
                 os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+args.r+" -ds "+args.d+" > "+args.o)
             else:
                 os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+args.r+" > "+args.o)
-        
+            """
 
     if args.mode == 'fischer':
         #print(args.de)
