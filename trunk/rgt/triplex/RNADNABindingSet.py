@@ -6,8 +6,7 @@ from collections import *
 # Distal Libraries
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
-from RNABinding import *
-from RNABindingSet import *
+from RNABindingSet import RNABinding, RNABindingSet
 
 class RNADNABindingSet:
     """A framework to map DNA binding sites to corresponding RNA binding sites """
