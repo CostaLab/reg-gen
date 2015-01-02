@@ -1,3 +1,5 @@
+from rgt.GenomicRegion import GenomicRegion
+
 """
 A RNABinding describes a binding region on RNA.
 
@@ -5,7 +7,6 @@ Authors: Joseph Kuo
 
 """
 
-from rgt.GenomicRegion import GenomicRegion
 
 class RNABinding(GenomicRegion):
 
@@ -24,19 +25,15 @@ class RNABinding(GenomicRegion):
 
     def __str__(self):
         """Give informal string representation"""
-        try:
-            return '-'.join( [self.name, str(self.initial), str(self.final), str(self.score), self.errors, 
-                              self.motif, self.orientation, self.guanine_rate] )
-        except:
-        	return '-'.join( [self.name, str(self.initial), str(self.final)] ) 
+        infos = [ self.name, self.initial, self.final, self.score, self.errors, 
+                  self.motif, self.orientation, self.seq, self.guanine_rate ]
+        return '-'.join( [str(x) for x in infos if x] )
         
     def __repr__(self):
         """Return official representation of GenomicRegion"""
-        try:
-            return ','.join( [self.name, str(self.initial), str(self.final), str(self.score), self.errors, 
-                              self.motif, self.orientation, self.guanine_rate] )
-        except:
-            return ','.join( [self.name, str(self.initial), str(self.final)] ) 
+        infos = [ self.name, self.initial, self.final, self.score, self.errors, 
+                  self.motif, self.orientation, self.seq, self.guanine_rate ]
+        return ','.join( [str(x) for x in infos if x] ) 
         
     def __len__(self):
         """Return the length of the binding site """

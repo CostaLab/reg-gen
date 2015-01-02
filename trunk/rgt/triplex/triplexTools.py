@@ -26,15 +26,15 @@ class TriplexSearch:
             A - anti-parallel binding, i.e. motifs facilitating reverse Hoogsten bonds; 
                 this covers the purine motif and the purine-pyrimidine motif in anti-parallel configuration
     """
+    
     def find_rbs(self, a_sequence, motif="RYMPA", min_len=10, max_len=None, organism="hg19"):
-        """Calculate the potential RBS (RNA binding sites) on RNA in the given sequence
+        """Return a RNABindingSet with the potential RNA binding sites
 
         Parameters:
             a_sequence:  A Sequence object
             min_len:     Define the minimum length of RBS (default is 10 bp)
             max_len:     Define the maximum length of RBS (default is infinite)
-            motif:
-                         R: G, A
+            motif:       R: G, A
                          Y: C, T
                          M: G, T
                          P: C, T, G
@@ -80,14 +80,12 @@ class TriplexSearch:
                     elif max_len and count > max_len:
                         tfos.add(rbs)
                         con_rbs = False
-
                 else:  
                     sample = ""
                     count = 0
                     if con_rbs: 
                         tfos.add(rbs)
                         con_rbs = False
-
         return tfos
 
 
@@ -106,7 +104,43 @@ class TriplexSearch:
                          A: A, G, T
 
             max_err:    Define the maximum tolerance of error in percentage (0 as default) 
-            organism:   Define the organism (hg19 as default)"""
+            organism:   Define the organism (hg19 as default)
+        """
+        
+        all_dbs = RNABindingSet(name=a_sequence.name)
+
+        
+        targets = ["A", "G"] 
+
+        # Parsing the sequence
+        count = 0
+        sample = ""
+        con_dbs = False
+
+        for i, a in enumerate(a_sequence.seq):
+            if a in targets:
+                if count < min_len:
+                    sample += a
+                    count += 1
+                elif min_len <= count:
+                    sample += a
+                    count += 1
+                    dbs = RNABinding(name=a_sequence.name, initial=i-count+1, final=i+1, 
+                                     score=count, errors=0, motif=m, 
+                                     orientation=None, seq=sample)
+                    con_dbs = True
+
+                elif max_len and count > max_len:
+                    all_dbs.add(rbs)
+                    con_dbs = False
+            else:  
+                sample = ""
+                count = 0
+                if con_rbs: 
+                    all_dbs.add(dbs)
+                    con_dbs = False
+        return all_dbs
+        
 
     #def find_triplex(self):
 

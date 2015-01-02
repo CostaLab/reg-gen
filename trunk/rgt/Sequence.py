@@ -1,6 +1,7 @@
 from Util import SequenceType
+
 """
-Describe the Sequence with ATCG alphabets as well as its types
+Describe the Sequence with ATCG as alphabets as well as its types
 
 Author: JosephKuo
 """
@@ -31,13 +32,6 @@ class Sequence():
         """Return the ratio of GC content in this sequence"""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
-    
-    def find_TTS():
-        """Return a triplex target sites"""
-
-    def find_triplex_region(self, min_len, max_len, parallel):
-        """Return a dictionary of possible which takes RNABinding (or GenomicRegion when the Sequence is DNA) as the keys and its correspoinding """
-    
 
 if __name__ == '__main__':
     a = Sequence(name="xx", seq="AGGCCTT")
