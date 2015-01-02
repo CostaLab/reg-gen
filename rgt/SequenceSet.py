@@ -49,12 +49,20 @@ class SequenceSet:
                 pass
 
 
-    def read_bed(self, bedfile, genome_file):
+    def read_bed(self, bedfile, genome_file_dir):
         """Read the sequences defined by BED file on the given genomce"""
+        # Read BED into GenomicRegionSet
         bed = GenomicRegionSet(os.path.basename(bedfile))
         bed.read_bed(bedfile)
         
+        # Parse each chromosome and fetch the defined region in this chromosome
+        for s in bed:
+            
+        
+        
+        
         # Read genome by chromosome
+        
 
 if __name__ == '__main__':
     a = SequenceSet(name="test", seq_type=SequenceType.DNA)
