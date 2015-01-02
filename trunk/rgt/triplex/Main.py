@@ -17,9 +17,9 @@ Author: Joseph Kuo
 
 """
 
-#################################################################################################
-##### FUNCTIONS #################################################################################
-#################################################################################################
+##############################################################################
+##### FUNCTIONS ##############################################################
+##############################################################################
     
 
 ######### Universal functions
@@ -27,24 +27,26 @@ Author: Joseph Kuo
 
 
 def main():
-    #################################################################################################
-    ##### PARAMETERS ################################################################################
-    #################################################################################################
+    ##########################################################################
+    ##### PARAMETERS #########################################################
+    ##########################################################################
     
     
     
-    parser = argparse.ArgumentParser(description='Provides various Statistical tests for triplex \
-                                     binding site analysis \
-                                     \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', 
+    parser = argparse.ArgumentParser(description='Provides \
+                                     triplex binding sites searching tool and \
+                                     various Statistical tests for analysis. \
+                                     \nAuthor: Joseph Kuo', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
     
     ################### Triplex search ##########################################
 
-    parser_search = subparsers.add_parser('search', help='Search the possible triplex loci between \
-                                                          single strand (RNA) and double strand (DNA)')
-    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
-    parser_search.add_argument('-d', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
+    parser_search = subparsers.add_parser('search', help='Search the possible triplex binding sites \
+                                                          between single strand (RNA) and \
+                                                          double strand (DNA)')
+    parser_search.add_argument('-rna', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
+    parser_search.add_argument('-dna', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
     
     parser_search.add_argument('-rt', choices= ['fasta', 'bed'], default='fasta', 
                                help="Input file type (fasta or bed)")

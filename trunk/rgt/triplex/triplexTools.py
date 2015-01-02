@@ -39,8 +39,6 @@ class TriplexSearch:
                          M: G, T
                          P: C, T, G
                          A: A, G, T
-
-            max_err:    Define the maximum tolerance of error in percentage (0 as default) 
             organism:   Define the organism (hg19 as default)
         """
         tfos = RNABindingSet(name=a_sequence.name)
@@ -103,7 +101,6 @@ class TriplexSearch:
                          P: C, T, G
                          A: A, G, T
 
-            max_err:    Define the maximum tolerance of error in percentage (0 as default) 
             organism:   Define the organism (hg19 as default)
         """
         
