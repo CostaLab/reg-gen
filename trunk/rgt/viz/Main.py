@@ -95,9 +95,9 @@ def copy_em(em, directory, folder):
     
 
 def main():
-    #################################################################################################
-    ##### PARAMETERS ################################################################################
-    #################################################################################################
+    ###############################################################################
+    ##### PARAMETERS ##############################################################
+    ###############################################################################
     
     # Some general help descriptions
     ######### Some general plotting arguments descriptions ###############
@@ -131,8 +131,6 @@ def main():
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_projection.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    #parser_projection.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -153,12 +151,8 @@ def main():
                                   'bp' outputs the coverage(basepair) of intersection.")
     parser_intersect.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
     parser_intersect.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
-    #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
-    #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
@@ -176,8 +170,6 @@ def main():
     parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_jaccard.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    #parser_jaccard.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
 
@@ -198,13 +190,8 @@ def main():
                                       'bp' outputs the coverage(basepair) of intersection.")
     parser_combinatorial.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
     parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
-    #parser_intersect.add_argument('-stackedbar', action="store_true", help='Plot the intersection test in stacked bar plot according to their intersections.')
-    #parser_intersect.add_argument('-pbar', action="store_true", help='Plot the intersection test in stacked bar with percentage.')
     parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_intersect.add_argument('-pdf', action="store_true", help='Save the plot in pdf format.')
-    #parser_intersect.add_argument('-html', action="store_true", help='Save the figure in html format.')
-    #parser_combinatorial.add_argument('-comb', action="store_true", help='Calculate all combinatorial intersections.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
@@ -221,8 +208,6 @@ def main():
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
-    #parser_boxplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    #parser_boxplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_boxplot.add_argument('-ylim', type=int, default=None, help="Define the limit of y axis.")
     parser_boxplot.add_argument('-p','--pvalue', type=float, default=0.05, help='Define the significance level for multiple test. Default: 0.01')
@@ -232,7 +217,8 @@ def main():
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] # Be consist as the arguments of GenomicRegionSet.relocate_regions
+    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_lineplot.add_argument('input', help=helpinput)
     parser_lineplot.add_argument('output', help=helpoutput)
@@ -249,11 +235,8 @@ def main():
     parser_lineplot.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_lineplot.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
     parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
-    #parser_lineplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_lineplot.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
-    #parser_lineplot.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    #parser_lineplot.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -262,7 +245,8 @@ def main():
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] # Be consist as the arguments of GenomicRegionSet.relocate_regions
+    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_heatmap.add_argument('input', help=helpinput)
     parser_heatmap.add_argument('output', help=helpoutput)
@@ -285,8 +269,6 @@ def main():
     parser_heatmap.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
-    #parser_heatmap.add_argument('-pdf', action="store_true", help='Save the figure in pdf format.')
-    #parser_heatmap.add_argument('-html', action="store_true", help='Save the figure in html format.')
     parser_heatmap.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')

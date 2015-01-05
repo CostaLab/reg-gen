@@ -1,6 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
+import copy
 # Local Libraries
 
 # Distal Libraries
@@ -16,7 +17,7 @@ class Sequence():
     Author: JosephKuo
     """
 
-    def __init__(self, seq, name=None,  strand="+"):
+    def __init__(self, seq, strand, name=None):
         """Initiation"""
         self.name = name # Extra information about the sequence
         self.seq = seq.upper() # Convert all alphabets into upper case
@@ -41,6 +42,23 @@ class Sequence():
         """Return the ratio of GC content in this sequence"""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
+        
+    def complement(self):
+        """Return another Sequence which is the complement to original sequence"""
+        if self.strand == "RNA":
+            print("No complement strand for RNA "+self.name)
+            return
+        elif self.strand == "+": strand = "-"
+        else: strand = "-"
+        
+        seq = copy.deepcopy(self.seq)
+        seq.replace("A","G")
+        seq.replace("G","A")
+        seq.replace("C","T")
+        seq.replace("T","C")
+        
+        s = Sequence(seq, name=self.name+"_complement",  strand=strand)
+        return s
 
 ####################################################################################
 ####################################################################################
@@ -119,7 +137,7 @@ class SequenceSet:
 
             for s in beds:
                 seq = ch_seq[0].seq[s.initial:s.final]
-                self.sequences.append(Sequence(seq=seq, name=s.name))
+                self.sequences.append(Sequence(seq=seq, name=s.name, strand=s.strand))
 
 ####################################################################################
 ####################################################################################

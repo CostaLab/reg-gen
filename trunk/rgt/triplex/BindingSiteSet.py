@@ -15,7 +15,7 @@ class BindingSite(GenomicRegion):
     """
 
     def __init__(self, chrm, initial, final, name=None, score=None, errors_bp=None, motif=None, 
-                 orientation=None, guanine_rate=None):
+                 strand=None, orientation=None, guanine_rate=None, seq=None):
         """Initialize
         
         name             The name of this binding site (Default: None)
@@ -26,8 +26,10 @@ class BindingSite(GenomicRegion):
         score            Score of the binding pattern (Default: None)
         errors_bp        Error base pair in this binding (Default: None)
         motif            The motif for this binding (Default: None)
+        strand           The strand of DNA (+ or -) (Default: None)
         orientation      Parallel or antiparallel (Default: None)
         guanine_rate     (Default: None)
+        seq              Sequence of this region with ATCG as letters
 
         """
         GenomicRegion.__init__(self, chrom=chrm, initial=initial, final=final)
@@ -36,19 +38,21 @@ class BindingSite(GenomicRegion):
         self.score = score                    # Score for pattern matching
         self.errors_bp = errors_bp                  
         self.motif = motif
+        self.strand = strand
         self.orientation = orientation
         self.guanine_rate = guanine_rate
+        self.seq = seq                        # An object (Sequence) not just a string
 
     def __str__(self):
         """Give informal string representation"""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.orientation, self.guanine_rate ]
+                  self.motif, self.strand, self.orientation, self.guanine_rate, self.seq ]
         return '-'.join( [str(x) for x in infos if x] )
         
     def __repr__(self):
         """Return official representation of GenomicRegion"""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.orientation, self.guanine_rate ]
+                  self.motif, self.strand, self.orientation, self.guanine_rate, self.seq ]
         return ','.join( [str(x) for x in infos if x] ) 
         
     def __len__(self):
@@ -57,6 +61,12 @@ class BindingSite(GenomicRegion):
 
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))
+                        
+
+            
+            
+            
+            
 
 ####################################################################################
 ####################################################################################
@@ -76,7 +86,7 @@ class BindingSiteSet(GenomicRegionSet):
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
     
-    def write_rbs(self, filename):
+    def write_bs(self, filename):
         """Write the information into a file with .rbs """
         d = os.path.dirname(filename)
         if not os.path.exists(d):
@@ -87,7 +97,7 @@ class BindingSiteSet(GenomicRegionSet):
             for bs in self.sequences:
                 err_rate = 1 - bs.score/(bs.final - bs.initial)
                 print("\t".join([bs.name, str(bs.initial), str(bs.final), str(bs.score), 
-                                 bs.motif, "{0:.2f}".format(err_rate)]), file=f)
+                                 bs.motif, "{0:.2f}".format(err_rate), bs.seq]), file=f)
 
     def concatenate(self, another_BindingSiteSet):
         """Concatenate another RNABindingSet without sorting"""
