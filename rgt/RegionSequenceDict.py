@@ -13,10 +13,11 @@ from SequenceSet import Sequence, SequenceSet
 ####################################################################################
 
 class RegionSequenceDict:
-    """A structure to connect a region (GenomicRegion or RNABinding) to its sequence (Sequence)
+    """A structure to link regions (GenomicRegion or BindingSite) to their sequences (Sequence)
 
     Author: Joseph Kuo 
     """
+    
     def __init__(self, name, seq_type):
         """Initiation"""
         self.name = name
