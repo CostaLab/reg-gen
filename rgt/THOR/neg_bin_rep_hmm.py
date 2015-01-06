@@ -141,8 +141,8 @@ class NegBinRepHMM(_BaseHMM):
             pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
-                    if any(posteriors[t] * symbol[i]) > 10*-300:
-                        print(posteriors[t] * symbol[i], file=sys.stderr)
+                    #if any(posteriors[t] * symbol[i]) > 10*-300:
+                    #    print(posteriors[t] * symbol[i], file=sys.stderr)
                     
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
         
