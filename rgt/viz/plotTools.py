@@ -2003,40 +2003,7 @@ def annotation_dump(organism):
         dump(exone, gd.get_annotation_dump_dir(),"exone.dump")
     beds.append(exone)
     print("\texone: "+str(len(exone)))
-    """
-    # genes
-    try: gene = load_dump(gd.get_annotation_dump_dir(),"gene.dump")
-    except:
-        anno = read_gtf(gd, organism)
-        print("gg")
-        gene = anno.get_genes()
-        dump(gene, gd.get_annotation_dump_dir(),"gene.dump")
-    beds.append(gene)
-    print("\tgene: "+str(len(gene)))
-    #intron
-    try: intron = load_dump(gd.get_annotation_dump_dir(),"intron.dump")
-    except:
-        anno = read_gtf(gd, organism)
-        intron = gene.subtract(exon)
-        dump(intron, gd.get_annotation_dump_dir(),"intron.dump")
-    beds.append(intron)
-    print("\tintron: "+str(len(intron)))
     
-    #introns
-    try: introns = load_dump(gd.get_annotation_dump_dir(),"introns.dump")
-    except:
-        introns = intron.relocate_regions("leftend", left_length=1, right_length=1)
-        dump(introns, gd.get_annotation_dump_dir(),"introns.dump")
-    beds.append(introns)
-    print("\tintrons: "+str(len(introns)))
-    # introne
-    try: introne = load_dump(gd.get_annotation_dump_dir(),"introne.dump")
-    except:
-        introne = intron.relocate_regions("rightend", left_length=1, right_length=1)
-        dump(introne, gd.get_annotation_dump_dir(),"introne.dump")
-    beds.append(introne)
-    print("\tintrone: "+str(len(introne)))
-    """
     
     #bednames = ["TSS", "TTS", "Exon start site", "Exon end site", "Intron start site", "Intron end site"]
     bednames = ["TSS", "TTS", "Exon start site", "Exon end site"]

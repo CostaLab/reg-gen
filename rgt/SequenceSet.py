@@ -89,26 +89,23 @@ class SequenceSet:
 
     def read_fasta(self, fasta_file):
         """Read all the sequences in the given fasta file"""
+        pre_seq = False
         with open(fasta_file) as f:
             for line in f:
-                #print(line)
                 line = line.strip()
                 if not line: pass
                 elif line[0] == ">":
-                    try: # Save the previous sequence
-                        s = Sequence(seq=seq, name=info)
-                        self.sequences.append(s)
-                    except: pass
-
+                    if pre_seq:
+                        self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
+                        pre_seq = False
                     info = line.split()[0][1:]
                     seq = ""
+                    try: strand = line[line.index("strand")+7]
+                    except: strand = "+"
                 else:
                     seq = seq + line
-            try: # Save the previous sequence
-                s = Sequence(seq=seq, name=info)
-                self.sequences.append(s)
-            except: # Start to parse a new sequence
-                pass
+                    pre_seq = True
+            self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
     def read_bed(self, bedfile, genome_file_dir):
         """Read the sequences defined by BED file on the given genomce"""
@@ -123,7 +120,7 @@ class SequenceSet:
         chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
 
         for ch in chroms:
-            if ch not in chro_files: print("There is no genome FASTA file for: "+ch+"\n")
+            if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
 
             # Read genome in FASTA according to the given chromosome
             ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
@@ -137,7 +134,10 @@ class SequenceSet:
 
             for s in beds:
                 seq = ch_seq[0].seq[s.initial:s.final]
-                self.sequences.append(Sequence(seq=seq, name=s.name, strand=s.strand))
+                try: strand = s.strand
+                except: strand = "+"
+                self.sequences.append(Sequence(seq=seq, name=s.__repr__(), 
+                                               strand=strand))
 
 ####################################################################################
 ####################################################################################
