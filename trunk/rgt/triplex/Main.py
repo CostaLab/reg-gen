@@ -38,8 +38,8 @@ def output_summary(summary, directory, filename):
     except: os.mkdir(pd)    
     if summary:
         with open(os.path.join(pd,"parameters.txt"),'w') as f:
-            print("#########  RGT Triplex: Summary information #########", file=f)
-            for s in parameter:
+            print("********* RGT Triplex: Summary information *********", file=f)
+            for s in summary:
                 print(s, file=f)
         
 def main():
@@ -73,7 +73,8 @@ def main():
     parser_search.add_argument('-min',type=int, default=8, help="Minimum length of binding site (Default: 4)")
     parser_search.add_argument('-max',type=int, default=None, help="Maxmum length of binding site (Default is infinite)")
     parser_search.add_argument('-m',type=str, default="RYMPA", help="Define the motif for binding site searching (Default is RYMPA)")
-
+    parser_search.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
+    
     ################### Fischer exact test ##########################################
     parser_fischertest = subparsers.add_parser('fischer', help='Test the TTS are due to chance \
                                               or not by randomization')
@@ -116,13 +117,12 @@ def main():
                     print("\nSubparser '{}'".format(choice))        
                     subparser.print_help()
         sys.exit(1)
-    else:
+    else:   
+        args = parser.parse_args()
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
-            
-        args = parser.parse_args()
-        
+
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
@@ -131,7 +131,7 @@ def main():
         summary = []
         summary.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         summary.append("User: " + getpass.getuser())
-        summary.append("\nCommand:\n   $ " + " ".join(sys.argv))
+        summary.append("\nCommand:\n\t$ " + " ".join(sys.argv))
 
     ################################################################################
     ##### Search ###################################################################
@@ -189,6 +189,7 @@ def main():
             if args.dt == 'fasta': # Input is FASTA
                 print2(summary, "\tRead DNA in FASTA: "+args.d)
                 dnas.read_fasta(args.d)
+                
             else: # Input is BED
                 if not args.genome: 
                     print("Please add the directory where the genome FASTA files locate.\n")
@@ -213,8 +214,8 @@ def main():
             print2(summary, "\tDNA binding sites are saved in: "+os.path.join(args.o, dnaname+".dbs"))
             
             ##### Compare the binding sites between RNA and DNA ####################
-            rbs = 
-            dbs
+            #rbs = 
+            #dbs
             
             
             
@@ -254,12 +255,13 @@ def main():
             
             triplex = TriplexSearch()
             print2(summary, "\tMotif: "+args.m)
-            print2(summary, "\tMinimum length: "+args.min)
-            print2(summary, "\tMaximum length: "+args.max)
-            bs = triplex.search_bindingsites(sequence_set=rnas, seq_type=SequenceType.RNA, 
-                                             motif=args.m, min_len=args.min, max_len=args.max)
+            print2(summary, "\tMinimum length: "+str(args.min))
+            print2(summary, "\tMaximum length: "+str(args.max))
 
-            bs.write_bs(os.path.join(args.o, rnaname+".rbs"))
+            bs = triplex.search_bindingsites(sequence_set=rnas, seq_type=SequenceType.RNA, 
+                                             motif=args.m, min_len=args.min, max_len=args.max, multiprocess=args.mp)
+
+            bs.write_rbs(os.path.join(args.o, rnaname+".rbs"))
             t1 = time.time()
             print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             print2(summary, "Results are saved in: "+os.path.join(args.o, rnaname+".rbs"))
@@ -271,7 +273,7 @@ def main():
             print2(summary, "\nSearch potential triplex forming binding sites on DNA")
             
             args.d = os.path.normpath(os.path.join(dir,args.d))   # Normalised paths
-            dnaname = os.path.basename(args.r).split(".")[0]
+            dnaname = os.path.basename(args.d).split(".")[0]
             dnas = SequenceSet(name=dnaname, seq_type=SequenceType.DNA)
             
             # Input is FASTA
@@ -290,13 +292,12 @@ def main():
                 dnas.read_bed(os.path.join(dir, args.d), args.genome)
             
             triplex = TriplexSearch()
-            print2(summary, "\tMotif: "+args.m)
-            print2(summary, "\tMinimum length: "+args.min)
-            print2(summary, "\tMaximum length: "+args.max)
+            print2(summary, "\tMinimum length: "+str(args.min))
+            print2(summary, "\tMaximum length: "+str(args.max))
             bs = triplex.search_bindingsites(sequence_set=dnas, seq_type=SequenceType.DNA, 
-                                             motif=args.m, min_len=args.min, max_len=args.max)
+                                             motif=args.m, min_len=args.min, max_len=args.max, multiprocess=args.mp)
 
-            bs.write_bs(os.path.join(args.o, dnaname+".dbs"))
+            bs.write_dbs(os.path.join(args.o, dnaname+".dbs"))
             t1 = time.time()
             print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             print2(summary, "Results are saved in: "+os.path.join(args.o, dnaname+".dbs"))

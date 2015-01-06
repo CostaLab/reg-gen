@@ -40,8 +40,9 @@ class BindingSite(GenomicRegion):
         self.motif = motif
         self.strand = strand
         self.orientation = orientation
-        self.guanine_rate = guanine_rate
         self.seq = seq                        # An object (Sequence) not just a string
+        
+        self.guanine_rate = "{0:.2f}".format(float(seq.seq.count("G"))/len(seq))
 
     def __str__(self):
         """Give informal string representation"""
@@ -86,18 +87,38 @@ class BindingSiteSet(GenomicRegionSet):
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
     
-    def write_bs(self, filename):
+    def write_rbs(self, filename):
         """Write the information into a file with .rbs """
         d = os.path.dirname(filename)
         if not os.path.exists(d):
             os.makedirs(d)
 
         with open(filename, "w") as f:
-            print("# Sequence-ID\tStart\tEnd\tScore\tMotif\tError-rate\tSequence",file=f)
+            print("# Sequence-ID\tStart\tEnd\tScore\tMotif\tError-rate\tGuanine-rate\tSequence",file=f)
+            # Sequence-ID   Start   End Score   Motif   Error-rate  Errors  
+            # Guanine-rate    Duplicates  TFO Duplicate locations
+
             for bs in self.sequences:
                 err_rate = 1 - bs.score/(bs.final - bs.initial)
                 print("\t".join([bs.name, str(bs.initial), str(bs.final), str(bs.score), 
-                                 bs.motif, "{0:.2f}".format(err_rate), bs.seq]), file=f)
+                                 bs.motif, "{0:.2f}".format(err_rate), bs.guanine_rate, bs.seq.seq]), file=f)
+
+    def write_dbs(self, filename):
+        """Write the information into a file with .dbs """
+        d = os.path.dirname(filename)
+        if not os.path.exists(d):
+            os.makedirs(d)
+
+        with open(filename, "w") as f:
+            print("# Chromosome\tStart\tEnd\tScore\tError-rate\tGuanine-rate\tSequence",file=f)
+            # Sequence-ID   Start   End Score   Motif   Error-rate  Errors  
+            # Guanine-rate    Duplicates  TFO Duplicate locations
+
+            for bs in self.sequences:
+                print(bs)
+                err_rate = 1 - bs.score/(bs.final - bs.initial)
+                print("\t".join([bs.chrom, str(bs.initial), str(bs.final), str(bs.score), 
+                                 "{0:.2f}".format(err_rate), bs.guanine_rate, bs.seq.seq]), file=f)
 
     def concatenate(self, another_BindingSiteSet):
         """Concatenate another RNABindingSet without sorting"""

@@ -2,6 +2,7 @@
 from __future__ import print_function
 #from collections import *
 import os
+import multiprocessing
 # Local Libraries
 
 # Distal Libraries
@@ -14,6 +15,13 @@ from Util import SequenceType
 
 ####################################################################################
 ####################################################################################
+def mp_find_rbs(s, motif, min_len, max_len):
+    triplex = TriplexSearch()
+    return triplex.find_rbs(s, motif, min_len, max_len)
+def mp_find_dbs(s, min_len, max_len):
+    triplex = TriplexSearch()
+    return triplex.find_dbs(s, min_len, max_len)
+
 
 class TriplexSearch:
     """Contains functions for potential triplex forming sites on DNA or RNA.
@@ -35,7 +43,7 @@ class TriplexSearch:
                 this covers the purine motif and the purine-pyrimidine motif in anti-parallel configuration
     """
     
-    def search_bindingsites(self, sequence_set, seq_type, motif, min_len, max_len):
+    def search_bindingsites(self, sequence_set, seq_type, motif, min_len, max_len, multiprocess=False):
         """Find binding sites on RNA or DNA from given SequenceSet
         
         Parameters:
@@ -45,14 +53,28 @@ class TriplexSearch:
             min_len:       Define the minimum length of RBS (default is 10 bp)
             max_len:       Define the maximum length of RBS (default is infinite)
         """
-        
         all_binding_sites = BindingSiteSet(name=sequence_set.name)
-        for s in sequence_set:
+        if not multiprocess:
+            for i,s in enumerate(sequence_set):
+                if seq_type == SequenceType.RNA:
+                    bs = self.find_rbs(s, motif, min_len, max_len)
+                elif seq_type == SequenceType.DNA:
+                    bs = self.find_dbs(s, min_len, max_len)
+                all_binding_sites.concatenate(bs)
+        else:
+            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            if len(sequence_set) == 1: 
+            else:
+                mp_input = [ [s, motif, min_len, max_len] for s in sequence_set]
+            print(mp_input)
             if seq_type == SequenceType.RNA:
-                bs = self.find_rbs(s, motif, min_len, max_len)
+                bs = pool.map(mp_find_rbs, mp_input)
             elif seq_type == SequenceType.DNA:
-                bs = self.find_dbs(s, min_len, max_len)
-            all_binding_sites.concatenate(bs)
+                bs = pool.map(mp_find_dbs, mp_input)
+            pool.close()
+            pool.join()
+            for b in bs:
+                all_binding_sites.concatenate(b)
 
         return all_binding_sites
 
@@ -91,8 +113,8 @@ class TriplexSearch:
             con_rbs = False
 
             for i, a in enumerate(a_sequence.seq):
-
                 if a in targets:
+                    
                     if count < min_len:
                         sample += a
                         count += 1
@@ -107,7 +129,7 @@ class TriplexSearch:
                     elif max_len and count > max_len:
                         rbss.add(rbs)
                         con_rbs = False
-                else:  
+                else:
                     sample = ""
                     count = 0
                     if con_rbs: 
@@ -124,9 +146,12 @@ class TriplexSearch:
             a_sequence:  A Sequence object
             min_len:     Define the minimum length of RBS (default is 10 bp)
             max_len:     Define the maximum length of RBS (default is infinite)
+            region:      A BindingSite or GenomicRegion
         """
         
         all_dbs = BindingSiteSet(name=a_sequence.name)
+        if len(a_sequence) < min_len: return
+        
         targets = ["A", "G"]
         if a_sequence.strand == "+": c_strand = "-"
         else: c_strand = "+"
@@ -137,16 +162,23 @@ class TriplexSearch:
         sample_2 = ""
         con_1 = False
         con_2 = False
-        
+        #l = len(a_sequence)
+
         for i, a in enumerate(a_sequence.seq):
+        #    print(str(l)+"\t"+str(i))
             if a in targets:
                 # Strand 2
+                if con_2:
+                    sample_2 = sample_2.replace("C","G")
+                    sample_2 = sample_2.replace("T","A")
+                    dbs_2 = BindingSite(chrm=a_sequence.name, initial=i-count_2+1, final=i+1, 
+                                        score=count_2, errors_bp=0, strand=c_strand, 
+                                        seq=Sequence(seq=sample_2, strand=c_strand))
+                    all_dbs.add(dbs_2)
+                    con_2 = False
                 sample_2 = ""
                 count_2 = 0
-                if con_2: 
-                    all_dbs.add(dbs)
-                    con_2 = False
-                    
+
                 # Strand 1 
                 if count_1 < min_len:
                     sample_1 += a
@@ -154,33 +186,38 @@ class TriplexSearch:
                 elif min_len <= count_1:
                     sample_1 += a
                     count_1 += 1
-                    dbs_1 = BindingSite(chrm=a_sequence.name, initial=i-count_1+1, final=i+1, 
-                                        score=count_1, errors=0, strand=a_sequence.strand, 
-                                        seq=Sequence(seq=sample, strand=a_sequence.strand))
+                    
                     con_1 = True
                 elif max_len and count_1 > max_len:
+                    dbs_1 = BindingSite(chrm=a_sequence.name, initial=i-count_1+1, final=i+1, 
+                                        score=count_1, errors_bp=0, strand=a_sequence.strand, 
+                                        seq=Sequence(seq=sample_1, strand=a_sequence.strand))
                     all_dbs.add(dbs_1)
                     con_1 = False
             else:
                 # Strand 1
-                sample_1 = ""
-                count_1 = 0
                 if con_1: 
+                    dbs_1 = BindingSite(chrm=a_sequence.name, initial=i-count_1+1, final=i+1, 
+                                        score=count_1, errors_bp=0, strand=a_sequence.strand, 
+                                        seq=Sequence(seq=sample_1, strand=a_sequence.strand))
                     all_dbs.add(dbs_1)
                     con_1 = False
-                    
-                # Strand 2 
+                sample_1 = ""
+                count_1 = 0
+                # Strand 2
                 if count_2 < min_len:
                     sample_2 += a
                     count_2 += 1
                 elif min_len <= count_2:
                     sample_2 += a
                     count_2 += 1
-                    dbs_2 = BindingSite(chrm=a_sequence.name, initial=i-count_2+1, final=i+1, 
-                                        score=count_2, errors=0, strand=c_strand, 
-                                        seq=Sequence(seq=sample, strand=c_strand))
                     con_2 = True
                 elif max_len and count_2 > max_len:
+                    sample_2 = sample_2.replace("C","G")
+                    sample_2 = sample_2.replace("T","A")
+                    dbs_2 = BindingSite(chrm=a_sequence.name, initial=i-count_2+1, final=i+1, 
+                                        score=count_2, errors_bp=0, strand=c_strand, 
+                                        seq=Sequence(seq=sample_2, strand=c_strand))
                     all_dbs.add(dbs_2)
                     con_2 = False
         return all_dbs
