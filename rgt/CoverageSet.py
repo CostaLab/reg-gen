@@ -112,8 +112,11 @@ class CoverageSet:
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
-            for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                cov[i] += 1
+            try:
+                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                    cov[i] += 1
+            except:
+                print("\tError: "+str(region))
         self.coverage=cov 
         self.coverageOrig=cov
 

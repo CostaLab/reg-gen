@@ -1,16 +1,18 @@
 # Python Libraries
 from __future__ import print_function
-#from collections import *
+from collections import *
 import os
 import multiprocessing
 # Local Libraries
-
+from scipy import stats
 # Distal Libraries
+from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
 from SequenceSet import Sequence, SequenceSet
-from Util import SequenceType
+from RNADNABindingSet import RNADNABinding, RNADNABindingSet
+from Util import SequenceType, Html
 #import multiprocessing
 
 ####################################################################################
@@ -22,6 +24,17 @@ def mp_find_dbs(s, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_dbs(s, min_len, max_len)
 
+def value2str(value):
+    if (isinstance(value,str)): return value
+    if value == 0: return "0"
+    if(isinstance(value,int)): return str(value)
+    elif(isinstance(value,float)):
+        if value >= 1000: r = "{}".format(int(value))
+        elif 1000 > value > 10: r = "{:.1f}".format(value)
+        elif 10 > value >= 1: r = "{:.2f}".format(value)
+        elif 1 > value > 0.0001: r = "{:.4f}".format(value)
+        else: r = "{:.1e}".format(value)
+        return r
 
 class TriplexSearch:
     """Contains functions for potential triplex forming sites on DNA or RNA.
@@ -54,7 +67,7 @@ class TriplexSearch:
             max_len:       Define the maximum length of RBS (default is infinite)
         """
         all_binding_sites = BindingSiteSet(name=sequence_set.name)
-        if not multiprocess:
+        if not multiprocess or len(sequence_set) == 1:
             for i,s in enumerate(sequence_set):
                 if seq_type == SequenceType.RNA:
                     bs = self.find_rbs(s, motif, min_len, max_len)
@@ -63,9 +76,7 @@ class TriplexSearch:
                 all_binding_sites.concatenate(bs)
         else:
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-            if len(sequence_set) == 1: 
-            else:
-                mp_input = [ [s, motif, min_len, max_len] for s in sequence_set]
+            mp_input = [ [s, motif, min_len, max_len] for s in sequence_set ]
             print(mp_input)
             if seq_type == SequenceType.RNA:
                 bs = pool.map(mp_find_rbs, mp_input)
@@ -278,52 +289,111 @@ class TriplexSearch:
 ####################################################################################
 ####################################################################################
 
-class FischerTest:
+class FisherTest:
+    """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, organism, promoterLength):
         """Initiation"""
         self.organism = organism
 
         # DE gene regions
-        self.df_gene = GeneSet("df genes")
-        self.df_gene.read(gene_list_file)
-        df_regions = GenomicRegionSet("df genes")
-        self.df_regions = df_regions.get_from_genes(gene_list=self.df_gene, organism=organism, 
-                                                    promoterLength=promoterLength)
-
-        # All gene regions
-        self.all_gene = GeneSet("all genes")
-        self.all_gene.get_all_genes(organism=organism)
-        all_regions = GenomicRegionSet("all genes")
-        self.all_regions = all_regions.get_from_genes(gene_list=self.all_gene, organism=organism, 
-                                                      promoterLength=promoterLength)
-
-    def search_triplex(self, rna, temp):
-        """Perform triplexator on DE genes and all genes to find triplexes"""
-        # DE gene regions
-        self.df_regions.write_bed(os.path.join(temp,"de_gene.bed"))
-        bed = os.path.join(temp, "de_gene.bed")
-        fasta = os.path.join(temp, "de_gene.fasta")
-        txp = os.path.join(temp, "de.txp")
-        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+bed+" -fo "+fasta)
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+rna+" -ds "+fasta+" > "+txp)
+        self.de_gene = GeneSet("de genes")
+        self.de_gene.read(gene_list_file)
+        self.de_regions = GenomicRegionSet("de genes")
+        self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
+                                      promoterLength=promoterLength)
         
-        # All gene regions
-        self.all_regions.write_bed(os.path.join(temp,"all_gene.bed"))
-        bed = os.path.join(temp, "all_gene.bed")
-        fasta = os.path.join(temp, "all_gene.fasta")
-        txp = os.path.join(temp, "all.txp")
-        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+bed+" -fo "+fasta)
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+rna+" -ds "+fasta+" > "+txp)
+        # nonDE gene regions
+        self.nde_gene = GeneSet("nde genes")
+        self.nde_gene.get_all_genes(organism=organism)
+        self.nde_gene.subtract(self.de_gene)
+        self.nde_regions = GenomicRegionSet("nde genes")
+        self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
+                                       promoterLength=promoterLength)
 
-    def load_txp(self,temp):
-        """Loading the txp files from temp directory"""
-        de_binding = RNADNABindingSet(organism=self.organism, filename=os.path.join(temp,"de.txp"))
+    def search_triplex(self, rna, temp, remove_temp=False):
+        # DE
+        self.de_regions.write_bed(os.path.join(temp,"de_regions.bed"))
+        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+\
+                  os.path.join(temp,"de_regions.bed")+" -fo "+os.path.join(temp,"de.fa"))
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -ss "+\
+                  rna+" -ds "+os.path.join(temp,"de.fa")+" > "+os.path.join(temp, "de.txp"))
+
+
+        # non-DE
+        self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
+        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+\
+                  os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+rna+" -ds "+os.path.join(temp,"nde.fa")+\
+                  " > "+os.path.join(temp, "nde.txp"))
+        if remove_temp:
+            os.remove(os.path.join(temp,"de_regions.bed"))
+            os.remove(os.path.join(temp,"de.fa"))
+            os.remove(os.path.join(temp,"nde_regions.bed"))
+            os.remove(os.path.join(temp,"nde.fa"))
         
-        all_binding = RNADNABindingSet(organism=self.organism, filename=os.path.join(temp,"all.txp"))
+    def count_frequency(self, temp):
+        """Count the frequency between DE genes and non-DE genes with the given BindingSiteSet"""
         
+        # Read txp and merge RBS
+        txp = RNADNABindingSet("all")
+        txp.read_txp(os.path.join(temp, "de.txp"))
+        txp.read_txp(os.path.join(temp, "nde.txp"))
+        txp.merge_rbs()
+        
+        self.de_frequency = OrderedDict()
+        self.nde_frequency = OrderedDict()
+        len_de = len(self.de_regions)
+        len_nde = len(self.nde_regions)
+        for rbs, regions in txp.merged_dict.iteritems():
+            # DE
+            inter = len(self.de_regions.intersect(regions))
+            self.de_frequency[rbs] = [inter, len_de - inter]
+            # non-DE
+            inter = len(self.nde_regions.intersect(regions))
+            self.nde_frequency[rbs] = [inter, len_nde - inter]
+        self.txp = txp
 
-
-
+    def fisher_exact(self):
+        """Return oddsratio and pvalue"""
+        self.oddsratio = {}
+        self.pvalue = {}
+        for rbs in self.txp.merged_dict.keys():
+            self.oddsratio[rbs], self.pvalue[rbs] = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
+        
+    def gen_html(self, directory, align=50, alpha = 0.05):
+        #fp = os.path.join(dir,outputname,title)
+        link_d = {os.path.basename(directory):"fisher.html"}
+        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(os.path.dirname(directory),"fig"))
+        #html.add_figure("projection_test.png", align="center")
+        
+        header_list = ["RNA Binding Site",
+                       "DE genes<br>RBS binding", 
+                       "DE genes<br>no binding",
+                       "nonDE genes<br>RBS binding", 
+                       "nonDE genes<br>no binding",
+                       "Oddsratio",
+                       "p-value"]
+        
+        type_list = 'sssssss'
+        col_size_list = [10,10,10,10,10,10,10]
+        data_table = []
+        for rbs in self.txp.merged_dict.keys():
+            if self.pvalue[rbs] < alpha:
+                data_table.append([ rbs.region_str(), value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
+                                    value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
+                                    value2str(self.oddsratio[rbs]), "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>" ])
+            else:
+                data_table.append([ rbs.region_str(), value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
+                                    value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
+                                    value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs])])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align)
+        
+        header_list=["Assumptions and hypothesis"]
+        data_table = []
+        
+        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
+        html.write(os.path.join(directory,"fisher.html"))
+    
 ####################################################################################
 ####################################################################################
 

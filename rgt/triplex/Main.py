@@ -8,7 +8,7 @@ import time, datetime, getpass, fnmatch
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import TriplexSearch, FischerTest, RandomTest
+from triplexTools import TriplexSearch, FisherTest, RandomTest
 from SequenceSet import Sequence, SequenceSet
 from Util import SequenceType
 
@@ -59,7 +59,7 @@ def main():
     parser_search = subparsers.add_parser('search', help='Search the possible triplex binding sites \
                                                           between single strand (RNA) and \
                                                           double strand (DNA)')
-    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
+    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_search.add_argument('-d', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
     
     parser_search.add_argument('-rt', choices= ['fasta', 'bed'], default='fasta', 
@@ -75,16 +75,16 @@ def main():
     parser_search.add_argument('-m',type=str, default="RYMPA", help="Define the motif for binding site searching (Default is RYMPA)")
     parser_search.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     
-    ################### Fischer exact test ##########################################
-    parser_fischertest = subparsers.add_parser('fischer', help='Test the TTS are due to chance \
-                                              or not by randomization')
-    parser_fischertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta or bed format)")
-    parser_fischertest.add_argument('-de', help="Input file for defferentially expression gene list ")
-    parser_fischertest.add_argument('-pl', type=int, default=0, 
-                                   help="Define the promotor length (Default: 0)")
-    parser_fischertest.add_argument('-o', help="Output directory name for all the results and temporary files")
-    parser_fischertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-
+    ################### Fisher exact test ##########################################
+    parser_fishertest = subparsers.add_parser('fisher', help='Test the association between differential expression genes and \
+                                               the RNA binding sites of triplex on the given RNA by their frequency')
+    parser_fishertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
+    parser_fishertest.add_argument('-de', help="Input file for defferentially expression gene list ")
+    parser_fishertest.add_argument('-pl', type=int, default=1000, 
+                                   help="Define the promotor length (Default: 1000)")
+    parser_fishertest.add_argument('-o', help="Output directory name for all the results and temporary files")
+    parser_fishertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_fishertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     ################### Random test ##########################################
     parser_randomtest = subparsers.add_parser('randomtest', help='Test the TTS are due to chance \
                                               or not by randomization')
@@ -223,11 +223,6 @@ def main():
             
             
             
-            
-            
-            
-            
-            
         ############################################################################
         ##### Only RNA input #######################################################
         elif args.r and not args.d:
@@ -311,12 +306,19 @@ def main():
     ################################################################################
     ##### Fischer ##################################################################
     ################################################################################
-    if args.mode == 'fischer':
+    if args.mode == 'fisher':
         #print(args.de)
         #print(args.organism)
         #print(args.pl)
-        fischer = FischerTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
-        fischer.search_triplex(rna=args.r, temp=os.path.join(args.o,"fischer_test"))
+        args.r = os.path.normpath(os.path.join(dir,args.r))
+        
+        # Get GenomicRegionSet from the given genes
+        fisher = FisherTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
+        fisher.search_triplex(rna=args.r, temp=args.o, remove_temp=True)
+        fisher.count_frequency(temp=args.o)
+        fisher.fisher_exact()
+        fisher.gen_html(directory=args.o, align=50, alpha=args.a)
+
     
     ################################################################################
     ##### Random ###################################################################
