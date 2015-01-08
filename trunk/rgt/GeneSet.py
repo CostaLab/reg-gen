@@ -52,3 +52,7 @@ class GeneSet:
             self.genes.append(l[3].upper())
         f.close()
         self.genes = list(set(self.genes))
+
+    def subtract(self, gene_set):
+        """Subtract another GeneSet"""
+        self.genes = [gene for gene in self.genes if gene not in gene_set]

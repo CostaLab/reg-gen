@@ -38,12 +38,12 @@ class RNADNABinding:
     
     """
 
-    def __init__(self, rna, dna, score, err_rate, err, guan_rate, rna_seq, dna_seq, match):
+    def __init__(self, rna, dna, score, err_rate, err, guan_rate, rna_seq=None, dna_seq=None, match=None):
         """Initiation"""
-        self.rna = rna
-        self.dna = dna
+        self.rna = rna  # BindingSite
+        self.dna = dna  # GenomicRegion
         self.motif = rna.motif
-        self.strand = dna.strand
+        self.strand = dna.orientation
         self.orient = rna.orientation
         self.score = score
         self.err_rate = err_rate
@@ -53,6 +53,10 @@ class RNADNABinding:
         self.dna_seq = dna_seq
         self.match = match
     
+    def __str__(self):
+        return "\t".join( [ self.rna.chrom, str(self.rna.initial), str(self.rna.final), self.dna.toString(), "0", 
+                            str(len(self.dna)), self.score, self.err_rate, self.err, self.motif,
+                            self.strand, self.orient, self.guan_rate ] )
         
 class RNADNABindingSet:
     """A framework to map DNA binding sites to corresponding RNA binding sites 
@@ -80,7 +84,88 @@ class RNADNABindingSet:
         self.sequences = []    # A list to contain all RNA/DNA interactions and extra information 
         self.sorted_dna = False
         self.sorted_rna = False
+ 
+
+    def __len__(self):
+        """Return the number of interactions between DNA and RNA """
+        return len(self.sequences)
+
+    def __iter__(self):
+        return iter(self.sequences)
     
+    def add(self, rnadnabinding):
+        """Add one pair of BindingSite on RNA and GenomicRegion on DNA"""
+        self.sequences.append(rnadnabinding)
+        
+    def get_rbs(self, sort=False):
+        """Return a BindingSiteSet which contains all RNA binding sites"""
+        rna_set = BindingSiteSet(name=self.name)
+        for rd in self.sequences:
+            rna_set.add(rd.rna)
+        if sort: rna_set.sort()
+        return rna_set
+
+    def get_dbs(self, sort=False):
+        """Return GenomicRegionSet which contains all DNA binding sites"""
+        dna_set = GenomicRegionSet(name="DNA_binding_sites")
+        for rd in self.sequences:
+            dna_set.add(rd.dna)
+        if sort: dna_set.sort()
+        return dna_set
+
+    def sort_rbs(self):
+        """Sort the dictionary by RNA"""
+        self.sequences = sorted(self.sequences, key=lambda x: x.rna, cmp=GenomicRegion.__cmp__)
+        
+    def sort_dbs(self):
+        """Sort the dictionary by DNA"""
+        self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
+    
+    def merge_rbs(self):
+        """Merge the RNA binding regions which have overlap to each other and 
+           combine their corresponding DNA binding regions.
+        
+        extend -> Define the extending length in basepair of each RNA binding regions
+        perfect_match -> Merge only the exactly same RNA binding regions
+        """
+        # Merge RBS
+        rna_merged = self.get_rbs()
+        rna_merged.merge()
+        print(len(rna_merged))
+        # A dict: RBS as key, and GenomicRegionSet as its value
+        new_dict = OrderedDict()
+        
+        # Iteration
+        con_rd = iter(self)
+        rd = con_rd.next()
+        con_rna_m = iter(rna_merged)
+        rna_m = con_rna_m.next()
+
+        
+        con_loop = True
+        while con_loop:
+            #print(rd.dna.toString())
+            if rna_m.overlap(rd.rna):
+                # Add to new dictionary
+                #print(rna_m.region_str())
+                try:
+                    new_dict[rna_m].add(rd.dna)
+                except:
+                    new_dict[rna_m] = GenomicRegionSet(rna_m.toString())
+                    new_dict[rna_m].add(rd.dna)
+                # next iteration
+                try: rd = con_rd.next()
+                except: con_loop = False
+            elif rd.rna < rna_m:
+                # next RNA and DNA
+                try: rd = con_rd.next()
+                except: con_loop = False
+            else:
+                # next RNA_m
+                try: rna_m = con_rna_m.next()
+                except: con_loop = False
+        self.merged_dict = new_dict
+
     def read_txp(self, filename):
         """Read txp file to load all interactions. """
         
@@ -114,107 +199,40 @@ class RNADNABindingSet:
                 
                 rna_start, rna_end = int(line[1]), int(line[2])
                 if rna_start > rna_end: rna_start, rna_end =  rna_end, rna_start
-                rna = BindingSite(chrm=line[0], initial=rna_start, final=rna_end, score=line[6], 
+                rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6], 
                                   errors_bp=line[8], motif=line[9], orientation=line[11], 
                                   guanine_rate=line[12])
-                
                 # DNA binding site
                 dna_start = int(line[3].split(":")[1].split("-")[0]) + int(line[4])
                 dna_end = int(line[3].split(":")[1].split("-")[0]) + int(line[5])
-                dna = GenomicRegion(chrom=line[3].split(":")[0], 
-                                    initial=dna_start, final=dna_end, 
+                dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
                                     name=line[3], orientation=line[10])
                 
                 # Map RNA binding site to DNA binding site
-                self.add(RNADNABinding(self, rna, dna, score, err_rate, err, guan_rate, rna_seq, dna_seq, match))
+                self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
 
-    def __len__(self):
-        """Return the number of interactions between DNA and RNA """
-        return len(self.dict.keys())
-
-    def __iter__(self):
-        return self.dict.iteritems()
-    
-    def add(self, rna, dna, score, match):
-        """Add one pair of BindingSite on RNA and GenomicRegion on DNA"""
-        self.dict[rna] = [dna
-        
-    def get_rna(self, sort=False):
-        """Return a BindingSiteSet which contains all RNA binding sites"""
-        rna_set = BindingSiteSet(name=self.name)
-        rna_set.sequences =  self.dict.keys()
-        if sort: rna_set.sort()
-        return rna_set
-
-    def get_dna(self, sort=False):
-        """Return GenomicRegionSet which contains all DNA binding sites"""
-        dna_set = GenomicRegionSet(name="DNA_binding_sites")
-        dna_set.sequences = self.dict.values()
-        if sort: dna_set.sort()
-        return dna_set
-
-    def sort_rna(self):
-        """Sort the dictionary by RNA"""
-        self.dict = OrderedDict(sorted(self.dict.iteritems(), key=lambda x: x[0], cmp=GenomicRegion.__cmp__))
-        
-    def sort_dna(self):
-        """Sort the dictionary by DNA"""
-        self.dict = OrderedDict(sorted(self.dict.iteritems(), key=lambda x: x[1], cmp=GenomicRegion.__cmp__))
-    
-    def merge_rna(self):
-        """Merge the RNA binding regions which have overlap to each other and 
-           combine their corresponding DNA binding regions.
-        
-        extend -> Define the extending length in basepair of each RNA binding regions
-        perfect_match -> Merge only the exactly same RNA binding regions
-        """
-        rna_merged = self.get_rna()
-        rna_merged.merge()
-        new_dict = OrderedDict()
-        
-        con_rna, con_dna = iter(self)
-        rna, dna = con_rna.next(), con_dna.next()
-        
-        con_rna_m = iter(rna_merged)
-        rna_m = con_rna_m.next()
-
-        con_loop = True
-        while con_loop:
-            if rna_m.overlap(rna):
-                # Add to new dictionary
-                try:
-                    new_dict[rna_m].add(dna)
-                except:
-                    z = GenomicRegionSet(str(rna_m))
-                    new_dict[rna_m] = z.add(dna)
-                # next iteration
-                try: rna, dna = con_rna.next(), con_dna.next()
-                except: con_loop = False
-            elif rna < rna_m:
-                # next RNA and DNA
-                try: rna, dna = con_rna.next(), con_dna.next()
-                except: con_loop = False
-            else:
-                # next RNA_m
-                try: rna_m = con_rna_m.next()
-                except: con_loop = False
-        self.merged_dict = new_dict
+    def write_txp(self, filename):
+        """Write RNADNABindingSet into the file"""
+        try: os.stat(os.path.dirname(filename))
+        except: os.mkdir(os.path.dirname(filename))   
+        with open(filename, "w") as f:
+            print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\
+                   \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
+            for rd in self:
+                print(str(rd), file=f)
 
 if __name__ == '__main__':
-    a = BindingSiteSet(name="a")
-    a.add(BindingSite("a",1,5))
-    a.add(BindingSite("a",10,15))
-    
-    b = BindingSiteSet(name="b")
-    b.add(BindingSite("b",4,8))
     
     file_txp = "/projects/lncRNA/data/sample.txp"
     rd = RNADNABindingSet(name="test")
-    rd.get_rna()
-    rd.get_dna()
+    rd.read_txp(file_txp)
+    rd.get_rnas()
+    rd.get_dnas()
     rd.sort_dna()
     rd.sort_rna()
     
-    for i,j in rd.dict.iteritems():
+    for i in rd:
     	print(str(i))
-    	print("   "+str(j))
+
+    rd.write_txp("/projects/lncRNA/data/write.txp")
+    	

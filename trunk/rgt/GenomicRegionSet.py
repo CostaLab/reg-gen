@@ -439,23 +439,19 @@ class GenomicRegionSet:
 
         return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
-    def get_from_genes(self, organism, gene_list=None, promoterLength=0):
-        """Return the GenomicRegionSet corresponding to the given gene names according to the given organism"""
-        genome_data = GenomeData(organism)
-        if gene_list:
-            gene_regions = GenomicRegionSet("gene_regions")
-            with open(genome_data.get_association_file()) as f:
-                for l in f.readlines():
-                    l = l.strip("\n")
-                    l = l.split("\t")
-                    if l[3].upper() in gene_list.genes:
-                        gene_regions.add(GenomicRegion(chrom=l[0], initial=l[1], final=l[2],
-                                                       orientation=l[5], name=l[3]))
-        else:
-            gene_regions = GenomicRegionSet("gene_regions")
-            gene_regions.read_bed(genome_data.get_association_file())
-            #gene_regions.remove_duplicates()
-        return gene_regions
+    def get_promotors(self, organism, gene_set, promoterLength=1000):
+        """Return the GenomicRegionSet corresponding to the given GeneSet according to the given organism"""
+        genome_data = GenomeData(organism)    
+        all_regions = GenomicRegionSet("all")
+        all_regions.read_bed(genome_data.get_association_file())
+        gene_regions = GenomicRegionSet("gene_regions")
+        for s in all_regions:
+            if s.name in gene_set.genes: 
+                if s.orientation == "+": s.initial, s.final = max(s.initial-promoterLength, 0), s.initial
+                else: s.initial, s.final = s.final, s.final+promoterLength
+                gene_regions.add(s)
+        #gene_regions.sequences = [s for s in all_regions if s.name not in gene_set.genes]
+        self.sequences = gene_regions.sequences
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.

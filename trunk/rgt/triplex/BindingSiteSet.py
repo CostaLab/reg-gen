@@ -14,7 +14,7 @@ class BindingSite(GenomicRegion):
     Authors: Joseph Kuo
     """
 
-    def __init__(self, chrm, initial, final, name=None, score=None, errors_bp=None, motif=None, 
+    def __init__(self, chrom, initial, final, name=None, score=None, errors_bp=None, motif=None, 
                  strand=None, orientation=None, guanine_rate=None, seq=None):
         """Initialize
         
@@ -32,7 +32,7 @@ class BindingSite(GenomicRegion):
         seq              Sequence of this region with ATCG as letters
 
         """
-        GenomicRegion.__init__(self, chrom=chrm, initial=initial, final=final)
+        GenomicRegion.__init__(self, chrom=chrom, initial=initial, final=final)
         
         self.name = name                      # RNA name
         self.score = score                    # Score for pattern matching
@@ -41,8 +41,8 @@ class BindingSite(GenomicRegion):
         self.strand = strand
         self.orientation = orientation
         self.seq = seq                        # An object (Sequence) not just a string
-        
-        self.guanine_rate = "{0:.2f}".format(float(seq.seq.count("G"))/len(seq))
+        if seq:
+            self.guanine_rate = "{0:.2f}".format(float(seq.seq.count("G"))/len(seq))
 
     def __str__(self):
         """Give informal string representation"""
@@ -63,7 +63,8 @@ class BindingSite(GenomicRegion):
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))
                         
-
+    def region_str(self):
+        return "({0},{1},{2})".format(self.chrom, self.initial, self.final)
             
             
             
