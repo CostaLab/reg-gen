@@ -135,35 +135,16 @@ class RNADNABindingSet:
         # A dict: RBS as key, and GenomicRegionSet as its value
         new_dict = OrderedDict()
         
-        # Iteration
-        con_rd = iter(self)
-        rd = con_rd.next()
-        con_rna_m = iter(rna_merged)
-        rna_m = con_rna_m.next()
-
-        
-        con_loop = True
-        while con_loop:
-            #print(rd.dna.toString())
-            if rna_m.overlap(rd.rna):
+        for rbsm in rna_merged:
+            for rd in self:
+                if rbsm.overlap(rd.rna):
                 # Add to new dictionary
-                #print(rna_m.region_str())
-                try:
-                    new_dict[rna_m].add(rd.dna)
-                except:
-                    new_dict[rna_m] = GenomicRegionSet(rna_m.toString())
-                    new_dict[rna_m].add(rd.dna)
-                # next iteration
-                try: rd = con_rd.next()
-                except: con_loop = False
-            elif rd.rna < rna_m:
-                # next RNA and DNA
-                try: rd = con_rd.next()
-                except: con_loop = False
-            else:
-                # next RNA_m
-                try: rna_m = con_rna_m.next()
-                except: con_loop = False
+                    try:
+                        new_dict[rbsm].add(rd.dna)
+                    except:
+                        new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
+                        new_dict[rbsm].add(rd.dna)
+
         self.merged_dict = new_dict
 
     def read_txp(self, filename):

@@ -29,7 +29,9 @@ def value2str(value):
     if value == 0: return "0"
     if(isinstance(value,int)): return str(value)
     elif(isinstance(value,float)):
-        if value >= 1000: r = "{}".format(int(value))
+        if value >= 1000: 
+            try: r = "{}".format(int(value))
+            except: r = "Inf"
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
         elif 1 > value > 0.0001: r = "{:.4f}".format(value)
