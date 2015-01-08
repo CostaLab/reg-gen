@@ -718,7 +718,6 @@ class GenomicRegionSet:
         
         iter_a = iter(self)
         s = iter_a.next()
-        print(b)
         last_j = len(b) - 1
         j = 0
         cont_loop = True
