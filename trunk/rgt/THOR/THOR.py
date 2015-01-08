@@ -45,7 +45,6 @@ def main():
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, tracker=tracker)
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000)
-    print(func_para, file=sys.stderr)
     tracker.write(text=str(func_para), header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")
     exp_data.compute_putative_region_index()
 
