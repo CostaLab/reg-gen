@@ -70,7 +70,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
 if __name__ == '__main__':
     #a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = get_extension_size('/hpcwork/izkf/projects/hematology/local/new_run/bam/HEL_hg_Rux_H3K9ac_rep1.bam')
+    a, b = get_extension_size('/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/HEL_hg_Rux_H3K9ac_rep1.bam')
     print(a, b)
     
     
