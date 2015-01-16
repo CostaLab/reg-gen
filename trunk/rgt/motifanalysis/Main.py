@@ -135,12 +135,22 @@ def main_matching():
                               "then it will be created a number of coordinates that equals this"
                               "parameter x the number of input regions (in case of multiple regions, the"
                               "larger is considered). If zero (0) is passed, then no random coordinates are created."))
+    parser.add_option("--norm-threshold", dest = "norm_threshold", action = "store_true", default = False,
+                      help = ("If this option is used, the thresholds for all PWMs will be normalized by their length."
+                              "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr."
+                              "Then, all thresholds are divided by the lenght of the motif. The final threshold consists"
+                              "of the average between all normalized motif thresholds. This single threshold will be"
+                              "applied to all motifs."))
 
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", default = os.getcwd(),
                       help = ("Path where the output files will be written."))
     parser.add_option("--bigbed", dest = "bigbed", action = "store_true", default = False,
                       help = ("If this option is used, all bed files will be written as bigbed."))
+    parser.add_option("--normalize-bitscore", dest = "normalize_bitscore", action = "store_false", default = True,
+                      help = ("In order to print bigbed files the scores need to be normalized between 0 and 1000."
+                              "This option should be used if real bitscores should be printed in the resulting bed file."
+                              "In this case, a bigbed file will not be created."))
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -272,6 +282,13 @@ def main_matching():
         # Append motif motif_list
         motif_list.append(Motif(motif_file_name, options.pseudocounts, options.precision, options.fpr, thresholds))
 
+    # Performing normalized threshold strategy if requested
+    if(options.norm_threshold):
+        threshold_list = [motif.threshold/motif.len for motif in motif_list]
+        unique_threshold = sum(threshold_list)/len(threshold_list)
+    else: unique_threshold = None
+        
+
     ###################################################################################################
     # Motif Matching
     ###################################################################################################
@@ -298,13 +315,13 @@ def main_matching():
 
             # Perform motif matching for each motif in each sequence
             for seq in sequence_list:
-                for motif in motif_list: match_single(motif, seq, genomic_region, output_file)
+                for motif in motif_list: match_single(motif, seq, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
 
         # Closing file
         output_file.close()
 
         # Verifying condition to write bb
-        if(options.bigbed):
+        if(options.bigbed and options.normalize_bitscore):
 
             # Fetching file with chromosome sizes
             chrom_sizes_file = genome_data.get_chromosome_sizes()
