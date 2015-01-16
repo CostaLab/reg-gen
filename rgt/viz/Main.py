@@ -54,7 +54,7 @@ def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
         os.mkdir(pd)    
     
     # Saving 
-    if extra == None:
+    if not extra:
         f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
                   bbox_inches='tight',dpi=300)
     else:

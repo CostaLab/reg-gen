@@ -8,7 +8,7 @@ import time, datetime, getpass, fnmatch
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import TriplexSearch, FisherTest, RandomTest
+from triplexTools import TriplexSearch, PromoterTest, RandomTest
 from SequenceSet import Sequence, SequenceSet
 from Util import SequenceType
 
@@ -41,7 +41,14 @@ def output_summary(summary, directory, filename):
             print("********* RGT Triplex: Summary information *********", file=f)
             for s in summary:
                 print(s, file=f)
-        
+    
+def check_dir(path):
+    """Check the availability of the given directory and creat it"""
+    try:
+        os.stat(path)
+    except:
+        os.mkdir(path)
+
 def main():
     ##########################################################################
     ##### PARAMETERS #########################################################
@@ -75,9 +82,10 @@ def main():
     parser_search.add_argument('-m',type=str, default="RYMPA", help="Define the motif for binding site searching (Default is RYMPA)")
     parser_search.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     
-    ################### Fisher exact test ##########################################
-    parser_fishertest = subparsers.add_parser('fisher', help='Test the association between differential expression genes and \
-                                               the RNA binding sites of triplex on the given RNA by their frequency')
+    ################### Promoter test ##########################################
+
+    h_promotor = "Evaluate the difference between the promotor regions of the given genes and the other genes by the potential triplex forming sites on DNA with the given RNA."
+    parser_fishertest = subparsers.add_parser('promoter', help=h_promotor)
     parser_fishertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_fishertest.add_argument('-de', help="Input file for defferentially expression gene list ")
     parser_fishertest.add_argument('-pl', type=int, default=1000, 
@@ -306,20 +314,34 @@ def main():
     ################################################################################
     ##### Fischer ##################################################################
     ################################################################################
-    if args.mode == 'fisher':
-        #print(args.de)
-        #print(args.organism)
-        #print(args.pl)
+    if args.mode == 'promoter':
+        print2(summary, "\n"+h_promotor)
         args.r = os.path.normpath(os.path.join(dir,args.r))
+        args.o = os.path.normpath(os.path.join(dir,args.o))
+        check_dir(args.o)
         
         # Get GenomicRegionSet from the given genes
-        fisher = FisherTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
-        fisher.search_triplex(rna=args.r, temp=args.o, remove_temp=True)
-        fisher.count_frequency(temp=args.o)
-        fisher.fisher_exact()
-        fisher.gen_html(directory=args.o, align=50, alpha=args.a)
+        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
+        promoter = PromoterTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
+        promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=True)
+        t1 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
+        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
+        promoter.count_frequency(temp=args.o)
+        promoter.fisher_exact()
+        t2 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
+
+        print2(summary, "Step 3: Generate plot and output html files.")
+        promoter.plot_frequency_rna(rna=args.r, dir=args.o)
+        promoter.plot_de(dir=args.o)
+        promoter.gen_html(directory=args.o, align=50, alpha=args.a)
+        t3 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+        print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
+        output_summary(summary, args.o, "summary.log")
     ################################################################################
     ##### Random ###################################################################
     ################################################################################
