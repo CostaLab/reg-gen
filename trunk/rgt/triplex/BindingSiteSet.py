@@ -63,8 +63,8 @@ class BindingSite(GenomicRegion):
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))
                         
-    def region_str(self):
-        return "({0},{1},{2})".format(self.chrom, self.initial, self.final)
+    def region_str_rna(self):
+        return "{0}-{1}-{2}".format(self.initial, self.final, self.orientation)
             
             
             
@@ -124,6 +124,13 @@ class BindingSiteSet(GenomicRegionSet):
     def concatenate(self, another_BindingSiteSet):
         """Concatenate another RNABindingSet without sorting"""
         self.sequences = self.sequences + another_BindingSiteSet.sequences
+
+    def count_rbs_position(self, bp):
+        count = 0
+        for r in self.sequences:
+            if r.initial <= bp and r.final > bp:
+                count += 1
+        return count  
         
 
 ####################################################################################

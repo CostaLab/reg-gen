@@ -97,11 +97,16 @@ class RNADNABindingSet:
         """Add one pair of BindingSite on RNA and GenomicRegion on DNA"""
         self.sequences.append(rnadnabinding)
         
-    def get_rbs(self, sort=False):
+    def get_rbs(self, sort=False, orientation=None):
         """Return a BindingSiteSet which contains all RNA binding sites"""
         rna_set = BindingSiteSet(name=self.name)
         for rd in self.sequences:
-            rna_set.add(rd.rna)
+            if not orientation:
+                rna_set.add(rd.rna)
+            elif orientation == rd.orient:
+                rna_set.add(rd.rna)
+            else: pass
+
         if sort: rna_set.sort()
         return rna_set
 
@@ -131,7 +136,7 @@ class RNADNABindingSet:
         # Merge RBS
         rna_merged = self.get_rbs()
         rna_merged.merge()
-        print(len(rna_merged))
+        
         # A dict: RBS as key, and GenomicRegionSet as its value
         new_dict = OrderedDict()
         

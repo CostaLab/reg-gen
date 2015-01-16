@@ -5,6 +5,7 @@ import os
 import multiprocessing
 # Local Libraries
 from scipy import stats
+import matplotlib.pyplot as plt
 # Distal Libraries
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
@@ -291,7 +292,7 @@ class TriplexSearch:
 ####################################################################################
 ####################################################################################
 
-class FisherTest:
+class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, organism, promoterLength):
         """Initiation"""
@@ -325,7 +326,7 @@ class FisherTest:
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+\
                   os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -ss "+rna+" -ds "+os.path.join(temp,"nde.fa")+\
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -ss "+rna+" -ds "+os.path.join(temp,"nde.fa")+\
                   " > "+os.path.join(temp, "nde.txp"))
         if remove_temp:
             os.remove(os.path.join(temp,"de_regions.bed"))
@@ -362,40 +363,140 @@ class FisherTest:
         for rbs in self.txp.merged_dict.keys():
             self.oddsratio[rbs], self.pvalue[rbs] = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
         
+
+    def plot_frequency_rna(self, rna, dir):
+        """Generate the plots for demonstration of RBS"""
+        rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
+        rnas.read_fasta(rna)
+        self.rna_len = len(rnas[0])
+
+        rbsp = self.txp.get_rbs(orientation="P")
+        rbsa = self.txp.get_rbs(orientation="A")
+        
+        x = range(self.rna_len)
+        p_y = []
+        a_y = []
+        for i in range(self.rna_len):
+            p_y.append(rbsp.count_rbs_position(i))
+            a_y.append(rbsa.count_rbs_position(i))
+        
+        all_y = [sum(z) for z in zip(p_y, a_y)]
+            
+        f, ax = plt.subplots(1, 1, dpi=300)
+        ax.plot(x, all_y, color="b", alpha=.5, lw=2, label="Parallel + Anti-parallel")
+        ax.plot(x, p_y, color="g", alpha=.5, lw=2, label="Parallel")
+        ax.plot(x, a_y, color="r", alpha=.5, lw=2, label="Anti-parallel")
+        
+        ax.legend(bbox_to_anchor=(1.05, 0.5), loc=2, borderaxespad=0.)
+
+        ax.set_xlabel("RNA sequence (bp)", fontsize=12)
+        ax.set_ylabel("Frequency of RNA binding sites",fontsize=12, rotation=90)
+
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.savefig(os.path.join(dir, "rna_plot.png"), facecolor='w', edgecolor='w',  
+                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+
+    def plot_de(self, dir):
+        """Demonstrate the difference between DE genes and non DE genes"""
+        
+        x = range(self.rna_len)
+        de_y = [0] * self.rna_len 
+        nde_y = [0] * self.rna_len
+        zeros = [0] * self.rna_len
+        
+        max_de = max([ m[0] for m in self.de_frequency.values() ])
+        max_nde = max([ m[0] for m in self.nde_frequency.values() ])
+        
+        for rbs in self.txp.merged_dict.keys():
+            de_y[rbs.initial:rbs.final] = [ self.de_frequency[rbs][0]/float(max_de) ] * (rbs.final - rbs.initial) 
+            nde_y[rbs.initial:rbs.final] = [ 0 - self.nde_frequency[rbs][0]/float(max_nde) ] * (rbs.final - rbs.initial) 
+
+        f, ax = plt.subplots(1, 1, dpi=300)
+        ax.plot(x, de_y, color="b", lw=1, label="DE genes")
+        ax.plot(x, nde_y, color="g", lw=1, label="non-DE genes")
+
+        ax.set_ylim([-1, 1])
+        ax.set_xlabel("RNA sequence (bp)", fontsize=12)
+        #ax.set_ylabel("DE genes with DBS",fontsize=12, rotation=90)
+        ax.set_yticks([-1, -0.5, 0, 0.5, 1])
+        ax.set_yticklabels(["100 %", "non-DE gene", "0 %", "DE gene", "100 %"],rotation=0, ha="right")
+        ax.grid(b=True, which='major', color='gray', linestyle='-')
+        ax.fill_between(x, de_y, zeros, where=de_y>zeros, interpolate=True, color='b')
+        ax.fill_between(x, zeros, nde_y, where=zeros>nde_y, interpolate=True, color='g')
+
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.savefig(os.path.join(dir, "de_plot.png"), facecolor='w', edgecolor='w',  
+                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+
     def gen_html(self, directory, align=50, alpha = 0.05):
+        def subtable(data):
+            code = "<table>"
+            for row in data:
+                code += "<tr>"
+                for col in data:
+                    code += "<td>" + col + "</td>"
+                code += "</tr>"
+            code += "</table>"
+            return code
+
         #fp = os.path.join(dir,outputname,title)
-        link_d = {os.path.basename(directory):"fisher.html"}
-        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(os.path.dirname(directory),"fig"))
+        link_d = {os.path.basename(directory):"promoter.html",
+                  "All triplex binding sites":"all_triplex.html"}
+        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
         #html.add_figure("projection_test.png", align="center")
         
-        header_list = ["RNA Binding Site",
-                       "DE genes<br>RBS binding", 
-                       "DE genes<br>no binding",
-                       "nonDE genes<br>RBS binding", 
-                       "nonDE genes<br>no binding",
+        html.add_figure("rna_plot.png", align="center")
+        html.add_figure("de_plot.png", align="center")
+        # Table of merged TBS on promoters
+        header_list = ["RBS",
+                       "Number<br>of DBS",
+                       "DE_genes<br>with DBS", 
+                       "DE_genes<br>no DBS",
+                       "nonDE_genes<br>with DBS", 
+                       "nonDE_genes<br>no DBS",
                        "Oddsratio",
-                       "p-value"]
+                       "P_value"]
         
-        type_list = 'sssssss'
-        col_size_list = [10,10,10,10,10,10,10]
+        type_list = 'sssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10]
         data_table = []
         for rbs in self.txp.merged_dict.keys():
+            dbss = []
+            for dbs in self.txp.merged_dict[rbs]:
+                dbss.append(dbs.toString())
+
             if self.pvalue[rbs] < alpha:
-                data_table.append([ rbs.region_str(), value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
+                data_table.append([ rbs.region_str_rna(), str(len(dbss)), 
+                                    value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
                                     value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>" ])
             else:
-                data_table.append([ rbs.region_str(), value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
+                data_table.append([ rbs.region_str_rna(), str(len(dbss)), 
+                                    value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
                                     value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs])])
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align)
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+
+        header_list=["Notes"]
+        data_table = [["RNA name: "+ self.txp.merged_dict.keys()[0].chrom],
+                      ["RBS stands for RNA Binding Site."],
+                      ["DBS stands for DNA Binding Site."]]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+
         
-        header_list=["Assumptions and hypothesis"]
-        data_table = []
-        
+
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
-        html.write(os.path.join(directory,"fisher.html"))
+        html.write(os.path.join(directory,"promoter.html"))
     
+        # Table of all triplex
+        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
+        header_list=["RBS", "DBS", "Score", "Motif", "Orientation", "Strand"]
+        data_table = []
+        for tbs in self.txp:
+            data_table.append([ tbs.rna.region_str_rna(), tbs.dna.toString(), tbs.score, 
+                                tbs.motif, tbs.orient, tbs.strand])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+        html.write(os.path.join(directory,"all_triplex.html"))
 ####################################################################################
 ####################################################################################
 
