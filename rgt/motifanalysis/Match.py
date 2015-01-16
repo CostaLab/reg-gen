@@ -16,7 +16,7 @@ from MOODS import search
 # Functions
 ###################################################################################################
 
-def match_single(motif, sequence, genomic_region, output_file):
+def match_single(motif, sequence, genomic_region, output_file, unique_threshold=None, normalize_bitscore=True):
     """
     Performs motif matching given sequence and the motif.pssm passed as parameter.
     The genomic_region is needed to evaluate the correct binding position.
@@ -27,15 +27,30 @@ def match_single(motif, sequence, genomic_region, output_file):
     motif -- TODO.
     sequence -- A DNA sequence (string).
     genomic_region -- A GenomicRegion.
-    output_file -- TODO.    
+    output_file -- TODO.  
+    unique_threshold -- If this argument is provided, the motif search will be made using a threshold of 0 and
+                        then accepting only the motif matches with bitscore/motif_length >= unique_threshold.
         
     Return:
     Print MPBSs to output_file.
     """
 
+    # Establishing threshold
+    if(unique_threshold):
+        current_threshold = 0.0
+        eval_threshold = unique_threshold
+        motif_max = motif.max / motif.len
+    else:
+        current_threshold = motif.threshold
+        eval_threshold = motif.threshold
+        motif_max = motif.max
+ 
     # Performing motif matching
-    for search_result in search(sequence, [motif.pssm_list], motif.threshold, absolute_threshold=True, both_strands=True):
+    for search_result in search(sequence, [motif.pssm_list], current_threshold, absolute_threshold=True, both_strands=True):
         for (position, score) in search_result:
+
+            # Verifying unique threshold acceptance
+            if(unique_threshold and score/motif.len < unique_threshold): continue
 
             # If match forward strand
             if(position >= 0):
@@ -47,11 +62,17 @@ def match_single(motif, sequence, genomic_region, output_file):
                 strand = "-"
             else: continue
 
-            # Evaluating p2 and normalized score (integer between 0 and 1000 -- needed for bigbed transformation)
+            # Evaluating p2
             p2 = p1 + motif.len
-            if(motif.max > motif.threshold):
-                norm_score = int( ( (score - motif.threshold) * 1000.0) / (motif.max - motif.threshold) )
-            else: norm_score = 1000
+
+            # Evaluating score (integer between 0 and 1000 -- needed for bigbed transformation)
+            if(normalize_bitscore): # Normalized bitscore = standardize to integer between 0 and 1000 (needed for bigbed transformation)
+                if(motif_max > eval_threshold):
+                    norm_score = int( ( (score - eval_threshold) * 1000.0) / (motif_max - eval_threshold) )
+                else: norm_score = 1000
+            else: # Keep the original bitscore
+                if(unique_threshold): norm_score = score/motif.len
+                else: norm_score = score
 
             # Writing motifs
             output_file.write("\t".join([genomic_region.chrom,str(p1),str(p2),motif.name,str(norm_score),strand])+"\n")
