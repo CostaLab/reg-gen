@@ -15,6 +15,7 @@ from math import log
 from numpy.random import random_sample
 import sys
 from math import fabs
+from scipy.stats import nbinom
 
 class NegBin():
     """Negative Binomial distribution (NB1) with continuous parameter r,
@@ -85,13 +86,17 @@ class NegBin():
         return np.digitize(random_sample(1), self.bins)[0]
 
 if __name__ == '__main__':
-    neg_bin = NegBin(15, 0.2)
+    neg_bin = NegBin(0.1, 0.00000000001)
     s=0
     ew = 0
-    for i in range(100):
-        v= neg_bin.pdf(i)
-        v_log = neg_bin.logpdf(i)
-        s += v
-        ew += i * v
-        print(i, v, log(v), v_log, sep='\t')
-    print(s, ew)
+    distr = {'n': 10, 'p': 0.1}
+    
+    for i in range(10):
+        #v = neg_bin.pdf(i)
+        v = nbinom.logpmf(i, distr['n'], distr['p'])
+        #v_log = neg_bin.logpdf(i)
+        #s += v
+        #ew += i * v
+        #print(i, v, log(v), v_log, sep='\t')
+        print(i, v, sep='\t')
+    #print(s, ew)

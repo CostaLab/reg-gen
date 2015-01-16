@@ -42,6 +42,7 @@ def get_log_value(x, distr):
             return v
     if distr['distr_name'] == 'nb':
         return distr['distr'].logpdf(x)
+        #return nbinom.logpmf(x, distr['n'], distr['p'])
 
 def _comp(i, x, side, current_p, p):
     if side == 'r':
@@ -52,14 +53,6 @@ def _comp(i, x, side, current_p, p):
         return current_p >= p
 
 
-def _check_side(side, i, S):
-    if side == 'r' and i > S/2:
-        return True
-    elif side == 'l' and i <= S/2:
-        return True
-    else:
-        return False
-    
 def compute_pvalue(distr, N, side, current_p, x):
     """Compute log2 pvalue"""
     sum_num = []
@@ -69,28 +62,12 @@ def compute_pvalue(distr, N, side, current_p, x):
     for i in it:
         p1 = get_log_value(i, distr)
         p2 = get_log_value(N - i, distr)
-        #print("H", p1, p2)
         p = p1 + p2
         
         if _comp(i, x, side, current_p, p):
             sum_num.append(p)
         sum_denum.append(p)
         
-        #with t is precision. does not help so much, so ignore it
-        #if side == 'r' and i > S/2 and p < t:
-        #    print(i ,len(it), p, t)
-        #    sum_denum += (S - i) * [p]
-        #    if _comp(i, x, side, current_p, p):
-        #        sum_num += (S - i) * [p]
-        #    break
-        
-        #if side == 'l' and i < S/2 and p < t:
-        #    sum_denum += i * p
-        #    if _comp(i, x, side, current_p, p):
-        #        sum_num += i * p            
-        #    break
-    #sum_num += sum_num
-    #sum_denum += sum_denum
     if distr['distr_name'] == 'nb':
         sum_num = map(lambda x: float(x), sum_num)
         sum_denum = map(lambda x: float(x), sum_denum)
@@ -113,98 +90,56 @@ def get_log_pvalue_new(x, y, side, distr):
         lookup_pvalue[(x, y, side)] = pvalue
         return pvalue
 
+def change_nb_WP2NB1(n, p):
+    alpha = 1./n
+    mu = (1./p - 1) / alpha
+    
+    return mu, alpha
+
+def change_nb_NB12WP(mu, alpha):
+    alpha = float(alpha)
+    mu = float(mu)
+    p = 1./(1 + mu * alpha)
+    n = 1./alpha
+    
+    return n, p
+
 if __name__ == '__main__':
-    n = 30000000
+    mu = 20
+    alpha = 0.1
+    
+    m = NegBin(mu, alpha)
+    distr = {'distr_name': 'nb', 'distr': m}
+    
+    n = 90
     p = 0.01
-    distr={'distr_name': 'binomial', 'p':p, 'n':n}
-#     #side = 'l' #r bei y > x, sonst l
-#     #x=870
-#     #y=1123
-#     #side = 'r' if y > x else 'l'
-#     #rep = 1
-#     
-#     values = []
-#     with open('/home/manuel/pvalues_cut', 'r') as f:
-#         for line in f:
-#             line=line.strip()
-#             line=line.split(',')
-#             values.append((int(line[0]), int(line[1]), float(line[2])))
-# 
-#     i = 0
-#     t = time()
-#     k = 0
-#     for x, y, pvalue in values:
-#         k += 1
-#         if k == 100:
-#             break
-#         side = 'r' if y > x else 'l'
-#         p = -get_log_pvalue_new(x, y, side, distr)
-#         print(p)
-#         if fabs(pvalue - p) > 1:
-#             i += 1
-#             #print('r',x, y, pvalue, p, sep= '\t')
-#     t2 = time()-t
-#     print('new approach:', t2, i)
-     
-#    t = time()
-#    i = 0
-#    for x, y, pvalue in values:
-#        i += 1
-#        if i % 10 == 0:
-#            print(i, file=sys.stderr)
-#        
-#        side = 'r' if y > x else 'l'
-#        p = get_log_pvalue(x, y, side, distr_name='binomial', p=p, n=n)
-#        if fabs(pvalue - p) > 10:
-#            print(x, y, pvalue, p)
-#    t2_o = time()-t
-#    print('old approach:', t2_o)
-#    print('The new method is %s time(s) faster... awesome!' %((t2_o/t2)))
+    #distr={'distr_name': 'binomial', 'p':p, 'n':n}
+    
+    #n, p = change_nb_NB12WP(mu, alpha)
+    
+    #n, p = 10, 0.1 #working
+    #print(n, p)
+    #distr={'distr_name': 'nb', 'p': p, 'n': n}
+    
+    #for i in range(10):
+        #print(nbinom.logpmf(i, distr['n'], distr['p']), m.logpdf(i), fabs(nbinom.logpmf(i, distr['n'], distr['p']) - round(m.logpdf(i), 11)) < 10**-10, sep='\t')
     
     
-#     x,y = 10,12
-#     side = 'r' if y > x else 'l'
-#     print(get_pvalue_new(x,y,distr,side))
-#     print(get_log_pvalue(x, y, side, distr_name='binomial', p=p, n=n))
+    #x, y, side = 698, 639, 'l'
+    x, y, side = 20, 10, 'l'
+    print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
+    x, y, side = 12, 5, 'l'
+    print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
-    #new
-    #t = time()
-    #for i in range(rep):
-    #    pvalue = get_pvalue_new(x, y, distr, side)
-    #told = time()-t
-    #print('time for new: ', told, pvalue)
+    #print()
     
-    #old
-    #t2 = time()
-    #for i in range(rep):
-    #    pvalue = get_log_pvalue(x, y, side, distr_name='binomial', p=p, n=n)
-    #t2old = time()-t2
-    #print('time for old: ', t2old, pvalue)
-    #print('The new method is %s time(s) faster... awesome!' %((t2old/told)))
+    S = 30
+    for x in range(S+1):
+        y = S - x
+        side = 'l' if x > y else 'r'
+        cur = 10**(get_log_value(x, distr))
+        cur2 = 10**(get_log_value(y, distr))
+        #print(x, y, cur, cur2, 10**get_log_pvalue_new(x, y, side, distr), sep='\t')
+        #print(cur, cur2, sep='\t')
     
-    #print(get_log_pvalue(12, 3, 'r', distr_name='binomial', p=p, n=n))
-    #print(get_log_pvalue(3, 12, 'l', distr_name='binomial', p=p, n=n))
-    
-    m = NegBin(2.734905, 0.00251129, max_range=11000)
-    m = NegBin(1.18294009846, 0.674463011058, max_range=10000)
-    distr={'distr_name': 'nb', 'distr': m}
-    
-    from random import uniform
-    from math import exp
-    x, y, side = 309, 502, 'r'
-    
-    print(-get_log_pvalue_new(x, y, side, distr))
-#     S = 10
-#     for _ in range(1000):
-#         #for x in range(S+1):
-#         x = int(uniform(0, S+1))
-#         y = int(uniform(0, S+1))
-#         
-#         if x+y == S:
-#             side = 'l' if x>y else 'r'
-#             print(x, S-x, 10**get_log_pvalue_new(x, y, side, distr), sep='\t')
-        #a = get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n)
-        #print('old', x, S-x, a, log(a, 10))
-        #print('old', x, S-x, get_log_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n))
-        #print(get_pvalue_new(x, S-x, distr, side) - get_pvalue(x, S-x, side, distr_name='binomial', p=p, n=n) < 10**-10)
