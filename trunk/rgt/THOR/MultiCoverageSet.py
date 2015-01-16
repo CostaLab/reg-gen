@@ -67,7 +67,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
         self._normalization_by_signal(name)
         
@@ -228,9 +228,12 @@ class MultiCoverageSet(DualCoverageSet):
             elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                 s0.append((i, cov1, cov2))
         
+        print(len(s0), len(s1), len(s2), file=sys.stderr)
+        
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
+            print(el, file=sys.stderr)
             if not test:
                 el = el[el[:,1] < np.percentile(el[:,1], 90)]
                 el = el[el[:,2] < np.percentile(el[:,2], 90)]
