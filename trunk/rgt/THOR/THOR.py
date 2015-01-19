@@ -25,14 +25,19 @@ from tracker import Tracker
 from rgt.THOR.neg_bin import NegBin
 import cProfile
 
-def _get_pvalue_distr(mu, alpha, tracker):
+def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
     alpha = alpha[0,0]
     tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
     nb = NegBin(mu, alpha)
-    
-    return {'distr_name': 'nb', 'distr': nb}
+    print(mu, alpha, file=sys.stderr)
+    n = np.mean([np.sum(exp_data.overall_coverage[i]) for i in range(2)])
+    print(n, file=sys.stderr)
+    p = mu / n
+    print(p, file=sys.stderr)
+    return {'distr_name': 'binomial', 'n': n, 'p': p}
+    #return {'distr_name': 'nb', 'distr': nb}
 
 def main():
     test = False
@@ -70,7 +75,7 @@ def main():
         posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
     
-    distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
+    distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
     
 if __name__ == '__main__':
