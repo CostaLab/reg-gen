@@ -71,13 +71,12 @@ def compute_pvalue(distr, N, side, current_p, x):
     if distr['distr_name'] == 'nb':
         sum_num = map(lambda x: float(x), sum_num)
         sum_denum = map(lambda x: float(x), sum_denum)
-        
+    
     return logsumexp(np.array(sum_num)) - (log(2) + logsumexp(np.array(sum_denum)))
     
 def get_log_pvalue_new(x, y, side, distr):
     """compute log10 p-value"""
     N = x + y
-    
     if side == 'l':
         x, y = y, x
         side = 'r'
