@@ -124,22 +124,22 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
     result = {}
     for chrom in chromosomes:
         overrun = 0
-        #if not chrom_len.has_key(chrom):
-        #    print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
-        #else:
-#             print("... considering %s..."%chrom, file=sys.stderr)
-        for i in range(0, chrom_len[chrom], step_width):
-            end = min(i + step_width, chrom_len[chrom])
-            counts = reduce(lambda x, y: x + y, count_list[ GenomicInterval(chrom, i, end) ])
-            count_list[ GenomicInterval(chrom, i, end) ] = 0
-            counts += overrun
-
-            if chrom in result.keys():
-                result[chrom].append(counts)
-            else:
-                result[chrom] = [counts] 
-
-            overrun = _get_overrun(chrom, i, end, step_width, count_list, feature_len)
+        if not chrom_len.has_key(chrom):
+            print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
+        else:
+            print("... considering %s..."%chrom, file=sys.stderr)
+            for i in range(0, chrom_len[chrom], step_width):
+                end = min(i + step_width, chrom_len[chrom])
+                counts = reduce(lambda x, y: x + y, count_list[ GenomicInterval(chrom, i, end) ])
+                count_list[ GenomicInterval(chrom, i, end) ] = 0
+                counts += overrun
+    
+                if chrom in result.keys():
+                    result[chrom].append(counts)
+                else:
+                    result[chrom] = [counts] 
+    
+                overrun = _get_overrun(chrom, i, end, step_width, count_list, feature_len)
 
     return result
 
