@@ -223,8 +223,8 @@ class MultiCoverageSet(DualCoverageSet):
             threshold = 1.5
         s0, s1, s2 = [], [], []
         
-        if debug:
-            self.output_overall_coverage('signal')
+        #if debug:
+        #    self.output_overall_coverage('signal')
         
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
