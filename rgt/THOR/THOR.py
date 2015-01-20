@@ -29,13 +29,14 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
     alpha = alpha[0,0]
-    tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
+    #tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
     nb = NegBin(mu, alpha)
     print(mu, alpha, file=sys.stderr)
     n = np.mean([np.sum(exp_data.overall_coverage[i]) for i in range(2)])
     print(n, file=sys.stderr)
     p = mu / n
     print(p, file=sys.stderr)
+    tracker.write(text=str(n) + " " + str(p), header="Bin. distribution for p-value estimates (n, p)")
     return {'distr_name': 'binomial', 'n': n, 'p': p}
     #return {'distr_name': 'nb', 'distr': nb}
 
