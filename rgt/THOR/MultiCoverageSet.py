@@ -97,8 +97,8 @@ class MultiCoverageSet(DualCoverageSet):
     def output_overall_coverage(self, path):
         for j in range(2):
             f = open(path + str(j), 'w')
-            for i in range(self.overall_coverage[j].shape[0]):
-                print(self.overall_coverage[j][i, ], file=f)
+            for i in range(self.overall_coverage[j].shape[1]):
+                print(self.overall_coverage[j][:,i], file=f)
     
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, debug):
         """Normalize with regard to input file"""
@@ -124,7 +124,7 @@ class MultiCoverageSet(DualCoverageSet):
         means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
         max_index = means_signal.index(max(means_signal))
         
-        if max_index == 1:
+        if max_index == 1:signal0
             r = range(self.dim_1)
             f = means_signal[1] / means_signal[0]
             print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
