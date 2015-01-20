@@ -124,7 +124,7 @@ class MultiCoverageSet(DualCoverageSet):
         means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
         max_index = means_signal.index(max(means_signal))
         
-        if max_index == 1:signal0
+        if max_index == 1:
             r = range(self.dim_1)
             f = means_signal[1] / means_signal[0]
             print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
