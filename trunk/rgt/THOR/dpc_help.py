@@ -268,6 +268,7 @@ def input(laptop):
         print("---------- TEST MODE ----------", file=sys.stderr)
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
+        #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         options.exts = [200, 200, 200, 200, 200]
         options.exts_inputs = None #[200, 200, 200, 200, 200]
