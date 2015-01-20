@@ -105,7 +105,7 @@ def change_nb_NB12WP(mu, alpha):
 
 if __name__ == '__main__':
     mu = 20
-    alpha = 0.1
+    alpha = 100
     
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
@@ -124,8 +124,8 @@ if __name__ == '__main__':
         #print(nbinom.logpmf(i, distr['n'], distr['p']), m.logpdf(i), fabs(nbinom.logpmf(i, distr['n'], distr['p']) - round(m.logpdf(i), 11)) < 10**-10, sep='\t')
     
     
-    #x, y, side = 698, 639, 'l'
-    x, y, side = 20, 10, 'l'
+    x, y, side = 698, 639, 'l'
+    #x, y, side = 20, 10, 'l'
     print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
     x, y, side = 12, 5, 'l'

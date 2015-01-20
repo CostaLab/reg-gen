@@ -40,7 +40,8 @@ def compute_pvalue(distr, N, x, current_p):
         p2 = get_log_value(N - i, distr)
         p = p1 + p2
         
-        if current_p >= p:
+        #if current_p >= p:
+        if i <= x:
             sum_num.append(p)
         
         sum_denum.append(p)
@@ -61,54 +62,78 @@ def get_log_pvalue(x, y, side, distr):
         lookup_pvalue[(x, y)] = pvalue
     return lookup_pvalue[(x, y)]
 
-def get_d(lower, upper, s_l, s_r, m):
-    return sum([m.pdf(s_l + i) * m.pdf(s_r - i) for i in range(lower, upper + 1)])
+#def get_num(y_1, y_2):
+#    return sum([i * (y_1 + y_2 -i) for i in range(0, y_1 + y_2 +1)])
+
+#def get_denum(y_1, y_2):
+#    return sum([(y_1 + i) * (y_2 - i) for i in range(0, y_2 + 1)])
+
+def get_num(y_1, y_2):
+    return sum([1./((y_1 + i) * (y_2 - i)) for i in range(1, y_2)])
+
+def get_denum(y_1, y_2):
+    return sum([1./(i*(y_1 + y_2 - i)) for i in range(1, y_1+y_2)])
+
+def get_all(y_1, y_2):
+    return get_num(y_1, y_2) / get_denum(y_1, y_2)
+
+#def get_all(y_1, y_2, num, denum):
+#    return float(y_2)/ (y_1 + y_2) #* num / denum
 
 if __name__ == '__main__':
-    mu, alpha = 10, 0.1
+    mu, alpha = 10, 100
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
-     
+    
+    x, y, side = 698, 639, 'l'
+    #x, y, side = 20, 10, 'l'
+    #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
+    
+    x, y, side = 12, 5, 'l'
+    #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
+    
+    
     x, y, side = 800, 600, 'l'
 #     x, y, side = 30, 20, 'l'
     
-    print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
+    #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
      
-    x, y, side = 30, 20, 'l'
-    print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
+    x, y, side = 20, 3, 'l'
+    #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
     
     #x, y, side = 30, 10, 'l'
     #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
     
     x, y, side = 40, 10, 'l'
-    print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
+    #print(x, y, -get_log_pvalue(x, y, side, distr), sep='\t')
     
-    print()
+    #print()
     S = 10
     for x in range(S+1):
         y = S - x
         side = 'l' if x > y else 'r'
-               
+        
         pvalue = 10**get_log_pvalue(x, y, side, distr)
      
         #print(x, y, pvalue, sep='\t')
 
-    y_1 = 800
-    y_2 = 600
-      
-    y__1 = 40
-    y__2 = 10
-      
-    a = get_d(1, y_2, y_1, y_2, m)
-    b = get_d(0, y_1 + y_2, 0, y_1+y_2, m)
-      
-    c = get_d(1, y__2, y__1, y__2, m)
-    d = get_d(0, y__1 + y__2, 0, y__1 + y__2, m)
-      
-    print(a, b)
-    print(c, d)
-      
-    print(-log10(a/b), -log10(c/d))
-
+    #y_1 = 800
+    #y_2 = 600
+    
+    #for y_1 in range(100, 1000):
+    #    for y_2 in range(50, y_1-1):
+    #        y__1 = int(y_1 / 20)
+    #        y__2 = int(y_2 / 40)
+    #        a = get_all(y_1, y_2)
+    #        b = get_all(y__1, y__2)
+    #        r = 1 if b-a < 0 else 0
+    #        print(y_1, y_2, r, sep='\t')
+            
+    y_1 = 698
+    y_2 = 639
+    y__1 = 12 #int(y_1 / 20)
+    y__2 = 5 #int(y_2 / 40)
+    print(get_all(y_1, y_2))
+    print(get_all(y__1, y__2))
 
 
