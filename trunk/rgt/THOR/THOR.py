@@ -42,7 +42,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
 def main():
     test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
-    
+    print(options.debug, file=sys.stderr)
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
