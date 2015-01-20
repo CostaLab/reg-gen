@@ -98,7 +98,7 @@ class MultiCoverageSet(DualCoverageSet):
         for j in range(2):
             f = open(path + str(j), 'w')
             for i in range(self.overall_coverage[j].shape[1]):
-                print(self.overall_coverage[j][:,i], file=f)
+                print(self.overall_coverage[j][:,i].T, file=f)
     
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, debug):
         """Normalize with regard to input file"""
