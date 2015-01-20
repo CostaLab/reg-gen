@@ -94,6 +94,12 @@ class MultiCoverageSet(DualCoverageSet):
         """Sum over all columns and add maximum"""
         return self.overall_coverage[0].sum(axis=0).max() + self.overall_coverage[1].sum(axis=0).max()
     
+    def output_overall_coverage(self, path):
+        for j in range(2):
+            f = open(path + str(j), 'w')
+            for i in range(self.overall_coverage[j].shape[0]):
+                print(self.overall_coverage[j][i, ], file=f)
+    
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, debug):
         """Normalize with regard to input file"""
         if path_inputs:
@@ -218,8 +224,7 @@ class MultiCoverageSet(DualCoverageSet):
         s0, s1, s2 = [], [], []
         
         if debug:
-            np.save("signal1.npy", self.overall_coverage[1])
-            np.save("signal2.npy", self.overall_coverage[2])
+            self.output_overall_coverage('signal')
         
         for i in range(len(self.indices_of_interest)):
             cov1, cov2 = self._get_covs(exp_data, i)
