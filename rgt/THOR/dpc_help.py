@@ -24,6 +24,7 @@ from math import fabs
 from rgt.ODIN.postprocessing import merge_delete
 from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin import NegBin
+from operator import add
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -126,7 +127,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
 
 def _compute_pvalue((x, y, side, distr)):
-    #print(x,y,file=sys.stderr)
+    print(x,y,file=sys.stderr)
     var =  np.var( x + y )
     mu = np.mean( x + y )
     alpha = max((var - mu) / np.square(mu), 0.00000000001)
@@ -163,8 +164,8 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
         #merge bins
         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
-            v1 += tmp_peaks[i+1][3]
-            v2 += tmp_peaks[i+1][4]
+            v1 = map(add, v1, tmp_peaks[i+1][3])
+            v2 = map(add, v2, tmp_peaks[i+1][4])
             i += 1
         
         s1 = v1
