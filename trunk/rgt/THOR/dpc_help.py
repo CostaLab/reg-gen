@@ -133,7 +133,7 @@ def _compute_pvalue((x, y, side, distr)):
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
     
-    return -get_log_pvalue_new(x, y, side, distr)
+    return -get_log_pvalue_new(int(np.mean(x)), int(np.mean(y)), side, distr)
 
 def _get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
