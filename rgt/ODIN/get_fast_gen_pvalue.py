@@ -65,6 +65,7 @@ def compute_pvalue(distr, N, side, current_p, x):
         p = p1 + p2
         
         if _comp(i, x, side, current_p, p):
+        #if p > current_p:
             sum_num.append(p)
         sum_denum.append(p)
         
@@ -110,15 +111,15 @@ if __name__ == '__main__':
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
     
-    
-    for x, y in [([2000, 1900, 1800], [100, 90, 100])]:
+    #,0.510793370086
+    for x, y in [([800, 900],[600, 500]), ([200, 190], [40,50])]:
         side = 'l' if x > y else 'r'
         var =  np.var( x + y )
         mu = np.mean( x + y )
         alpha = max((var - mu) / np.square(mu), 0.00000000001)
         m = NegBin(mu, alpha)
         distr = {'distr_name': 'nb', 'distr': m}
-        print(x, y, alpha, -get_log_pvalue_new(int(np.mean(x)), int(np.mean(y)), side, distr), sep='\t')
+        print(x, y, -get_log_pvalue_new(int(sum(x)), int(sum(y)), side, distr), sep='\t')
     
     
     #n = 90

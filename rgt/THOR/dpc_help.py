@@ -125,16 +125,23 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     g.close()
     print("done...", file=sys.stderr)
 
-
+lookup_pvalues = {}
 def _compute_pvalue((x, y, side, distr)):
-    print(x,y,file=sys.stderr)
+    #print(x,y,file=sys.stderr)
     var =  np.var( x + y )
     mu = np.mean( x + y )
     alpha = max((var - mu) / np.square(mu), 0.00000000001)
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
     
-    return -get_log_pvalue_new(int(np.mean(x)), int(np.mean(y)), side, distr)
+    a, b = int(np.mean(x)), int(np.mean(y))
+    k = (a, b, mu, alpha)
+    if not lookup_pvalues.has_key(k):
+        lookup_pvalues[k] = -get_log_pvalue_new(a, b, side, distr)
+    
+    return lookup_pvalues[k]
+    
+    #return -get_log_pvalue_new(a, b, side, distr)
 
 def _get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
