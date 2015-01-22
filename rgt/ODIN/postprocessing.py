@@ -30,6 +30,7 @@ def output(name, regions):
     color = {'+': '255,0,0', '-': '0,255,0'}
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
+        print(tmp, file=sys.stderr)
         c1 = int(tmp[0].replace("(", ""))
         c2 = int(tmp[1])
         logpvalue = float(tmp[2].replace(")", ""))
