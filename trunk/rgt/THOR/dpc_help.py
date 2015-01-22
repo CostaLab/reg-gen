@@ -173,6 +173,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
     
+    print('start', file=sys.stderr)
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
     
