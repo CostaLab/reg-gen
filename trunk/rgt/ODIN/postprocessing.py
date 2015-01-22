@@ -37,7 +37,7 @@ def output(name, regions):
         print(counts, pvalue, file=sys.stderr)
         #c1 = int(tmp[0].replace("(", ""))
         #c2 = int(tmp[1])
-        logpvalue = float(tmp[2].replace(")", ""))
+        #logpvalue = float(tmp[2].replace(")", ""))
         
         print(el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
               color[el.orientation], 0, counts + ',' + pvalue, sep='\t', file=f)
