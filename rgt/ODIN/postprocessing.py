@@ -31,12 +31,15 @@ def output(name, regions):
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
         print(tmp, file=sys.stderr)
-        c1 = int(tmp[0].replace("(", ""))
-        c2 = int(tmp[1])
+        counts = ",".join(map(lambda x: re.sub("\D", "", x), tmp[:len(tmp)-1]))
+        pvalue = tmp[len(tmp)-1].replace(")", "").strip()
+        print(counts, pvalue, file=sys.stderr)
+        #c1 = int(tmp[0].replace("(", ""))
+        #c2 = int(tmp[1])
         logpvalue = float(tmp[2].replace(")", ""))
         
         print(el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
-              color[el.orientation], 0, str(c1)+','+str(c2)+','+str(logpvalue), sep='\t', file=f)
+              color[el.orientation], 0, counts + ',' + pvalue, sep='\t', file=f)
     f.close()
     
 
