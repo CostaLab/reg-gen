@@ -23,6 +23,7 @@ from numpy import linspace
 from math import fabs
 from rgt.ODIN.postprocessing import merge_delete
 from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
+from rgt.THOR.neg_bin import NegBin
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
