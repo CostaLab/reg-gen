@@ -125,7 +125,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
 
 def _compute_pvalue((x, y, side, distr)):
-    print(x,y,file=sys.stderr)
+    #print(x,y,file=sys.stderr)
     var =  np.var( x + y )
     mu = np.mean( x + y )
     alpha = max((var - mu) / np.square(mu), 0.00000000001)
@@ -156,8 +156,8 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
     while i < len(tmp_peaks):
         j+=1
         c, s, e, c1, c2, strand = tmp_peaks[i]
-        v1 = [c1]
-        v2 = [c2]
+        v1 = c1
+        v2 = c2
         
         #merge bins
         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
