@@ -104,14 +104,25 @@ def change_nb_NB12WP(mu, alpha):
     return n, p
 
 if __name__ == '__main__':
-    mu = 20
-    alpha = 100
+    mu = 1.03882161264 
+    alpha = 0.1
     
     m = NegBin(mu, alpha)
     distr = {'distr_name': 'nb', 'distr': m}
     
-    n = 90
-    p = 0.01
+    
+    for x, y in [([2000, 1900, 1800], [100, 90, 100])]:
+        side = 'l' if x > y else 'r'
+        var =  np.var( x + y )
+        mu = np.mean( x + y )
+        alpha = max((var - mu) / np.square(mu), 0.00000000001)
+        m = NegBin(mu, alpha)
+        distr = {'distr_name': 'nb', 'distr': m}
+        print(x, y, alpha, -get_log_pvalue_new(int(np.mean(x)), int(np.mean(y)), side, distr), sep='\t')
+    
+    
+    #n = 90
+    #p = 0.01
     #distr={'distr_name': 'binomial', 'p':p, 'n':n}
     
     #n, p = change_nb_NB12WP(mu, alpha)
@@ -123,13 +134,15 @@ if __name__ == '__main__':
     #for i in range(10):
         #print(nbinom.logpmf(i, distr['n'], distr['p']), m.logpdf(i), fabs(nbinom.logpmf(i, distr['n'], distr['p']) - round(m.logpdf(i), 11)) < 10**-10, sep='\t')
     
+    #,,0.335898768556
+    x, y, side = 800, 600, 'l'
+    #print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
-    x, y, side = 698, 639, 'l'
-    #x, y, side = 20, 10, 'l'
-    print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
-    x, y, side = 12, 5, 'l'
-    print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
+    #for x,y in [(800, 600), (12, 5)]:
+        #side = 'l' if x > y else 'r'
+    #x, y, side = 12, 5, 'l'
+        #print(x, y, -get_log_pvalue_new(x, y, side, distr), sep='\t')
     
     #print()
     

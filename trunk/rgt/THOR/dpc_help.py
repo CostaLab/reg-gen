@@ -125,12 +125,24 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
 
 def _compute_pvalue((x, y, side, distr)):
+    var =  np.var( x + y )
+    mu = np.mean( x + y )
+    alpha = max((var - mu) / np.square(mu), 0.00000000001)
+    m = NegBin(mu, alpha)
+    distr = {'distr_name': 'nb', 'distr': m}
+    
     return -get_log_pvalue_new(x, y, side, distr)
 
-def _get_covs(DCS, i):
+def _get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
-    cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
-    cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+    if not as_list:
+        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
+        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+    else:
+        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
+        cov1 = map(lambda x: x[0], np.asarray((cov1[:,1])))
+        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
+        cov2 = map(lambda x: x[0], np.asarray((cov2[:,1])))
     
     return cov1, cov2
 
@@ -149,12 +161,12 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
         #merge bins
         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
-            v1.append(tmp_peaks[i+1][3])
-            v2.append(tmp_peaks[i+1][4])
+            v1 += tmp_peaks[i+1][3]
+            v2 += tmp_peaks[i+1][4]
             i += 1
         
-        s1 = sum(v1)
-        s2 = sum(v2)
+        s1 = v1
+        s2 = v2
         
         side = 'l' if strand == '+' else 'r'
         pvalues.append((s1, s2, side, distr))
@@ -179,7 +191,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
             continue #ignore background states
         
         strand = '+' if states[i] == 1 else '-'
-        cov1, cov2 = _get_covs(DCS, i)
+        cov1, cov2 = _get_covs(DCS, i, as_list=True)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
 
