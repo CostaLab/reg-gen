@@ -380,9 +380,10 @@ class Projection:
                 self.background[ty].combine(r)
             self.background[ty].merge()
             
-    def background(self,bed_path):
+    def background(self, bed_path):
         bg = GenomicRegionSet("background")
         bg.read_bed(bed_path)
+
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
@@ -756,7 +757,7 @@ class Jaccard:
         self.xtickrotation, self.xtickalign = 0,"center"
         
         for it, t in enumerate(self.jlist.keys()):
-            f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey = True)
+            f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey=True)
             legend_x = 1.05
             nm = len(self.jlist.keys()) * len(self.jlist.values()[0]) * len(self.jlist.values()[0])
             if nm > 40:
@@ -795,8 +796,8 @@ class Jaccard:
                                       patch_artist=True, bootstrap=None)
                 z = 10 # zorder for bosplot
                 plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
-                plt.setp(bp['fliers'], markerfacecolor='gray',color='none',alpha=0.3,markersize=1.8,zorder=z)
-                plt.setp(bp['caps'],color='none',zorder=z)
+                plt.setp(bp['fliers'], markerfacecolor='gray',color='white', alpha=0.3,markersize=1.8,zorder=z)
+                plt.setp(bp['caps'],color='white', zorder=z)
                 plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
                 legends = []
                 for patch, color in zip(bp['boxes'], color_t):

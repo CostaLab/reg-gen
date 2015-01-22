@@ -5,7 +5,11 @@ import os
 import multiprocessing
 # Local Libraries
 from scipy import stats
+import numpy
+import matplotlib.patches as patches
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
 # Distal Libraries
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
@@ -13,7 +17,8 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
 from SequenceSet import Sequence, SequenceSet
 from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from Util import SequenceType, Html
+from Util import SequenceType, Html, OverlapType
+from rgt.motifanalysis.Statistics import multiple_test_correction
 #import multiprocessing
 
 ####################################################################################
@@ -304,6 +309,7 @@ class PromoterTest:
         self.de_regions = GenomicRegionSet("de genes")
         self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
                                       promoterLength=promoterLength)
+        #self.de_regions.read_bed("/projects/lncRNA/data/joseph_results/hotair_genes_promoters_up.bed")
         
         # nonDE gene regions
         self.nde_gene = GeneSet("nde genes")
@@ -312,22 +318,29 @@ class PromoterTest:
         self.nde_regions = GenomicRegionSet("nde genes")
         self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
                                        promoterLength=promoterLength)
-
+        #self.nde_regions.read_bed("/projects/lncRNA/data/joseph_results/hotair_promoters_bg_up.bed")
+        
     def search_triplex(self, rna, temp, remove_temp=False):
+        
+        #arguments_triplexator = "-l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -rm 1"
+        arguments_triplexator = "-l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -mf"
         # DE
         self.de_regions.write_bed(os.path.join(temp,"de_regions.bed"))
-        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+\
+        #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
+        #          "/projects/lncRNA/data/genesmarie/promotor_hotair_up_genes.bed"+" -fo "+os.path.join(temp,"de.fa"))
+        os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
                   os.path.join(temp,"de_regions.bed")+" -fo "+os.path.join(temp,"de.fa"))
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -ss "+\
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
                   rna+" -ds "+os.path.join(temp,"de.fa")+" > "+os.path.join(temp, "de.txp"))
-
 
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
-        os.system("bedtools getfasta -fi /data/genome/hg19genome.fa -bed "+\
+        #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
+        #          "/projects/lncRNA/data/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
+        os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
                   os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator -l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -ss "+rna+" -ds "+os.path.join(temp,"nde.fa")+\
-                  " > "+os.path.join(temp, "nde.txp"))
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
+                  rna+" -ds "+os.path.join(temp,"nde.fa")+" > "+os.path.join(temp, "nde.txp"))
         if remove_temp:
             os.remove(os.path.join(temp,"de_regions.bed"))
             os.remove(os.path.join(temp,"de.fa"))
@@ -338,57 +351,145 @@ class PromoterTest:
         """Count the frequency between DE genes and non-DE genes with the given BindingSiteSet"""
         
         # Read txp and merge RBS
-        txp = RNADNABindingSet("all")
-        txp.read_txp(os.path.join(temp, "de.txp"))
-        txp.read_txp(os.path.join(temp, "nde.txp"))
-        txp.merge_rbs()
-        
+        txp_de = RNADNABindingSet("DE")
+        #txp_de.read_txp("/projects/lncRNA/data/joseph_results/joseph.txp")
+        txp_de.read_txp(os.path.join(temp, "de.txp"))
+        txp_de.merge_rbs()
+
+        txp_nde = RNADNABindingSet("non-DE")
+        #txp_nde.read_txp("/projects/lncRNA/data/joseph_results/joseph_bg.txp")
+        txp_nde.read_txp(os.path.join(temp, "nde.txp"))
+        txp_nde.merge_rbs()
+
         self.de_frequency = OrderedDict()
         self.nde_frequency = OrderedDict()
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
-        for rbs, regions in txp.merged_dict.iteritems():
+        for rbs, regions in txp_de.merged_dict.iteritems():
+            if len(regions) < 10: continue
             # DE
-            inter = len(self.de_regions.intersect(regions))
+            #inter = len(regions.intersect(self.de_regions, mode=OverlapType.ORIGINAL))
+            inter = len(self.de_regions.intersect(regions, mode=OverlapType.ORIGINAL))
             self.de_frequency[rbs] = [inter, len_de - inter]
             # non-DE
-            inter = len(self.nde_regions.intersect(regions))
-            self.nde_frequency[rbs] = [inter, len_nde - inter]
-        self.txp = txp
+            #inter = len(regions.intersect(self.nde_regions, mode=OverlapType.ORIGINAL))
+            self.nde_frequency[rbs] = [0, len_nde]
+            for rbs_n, regions_n in txp_nde.merged_dict.iteritems():
+                
+                if rbs.overlap(rbs_n):
+                    #print("Overlap RBS: "+rbs.region_str_rna()+"   "+rbs_n.region_str_rna()+"   "+str(len(regions))+"   "+str(len(regions_n)))
+                    inter = len(self.nde_regions.intersect(regions_n, mode=OverlapType.ORIGINAL))
+                    self.nde_frequency[rbs] = [inter, len_nde - inter]
+                    #print(self.nde_frequency[rbs])
+                
+        self.txp_de = txp_de
+        self.txp_nde = txp_nde
+        
 
     def fisher_exact(self):
         """Return oddsratio and pvalue"""
         self.oddsratio = {}
         self.pvalue = {}
-        for rbs in self.txp.merged_dict.keys():
-            self.oddsratio[rbs], self.pvalue[rbs] = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
-        
+        pvalues = []
+        self.sig_region = []
+        for rbs in self.de_frequency.keys():
+            #print(rbs.toString())
+            #print(self.de_frequency[rbs])
+            #print(self.nde_frequency[rbs])
+            #self.oddsratio[rbs], p = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
+            table = numpy.array([self.de_frequency[rbs], self.nde_frequency[rbs]])
+            table = numpy.transpose(table)
+            self.oddsratio[rbs], p = stats.fisher_exact(table)
+            pvalues.append(p)
 
-    def plot_frequency_rna(self, rna, dir):
-        """Generate the plots for demonstration of RBS"""
+        # correction
+        reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+        for i, rbs in enumerate(self.de_frequency.keys()):
+            self.pvalue[rbs] = pvals_corrected[i]
+            if pvals_corrected[i] < 0.05:
+                self.sig_region.append(rbs)
+
+    def read_ac(self, path):
+        """Read the RNA accessibility file and output its positions and values
+
+        The file should be a simple table with two columns:
+        The first column is the position and the second one is the value
+        '#' will be skipped
+
+        example:
+            #pos      u4S            
+            1        NA  
+            2        NA  
+            3        NA  
+            4     1.740  
+            5     2.785  
+            6     3.367  
+            7     2.727  
+            8     2.315  
+            9     3.005  
+            10     2.679  
+            11     3.803  
+            12     4.267  
+            13     1.096  
+        """
+        pos = []
+        values = []
+        with open(path) as f:
+            for line in f:
+                if line[0] == "#": continue
+                elif not line.split(): continue
+                else:
+                    line = line.split()
+                    pos.append(line[0])
+                    if line[1] == "NA": values.append(0)
+                    else: values.append(line[1])
+        return pos, values
+
+
+    def plot_frequency_rna(self, rna, dir, ac=None):
+        """Generate the plots for demonstration of RBS
+
+        rna:     File path to the RNA sequence in FASTA format
+        dir:     Directory where the figure is saved
+        ac:      RNA accessibility data.
+        """
         rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
         rnas.read_fasta(rna)
+        self.rna_name = rnas[0].name
         self.rna_len = len(rnas[0])
 
-        rbsp = self.txp.get_rbs(orientation="P")
-        rbsa = self.txp.get_rbs(orientation="A")
+        rbsp = self.txp_de.get_rbs(orientation="P")
+        rbsa = self.txp_de.get_rbs(orientation="A")
         
+        # Extract data points
         x = range(self.rna_len)
         p_y = []
         a_y = []
         for i in range(self.rna_len):
             p_y.append(rbsp.count_rbs_position(i))
             a_y.append(rbsa.count_rbs_position(i))
-        
         all_y = [sum(z) for z in zip(p_y, a_y)]
-            
+        max_y = max(all_y) * 1.05
+
+        # Plotting
         f, ax = plt.subplots(1, 1, dpi=300)
+        for rbs in self.sig_region:
+            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="r", 
+                                     edgecolor="none", alpha=0.1, lw=None)
+            ax.add_patch(rect)
         ax.plot(x, all_y, color="b", alpha=.5, lw=2, label="Parallel + Anti-parallel")
         ax.plot(x, p_y, color="g", alpha=.5, lw=2, label="Parallel")
         ax.plot(x, a_y, color="r", alpha=.5, lw=2, label="Anti-parallel")
         
-        ax.legend(bbox_to_anchor=(1.05, 0.5), loc=2, borderaxespad=0.)
+        ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode="expand", borderaxespad=0.)
 
+        # RNA accessbility
+        if ac:
+            ac_x, ac_v = self.read_ac(ac)
+            plt.imshow(ac_v, cmap=cm.jet, interpolation='nearest', extent=[0, self.rna_len, 0, -10])
+
+        ax.set_xlim([0, self.rna_len])
+        ax.set_ylim([0, max_y])
         ax.set_xlabel("RNA sequence (bp)", fontsize=12)
         ax.set_ylabel("Frequency of RNA binding sites",fontsize=12, rotation=90)
 
@@ -446,7 +547,7 @@ class PromoterTest:
         #html.add_figure("projection_test.png", align="center")
         
         html.add_figure("rna_plot.png", align="center")
-        html.add_figure("de_plot.png", align="center")
+        #html.add_figure("de_plot.png", align="center")
         # Table of merged TBS on promoters
         header_list = ["RBS",
                        "Number<br>of DBS",
@@ -460,9 +561,9 @@ class PromoterTest:
         type_list = 'sssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10]
         data_table = []
-        for rbs in self.txp.merged_dict.keys():
+        for rbs in self.de_frequency.keys():
             dbss = []
-            for dbs in self.txp.merged_dict[rbs]:
+            for dbs in self.txp_de.merged_dict[rbs]:
                 dbss.append(dbs.toString())
 
             if self.pvalue[rbs] < alpha:
@@ -478,7 +579,7 @@ class PromoterTest:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
         header_list=["Notes"]
-        data_table = [["RNA name: "+ self.txp.merged_dict.keys()[0].chrom],
+        data_table = [["RNA name: "+ self.rna_name ],
                       ["RBS stands for RNA Binding Site."],
                       ["DBS stands for DNA Binding Site."]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
@@ -492,7 +593,7 @@ class PromoterTest:
         html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
         header_list=["RBS", "DBS", "Score", "Motif", "Orientation", "Strand"]
         data_table = []
-        for tbs in self.txp:
+        for tbs in self.txp_de:
             data_table.append([ tbs.rna.region_str_rna(), tbs.dna.toString(), tbs.score, 
                                 tbs.motif, tbs.orient, tbs.strand])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")

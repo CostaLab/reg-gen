@@ -85,14 +85,16 @@ def main():
     ################### Promoter test ##########################################
 
     h_promotor = "Evaluate the difference between the promotor regions of the given genes and the other genes by the potential triplex forming sites on DNA with the given RNA."
-    parser_fishertest = subparsers.add_parser('promoter', help=h_promotor)
-    parser_fishertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
-    parser_fishertest.add_argument('-de', help="Input file for defferentially expression gene list ")
-    parser_fishertest.add_argument('-pl', type=int, default=1000, 
+    parser_promotertest = subparsers.add_parser('promoter', help=h_promotor)
+    parser_promotertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
+    parser_promotertest.add_argument('-de', help="Input file for defferentially expression gene list ")
+    parser_promotertest.add_argument('-pl', type=int, default=1000, 
                                    help="Define the promotor length (Default: 1000)")
-    parser_fishertest.add_argument('-o', help="Output directory name for all the results and temporary files")
-    parser_fishertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_fishertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
+    parser_promotertest.add_argument('-o', help="Output directory name for all the results and temporary files")
+    parser_promotertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
+    parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
+    
     ################### Random test ##########################################
     parser_randomtest = subparsers.add_parser('randomtest', help='Test the TTS are due to chance \
                                               or not by randomization')
@@ -222,15 +224,7 @@ def main():
             print2(summary, "\tDNA binding sites are saved in: "+os.path.join(args.o, dnaname+".dbs"))
             
             ##### Compare the binding sites between RNA and DNA ####################
-            #rbs = 
-            #dbs
-            
-            
-            
             output_summary(summary, args.o, "summary.log")
-            
-            
-            
         ############################################################################
         ##### Only RNA input #######################################################
         elif args.r and not args.d:
@@ -323,7 +317,7 @@ def main():
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
-        promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=True)
+        promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=False)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -334,8 +328,8 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
 
         print2(summary, "Step 3: Generate plot and output html files.")
-        promoter.plot_frequency_rna(rna=args.r, dir=args.o)
-        promoter.plot_de(dir=args.o)
+        promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac)
+        #promoter.plot_de(dir=args.o)
         promoter.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
