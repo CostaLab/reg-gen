@@ -125,6 +125,7 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
 
 def _compute_pvalue((x, y, side, distr)):
+    print(x,y,file=sys.stderr)
     var =  np.var( x + y )
     mu = np.mean( x + y )
     alpha = max((var - mu) / np.square(mu), 0.00000000001)
