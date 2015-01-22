@@ -140,9 +140,9 @@ def _get_covs(DCS, i, as_list=False):
         cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
     else:
         cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
-        cov1 = map(lambda x: x[0], np.asarray((cov1[:,1])))
+        cov1 = map(lambda x: x[0], np.asarray((cov1)))
         cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
-        cov2 = map(lambda x: x[0], np.asarray((cov2[:,1])))
+        cov2 = map(lambda x: x[0], np.asarray((cov2)))
     
     return cov1, cov2
 
