@@ -9,6 +9,7 @@ from __future__ import print_function
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
+import re
 
 def merge_data(regions):
     for el in regions:
