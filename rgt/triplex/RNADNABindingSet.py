@@ -162,7 +162,10 @@ class RNADNABindingSet:
                 line = line.strip("\n")
                 line = line.split()
                 
-                if len(line) < 12: continue # skip the unimportant lines in txp
+                if len(line) < 10: 
+                    #print(line)
+                    continue # skip the unimportant lines in txp
+
                 if len(line) == 12:
                     line.insert(8,"_")
                 # Format of each line in txp

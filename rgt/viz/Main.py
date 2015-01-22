@@ -41,7 +41,7 @@ def print2(parameter, string):
     
 ######### Projection test
 
-def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
+def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
     """Output the file in the defined folder """
     pd = os.path.normpath(os.path.join(dir,directory,folder))
     try:
@@ -55,22 +55,23 @@ def output(f, directory, folder, filename, extra=None, pdf=None, show=None):
     
     # Saving 
     if not extra:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
-                  bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_inches='tight', dpi=300)
+        #f.savefig(os.path.join(pd,filename))
     else:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
-                  bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
     
     if pdf:
-        pp = PdfPages(os.path.join(pd,filename) + '.pdf')
-        pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
-    
-        # Set the file's metadata via the PdfPages object:
-        #d = pp.infodict()
-        #d['Title'] = args.title
-        #d['CreationDate'] = datetime.datetime.today()
-        pp.close()
-    
+        try:
+            pp = PdfPages(os.path.join(pd,filename) + '.pdf')
+            pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
+        
+            # Set the file's metadata via the PdfPages object:
+            #d = pp.infodict()
+            #d['Title'] = args.title
+            #d['CreationDate'] = datetime.datetime.today()
+            pp.close()
+        except:
+            print("ERROR: Problem in PDF conversion. Skipped.")
     if show:
         plt.show()
         
@@ -126,7 +127,7 @@ def main():
     parser_projection.add_argument('-t', '--title', default='projection_test', help=helptitle)
     parser_projection.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_projection.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    parser_projection.add_argument('-bg', default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
     parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test.')
     parser_projection.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -320,7 +321,7 @@ def main():
         projection = Projection(args.reference,args.query)
         projection.group_refque(args.g)
         projection.colors(args.c, args.color)
-        projection.background(args.bg)
+        if args.bg: projection.background(args.bg)
         if args.union: 
             projection.ref_union()
             projection.projection_test(organism = args.organism)
@@ -343,8 +344,7 @@ def main():
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-        copy_em()
-            
+        
     ################### Intersect Test ##########################################
     if args.mode == 'intersect':
         print("\n############ Intersection Test ############")
