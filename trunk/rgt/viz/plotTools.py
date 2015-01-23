@@ -760,7 +760,7 @@ class Jaccard:
             f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey=True)
             legend_x = 1.05
             nm = len(self.jlist.keys()) * len(self.jlist.values()[0]) * len(self.jlist.values()[0])
-            if nm > 40:
+            if nm > 30:
                 f.set_size_inches(nm * 0.1 +1 ,nm * 0.1 +1)
                 legend_x = 1.2
                 self.xtickrotation, self.xtickalign = 70,"right"
@@ -1080,7 +1080,7 @@ class Intersect:
         for ai, ax in enumerate(axs):
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
-            ax.set_title(self.counts.keys()[ai], y=0.95)
+            ax.set_title(self.counts.keys()[ai], y=1)
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 if len(axs) == 1: r_label.append(r)

@@ -94,21 +94,19 @@ def main():
     parser_promotertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
+    parser_promotertest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
+    
     
     ################### Random test ##########################################
-    parser_randomtest = subparsers.add_parser('randomtest', help='Test the TTS are due to chance \
-                                              or not by randomization')
-    parser_randomtest.add_argument('-i', help="Input file name (.txp) ")
-    parser_randomtest.add_argument('-o', help="Output directory name")
-    parser_randomtest.add_argument('-ns', type=int, default=1000, 
-                                   help="Number of sequences for each randomization (Default: 1000)")
-    parser_randomtest.add_argument('-l', type=int, default=1000, 
-                                   help="Length of random sequences (Default: 1000 bp)")
+    h_random = "Test validation of the binding sites of triplex on the genome by randomization."
+    parser_randomtest = subparsers.add_parser('randomtest', help=h_random)
+    parser_randomtest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
+    parser_randomtest.add_argument('-d', help="Input BED file for interested regions on DNA")
+    parser_randomtest.add_argument('-o', help="Output directory name for all the results and temporary files")
+    parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_randomtest.add_argument('-n', type=int, default=10000, 
                                    help="Number of times for randomization (Default: 10000)")
-    parser_randomtest.add_argument('-bg', help="Define a BED file as background. If not defined, \
-                                                the background is whole genome according to the given organism.")
-
     
 
     ################### Parsing the arguments ################################
@@ -328,7 +326,7 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
 
         print2(summary, "Step 3: Generate plot and output html files.")
-        promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac)
+        promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
         #promoter.plot_de(dir=args.o)
         promoter.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()
@@ -340,4 +338,10 @@ def main():
     ##### Random ###################################################################
     ################################################################################
     if args.mode == 'random':
-        pass
+        print2(summary, "\n"+h_random)
+        args.r = os.path.normpath(os.path.join(dir,args.r))
+        args.o = os.path.normpath(os.path.join(dir,args.o))
+        check_dir(args.o)
+        
+        # randomization
+        randomtest = RandomTest()

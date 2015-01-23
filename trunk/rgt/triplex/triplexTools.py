@@ -307,18 +307,18 @@ class PromoterTest:
         self.de_gene = GeneSet("de genes")
         self.de_gene.read(gene_list_file)
         self.de_regions = GenomicRegionSet("de genes")
-        self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
-                                      promoterLength=promoterLength)
-        #self.de_regions.read_bed("/projects/lncRNA/data/joseph_results/hotair_genes_promoters_up.bed")
+        #self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
+        #                              promoterLength=promoterLength)
+        self.de_regions.read_bed("/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed")
         
         # nonDE gene regions
         self.nde_gene = GeneSet("nde genes")
         self.nde_gene.get_all_genes(organism=organism)
         self.nde_gene.subtract(self.de_gene)
         self.nde_regions = GenomicRegionSet("nde genes")
-        self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
-                                       promoterLength=promoterLength)
-        #self.nde_regions.read_bed("/projects/lncRNA/data/joseph_results/hotair_promoters_bg_up.bed")
+        #self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
+        #                               promoterLength=promoterLength)
+        self.nde_regions.read_bed("/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed")
         
     def search_triplex(self, rna, temp, remove_temp=False):
         
@@ -327,7 +327,7 @@ class PromoterTest:
         # DE
         self.de_regions.write_bed(os.path.join(temp,"de_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
-        #          "/projects/lncRNA/data/genesmarie/promotor_hotair_up_genes.bed"+" -fo "+os.path.join(temp,"de.fa"))
+        #          "/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed"+" -fo "+os.path.join(temp,"de.fa"))
         os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
                   os.path.join(temp,"de_regions.bed")+" -fo "+os.path.join(temp,"de.fa"))
         os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
@@ -336,7 +336,7 @@ class PromoterTest:
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
-        #          "/projects/lncRNA/data/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
+        #          "/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
         os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
                   os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
         os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
@@ -398,7 +398,7 @@ class PromoterTest:
             #print(self.nde_frequency[rbs])
             #self.oddsratio[rbs], p = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
             table = numpy.array([self.de_frequency[rbs], self.nde_frequency[rbs]])
-            table = numpy.transpose(table)
+            #table = numpy.transpose(table)
             self.oddsratio[rbs], p = stats.fisher_exact(table)
             pvalues.append(p)
 
@@ -409,7 +409,7 @@ class PromoterTest:
             if pvals_corrected[i] < 0.05:
                 self.sig_region.append(rbs)
 
-    def read_ac(self, path):
+    def read_ac(self, path, cut_off):
         """Read the RNA accessibility file and output its positions and values
 
         The file should be a simple table with two columns:
@@ -432,21 +432,30 @@ class PromoterTest:
             12     4.267  
             13     1.096  
         """
-        pos = []
+        #pos = []
         values = []
         with open(path) as f:
             for line in f:
-                if line[0] == "#": continue
-                elif not line.split(): continue
+                line = line.split()
+                if line[0][0] == "#": continue
+                elif not line: continue
+                elif len(line) < 2: continue
                 else:
-                    line = line.split()
-                    pos.append(line[0])
-                    if line[1] == "NA": values.append(0)
-                    else: values.append(line[1])
-        return pos, values
+                    #pos.append(int(line[0]))
+                    v = line[1]
+                    if v == "NA": values.append(0)
+                    else: v = float(v)
+                    print(v)
+                    v = 2^(-v)
+                    if v >= cut_off:
+                        v = 1
+                    else:
+                        v = 0
+                    values.append(v)
+        return values
 
 
-    def plot_frequency_rna(self, rna, dir, ac=None):
+    def plot_frequency_rna(self, rna, dir, cut_off, ac=None):
         """Generate the plots for demonstration of RBS
 
         rna:     File path to the RNA sequence in FASTA format
@@ -469,27 +478,34 @@ class PromoterTest:
             p_y.append(rbsp.count_rbs_position(i))
             a_y.append(rbsa.count_rbs_position(i))
         all_y = [sum(z) for z in zip(p_y, a_y)]
-        max_y = max(all_y) * 1.05
+        max_y = float(max(all_y) * 1.05)
+        if ac: min_y = float(max_y*(-0.1))
+        else: min_y = 0
 
         # Plotting
-        f, ax = plt.subplots(1, 1, dpi=300)
+        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
         for rbs in self.sig_region:
             rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="r", 
                                      edgecolor="none", alpha=0.1, lw=None)
             ax.add_patch(rect)
-        ax.plot(x, all_y, color="b", alpha=.5, lw=2, label="Parallel + Anti-parallel")
-        ax.plot(x, p_y, color="g", alpha=.5, lw=2, label="Parallel")
-        ax.plot(x, a_y, color="r", alpha=.5, lw=2, label="Anti-parallel")
+        ax.plot(x, all_y, color="b", alpha=.5, lw=1, label="Parallel + Anti-parallel")
+        ax.plot(x, p_y, color="g", alpha=.5, lw=1, label="Parallel")
+        ax.plot(x, a_y, color="r", alpha=.5, lw=1, label="Anti-parallel")
         
-        ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode="expand", borderaxespad=0.)
+        
 
         # RNA accessbility
         if ac:
-            ac_x, ac_v = self.read_ac(ac)
-            plt.imshow(ac_v, cmap=cm.jet, interpolation='nearest', extent=[0, self.rna_len, 0, -10])
+            n_value = self.read_ac(ac, cut_off)
+            ac = numpy.array([n_value])
+            ax.imshow(ac, cmap='Oranges', interpolation='nearest', extent=[0, self.rna_len, min_y, 0],
+                      aspect='auto', label="Accessibility")
 
-        ax.set_xlim([0, self.rna_len])
-        ax.set_ylim([0, max_y])
+
+        ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode="expand", borderaxespad=0.)
+        ax.set_xlim(left=0, right=self.rna_len )
+        ax.set_ylim( [min_y, max_y] ) 
+        
         ax.set_xlabel("RNA sequence (bp)", fontsize=12)
         ax.set_ylabel("Frequency of RNA binding sites",fontsize=12, rotation=90)
 
@@ -550,7 +566,6 @@ class PromoterTest:
         #html.add_figure("de_plot.png", align="center")
         # Table of merged TBS on promoters
         header_list = ["RBS",
-                       "Number<br>of DBS",
                        "DE_genes<br>with DBS", 
                        "DE_genes<br>no DBS",
                        "nonDE_genes<br>with DBS", 
@@ -562,17 +577,17 @@ class PromoterTest:
         col_size_list = [10,10,10,10,10,10,10,10,10]
         data_table = []
         for rbs in self.de_frequency.keys():
-            dbss = []
-            for dbs in self.txp_de.merged_dict[rbs]:
-                dbss.append(dbs.toString())
+            #dbss = []
+            #for dbs in self.txp_de.merged_dict[rbs]:
+            #    dbss.append(dbs.toString())
 
             if self.pvalue[rbs] < alpha:
-                data_table.append([ rbs.region_str_rna(), str(len(dbss)), 
+                data_table.append([ rbs.region_str_rna(), #str(len(dbss)), 
                                     value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
                                     value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>" ])
             else:
-                data_table.append([ rbs.region_str_rna(), str(len(dbss)), 
+                data_table.append([ rbs.region_str_rna(), #str(len(dbss)), 
                                     value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
                                     value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs])])
