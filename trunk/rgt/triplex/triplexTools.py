@@ -44,6 +44,15 @@ def value2str(value):
         else: r = "{:.1e}".format(value)
         return r
 
+def random_each(number, rna, region, temp, remove_temp, organism):
+    random = region.random_regions(organism=organism, multiply_factor=1, 
+                                   overlap_result=True, overlap_input=True, 
+                                   chrom_X=True, chrom_M=False)
+    ran = RandomTest(rna_fasta=rna, dna_region=region, organism=organism)
+    txp = ran.find_triplex(random, temp=temp, prefix=str(number), remove_temp=remove_temp)
+    return txp
+
+
 class TriplexSearch:
     """Contains functions for potential triplex forming sites on DNA or RNA.
 
@@ -309,7 +318,7 @@ class PromoterTest:
         self.de_regions = GenomicRegionSet("de genes")
         #self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
         #                              promoterLength=promoterLength)
-        self.de_regions.read_bed("/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed")
+        self.de_regions.read_bed("/projects/lncRNA/data/fendrr/fendrr_genes_promoters.bed")
         
         # nonDE gene regions
         self.nde_gene = GeneSet("nde genes")
@@ -318,17 +327,17 @@ class PromoterTest:
         self.nde_regions = GenomicRegionSet("nde genes")
         #self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
         #                               promoterLength=promoterLength)
-        self.nde_regions.read_bed("/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed")
+        self.nde_regions.read_bed("/projects/lncRNA/data/fendrr/promoters_bg.bed")
         
     def search_triplex(self, rna, temp, remove_temp=False):
         
         #arguments_triplexator = "-l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -rm 1"
-        arguments_triplexator = "-l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -mf"
+        arguments_triplexator = "-l 30 -e 15 -c 2 -fr off -fm 0 -of 1 -mf"
         # DE
         self.de_regions.write_bed(os.path.join(temp,"de_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
         #          "/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed"+" -fo "+os.path.join(temp,"de.fa"))
-        os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
+        os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
                   os.path.join(temp,"de_regions.bed")+" -fo "+os.path.join(temp,"de.fa"))
         os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
                   rna+" -ds "+os.path.join(temp,"de.fa")+" > "+os.path.join(temp, "de.txp"))
@@ -337,7 +346,7 @@ class PromoterTest:
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
         #          "/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
-        os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
+        os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
                   os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
         os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
                   rna+" -ds "+os.path.join(temp,"nde.fa")+" > "+os.path.join(temp, "nde.txp"))
@@ -347,18 +356,20 @@ class PromoterTest:
             os.remove(os.path.join(temp,"nde_regions.bed"))
             os.remove(os.path.join(temp,"nde.fa"))
         
-    def count_frequency(self, temp):
+    def count_frequency(self, temp, remove_temp):
         """Count the frequency between DE genes and non-DE genes with the given BindingSiteSet"""
         
         # Read txp and merge RBS
         txp_de = RNADNABindingSet("DE")
-        #txp_de.read_txp("/projects/lncRNA/data/joseph_results/joseph.txp")
-        txp_de.read_txp(os.path.join(temp, "de.txp"))
+        txp_de.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes.txp")
+        #txp_de.read_txp(os.path.join(temp, "de.txp"))
+        #print(len(txp_de))
         txp_de.merge_rbs()
 
         txp_nde = RNADNABindingSet("non-DE")
-        #txp_nde.read_txp("/projects/lncRNA/data/joseph_results/joseph_bg.txp")
-        txp_nde.read_txp(os.path.join(temp, "nde.txp"))
+        txp_nde.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes_bg.txp")
+        #txp_nde.read_txp(os.path.join(temp, "nde.txp"))
+        #print(len(txp_nde))
         txp_nde.merge_rbs()
 
         self.de_frequency = OrderedDict()
@@ -366,7 +377,7 @@ class PromoterTest:
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
         for rbs, regions in txp_de.merged_dict.iteritems():
-            if len(regions) < 10: continue
+            #if len(regions) < 10: continue
             # DE
             #inter = len(regions.intersect(self.de_regions, mode=OverlapType.ORIGINAL))
             inter = len(self.de_regions.intersect(regions, mode=OverlapType.ORIGINAL))
@@ -377,14 +388,18 @@ class PromoterTest:
             for rbs_n, regions_n in txp_nde.merged_dict.iteritems():
                 
                 if rbs.overlap(rbs_n):
-                    #print("Overlap RBS: "+rbs.region_str_rna()+"   "+rbs_n.region_str_rna()+"   "+str(len(regions))+"   "+str(len(regions_n)))
+                    print("Overlap RBS: "+rbs.region_str_rna()+"   "+rbs_n.region_str_rna()+"   "+str(len(regions))+"   "+str(len(regions_n)))
                     inter = len(self.nde_regions.intersect(regions_n, mode=OverlapType.ORIGINAL))
+                    
                     self.nde_frequency[rbs] = [inter, len_nde - inter]
-                    #print(self.nde_frequency[rbs])
+                    print(self.nde_frequency[rbs])
                 
         self.txp_de = txp_de
         self.txp_nde = txp_nde
         
+        if remove_temp:
+            os.remove(os.path.join(temp,"de.txp"))
+            os.remove(os.path.join(temp,"nde.txp"))
 
     def fisher_exact(self):
         """Return oddsratio and pvalue"""
@@ -403,7 +418,10 @@ class PromoterTest:
             pvalues.append(p)
 
         # correction
-        reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+        if len(self.de_frequency.keys()) > 1:
+            reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+        else:
+            pvals_corrected = pvalues
         for i, rbs in enumerate(self.de_frequency.keys()):
             self.pvalue[rbs] = pvals_corrected[i]
             if pvals_corrected[i] < 0.05:
@@ -437,16 +455,15 @@ class PromoterTest:
         with open(path) as f:
             for line in f:
                 line = line.split()
-                if line[0][0] == "#": continue
-                elif not line: continue
+                if not line: continue
+                elif line[0][0] == "#": continue
                 elif len(line) < 2: continue
                 else:
                     #pos.append(int(line[0]))
                     v = line[1]
-                    if v == "NA": values.append(0)
+                    if v == "NA": v = 0
                     else: v = float(v)
-                    print(v)
-                    v = 2^(-v)
+                    v = 2**(-v)
                     if v >= cut_off:
                         v = 1
                     else:
@@ -617,21 +634,70 @@ class PromoterTest:
 ####################################################################################
 
 class RandomTest:
-    def __init__(self, txp_path, organism):
-    	self.txp = RNADNABindingSet(organism=organism, filename=txp_path)
-    	
-    def target_count(self):
-    	"""Count the number of TFFs for each TFO
-
-    	The count number is stored in a dictionary as self.merged_TFO
-    	"""
-    	self.txp.merged_TFO()
-    	self.merged_TFO = OderedDict()
-    	for tfo, tffs in iteritems(self.txp.merged):
-    		self.merged_TFO[tfo] = len(tffs)
+    def __init__(self, rna_fasta, dna_region, organism):
+    	self.organism = organism
+        # RNA: Path to the FASTA file
+        self.rna_fasta = rna_fasta
+        # DNA: GenomicRegionSet
+        self.dna_region = GenomicRegionSet(name="target")
+        self.dna_region.read_bed(dna_region)
         
-    #def randomization(repeat):
 
+    def find_triplex(self, dna_region, temp, prefix="", remove_temp=False):
+        """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
+        
+        arguments_triplexator = "-l 30 -e 15 -c 2 -fr off -fm 0 -of 1 -mf"
+        # Generate BED 
+        dna_region.write_bed(os.path.join(temp,"dna_region"+prefix+".bed"))
+        # Bedtools
+        os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
+                  os.path.join(temp,"dna_region"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
+        # Triplexator
+        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
+                  self.rna_fasta+" -ds "+os.path.join(temp,"dna_"+prefix+".fa")+" > "+os.path.join(temp, "dna_"+prefix+".txp"))
+
+        # Read txp
+        txp = RNADNABindingSet("dna")
+        txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"))
+        #print(len(txp_de))
+        txp.merge_rbs()
+
+        if remove_temp:
+            os.remove(os.path.join(temp,"dna_region"+prefix+".bed"))
+            os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
+            os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
+
+        return txp
+    
+    def target_dna(self, temp, remove_temp):
+        """Calculate the true counts of triplexes on the given dna regions"""
+        txp = self.find_triplex(self.dna_region, temp=temp, remove_temp=remove_temp)
+        self.rbss = txp.merged_dict.keys()
+        
+        self.counts_target = OrderedDict()
+        self.counts_random = OrderedDict()        
+        for rbs in self.rbss:
+            self.counts_target[rbs] = len(txp.merged_dict[rbs])
+            self.counts_random[rbs] = []
+        
+
+
+    def random_test(self, repeats, temp, remove_temp):
+        """Perform randomization for the given times"""
+        
+        mp_input = range(repeats)
+
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        mp_output = pool.map(random_test, mp_input)
+            pool.close()
+            pool.join()
+        
+            # Random the region
+            
+            # Run triplexator
+            
+            for rbs in self.rbss:
+                self.counts_random[rbs].append(len(txp.merged_dict[rbs]))
 
 if __name__ == '__main__':
     a = SequenceSet(name="test", seq_type=SequenceType.RNA)

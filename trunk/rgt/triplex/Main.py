@@ -95,6 +95,7 @@ def main():
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
     parser_promotertest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
+    parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     
     
     ################### Random test ##########################################
@@ -107,7 +108,8 @@ def main():
     parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_randomtest.add_argument('-n', type=int, default=10000, 
                                    help="Number of times for randomization (Default: 10000)")
-    
+    parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
+  
 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
@@ -315,12 +317,12 @@ def main():
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
-        promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=False)
+        #promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=args.rt)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        promoter.count_frequency(temp=args.o)
+        promoter.count_frequency(temp=args.o, remove_temp=args.rt)
         promoter.fisher_exact()
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
@@ -337,11 +339,13 @@ def main():
     ################################################################################
     ##### Random ###################################################################
     ################################################################################
-    if args.mode == 'random':
+    if args.mode == 'randomtest':
         print2(summary, "\n"+h_random)
         args.r = os.path.normpath(os.path.join(dir,args.r))
         args.o = os.path.normpath(os.path.join(dir,args.o))
         check_dir(args.o)
         
-        # randomization
-        randomtest = RandomTest()
+        randomtest = RandomTest(rna_fasta=args.r, dna_region=args.d, organism=args.organism)
+
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt)
+        randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt)
