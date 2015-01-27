@@ -336,6 +336,7 @@ def main():
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
         output_summary(summary, args.o, "summary.log")
+        
     ################################################################################
     ##### Random ###################################################################
     ################################################################################
@@ -345,7 +346,24 @@ def main():
         args.o = os.path.normpath(os.path.join(dir,args.o))
         check_dir(args.o)
         
+        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, dna_region=args.d, organism=args.organism)
-
         randomtest.target_dna(temp=args.o, remove_temp=args.rt)
+        t1 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        
+        print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt)
+        t2 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
+        
+        print2(summary, "Step 3: Generating plot and output HTML")
+        randomtest.plot()
+        randomtest.gen_html()
+        t3 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+        
+        print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
+    
+        output_summary(summary, args.o, "summary.log")
+        
