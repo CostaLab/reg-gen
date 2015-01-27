@@ -208,20 +208,5 @@ class RNADNABindingSet:
             print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\
                    \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
-                print(str(rd), file=f)
-
-if __name__ == '__main__':
-    
-    file_txp = "/projects/lncRNA/data/sample.txp"
-    rd = RNADNABindingSet(name="test")
-    rd.read_txp(file_txp)
-    rd.get_rnas()
-    rd.get_dnas()
-    rd.sort_dna()
-    rd.sort_rna()
-    
-    for i in rd:
-    	print(str(i))
-
-    rd.write_txp("/projects/lncRNA/data/write.txp")
+                print(str(rd), file=f) 
     	

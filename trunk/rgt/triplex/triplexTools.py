@@ -45,13 +45,17 @@ def value2str(value):
         return r
 
 def random_each(number, rna, region, temp, remove_temp, organism):
+    """Return the counts of DNA Binding sites with randomization
+    For multiprocessing. """
+    print("Processing: "+str(number))
     random = region.random_regions(organism=organism, multiply_factor=1, 
                                    overlap_result=True, overlap_input=True, 
                                    chrom_X=True, chrom_M=False)
     ran = RandomTest(rna_fasta=rna, dna_region=region, organism=organism)
     txp = ran.find_triplex(random, temp=temp, prefix=str(number), remove_temp=remove_temp)
-    return txp
+    return [ len(dbss) for dbss in txp.merged_dict.values() ]
 
+#####################################################################################
 
 class TriplexSearch:
     """Contains functions for potential triplex forming sites on DNA or RNA.
@@ -675,40 +679,31 @@ class RandomTest:
         self.rbss = txp.merged_dict.keys()
         
         self.counts_target = OrderedDict()
-        self.counts_random = OrderedDict()        
+              
         for rbs in self.rbss:
             self.counts_target[rbs] = len(txp.merged_dict[rbs])
-            self.counts_random[rbs] = []
-        
-
 
     def random_test(self, repeats, temp, remove_temp):
         """Perform randomization for the given times"""
         
-        mp_input = range(repeats)
-
+        # Prepare the input lists for multiprocessing
+        mp_input = []
+        for i in range(repeats):
+            mp_input.append([ str(i), self.rna_fasta, self.dna_region,
+                              temp, remove_temp, self.organism ])
+        # Multiprocessing
         pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-        mp_output = pool.map(random_test, mp_input)
-            pool.close()
-            pool.join()
+        mp_output = pool.map(random_each, mp_input)
+        pool.close()
+        pool.join()
         
-            # Random the region
-            
-            # Run triplexator
-            
-            for rbs in self.rbss:
-                self.counts_random[rbs].append(len(txp.merged_dict[rbs]))
+        # Processing the result
+        self.counts_random = OrderedDict()  
+        for i, rbs in enumerate(self.rbss):
+            self.counts_random[rbs] = [ v[i] for v in mp_output ]
 
-if __name__ == '__main__':
-    a = SequenceSet(name="test", seq_type=SequenceType.RNA)
-    a.read_fasta("/projects/lncRNA/data/hotair.fasta")
-    print(len(a))
-
-
-    triplex = TriplexSearch()
-    b = triplex.find_rbs(a[0])
-    print(b)
-    print(len(b))
-    for s in b:
-        print(s.seq + "\t\t" + s.motif)
-    b.write_rbs("test")
+    def plot(self):
+        """Generate the visualized plot"""
+        
+    def gen_html(self):
+        """Generate the HTML file"""
