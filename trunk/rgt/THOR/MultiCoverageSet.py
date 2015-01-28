@@ -67,9 +67,9 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
-        self._normalization_by_signal(name)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
+        #self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
+        #self._normalization_by_signal(name)
         
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
@@ -245,7 +245,6 @@ class MultiCoverageSet(DualCoverageSet):
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
-            print(el, file=sys.stderr)
             if not test:
                 el = el[el[:,1] < np.percentile(el[:,1], 90)]
                 el = el[el[:,2] < np.percentile(el[:,2], 90)]
