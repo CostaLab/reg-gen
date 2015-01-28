@@ -21,7 +21,8 @@ from scipy.optimize import curve_fit
 import numpy as np
 from numpy import linspace
 from math import fabs
-from rgt.ODIN.postprocessing import merge_delete
+#from rgt.ODIN.postprocessing import merge_delete
+from rgt.THOR.postprocessing import merge_delete
 from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin import NegBin
 from operator import add
