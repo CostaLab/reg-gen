@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import re
+import numpy as np
+
 class Tracker:
     def __init__(self, path):
         self.file = open(path, 'w')
@@ -9,4 +12,7 @@ class Tracker:
         if header:
             self.file.write('#' + header + '\n')
         
-        self.file.write(text + '\n')
+        if isinstance(text, np.ndarray):
+            self.file.write(re.sub(' +',' ', str(text).replace('\n ', '\n').replace('[','').replace(']','').strip()) + '\n')
+        else:
+            self.file.write(text + '\n')
