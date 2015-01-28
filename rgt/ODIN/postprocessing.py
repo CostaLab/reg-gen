@@ -9,7 +9,6 @@ from __future__ import print_function
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
-import re
 
 def merge_data(regions):
     for el in regions:
@@ -31,16 +30,12 @@ def output(name, regions):
     color = {'+': '255,0,0', '-': '0,255,0'}
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
-        #print(tmp, file=sys.stderr)
-        counts = ",".join(map(lambda x: re.sub("\D", "", x), tmp[:len(tmp)-1]))
-        pvalue = tmp[len(tmp)-1].replace(")", "").strip()
-        #print(counts, pvalue, file=sys.stderr)
-        #c1 = int(tmp[0].replace("(", ""))
-        #c2 = int(tmp[1])
-        #logpvalue = float(tmp[2].replace(")", ""))
+        c1 = int(tmp[0].replace("(", ""))
+        c2 = int(tmp[1])
+        logpvalue = float(tmp[2].replace(")", ""))
         
         print(el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
-              color[el.orientation], 0, counts + ',' + pvalue, sep='\t', file=f)
+              color[el.orientation], 0, str(c1)+','+str(c2)+','+str(logpvalue), sep='\t', file=f)
     f.close()
     
 
