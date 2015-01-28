@@ -23,7 +23,7 @@ from numpy import linspace
 from math import fabs
 #from rgt.ODIN.postprocessing import merge_delete
 from rgt.THOR.postprocessing import merge_delete
-from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
+#from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin import NegBin
 from operator import add
 
@@ -80,8 +80,8 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
             np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
     
     for i in range(2):
-        print("percentile 99.75", np.percentile(data_rep[i][:,0], 99.75), file=sys.stderr)
-        print("percentile 99.75", np.percentile(data_rep[i][:,1], 99.75), file=sys.stderr)
+        #print("percentile 99.75", np.percentile(data_rep[i][:,0], 99.75), file=sys.stderr)
+        #print("percentile 99.75", np.percentile(data_rep[i][:,1], 99.75), file=sys.stderr)
         data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)]
         data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)]
     
@@ -124,25 +124,25 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
 
     f.close()
     g.close()
-    print("done...", file=sys.stderr)
 
 lookup_pvalues = {}
 def _compute_pvalue((x, y, side, distr)):
-    #print(x,y,file=sys.stderr)
-    var =  np.var( x + y )
-    mu = np.mean( x + y )
-    alpha = max((var - mu) / np.square(mu), 0.00000000001)
-    m = NegBin(mu, alpha)
-    distr = {'distr_name': 'nb', 'distr': m}
+    #return 0.2
+#     var =  np.var( x + y )
+#     mu = np.mean( x + y )
+#     alpha = max((var - mu) / np.square(mu), 0.00000000001)
+#     m = NegBin(mu, alpha)
+#     distr = {'distr_name': 'nb', 'distr': m}
+#     
+#     a, b = int(np.mean(x)), int(np.mean(y))
+#     k = (a, b, mu, alpha)
+#     if not lookup_pvalues.has_key(k):
+#         lookup_pvalues[k] = -get_log_pvalue_new(a, b, side, distr)
+#     
+#     return lookup_pvalues[k]
     
     a, b = int(np.mean(x)), int(np.mean(y))
-    k = (a, b, mu, alpha)
-    if not lookup_pvalues.has_key(k):
-        lookup_pvalues[k] = -get_log_pvalue_new(a, b, side, distr)
-    
-    return lookup_pvalues[k]
-    
-    #return -get_log_pvalue_new(a, b, side, distr)
+    return -get_log_pvalue_new(a, b, side, distr)
 
 def _get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
@@ -157,12 +157,12 @@ def _get_covs(DCS, i, as_list=False):
     
     return cov1, cov2
 
-def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
-    """Merge consecutive peaks in tmp_peaks, and compute p-value"""
+def _merge_consecutive_bins(tmp_peaks, distr):
+    """Merge consecutive peaks and compute p-value. Return list 
+    <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
     peaks = []
     pvalues = []
     i, j, = 0, 0
-    pcutoff = -log10(pcutoff)
     while i < len(tmp_peaks):
         j+=1
         c, s, e, c1, c2, strand = tmp_peaks[i]
@@ -184,13 +184,10 @@ def _merge_consecutive_bins(tmp_peaks, distr, pcutoff):
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
     
-    print('start', file=sys.stderr)
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
     
-    pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
-    
-    return pvalues, peaks, pv_pass
+    return pvalues, peaks
 
 
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
@@ -208,12 +205,54 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
 
     #merge consecutive peaks and compute p-value
-    pvalues, peaks, pv_pass = _merge_consecutive_bins(tmp_peaks, distr, pcutoff)
+    pvalues, peaks = _merge_consecutive_bins(tmp_peaks, distr)
+    #postprocessing, returns GenomicRegionSet with merged regions
+    regions = merge_delete(exts, merge, peaks, pvalues) 
     
-    merge_delete(exts, merge, peaks, pvalues, name) #postprocessing
+    output = []
+    pvalues = []
+    main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
+    int_sep = ';' #sep counts in <counts>
     
-    _output_BED(name, pvalues, peaks, pv_pass)
-    _output_narrowPeak(name, pvalues, peaks, pv_pass)    
+    for i, el in enumerate(regions):
+        tmp = el.data.split(',')
+        counts = ",".join(tmp).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
+        pvalue = float(tmp[len(tmp)-1].replace(")", "").strip())
+        pvalues.append(pvalue)
+        output.append((el.chrom, el.initial, el.final, el.orientation, counts))
+    
+    pcutoff = -log10(pcutoff)
+    pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
+    
+    output = np.array(output)
+    output = output[pv_pass]
+    output = map(lambda x: tuple(x), list(output))
+    pv_pass = list(pv_pass)
+    
+    _output_BED(name, output, pvalues)
+    _output_narrowPeak(name, output, pvalues)
+
+def _output_BED(name, output, pvalues):
+    f = open(name + '-diffpeaks.bed', 'w')
+     
+    colors = {'+': '255,0,0', '-': '0,255,0'}
+    bedscore = 1000
+    
+    for i in range(len(pvalues)):
+        c, s, e, strand, counts = output[i]
+            
+        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
+    
+    f.close()
+
+def _output_narrowPeak(name, output, pvalues):
+    """Output in narrowPeak format,
+    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
+    f = open(name + '-diffpeaks.narrowPeak', 'w')
+    for i in range(len(pvalues)):
+        c, s, e, strand, _ = output[i]
+        print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
+    f.close()
 
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     """Compute Extension sizes for bamfiles and input files"""

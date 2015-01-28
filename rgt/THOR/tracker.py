@@ -13,6 +13,6 @@ class Tracker:
             self.file.write('#' + header + '\n')
         
         if isinstance(text, np.ndarray):
-            self.file.write(re.sub(' +',' ', str(text).replace('\n ', '\n').replace('[','').replace(']','').strip()) + '\n')
+            self.file.write(re.sub(' +',' ', str(text).replace('\n ', '\n').replace('[','').replace(']','').strip().replace('\n ', '\n')) + '\n')
         else:
             self.file.write(text + '\n')

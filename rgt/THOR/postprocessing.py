@@ -27,24 +27,23 @@ def merge_data(regions):
 
 
 def output(name, regions):
-    f = open(name + '-diffpeaks.bed', 'w')
     color = {'+': '255,0,0', '-': '0,255,0'}
+    output = []
+    
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
-        #print(tmp, file=sys.stderr)
-        counts = ",".join(map(lambda x: re.sub("\D", "", x), tmp[:len(tmp)-1]))
-        pvalue = tmp[len(tmp)-1].replace(")", "").strip()
-        #print(counts, pvalue, file=sys.stderr)
-        #c1 = int(tmp[0].replace("(", ""))
-        #c2 = int(tmp[1])
-        #logpvalue = float(tmp[2].replace(")", ""))
+        #counts = ",".join(map(lambda x: re.sub("\D", "", x), tmp[:len(tmp)-1]))
+        main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
+        int_sep = ';' #sep counts in <counts>
+        counts = ",".join(tmp).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
+        pvalue = float(tmp[len(tmp)-1].replace(")", "").strip())
         
-        print(el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
-              color[el.orientation], 0, counts + ',' + pvalue, sep='\t', file=f)
-    f.close()
+        output.append("\t".join([el.chrom, el.initial, el.final, 'Peak'+str(i), 1000, el.orientation, el.initial, el.final, \
+              color[el.orientation], 0, counts]), pvalue)
     
+    return output
 
-def merge_delete(ext_size, merge, peak_list, pvalue_list, name):
+def merge_delete(ext_size, merge, peak_list, pvalue_list):
 #     peaks_gain = read_diffpeaks(path)
     
     regions_plus = GenomicRegionSet('regions') #pot. mergeable
@@ -88,7 +87,8 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list, name):
     for el in regions_unmergable:
         results.add(el)
     results.sort()
-    output(name, results)
+    
+    return results
 
 if __name__ == '__main__':
     ext_size1 = int(sys.argv[1]) #100
