@@ -15,4 +15,8 @@ class Tracker:
         if isinstance(text, np.ndarray):
             self.file.write(re.sub(' +',' ', str(text).replace('\n ', '\n').replace('[','').replace(']','').strip().replace('\n ', '\n').replace('\n ', '\n').replace('\n ', '\n')) + '\n')
         else:
+            if isinstance(text, list):
+                text = ",".join(text)
+            if isinstance(text, int) or isinstance(text, float):
+                text = str(text)
             self.file.write(text + '\n')
