@@ -415,7 +415,7 @@ def input(test):
             options.verbose = True
         
         if options.version:
-            version = "version \"0.1alpha\""
+            version = "version \"0.3\""
             print("")
             print(version)
             sys.exit()
