@@ -232,9 +232,9 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
         ext_input_2, values_input_2 = get_extension_size(input_2, start=start, end=end, stepsize=ext_stepsize)
     print("Read extension for second input file: %s" %ext_input_2, file=sys.stderr)
     
-    tracker.write(text=str(ext_1) + "," + str(ext_2) + "\n", header="Extension size IP1, IP2")
+    tracker.write(text=str(ext_1) + "," + str(ext_2), header="Extension size IP1, IP2")
     if input_1 is not None and input_2 is not None:
-        tracker.write(text=str(ext_input_1) + "," + str(ext_input_2) + "\n", header="Extension size Control1, Control2")
+        tracker.write(text=str(ext_input_1) + "," + str(ext_input_2), header="Extension size Control1, Control2")
     
     if verbose:
         if 'values_1' in locals() and values_1 is not None:
