@@ -245,9 +245,9 @@ class MultiCoverageSet(DualCoverageSet):
                 print("No differential peaks detected", file=sys.stderr)
                 sys.exit()
             
-            if len(s1) < 100/4 and len(s2) > 2*100:
+            if len(s1) < 100/2 and len(s2) > 2*100:
                 s1 = map(lambda x: (x[0], x[2], x[1]), s2)
-            if len(s2) < 100/4 and len(s1) > 2*100:
+            if len(s2) < 100/2 and len(s1) > 2*100:
                 s2 = map(lambda x: (x[0], x[2], x[1]), s1)
             
             if len(s1) < 100 or len(s2) < 100:
