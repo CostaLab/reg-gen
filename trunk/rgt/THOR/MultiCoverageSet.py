@@ -217,7 +217,7 @@ class MultiCoverageSet(DualCoverageSet):
     def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
         threshold = 3.0
-        diff_cov = 20
+        diff_cov = 100
         if test:
             diff_cov = 2
             threshold = 1.5
@@ -226,17 +226,33 @@ class MultiCoverageSet(DualCoverageSet):
         #if debug:
         #    self.output_overall_coverage('signal')
         
-        for i in range(len(self.indices_of_interest)):
-            cov1, cov2 = self._get_covs(exp_data, i)
-
-            #apply criteria for initial peak calling
-            if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                s1.append((i, cov1, cov2))
-            elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                s2.append((i, cov1, cov2))
-            elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
-                s0.append((i, cov1, cov2))
-        print(len(s0), len(s1), len(s2), file=sys.stderr)
+        rep=True
+        while rep:
+            for i in range(len(self.indices_of_interest)):
+                cov1, cov2 = self._get_covs(exp_data, i)
+    
+                #apply criteria for initial peak calling
+                if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
+                    s1.append((i, cov1, cov2))
+                elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
+                    s2.append((i, cov1, cov2))
+                elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
+                    s0.append((i, cov1, cov2))
+            
+            print(len(s0), len(s1), len(s2), file=sys.stderr)
+            
+            if diff_cov == 1 and threshold == 1.1:
+                print("No differential peaks detected", file=sys.stderr)
+                sys.exit()
+            
+            if len(s1) < 100 or len(s2) < 100:
+                diff_cov -= 20
+                threshold -= 0.1
+                diff_cov = max(diff_cov, 1)
+                threshold = max(threshold, 1.1)
+            else:
+                rep = False
+            
         
         if len(s1) == 0:
             s1 = map(lambda x: (x[0], x[2], x[1]), s2)
