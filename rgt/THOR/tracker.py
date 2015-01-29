@@ -11,7 +11,6 @@ class Tracker:
     def write(self, text, header=None):
         if header:
             self.file.write('#' + header + '\n')
-        print(text, type(text))
         if isinstance(text, np.ndarray):
             self.file.write(re.sub(' +',' ', str(text).replace('\n ', '\n').replace('[','').replace(']','').strip().replace('\n ', '\n').replace('\n ', '\n').replace('\n ', '\n')) + '\n')
         else:
