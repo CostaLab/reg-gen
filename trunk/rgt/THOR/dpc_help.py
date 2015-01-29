@@ -226,8 +226,11 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
     
     output = np.array(output)
     output = output[pv_pass]
+    pvalues = pvalues[pv_pass]
     output = map(lambda x: tuple(x), list(output))
     pv_pass = list(pv_pass)
+    
+    assert(len(output) == len(pvalues))
     
     _output_BED(name, output, pvalues)
     _output_narrowPeak(name, output, pvalues)
