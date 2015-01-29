@@ -70,7 +70,8 @@ class BinomialHMM2d3s(_BaseHMM):
 
     def save_setup(self, tracker):
         tracker.write(text=self.n, header="HMM's Binomial Emission Distribution (n, p)")
-        tracker.write(text=self.p)
+        tracker.write(text=self.p[0])
+        tracker.write(text=self.p[1])
         tracker.write(text=self.n[0], header="p-value setting (n, p of Background state)")
         tracker.write(self.p[0][1])
         tracker.write(text=self._get_transmat(), header="Transmission matrix")
