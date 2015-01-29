@@ -24,6 +24,7 @@ from get_fast_gen_pvalue import get_log_pvalue_new
 from postprocessing import merge_delete
 from math import log10
 from rgt.motifanalysis.Statistics import multiple_test_correction
+import os
 
 SIGNAL_CUTOFF = 30000
 
@@ -267,31 +268,6 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
     return cov_cdp_mpp, [ext_1, ext_2]
 
 
-def _get_chrom_list(file):
-    l = []
-    with open(file) as f:
-        for line in f:
-            line = line.strip()
-            line = line.split('\t')
-            if line[0] not in l:
-                l.append(line[0])
-    return l
-
-# def _check_order(deadzones, regions, parser):
-#     chrom_dz = _get_chrom_list(deadzones)
-#     chrom_regions= _get_chrom_list(regions)
-#     #chrom_regions may be subset of chrom_dz, but in same ordering
-#     pos_old = -1
-#     tmp_dz = []
-#     #the list should have the same element
-#     for r_chrom in chrom_dz:
-#         if r_chrom in chrom_regions:
-#             tmp_dz.append(r_chrom)
-#     #they should be in the same order
-#     if not tmp_dz == chrom_regions:
-#         parser.error("Please make sure the deadzone file has the same order as the region file.")
-    
-
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
     def error(self, msg):
@@ -402,7 +378,9 @@ def input(test):
         parser.add_option("--version", dest="version", default=False, action="store_true", help="show version [default: %default]")
         parser.add_option("--bibtex", dest="bibtex", default=False, action="store_true", help="show BibTeX entry [default: %default]")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
-    
+        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
+                          help="All files are stored in output directory which is created if necessary.")
+        
         group = OptionGroup(parser, "Advanced options")
         group.add_option("--regions", dest="regions", default=None, help="regions (BED) where to search for DPs [default: entire genome]")
         group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
@@ -494,5 +472,17 @@ def input(test):
     
     if not which("wigToBigWig"):
         print("Warning: wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
+    
+    
+    if options.outputdir:
+        options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path
+        if os.path.isdir(options.outputdir) and sum(map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
+            parser.error("Output directory exists and contains files with names starting with your chosen experiment name! Do nothing to prevend file overwriting!")
+        if not os.path.exists(options.outputdir):
+            os.mkdir(options.outputdir)
+    else:
+        options.outputdir = os.getcwd() 
+    
+    options.name = os.path.join(options.outputdir, options.name)
     
     return options, bamfile_1, bamfile_2, genome, chrom_sizes
