@@ -151,6 +151,44 @@ class NegBinRepHMM(_BaseHMM):
         
         stats['posterior'] = np.copy(posteriors)
         
+    def _valid_posteriors(self, posteriors, obs):
+    
+        warnings.filterwarnings('error')
+        
+        for i in range(len(obs)):
+            state_1 = False
+            c1, c2 = np.mean(obs[i][:self.dim[0]]), np.mean(obs[i][self.dim[0]:]) #counts of samples
+    
+            if posteriors[i][0] > 0.5: 
+                state_1 = True
+                
+            if c1 > c2: #state 1
+                if fabs(posteriors[i][2] - 1) < 1e-200:
+                    posteriors[i] = np.array([1, 0, 0])
+                else:
+                    if not state_1 and posteriors[i][2] > posteriors[i][1]:
+                        try:                        
+                            post_s2 = 0
+                            post_s0 = posteriors[i][0] / (posteriors[i][0] + posteriors[i][1])
+                            post_s1 = posteriors[i][1] / (posteriors[i][0] + posteriors[i][1])
+                            posteriors[i] = np.array([post_s0, post_s1, post_s2])
+                        except RuntimeWarning:
+                            print(posteriors[i], c1, c2, file=sys.stderr)
+            
+            if c2 > c1: #state 2
+                if fabs(posteriors[i][1] - 1) < 1e-200:
+                    posteriors[i] = np.array([1, 0, 0])
+                else:
+                    if not state_1 and posteriors[i][1] > posteriors[i][2]:
+                        try:
+                            post_s1 = 0
+                            post_s0 = posteriors[i][0] / (posteriors[i][0] + posteriors[i][2])
+                            post_s2 = posteriors[i][2] / (posteriors[i][0] + posteriors[i][2])
+                            posteriors[i] = np.array([post_s0, post_s1, post_s2])
+                        except RuntimeWarning:
+                            print(posteriors[i], c1, c2, file=sys.stderr)
+        
+        return posteriors
 
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                       posteriors, fwdlattice, bwdlattice,
@@ -158,7 +196,7 @@ class NegBinRepHMM(_BaseHMM):
         super(NegBinRepHMM, self)._accumulate_sufficient_statistics(
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
             params)
-        
+        posteriors = self._valid_posteriors(posteriors, obs)
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
     def _help_do_mstep(self, stats):
