@@ -217,7 +217,7 @@ class MultiCoverageSet(DualCoverageSet):
     def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
         threshold = 3.0
-        diff_cov = 50
+        diff_cov = 20
         if test:
             diff_cov = 2
             threshold = 1.5
