@@ -239,14 +239,14 @@ class MultiCoverageSet(DualCoverageSet):
                 elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                     s0.append((i, cov1, cov2))
             
-            print(len(s0), len(s1), len(s2), file=sys.stderr)
+            print(diff_cov, threshold, len(s0), len(s1), len(s2), file=sys.stderr)
             
             if diff_cov == 1 and threshold == 1.1:
                 print("No differential peaks detected", file=sys.stderr)
                 sys.exit()
             
             if len(s1) < 100 or len(s2) < 100:
-                diff_cov -= 20
+                diff_cov -= 15
                 threshold -= 0.1
                 diff_cov = max(diff_cov, 1)
                 threshold = max(threshold, 1.1)
