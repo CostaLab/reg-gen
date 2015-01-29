@@ -210,36 +210,17 @@ class NegBinRepHMM(_BaseHMM):
     
 if __name__ == '__main__':
     alpha = np.matrix([[0.2, 0.2, 0.2], [0.2, 0.2, 0.2]])
-    mu = np.matrix([[10.,100.,10.], [10.,10.,100.]])
-    para_func = [[1, 2, 0.3], [1, 2, 0.3]]
-    para_func = [np.array([-0.02178527,  0.48686578,  0.21833156]), np.array([ 0.76335214, -0.94956275,  0.70959764])]
+    mu = np.matrix([[15.,100.,10.], [10.,10.,100.]])
+    f = lambda x: 0.4*x**2 + 1
     
-    #tmp_a = []
-    #for i in range(2):
-        #tmp_a.append(map(lambda m: get_alpha(para_func, i, m), np.asarray(mu[i])[0]))
-    
-    #alpha = np.matrix(tmp_a)
-    #print(mu)
-    #print(alpha)
-    
-    dim_cond_1 = 5
-    dim_cond_2 = 5
+    dim_cond_1 = 2
+    dim_cond_2 = 3
 
-    m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2)
+    m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
     
     X, Z = m.sample(20)
-#     for i, el in enumerate(X):
-#         print(el, Z[i], sep='\t')
     
-    
-#    X = np.array([[80,14], [34,92], [15,95],[15,5],[44,2]])
-#    n_ = [ sum([x[i] for x in X]) for i in range(2) ]
-#    X=np.array([[46,5],[41, 3],[43,4],[43,2],[45,4],[39,3],[18,36],[28,28],[43,1],[23,35]])
-#     print('obs           ', X)
-#     print('hidden states ', Z)
-# #    X = np.array([[12,2],[11, 5],[12,4],[10,2],[4,4],[3,3],[2,1],[2,14],[4,11],[2,9]])
-    
-    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, para_func = para_func)
+    m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
     m2.fit([X])
     
     posteriors = m.predict_proba(X)
@@ -247,25 +228,4 @@ if __name__ == '__main__':
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
     
-    #print(m2.transmat_)
-    #print(m2.alpha)
-    #print(m2.mu)
-    #print(m2.predict_proba(X))
-#     
-#     
-# #    logprob, posteriors = m2.eval(X)
-# #    print('logprob:', logprob)
-# #    print('posteriors:', posteriors)
-#     
-#     print('estim. states ', m2.predict(X))
-#     print(m2.predict_proba(X))
-#     print(m2.n)
-#     print(m2.p)
-#     print(m2._get_transmat())
-#     init_state = m2.predict(X)
-#     m3 = BinomialHMM2d3s(n_components=3, n=n_)
-#     m3.fit([X], init_params='advanced')
-#     print(m3._get_transmat())
-#     print(m3.p)
-#     m2.eval(X)
     
