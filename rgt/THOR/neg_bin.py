@@ -78,10 +78,11 @@ class NegBin():
             while True:
                 v = self.nbin(i, self.mu, 1./self.alpha)
                 probs.append(v)
-                v_old = v
+                
                 i += 1
                 if fabs(v_old - v) < 10**-10:
                     break
+                v_old = v
             self.bins = map(lambda x: float(x), np.add.accumulate(probs))
         return np.digitize(random_sample(1), self.bins)[0]
 
