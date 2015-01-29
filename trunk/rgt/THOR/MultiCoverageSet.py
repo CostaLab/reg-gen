@@ -216,8 +216,8 @@ class MultiCoverageSet(DualCoverageSet):
     
     def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
-        threshold = 3.0
-        diff_cov = 100
+        threshold = 2.0
+        diff_cov = 80
         if test:
             diff_cov = 2
             threshold = 1.5
@@ -245,6 +245,11 @@ class MultiCoverageSet(DualCoverageSet):
                 print("No differential peaks detected", file=sys.stderr)
                 sys.exit()
             
+            if len(s1) == 0:
+                s1 = map(lambda x: (x[0], x[2], x[1]), s2)
+            if len(s2) == 0:
+                s2 = map(lambda x: (x[0], x[2], x[1]), s1)
+            
             if len(s1) < 100 or len(s2) < 100:
                 diff_cov -= 15
                 threshold -= 0.1
@@ -254,10 +259,7 @@ class MultiCoverageSet(DualCoverageSet):
                 rep = False
             
         
-        if len(s1) == 0:
-            s1 = map(lambda x: (x[0], x[2], x[1]), s2)
-        if len(s2) == 0:
-            s2 = map(lambda x: (x[0], x[2], x[1]), s1)
+        
         
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
