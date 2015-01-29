@@ -84,11 +84,12 @@ class PoissonHMM2d3s(_BaseHMM):
     
     
     def save_setup(self, tracker, n, p):
-        tracker.write(text=str(self.p) + '\n', header='Poisson P\n')
-        tracker.write(text=str(self.c) + '\n', header='Poisson C\n')
-        tracker.write(text=str(n) + '\n' + str(p), header='Poisson p-value settings\n')
-        tracker.write(text=str(self._get_transmat()) + "\n", header="Transmission matrix")
-        tracker.write(text=str(self.distr_magnitude) + "\n", header="Distribution magnitude")
+        tracker.write(text=self.p, header='Poisson P')
+        tracker.write(text=self.c, header='Poisson C')
+        tracker.write(text=str(n), header='Poisson p-value settings (n, p)')
+        tracker.write(text=str(p))
+        tracker.write(text=self._get_transmat(), header="Transmission matrix")
+        tracker.write(text=self.distr_magnitude, header="Distribution magnitude")
     
     def _compute_log_likelihood(self, X):
         matrix = []
