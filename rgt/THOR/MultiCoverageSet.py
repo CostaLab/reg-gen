@@ -236,6 +236,7 @@ class MultiCoverageSet(DualCoverageSet):
                 s2.append((i, cov1, cov2))
             elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                 s0.append((i, cov1, cov2))
+        print(len(s0), len(s1), len(s2), file=sys.stderr)
         
         if len(s1) == 0:
             s1 = map(lambda x: (x[0], x[2], x[1]), s2)
