@@ -126,7 +126,7 @@ class RNADNABindingSet:
         """Sort the dictionary by DNA"""
         self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
     
-    def merge_rbs(self):
+    def merge_rbs(self, rm_duplicate=False):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -149,10 +149,10 @@ class RNADNABindingSet:
                     except:
                         new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
                         new_dict[rbsm].add(rd.dna)
-
+            if rm_duplicate: new_dict[rbsm].remove_duplicates()
         self.merged_dict = new_dict
 
-    def read_txp(self, filename):
+    def read_txp(self, filename, dna_fine_posi=False):
         """Read txp file to load all interactions. """
         
         with open(filename) as f:
@@ -192,10 +192,15 @@ class RNADNABindingSet:
                                   errors_bp=line[8], motif=line[9], orientation=line[11], 
                                   guanine_rate=line[12])
                 # DNA binding site
-                dna_start = int(line[3].split(":")[1].split("-")[0]) + int(line[4])
-                dna_end = int(line[3].split(":")[1].split("-")[0]) + int(line[5])
-                dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
-                                    name=line[3], orientation=line[10])
+                if dna_fine_posi:
+                    dna_start = int(line[3].split(":")[1].split("-")[0]) + int(line[4])
+                    dna_end = int(line[3].split(":")[1].split("-")[0]) + int(line[5])
+                    dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
+                                        name=line[3], orientation=line[10])
+                else:
+                    dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(line[3].split(":")[1].split("-")[0]),
+                                        final=int(line[3].split(":")[1].split("-")[1]), 
+                                        name=line[3], orientation=line[10])
                 
                 # Map RNA binding site to DNA binding site
                 self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))

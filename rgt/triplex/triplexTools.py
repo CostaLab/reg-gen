@@ -26,6 +26,7 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 def mp_find_rbs(s, motif, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_rbs(s, motif, min_len, max_len)
+
 def mp_find_dbs(s, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_dbs(s, min_len, max_len)
@@ -44,17 +45,110 @@ def value2str(value):
         else: r = "{:.1e}".format(value)
         return r
 
-def random_each(number, rna, region, temp, remove_temp, organism):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
+    """Perform Triplexator"""
+    path_triplexator = "~/Apps/triplexator/bin/triplexator"
+
+    arguments = " "
+    if ss: arguments += "-ss "+ss+" "
+    if ds: arguments += "-ds "+ds+" "
+    if l: arguments += "-l "+str(l)+" "
+    if e: arguments += "-e "+str(e)+" "
+    if c: arguments += "-c "+str(c)+" "
+    if fr: arguments += "-fr "+fr+" "
+    if fm: arguments += "-fm "+str(fm)+" "
+    if of: arguments += "-of "+str(of)+" "
+    if mf: arguments += "-mf "
+    if rm: arguments += "-rm "+str(rm)+" "
+    
+    if output: arguments += "> "+output
+    os.system(path_triplexator+arguments)
+
+
+def random_each(input):
     """Return the counts of DNA Binding sites with randomization
-    For multiprocessing. """
-    print("Processing: "+str(number))
-    random = region.random_regions(organism=organism, multiply_factor=1, 
-                                   overlap_result=True, overlap_input=True, 
-                                   chrom_X=True, chrom_M=False)
-    ran = RandomTest(rna_fasta=rna, dna_region=region, organism=organism)
-    txp = ran.find_triplex(random, temp=temp, prefix=str(number), remove_temp=remove_temp)
+    For multiprocessing. 
+    Input contains:
+    number, rna, region, temp, remove_temp, organism
+    """
+    print("Processing: "+str(input[0]))
+
+    random = input[2].random_regions(organism=input[5], multiply_factor=1, 
+                                     overlap_result=True, overlap_input=True, 
+                                     chrom_X=True, chrom_M=False)
+    txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
+                       organism=input[5], prefix=str(input[0]), remove_temp=input[4])
     return [ len(dbss) for dbss in txp.merged_dict.values() ]
 
+def find_triplex(rna_fasta, dna_region, temp, organism, prefix="", remove_temp=False):
+    """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
+    
+    arguments_triplexator = "-l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf"
+    # Generate BED 
+    dna_region.write_bed(os.path.join(temp,"dna_"+prefix+".bed"))
+    # Bedtools
+    os.system("bedtools getfasta -fi /data/genome/"+organism+"/"+organism+".fa -bed "+\
+              os.path.join(temp,"dna_"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
+    # Triplexator
+    run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
+                    output=os.path.join(temp, "dna_"+prefix+".txp"), 
+                    l=15, e=15, c=2, fr="off", fm=0, of=1, mf=True)
+    # Read txp
+    txp = RNADNABindingSet("dna")
+    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"))
+    #print(len(txp_de))
+    txp.merge_rbs()
+
+    if remove_temp:
+        os.remove(os.path.join(temp,"dna_region"+prefix+".bed"))
+        os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
+        os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
+
+    return txp
+
+def read_ac(self, path, cut_off):
+    """Read the RNA accessibility file and output its positions and values
+
+    The file should be a simple table with two columns:
+    The first column is the position and the second one is the value
+    '#' will be skipped
+
+    example:
+        #pos      u4S            
+        1        NA  
+        2        NA  
+        3        NA  
+        4     1.740  
+        5     2.785  
+        6     3.367  
+        7     2.727  
+        8     2.315  
+        9     3.005  
+        10     2.679  
+        11     3.803  
+        12     4.267  
+        13     1.096  
+    """
+    #pos = []
+    values = []
+    with open(path) as f:
+        for line in f:
+            line = line.split()
+            if not line: continue
+            elif line[0][0] == "#": continue
+            elif len(line) < 2: continue
+            else:
+                #pos.append(int(line[0]))
+                v = line[1]
+                if v == "NA": v = 0
+                else: v = float(v)
+                v = 2**(-v)
+                if v >= cut_off:
+                    v = 0.7 # Make it brighter in colormap. 1 is too dark for colormap
+                else:
+                    v = 0
+                values.append(v)
+    return values
 #####################################################################################
 
 class TriplexSearch:
@@ -312,48 +406,49 @@ class TriplexSearch:
 
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
-    def __init__(self, gene_list_file, organism, promoterLength):
+    def __init__(self, gene_list_file, bed, bg, organism, promoterLength):
         """Initiation"""
         self.organism = organism
-
-        # DE gene regions
-        self.de_gene = GeneSet("de genes")
-        self.de_gene.read(gene_list_file)
         self.de_regions = GenomicRegionSet("de genes")
-        #self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
-        #                              promoterLength=promoterLength)
-        self.de_regions.read_bed("/projects/lncRNA/data/fendrr/fendrr_genes_promoters.bed")
-        
-        # nonDE gene regions
-        self.nde_gene = GeneSet("nde genes")
-        self.nde_gene.get_all_genes(organism=organism)
-        self.nde_gene.subtract(self.de_gene)
         self.nde_regions = GenomicRegionSet("nde genes")
-        #self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
-        #                               promoterLength=promoterLength)
-        self.nde_regions.read_bed("/projects/lncRNA/data/fendrr/promoters_bg.bed")
-        
-    def search_triplex(self, rna, temp, remove_temp=False):
-        
-        #arguments_triplexator = "-l 15 -e 15 -c 2 -fr off -fm 0 -of 1 -mf -rm 1"
-        arguments_triplexator = "-l 30 -e 15 -c 2 -fr off -fm 0 -of 1 -mf"
+
+        if bed and bg:
+            self.de_regions.read_bed(bed)
+            self.nde_regions.read_bed(bg)
+        else:
+            # DE gene regions
+            self.de_gene = GeneSet("de genes")
+            self.de_gene.read(gene_list_file)
+            self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
+                                          promoterLength=promoterLength)
+            
+            # nonDE gene regions
+            self.nde_gene = GeneSet("nde genes")
+            self.nde_gene.get_all_genes(organism=organism)
+            self.nde_gene.subtract(self.de_gene)
+            self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
+                                           promoterLength=promoterLength)
+            
+    def search_triplex(self, rna, temp, l, e, remove_temp=False):
         # DE
         self.de_regions.write_bed(os.path.join(temp,"de_regions.bed"))
-        #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
+
+        #os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
         #          "/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed"+" -fo "+os.path.join(temp,"de.fa"))
         os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
                   os.path.join(temp,"de_regions.bed")+" -fo "+os.path.join(temp,"de.fa"))
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
-                  rna+" -ds "+os.path.join(temp,"de.fa")+" > "+os.path.join(temp, "de.txp"))
-
+        run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
+                        output=os.path.join(temp, "de.txp"), 
+                        l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
         #          "/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
         os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
                   os.path.join(temp,"nde_regions.bed")+" -fo "+os.path.join(temp,"nde.fa"))
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
-                  rna+" -ds "+os.path.join(temp,"nde.fa")+" > "+os.path.join(temp, "nde.txp"))
+        run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
+                        output=os.path.join(temp, "nde.txp"), 
+                        l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
         if remove_temp:
             os.remove(os.path.join(temp,"de_regions.bed"))
             os.remove(os.path.join(temp,"de.fa"))
@@ -365,16 +460,17 @@ class PromoterTest:
         
         # Read txp and merge RBS
         txp_de = RNADNABindingSet("DE")
-        txp_de.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes.txp")
-        #txp_de.read_txp(os.path.join(temp, "de.txp"))
-        #print(len(txp_de))
-        txp_de.merge_rbs()
+        #txp_de.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes.txp")
+        #txp_de.read_txp("/projects/lncRNA/data/joseph_results/joseph.txp")
+        txp_de.read_txp(os.path.join(temp, "de.txp"))
+        txp_de.merge_rbs(rm_duplicate=True)
 
         txp_nde = RNADNABindingSet("non-DE")
-        txp_nde.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes_bg.txp")
-        #txp_nde.read_txp(os.path.join(temp, "nde.txp"))
+        #txp_nde.read_txp("/projects/lncRNA/data/fendrr/fendrr_genes_bg.txp")
+        #txp_nde.read_txp("/projects/lncRNA/data/joseph_results/joseph_bg.txp")
+        txp_nde.read_txp(os.path.join(temp, "nde.txp"))
         #print(len(txp_nde))
-        txp_nde.merge_rbs()
+        txp_nde.merge_rbs(rm_duplicate=True)
 
         self.de_frequency = OrderedDict()
         self.nde_frequency = OrderedDict()
@@ -384,19 +480,21 @@ class PromoterTest:
             #if len(regions) < 10: continue
             # DE
             #inter = len(regions.intersect(self.de_regions, mode=OverlapType.ORIGINAL))
-            inter = len(self.de_regions.intersect(regions, mode=OverlapType.ORIGINAL))
+            #inter = len(self.de_regions.intersect(regions, mode=OverlapType.ORIGINAL))
+            inter = len(regions)
             self.de_frequency[rbs] = [inter, len_de - inter]
             # non-DE
             #inter = len(regions.intersect(self.nde_regions, mode=OverlapType.ORIGINAL))
-            self.nde_frequency[rbs] = [0, len_nde]
+            #self.nde_frequency[rbs] = [0, len_nde]
             for rbs_n, regions_n in txp_nde.merged_dict.iteritems():
                 
                 if rbs.overlap(rbs_n):
-                    print("Overlap RBS: "+rbs.region_str_rna()+"   "+rbs_n.region_str_rna()+"   "+str(len(regions))+"   "+str(len(regions_n)))
-                    inter = len(self.nde_regions.intersect(regions_n, mode=OverlapType.ORIGINAL))
+                    #print("Overlap RBS: "+rbs.region_str_rna()+"   "+rbs_n.region_str_rna()+"   "+str(len(regions))+"   "+str(len(regions_n)))
+                    #inter = len(self.nde_regions.intersect(regions_n, mode=OverlapType.ORIGINAL))
                     
+                    inter = len(regions_n)
                     self.nde_frequency[rbs] = [inter, len_nde - inter]
-                    print(self.nde_frequency[rbs])
+                    #print(self.nde_frequency[rbs])
                 
         self.txp_de = txp_de
         self.txp_nde = txp_nde
@@ -418,7 +516,7 @@ class PromoterTest:
             #self.oddsratio[rbs], p = stats.fisher_exact([self.de_frequency[rbs], self.nde_frequency[rbs]])
             table = numpy.array([self.de_frequency[rbs], self.nde_frequency[rbs]])
             #table = numpy.transpose(table)
-            self.oddsratio[rbs], p = stats.fisher_exact(table)
+            self.oddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
             pvalues.append(p)
 
         # correction
@@ -430,51 +528,6 @@ class PromoterTest:
             self.pvalue[rbs] = pvals_corrected[i]
             if pvals_corrected[i] < 0.05:
                 self.sig_region.append(rbs)
-
-    def read_ac(self, path, cut_off):
-        """Read the RNA accessibility file and output its positions and values
-
-        The file should be a simple table with two columns:
-        The first column is the position and the second one is the value
-        '#' will be skipped
-
-        example:
-            #pos      u4S            
-            1        NA  
-            2        NA  
-            3        NA  
-            4     1.740  
-            5     2.785  
-            6     3.367  
-            7     2.727  
-            8     2.315  
-            9     3.005  
-            10     2.679  
-            11     3.803  
-            12     4.267  
-            13     1.096  
-        """
-        #pos = []
-        values = []
-        with open(path) as f:
-            for line in f:
-                line = line.split()
-                if not line: continue
-                elif line[0][0] == "#": continue
-                elif len(line) < 2: continue
-                else:
-                    #pos.append(int(line[0]))
-                    v = line[1]
-                    if v == "NA": v = 0
-                    else: v = float(v)
-                    v = 2**(-v)
-                    if v >= cut_off:
-                        v = 1
-                    else:
-                        v = 0
-                    values.append(v)
-        return values
-
 
     def plot_frequency_rna(self, rna, dir, cut_off, ac=None):
         """Generate the plots for demonstration of RBS
@@ -514,10 +567,9 @@ class PromoterTest:
         ax.plot(x, a_y, color="r", alpha=.5, lw=1, label="Anti-parallel")
         
         
-
         # RNA accessbility
         if ac:
-            n_value = self.read_ac(ac, cut_off)
+            n_value = read_ac(ac, cut_off)
             ac = numpy.array([n_value])
             ax.imshow(ac, cmap='Oranges', interpolation='nearest', extent=[0, self.rna_len, min_y, 0],
                       aspect='auto', label="Accessibility")
@@ -642,40 +694,19 @@ class RandomTest:
     	self.organism = organism
         # RNA: Path to the FASTA file
         self.rna_fasta = rna_fasta
+        rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
+        rnas.read_fasta(self.rna_fasta)
+        self.rna_name = rnas[0].name
+        self.rna_len = len(rnas[0])
         # DNA: GenomicRegionSet
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
         
-
-    def find_triplex(self, dna_region, temp, prefix="", remove_temp=False):
-        """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
-        
-        arguments_triplexator = "-l 30 -e 15 -c 2 -fr off -fm 0 -of 1 -mf"
-        # Generate BED 
-        dna_region.write_bed(os.path.join(temp,"dna_region"+prefix+".bed"))
-        # Bedtools
-        os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
-                  os.path.join(temp,"dna_region"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
-        # Triplexator
-        os.system("/projects/lncRNA/bin/triplexator/bin/triplexator "+arguments_triplexator+" -ss "+\
-                  self.rna_fasta+" -ds "+os.path.join(temp,"dna_"+prefix+".fa")+" > "+os.path.join(temp, "dna_"+prefix+".txp"))
-
-        # Read txp
-        txp = RNADNABindingSet("dna")
-        txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"))
-        #print(len(txp_de))
-        txp.merge_rbs()
-
-        if remove_temp:
-            os.remove(os.path.join(temp,"dna_region"+prefix+".bed"))
-            os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
-            os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
-
-        return txp
-    
     def target_dna(self, temp, remove_temp):
         """Calculate the true counts of triplexes on the given dna regions"""
-        txp = self.find_triplex(self.dna_region, temp=temp, remove_temp=remove_temp)
+        
+        txp = find_triplex(rna_fasta=self.rna_fasta, dna_region=self.dna_region, 
+                           temp=temp, organism=self.organism, remove_temp=remove_temp)
         self.rbss = txp.merged_dict.keys()
         
         self.counts_target = OrderedDict()
@@ -694,16 +725,97 @@ class RandomTest:
         # Multiprocessing
         pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
         mp_output = pool.map(random_each, mp_input)
+        print(mp_output)
         pool.close()
         pool.join()
         
         # Processing the result
-        self.counts_random = OrderedDict()  
+        matrix = []
+        self.p_random = []
+        self.mean_random = []
+        self.sig_region = []
         for i, rbs in enumerate(self.rbss):
-            self.counts_random[rbs] = [ v[i] for v in mp_output ]
+            print(i)
+            row = [ v[i] for v in mp_output ]
+            print(row)
+            matrix.append(row)
+            p = float(len([ h for h in row if h > self.counts_target[rbs] ]))/repeats
+            self.p_random.append(p)
+            if p < 0.05: self.sig_region.append(rbs)
+            self.mean_random.append(numpy.mean(row))
+        self.counts_random = numpy.array(matrix)
+        self.sd_random = numpy.std(self.counts_random, axis=0)
 
-    def plot(self):
+    def plot(self, dir, ac, cut_off):
         """Generate the visualized plot"""
         
-    def gen_html(self):
+        # Extract data points
+        x = range(self.rna_len)
+        y = []
+
+        for i in range(self.rna_len):
+            y.append(self.rbss.count_rbs_position(i))
+        
+        max_y = float(max(y) * 1.05)
+
+        # Plotting
+        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
+        for rbs in self.sig_region:
+            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="r", 
+                                     edgecolor="none", alpha=0.1, lw=None)
+            ax.add_patch(rect)
+        ax.plot(x, y, color="b", alpha=.5, lw=1)
+
+        #ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode="expand", borderaxespad=0.)
+        ax.set_xlim(left=0, right=self.rna_len )
+        ax.set_ylim( [0, max_y] ) 
+        
+        if ac:
+            n_value = read_ac(ac, cut_off)
+            ac = numpy.array([n_value])
+            ax.imshow(ac, cmap='Oranges', interpolation='nearest', extent=[0, self.rna_len, min_y, 0],
+                      aspect='auto', label="Accessibility")
+
+        ax.set_xlabel("RNA sequence (bp)", fontsize=12)
+        ax.set_ylabel("Frequency of RNA binding sites",fontsize=12, rotation=90)
+
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.savefig(os.path.join(dir, "randomtest.png"), facecolor='w', edgecolor='w',  
+                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+
+    def gen_html(self, directory, align=50, alpha = 0.05):
         """Generate the HTML file"""
+        link_d = {os.path.basename(directory):"randomtest.html"}
+        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
+        
+        html.add_figure("randomtest.png", align="center")
+        header_list = ["RBS",
+                       "Count of<br>target regions<br>with DBS",
+                       "Average of<br>randomization",
+                       "SD of<br>randomization",
+                       "P value"]
+        
+        type_list = 'sssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10]
+        data_table = []
+        
+        for i, rbs in enumerate(self.rbss):
+            if self.p_random[i] < alpha:
+                data_table.append([ rbs.region_str_rna(), value2str(self.counts_target[rbs]),
+                                    value2str(self.mean_random[i]), value2str(self.sd_random[i]), 
+                                    "<font color=\"red\">"+value2str(self.p_random[i])+"</font>" ])
+            else:
+                data_table.append([ rbs.region_str_rna(), value2str(self.counts_target[rbs]),
+                                    value2str(self.mean_random[i]), value2str(self.sd_random[i]), 
+                                    value2str(self.p_random[i]) ])
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+
+        header_list=["Notes"]
+        data_table = [["RNA name: "+ self.rna_name ],
+                      ["RBS stands for RNA Binding Site."],
+                      ["DBS stands for DNA Binding Site."]]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+
+        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
+        html.write(os.path.join(directory,"randomtest.html"))

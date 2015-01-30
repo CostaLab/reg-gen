@@ -88,14 +88,17 @@ def main():
     parser_promotertest = subparsers.add_parser('promoter', help=h_promotor)
     parser_promotertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_promotertest.add_argument('-de', help="Input file for defferentially expression gene list ")
-    parser_promotertest.add_argument('-pl', type=int, default=1000, 
-                                   help="Define the promotor length (Default: 1000)")
+    parser_promotertest.add_argument('-bed', help="Input BED file of the promoter regions of defferentially expression genes")
+    parser_promotertest.add_argument('-bg', help="Input BED file of the promoter regions of background genes")
+    parser_promotertest.add_argument('-pl', type=int, default=1000, help="Define the promotor length (Default: 1000)")
     parser_promotertest.add_argument('-o', help="Output directory name for all the results and temporary files")
-    parser_promotertest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_promotertest.add_argument('-organism', help='Define the organism. (Default: hg19)')
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
     parser_promotertest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
+    parser_promotertest.add_argument('-l', type=int, default=None, help="Define the minimum length for Triplexator")
+    parser_promotertest.add_argument('-e', type=int, default=None, help="Define the maximum error rate for Triplexator")
     
     
     ################### Random test ##########################################
@@ -132,11 +135,13 @@ def main():
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
-
+        if not args.organism: 
+            print("Please define the organism. (hg19 or mm9)")
+            sys.exit(1)
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
-        
+        check_dir(args.o)
         # Input parameters dictionary
         summary = []
         summary.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -311,13 +316,17 @@ def main():
     if args.mode == 'promoter':
         print2(summary, "\n"+h_promotor)
         args.r = os.path.normpath(os.path.join(dir,args.r))
-        args.o = os.path.normpath(os.path.join(dir,args.o))
-        check_dir(args.o)
+        
+        if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
+        if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
+        if args.bg: args.bg = os.path.normpath(os.path.join(dir,args.bg))
+
+        
         
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, organism=args.organism, promoterLength=args.pl)
-        #promoter.search_triplex(rna=args.r, temp=args.o, remove_temp=args.rt)
+        promoter = PromoterTest(gene_list_file=args.de, bed=args.bed, bg=args.bg, organism=args.organism, promoterLength=args.pl)
+        promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -358,8 +367,8 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.plot()
-        randomtest.gen_html()
+        randomtest.plot(dir=args.o)
+        randomtest.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
         
