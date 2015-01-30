@@ -240,8 +240,8 @@ class NegBinRepHMM(_BaseHMM):
             el[1,2] = high
             el[1,1] = low
             el[0,2] = low
-            el[0,0] = med
-            el[1,0] = med
+            el[0,0] = min(med, low)
+            el[1,0] = min(med, low)
         
         self._update_distr(self.mu, self.alpha)
 
@@ -266,4 +266,4 @@ if __name__ == '__main__':
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
     
-    
+    print(m2.mu)
