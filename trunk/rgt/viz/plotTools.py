@@ -304,7 +304,7 @@ def multiple_correction(dic):
 
 def compute_coverage(input):
     """
-    bed, bam, rs, bs, ss, center, heatmap, logt
+    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c
     """
     
     ts = time.time()
@@ -339,7 +339,7 @@ def compute_coverage(input):
         #print(avearr.shape)
         avearr = numpy.average(avearr, axis=0)
         #numpy.transpose(avearr)
-        result = avearr # Store the array into data list
+        result = [input[8], input[9], input[10], avearr] # Store the array into data list
     te = time.time()
     print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
@@ -680,6 +680,8 @@ class Projection:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+        html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp,"distribution.html"))
         
 ###########################################################################################
@@ -886,6 +888,8 @@ class Jaccard:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+        html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp,"jaccard.html"))
         
     def table(self, directory, folder):
@@ -1250,6 +1254,8 @@ class Intersect:
         
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+        html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp,"intersection.html"))
     
     def gen_html_comb(self, outputname, title, align):
@@ -1261,12 +1267,8 @@ class Intersect:
         
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        
-        
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** </p>'])
-        
-        
         
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -1307,6 +1309,8 @@ class Intersect:
         """
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+        html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp,"combinatorial.html"))
     
     def posi2region(self, regions, p):
@@ -1930,6 +1934,7 @@ class Boxplot:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(fp,"boxplot.html"))
 ###########################################################################################
 #                    Lineplot 
@@ -2132,7 +2137,9 @@ class Lineplot:
                                             i = annot_ind(self.bednames, [s,g,c])
                                         else: i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
-                                        mp_input.append([self.processed_beds[i], self.reads[j], self.rs, self.bs, self.ss, self.center, heatmap, logt])
+                                        mp_input.append([ self.processed_beds[i], self.reads[j], 
+                                                          self.rs, self.bs, self.ss, self.center, heatmap, logt,
+                                                          s, g, c])
                                         if self.df: data[s][g][c] = []
                                         else: data[s][g][c] = 0
                                     else:
@@ -2190,19 +2197,15 @@ class Lineplot:
             pool.close()
             pool.join()
         
-            i = 0
             for s in data.keys():
                 for g in data[s].keys():
                     for c in data[s][g].keys():
-                        try:
-                            if self.df: 
-                                data[s][g][c].append(numpy.subtract(mp_output[i],mp_output[i+1]))
-                                i = i + 1
-                            else: 
-                                data[s][g][c] = mp_output[i]
-                            i = i + 1
-                        except:
-                            pass
+                        for out in mp_output:
+                            if out[0] == s and out[1] == g and out[2] == c:
+                                if self.df:
+                                    data[s][g][c].append(out[3])
+                                else:
+                                    data[s][g][c] = out[3]     
             te = time.time()
             #print2(self.parameter, "     Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
 
@@ -2333,6 +2336,7 @@ class Lineplot:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(fp,"lineplot.html"))
 
         
@@ -2480,6 +2484,7 @@ class Lineplot:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(fp,"heatmap.html"))
 
 

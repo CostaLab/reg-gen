@@ -560,7 +560,6 @@ class GenomicRegionSet:
                     if s.overlap(b[j]):
                         z.add(s)
                         
-                        
                         try: s = iter_a.next()
                         except: cont_loop = False
                         
@@ -664,11 +663,17 @@ class GenomicRegionSet:
         """Remove the duplicate regions and remain the unique regions. (No return)"""
         if self.sorted == False: self.sort()
         for i in range(len(self.sequences) - 1):
-            try:
-                if self.sequences[i] == self.sequences[i+1]:
-                    del self.sequences[i+1]
-            except:
-                continue
+            loop = True
+            while loop:
+                try:
+                    if self.sequences[i] == self.sequences[i+1]:
+                        del self.sequences[i+1]
+                        loop = True
+                    else:
+                        loop = False
+                except:
+                    loop = False
+                    continue
             
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number 
@@ -1181,7 +1186,7 @@ class GenomicRegionSet:
         right_length:
             The length to extend from the center
         """
-        new_regions = GenomicRegionSet('new'+self.name)
+        new_regions = GenomicRegionSet("relocated_"+self.name)
         for r in self.sequences:
             # Define the position
             if center == 'midpoint':

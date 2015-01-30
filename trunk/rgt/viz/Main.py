@@ -91,8 +91,8 @@ def output_parameters(parameter, directory, folder, filename):
             logp.write("{}\n".format(s))
         logp.close()
 
-def copy_em(em, directory, folder):
-    copyfile(em, os.path.join(dir,directory,folder, "experimental_matrix.txt"))
+def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
+    copyfile(em, os.path.join(dir,directory,folder,filename))
     
 
 def main():
@@ -344,6 +344,8 @@ def main():
         t1 = time.time()
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+        copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
+        copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
         
     ################### Intersect Test ##########################################
     if args.mode == 'intersect':
@@ -390,7 +392,9 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-    
+        copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
+        copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
+
         ################### Jaccard test ##########################################
     if args.mode == "jaccard":
         """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
@@ -423,7 +427,8 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-        
+        copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
+        copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
     
     ################### Combinatorial Test ##########################################
     if args.mode == 'combinatorial':
@@ -466,7 +471,9 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-    
+        copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
+        copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
+
     ################### Boxplot ##########################################
     if args.mode == 'boxplot':
         print("\n################# Boxplot #################")
@@ -516,7 +523,7 @@ def main():
         print2(parameter,"Total running time is: " + str(datetime.timedelta(seconds=round(t5-t0))) + " (H:M:S)\n")
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-    
+        copy_em(em=args.input, directory=args.output, folder=args.title)
     ################### Lineplot #########################################
     if args.mode == 'lineplot':
         print("\n################ Lineplot #################")
@@ -562,7 +569,7 @@ def main():
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))) + "(H:M:S)\n")
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-    
+        copy_em(em=args.input, directory=args.output, folder=args.title)
     ################### Heatmap ##########################################
     if args.mode=='heatmap':
         print("\n################# Heatmap #################")
@@ -615,7 +622,7 @@ def main():
         print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))) + "(H:M:S)\n")
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-        
+        copy_em(em=args.input, directory=args.output, folder=args.title)
     ################### Integration ######################################
     if args.mode=='integration':
         print("\n############### Integration ###############")
