@@ -7,17 +7,14 @@ Created on Mar 6, 2013
 '''
 from __future__ import print_function
 from scipy.stats import poisson
-from sklearn.hmm import _BaseHMM
+from hmmlearn.hmm import _BaseHMM
 import string , numpy as np
-from sklearn import hmm
-from sklearn.hmm import _BaseHMM
 import sys
 from time import time
 from math import fabs
-from sklearn.utils.extmath import logsumexp
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
-import cProfile
-import trace
+# import cProfile
+# import trace
 
 lookup_poisson = {}
 lookup_state = {}
@@ -325,7 +322,7 @@ def test(c = 30, verbose=False):
     return res, errors/c
                 
 if __name__ == '__main__':
-    print(test(c=500, verbose=True))
+    print(test(c=100, verbose=True))
     
     #c, p = get_init_parameters([(10,1), (50,3), (50,2), (40,2)], [(0,10),(2,12),(10,16)], distr_magnitude=3, n_components=3, n_features=2)
     #print(p)
