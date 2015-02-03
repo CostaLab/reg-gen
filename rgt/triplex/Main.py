@@ -112,7 +112,9 @@ def main():
     parser_randomtest.add_argument('-n', type=int, default=10000, 
                                    help="Number of times for randomization (Default: 10000)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
-  
+    parser_randomtest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
+    parser_randomtest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
+    
 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
@@ -367,7 +369,7 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.plot(dir=args.o)
+        randomtest.plot(dir=args.o, ac=args.ac, cut_off=args.cf)
         randomtest.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))

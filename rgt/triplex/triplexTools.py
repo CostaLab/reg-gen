@@ -62,6 +62,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if rm: arguments += "-rm "+str(rm)+" "
     
     if output: arguments += "> "+output
+    arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
     os.system(path_triplexator+arguments)
 
 
@@ -769,7 +770,7 @@ class RandomTest:
         #ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3, mode="expand", borderaxespad=0.)
         ax.set_xlim(left=0, right=self.rna_len )
         ax.set_ylim( [0, max_y] ) 
-        
+
         if ac:
             n_value = read_ac(ac, cut_off)
             ac = numpy.array([n_value])
