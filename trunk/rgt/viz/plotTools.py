@@ -900,6 +900,7 @@ class Jaccard:
                     ar = numpy.array([[r, q, self.realj[ty][r][q], self.qlist[ty][r][q],self.plist[ty][r][q]]])
                     arr = numpy.vstack((arr, ar))
         output_array(arr, directory, folder, filename="output_table.txt")
+        
 ###########################################################################################
 #                    Inersection test
 ###########################################################################################
