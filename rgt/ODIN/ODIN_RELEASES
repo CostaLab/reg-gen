@@ -1,4 +1,5 @@
 use hmmlearn instead of sklearn
+Feature (chrM:16050-16550) beyond the length of chrM size (16299 bp).  Skipping.
 
 * ODIN-0.3
 - fix estimate shiftsize if seq in bam file not given
