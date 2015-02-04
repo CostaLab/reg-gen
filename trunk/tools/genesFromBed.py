@@ -29,6 +29,7 @@ from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
 import scipy.stats
 from rgt.Util import GenomeData
+import numpy as np
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -81,7 +82,10 @@ def mode_3(exp_matrix, thresh, type_file):
             if type_file=="ODIN":
               aux=(region.data).split("\t")
               aux=aux[-1].split(";")
-              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data[-1]
+              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(region.data[-1])
+            if type_file=="THOR":
+              aux=(region.data).split(";")
+              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(aux[-1])
             else:
                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
     
@@ -101,13 +105,15 @@ def mode_3(exp_matrix, thresh, type_file):
                     continue
                 genes[gen] = genes.get(gen, set())
                 genes[gen].add(peak)
-                    
                 
                 avg_score[gen] = avg_score.get(gen, [])
                 avg_score[gen].append(score[peak]) #join all scores of peaks assigned to a gen
         
         for gen in genes.keys():
-            avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
+            if options.metric == 'mean':
+                avg = np.mean(avg_score[gen])
+            elif options.metric == 'max':
+                avg = np.max(avg_score[gen])
             print(gen, avg, ", ".join(str(t) for t in genes[gen]), sep='\t', file = f)
         
         f.close()
@@ -181,25 +187,31 @@ if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
     parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     parser.add_option("--distance", "-d", dest="distance", default=50000, help="distance from peak to gene", type="int")
-    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed file (<bed> or <ODIN>", type="str")
+    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed file (<bed>, <ODIN>, <THOR>)", type="str")
+    parser.add_option("--metric", dest="metric", default="max", help="metric to merge peaks' scores (mean, max)", type="str")
     (options, args) = parser.parse_args()
-    
+     
     i = 3
     if len(args) > i:
         parser.error("Exactly %s parameters are needed" %i)
-      
+        
     path_exp_matrix = args[0]
     path_annotation = args[1]
     
-    #options.mode = 3
-    #path_exp_matrix = '/workspace/cluster_p/hematology/exp/exp03_rerun_chipseq/assign_peak/exp_matrix_peak_assign_chipseq'
-    #path_annotation = '/home/manuel/data/rgt-data/mm9/'
+#     options.mode = 3
+#     options.distance = 50000
+#     options.type='THOR'
+#     options.metric = 'max'
+#     path_exp_matrix = '/home/manuel/workspace/cluster_p/hematology/exp/exp12_peak_gene_assignment/assign_peaks_mm.expmatrix'
+#     path_annotation = '/home/manuel/rgt-data/mm9/'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
     
     exp_matrix = ExperimentalMatrix()
     exp_matrix.read(path_exp_matrix, is_bedgraph=False)
+    
+    print("Use metric %s to merge peaks' score." %options.metric, file=sys.stderr)
     
     if options.mode is 1:
         mode_1(exp_matrix,options.distance)
