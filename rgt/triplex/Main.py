@@ -37,7 +37,7 @@ def output_summary(summary, directory, filename):
     try: os.stat(pd)
     except: os.mkdir(pd)    
     if summary:
-        with open(os.path.join(pd,"parameters.txt"),'w') as f:
+        with open(os.path.join(pd,filename),'w') as f:
             print("********* RGT Triplex: Summary information *********", file=f)
             for s in summary:
                 print(s, file=f)
@@ -327,7 +327,8 @@ def main():
         
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, bed=args.bed, bg=args.bg, organism=args.organism, promoterLength=args.pl)
+        promoter = PromoterTest(gene_list_file=args.de, bed=args.bed, bg=args.bg, organism=args.organism, 
+                                promoterLength=args.pl, summary=summary)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
