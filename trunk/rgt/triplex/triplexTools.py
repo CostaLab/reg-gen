@@ -23,6 +23,11 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 
 ####################################################################################
 ####################################################################################
+def print2(summary, string):
+    """ Show the message on the console and also save in summary. """
+    print(string)
+    summary.append(string)
+
 def mp_find_rbs(s, motif, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_rbs(s, motif, min_len, max_len)
@@ -407,7 +412,7 @@ class TriplexSearch:
 
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
-    def __init__(self, gene_list_file, bed, bg, organism, promoterLength):
+    def __init__(self, gene_list_file, bed, bg, organism, promoterLength, summary):
         """Initiation"""
         self.organism = organism
         self.de_regions = GenomicRegionSet("de genes")
@@ -420,13 +425,22 @@ class PromoterTest:
             # DE gene regions
             self.de_gene = GeneSet("de genes")
             self.de_gene.read(gene_list_file)
+            gene_list_file = os.path.basename(gene_list_file)
+            print2(summary, "   \t"+str(len(self.de_gene))+" genes are loaded from: "+gene_list_file)
+
+            if len(self.de_gene) == 0:
+                print("Error: No genes are loaded from: "+gene_list_file)
+                print("Pleas check the format.")
+                sys.exit(1)
             self.de_regions.get_promotors(gene_set=self.de_gene, organism=organism, 
                                           promoterLength=promoterLength)
             
             # nonDE gene regions
             self.nde_gene = GeneSet("nde genes")
             self.nde_gene.get_all_genes(organism=organism)
+            print2(summary, "   \t"+str(len(self.nde_gene))+" genes are loaded from "+organism+" genome data")
             self.nde_gene.subtract(self.de_gene)
+            print2(summary, "   \t"+str(len(self.nde_gene))+" genes are not in "+gene_list_file)
             self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
                                            promoterLength=promoterLength)
             
@@ -675,7 +689,7 @@ class PromoterTest:
 
         
 
-        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
+        html.add_free_content(['<a href="summary.log" style="margin-left:100">See summary</a>'])
         html.write(os.path.join(directory,"promoter.html"))
     
         # Table of all triplex
@@ -818,5 +832,5 @@ class RandomTest:
                       ["DBS stands for DNA Binding Site."]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
-        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
+        html.add_free_content(['<a href="summary.log" style="margin-left:100">See summary</a>'])
         html.write(os.path.join(directory,"randomtest.html"))

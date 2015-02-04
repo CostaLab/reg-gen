@@ -446,7 +446,7 @@ class GenomicRegionSet:
         all_regions.read_bed(genome_data.get_association_file())
         gene_regions = GenomicRegionSet("gene_regions")
         for s in all_regions:
-            if s.name in gene_set.genes: 
+            if s.name.upper() in gene_set.genes: 
                 if s.orientation == "+": s.initial, s.final = max(s.initial-promoterLength, 0), s.initial
                 else: s.initial, s.final = s.final, s.final+promoterLength
                 gene_regions.add(s)

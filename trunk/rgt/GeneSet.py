@@ -14,7 +14,6 @@ class GeneSet:
         self.values = {} #keys: gene, value: expression data as a list
         self.cond = []
 
-
     def __len__(self):
         return len(self.genes)
     
@@ -25,7 +24,7 @@ class GeneSet:
         """Read genes"""
         with open(geneListFile) as f:
             lines = (line.rstrip() for line in f) 
-            self.genes = list(set((line for line in lines if line))) # Non-blank lines in a list
+            self.genes = list(set((line.upper() for line in lines if line))) # Non-blank lines in a list
 
     def read_expression(self, geneListFile, header = True):
         """Read gene expression data"""
@@ -51,8 +50,10 @@ class GeneSet:
             l = l.split("\t")
             self.genes.append(l[3].upper())
         f.close()
+
         self.genes = list(set(self.genes))
 
     def subtract(self, gene_set):
         """Subtract another GeneSet"""
-        self.genes = [gene for gene in self.genes if gene not in gene_set]
+        self.genes = [gene for gene in self.genes if gene not in gene_set.genes]
+
