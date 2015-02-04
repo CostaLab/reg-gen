@@ -455,6 +455,7 @@ class PromoterTest:
         run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
                         output=os.path.join(temp, "de.txp"), 
                         l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
+        print("ffffffffffffff")
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
