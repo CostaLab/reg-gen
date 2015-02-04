@@ -45,7 +45,6 @@ def mode_1(exp_matrix,thresh):
         print(region.name+"\t"+("\t".join(region_set.genes)))
 
 def mode_2(exp_matrix,thresh):
-    
     #remember value of bedgraph, ugly way
     value = {}
     for regions in exp_matrix.get_regionsets():
@@ -74,7 +73,7 @@ def mode_2(exp_matrix,thresh):
         
         f.close()
 
-def mode_3(exp_matrix,thresh,type_file):
+def mode_3(exp_matrix, thresh, type_file):
     #remember value of bedgraph, ugly way
     score = {}
     for regions in exp_matrix.get_regionsets():
@@ -87,22 +86,15 @@ def mode_3(exp_matrix,thresh,type_file):
                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
     
     
-    for region in exp_matrix.get_regionsets():
+    for i, region in enumerate(exp_matrix.get_regionsets()):
         f = open("region_" + str(region.name) + ".data", 'w')
-        
         region_set = GenomicRegionSet("")
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association_old(region.fileName, None, gene_file, genome_file, threshDist=thresh)
 
-        #region.filter_by_gene_association(organism=organism,threshDist=thresh)
-        # _, _, mappedGenes, _, gene_peaks_mapping
-
-         
-        
         avg_score = {} #score per peak
         genes = {}
         
-
-        print(mappedGenes)
+        print('Consider row %s of exp. matrix, number of mapped genes is %s' %(i, mappedGenes), file=sys.stderr)
         for peak, gene_list in gene_peaks_mapping.items():            
             for gen in gene_list: #reverse mapping peak -> gene to gene -> peak
                 if not gen:
@@ -117,7 +109,7 @@ def mode_3(exp_matrix,thresh,type_file):
         for gen in genes.keys():
             avg = sum(map(lambda x: float(x), avg_score[gen]))/ float(len(avg_score[gen]))
             print(gen, avg, ", ".join(str(t) for t in genes[gen]), sep='\t', file = f)
-               
+        
         f.close()
      
 
@@ -189,7 +181,7 @@ if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
     parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     parser.add_option("--distance", "-d", dest="distance", default=50000, help="distance from peak to gene", type="int")
-    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed fil", type="str")
+    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed file (<bed> or <ODIN>", type="str")
     (options, args) = parser.parse_args()
     
     i = 3
