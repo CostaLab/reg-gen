@@ -25,7 +25,7 @@ class GeneSet:
         with open(geneListFile) as f:
             lines = (line.rstrip() for line in f) 
             self.genes = list(set((line.upper() for line in lines if line))) # Non-blank lines in a list
-
+            
     def read_expression(self, geneListFile, header = True):
         """Read gene expression data"""
         with open(geneListFile) as f:

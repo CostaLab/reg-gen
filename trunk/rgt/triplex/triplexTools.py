@@ -9,6 +9,7 @@ import numpy
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from matplotlib import colors
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
@@ -112,7 +113,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, prefix="", remove_temp=F
 
     return txp
 
-def read_ac(self, path, cut_off):
+def read_ac(path, cut_off):
     """Read the RNA accessibility file and output its positions and values
 
     The file should be a simple table with two columns:
@@ -146,14 +147,17 @@ def read_ac(self, path, cut_off):
             else:
                 #pos.append(int(line[0]))
                 v = line[1]
-                if v == "NA": v = 0
-                else: v = float(v)
-                v = 2**(-v)
-                if v >= cut_off:
-                    v = 0.7 # Make it brighter in colormap. 1 is too dark for colormap
-                else:
-                    v = 0
-                values.append(v)
+                if v == "NA": 
+                    values.append(0)
+                    continue
+                else: 
+                    try: v = 2**(-float(v))
+                    except: continue
+                    if v >= cut_off:
+                        fv = 1
+                    else:
+                        fv = 0
+                    values.append(v)
     return values
 #####################################################################################
 
@@ -425,6 +429,7 @@ class PromoterTest:
             # DE gene regions
             self.de_gene = GeneSet("de genes")
             self.de_gene.read(gene_list_file)
+
             gene_list_file = os.path.basename(gene_list_file)
             print2(summary, "   \t"+str(len(self.de_gene))+" genes are loaded from: "+gene_list_file)
 
@@ -455,7 +460,7 @@ class PromoterTest:
         run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
                         output=os.path.join(temp, "de.txp"), 
                         l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
-        print("ffffffffffffff")
+        
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"nde_regions.bed"))
         #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
@@ -578,16 +583,16 @@ class PromoterTest:
             rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="r", 
                                      edgecolor="none", alpha=0.1, lw=None)
             ax.add_patch(rect)
-        ax.plot(x, all_y, color="b", alpha=.5, lw=1, label="Parallel + Anti-parallel")
+        ax.plot(x, all_y, color="pink", alpha=.5, lw=1, label="Parallel + Anti-parallel")
         ax.plot(x, p_y, color="g", alpha=.5, lw=1, label="Parallel")
-        ax.plot(x, a_y, color="r", alpha=.5, lw=1, label="Anti-parallel")
+        ax.plot(x, a_y, color="b", alpha=.5, lw=1, label="Anti-parallel")
         
         
         # RNA accessbility
         if ac:
             n_value = read_ac(ac, cut_off)
             ac = numpy.array([n_value])
-            ax.imshow(ac, cmap='Oranges', interpolation='nearest', extent=[0, self.rna_len, min_y, 0],
+            ax.imshow(ac[:self.rna_len], cmap=colors.ListedColormap(['white', 'orchid']), interpolation='nearest', extent=[0, self.rna_len, min_y, 0],
                       aspect='auto', label="Accessibility")
 
 
@@ -635,22 +640,19 @@ class PromoterTest:
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
 
     def gen_html(self, directory, align=50, alpha = 0.05):
-        def subtable(data):
-            code = "<table>"
-            for row in data:
-                code += "<tr>"
-                for col in data:
-                    code += "<td>" + col + "</td>"
-                code += "</tr>"
-            code += "</table>"
-            return code
 
         #fp = os.path.join(dir,outputname,title)
-        link_d = {os.path.basename(directory):"promoter.html",
-                  "All triplex binding sites":"all_triplex.html"}
-        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
+        link_d = {"RNA Binding Sites":"index.html",
+                  "Gene-centered":"genes.html"}
+
+        #############################################################
+        # RNA Binding Site page
+        #############################################################
+        
+        html = Html(name="Triplex: Promoter Test", links_dict=link_d, fig_dir=os.path.join(directory,"style"), fig_rpath="./style")
         #html.add_figure("projection_test.png", align="center")
         
+
         html.add_figure("rna_plot.png", align="center")
         #html.add_figure("de_plot.png", align="center")
         # Table of merged TBS on promoters
@@ -672,14 +674,19 @@ class PromoterTest:
 
             if self.pvalue[rbs] < alpha:
                 data_table.append([ rbs.region_str_rna(), #str(len(dbss)), 
-                                    value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
-                                    value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
+                                    '<a href="'+"de"+rbs.region_str_rna()+".html"+'" style="text-align:left">'+value2str(self.de_frequency[rbs][0])+'</a>', 
+                                    value2str(self.de_frequency[rbs][1]), 
+                                    '<a href="'+"nde"+rbs.region_str_rna()+".html"+'" style="text-align:left">'+value2str(self.nde_frequency[rbs][0])+'</a>', 
+                                    value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>" ])
             else:
                 data_table.append([ rbs.region_str_rna(), #str(len(dbss)), 
-                                    value2str(self.de_frequency[rbs][0]), value2str(self.de_frequency[rbs][1]), 
-                                    value2str(self.nde_frequency[rbs][0]), value2str(self.nde_frequency[rbs][1]), 
+                                    '<a href="'+"de"+rbs.region_str_rna()+".html"+'" style="text-align:left">'+value2str(self.de_frequency[rbs][0])+'</a>', 
+                                    value2str(self.de_frequency[rbs][1]), 
+                                    '<a href="'+"nde"+rbs.region_str_rna()+".html"+'" style="text-align:left">'+value2str(self.nde_frequency[rbs][0])+'</a>', 
+                                    value2str(self.nde_frequency[rbs][1]), 
                                     value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs])])
+
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
         header_list=["Notes"]
@@ -688,20 +695,100 @@ class PromoterTest:
                       ["DBS stands for DNA Binding Site."]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
-        
-
         html.add_free_content(['<a href="summary.log" style="margin-left:100">See summary</a>'])
-        html.write(os.path.join(directory,"promoter.html"))
-    
-        # Table of all triplex
-        html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
+        html.write(os.path.join(directory,"index.html"))
+
+        #############################################################
+        # DNA Binding Site of DE
+        #############################################################
         header_list=["RBS", "DBS", "Score", "Motif", "Orientation", "Strand"]
+        for rbs in self.de_frequency.keys():
+            #dbss = []
+            html = Html(name="Triplex: Promoter Test", links_dict=link_d, fig_dir=os.path.join(directory,"style"), fig_rpath="./style")
+            data_table = []
+
+            for dbs in self.txp_de.merged_dict[rbs]:
+                data_table.append([ rbs.region_str_rna(), 
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                    "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+'" style="text-align:left">'+
+                                    dbs.toString()+'</a>',
+                                    dbs.score, 
+                                    rbs.motif, rbs.orientation, dbs.orientation])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.write(os.path.join(directory,"de"+rbs.region_str_rna()+".html"))
+
+        #############################################################
+        # DNA Binding Site of non-DE
+        #############################################################
+        header_list=["RBS", "DBS", "Score", "Motif", "Orientation", "Strand"]
+        for rbs in self.de_frequency.keys():
+            #dbss = []
+            html = Html(name="Triplex: Promoter Test", links_dict=link_d, fig_dir=os.path.join(directory,"style"), fig_rpath="./style")
+            data_table = []
+
+            for rbs_n, regions_n in self.txp_nde.merged_dict.iteritems():
+                if rbs.overlap(rbs_n):
+                    for dbs in self.txp_nde.merged_dict[rbs_n]:
+                        data_table.append([ rbs_n.region_str_rna(), '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                    "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+'" style="text-align:left">'+
+                                    dbs.toString()+'</a>',
+                                    dbs.score, 
+                                    rbs_n.motif, rbs_n.orientation, dbs.orientation])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.write(os.path.join(directory,"nde"+rbs.region_str_rna()+".html"))
+ 
+
+        #############################################################
+        # Gene centered
+        #############################################################
+
+        if self.organism == "hg19": ani = "human"
+        elif self.organism == "mm9": ani = "mouse"
+        html = Html(name="Triplex: Promoter Test", links_dict=link_d, fig_dir=os.path.join(directory,"style"), fig_rpath="./style")
+        header_list=["Gene", "Total Bindings", "Parallel Bindings", "Antiparallel Bindings"]
+        
+        # DE
+        html.add_heading(heading="Differential expression genes")
         data_table = []
-        for tbs in self.txp_de:
-            data_table.append([ tbs.rna.region_str_rna(), tbs.dna.toString(), tbs.score, 
-                                tbs.motif, tbs.orient, tbs.strand])
+        
+        counts_p = self.de_regions.counts_per_region(self.txp_de.get_dbs(sort=True, orientation="P"))
+        counts_a = self.de_regions.counts_per_region(self.txp_de.get_dbs(sort=True, orientation="A"))
+        
+        if not self.de_regions.sorted: self.de_regions.sort()
+        for i, promoter in enumerate(self.de_regions):
+            if counts_p[i] == 0 and counts_a[i] == 0:
+                continue
+            else:
+                data_table.append(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+"&db="+
+                                   self.organism+"&singleSearch=knownCanonical&position="+promoter.name+'" style="text-align:left">'+promoter.name+'</a>', 
+                                   str(counts_p[i]+counts_a[i]), str(counts_p[i]), str(counts_a[i])])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-        html.write(os.path.join(directory,"all_triplex.html"))
+       
+
+        # Non-DE
+        html.add_heading(heading="Non-differential expression genes")
+        data_table = []
+
+        counts_p = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="P"))
+        counts_a = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="A"))
+        
+        if not self.nde_regions.sorted: self.nde_regions.sort()
+        for i, promoter in enumerate(self.nde_regions):
+            if counts_p[i] == 0 and counts_a[i] == 0:
+                continue
+            else:
+               data_table.append(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+"&db="+
+                                   self.organism+"&singleSearch=knownCanonical&position="+promoter.name+'" style="text-align:left">'+promoter.name+'</a>', 
+                                   str(counts_p[i]+counts_a[i]), str(counts_p[i]), str(counts_a[i])])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+        
+        header_list=["Notes"]
+        data_table = [["All the genes without any bindings are ignored."]]
+
+        html.write(os.path.join(directory,"genes.html"))
+ 
+
+
 ####################################################################################
 ####################################################################################
 
@@ -804,7 +891,7 @@ class RandomTest:
         link_d = {os.path.basename(directory):"randomtest.html"}
         html = Html(name="Triplex", links_dict=link_d, fig_dir=os.path.join(directory,"fig"), fig_rpath="./fig")
         
-        html.add_figure("randomtest.png", align="center")
+        html.add_figure("randomtest.png", align="left")
         header_list = ["RBS",
                        "Count of<br>target regions<br>with DBS",
                        "Average of<br>randomization",

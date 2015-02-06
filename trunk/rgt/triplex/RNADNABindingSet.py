@@ -110,11 +110,16 @@ class RNADNABindingSet:
         if sort: rna_set.sort()
         return rna_set
 
-    def get_dbs(self, sort=False):
+    def get_dbs(self, sort=False, orientation=None):
         """Return GenomicRegionSet which contains all DNA binding sites"""
         dna_set = GenomicRegionSet(name="DNA_binding_sites")
         for rd in self.sequences:
-            dna_set.add(rd.dna)
+            if not orientation:
+                dna_set.add(rd.dna)
+            else:
+                if orientation == rd.orient:
+                    dna_set.add(rd.dna)
+                else: pass
         if sort: dna_set.sort()
         return dna_set
 
@@ -144,6 +149,7 @@ class RNADNABindingSet:
             for rd in self:
                 if rbsm.overlap(rd.rna):
                 # Add to new dictionary
+                    rd.dna.score = rd.score
                     try:
                         new_dict[rbsm].add(rd.dna)
                     except:
@@ -214,4 +220,3 @@ class RNADNABindingSet:
                    \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
                 print(str(rd), file=f) 
-    	
