@@ -70,7 +70,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
     for chrom, pos in _get_read_info(path):
         i += 1
         
-        if stop and i == 1000:
+        if stop and i == 5000000:
             break
         
         if not chrom.startswith("chr"):
