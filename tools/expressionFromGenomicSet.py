@@ -67,10 +67,10 @@ if __name__ == '__main__':
     outputdir = args[3]
     
     
-#     experimental_matrix_file = "/home/manuel/input_pu1.txt"
-#     gene_exp = "/home/manuel/dcs.txt"
-#     annotation_path = "/home/manuel/workspace/eclipse_workspace/reg-gen/data/mm9"
-#     outputdir = "/home/manuel/tmp5"
+#     experimental_matrix_file = "/home/manuel/workspace/cluster_p/THOR/exp/exp23_macs2_payton/1"
+#     gene_exp = "/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/gene_expression/CCmean.data"
+#     annotation_path = "/home/manuel/workspace/cluster_h/rgtdata/hg19/"
+#     outputdir = "/home/manuel/test/"
     
     exps = ExperimentalMatrix()
     exps.read(experimental_matrix_file)
@@ -90,7 +90,8 @@ if __name__ == '__main__':
         [ct, labels] = averageExpression(region, genes, regionsToGenes)
         aux = region.fileName.split("/")
         fileName = aux[-1]
-        output(genes.cond, labels, ct, outputdir + "/" + fileName[:-4] + ".txt")
+        fileName = fileName.split(".")
+        output(genes.cond, labels, ct, outputdir + "/" + fileName[0] + ".txt")
         
         
 
