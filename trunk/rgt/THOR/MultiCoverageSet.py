@@ -109,10 +109,10 @@ class MultiCoverageSet(DualCoverageSet):
                 sig = 0 if i < self.dim_1 else 1
                 j = 0 if i < self.dim_1 else 1
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
-                                                filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False)
+                                                filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
                 
                 print("Normalize input of Signal %s, Rep %s with factor %s"\
-                       %(round(n, 3), sig, rep) , file=sys.stderr)
+                       %(sig, rep, round(n, 3)) , file=sys.stderr)
                 self.inputs[i].scale(n)
                 self.covs[i].subtract(self.inputs[i])
     
