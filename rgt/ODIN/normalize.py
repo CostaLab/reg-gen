@@ -14,6 +14,7 @@ from math import fabs
 import pysam, sys, operator, os.path
 from itertools import chain
 import cProfile
+from time import time
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -61,7 +62,7 @@ def _get_read_info(path):
             if not read.is_unmapped:
                 yield samfile.getrname(read.tid), read.pos
 
-def get_count_list(CHROM_LEN, path):
+def get_count_list(CHROM_LEN, path, stop=False):
     """Compute list of read's starting positions based on HTSeq's genomic array."""
     genomic_array = GenomicArray(CHROM_LEN, stranded=False, typecode='i', storage='step')
     i = 0
@@ -69,14 +70,14 @@ def get_count_list(CHROM_LEN, path):
     for chrom, pos in _get_read_info(path):
         i += 1
         
+        if stop and i == 1000:
+            break
+        
         if not chrom.startswith("chr"):
             chrom = "chr" + chrom
 
         if chrom not in chromosomes:
             chromosomes.add(chrom)
-
-#         if i % 10000000 == 0:
-#             print("%s reads considered..." % i, file=sys.stderr)
 
         #ignore reads that fall out of chromosome borders, should not be necassary!
         if chrom not in CHROM_LEN.keys() or pos >= CHROM_LEN[chrom] or pos < 0:
@@ -84,7 +85,9 @@ def get_count_list(CHROM_LEN, path):
             continue
         
         genomic_array[ GenomicPosition(chrom, pos) ] += 1
-
+    
+    print('count_list', i, file=sys.stderr)
+    
     return genomic_array, chromosomes
 
 def _get_overrun(chrom, i, end, step_width, count_list, feature_len):
@@ -125,7 +128,8 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
     for chrom in chromosomes:
         overrun = 0
         if not chrom_len.has_key(chrom):
-            print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
+#             print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
+            pass
         else:
             print("... considering %s..."%chrom, file=sys.stderr)
             for i in range(0, chrom_len[chrom], step_width):
@@ -191,14 +195,14 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     
     return _get_lists(count_list, zero_counts, two_sample)
 
-def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict):
+def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict, stop):
     """work"""
     CHROM_LEN = chrom_sizes_dict #CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
     #counts_1, counts_1 is a genomicarray (HTSeq) describing chr und pos of reads
     #print("Reading first input file...", file=sys.stderr)
-    counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path)
+    counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path, stop=stop)
     #print("Reading second input file...", file=sys.stderr)
-    counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path)
+    counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path, stop=stop)
 #     print("...done", file=sys.stderr)
     chromosomes = chromosomes1 | chromosomes2
     
@@ -209,7 +213,7 @@ def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_siz
     
     return pq_list, max_index, max_value, factor1, factor2, chromosomes
 
-def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, debug, chrom_sizes_dict, two_sample=False):
+def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, debug, chrom_sizes_dict, two_sample=False, stop=False):
     """Return normalization factor (see Diaz et al) for the input
     if two_sample is True: compare sample with index of 0.15"""
     #take two largest chromosomes for analysis:
@@ -220,7 +224,7 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     #print("For input normalization consider chromosomes: %s" %(", ".join(tmp.keys())), file=sys.stderr)
     
     pq_list, max_index, max_value, factor1, factor2, chromosomes =\
-    work(first_path, second_path, step_width, zero_counts, two_sample, tmp)
+    work(first_path, second_path, step_width, zero_counts, two_sample, tmp, stop)
     
     if debug:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
@@ -247,8 +251,8 @@ def test_run():
     p1 = '/home/manuel/data/testdata/PU1_CDP.chr1-2.bam'
     p2 = '/home/manuel/data/testdata/PU1_Input4mix.chr1-2.bam'
     
-    p1 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam'
-    p2 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam'
+#     p1 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam'
+#     p2 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam'
     
     chrom_sizes_dict = { 'chr1' : 197195432, 'chr2':181748087,'chr3': 159599783,'chr4': 155630120,
              'chr5': 152537259,'chr6': 149517037,'chr7': 152524553,'chr8': 131738871,
@@ -263,5 +267,7 @@ def test_run():
     
 if __name__ == '__main__':
     #cProfile.run("test_run()")
+    a = time()
     test_run()
+    print(time() -a)
     
