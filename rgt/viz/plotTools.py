@@ -1636,12 +1636,12 @@ class Boxplot:
     def print_plot_table(self, directory, folder):
         for i,bed in enumerate(self.tableDict.keys()):
             table = []
-            header = [bed]
+            header = ["chrom", "initial", "final"]
             for rp in self.reads:
                 header.append(os.path.basename(rp))
             table.append(header)
             for j, re in enumerate(self.beds[i]):
-                table.append([re.__repr__()] + self.tableDict[bed][j].tolist())
+                table.append([re.chrom, re.initial, re.final] + self.tableDict[bed][j].tolist())
             output_array(table, directory, folder, filename="table_"+bed+".txt")  
         
         
@@ -1669,7 +1669,7 @@ class Boxplot:
     
     
         
-    def group_data(self, directory, folder, table=False, log=False):  
+    def group_data(self, directory, folder, log=False):  
         plotDict = OrderedDict()  # Extracting the data from different bed_bams file
         cuesbed = OrderedDict()   # Storing the cues for back tracking
         cuesbam = OrderedDict()
@@ -1685,11 +1685,6 @@ class Boxplot:
                 #print(plotDict[bedname][readname])
                 cuesbam[readname] = set(tag_from_r(self.exps, self.tag_type, readname))
                 #cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
-        
-        #print(cues.keys())
-        if table: 
-            header_dict = {}
-            tbed = {}
             
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
@@ -1704,20 +1699,12 @@ class Boxplot:
                     #print("            "+c)
                     
                     for i, bed in enumerate(cuesbed.keys()):
-                        #print(bed)
-                        #print(set([g,a,c]))
-                        #print(cuesbed[bed])
-                        #print(set([g,a,c]))
                         if set([g,a,c]) >= cuesbed[bed]:
                             sortDict[g][a][c] = []
-                            
                             for bam in cuesbam.keys():
                                 if set([g,a,c]) >= cuesbam[bam]:
-                                    
-                                    #print("                "+ bed + " + "+ bam)
                                     if self.df:
                                         sortDict[g][a][c].append(plotDict[bed][bam])
-                                        
                                         if len(sortDict[g][a][c]) == 2: 
                                             bam2 = bam
                                             if log:
@@ -1726,35 +1713,10 @@ class Boxplot:
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],sortDict[g][a][c][1]).tolist()
                                             else:
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],sortDict[g][a][c][1]).tolist()
-                                            if table: 
-                                                
-                                                try: header_dict[bed].append("Df_"+ bam1 + "_&_" + bam2)
-                                                except: header_dict[bed] = ["regions","Df_"+ bam1 + "_&_" + bam2]
-                                                
-                                                try: tbed[bed].append(sortDict[g][a][c])
-                                                except: tbed[bed] = [sortDict[g][a][c]]
                                         else: 
                                             bam1 = bam
                                     else:
                                         sortDict[g][a][c] = plotDict[bed][bam]
-                                        
-                                        if table:
-                                            try: header_dict[bed].append(bam)
-                                            except: header_dict[bed] = ["regions", bam]
-                                            try: tbed[bed].append(sortDict[g][a][c])
-                                            except: tbed[bed] = [sortDict[g][a][c]]
-        if table:
-            for bed in tbed.keys():
-                
-                tb = numpy.transpose(numpy.array(tbed[bed])).tolist()
-                tt = [header_dict[bed]]
-                
-                beds = self.beds[self.bednames.index(bed)]
-                for k, s in enumerate(beds):
-                    try: tt.append([s.__repr__()] + tb[k])
-                    except: print(k+"___"+s.__repr__())
-                output_array(tt, directory, folder, filename="table_"+bed+".txt")  
-                            
         self.sortDict = sortDict
 
     def color_map(self, colorby, definedinEM):

@@ -38,7 +38,7 @@ class BindingSite(GenomicRegion):
         self.score = score                    # Score for pattern matching
         self.errors_bp = errors_bp                  
         self.motif = motif
-        self.strand = strand
+        #self.strand = strand
         self.orientation = orientation
         self.seq = seq                        # An object (Sequence) not just a string
         if seq:

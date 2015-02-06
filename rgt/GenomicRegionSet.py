@@ -514,8 +514,8 @@ class GenomicRegionSet:
         
         else:
             # If there is overlap within self or y, they should be merged first. 
-            if a.sorted == False: a.sort()
-            if b.sorted == False: b.sort()
+            if not a.sorted: a.sort()
+            if not b.sorted: b.sort()
             
             if mode == OverlapType.OVERLAP:
                 a.merge()
@@ -1240,3 +1240,106 @@ class GenomicRegionSet:
         g.get_genome_data(organism, chrom_X, chrom_Y, chrom_M)
         g.subtract(self)
         return g
+
+    def count_by_region(self, region):
+        """Return the number of intersection regions with the given GenomicRegion"""
+        query = GenomicRegionSet("query")
+        query.add(region)
+        return len(self.intersect(query))
+
+    def count_by_regionset(self, regionset):
+        """Return the number of intersection regions with the given GenomicRegionSet"""
+        return len(self.intersect(regionset))
+
+    def counts_per_region(self, regionset):
+        """Return a list of counting numbers of the given GenomicRegionSet based on the self RegionSet
+        Note: The length of the result list is the same as self GenomicRegionSet"""
+        if len(self) == 0: return None
+        if len(regionset) == 0: return [0]*len(self)
+
+        a = copy.deepcopy(self)
+        b = copy.deepcopy(regionset)
+        if not a.sorted: a.sort()
+        if not b.sorted: b.sort()
+        counts = []
+        
+        iter_a = iter(a)
+        s = iter_a.next()
+        last_j = len(b)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+        c = 0
+        while cont_loop:
+            # When the regions overlap
+            #print(str(s)+"\t\t"+str(b[j]))
+            if s.overlap(b[j]):
+                c += 1
+                if cont_overlap == False: pre_inter = j
+                if j == last_j: 
+                    try: 
+                        s = iter_a.next()
+                        counts.append(c)
+                        c = 0
+                        j = pre_inter
+                    except: 
+                        cont_loop = False
+                        counts.append(c)
+                else: 
+                    j += 1
+                cont_overlap = True
+            
+            elif s < b[j]:
+                try: 
+                    s = iter_a.next()
+                    counts.append(c)
+                    c = 0
+                    j = pre_inter
+                    cont_overlap = False
+                except: 
+                    cont_loop = False
+                    counts.append(c)
+            
+            elif s > b[j]:
+                if j == last_j:
+                    try:
+                        s = iter_a.next()
+                        counts.append(c)
+                        c = 0
+
+                    except:
+                        cont_loop = False
+                        counts.append(c)
+                else:
+                    j = j + 1
+                    cont_overlap = False
+        return counts
+
+if __name__ == '__main__':
+    a = GenomicRegionSet(name="a")
+    a.add(GenomicRegion("chr1",10,50))
+    a.add(GenomicRegion("chr1",100,500))
+    a.add(GenomicRegion("chr1",100,500))
+    a.add(GenomicRegion("chr1",1000,5000))
+    a.add(GenomicRegion("chr2",1000,5000))
+    a.add(GenomicRegion("chr2",1000,5000))
+
+    b = GenomicRegionSet(name="b")
+    b.add(GenomicRegion("chr1",1,8))
+    b.add(GenomicRegion("chr1",20,30))
+    b.add(GenomicRegion("chr1",40,60))
+    b.add(GenomicRegion("chr1",200,300))
+    b.add(GenomicRegion("chr1",400,600))
+    b.add(GenomicRegion("chr1",4000,6000))
+    b.add(GenomicRegion("chr1",4000,6000))
+    b.add(GenomicRegion("chr1",4000,6000))
+    
+    
+    #print(len(a))
+    #print(len(b))
+    #print(a.sequences)
+    #print(b.sequences)
+    
+    c = a.counts_per_region(b)    
+    print(c)

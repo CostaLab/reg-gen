@@ -511,7 +511,7 @@ def main():
         print2(parameter,"Step 5/5: Plotting")
         boxplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
         
-        boxplot.group_data(directory = args.output, folder = args.title, table=args.table, log=args.nlog)
+        boxplot.group_data(directory = args.output, folder = args.title, log=args.nlog)
         boxplot.color_map(colorby=args.c, definedinEM=args.color)
         boxplot.plot(title=args.title,html=True, logT=args.nlog, sy=args.sy, ylim=args.ylim)
         #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
@@ -524,6 +524,7 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         copy_em(em=args.input, directory=args.output, folder=args.title)
+
     ################### Lineplot #########################################
     if args.mode == 'lineplot':
         print("\n################ Lineplot #################")
