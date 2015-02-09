@@ -67,15 +67,17 @@ tools_dictionary = {
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+  ["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+  #["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
   []
 ), 
 "THOR": (
 "rgt-THOR",
 "rgt.THOR.THOR:main",
-["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+["scikit-learn<=0.14", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+#["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
 []
-), 
+),                 
 "filterVCF": (
 "rgt-filterVCF",
 "rgt.filterVCF.filterVCF:main",
