@@ -7,16 +7,13 @@ Created on Mar 6, 2013
 '''
 from __future__ import print_function
 from scipy.stats import binom
-from sklearn.hmm import _BaseHMM
 import string
 import numpy as np
-from sklearn import hmm
-from sklearn.hmm import _BaseHMM
+from hmmlearn.hmm import _BaseHMM
 import sys
 from time import time
 from math import fabs, log
 from sklearn.utils.extmath import logsumexp
-# from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 
 from scipy.stats import nbinom
 from random import randint
