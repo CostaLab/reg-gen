@@ -131,7 +131,6 @@ class BindingSiteSet(GenomicRegionSet):
             if r.initial <= bp and r.final > bp:
                 count += 1
         return count  
-        
 
 ####################################################################################
 #   Test

@@ -131,7 +131,7 @@ class RNADNABindingSet:
         """Sort the dictionary by DNA"""
         self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
     
-    def merge_rbs(self, rm_duplicate=False):
+    def merge_rbs(self, rm_duplicate=False, rbs_target=False):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -141,22 +141,55 @@ class RNADNABindingSet:
         # Merge RBS
         rna_merged = self.get_rbs()
         rna_merged.merge()
-        
         # A dict: RBS as key, and GenomicRegionSet as its value
         new_dict = OrderedDict()
-        
+        if rbs_target: rbs_dict = OrderedDict()
+
         for rbsm in rna_merged:
+            new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
+            if rbs_target: rbs_dict[rbsm] = BindingSiteSet(rbsm.toString())
+            
             for rd in self:
                 if rbsm.overlap(rd.rna):
-                # Add to new dictionary
+                    if rbs_target: rbs_dict[rbsm].add(rd.rna)
+                    # Add to new dictionary
                     rd.dna.score = rd.score
-                    try:
-                        new_dict[rbsm].add(rd.dna)
-                    except:
-                        new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
-                        new_dict[rbsm].add(rd.dna)
-            if rm_duplicate: new_dict[rbsm].remove_duplicates()
+                    rd.dna.motif = rd.motif
+                    rd.dna.tri_orien = rd.orient
+                    new_dict[rbsm].add(rd.dna)
+
+            if rm_duplicate: 
+                new_dict[rbsm].remove_duplicates()
+                if rbs_target: rbs_dict[rbsm].remove_duplicates()
+
         self.merged_dict = new_dict
+        if rbs_target: self.merged_rbss = rbs_dict
+
+    def merge_by(self, rbss, rm_duplicate=False, rbs_target=False):
+        """Merge the RNA Binding Sites by the given list of Binding sites"""
+        new_dict = OrderedDict()
+        if rbs_target: rbs_dict = OrderedDict()
+
+        for rbsm in rbss:
+            new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
+            if rbs_target: rbs_dict[rbsm] = BindingSiteSet(rbsm.toString())
+            
+            for rd in self:
+                if rbsm.overlap(rd.rna):
+                    if rbs_target: rbs_dict[rbsm].add(rd.rna)
+                    # Add to new dictionary
+                    rd.dna.score = rd.score
+                    rd.dna.motif = rd.motif
+                    rd.dna.tri_orien = rd.orient
+                    new_dict[rbsm].add(rd.dna)
+
+            if rm_duplicate: 
+                new_dict[rbsm].remove_duplicates()
+                if rbs_target: rbs_dict[rbsm].remove_duplicates()
+
+        self.merged_dict = new_dict
+        if rbs_target: self.merged_rbss = rbs_dict
+
 
     def read_txp(self, filename, dna_fine_posi=False):
         """Read txp file to load all interactions. """

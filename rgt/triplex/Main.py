@@ -87,6 +87,7 @@ def main():
     h_promotor = "Evaluate the difference between the promotor regions of the given genes and the other genes by the potential triplex forming sites on DNA with the given RNA."
     parser_promotertest = subparsers.add_parser('promoter', help=h_promotor)
     parser_promotertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
+    parser_promotertest.add_argument('-rn', type=str, default=None, help="Define the RAN name")
     parser_promotertest.add_argument('-de', help="Input file for defferentially expression gene list ")
     parser_promotertest.add_argument('-bed', help="Input BED file of the promoter regions of defferentially expression genes")
     parser_promotertest.add_argument('-bg', help="Input BED file of the promoter regions of background genes")
@@ -95,7 +96,7 @@ def main():
     parser_promotertest.add_argument('-organism', help='Define the organism. (Default: hg19)')
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
     parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
-    parser_promotertest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
+    parser_promotertest.add_argument('-cf', type=float, default=500, help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_promotertest.add_argument('-l', type=int, default=None, help="Define the minimum length for Triplexator")
     parser_promotertest.add_argument('-e', type=int, default=None, help="Define the maximum error rate for Triplexator")
@@ -105,7 +106,7 @@ def main():
     h_random = "Test validation of the binding sites of triplex on the genome by randomization."
     parser_randomtest = subparsers.add_parser('randomtest', help=h_random)
     parser_randomtest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
-    parser_randomtest.add_argument('-d', help="Input BED file for interested regions on DNA")
+    parser_randomtest.add_argument('-bed', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', help="Output directory name for all the results and temporary files")
     parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
@@ -231,7 +232,7 @@ def main():
             print2(summary, "\tDNA binding sites are saved in: "+os.path.join(args.o, dnaname+".dbs"))
             
             ##### Compare the binding sites between RNA and DNA ####################
-            output_summary(summary, args.o, "summary.log")
+            output_summary(summary, args.o, "summary.txt")
         ############################################################################
         ##### Only RNA input #######################################################
         elif args.r and not args.d:
@@ -269,7 +270,7 @@ def main():
             t1 = time.time()
             print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             print2(summary, "Results are saved in: "+os.path.join(args.o, rnaname+".rbs"))
-            output_summary(summary, args.o, "summary.log")
+            output_summary(summary, args.o, "summary.txt")
          
         ############################################################################
         ##### Only DNA input #######################################################
@@ -305,7 +306,7 @@ def main():
             t1 = time.time()
             print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             print2(summary, "Results are saved in: "+os.path.join(args.o, dnaname+".dbs"))
-            output_summary(summary, args.o, "summary.log")
+            output_summary(summary, args.o, "summary.txt")
             
             
         # No input
@@ -327,7 +328,7 @@ def main():
         
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, bed=args.bed, bg=args.bg, organism=args.organism, 
+        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
                                 promoterLength=args.pl, summary=summary)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt)
         t1 = time.time()
@@ -340,14 +341,17 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
 
         print2(summary, "Step 3: Generate plot and output html files.")
+        promoter.plot_promoter(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
+        promoter.plot_dbss(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
         promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
         #promoter.plot_de(dir=args.o)
         promoter.gen_html(directory=args.o, align=50, alpha=args.a)
+        promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
-        output_summary(summary, args.o, "summary.log")
+        output_summary(summary, args.o, "summary.txt")
         
     ################################################################################
     ##### Random ###################################################################
@@ -359,7 +363,7 @@ def main():
         check_dir(args.o)
         
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and the given regions")
-        randomtest = RandomTest(rna_fasta=args.r, dna_region=args.d, organism=args.organism)
+        randomtest = RandomTest(rna_fasta=args.r, dna_region=args.bed, organism=args.organism)
         randomtest.target_dna(temp=args.o, remove_temp=args.rt)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -377,5 +381,5 @@ def main():
         
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
-        output_summary(summary, args.o, "summary.log")
+        output_summary(summary, args.o, "summary.txt")
         
