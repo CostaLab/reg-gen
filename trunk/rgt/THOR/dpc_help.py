@@ -190,16 +190,16 @@ def _merge_consecutive_bins(tmp_peaks, distr):
     return pvalues, peaks
 
 def get_back(DCS, states):
-    counts = set()
+    counts = []
     print("H", file=sys.stderr)
     for i in range(len(DCS.indices_of_interest)):
-        print(states[i], file=sys.stderr)
-        if states[i] is 0:
+        if states[i] == 0:
             cov1, cov2 = _get_covs(DCS, i)
-            counts.add(cov1)
-            counts.add(cov2)
+            counts.append(cov1)
+            counts.append(cov2)
     print(len(counts), file=sys.stderr)
-    return np.var(list(counts))
+    print(np.var(counts), file=sys.stderr)
+    return np.var(counts)
         
     
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
