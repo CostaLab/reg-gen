@@ -189,7 +189,16 @@ def _merge_consecutive_bins(tmp_peaks, distr):
     
     return pvalues, peaks
 
-
+def get_back(DCS, states):
+    counts = set()
+    for i in range(len(DCS.indices_of_interest)):
+        if states[i] is 0:
+            cov1, cov2 = _get_covs(DCS, i)
+            counts.add(cov1)
+            counts.add(cov2)
+    return np.var(list(counts))
+        
+    
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
