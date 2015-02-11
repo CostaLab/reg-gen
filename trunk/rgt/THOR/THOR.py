@@ -18,6 +18,7 @@ from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
 from dpc_help import _fit_mean_var_distr
+from dpc_help import get_back
 from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
