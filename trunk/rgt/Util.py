@@ -510,7 +510,7 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False):
+    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False, RGT_header=True):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
@@ -531,7 +531,7 @@ class Html:
         # Initialize document
         if fig_dir:
             self.copy_relevent_files(fig_dir)
-            self.create_header(relative_dir=fig_rpath)
+            self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header)
         else:
             self.create_header()
         
@@ -562,7 +562,7 @@ class Html:
         
         
         
-    def create_header(self, relative_dir=None):
+    def create_header(self, relative_dir=None, RGT_name=True):
         """ 
         Creates default document header.
         
@@ -611,7 +611,10 @@ class Html:
         else:
             self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
         
-        self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+        if RGT_name:
+            self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+        else:
+            self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">"+self.name+"</font></td>")
         self.document.append("  </tr>")
         self.document.append("</table>")
         self.document.append("</h3>")
@@ -790,6 +793,23 @@ class Html:
         """
         for e in content_list: self.document.append(e)
 
+    def add_list(self, list_of_items, ordered=False):
+        """
+        Add a list to the document
+        """
+        codes = ""
+
+        if ordered: codes += "<ol>"
+        else: codes += "<ul>"
+        
+        for item in list_of_items:
+            codes += "<li>"+item+"</li>"
+        
+        if ordered: codes += "</ol>"
+        else: codes += "</ul>"
+
+        self.document.append(codes)
+        
     def write(self, file_name):
         """ 
         Write HTML document to file name.

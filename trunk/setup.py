@@ -85,13 +85,13 @@ tools_dictionary = {
 "viz": (
   "rgt-viz",
   "rgt.viz.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","HTML>=0.04","matplotlib>=1.1.0"],
+  ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
   []
 ),
 "triplex": (
   "rgt-triplex",
   "rgt.triplex.Main:main",
-  [""],
+  ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
   []
 )
 }
