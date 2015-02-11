@@ -193,6 +193,7 @@ def get_back(DCS, states):
     counts = set()
     print("H", file=sys.stderr)
     for i in range(len(DCS.indices_of_interest)):
+        print(states[i], file=sys.stderr)
         if states[i] is 0:
             cov1, cov2 = _get_covs(DCS, i)
             counts.add(cov1)
