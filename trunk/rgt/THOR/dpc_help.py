@@ -191,11 +191,13 @@ def _merge_consecutive_bins(tmp_peaks, distr):
 
 def get_back(DCS, states):
     counts = set()
+    print("H", file=sys.stderr)
     for i in range(len(DCS.indices_of_interest)):
         if states[i] is 0:
             cov1, cov2 = _get_covs(DCS, i)
             counts.add(cov1)
             counts.add(cov2)
+    print(len(counts), file=sys.stderr)
     return np.var(list(counts))
         
     
