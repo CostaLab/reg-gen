@@ -76,7 +76,7 @@ def main():
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    back_var = get_back(states)
+    back_var = get_back(exp_data, states)
     tracker.write(text=back_var, header="background variance")
     
     if options.debug:
