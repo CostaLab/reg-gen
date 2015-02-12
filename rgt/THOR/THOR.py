@@ -76,15 +76,18 @@ def main():
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    back_var = get_back(exp_data, states)
+    back_var, back_mean = get_back(exp_data, states)
     tracker.write(text=back_var, header="background variance")
+    tracker.write(text=back_mean, header="background mean")
+    a = (back_var - back_mean) / (back_mean ** 2)
+    tracker.write(text=a, header="new alpha")
     
     if options.debug:
         posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
     
     distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
+    #get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
     
 if __name__ == '__main__':
     main() 

@@ -199,7 +199,8 @@ def get_back(DCS, states):
             counts.append(cov2)
     print(len(counts), file=sys.stderr)
     print(np.var(counts), file=sys.stderr)
-    return np.var(counts)
+    print(np.mean(counts), file=sys.stderr)
+    return np.var(counts), np.mean(counts)
         
     
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
