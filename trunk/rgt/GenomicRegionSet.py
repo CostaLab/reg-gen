@@ -106,11 +106,9 @@ class GenomicRegionSet:
                         data = line[4]
                     
                     if start==end:
-                       raise Exception("zero-length region: "self.chrom+","+str(self.initial)+","+str(self.final))
+                       raise Exception("zero-length region: "+self.chrom+","+str(self.initial)+","+str(self.final))
                     
-                    self.add( GenomicRegion(chrom, start, end, name, orientation, data))
-                   
-
+                    self.add( GenomicRegion(chrom, start, end, name, orientation, data))    
                 except:
                     error_line += 1
                     if error_line >1: print("Error at line",line,self.fileName) # Skip the first error line which contains the track information
