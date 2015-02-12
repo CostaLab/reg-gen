@@ -106,7 +106,7 @@ class GenomicRegionSet:
                         data = line[4]
                     
                     if start==end:
-                       raise Exception(self.chrom+","+str(self.initial)+","+str(self.final)+","+filename+"\tThe region length shouldn't be zero.")
+                       raise Exception("zero-length region: "self.chrom+","+str(self.initial)+","+str(self.final))
                     
                     self.add( GenomicRegion(chrom, start, end, name, orientation, data))
                    

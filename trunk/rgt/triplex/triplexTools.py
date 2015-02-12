@@ -151,9 +151,12 @@ def read_ac(path, cut_off, rnalen):
 
 def check_dir(path):
     """Check the availability of the given directory and creat it"""
-    try:
-        os.stat(path)
-    except:
+    if os.stat(path):
+        filelist = [ f for f in os.listdir(path) ]
+        print("clean the files...")
+        for f in filelist:
+            os.remove(f)
+    else:
         os.mkdir(path)
 #####################################################################################
 
@@ -763,12 +766,12 @@ class PromoterTest:
         #fp = os.path.join(dir,outputname,title)
         self.link_d = OrderedDict()
         self.link_d["On RNA"] = "index.html"
-        self.link_d["On DE Genes"] = "genes.html"
-        self.link_d["On Background"] = "background.html"
+        self.link_d["On Targeted promoters"] = "genes.html"
+        self.link_d["On Untargeted promoters"] = "background.html"
         self.link_ds = OrderedDict()
         self.link_ds["On RNA"] = "../index.html"
-        self.link_ds["On DE Genes"] = "../genes.html"
-        self.link_ds["On Background"] = "../background.html"
+        self.link_ds["On Targeted promoters"] = "../genes.html"
+        self.link_ds["On Untargeted promoters"] = "../background.html"
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
@@ -785,17 +788,17 @@ class PromoterTest:
         
         # Table of merged TBS on promoters
         header_list = ["DNA Binding Domain",
-                       "Binding<br>DE_promoters", 
-                       "Else<br>DE_promoters",
-                       "Binding<br>Background", 
-                       "Else<br>Background",
+                       "Binding<br>Targeted promoters", 
+                       "No binding<br>Targeted promoters",
+                       "Binding<br>Untargeted promoters", 
+                       "No binding<br>Untargeted promoters",
                        "Oddsratio",
                        "P_value",
-                       "Unique_DBSs<br>DE_promoters",
-                       "Unique_DBSs<br>Background" ]
+                       "Unique DBSs<br>Targeted promoters",
+                       "Unique DBSs<br>Untargeted promoters" ]
         
         type_list = 'sssssssss'
-        col_size_list = [10,10,10,10,10,10,10,10,10]
+        col_size_list = [50,50,10,10,10,10,10,10,10]
         data_table = []
         for rbs in self.frequency["promoters"]["de"].keys():
             #dbss = []
@@ -960,7 +963,7 @@ class PromoterTest:
         html.write(os.path.join(directory,"genes.html"))
 
         ############################
-        header_list=["DNA_Binding_Domain", "DNA Binding Site", "Width", "Score", "Motif", "Orientation"]
+        header_list=["DNA_Binding_Domain", "DNA Binding Site", "Score", "Motif", "Orientation"]
         for i, promoter in enumerate(self.de_regions):
             if counts_p[i] == 0 and counts_a[i] == 0:
                 continue
@@ -976,10 +979,10 @@ class PromoterTest:
                                             '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                             "&position="+rd.dna.chrom+"%3A"+str(rd.dna.initial)+"-"+str(rd.dna.final)+'" style="text-align:left">'+
                                             rd.dna.toString()+'</a>',
-                                            str(rd.dna.final-rd.dna.initial),
-                                            rd.dna.score, 
-                                            rd.rna.motif, rd.rna.orientation])
-
+                                            rd.score, 
+                                            rd.motif, rd.orient])
+            html.add_heading("Notes")
+            html.add_list(["Here we neglect the difference of DNA binding sites, only the difference of DNA binding domain are counted."])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
             html.write(os.path.join(directory,"supplements", "promoter_de"+str(i)+"_"+promoter.toString()+".html"))
 
@@ -1017,7 +1020,7 @@ class PromoterTest:
         html.write(os.path.join(directory,"background.html"))
  
         ############################
-        header_list=["DNA_Binding_Domain", "DNA Binding Site", "Width", "Score", "Motif", "Orientation"]
+        header_list=["DNA_Binding_Domain", "DNA Binding Site", "Score", "Motif", "Orientation"]
         for i, promoter in enumerate(self.nde_regions):
             if counts_p[i] == 0 and counts_a[i] == 0:
                 continue
@@ -1033,10 +1036,10 @@ class PromoterTest:
                                             '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                             "&position="+rd.dna.chrom+"%3A"+str(rd.dna.initial)+"-"+str(rd.dna.final)+'" style="text-align:left">'+
                                             rd.dna.toString()+'</a>',
-                                            str(rd.dna.final-rd.dna.initial),
-                                            rd.dna.score, 
-                                            rd.rna.motif, rd.rna.orientation])
-
+                                            rd.score, 
+                                            rd.motif, rd.orient])
+            html.add_heading("Notes")
+            html.add_list(["Here we neglect the difference of DNA binding sites, only the difference of DNA binding domain are counted."])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
             html.write(os.path.join(directory,"supplements", "promoter_bg"+str(i)+"_"+promoter.toString()+".html"))
 
