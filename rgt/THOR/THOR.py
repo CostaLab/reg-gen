@@ -29,7 +29,7 @@ import cProfile
 def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
-    alpha = alpha[0,0]
+    alpha = max(3, alpha[0,0])
     tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
     nb = NegBin(mu, alpha)
     return {'distr_name': 'nb', 'distr': nb}
@@ -87,7 +87,7 @@ def main():
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
     
     distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
-    #get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
     
 if __name__ == '__main__':
     main() 
