@@ -100,6 +100,7 @@ def main():
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_promotertest.add_argument('-l', type=int, default=None, help="Define the minimum length for Triplexator")
     parser_promotertest.add_argument('-e', type=int, default=None, help="Define the maximum error rate for Triplexator")
+    parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     
     
     ################### Random test ##########################################
@@ -109,7 +110,7 @@ def main():
     parser_randomtest.add_argument('-bed', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', help="Output directory name for all the results and temporary files")
     parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
+    parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0.05)")
     parser_randomtest.add_argument('-n', type=int, default=10000, 
                                    help="Number of times for randomization (Default: 10000)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
@@ -314,7 +315,7 @@ def main():
             print("Please define either RNA strand or DNA strand (or both) as inputs\n")
         
     ################################################################################
-    ##### Fischer ##################################################################
+    ##### Promoter Test ############################################################
     ################################################################################
     if args.mode == 'promoter':
         print2(summary, "\n"+h_promotor)
@@ -324,8 +325,6 @@ def main():
         if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
         if args.bg: args.bg = os.path.normpath(os.path.join(dir,args.bg))
 
-        
-        
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
@@ -335,20 +334,26 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        promoter.count_frequency(temp=args.o, remove_temp=args.rt)
+        promoter.count_frequency(temp=args.o, remove_temp=args.rt, bed_output=args.obed)
         promoter.fisher_exact()
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
 
-        print2(summary, "Step 3: Generate plot and output html files.")
+        print2(summary, "Step 3: Establishing promoter profile.")
+        promoter.promoter_profile()
+        t3 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+
+        print2(summary, "Step 4: Generate plot and output html files.")
         promoter.plot_promoter(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
         promoter.plot_dbss(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
-        promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
+
+        #promoter.plot_frequency_rna(rna=args.r, dir=args.o, ac=args.ac, cut_off=args.cf)
         #promoter.plot_de(dir=args.o)
         promoter.gen_html(directory=args.o, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
-        t3 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+        t4 = time.time()
+        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t4-t3))))
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
         output_summary(summary, args.o, "summary.txt")

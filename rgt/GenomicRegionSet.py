@@ -629,8 +629,8 @@ class GenomicRegionSet:
             z_dict = {}  # For storing the distance and the regions
             if self.sorted == False: self.sort()
             if y.sorted == False: y.sort()
-            con_self = self.__iter__()
-            con_y = y.__iter__()
+            con_self = iter(self)
+            con_y = iter(y)
             s = con_self.next()
             ss = con_y.next()
             cont_loop = True
@@ -1226,11 +1226,10 @@ class GenomicRegionSet:
 
     def include(self, region):
         """Check whether the given region has intersect with the original regionset """
-        g = GenomicRegionSet("temp")
-        g.add(region)
-        inter = self.intersect(g)
-        if inter.sequences: return True
-        else: return False
+        for s in self:
+            if s.overlap(region): return True
+            else: continue
+        return False
 
     def complement(self, organism, chrom_X=True, chrom_Y=False, chrom_M=False):
         """Return the complement GenomicRegionSet for the given organism """
