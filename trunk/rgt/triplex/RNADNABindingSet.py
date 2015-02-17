@@ -244,6 +244,20 @@ class RNADNABindingSet:
                 # Map RNA binding site to DNA binding site
                 self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
 
+    def map_promoter_name(self, promoters):
+        """Give each DNA region the corresponding name from the given promoter"""
+        self.sort_dbs()
+        if not promoters.sorted: promoters.sort()
+        con_p = iter(promoters)
+        p = con_p.next()
+
+        for rd in self:
+            if p.overlap(rd.dna):
+                rd.dna.name = p.name
+            elif p < rd.dna:
+                try: p = con_p.next()
+                except: break
+
     def write_txp(self, filename):
         """Write RNADNABindingSet into the file"""
         try: os.stat(os.path.dirname(filename))
@@ -253,3 +267,10 @@ class RNADNABindingSet:
                    \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
                 print(str(rd), file=f) 
+
+    def write_bed(self, filename, remove_duplicates=False):
+        """Write BED file for all the DNA Binding sites"""
+        dbss = self.get_dbs()
+        if remove_duplicates:
+            dbss.remove_duplicates()
+        dbss.write_bed(filename)
