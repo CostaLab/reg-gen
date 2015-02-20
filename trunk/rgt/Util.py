@@ -582,7 +582,7 @@ class Html:
         self.document.append('<script type="text/javascript">') 
         self.document.append('$(document).ready(function()') 
         self.document.append('    { ') 
-        self.document.append('        $("#hor-zebra").tablesorter(); ') 
+        self.document.append('        $("table").tablesorter(); ') 
         self.document.append('    } ') 
         self.document.append('); ') 
         self.document.append('</script>') 
@@ -651,7 +651,7 @@ class Html:
         self.document.append("</body>")
         self.document.append("</html>")
 
-    def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True):
+    def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True, idtag=None):
         """ 
         Creates a heading.
         
@@ -663,17 +663,23 @@ class Html:
         face -- Font of the heading. (default "Arial")
         size -- Size of the heading (HTML units [1,7]). (default 5)
         bold -- Whether the heading is bold. (default True)
+        id -- Add ID tag in the heading element
 
         Return:
         None -- Appends heading to the document.
         """
 
+        if idtag:
+            idstr = ' id="'+idtag+'"'
+        else:
+            idstr = ""
+
         # Creating header
         content_str = ""
-        if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\">"
-        elif(isinstance(align,str)): content_str += "<p align=\""+align+"\">"
+        if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\""+idstr+">"
+        elif(isinstance(align,str)): content_str += "<p align=\""+align+"\""+idstr+">"
         else: pass # ERROR
-        content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\">"
+        content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\""+idstr+">"
         if(bold): content_str += "<b>"
         self.document.append(content_str)
 
