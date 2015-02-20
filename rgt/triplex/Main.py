@@ -368,7 +368,7 @@ def main():
         print2(summary, "\n"+"*******************************************")
         print2(summary, "*** Input RNA sequence: "+args.r)
         print2(summary, "*** Input regions in BED: "+args.bed)
-        print2(summary, "*** Number of randomization: "+args.n)
+        print2(summary, "*** Number of randomization: "+str(args.n))
         print2(summary, "*** Output directoey: "+args.o)
         
         #print2(summary, "\n"+h_random)
