@@ -1,5 +1,6 @@
+import sys # Cannot be changed
 from os import walk, chown, chmod, path, getenv, makedirs, remove
-from sys import platform, argv, exit
+from sys import platform, exit
 from pwd import getpwnam
 from shutil import copy, copytree
 from errno import ENOTDIR
@@ -177,12 +178,12 @@ options.param_rgt_tool = options.param_rgt_tool.split(",")
 
 # Manually Removing Additional Options from sys.argv
 new_sys_argv = []
-for e in argv:
+for e in sys.argv:
     if(param_rgt_data_location_name == e[:len(param_rgt_data_location_name)]): continue
     elif(param_rgt_tool_name == e[:len(param_rgt_tool_name)]): continue
     new_sys_argv.append(e)
 
-argv = new_sys_argv
+sys.argv = new_sys_argv
 
 # Defining entry points
 current_entry_points = {"console_scripts" : []}
