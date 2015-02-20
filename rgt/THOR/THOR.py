@@ -43,13 +43,14 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     #return {'distr_name': 'binomial', 'n': n, 'p': p}
 
 def main():
-    test = False
+    test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
-                          verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, tracker=tracker)
+                          verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
+                          tracker=tracker, norm_regions=options.norm_regions)
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000)
     tracker.write(text=func_para[0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")

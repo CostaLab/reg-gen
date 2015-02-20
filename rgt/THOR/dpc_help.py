@@ -294,7 +294,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     return exts, exts_inputs
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker, debug):
+               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker, debug, norm_regions):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -319,14 +319,21 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 chrom, end = line[0], int(line[1])
                 regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
                 chrom_sizes_dict[chrom] = end
-                
+    
+    if norm_regions:
+        norm_regionset = GenomicRegionSet('norm_regions')
+        norm_regionset.read_bed(norm_regions)
+    else:
+        norm_regionset = None
+    
     regionset.sequences.sort()
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
     tracker.write(text=str(exts).strip('[]'), header="Extension size (rep1, rep2, input1, input2)")
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug)
+                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
+                                  norm_regionset=norm_regionset)
     
     return multi_cov_set
 
@@ -359,6 +366,7 @@ def input(laptop):
         options.verbose = True
         options.no_gc_content = False
         options.debug = True
+        options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
     else:
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
@@ -376,6 +384,9 @@ def input(laptop):
                           help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
+        
+        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization")
+        
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
