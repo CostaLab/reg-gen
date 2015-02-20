@@ -304,9 +304,10 @@ os.remove(data_config_path_file_name)
 current_user = os.getenv("SUDO_USER")
 default_file_permission = 0644
 default_path_permission = 0755
+
 if(current_user):
     current_user_uid = pwd.getpwnam(current_user).pw_uid
-    current_user_gid = grp.getgrnam(current_user).gr_gid
+    current_user_gid = pwd.getpwnam(current_user).pw_gid
     recursive_chown_chmod(options.param_rgt_data_location,current_user_uid,current_user_gid,default_file_permission,default_path_permission)
 
 
