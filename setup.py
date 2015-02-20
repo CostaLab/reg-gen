@@ -1,5 +1,4 @@
 import sys # Cannot be changed
-import os
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
@@ -129,15 +128,15 @@ class PassThroughOptionParser(OptionParser):
                 largs.append(e.opt_str)
 
 # recursive_chown_chmod Function
-def recursive_chown_chmod(path, uid, gid, file_permission, path_permission):
+def recursive_chown_chmod(path_to_walk, uid, gid, file_permission, path_permission):
     """
     Recursively applies chown from path.
     """
-    for root_dir, directory_list, file_list in walk(path):
+    for root_dir, directory_list, file_list in walk(path_to_walk):
         chown(root_dir, uid, gid)
         chmod(root_dir, path_permission)
         for f in file_list:
-            current_complete_file = os.path.join(root_dir,f)
+            current_complete_file = path.join(root_dir,f)
             chown(current_complete_file, uid, gid)
             chmod(current_complete_file, file_permission)
 
