@@ -1,4 +1,5 @@
 import sys # Cannot be changed
+import os
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
@@ -136,7 +137,7 @@ def recursive_chown_chmod(path, uid, gid, file_permission, path_permission):
         chown(root_dir, uid, gid)
         chmod(root_dir, path_permission)
         for f in file_list:
-            current_complete_file = path.join(root_dir,f)
+            current_complete_file = os.path.join(root_dir,f)
             chown(current_complete_file, uid, gid)
             chmod(current_complete_file, file_permission)
 
