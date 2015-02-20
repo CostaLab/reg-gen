@@ -1,8 +1,9 @@
-import os
-import sys
-import pwd, grp
-import shutil, errno
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
+from os import walk, chown, chmod, path, getenv, makedirs, remove
+from sys import platform, argv, exit
+from pwd import getpwnam
+from shutil import copy, copytree
+from errno import ENOTDIR
+from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 from setuptools import setup, find_packages
 
 """
@@ -14,6 +15,15 @@ Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo, Ivan G. Costa.
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 """
+
+###################################################################################################
+# Unsupported Platforms
+###################################################################################################
+
+supported_platforms = ["linux","linux2","darwin"]
+if(platform not in supported_platforms):
+  print("ERROR: This package currently supports only unix-based systems (Linux and MAC OS X).")
+  exit(0)
 
 ###################################################################################################
 # Parameters
@@ -121,13 +131,13 @@ def recursive_chown_chmod(path, uid, gid, file_permission, path_permission):
     """
     Recursively applies chown from path.
     """
-    for root_dir, directory_list, file_list in os.walk(path):
-        os.chown(root_dir, uid, gid)
-        os.chmod(root_dir, path_permission)
+    for root_dir, directory_list, file_list in walk(path):
+        chown(root_dir, uid, gid)
+        chmod(root_dir, path_permission)
         for f in file_list:
-            current_complete_file = os.path.join(root_dir,f)
-            os.chown(current_complete_file, uid, gid)
-            os.chmod(current_complete_file, file_permission)
+            current_complete_file = path.join(root_dir,f)
+            chown(current_complete_file, uid, gid)
+            chmod(current_complete_file, file_permission)
 
 ###################################################################################################
 # Processing Input Arguments
@@ -145,7 +155,7 @@ parser = PassThroughOptionParser(usage = usage_message, version = version_messag
 param_rgt_data_location_name = "--rgt-data-path"
 parser.add_option(param_rgt_data_location_name, type = "string", metavar="STRING",
                   help = "Path containing data used by RGT tool.",
-                  dest = "param_rgt_data_location", default = os.path.join(os.getenv('HOME'),rgt_data_base_name))
+                  dest = "param_rgt_data_location", default = path.join(getenv('HOME'),rgt_data_base_name))
 
 # Parameter: Tool
 param_rgt_tool_name = "--rgt-tool"
@@ -159,20 +169,20 @@ parser.add_option(param_rgt_tool_name, type = "string", metavar="STRING",
 
 # Processing Options
 options, arguments = parser.parse_args()
-if(os.path.basename(options.param_rgt_data_location) != rgt_data_base_name):
-    options.param_rgt_data_location = os.path.join(options.param_rgt_data_location,rgt_data_base_name)
+if(path.basename(options.param_rgt_data_location) != rgt_data_base_name):
+    options.param_rgt_data_location = path.join(options.param_rgt_data_location,rgt_data_base_name)
 if(options.param_rgt_data_location[0] == "~"):
-    options.param_rgt_data_location = os.path.join(os.getenv('HOME'),options.param_rgt_data_location[2:])
+    options.param_rgt_data_location = path.join(getenv('HOME'),options.param_rgt_data_location[2:])
 options.param_rgt_tool = options.param_rgt_tool.split(",")
 
 # Manually Removing Additional Options from sys.argv
 new_sys_argv = []
-for e in sys.argv:
+for e in argv:
     if(param_rgt_data_location_name == e[:len(param_rgt_data_location_name)]): continue
     elif(param_rgt_tool_name == e[:len(param_rgt_tool_name)]): continue
     new_sys_argv.append(e)
 
-sys.argv = new_sys_argv
+argv = new_sys_argv
 
 # Defining entry points
 current_entry_points = {"console_scripts" : []}
@@ -189,11 +199,11 @@ for tool_option in options.param_rgt_tool: current_install_requires += tools_dic
 ###################################################################################################
 
 # Creating Data Path
-if not os.path.exists(options.param_rgt_data_location):
-    os.makedirs(options.param_rgt_data_location)
+if not path.exists(options.param_rgt_data_location):
+    makedirs(options.param_rgt_data_location)
 
 # Creating data.config
-data_config_file_name = os.path.join(options.param_rgt_data_location, "data.config")
+data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
 data_config_file = open(data_config_file_name,"w")
 data_config_file.write("[GenomeData]\n")
 data_config_file.write("genome: genome.fa\n")
@@ -209,8 +219,8 @@ data_config_file.write("default_hmm: fp_hmms/H3K4me3_proximal.hmm\n\n")
 data_config_file.close()
 
 # Creating data.config.path
-script_dir = os.path.dirname(os.path.abspath(__file__))
-data_config_path_file_name = os.path.join(script_dir,"rgt","data.config.path")
+script_dir = path.dirname(path.abspath(__file__))
+data_config_path_file_name = path.join(script_dir,"rgt","data.config.path")
 data_config_path_file = open(data_config_path_file_name,"w")
 data_config_path_file.write(data_config_file_name)
 data_config_path_file.close()
@@ -230,22 +240,16 @@ copy_files_dictionary = {
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js"],
 }
 for copy_folder in copy_files_dictionary.keys():
-    copy_dest_path = os.path.join(options.param_rgt_data_location,copy_folder)
-    if not os.path.exists(copy_dest_path): os.makedirs(copy_dest_path)
+    copy_dest_path = path.join(options.param_rgt_data_location,copy_folder)
+    if not path.exists(copy_dest_path): makedirs(copy_dest_path)
     for copy_file in copy_files_dictionary[copy_folder]:
-        copy_source_file = os.path.join(script_dir,"data",copy_folder,copy_file)
-        copy_dest_file = os.path.join(copy_dest_path,copy_file)
-        if not os.path.exists(copy_dest_file): 
-            try: shutil.copytree(copy_source_file, copy_dest_file)
+        copy_source_file = path.join(script_dir,"data",copy_folder,copy_file)
+        copy_dest_file = path.join(copy_dest_path,copy_file)
+        if not path.exists(copy_dest_file): 
+            try: copytree(copy_source_file, copy_dest_file)
             except OSError as exc:
-                if exc.errno == errno.ENOTDIR: shutil.copy(copy_source_file, copy_dest_file)
+                if exc.errno == ENOTDIR: copy(copy_source_file, copy_dest_file)
                 else: raise
-
-# Creating packagePathFile - TODO DEPRECATED
-#packagePathFileName = os.path.join(os.path.dirname(os.path.abspath(__file__)), "rgt", "packagePathFile.txt")
-#packagePathFile = open(packagePathFileName,"w")
-#packagePathFile.write(os.path.dirname(os.path.abspath(__file__))+"/")
-#packagePathFile.close()
 
 ###################################################################################################
 # Setup Function
@@ -259,8 +263,7 @@ keywords_list = ["ChIP-seq","DNase-seq","Peak Calling","Motif Discovery","Motif 
 author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Joseph Kuo","Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
-#package_data_dictionary = {"rgt": [os.path.basename(data_config_path_file_name), os.path.basename(packagePathFileName)]} TODO DEPRECATED
-package_data_dictionary = {"rgt": [os.path.basename(data_config_path_file_name)]}
+package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
 
 # External scripts
 external_scripts=[]
@@ -268,7 +271,7 @@ for tool_option in options.param_rgt_tool:
     for e in tools_dictionary[tool_option][3]: external_scripts.append(e)
 
 # Fetching Additional Structural Files
-readme_file_name = os.path.join(os.path.dirname(os.path.abspath(__file__)), "README.txt")
+readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.txt")
 
 # Fetching Long Description
 readme_file = open(readme_file_name,"r")
@@ -297,17 +300,17 @@ setup(name = "RGT",
 ###################################################################################################
 
 # Removing data.config.path
-os.remove(data_config_path_file_name)
+remove(data_config_path_file_name)
 
 # Modifying Permissions when Running Superuser/Admin
 # $SUDO_USER exists only if you are sudo, and returns the original user name
-current_user = os.getenv("SUDO_USER")
+current_user = getenv("SUDO_USER")
 default_file_permission = 0644
 default_path_permission = 0755
 
 if(current_user):
-    current_user_uid = pwd.getpwnam(current_user).pw_uid
-    current_user_gid = pwd.getpwnam(current_user).pw_gid
+    current_user_uid = getpwnam(current_user).pw_uid
+    current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(options.param_rgt_data_location,current_user_uid,current_user_gid,default_file_permission,default_path_permission)
 
 
