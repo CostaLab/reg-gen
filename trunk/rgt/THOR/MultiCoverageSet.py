@@ -7,14 +7,15 @@ import sys
 from rgt.ODIN.normalize import get_normalization_factor
 from math import fabs
 from rgt.ODIN.DualCoverageSet import DualCoverageSet
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 EPSILON = 1**-320
 
 class MultiCoverageSet(DualCoverageSet):
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions):
+    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset):
         """Return self.covs and self.inputs as CoverageSet"""
         self.exts = exts
-        self.covs = [CoverageSet('file'+str(i), regions) for i in range(dim)]
+        self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
         for i, c in enumerate(self.covs):
             c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
@@ -26,6 +27,14 @@ class MultiCoverageSet(DualCoverageSet):
                                 stepsize=stepsize)
         else:
             self.inputs = []
+            
+        if norm_regionset:
+            self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
+            for i, c in enumerate(self.norm_regions):
+                c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
+                                    stepsize=stepsize)
+        else:
+            self.norm_regions = None
     
     def _get_covs(self, DCS, i):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
@@ -55,7 +64,7 @@ class MultiCoverageSet(DualCoverageSet):
             print("Do not compute GC-content, as there is no input.", file=sys.stderr)
     
     
-    def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, \
+    def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs, chrom_sizes_dict):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
@@ -66,7 +75,7 @@ class MultiCoverageSet(DualCoverageSet):
         self.dim_1, self.dim_2 = dims
         
         #make data nice
-        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions)
+        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset)
         self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
         self._normalization_by_signal(name)
@@ -118,8 +127,13 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _normalization_by_signal(self, name):
         """Normalize signal"""
-        signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-        print("Normalize by signal", file=sys.stderr)
+        
+        if self.norm_regions:
+            print("Normalize by signal (on specified regions)", file=sys.stderr)
+            signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+        else:
+            print("Normalize by signal (genomewide)", file=sys.stderr)
+            signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
         
         means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
         max_index = means_signal.index(max(means_signal))
