@@ -133,7 +133,9 @@ class BindingSiteSet(GenomicRegionSet):
         for r in self.sequences:
             if r.initial <= bp and r.final > bp:
                 count += 1
-        return count  
+        return count
+
+
 
 ####################################################################################
 #   Test

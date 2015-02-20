@@ -52,8 +52,11 @@ class GenomicRegion:
             s += '\t' + str(self.data)
         return s
 
-    def toString(self):
-        return self.chrom+":"+str(self.initial)+"-"+str(self.final)
+    def toString(self, space=False):
+        if space:
+            return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
+        else:
+            return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 
     def extend(self, left, right):
         """Extend GenomicRegion both-sided"""

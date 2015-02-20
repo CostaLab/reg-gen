@@ -274,3 +274,14 @@ class RNADNABindingSet:
         if remove_duplicates:
             dbss.remove_duplicates()
         dbss.write_bed(filename)
+
+
+    def count_dbs_on_dbd(self, rna_len):
+        """Return the frequency list of the appearance of DBS on RNA profile"""
+        count = [0]*rna_len
+
+        for rd in self.sequences:
+            for i in range(rd.rna.initial, rd.dna.final):
+                count[i] += 1
+
+        return count
