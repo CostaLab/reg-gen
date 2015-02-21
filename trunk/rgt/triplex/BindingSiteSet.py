@@ -4,7 +4,7 @@ from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 # Test
-from Util import SequenceType
+from rgt.Util import SequenceType
 ####################################################################################
 ####################################################################################
 
