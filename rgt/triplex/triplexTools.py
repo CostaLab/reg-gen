@@ -18,9 +18,9 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
-from SequenceSet import Sequence, SequenceSet
+from rgt.SequenceSet import Sequence, SequenceSet
 from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from Util import SequenceType, Html, OverlapType
+from rgt.Util import SequenceType, Html, OverlapType
 from rgt.motifanalysis.Statistics import multiple_test_correction
 #import multiprocessing
 

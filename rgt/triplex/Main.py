@@ -9,8 +9,8 @@ import time, datetime, getpass, fnmatch
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
 from triplexTools import TriplexSearch, PromoterTest, RandomTest
-from SequenceSet import Sequence, SequenceSet
-from Util import SequenceType
+from rgt.SequenceSet import Sequence, SequenceSet
+from rgt.Util import SequenceType
 
 dir = os.getcwd()
 
