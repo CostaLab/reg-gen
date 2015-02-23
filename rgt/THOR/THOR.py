@@ -29,7 +29,8 @@ import cProfile
 def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
-    alpha = max(3, alpha[0,0])
+    #alpha = max(3, alpha[0,0])
+    alpha = alpha[0,0]
     tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
     nb = NegBin(mu, alpha)
     return {'distr_name': 'nb', 'distr': nb}
@@ -43,14 +44,14 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     #return {'distr_name': 'binomial', 'n': n, 'p': p}
 
 def main():
-    test = True
+    test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
-                          tracker=tracker, norm_regions=options.norm_regions)
+                          tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip)
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000)
     tracker.write(text=func_para[0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")

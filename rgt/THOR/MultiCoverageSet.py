@@ -8,6 +8,7 @@ from rgt.ODIN.normalize import get_normalization_factor
 from math import fabs
 from rgt.ODIN.DualCoverageSet import DualCoverageSet
 from rgt.GenomicRegionSet import GenomicRegionSet
+from copy import deepcopy
 
 EPSILON = 1**-320
 
@@ -19,12 +20,13 @@ class MultiCoverageSet(DualCoverageSet):
         for i, c in enumerate(self.covs):
             c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
-        
+        self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
         if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize)
+            self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.inputs = []
             
@@ -33,6 +35,7 @@ class MultiCoverageSet(DualCoverageSet):
             for i, c in enumerate(self.norm_regions):
                 c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                     stepsize=stepsize)
+            self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.norm_regions = None
     
@@ -48,8 +51,7 @@ class MultiCoverageSet(DualCoverageSet):
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
             for i, cov in enumerate(self.covs):
-                input = self.inputs[i] #1 to 1 mapping between input and cov
-                
+                inputfile = self.inputs[i] #1 to 1 mapping between input and cov
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input.coverage, chrom_sizes_dict)
@@ -58,14 +60,35 @@ class MultiCoverageSet(DualCoverageSet):
             
                 if verbose:
                     self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
-                    input.write_bigwig(name + '-s%s-rep%s-input-gc.bw' %(sig, rep), chrom_sizes)
                     cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         else:
             print("Do not compute GC-content, as there is no input.", file=sys.stderr)
     
     
+    def _output_bw(self, name, chrom_sizes):
+        """Output bigwig files"""
+        for i in range(len(self.covs)):
+            rep = i if i < self.dim_1 else i-self.dim_1
+            sig = 1 if i < self.dim_1 else 2
+            if self.inputs:
+                self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes)
+            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes)
+        
+        ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
+        for k, d in enumerate(ra):
+            g = self.covs if k == 0 else self.inputs
+            for j in range(2):
+                d[j] = deepcopy(g[0]) if j == 0 else deepcopy(g[self.dim_1])
+                r = range(1, self.dim_1) if j == 0 else range(self.dim_1 + 1, self.dim_1 + self.dim_2)
+                f = 1./self.dim_1 if j == 0 else 1./self.dim_2
+                for i in r:
+                    d[j].add(g[i])
+                d[j].scale(f)
+                n = name + '-s%s.bw' %(j+1) if k == 0 else name + '-s%s-input.bw' %(j+1)
+                d[j].write_bigwig(n, chrom_sizes)
+
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
-                 verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs, chrom_sizes_dict):
+                 verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs, chrom_sizes_dict, scaling_factors_ip):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -76,16 +99,12 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
-        self._normalization_by_signal(name)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
+        #self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
+        #self._normalization_by_signal(name, scaling_factors_ip)
         
-        for i in range(len(self.covs)):
-            rep = i if i < self.dim_1 else i-self.dim_1
-            sig = 1 if i < self.dim_1 else 2
-            
-            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes)
-            
+        self._output_bw(name, chrom_sizes) 
+        
         #make data in nice list of two matrices
         tmp = [[], []]
         for k in range(2):
@@ -120,35 +139,42 @@ class MultiCoverageSet(DualCoverageSet):
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
                                                 filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
                 
-                print("Normalize input of Signal %s, Rep %s with factor %s"\
-                       %(sig, rep, round(n, 3)) , file=sys.stderr)
-                self.inputs[i].scale(n)
-                self.covs[i].subtract(self.inputs[i])
+                if n is not None:
+                    print("Normalize input of Signal %s, Rep %s with factor %s"\
+                           %(sig, rep, round(n, 3)) , file=sys.stderr)
+                    self.inputs[i].scale(n)
+                    self.covs[i].subtract(self.inputs[i])
     
-    def _normalization_by_signal(self, name):
+    def _normalization_by_signal(self, name, scaling_factors_ip):
         """Normalize signal"""
-        
-        if self.norm_regions:
-            print("Normalize by signal (on specified regions)", file=sys.stderr)
-            signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+        if scaling_factors_ip:
+            print("Normalize signal by predefined scaling factors", file=sys.stderr)
+            assert len(scaling_factors_ip) == len(self.covs)
+            for i in range(len(scaling_factors_ip)):
+                self.covs[i].scale(scaling_factors_ip[i])
         else:
-            print("Normalize by signal (genomewide)", file=sys.stderr)
-            signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
         
-        means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
-        max_index = means_signal.index(max(means_signal))
-        
-        if max_index == 1:
-            r = range(self.dim_1)
-            f = means_signal[1] / means_signal[0]
-            print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-        if max_index == 0:
-            r = range(self.dim_1, self.dim_1 + self.dim_2)
-            f = means_signal[0] / means_signal[1]
-            print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-        
-        for i in r:
-            self.covs[i].scale(f)
+            if self.norm_regions:
+                print("Normalize by signal (on specified regions)", file=sys.stderr)
+                signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+            else:
+                print("Normalize by signal (genomewide)", file=sys.stderr)
+                signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+            
+            means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
+            max_index = means_signal.index(max(means_signal))
+            
+            if max_index == 1:
+                r = range(self.dim_1)
+                f = means_signal[1] / means_signal[0]
+                print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
+            if max_index == 0:
+                r = range(self.dim_1, self.dim_1 + self.dim_2)
+                f = means_signal[0] / means_signal[1]
+                print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
+            
+            for i in r:
+                self.covs[i].scale(f)
            
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
