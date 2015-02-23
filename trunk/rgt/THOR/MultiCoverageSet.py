@@ -99,9 +99,9 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset)
-        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
-        #self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
-        #self._normalization_by_signal(name, scaling_factors_ip)
+        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
+        self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
+        self._normalization_by_signal(name, scaling_factors_ip)
         
         self._output_bw(name, chrom_sizes) 
         
