@@ -61,6 +61,22 @@ class CoverageSet:
                 pass
             i += 1
     
+    def add(self, cs):
+        """Substract CoverageSet <cs>, set negative values to 0."""
+        cs_chroms = cs.genomicRegions.get_chrom()
+        assert len(cs_chroms) == len(set(cs_chroms)) #no double entries
+        assert len(self.genomicRegions.get_chrom()) == len(set(self.genomicRegions.get_chrom()))
+        
+        i = 0
+        for c in self.genomicRegions.get_chrom(): #c corresponds to self.coverage[i]
+            try:
+                j = cs_chroms.index(c)
+                assert len(self.coverage[i]) == len(cs.coverage[j])
+                self.coverage[i] += cs.coverage[j]
+            except ValueError:
+                pass
+            i += 1
+    
     def scale(self, factor):
         """Scale coverage with <factor>"""
 #        print(factor)

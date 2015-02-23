@@ -112,11 +112,12 @@ def write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width):
 
 def write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename):
     """Write p,q-list to file"""
-    with open(filename, 'w') as f:
-        print('#max index', 'max value', 'factor1', 'factor2', sep='\t', file=f)
-        print('#' + str(max_index), str(max_value), str(factor1), str(factor2), sep='\t', file=f)
-        for p, q in pq_list:
-            print(p, q, file=f)
+    if pq_list:
+        with open(filename, 'w') as f:
+            print('#max index', 'max value', 'factor1', 'factor2', sep='\t', file=f)
+            print('#' + str(max_index), str(max_value), str(factor1), str(factor2), sep='\t', file=f)
+            for p, q in pq_list:
+                print(p, q, file=f)
  
 def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
     """Creates list of bins of length <step_width> with values describing 
@@ -170,7 +171,6 @@ def _get_lists(count_list, zero_counts, two_sample=False):
         count_list.sort(key = lambda a: a[0])
         if not zero_counts:
             count_list = filter(lambda x: x[0] != 0.0, count_list)
-    
         pre_pq_list = list(_accumulate(count_list))
         #get k, a from Diaz et al., 2012, compute p, q from Diaz et al., 2012
         pq_list = map(lambda x: [ x[0]/float(pre_pq_list[-1][0]), x[1]/float(pre_pq_list[-1][1]) ], pre_pq_list)
@@ -186,6 +186,9 @@ def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes
     Also give list of tuples (x,y) describing bins where x,y are the values for each bin."""
     #create dict of counts
     #print("Dividing genome into bins...", file=sys.stderr)
+    if set(chrom_len.keys()) & chromosomes == set(): #if chrom in input does not overlap chrom in IP channel
+        return None, None, None, None, None
+        
     counts_dict_2 = get_bins(chrom_len, chromosomes, count_list_2, step_width, feature_len)
     counts_dict_1 = get_bins(chrom_len, chromosomes, count_list_1, step_width, feature_len)
     #merge values with zip, obtain [ [(),()...], [(),(),..] ]
@@ -232,6 +235,9 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
     
     #print("norm sums 1 : ", sum([i for (i,j) in pq_list]), file=sys.stderr)
     #print("norm sums 2 : ", sum([j for (i,j) in pq_list]), file=sys.stderr)
+    
+    if pq_list == None:
+        return None, None
     
     if two_sample:
         l = 0.5

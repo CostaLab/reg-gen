@@ -1,3 +1,5 @@
+bug: input dna chrom does not overlap with chrom in IP, no longer an error
+
 ToDo:
 Feature (chrM:16050-16550) beyond the length of chrM size (16299 bp).  Skipping.  ? really an error? ask joseph
 

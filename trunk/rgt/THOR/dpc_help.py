@@ -170,15 +170,13 @@ def _merge_consecutive_bins(tmp_peaks, distr):
         v2 = c2
         
         #merge bins
-        while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
-            e = tmp_peaks[i+1][2]
-            v1 = map(add, v1, tmp_peaks[i+1][3])
-            v2 = map(add, v2, tmp_peaks[i+1][4])
-            i += 1
-        
+        #while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
+        #    e = tmp_peaks[i+1][2]
+        #    v1 = map(add, v1, tmp_peaks[i+1][3])
+        #    v2 = map(add, v2, tmp_peaks[i+1][4])
+        #    i += 1
         s1 = v1
         s2 = v2
-        
         side = 'l' if strand == '+' else 'r'
         pvalues.append((s1, s2, side, distr))
         peaks.append((c, s, e, s1, s2, strand))
@@ -220,7 +218,8 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
     #merge consecutive peaks and compute p-value
     pvalues, peaks = _merge_consecutive_bins(tmp_peaks, distr)
     #postprocessing, returns GenomicRegionSet with merged regions
-    regions = merge_delete(exts, merge, peaks, pvalues) 
+    #regions = merge_delete(exts, merge, peaks, pvalues) 
+    regions = merge_delete([0], False, peaks, pvalues) 
     
     output = []
     pvalues = []
@@ -255,7 +254,6 @@ def _output_BED(name, output, pvalues):
     
     for i in range(len(pvalues)):
         c, s, e, strand, counts = output[i]
-            
         print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
     
     f.close()
@@ -294,7 +292,8 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     return exts, exts_inputs
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, tracker, debug, norm_regions):
+               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
+               tracker, debug, norm_regions, scaling_factors_ip):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -333,7 +332,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset)
+                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip)
     
     return multi_cov_set
 
@@ -347,6 +346,9 @@ class HelpfulOptionParser(OptionParser):
 def _callback_list(option, opt, value, parser):
     setattr(parser.values, option.dest, map(lambda x: int(x), value.split(',')))
 
+def _callback_list_float(option, opt, value, parser):
+    setattr(parser.values, option.dest, map(lambda x: float(x), value.split(',')))
+
 def input(laptop):
     parser = HelpfulOptionParser(usage=__doc__)
     if laptop:
@@ -357,7 +359,7 @@ def input(laptop):
         bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         options.exts = [200, 200, 200, 200, 200]
         options.exts_inputs = None #[200, 200, 200, 200, 200]
-        options.pcutoff = 0.1
+        options.pcutoff = 1
         options.name='test'
         options.merge=True
         options.stepsize=50
@@ -367,6 +369,7 @@ def input(laptop):
         options.no_gc_content = False
         options.debug = True
         options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
+        options.scaling_factors_ip = False
     else:
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
@@ -386,6 +389,8 @@ def input(laptop):
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
         
         parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization")
+        parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
+                          help="Scaling factor for each BAM file [default: %default]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
@@ -414,6 +419,9 @@ def input(laptop):
         
         if options.exts_inputs and len(options.exts_inputs) != len(inputs):
             parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
+            
+        if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
+            parser.error("Number of scaling factors must equal number of bamfiles")
 #        bamfile_2 = args[1]
 #        regions = args[2]
 #        genome = args[3]
