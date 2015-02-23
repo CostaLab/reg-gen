@@ -46,7 +46,7 @@ class MultiCoverageSet(DualCoverageSet):
     
         return cov1, cov2
     
-    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict):
+    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict):
         """Compute GC-content"""
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
@@ -54,9 +54,9 @@ class MultiCoverageSet(DualCoverageSet):
                 inputfile = self.inputs[i] #1 to 1 mapping between input and cov
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
-                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input.coverage, chrom_sizes_dict)
+                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, chrom_sizes_dict)
                 self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
-                self._norm_gc_content(input.coverage, gc_content_cov, avg_gc_content)
+                self._norm_gc_content(inputfile.coverage, gc_content_cov, avg_gc_content)
             
                 if verbose:
                     self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
@@ -99,7 +99,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, input, name, chrom_sizes, chrom_sizes_dict)
+        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
         self._normalization_by_signal(name, scaling_factors_ip)
         
