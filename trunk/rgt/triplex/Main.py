@@ -83,42 +83,62 @@ def main():
     ################### Promoter test ##########################################
 
     h_promotor = "Promoter test evaluates the association between the given lncRNA to the target promoters."
-    parser_promotertest = subparsers.add_parser('promoter', help=h_promotor)
+    parser_promotertest = subparsers.add_parser('promotertest', help=h_promotor)
     parser_promotertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, help="Define the RAN name")
     parser_promotertest.add_argument('-de', help="Input file for defferentially expression gene list ")
     parser_promotertest.add_argument('-bed', help="Input BED file of the promoter regions of defferentially expression genes")
     parser_promotertest.add_argument('-bg', help="Input BED file of the promoter regions of background genes")
-    parser_promotertest.add_argument('-pl', type=int, default=1000, help="Define the promotor length (Default: 1000)")
     parser_promotertest.add_argument('-o', help="Output directory name for all the results and temporary files")
+    
     parser_promotertest.add_argument('-organism', help='Define the organism. (Default: hg19)')
+    
+    parser_promotertest.add_argument('-pl', type=int, default=1000, help="Define the promotor length (Default: 1000)")
+    
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
+    parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
     parser_promotertest.add_argument('-cf', type=float, default=500, help="Define the cut off value for RNA accecibility")
-    parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
-    parser_promotertest.add_argument('-l', type=int, default=20, help="Define the minimum length for Triplexator")
-    parser_promotertest.add_argument('-e', type=int, default=20, help="Define the maximum error rate for Triplexator")
     parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
+    
+    parser_promotertest.add_argument('-l', type=int, default=20, help="[Triplexator] Define the minimum length")
+    parser_promotertest.add_argument('-e', type=int, default=20, help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-c', type=int, default=2, help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-fr', type=str, default="off", help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-fm', type=int, default=0, help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-of', type=int, default=1, help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Define the maximum error rate")
+    parser_promotertest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Define the maximum error rate")
     
     
     ################### Random test ##########################################
-    h_random = "Test validation of the binding sites of triplex on the genome by randomization."
-    parser_randomtest = subparsers.add_parser('randomtest', help=h_random)
+    h_random = "Region test evaluates the association between the given lncRNA to the target regions by randomization."
+    parser_randomtest = subparsers.add_parser('regiontest', help=h_random)
     parser_randomtest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_randomtest.add_argument('-rn', type=str, default=None, help="Define the RAN name")
     parser_randomtest.add_argument('-bed', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', help="Output directory name for all the results and temporary files")
-    parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0.05)")
+    
     parser_randomtest.add_argument('-n', type=int, default=10000, 
                                    help="Number of times for randomization (Default: 10000)")
-    parser_randomtest.add_argument('-l', type=int, default=20, help="Define the minimum length for Triplexator")
-    parser_randomtest.add_argument('-e', type=int, default=20, help="Define the maximum error rate for Triplexator")
+
+    parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    
+    parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0.05)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_randomtest.add_argument('-f', type=str, default=None, help="Input BED file for filteration in randomization")
     parser_randomtest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
     parser_randomtest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
+    
+    parser_randomtest.add_argument('-l', type=int, default=20, help="[Triplexator] Define the minimum length")
+    parser_randomtest.add_argument('-e', type=int, default=20, help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-c', type=int, default=2, help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-fr', type=str, default="off", help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-fm', type=int, default=0, help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-of', type=int, default=1, help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Define the maximum error rate")
+    parser_randomtest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Define the maximum error rate")
     
 
     ################### Parsing the arguments ################################
@@ -320,8 +340,11 @@ def main():
     ################################################################################
     ##### Promoter Test ############################################################
     ################################################################################
-    if args.mode == 'promoter':
-        print2(summary, "\n"+"*** Promoter test: "+os.path.basename(args.o))
+    if args.mode == 'promotertest':
+        print2(summary, "\n"+"*************** Promoter Test ****************")
+        print2(summary, "*** Input RNA sequence: "+args.r)
+        print2(summary, "*** Output directoey: "+os.path.basename(args.o))
+
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
         if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
@@ -332,7 +355,8 @@ def main():
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
                                 promoterLength=args.pl, summary=summary)
-        promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt)
+        promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -364,26 +388,27 @@ def main():
     ################################################################################
     ##### Random ###################################################################
     ################################################################################
-    if args.mode == 'randomtest':
-        print2(summary, "\n"+"*******************************************")
+    if args.mode == 'regiontest':
+        print2(summary, "\n"+"*************** Region Test ***************")
         print2(summary, "*** Input RNA sequence: "+args.r)
-        print2(summary, "*** Input regions in BED: "+args.bed)
+        print2(summary, "*** Input regions in BED: "+os.path.basename(args.bed))
         print2(summary, "*** Number of randomization: "+str(args.n))
-        print2(summary, "*** Output directoey: "+args.o)
+        print2(summary, "*** Output directoey: "+os.path.basename(args.o))
         
         #print2(summary, "\n"+h_random)
         args.r = os.path.normpath(os.path.join(dir,args.r))
-        args.o = os.path.normpath(os.path.join(dir,args.o))
-        check_dir(args.o)
         
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and the given regions")
+        print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, organism=args.organism)
-        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=args.obed)
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=args.obed,
+                              obedname=os.path.splitext(os.path.basename(args.bed))[0],
+                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf )
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         
         print2(summary, "Step 2: Randomization and counting number of binding sites")
-        randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e)
+        randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm)
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
         

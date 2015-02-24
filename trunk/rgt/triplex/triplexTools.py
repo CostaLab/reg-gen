@@ -54,6 +54,61 @@ def value2str(value):
         else: r = "{:.1e}".format(value)
         return r
 
+
+
+def random_each(input):
+    """Return the counts of DNA Binding sites with randomization
+    For multiprocessing. 
+    Input contains:
+    0       1               2                3     4              5          6                    
+    str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
+    number, rna,            region,          temp, organism,      rbss,      number of mark
+
+    7  8  9  10  11  12  13  14
+    l, e, c, fr, fm, of, mf, rm
+    """
+
+    random = input[2].random_regions(organism=input[4], multiply_factor=1, 
+                                     overlap_result=True, overlap_input=True, 
+                                     chrom_X=True, chrom_M=False)
+    txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
+                       organism=input[4], prefix=str(input[0]), remove_temp=True, 
+                       l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
+                       fm=input[11], of=input[12], mf=input[13], rm=input[14],
+                       dna_fine_posi=True)
+    
+    txp.merge_by(rbss=input[5], rm_duplicate=True)
+    #print("\t Randomization: \t"+input[0])
+    sys.stdout.flush()
+    print("".join(["="]*int(input[6])), end="")
+
+    return [ len(dbss) for dbss in txp.merged_dict.values() ]
+
+def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, prefix="", remove_temp=False, 
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None):
+    """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
+    
+    # Generate BED 
+    dna_region.write_bed(os.path.join(temp,"dna_"+prefix+".bed"))
+    # Bedtools
+    os.system("bedtools getfasta -fi /data/genome/"+organism+"/"+organism+".fa -bed "+\
+              os.path.join(temp,"dna_"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
+    # Triplexator
+    run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
+                    output=os.path.join(temp, "dna_"+prefix+".txp"), 
+                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+    # Read txp
+    txp = RNADNABindingSet("dna")
+    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
+    #print(len(txp_de))
+
+    if remove_temp:
+        os.remove(os.path.join(temp,"dna_"+prefix+".bed"))
+        os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
+        os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
+
+    return txp
+
 def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
     """Perform Triplexator"""
     path_triplexator = "~/Apps/triplexator/bin/triplexator"
@@ -73,52 +128,6 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
     os.system(path_triplexator+arguments)
-
-
-def random_each(input):
-    """Return the counts of DNA Binding sites with randomization
-    For multiprocessing. 
-    Input contains:
-    0       1               2                3     4              5          6                    7  8
-    str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)), l, e
-    number, rna,            region,          temp, organism,      rbss,      number of mark
-    """
-
-    random = input[2].random_regions(organism=input[4], multiply_factor=1, 
-                                     overlap_result=True, overlap_input=True, 
-                                     chrom_X=True, chrom_M=False)
-    txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
-                       organism=input[4], prefix=str(input[0]), remove_temp=True, l=int(input[7]), e=int(input[8]) )
-    txp.merge_by(rbss=input[5], rm_duplicate=True)
-    #print("\t Randomization: \t"+input[0])
-    sys.stdout.flush()
-    print("".join(["="]*int(input[6])), end="")
-
-    return [ len(dbss) for dbss in txp.merged_dict.values() ]
-
-def find_triplex(rna_fasta, dna_region, temp, organism, l, e, prefix="", remove_temp=False):
-    """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
-    
-    # Generate BED 
-    dna_region.write_bed(os.path.join(temp,"dna_"+prefix+".bed"))
-    # Bedtools
-    os.system("bedtools getfasta -fi /data/genome/"+organism+"/"+organism+".fa -bed "+\
-              os.path.join(temp,"dna_"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
-    # Triplexator
-    run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
-                    output=os.path.join(temp, "dna_"+prefix+".txp"), 
-                    l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
-    # Read txp
-    txp = RNADNABindingSet("dna")
-    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=True)
-    #print(len(txp_de))
-
-    if remove_temp:
-        os.remove(os.path.join(temp,"dna_"+prefix+".bed"))
-        os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
-        os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
-
-    return txp
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
@@ -364,8 +373,6 @@ class TriplexSearch:
         return all_dbs
         
 
-    #def find_triplex(self):
-
     def compare_rb_db(self, rna_seq, dna_seq, match_dict):
         """Find the highest score between two sequences
         Parameters:
@@ -455,7 +462,7 @@ class PromoterTest:
             self.nde_regions.get_promotors(gene_set=self.nde_gene, organism=organism, 
                                            promoterLength=promoterLength)
             
-    def search_triplex(self, rna, temp, l, e, remove_temp=False):
+    def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         # DE
         self.de_regions.write_bed(os.path.join(temp,"targeted_promoters.bed"))
 
@@ -465,7 +472,7 @@ class PromoterTest:
                   os.path.join(temp,"targeted_promoters.bed")+" -fo "+os.path.join(temp,"de.fa"))
         run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
                         output=os.path.join(temp, "de.txp"), 
-                        l=l, e=e, c=2, fr="off", fm=0, of=1, mf=True)
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
         
         # non-DE
         self.nde_regions.write_bed(os.path.join(temp,"untargeted_promoters.bed"))
@@ -788,19 +795,21 @@ class PromoterTest:
         print("\tEach promoter to all related merged DBD...")
         # Targeted promoters
         for promoter in self.de_regions:
-            dbsms = BindingSiteSet("Merged DBD to promoter "+promoter.name)
+            mdbd = BindingSiteSet("Merged DBD to promoter "+promoter.name)
             for dbsm in self.txp_de.merged_dict.keys():
                 if self.txp_de.merged_dict[dbsm].include(promoter):
-                    dbsms.add(dbsm)
-            self.promoter["de"]["merged_dbd"][promoter.name] = dbsms
+                    mdbd.add(dbsm)
+                #mdbd.remove_duplicates()
+            self.promoter["de"]["merged_dbd"][promoter.name] = mdbd
         
         # Untargeted promoters
         for promoter in self.nde_regions:
-            dbsms = BindingSiteSet("Merged DBD to promoter "+promoter.name)
+            mdbd = BindingSiteSet("Merged DBD to promoter "+promoter.name)
             for dbsm in self.txp_nde.merged_dict.keys():
                 if self.txp_nde.merged_dict[dbsm].include(promoter):
-                    dbsms.add(dbsm)
-            self.promoter["nde"]["merged_dbd"][promoter.name] = dbsms
+                    mdbd.add(dbsm)
+                #mdbd.remove_duplicates()
+            self.promoter["nde"]["merged_dbd"][promoter.name] = mdbd
 
         #################################################
         
@@ -1202,33 +1211,58 @@ class RandomTest:
         # DNA: GenomicRegionSet
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
+        self.dna_region = self.dna_region.gene_association(organism=self.organism)
         
-    def target_dna(self, temp, remove_temp, l, e, obed=False):
+    def target_dna(self, temp, remove_temp, l, e, c, fr, fm, of, mf, obed=False, obedname=None):
         """Calculate the true counts of triplexes on the given dna regions"""
         
         txp = find_triplex(rna_fasta=self.rna_fasta, dna_region=self.dna_region, 
-                           temp=temp, organism=self.organism, remove_temp=remove_temp, l=l, e=e)
+                           temp=temp, organism=self.organism, remove_temp=remove_temp, 
+                           l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf,
+                           prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=True)
-
-        rbss = txp.get_rbs()
-        self.rbs_counts = [ rbss.count_rbs_position(x) for x in range(self.rna_len) ]
+        self.txp = txp
         self.rbss = txp.merged_dict.keys()
-        
-        self.counts_target = []
-        self.counts_targetm = []
-        self.mdbs = {}
-        self.dbs = {}
-        for rbs in self.rbss:
-            self.dbs[rbs] = txp.merged_dict[rbs]
-            self.mdbs[rbs] = txp.merged_dict[rbs].merge(w_return=True)
-            self.counts_target.append(len(self.dbs[rbs]))
-            self.counts_targetm.append(len(self.mdbs[rbs]))
 
-        if obed:
-            dbss = txp.get_dbs()
-            dbss.write_bed(os.path.join(temp, "dbs_on_dna.bed"))
+        txpf = find_triplex(rna_fasta=self.rna_fasta, dna_region=self.dna_region, 
+                            temp=temp, organism=self.organism, remove_temp=remove_temp, 
+                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf,
+                            prefix="dbs", dna_fine_posi=True)
+        txpf.merge_by(rbss=self.rbss, rm_duplicate=True)
+        self.txpf = txpf
+
+        self.counts_tr = {}
+        self.counts_dbs = {}
+        self.counts_dbsm = {}
+        self.mdbs = {}
+        self.region_dbd = {}
+
+        for rbs in self.rbss:
+            self.mdbs[rbs] = txpf.merged_dict[rbs].merge(w_return=True)
+            tr = len(self.txp.merged_dict[rbs])
+            self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
+            self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
+            self.counts_dbsm[rbs] = len(self.mdbs[rbs])
+            for region in self.dna_region:
+                self.region_dbd[region] = BindingSiteSet(region.name+"_DBDs")
+                if self.txp.merged_dict[rbs].include(region):
+                    self.region_dbd[region].add(rbs)
         
-    def random_test(self, repeats, temp, remove_temp, l, e):
+        self.region_dbs = {}
+        self.region_dbsm = {}
+        dbss = self.txpf.get_dbs()
+        for region in self.dna_region:
+            self.region_dbs[region] = dbss.covered_by_aregion(region)
+            self.region_dbsm[region] = self.region_dbs[region].merge(w_return=True)
+        if obed:
+            btr = txp.get_dbs()
+            btr = dbss.gene_association(organism=self.organism)
+            btr.write_bed(os.path.join(temp, "binding_region_"+obedname+".bed"))
+            dbss = txpf.get_dbs()
+            dbss = dbss.gene_association(organism=self.organism)
+            dbss.write_bed(os.path.join(temp, "dbs_"+obedname+".bed"))
+
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats-1, num=41)).tolist()
@@ -1238,7 +1272,7 @@ class RandomTest:
         for i in range(repeats):
             mp_input.append([ str(i), self.rna_fasta, self.dna_region,
                               temp, self.organism, self.rbss, str(marks.count(i)),
-                              str(l), str(e) ])
+                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm) ])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
@@ -1259,7 +1293,7 @@ class RandomTest:
             counts_rbs = [ v[i] for v in mp_output ]
             #print(len(counts_rbs))
             matrix.append(counts_rbs)
-            p = float(len([ h for h in counts_rbs if h > self.counts_target[i] ]))/repeats
+            p = float(len([ h for h in counts_rbs if h > self.counts_tr[rbs] ]))/repeats
             self.p_random.append(p)
             if p < 0.05: self.sig_region.append(rbs)
             self.mean_random.append(numpy.mean(counts_rbs))
@@ -1269,21 +1303,36 @@ class RandomTest:
     def plotrna(self, dir, ac, cut_off):
         """Generate lineplot for RNA"""
 
-        # Plotting
-        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-        
-        # Max and min
-        max_y = float(max(self.rbs_counts) * 1.1)
+        # Extract data points
+        x = range(self.rna_len)
+        p_y = [0] * self.rna_len
+        a_y = [0] * self.rna_len
+
+        for rbsm in self.txp.merged_dict.keys():
+            p = 0
+            a = 0
+            for dbs in self.txp.merged_dict[rbsm]:
+                if dbs.tri_orien == "P": p += 1
+                if dbs.tri_orien == "A": a += 1
+            for i in range(rbsm.initial, rbsm.final):
+                p_y[i] += p
+                a_y[i] += a
+
+        all_y = [sum(z) for z in zip(p_y, a_y)]
+        max_y = float(max(all_y) * 1.1)
         if ac: min_y = float(max_y*(-0.1))
         else: min_y = 0
 
+        # Plotting
+        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
         for rbs in self.sig_region:
             rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="lightgray", 
                                      edgecolor="none", alpha=0.5, lw=None)
             ax.add_patch(rect)
-        ax.plot(range(self.rna_len), self.rbs_counts, color="r", alpha=.8, lw=1, label="RBS")
-
-
+        ax.plot(x, all_y, color="r", alpha=.8, lw=1, label="Parallel + Anti-parallel")
+        ax.plot(x, p_y, color="g", alpha=.8, lw=1, label="Parallel")
+        ax.plot(x, a_y, color="b", alpha=.8, lw=1, label="Anti-parallel")
+        
         # RNA accessbility
         if ac:
             n_value = read_ac(ac, cut_off, rnalen=self.rna_len)
@@ -1296,13 +1345,15 @@ class RandomTest:
                   prop={'size':9}, ncol=3)
         ax.set_xlim(left=0, right=self.rna_len )
         ax.set_ylim( [min_y, max_y] ) 
-        
+        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
+
         ax.set_xlabel("RNA sequence (bp)", fontsize=12)
-        ax.set_ylabel("Number of RBS",fontsize=12, rotation=90)
+        ax.set_ylabel("Number of related DBSs",fontsize=12, rotation=90)
 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.savefig(os.path.join(dir, "rna.png"), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+
 
     def boxplot(self, dir):
         """Generate the visualized plot"""
@@ -1322,14 +1373,15 @@ class RandomTest:
         plt.setp(bp['caps'],color='white',zorder=-1)
         plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
         
-        ax.plot(range(1, len(self.rbss)+1), self.counts_target, 'ro', markersize=4, zorder=z+2)
+        ax.plot(range(1, len(self.rbss)+1), [ len(x) for x in self.counts_tr.values()], 'ro', markersize=4, zorder=z+2)
         ax.set_xlabel("Potential DNA Binding Domains", fontsize=label_size)
         ax.set_ylabel("Number of DNA Binding Sites",fontsize=label_size, rotation=90)
         
         ax.set_ylim( [min_y, max_y] ) 
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
         
-        ax.set_xticklabels([dbd.region_str_rna(pa=False) for dbd in self.rbss], rotation=0, ha="center", fontsize=tick_size)
+        ax.set_xticklabels( [dbd.region_str_rna(pa=False) for dbd in self.rbss], rotation=70, 
+                            ha="right", fontsize=tick_size)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(tick_size) 
 
         for spine in ['top', 'right']:
@@ -1343,8 +1395,9 @@ class RandomTest:
 
     def gen_html(self, directory, align=50, alpha = 0.05):
         """Generate the HTML file"""
-        html_header = "Triplex Domain Finder: Randomization Test"
-        link_d = {"Randomization Test":"randomtest.html"}
+        html_header = "Triplex Domain Finder: Region Test"
+        link_ds = {"RNA":"index.html",
+                   "Target regions":"target_regions.html"}
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
@@ -1352,18 +1405,20 @@ class RandomTest:
         ##################################################
         # index.html
 
-        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         # Plots
         html.add_figure("rna.png", align="left")
         html.add_figure("boxplot.png", align="left")
 
-        header_list = ["DBD",
-                       "Merged DBS",
-                       "DBS",
-                       "Average DBS randomization",
-                       "s.d. randomization",
-                       "P value"]
+        header_list = [ "DNA Binding Domain",
+                        "Binding<br>Targeted regions", 
+                        "No binding<br>Targeted regions",
+                        "Randomization Average DBS",
+                        "Randomization s.d.",
+                        "P value",
+                        "DBSs",
+                        "Binding target regions" ]
         
         type_list = 'sssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10]
@@ -1372,22 +1427,26 @@ class RandomTest:
         for i, rbs in enumerate(self.rbss):
             if self.p_random[i] < alpha:
                 data_table.append([ rbs.region_str_rna(pa=False),
-                                    '<a href="merged_dbs.html#'+rbs.region_str_rna(pa=False)+
-                                    '" style="text-align:left">'+value2str(self.counts_targetm[i])+'</a>',
-                                    '<a href="dbs.html#'+rbs.region_str_rna(pa=False)+
-                                    '" style="text-align:left">'+value2str(self.counts_target[i])+'</a>',
+                                    '<a href="dbd_region.html#'+rbs.region_str_rna(pa=False)+
+                                    '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
+                                    str(self.counts_tr[rbs][1]),
                                     value2str(self.mean_random[i]), 
                                     value2str(self.sd_random[i]), 
-                                    "<font color=\"red\">"+value2str(self.p_random[i])+"</font>" ])
+                                    "<font color=\"red\">"+value2str(self.p_random[i])+"</font>",
+                                    '<a href="dbd_dbs.html#'+rbs.region_str_rna(pa=False)+
+                                    '" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
+                                    str(self.counts_dbsm[rbs]) ])
             else:
-                data_table.append([ rbs.region_str_rna(pa=False), 
-                                    '<a href="merged_dbs.html#'+rbs.region_str_rna(pa=False)+
-                                    '" style="text-align:left">'+value2str(self.counts_targetm[i])+'</a>',
-                                    '<a href="dbs.html#'+rbs.region_str_rna(pa=False)+
-                                    '" style="text-align:left">'+value2str(self.counts_target[i])+'</a>',
-                                    value2str(self.mean_random[i]),
+                data_table.append([ rbs.region_str_rna(pa=False),
+                                    '<a href="dbd_region.html#'+rbs.region_str_rna(pa=False)+
+                                    '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
+                                    str(self.counts_tr[rbs][1]),
+                                    value2str(self.mean_random[i]), 
                                     value2str(self.sd_random[i]), 
-                                    value2str(self.p_random[i]) ])
+                                    value2str(self.p_random[i]),
+                                    '<a href="dbd_dbs.html#'+rbs.region_str_rna(pa=False)+
+                                    '" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
+                                    str(self.counts_dbsm[rbs]) ])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
@@ -1401,40 +1460,212 @@ class RandomTest:
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See summary</a>'])
         html.write(os.path.join(directory,"index.html"))
 
-        ##################################################
-        # merged_dbs.html
-        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory,"style"), 
+#################################################################################
+# 
+        # 
+
+        '''
+        self.counts_tr = {}
+        self.counts_dbs = {}
+        self.counts_dbsm = {}
+        self.mdbs = {}
+        self.region_dbd = {}
+        self.region_dbs = {}
+        '''
+        #############################################################
+        # RNA subpage: Profile of targeted regions for each merged DNA Binding Domain
+        #############################################################
+        
+        header_list=[ "Targeted region", 
+                      "Associated Gene", 
+                      "Strand", 
+                      "Binding of DBD", 
+                      "Binding of DBS" ]
+
+        #########################################################
+        # dbd_region.html
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
-
-        header_list = ["Merged DBS"]
-
-        for mrbs in self.rbss: 
-            html.add_heading("Target regions of DBD: "+mrbs.region_str_rna(pa=False),
-                             idtag=mrbs.region_str_rna(pa=False))
+     
+        for rbsm in self.rbss:    
+            html.add_heading("Targeted regions relate to DBD: "+rbsm.region_str_rna(),
+                             idtag=rbsm.region_str_rna())
             data_table = []
-            for mdbs in self.mdbs[mrbs]:
+            for region in self.txp.merged_dict[rbsm]:
+                # Add information
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+mdbs.chrom+"%3A"+str(mdbs.initial)+"-"+str(mdbs.final)+
-                                    '" style="margin-left:50">'+
-                                    mdbs.toString(space=True)+'</a>' ])
+                                    "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                                    '" style="text-align:left">'+region.toString(space=True)+'</a>', 
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
+                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
+                                    region.name+'" style="text-align:left">'+region.name+'</a>',
+                                    region.orientation,
+                                    str(len(self.region_dbd[region])),
+                                    str(len(self.region_dbs[region]))
+                                     ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-        html.write(os.path.join(directory,"merged_dbs.html"))
+        html.write(os.path.join(directory, "dbd_region.html"))
 
-        ##################################################
-        # dbs.html
-        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory,"style"), 
+
+        #########################################################
+        # dbd_dbs.html
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
+        
+        header_list=[ "DBS", 
+                      "Associated Gene", 
+                      "Strand" ]
 
-        header_list = ["DBS"]
-
-        for mrbs in self.rbss: 
-            html.add_heading("DNA Binding Sites of DBD: "+mrbs.region_str_rna(pa=False),
-                             idtag=mrbs.region_str_rna(pa=False))
+        for rbsm in self.rbss:    
+            html.add_heading("Targeted regions relate to DBD: "+rbsm.region_str_rna(),
+                             idtag=rbsm.region_str_rna())
             data_table = []
-            for dbs in self.dbs[mrbs]:
+            for dbs in self.txpf.merged_dict[rbsm]:
+                # Add information
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
-                                    '" style="margin-left:50">'+
-                                    dbs.toString(space=True)+'</a>' ])
+                                    '" style="text-align:left">'+dbs.toString(space=True)+'</a>', 
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
+                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
+                                    dbs.name+'" style="text-align:left">'+dbs.name+'</a>',
+                                    dbs.orientation ])
+
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-        html.write(os.path.join(directory,"dbs.html"))
+        html.write(os.path.join(directory, "dbd_dbs.html"))
+
+
+        #############################################################
+        # Targeted regions centered
+        #############################################################
+        
+        ##############################################################################################
+        # target_regions.html
+        html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="./style", RGT_header=False)
+        header_list=[ "Targeted region", 
+                      "Associated Gene", 
+                      "Total DBDs", 
+                      "P-DBDs", 
+                      "A-DBDs",
+                      "DBSs",
+                      "Merged DBSs" ]
+
+        html.add_heading("The targeted promoters")
+        data_table = []
+        
+        p = self.dna_region.counts_per_region(self.txp.get_dbs(sort=True, orientation="P"))
+        a = self.dna_region.counts_per_region(self.txp.get_dbs(sort=True, orientation="A"))
+
+        if not self.dna_region.sorted: self.dna_region.sort()
+        # Iterate by each gene promoter
+        for i, region in enumerate(self.dna_region):
+            
+            if len(self.region_dbs[region]) == 0:
+                continue
+            else:
+
+                data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                    "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                                    '" style="text-align:left">'+region.toString(space=True)+'</a>',
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
+                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
+                                    region.name+'" style="text-align:left">'+region.name+'</a>',
+                                    '<a href="region_dbd.html#'+region.toString()+
+                                    '" style="text-align:left">'+str(p[i])+str(a[i])+'</a>',
+                                    str(p[i]), str(a[i]),
+                                    '<a href="region_dbs.html#'+region.toString()+
+                                    '" style="text-align:left">'+str(len(self.region_dbs[region]))+'</a>',
+                                    '<a href="region_dbsm.html#'+region.toString()+
+                                    '" style="text-align:left">'+str(len(self.region_dbsm[region]))+'</a>' ])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+        html.add_heading("Notes")
+        html.add_list(["All the genes without any bindings are ignored.",
+                       "P-DBDs stands for Parallel DNA Binding Domains", 
+                       "A-DBDs stands for Anti-parallel DNA Binding Domains"])
+        
+        html.write(os.path.join(directory,"target_regions.html"))
+
+        ############################
+        # Subpages for targeted region centered page
+        # region_dbd.html
+        
+        header_list = ["DBD", "Motif", "Orientation"]
+
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="./style", RGT_header=False)
+        html.add_heading("Notes")
+        html.add_list(["Here we neglect the difference of DBSs, only the difference of DBDs are counted."])
+
+        for i, region in enumerate(self.dna_region):
+            if p[i] == 0 and  a[i] == 0:
+                continue
+            else:         
+                html.add_heading(region.name, idtag=region.toString())
+                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                        "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                                        '" style="margin-left:50">'+
+                                        region.toString(space=True)+'</a>'])
+                data_table = []
+                for dbd in self.region_dbd[region]:
+                    data_table.append([ dbd.region_str_rna(pa=False),
+                                        dbd.motif, dbd.orientation ])
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+                
+        html.write(os.path.join(directory, "region_dbd.html"))
+
+        ############################
+        # Subpages for targeted region centered page
+        # region_dbs.html
+        
+        header_list = ["DBS", "Strand", "Score", "Motif", "Orientation" ]
+
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="./style", RGT_header=False)
+        
+        for i, region in enumerate(self.dna_region):
+            if len(self.region_dbs[region]) == 0:
+                continue
+            else:         
+                html.add_heading(region.name, idtag=region.toString())
+                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                        "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                                        '" style="margin-left:50">'+
+                                        region.toString(space=True)+'</a>'])
+                data_table = []
+                for dbs in self.region_dbs[region]:
+                    data_table.append([ dbs.toString(space=True),
+                                        dbs.score,
+                                        dbs.motif, 
+                                        dbs.tri_orien ])
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+                
+        html.write(os.path.join(directory, "region_dbs.html"))
+
+
+        ############################
+        # Subpages for targeted region centered page
+        # region_dbsm.html
+        
+        header_list = ["Target region", "Strand", "Motif", "Orientation" ]
+
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="./style", RGT_header=False)
+        
+        for i, region in enumerate(self.dna_region):
+            if len(self.region_dbsm[region]) == 0:
+                continue
+            else:         
+                html.add_heading(region.name, idtag=region.toString())
+                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                        "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                                        '" style="margin-left:50">'+
+                                        region.toString(space=True)+'</a>'])
+                data_table = []
+                for dbsm in self.region_dbsm[region]:
+                    data_table.append([ dbsm.toString(space=True),
+                                        dbsm.motif, 
+                                        dbsm.tri_orien ])
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+                
+        html.write(os.path.join(directory, "region_dbsm.html"))
+

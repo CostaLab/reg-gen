@@ -2,9 +2,7 @@
 from __future__ import print_function
 from __future__ import division
 import sys
-import os.path
-lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(lib_path)
+import os
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
@@ -86,10 +84,9 @@ def output_parameters(parameter, directory, folder, filename):
     except:
         os.mkdir(pd)    
     if parameter:
-        logp = open(os.path.join(pd,"parameters.txt"),'w')
-        for s in parameter:
-            logp.write("{}\n".format(s))
-        logp.close()
+        with open(os.path.join(pd,"parameters.txt"),'w') as f:
+            for s in parameter:
+                print(s, file=f)
 
 def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
     copyfile(em, os.path.join(dir,directory,folder,filename))
@@ -256,10 +253,10 @@ def main():
     parser_heatmap.add_argument('-center', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_heatmap.add_argument('-sort',type=int, default=None, help='Define the way to sort the signals. \
-    Default is no sorting at all, the signals arrange in the order of their position; \
-    "0" is sorting by the average ranking of all signals; \
-    "1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
+    parser_heatmap.add_argument('-sort',type=int, default=None, help='Define the way to sort the signals.'+
+                                'Default is no sorting at all, the signals arrange in the order of their position; '+
+                                '"0" is sorting by the average ranking of all signals; '+
+                                '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
     parser_heatmap.add_argument('-s', default='cell', help=helpsort + " (Default:cell)")
     parser_heatmap.add_argument('-g', default='regions', help=helpgroup + " (Default:regions)")
     parser_heatmap.add_argument('-c', default='reads', help=helpcolor + " (Default:reads)")
@@ -571,6 +568,7 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         copy_em(em=args.input, directory=args.output, folder=args.title)
+
     ################### Heatmap ##########################################
     if args.mode=='heatmap':
         print("\n################# Heatmap #################")
@@ -624,6 +622,7 @@ def main():
         print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
         output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
         copy_em(em=args.input, directory=args.output, folder=args.title)
+
     ################### Integration ######################################
     if args.mode=='integration':
         print("\n############### Integration ###############")
