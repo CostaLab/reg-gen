@@ -170,11 +170,11 @@ def _merge_consecutive_bins(tmp_peaks, distr):
         v2 = c2
         
         #merge bins
-        #while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
-        #    e = tmp_peaks[i+1][2]
-        #    v1 = map(add, v1, tmp_peaks[i+1][3])
-        #    v2 = map(add, v2, tmp_peaks[i+1][4])
-        #    i += 1
+        while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
+            e = tmp_peaks[i+1][2]
+            v1 = map(add, v1, tmp_peaks[i+1][3])
+            v2 = map(add, v2, tmp_peaks[i+1][4])
+            i += 1
         s1 = v1
         s2 = v2
         side = 'l' if strand == '+' else 'r'
