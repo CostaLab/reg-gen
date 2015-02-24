@@ -52,6 +52,9 @@ class GenomicRegion:
             s += '\t' + str(self.data)
         return s
 
+    def __hash__(self):
+        return hash(tuple([self.chrom, self.initial, self.final]))
+        
     def toString(self, space=False):
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)

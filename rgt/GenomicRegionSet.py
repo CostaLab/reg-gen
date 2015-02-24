@@ -1312,6 +1312,12 @@ class GenomicRegionSet:
                     j = j + 1
                     cont_overlap = False
         return counts
+        
+    def covered_by_aregion(self, region):
+        """Return a GEnomicRegionSet which includes all the regions covered by a given region."""
+        region_set = GenomicRegionSet("Query")
+        region_set.add(region)
+        return self.intersect(region_set, mode=OverlapType.ORIGINAL)
 
 if __name__ == '__main__':
     a = GenomicRegionSet(name="a")

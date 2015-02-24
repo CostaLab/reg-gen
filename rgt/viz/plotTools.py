@@ -3,8 +3,6 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
-lib_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.append(lib_path)
 import numpy
 from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
