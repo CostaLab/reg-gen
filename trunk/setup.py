@@ -78,7 +78,7 @@ tools_dictionary = {
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy", "pysam>=0.7.5", "HTSeq"],
+  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "pysam>=0.7.5", "HTSeq"],
   []
 ), 
 "THOR": (
