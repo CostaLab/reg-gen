@@ -91,6 +91,14 @@ class BindingSiteSet(GenomicRegionSet):
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
     
+    def get_bs(self, orientation):
+        """Get the Binding Sites with the given orientation"""
+        output = BindingSiteSet(self.name+":"+orientation)
+        for bs in self.sequences:
+            if bs.orientation == orientation:
+                output.add(bs)
+        return output
+
     def write_rbs(self, filename):
         """Write the information into a file with .rbs """
         d = os.path.dirname(filename)
