@@ -301,8 +301,8 @@ class GenomicRegionSet:
                 # Write the curent coordinate with its corresponding overlapping genes (enriched or not)
                 aDict[chrName].append(coord[:5]) # Writing the raw coordinate until STRAND field only
                 aDict[chrName][-1][2] = ":".join(genesList) # Write list of overlapping genes
-                aDict[chrName][-1][3] = 0 # Force the SCORE field to be '0'
-                aDict[chrName][-1][4] = "." # Force the STRAND field to be '.'
+                #aDict[chrName][-1][3] = 0 # Force the SCORE field to be '0' # EG
+                #aDict[chrName][-1][4] = "." # Force the STRAND field to be '.' # EG
 
         # Converting aDict to genomic region set
         result_grs = GenomicRegionSet(self.name+"_associated")
@@ -320,7 +320,8 @@ class GenomicRegionSet:
                         new_prox_list.append(curr_gene.split("_")[-1])
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list))
+                #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list)) # EG
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4]))
              
         return result_grs
 
