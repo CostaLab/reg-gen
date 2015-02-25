@@ -84,7 +84,7 @@ tools_dictionary = {
 "THOR": (
 "rgt-THOR",
 "rgt.THOR.THOR:main",
-["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq"],
+["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
 []
 ),                 
 "filterVCF": (
