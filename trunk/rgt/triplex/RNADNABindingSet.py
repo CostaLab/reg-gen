@@ -131,7 +131,42 @@ class RNADNABindingSet:
         """Sort the dictionary by DNA"""
         self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
     
-    def merge_rbs(self, rm_duplicate=False, rbs_target=False, asgene_name=False):
+    def sort_dbs_by_regions(self, regionset):
+        """Sort the DBS by given GenomicRegionSet"""
+        dbss = self.get_dbs()
+        result = OrderedDict()
+        for region in regionset:
+            result[region] = dbss.covered_by_aregion(region)
+        return result
+
+    def sort_rbs_by_regions(self, regionset, rm_duplicate=False):
+        """Sort the DBS by given GenomicRegionSet"""
+        
+        result = OrderedDict()
+        for region in regionset:
+            result[region] = BindingSiteSet("RBS_"+region.toString())
+            for rd in self:
+                if rd.dna.overlap(region):
+                    result[region].add(rd.rna)
+            result[region].remove_duplicates()
+        return result
+
+    def sort_dbs_by_regions(self, regionset):
+        """Sort the DBS by given GenomicRegionSet"""
+        dbss = self.get_dbs()
+        return dbss.intersect(regionset, mode=OverlapType.ORIGINAL)
+
+    def sort_rd_by_regions(self, regionset):
+        """Sort RNADNA binding information by a given GenomicRegionSet"""
+        result = OrderedDict()
+        for region in regionset:
+            result[region] = RNADNABindingSet(name=region.name)
+            for rd in self.sequences:        
+                if rd.dna.overlap(region):
+                    result[region].add(rd)
+        return result
+
+    def merge_rbs(self, rm_duplicate=False, rbs_target=False, asgene_organism=False):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -162,13 +197,13 @@ class RNADNABindingSet:
                 new_dict[rbsm].remove_duplicates()
                 if rbs_target: rbs_dict[rbsm].remove_duplicates()
 
-            if asgene_name:
-                new_dict[rbsm] = new_dict[rbsm].gene_association(organism=self.organism)
+            if asgene_organism:
+                new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
 
         self.merged_dict = new_dict
         if rbs_target: self.merged_rbss = rbs_dict
 
-    def merge_by(self, rbss, rm_duplicate=False, rbs_target=False, asgene_name=False):
+    def merge_by(self, rbss, rm_duplicate=False, rbs_target=False, asgene_organism=False):
         """Merge the RNA Binding Sites by the given list of Binding sites"""
         new_dict = OrderedDict()
         if rbs_target: rbs_dict = OrderedDict()
@@ -189,8 +224,8 @@ class RNADNABindingSet:
             if rm_duplicate: 
                 new_dict[rbsm].remove_duplicates()
                 if rbs_target: rbs_dict[rbsm].remove_duplicates()
-            if asgene_name:
-                new_dict[rbsm] = new_dict[rbsm].gene_association(organism=self.organism)
+            if asgene_organism:
+                new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
 
         self.merged_dict = new_dict
         if rbs_target: self.merged_rbss = rbs_dict
