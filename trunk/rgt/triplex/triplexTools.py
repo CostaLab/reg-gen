@@ -512,7 +512,7 @@ class PromoterTest:
         len_nde = len(self.nde_regions)
 
         for rbs in txp_de.merged_dict.keys():
-            #if len(regions) < 10: continue
+            if len(txp_de.merged_dict[rbs]) < 10: continue
             # DE
             self.frequency["promoters"]["de"][rbs] = [ len(txp_de.merged_dict[rbs]), len_de - len(txp_de.merged_dict[rbs]) ]
             #txp_de.merged_dict[rbs].write_bed("de.bed")
@@ -535,7 +535,7 @@ class PromoterTest:
         txp_ndef.merge_by(rbss=txp_def.merged_dict.keys(), rm_duplicate=True)
 
         for rbs in txp_def.merged_dict.keys():
-            #if len(regions) < 10: continue
+            if len(txp_def.merged_dict[rbs]) < 10: continue
             # DE
             self.frequency["hits"]["de"][rbs] = len(txp_def.merged_dict[rbs])
             # non-DE
@@ -629,9 +629,10 @@ class PromoterTest:
                   prop={'size':9}, ncol=3)
         ax.set_xlim(left=0, right=self.rna_len )
         ax.set_ylim( [min_y, max_y] ) 
-        
-        ax.set_xlabel("RNA sequence (bp)", fontsize=12)
-        ax.set_ylabel("Number of related promoters",fontsize=12, rotation=90)
+        for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        ax.set_xlabel("RNA sequence (bp)", fontsize=9)
+        ax.set_ylabel("Number of related promoters",fontsize=9, rotation=90)
 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.savefig(os.path.join(dir, "promoter.png"), facecolor='w', edgecolor='w',  
@@ -686,9 +687,10 @@ class PromoterTest:
                   prop={'size':9}, ncol=3)
         ax.set_xlim(left=0, right=self.rna_len )
         ax.set_ylim( [min_y, max_y] ) 
-        
-        ax.set_xlabel("RNA sequence (bp)", fontsize=12)
-        ax.set_ylabel("Number of related DNA binding sites",fontsize=12, rotation=90)
+        for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        ax.set_xlabel("RNA sequence (bp)", fontsize=9)
+        ax.set_ylabel("Number of related DBSs",fontsize=9, rotation=90)
 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.savefig(os.path.join(dir, "binding_sites.png"), facecolor='w', edgecolor='w',  
@@ -1329,8 +1331,11 @@ class RandomTest:
                                      edgecolor="none", alpha=0.5, lw=None)
             ax.add_patch(rect)
         ax.plot(x, all_y, color="r", alpha=.8, lw=1, label="Parallel + Anti-parallel")
+        ax.fill_between(x, 0, all_y, facecolor='r', interpolate=True)
         ax.plot(x, p_y, color="g", alpha=.8, lw=1, label="Parallel")
+        ax.fill_between(x, 0, p_y, facecolor='g', interpolate=True)
         ax.plot(x, a_y, color="b", alpha=.8, lw=1, label="Anti-parallel")
+        ax.fill_between(x, 0, a_y, facecolor='b', interpolate=True)
         
         # RNA accessbility
         if ac:
@@ -1615,7 +1620,7 @@ class RandomTest:
             if len(self.region_dbs[region]) == 0:
                 continue
             else:         
-                html.add_heading(region.name, idtag=region.toString())
+                html.add_heading("Associated gene: "+split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism), idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                                         '" style="margin-left:50">'+
@@ -1641,7 +1646,7 @@ class RandomTest:
             if len(self.region_dbs[region]) == 0:
                 continue
             else:         
-                html.add_heading("Associated gene: "+region.name, idtag=region.toString())
+                html.add_heading("Associated gene: "+split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism), idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                                         '" style="margin-left:50">'+
@@ -1674,7 +1679,7 @@ class RandomTest:
             if len(self.region_dbsm[region]) == 0:
                 continue
             else:         
-                html.add_heading("Associated gene: "+region.name, idtag=region.toString())
+                html.add_heading("Associated gene: "+split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism), idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                                         '" style="margin-left:50">'+
