@@ -207,7 +207,7 @@ class GenomicRegionSet:
         
         # Updating assocDict to contain all chromosomes in coord_dict
         for chrom in chromosome_list:
-            if(chrom not in assocDict.keys()): assocDict[k] = []
+            if(chrom not in assocDict.keys()): assocDict[chrom] = []
 
         # Updating geneFlagDict based on gene_set
         if(gene_set):
