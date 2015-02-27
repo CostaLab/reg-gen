@@ -63,7 +63,7 @@ class BindingSite(GenomicRegion):
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))
                         
-    def region_str_rna(self, pa=True):
+    def str_rna(self, pa=True):
         if pa:
             return "{0}-{1}-{2}".format(self.initial, self.final, self.orientation)
         else:

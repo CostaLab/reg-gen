@@ -26,7 +26,7 @@ class GenomicRegion:
         self.final = final
         self.name = name
         self.orientation = orientation
-        self.data = data
+        self.data = data # data can be integer, string, list
 
     def get_data(self, as_list=False):
         """Return data as string (with special separating character (_$_)) 
@@ -53,7 +53,10 @@ class GenomicRegion:
         return s
 
     def __hash__(self):
-        return hash(tuple([self.chrom, self.initial, self.final]))
+        return hash(tuple([self.chrom, self.initial, self.final, self.orientation]))
+
+    def __eq__(self, other):
+        return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
         
     def toString(self, space=False):
         if space:
