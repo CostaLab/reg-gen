@@ -133,40 +133,205 @@ class RNADNABindingSet:
     
     def sort_dbs_by_regions(self, regionset):
         """Sort the DBS by given GenomicRegionSet"""
-        dbss = self.get_dbs()
-        result = OrderedDict()
-        for region in regionset:
-            result[region] = dbss.covered_by_aregion(region)
+        dbss = self.get_dbs(sort=True)
+
+        result = {}
+
+        if not regionset.sorted: regionset.sort()
+
+        iter_dbs = iter(dbss)
+        dbs = iter_dbs.next()
+
+        last_j = len(regionset)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+
+        while cont_loop:
+            # When the regions overlap
+            if dbs.overlap(regionset[j]):
+                result[regionset[j].toString()].add(dbs)
+
+                if cont_overlap == False: pre_inter = j
+                if j == last_j: 
+                    try: dbs = iter_dbs.next()
+                    except: cont_loop = False 
+                else: 
+                    j = j + 1
+                    result[regionset[j].toString()] = GenomicRegionSet("RBS_"+regionset[j].toString())
+                cont_overlap = True
+            
+            elif dbs < regionset[j]:
+                try: 
+                    dbs = iter_dbs.next()
+                    j = pre_inter
+                    cont_overlap = False
+                except: cont_loop = False 
+            
+            elif dbs > regionset[j]:
+                if j == last_j:
+                    cont_loop = False
+                else:
+                    j = j + 1
+                    result[regionset[j].toString()] = GenomicRegionSet("RBS_"+regionset[j].toString())
+                    cont_overlap = False
         return result
 
-    def sort_rbs_by_regions(self, regionset, rm_duplicate=False):
+    def sort_rbs_by_regions(self, regionset, merge_rbs=True):
         """Sort the DBS by given GenomicRegionSet"""
         
         result = OrderedDict()
-        for region in regionset:
-            result[region] = BindingSiteSet("RBS_"+region.toString())
-            for rd in self:
-                if rd.dna.overlap(region):
-                    result[region].add(rd.rna)
-            result[region].remove_duplicates()
+
+        txp_copy = copy.deepcopy(self)
+        txp_copy.sort_dbs()
+
+        if not regionset.sorted: regionset.sort()
+
+        iter_rd = iter(txp_copy)
+        rd = iter_rd.next()
+
+        last_j = len(regionset)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+
+        while cont_loop:
+            # When the regions overlap
+            if rd.dna.overlap(regionset[j]):
+                result[regionset[j].toString()].add(rd.rna)
+
+                if cont_overlap == False: pre_inter = j
+                if j == last_j: 
+                    try: rd = iter_rd.next()
+                    except: cont_loop = False 
+                else: 
+                    j = j + 1
+                    result[regionset[j].toString()] = BindingSiteSet("RBS_"+regionset[j].toString())
+                cont_overlap = True
+            
+            elif rd.dna < regionset[j]:
+                try: 
+                    rd = iter_rd.next()
+                    j = pre_inter
+                    cont_overlap = False
+                except: cont_loop = False 
+            
+            elif rd.dna > regionset[j]:
+                if j == last_j:
+                    cont_loop = False
+                else:
+                    j = j + 1
+                    result[regionset[j].toString()] = BindingSiteSet("RBS_"+regionset[j].toString())
+                    cont_overlap = False
+         
+
         return result
 
-    def sort_dbs_by_regions(self, regionset):
-        """Sort the DBS by given GenomicRegionSet"""
-        dbss = self.get_dbs()
-        return dbss.intersect(regionset, mode=OverlapType.ORIGINAL)
 
     def sort_rd_by_regions(self, regionset):
         """Sort RNADNA binding information by a given GenomicRegionSet"""
+        """Sort the DBS by given GenomicRegionSet"""
+        
         result = OrderedDict()
-        for region in regionset:
-            result[region] = RNADNABindingSet(name=region.name)
-            for rd in self.sequences:        
-                if rd.dna.overlap(region):
-                    result[region].add(rd)
+
+        txp_copy = copy.deepcopy(self)
+        txp_copy.sort_dbs()
+
+        if not regionset.sorted: regionset.sort()
+
+        iter_rd = iter(txp_copy)
+        rd = iter_rd.next()
+
+        last_j = len(regionset)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+
+        while cont_loop:
+            # When the regions overlap
+            if rd.dna.overlap(regionset[j]):
+                result[regionset[j].toString()].add(rd)
+
+                if cont_overlap == False: pre_inter = j
+                if j == last_j: 
+                    try: rd = iter_rd.next()
+                    except: cont_loop = False 
+                else: 
+                    j = j + 1
+                    result[regionset[j].toString()] = RNADNABindingSet("RNADNA_interaction:"+regionset[j].toString())
+                cont_overlap = True
+            
+            elif rd.dna < regionset[j]:
+                try: 
+                    rd = iter_rd.next()
+                    j = pre_inter
+                    cont_overlap = False
+                except: cont_loop = False 
+            
+            elif rd.dna > regionset[j]:
+                if j == last_j:
+                    cont_loop = False
+                else:
+                    j = j + 1
+                    result[regionset[j].toString()] = RNADNABindingSet("RNADNA_interaction:"+regionset[j].toString())
+                    cont_overlap = False
         return result
 
-    def merge_rbs(self, rm_duplicate=False, rbs_target=False, asgene_organism=False):
+    def sort_rd_by_rbs(self, rbss):
+        """Sort RNADNA binding information by a given GenomicRegionSet"""
+        """Sort the DBS by given GenomicRegionSet"""
+        
+        result = OrderedDict()
+
+        txp_copy = copy.deepcopy(self)
+        txp_copy.sort_rbs()
+
+        if not rbss.sorted: rbss.sort()
+
+        iter_rd = iter(txp_copy)
+        rd = iter_rd.next()
+
+        last_j = len(rbss)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+
+        while cont_loop:
+            # When the regions overlap
+            if rd.rna.overlap(rbss[j]):
+                result[rbss[j].str_rna()].add(rd)
+
+                if cont_overlap == False: pre_inter = j
+                if j == last_j: 
+                    try: rd = iter_rd.next()
+                    except: cont_loop = False 
+                else: 
+                    j = j + 1
+                    result[rbss[j].str_rna()] = RNADNABindingSet("RNADNA_interaction:"+rbss[j].str_rna())
+                cont_overlap = True
+            
+            elif rd.dna < rbss[j]:
+                try: 
+                    rd = iter_rd.next()
+                    j = pre_inter
+                    cont_overlap = False
+                except: cont_loop = False 
+            
+            elif rd.dna > rbss[j]:
+                if j == last_j:
+                    cont_loop = False
+                else:
+                    j = j + 1
+                    result[rbss[j].str_rna()] = RNADNABindingSet("RNADNA_interaction:"+rbss[j].str_rna())
+                    cont_overlap = False
+        return result
+
+
+    def merge_rbs(self, rm_duplicate=False, asgene_organism=None):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -178,57 +343,39 @@ class RNADNABindingSet:
         rna_merged.merge()
         # A dict: RBS as key, and GenomicRegionSet as its value
         new_dict = OrderedDict()
-        if rbs_target: rbs_dict = OrderedDict()
 
         for rbsm in rna_merged:
             new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
-            if rbs_target: rbs_dict[rbsm] = BindingSiteSet(rbsm.toString())
             
             for rd in self:
                 if rbsm.overlap(rd.rna):
-                    if rbs_target: rbs_dict[rbsm].add(rd.rna)
-                    # Add to new dictionary
-                    rd.dna.score = rd.score
-                    rd.dna.motif = rd.motif
-                    rd.dna.tri_orien = rd.orient
                     new_dict[rbsm].add(rd.dna)
 
             if rm_duplicate: 
                 new_dict[rbsm].remove_duplicates()
-                if rbs_target: rbs_dict[rbsm].remove_duplicates()
 
             if asgene_organism:
                 new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
 
         self.merged_dict = new_dict
-        if rbs_target: self.merged_rbss = rbs_dict
 
-    def merge_by(self, rbss, rm_duplicate=False, rbs_target=False, asgene_organism=False):
+    def merge_by(self, rbss, rm_duplicate=False, asgene_organism=False):
         """Merge the RNA Binding Sites by the given list of Binding sites"""
         new_dict = OrderedDict()
-        if rbs_target: rbs_dict = OrderedDict()
 
         for rbsm in rbss:
             new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
-            if rbs_target: rbs_dict[rbsm] = BindingSiteSet(rbsm.toString())
             
             for rd in self:
                 if rbsm.overlap(rd.rna):
-                    if rbs_target: rbs_dict[rbsm].add(rd.rna)
-                    # Add to new dictionary
-                    rd.dna.score = rd.score
-                    rd.dna.motif = rd.motif
-                    rd.dna.tri_orien = rd.orient
                     new_dict[rbsm].add(rd.dna)
 
             if rm_duplicate: 
                 new_dict[rbsm].remove_duplicates()
-                if rbs_target: rbs_dict[rbsm].remove_duplicates()
             if asgene_organism:
                 new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
 
         self.merged_dict = new_dict
-        if rbs_target: self.merged_rbss = rbs_dict
 
 
     def read_txp(self, filename, dna_fine_posi=False):
@@ -275,11 +422,14 @@ class RNADNABindingSet:
                     dna_start = int(line[3].split(":")[1].split("-")[0]) + int(line[4])
                     dna_end = int(line[3].split(":")[1].split("-")[0]) + int(line[5])
                     dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
-                                        name=line[3], orientation=line[10])
+                                        name=line[3], orientation=line[10],
+                                        data=[line[6], line[9], line[11]]) # score, motif, orientation
+
                 else:
                     dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(line[3].split(":")[1].split("-")[0]),
                                         final=int(line[3].split(":")[1].split("-")[1]), 
-                                        name=line[3], orientation=line[10])
+                                        name=line[3], orientation=line[10],
+                                        data=[line[6], line[9], line[11]])
                 
                 # Map RNA binding site to DNA binding site
                 self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))

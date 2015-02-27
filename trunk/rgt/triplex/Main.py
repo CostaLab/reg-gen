@@ -10,7 +10,7 @@ import time, datetime, getpass, fnmatch
 from rgt.GenomicRegionSet import GenomicRegionSet
 from triplexTools import TriplexSearch, PromoterTest, RandomTest
 from rgt.SequenceSet import Sequence, SequenceSet
-from rgt.Util import SequenceType
+from rgt.Util import SequenceType, Html
 
 dir = os.getcwd()
 
@@ -46,6 +46,27 @@ def check_dir(path):
     """Check the availability of the given directory and creat it"""
     try: os.stat(path)
     except: os.mkdir(path)
+
+def list_all_index(path):
+    """Creat an 'index.html' in the defined directory """
+    dirname = os.path.basename(path)
+    link_d = {dirname:os.path.join(path,"index.html")}
+    
+    html = Html(name="Triplex Domain Finder", links_dict=link_d, 
+                fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False)
+    header_list = ["Expeirments"]
+    html.add_heading("All experiments in: "+dirname+"/")
+    data_table = []
+    type_list = 's'
+    col_size_list = [10]
+    for root, dirnames, filenames in os.walk(path):
+        roots = root.split('/')
+        for filename in fnmatch.filter(filenames, '*.html'):
+            if filename == 'index.html' and root.split('/')[-1] != dirname:
+                data_table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                #print(link_d[roots[-1]])
+    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left")
+    html.write(os.path.join(path,"index.html"))
 
 def main():
     ##########################################################################
@@ -343,7 +364,7 @@ def main():
     if args.mode == 'promotertest':
         print2(summary, "\n"+"*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: "+args.r)
-        print2(summary, "*** Output directoey: "+os.path.basename(args.o))
+        print2(summary, "*** Output directory: "+os.path.basename(args.o))
 
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
@@ -384,6 +405,7 @@ def main():
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
+        list_all_index(path=os.path.dirname(args.o))
         
     ################################################################################
     ##### Random ###################################################################
@@ -422,4 +444,5 @@ def main():
         print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
     
         output_summary(summary, args.o, "summary.txt")
+        list_all_index(path=os.path.dirname(args.o))
         

@@ -4,6 +4,7 @@ from collections import *
 import os
 import sys
 import multiprocessing
+import time, datetime
 # Local Libraries
 from scipy import stats
 import numpy
@@ -173,6 +174,27 @@ def check_dir(path):
             except: pass
     except:
         os.mkdir(path)
+
+def split_gene_name(gene_name, ani, org):
+    p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
+         "&db="+org+"&singleSearch=knownCanonical&position="
+    p2 = '" style="text-align:left">'
+    p3 = '</a>'
+    
+    if ":" in gene_name:
+        genes = gene_name.split(":")
+        genes = set(genes)
+        for i, g in enumerate(genes):
+            if i == 0:
+                result = p1+g+p2+g+p3
+            else:
+                result += ","+p1+g+p2+g+p3
+    elif gene_name == ".":
+        result = "none"
+
+    else:
+        result = p1+gene_name+p2+gene_name+p3
+    return result
 #####################################################################################
 
 class TriplexSearch:
@@ -437,7 +459,9 @@ class PromoterTest:
 
         if bed and bg:
             self.de_regions.read_bed(bed)
+            self.de_regions = self.de_regions.gene_association(organism=self.organism)
             self.nde_regions.read_bed(bg)
+            self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
         else:
             # DE gene regions
             self.de_gene = GeneSet("de genes")
@@ -501,18 +525,19 @@ class PromoterTest:
         txp_de = RNADNABindingSet("DE")
         txp_nde = RNADNABindingSet("non-DE")
         txp_de.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=False)
-        txp_de.map_promoter_name(self.de_regions)
-        txp_de.merge_rbs(rm_duplicate=True)
         
+        txp_de.merge_rbs(rm_duplicate=True, asgene_organism=self.organism)
+        
+        self.rbss = txp_de.merged_dict.keys()
+
         txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
-        txp_nde.map_promoter_name(self.nde_regions)
-        txp_nde.merge_by(rbss=txp_de.merged_dict.keys(), rm_duplicate=True)
+        
+        txp_nde.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
 
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
 
-        for rbs in txp_de.merged_dict.keys():
-            if len(txp_de.merged_dict[rbs]) < 10: continue
+        for rbs in self.rbss:
             # DE
             self.frequency["promoters"]["de"][rbs] = [ len(txp_de.merged_dict[rbs]), len_de - len(txp_de.merged_dict[rbs]) ]
             #txp_de.merged_dict[rbs].write_bed("de.bed")
@@ -526,16 +551,17 @@ class PromoterTest:
         ########################################################
         # Count the number of hits on the promoters from each merged DBD 
         txp_def = RNADNABindingSet("DE")
-        txp_ndef = RNADNABindingSet("non-DE")
         txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
-        txp_def.map_promoter_name(self.de_regions)
-        txp_def.merge_rbs(rm_duplicate=True)
-        txp_ndef.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=True)
-        txp_ndef.map_promoter_name(self.nde_regions)
-        txp_ndef.merge_by(rbss=txp_def.merged_dict.keys(), rm_duplicate=True)
 
-        for rbs in txp_def.merged_dict.keys():
-            if len(txp_def.merged_dict[rbs]) < 10: continue
+        txp_def.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
+
+        txp_ndef = RNADNABindingSet("non-DE")
+        txp_ndef.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=True)
+
+        txp_ndef.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
+
+        for rbs in self.rbss:
+            #if len(txp_def.merged_dict[rbs]) < 10: continue
             # DE
             self.frequency["hits"]["de"][rbs] = len(txp_def.merged_dict[rbs])
             # non-DE
@@ -592,12 +618,12 @@ class PromoterTest:
         p_y = [0] * self.rna_len
         a_y = [0] * self.rna_len
 
-        for rbsm in self.txp_de.merged_dict.keys():
+        for rbsm in self.rbss:
             p = 0
             a = 0
             for promoter in self.txp_de.merged_dict[rbsm]:
-                if promoter.tri_orien == "P": p += 1
-                if promoter.tri_orien == "A": a += 1
+                if promoter.data[2] == "P": p += 1
+                if promoter.data[2] == "A": a += 1
             for i in range(rbsm.initial, rbsm.final):
                 p_y[i] += p
                 a_y[i] += a
@@ -650,12 +676,12 @@ class PromoterTest:
         p_y = [0] * self.rna_len
         a_y = [0] * self.rna_len
 
-        for rbsm in self.txp_def.merged_dict.keys():
+        for rbsm in self.rbss:
             p = 0
             a = 0
             for promoter in self.txp_def.merged_dict[rbsm]:
-                if promoter.tri_orien == "P": p += 1
-                if promoter.tri_orien == "A": a += 1
+                if promoter.data[2] == "P": p += 1
+                if promoter.data[2] == "A": a += 1
             for i in range(rbsm.initial, rbsm.final):
                 p_y[i] += p
                 a_y[i] += a
@@ -784,58 +810,38 @@ class PromoterTest:
 
     def promoter_profile(self):
         """count the number of DBD and DBS regarding to each promoter"""
-        self.promoter = { "de": { "merged_dbd":OrderedDict(), 
-                                  "dbs": OrderedDict(), 
-                                  "merged_dbs":OrderedDict() },
-                          "nde": {"merged_dbd":OrderedDict(), 
-                                  "dbs": OrderedDict(), 
-                                  "merged_dbs":OrderedDict()} }
-
+        self.promoter = { "de": {},
+                          "nde": {} }
 
         #################################################
         # Each promoter to all related merged DBD
         print("\tEach promoter to all related merged DBD...")
         # Targeted promoters
-        for promoter in self.de_regions:
-            mdbd = BindingSiteSet("Merged DBD to promoter "+promoter.name)
-            for dbsm in self.txp_de.merged_dict.keys():
-                if self.txp_de.merged_dict[dbsm].include(promoter):
-                    mdbd.add(dbsm)
-                #mdbd.remove_duplicates()
-            self.promoter["de"]["merged_dbd"][promoter.name] = mdbd
-        
-        # Untargeted promoters
-        for promoter in self.nde_regions:
-            mdbd = BindingSiteSet("Merged DBD to promoter "+promoter.name)
-            for dbsm in self.txp_nde.merged_dict.keys():
-                if self.txp_nde.merged_dict[dbsm].include(promoter):
-                    mdbd.add(dbsm)
-                #mdbd.remove_duplicates()
-            self.promoter["nde"]["merged_dbd"][promoter.name] = mdbd
-
+        #self.promoter["de"]["rbs"] = self.txp_de.sort_rbs_by_regions(regionset=self.de_regions)
+        #self.promoter["nde"]["rbs"] = self.txp_nde.sort_rbs_by_regions(regionset=self.nde_regions)
+        self.promoter["de"]["rd"] = self.txp_de.sort_rd_by_regions(regionset=self.de_regions)
+        self.promoter["nde"]["rd"] = self.txp_nde.sort_rd_by_regions(regionset=self.nde_regions)
         #################################################
         
         # Each promoter to all related DBS
         print("\tEach promoter to all related DBS...")
         # Targeted promoters
-        for promoter in self.de_regions:
-            dbss = GenomicRegionSet("DBS to promoter "+promoter.name)
-            for rd in self.txp_def.sequences:
-                if promoter.overlap(rd.dna):
-                    dbss.add(rd.dna)
-            self.promoter["de"]["dbs"][promoter.name] = dbss
-            self.promoter["de"]["merged_dbs"][promoter.name] = dbss.merge(w_return=True)
-
+        
+        #self.promoter["de"]["dbs"] = self.txp_def.sort_dbs_by_regions(regionset=self.de_regions)
+        self.promoter["de"]["merged_dbs"] = {}
+        #for k, regionset in self.promoter["de"]["dbs"].items():
+        #    self.promoter["de"]["merged_dbs"][k] = regionset.merge(w_return=True)
+        for k, rds in self.promoter["de"]["rd"].items():
+            self.promoter["de"]["merged_dbs"][k] = rds.get_dbs().merge(w_return=True)
+        
         # Untargeted promoters
-        self.nde_promoter_dbs = OrderedDict()
-        self.nde_promoter_mdbs = OrderedDict() # for merged dbs
-        for promoter in self.nde_regions:
-            dbss = GenomicRegionSet("DBS to promoter "+promoter.name)
-            for rd in self.txp_ndef.sequences:
-                if promoter.overlap(rd.dna):
-                    dbss.add(rd.dna)
-            self.promoter["nde"]["dbs"][promoter.name] = dbss
-            self.promoter["nde"]["merged_dbs"][promoter.name] = dbss.merge(w_return=True)
+        
+        #self.promoter["nde"]["dbs"] = self.txp_ndef.sort_dbs_by_regions(regionset=self.nde_regions)
+        self.promoter["nde"]["merged_dbs"] = {}
+        #for k, regionset in self.promoter["nde"]["dbs"].items():
+        #    self.promoter["nde"]["merged_dbs"][k] = regionset.merge(w_return=True)
+        for k, rds in self.promoter["nde"]["rd"].items():
+            self.promoter["nde"]["merged_dbs"][k] = rds.get_dbs().merge(w_return=True)
 
     def gen_html(self, directory, align=50, alpha = 0.05):
 
@@ -879,40 +885,40 @@ class PromoterTest:
         col_size_list = [50,50,10,10,10,10,10,10,10]
         data_table = []
         for rbs in self.frequency["promoters"]["de"].keys():
-            
+            if self.frequency["promoters"]["de"][rbs][0] < 10: continue
             if self.pvalue[rbs] < alpha:
-                data_table.append([ rbs.region_str_rna(pa=False), #str(len(dbss)), 
-                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.region_str_rna()+
+                data_table.append([ rbs.str_rna(pa=False), #str(len(dbss)), 
+                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
                                     value2str(self.frequency["promoters"]["de"][rbs][1]), 
-                                    '<a href="'+"supplements/dbds_background.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_background.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["promoters"]["nde"][rbs][0])+'</a>', 
                                     value2str(self.frequency["promoters"]["nde"][rbs][1]), 
                                     value2str(self.oddsratio[rbs]), 
                                     "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>",
-                                    '<a href="'+"supplements/dbds_dbss.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_dbss.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["hits"]["de"][rbs])+'</a>', 
-                                    '<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["hits"]["nde"][rbs])+'</a>' ])
             else:
-                data_table.append([ rbs.region_str_rna(pa=False), #str(len(dbss)), 
-                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.region_str_rna()+
+                data_table.append([ rbs.str_rna(pa=False), #str(len(dbss)), 
+                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
                                     value2str(self.frequency["promoters"]["de"][rbs][1]), 
-                                    '<a href="'+"supplements/dbds_background.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_background.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["promoters"]["nde"][rbs][0])+'</a>', 
                                     value2str(self.frequency["promoters"]["nde"][rbs][1]), 
                                     value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs]),
-                                    '<a href="'+"supplements/dbds_dbss.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_dbss.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["hits"]["de"][rbs])+'</a>', 
-                                    '<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.region_str_rna()+
+                                    '<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.str_rna()+
                                     '" style="text-align:left">'+
                                     value2str(self.frequency["hits"]["nde"][rbs])+'</a>' ])
 
@@ -942,25 +948,19 @@ class PromoterTest:
                     fig_rpath="../style", RGT_header=False)
      
         for rbsm in self.frequency["promoters"]["de"].keys():    
-            html.add_heading("Targeted promoters relate to the merged domain: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("Targeted promoters relate to the merged domain: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
-            for dbs in self.txp_de.merged_dict[rbsm]:
-                # Find gene name
-                for promoter in self.de_regions:
-                    if dbs.overlap(promoter):
-                        proname = promoter.name
+            for promoter in self.txp_de.merged_dict[rbsm]:
                 # Add information
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
-                                    '" style="text-align:left">'+dbs.toString(space=True)+'</a>', 
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    proname+'" style="text-align:left">'+proname+'</a>',
-                                    dbs.orientation,
-                                    str(len(self.promoter["de"]["merged_dbd"][proname])),
-                                    str(len(self.promoter["de"]["dbs"][proname])),
-                                    str(len(self.promoter["de"]["merged_dbs"][proname]))
+                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
+                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
+                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                                    promoter.orientation,
+                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["de"]["merged_dbs"][promoter.toString()]))
                                      ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.write(os.path.join(directory,"supplements", "dbds_promoters.html"))
@@ -971,23 +971,18 @@ class PromoterTest:
       
         for rbsm in self.frequency["promoters"]["nde"].keys():
             
-            html.add_heading("Untargeted promoters relate to the merged domain: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("Untargeted promoters relate to the merged domain: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
-            for dbs in self.txp_nde.merged_dict[rbsm]:
-                for promoter in self.nde_regions:
-                    if dbs.overlap(promoter):
-                        proname = promoter.name
+            for promoter in self.txp_nde.merged_dict[rbsm]:
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
-                                    '" style="text-align:left">'+dbs.toString(space=True)+'</a>', 
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    proname+'" style="text-align:left">'+proname+'</a>',
-                                    dbs.orientation,
-                                    str(len(self.promoter["nde"]["merged_dbd"][proname])),
-                                    str(len(self.promoter["nde"]["dbs"][proname])),
-                                    str(len(self.promoter["nde"]["merged_dbs"][proname]))
+                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
+                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
+                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                                    promoter.orientation,
+                                    str(len(self.promoter["nde"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["nde"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["nde"]["merged_dbs"][promoter.toString()]))
                                      ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.write(os.path.join(directory,"supplements", "dbds_background.html"))
@@ -1003,21 +998,17 @@ class PromoterTest:
         
         for rbsm in self.frequency["hits"]["de"].keys():
             
-            html.add_heading("DBSs in the DBD: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("DBSs in the DBD: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
             for dbs in self.txp_def.merged_dict[rbsm]:
-                for promoter in self.nde_regions:
-                    if dbs.overlap(promoter):
-                        proname = promoter.name
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
                                     '" style="text-align:left">'+dbs.toString(space=True)+'</a>',
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    proname+'" style="text-align:left">'+proname+'</a>',
+                                    split_gene_name(gene_name=dbs.name, ani=self.ani, org=self.organism),
                                     dbs.orientation, str(dbs.final-dbs.initial),
-                                    dbs.score, dbs.motif, dbs.tri_orien ])
+                                    dbs.data[0], dbs.data[1], dbs.data[2]
+                                    ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.write(os.path.join(directory,"supplements", "dbds_dbss.html"))
 
@@ -1025,21 +1016,17 @@ class PromoterTest:
         html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False)
         for rbsm in self.frequency["hits"]["nde"].keys():
-            html.add_heading("DBSs in the DBD: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("DBSs in the DBD: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
             for dbs in self.txp_ndef.merged_dict[rbsm]:
-                for promoter in self.nde_regions:
-                    if dbs.overlap(promoter):
-                        proname = promoter.name
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
                                     '" style="text-align:left">'+dbs.toString(space=True)+'</a>',
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    proname+'" style="text-align:left">'+proname+'</a>',
+                                    split_gene_name(gene_name=dbs.name, ani=self.ani, org=self.organism),
                                     dbs.orientation, str(dbs.final-dbs.initial),
-                                    dbs.score, dbs.motif, dbs.tri_orien ])
+                                    dbs.data[0], dbs.data[1], dbs.data[2]
+                                   ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.write(os.path.join(directory,"supplements", "dbds_bg_dbss.html"))
 
@@ -1081,14 +1068,12 @@ class PromoterTest:
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                     '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    promoter.name+'" style="text-align:left">'+promoter.name+'</a>',
+                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
                                     '<a href="supplements/promoters_dbds.html#'+promoter.toString()+
                                     '" style="text-align:left">'+str(counts_p[i]+counts_a[i])+'</a>',
                                     str(counts_p[i]), str(counts_a[i]),
-                                    str(len(self.promoter["de"]["dbs"][promoter.name])),
-                                    str(len(self.promoter["de"]["merged_dbs"][promoter.name])) ])
+                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["de"]["merged_dbs"][promoter.toString()])) ])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_heading("Notes")
         html.add_list(["All the genes without any bindings are ignored.",
@@ -1112,19 +1097,19 @@ class PromoterTest:
             if counts_p[i] == 0 and counts_a[i] == 0:
                 continue
             else:         
-                html.add_heading(promoter.name, idtag=promoter.toString())
+                html.add_heading(split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism), idtag=promoter.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                         '" style="margin-left:50">'+
                                         promoter.toString(space=True)+'</a>'])
                 data_table = []
-                for rd in self.txp_def.sequences:
-                    if rd.dna.overlap(promoter):
-                        data_table.append([ rd.rna.region_str_rna(pa=False),
-                                            rd.dna.toString(space=True),
-                                            rd.dna.orientation,
-                                            rd.score, 
-                                            rd.motif, rd.orient])
+                
+                for rd in self.promoter["de"]["rd"][promoter.toString()]:
+                    data_table.append([ rd.rna.str_rna(pa=False),
+                                        rd.dna.toString(space=True),
+                                        rd.dna.orientation,
+                                        rd.score, 
+                                        rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
                 
         html.write(os.path.join(directory,"supplements", "promoters_dbds.html"))
@@ -1147,14 +1132,12 @@ class PromoterTest:
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                     '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    promoter.name+'" style="text-align:left">'+promoter.name+'</a>',
+                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
                                     '<a href="supplements/background_dbds.html#'+promoter.toString()+
                                     '" style="text-align:left">'+str(counts_p[i]+counts_a[i])+'</a>',
                                     str(counts_p[i]), str(counts_a[i]),
-                                    str(len(self.promoter["nde"]["dbs"][promoter.name])),
-                                    str(len(self.promoter["nde"]["merged_dbs"][promoter.name])) ])
+                                    str(len(self.promoter["nde"]["rd"][promoter.toString()])),
+                                    str(len(self.promoter["nde"]["merged_dbs"][promoter.toString()])) ])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_heading("Notes")
         html.add_list(["All the genes without any bindings are ignored.",
@@ -1175,19 +1158,18 @@ class PromoterTest:
             if counts_p[i] == 0 and counts_a[i] == 0:
                 continue
             else: 
-                html.add_heading(promoter.name, idtag=promoter.toString())
+                html.add_heading(split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism), idtag=promoter.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                         '" style="margin-left:50">'+
                                         promoter.toString(space=True)+'</a>'])
                 data_table = []
-                for rd in self.txp_ndef.sequences:
-                    if rd.dna.overlap(promoter):
-                        data_table.append([ rd.rna.region_str_rna(pa=False),
-                                            rd.dna.toString(space=True),
-                                            rd.dna.orientation,
-                                            rd.score, 
-                                            rd.motif, rd.orient])
+                for rd in self.promoter["nde"]["rd"][promoter.toString()]:
+                    data_table.append([ rd.rna.str_rna(pa=False),
+                                        rd.dna.toString(space=True),
+                                        rd.dna.orientation,
+                                        rd.score, 
+                                        rd.motif, rd.orient])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
             
         html.write(os.path.join(directory,"supplements", "background_dbds.html"))
@@ -1232,7 +1214,7 @@ class RandomTest:
                             prefix="dbs", dna_fine_posi=True)
         txpf.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
-
+        
         self.counts_tr = {}
         self.counts_dbs = {}
         self.counts_dbsm = {}
@@ -1330,12 +1312,15 @@ class RandomTest:
             rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="lightgray", 
                                      edgecolor="none", alpha=0.5, lw=None)
             ax.add_patch(rect)
-        ax.plot(x, all_y, color="r", alpha=.8, lw=1, label="Parallel + Anti-parallel")
-        ax.fill_between(x, 0, all_y, facecolor='r', interpolate=True)
-        ax.plot(x, p_y, color="g", alpha=.8, lw=1, label="Parallel")
-        ax.fill_between(x, 0, p_y, facecolor='g', interpolate=True)
-        ax.plot(x, a_y, color="b", alpha=.8, lw=1, label="Anti-parallel")
-        ax.fill_between(x, 0, a_y, facecolor='b', interpolate=True)
+        alpha = .7
+        ax.plot(x, all_y, color="r", alpha=alpha, lw=.7, label="Parallel + Anti-parallel")
+        #ax.fill_between(x, 0, all_y, facecolor='r', alpha=alpha)
+
+        ax.plot(x, p_y, color="g", alpha=alpha, lw=.7, label="Parallel")
+        #ax.fill_between(x, 0, p_y, facecolor='g', alpha=alpha)
+
+        ax.plot(x, a_y, color="b", alpha=alpha, lw=.7, label="Anti-parallel")
+        #ax.fill_between(x, 0, a_y, facecolor='b', alpha=alpha)
         
         # RNA accessbility
         if ac:
@@ -1389,7 +1374,7 @@ class RandomTest:
         ax.set_ylim( [min_y, max_y] ) 
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
         
-        ax.set_xticklabels( [dbd.region_str_rna(pa=False) for dbd in self.rbss], rotation=50, 
+        ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=50, 
                             ha="right", fontsize=tick_size)
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(tick_size) 
 
@@ -1404,28 +1389,6 @@ class RandomTest:
 
     def gen_html(self, directory, align=50, alpha = 0.05):
         """Generate the HTML file"""
-
-        def split_gene_name(gene_name, ani, org):
-            p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
-                 "&db="+org+"&singleSearch=knownCanonical&position="
-            p2 = '" style="text-align:left">'
-            p3 = '</a>'
-            
-            if ":" in gene_name:
-                genes = gene_name.split(":")
-                genes = set(genes)
-                for i, g in enumerate(genes):
-                    if i == 0:
-                        result = p1+g+p2+g+p3
-                    else:
-                        result += ","+p1+g+p2+g+p3
-            elif gene_name == ".":
-                result = "none"
-
-            else:
-                result = p1+gene_name+p2+gene_name+p3
-            return result
-
 
         html_header = "Triplex Domain Finder: Region Test"
         link_ds = {"RNA":"index.html",
@@ -1458,25 +1421,25 @@ class RandomTest:
         
         for i, rbs in enumerate(self.rbss):
             if self.p_random[i] < alpha:
-                data_table.append([ rbs.region_str_rna(pa=False),
-                                    '<a href="dbd_region.html#'+rbs.region_str_rna()+
+                data_table.append([ rbs.str_rna(pa=False),
+                                    '<a href="dbd_region.html#'+rbs.str_rna()+
                                     '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
                                     str(self.counts_tr[rbs][1]),
                                     value2str(self.mean_random[i]), 
                                     value2str(self.sd_random[i]), 
                                     "<font color=\"red\">"+value2str(self.p_random[i])+"</font>",
-                                    '<a href="dbd_dbs.html#'+rbs.region_str_rna()+
+                                    '<a href="dbd_dbs.html#'+rbs.str_rna()+
                                     '" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
                                     str(self.counts_dbsm[rbs]) ])
             else:
-                data_table.append([ rbs.region_str_rna(pa=False),
-                                    '<a href="dbd_region.html#'+rbs.region_str_rna()+
+                data_table.append([ rbs.str_rna(pa=False),
+                                    '<a href="dbd_region.html#'+rbs.str_rna()+
                                     '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
                                     str(self.counts_tr[rbs][1]),
                                     value2str(self.mean_random[i]), 
                                     value2str(self.sd_random[i]), 
                                     value2str(self.p_random[i]),
-                                    '<a href="dbd_dbs.html#'+rbs.region_str_rna()+
+                                    '<a href="dbd_dbs.html#'+rbs.str_rna()+
                                     '" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
                                     str(self.counts_dbsm[rbs]) ])
 
@@ -1508,18 +1471,16 @@ class RandomTest:
                     fig_rpath="./style", RGT_header=False)
      
         for rbsm in self.rbss:    
-            html.add_heading("Targeted regions relate to DBD: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("Targeted regions relate to DBD: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
             for region in self.txp.merged_dict[rbsm]:
                 # Add information
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
-                                    '" style="text-align:left">'+region.toString(space=True)+'</a>', 
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+self.ani+
-                                    "&db="+self.organism+"&singleSearch=knownCanonical&position="+
-                                    region.name+'" style="text-align:left">'+region.name+'</a>',
-                                    "?? as_gen", #region.orientation,
+                                    '" style="text-align:left">'+region.toString(space=True)+'</a>',
+                                    split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism),
+                                    region.orientation,
                                     str(len(self.region_dbs[region])) ])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
@@ -1536,20 +1497,19 @@ class RandomTest:
                       "Strand",
                       "Score" ]
 
-
-
         for rbsm in self.rbss:    
-            html.add_heading("Targeted regions relate to DBD: "+rbsm.region_str_rna(),
-                             idtag=rbsm.region_str_rna())
+            html.add_heading("Targeted regions relate to DBD: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
             data_table = []
             for dbs in self.txpf.merged_dict[rbsm]:
                 # Add information
+                
                 data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+dbs.chrom+"%3A"+str(dbs.initial)+"-"+str(dbs.final)+
                                     '" style="text-align:left">'+dbs.toString(space=True)+'</a>', 
                                     split_gene_name(gene_name=dbs.name, ani=self.ani, org=self.organism),
-                                    "?? as_gen", #region.orientation, ])
-                                    "score" ]) # dbs.score
+                                    dbs.orientation,
+                                    dbs.data[0] ])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.write(os.path.join(directory, "dbd_dbs.html"))
@@ -1627,7 +1587,7 @@ class RandomTest:
                                         region.toString(space=True)+'</a>'])
                 data_table = []
                 for dbd in self.region_dbd[region]:
-                    data_table.append([ dbd.region_str_rna(pa=False),
+                    data_table.append([ dbd.str_rna(pa=False),
                                         dbd.motif, dbd.orientation ])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
                 
@@ -1653,7 +1613,7 @@ class RandomTest:
                                         region.toString(space=True)+'</a>'])
                 data_table = []
                 for rd in self.region_dbs[region]:
-                    data_table.append([ rd.rna.region_str_rna(pa=False),
+                    data_table.append([ rd.rna.str_rna(pa=False),
                                         '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+rd.dna.chrom+"%3A"+str(rd.dna.initial)+"-"+str(rd.dna.final)+
                                         '" style="text-align:left">'+rd.dna.toString(space=True)+'</a>',
@@ -1690,8 +1650,8 @@ class RandomTest:
                                         "&position="+dbsm.chrom+"%3A"+str(dbsm.initial)+"-"+str(dbsm.final)+
                                         '" style="text-align:left">'+dbsm.toString(space=True)+'</a>',
                                         dbsm.orientation,
-                                        dbsm.motif, 
-                                        dbsm.tri_orien ])
+                                        dbsm.data[1], 
+                                        dbsm.data[2] ])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
                 
         html.write(os.path.join(directory, "region_dbsm.html"))
