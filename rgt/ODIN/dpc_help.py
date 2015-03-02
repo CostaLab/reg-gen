@@ -196,6 +196,7 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                 line = line.split('\t')
                 c, s, e = line[0], int(line[1]), int(line[2])
                 regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                chrom_sizes_dict[c] = e
     else:
         with open(chrom_sizes) as f:
             for line in f:

@@ -40,7 +40,7 @@ class DualCoverageSet():
         if not no_gc_content and input_1 is not None and input_2 is not None:
             print("Computing GC content", file=sys.stderr)
         else:
-             print("Do not compute GC content", file=sys.stderr)
+            print("Do not compute GC content", file=sys.stderr)
         
         for i in [1, 2]:
             input = map_input[i]
@@ -57,6 +57,7 @@ class DualCoverageSet():
             
             if not no_gc_content and input['input'] is not None:
                 gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, input['cov-input'].coverage, chrom_sizes_dict)
+                
                 self._norm_gc_content(input['cov-ip'].coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(input['cov-input'].coverage, gc_content_cov, avg_gc_content)
                 
@@ -64,6 +65,7 @@ class DualCoverageSet():
                     self.print_gc_hist(name + '-' + name_input, gc_hist) #print hist data
                     input['cov-input'].write_bigwig(name + '-debug-1-' + name_input + '.bw', chrom_sizes)
                     input['cov-ip'].write_bigwig(name + '-debug-1-' + name_bam + '.bw', chrom_sizes)
+        
         
         norm_done = False
         print("Normalizing signals", file=sys.stderr)
@@ -231,6 +233,7 @@ class DualCoverageSet():
         n = 0.9
         self._compute_score()
 #        print('before filter step:', len(self.scores), file=sys.stderr)
+        #print(self.first_overall_coverage, self.second_overall_coverage, file=sys.stderr)
         self.indices_of_interest = np.where(self.scores > 2/(m*n))[0]
 #        print('after first filter step: ', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(self.first_overall_coverage + self.second_overall_coverage > 3)[0]
