@@ -86,7 +86,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
         
         genomic_array[ GenomicPosition(chrom, pos) ] += 1
     
-    print('count_list', i, file=sys.stderr)
+    #print('count_list', i, file=sys.stderr)
     
     return genomic_array, chromosomes
 
@@ -132,7 +132,7 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
 #             print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
             pass
         else:
-            print("... considering %s..."%chrom, file=sys.stderr)
+            #print("... considering %s..."%chrom, file=sys.stderr)
             for i in range(0, chrom_len[chrom], step_width):
                 end = min(i + step_width, chrom_len[chrom])
                 counts = reduce(lambda x, y: x + y, count_list[ GenomicInterval(chrom, i, end) ])

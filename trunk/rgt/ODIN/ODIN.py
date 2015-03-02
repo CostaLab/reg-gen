@@ -30,6 +30,7 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
     i = 1
     while i < x:
         state = None
+        #print(indices_of_interest, file=sys.stderr)
         j = sample(indices_of_interest, 1)[0]
         
         cov1 = first_overall_coverage[j]
@@ -45,6 +46,11 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
             s2.append((cov1,cov2))
             so.append((cov1,cov2))
         i += 1
+    
+    if len(s1) == 0:
+        s1 = map(lambda x: (x[1], x[0]), s2)
+    if len(s2) == 0:
+        s2 = map(lambda x: (x[1], x[0]), s1)
     
     if debug:
         write(name + '-s0', s0)
