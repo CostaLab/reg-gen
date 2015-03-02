@@ -1,5 +1,5 @@
 ToDo:
-Feature (chrM:16050-16550) beyond the length of chrM size (16299 bp).  Skipping.  ? really an error? ask joseph
+get rid of option --region
 
 * ODIN-0.3.2
 - mac support
