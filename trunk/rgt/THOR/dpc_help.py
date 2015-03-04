@@ -26,6 +26,7 @@ from rgt.THOR.postprocessing import merge_delete
 #from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin import NegBin
 from operator import add
+from numpy import percentile
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -189,22 +190,23 @@ def _merge_consecutive_bins(tmp_peaks, distr):
 
 def get_back(DCS, states):
     counts = []
-    print("H", file=sys.stderr)
+#     print("H", file=sys.stderr)
     for i in range(len(DCS.indices_of_interest)):
         if states[i] == 0:
             cov1, cov2 = _get_covs(DCS, i)
             counts.append(cov1)
             counts.append(cov2)
-    print(len(counts), file=sys.stderr)
-    print(np.var(counts), file=sys.stderr)
-    print(np.mean(counts), file=sys.stderr)
+#     print(len(counts), file=sys.stderr)
+#     print(np.var(counts), file=sys.stderr)
+#     print(np.mean(counts), file=sys.stderr)
     return np.var(counts), np.mean(counts)
         
     
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
+def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
+    tmp_data = []
     
     for i in range(len(DCS.indices_of_interest)):
         if states[i] not in [1,2]:
@@ -212,14 +214,27 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff):
         
         strand = '+' if states[i] == 1 else '-'
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
+        c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
-
+        side = 'l' if strand == '+' else 'r'
+        tmp_data.append((c1, c2, side, distr))
+    
+    tmp_pvalues = map(_compute_pvalue, tmp_data)
+    per = np.percentile(tmp_pvalues, p)
+    
+    tmp = []
+    res = tmp_pvalues > per
+    for j in range(len(res)):
+        if res[j]:
+            tmp.append(tmp_peaks[j])
+    tmp_peaks = tmp
+    
     #merge consecutive peaks and compute p-value
     pvalues, peaks = _merge_consecutive_bins(tmp_peaks, distr)
     #postprocessing, returns GenomicRegionSet with merged regions
-    #regions = merge_delete(exts, merge, peaks, pvalues) 
-    regions = merge_delete([0], False, peaks, pvalues) 
+    regions = merge_delete(exts, merge, peaks, pvalues) 
+    #regions = merge_delete([0], False, peaks, pvalues) 
     
     output = []
     pvalues = []
@@ -387,6 +402,8 @@ def input(laptop):
                           help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
+        parser.add_option("--par", dest="par", default=70, type="int",\
+                          help="Percentile for p-value filter. [default: %default]")
         
         parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
