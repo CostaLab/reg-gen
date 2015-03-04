@@ -46,6 +46,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
 def main():
     test = False
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
+
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
@@ -89,7 +90,7 @@ def main():
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
     
     distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, p=options.par)
     
 if __name__ == '__main__':
     main() 
