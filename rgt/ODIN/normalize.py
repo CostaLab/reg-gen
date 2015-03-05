@@ -266,9 +266,24 @@ def test_run():
              'chr13': 120284312,'chr14': 125194864,'chr15': 103494974,'chr16': 98319150,
              'chr17': 95272651,'chr18': 90772031,'chr19': 61342430,'chrX': 166650296,
              'chrY': 15902555} #, 'chrM': 16299}
+    
+    chrom_sizes_dict_mm10_enseml = { 'chr1' : 197195432, 'chr2':181748087,'chr3': 159599783,'chr4': 155630120,
+             'chr5': 152537259,'chr6': 149517037,'chr7': 152524553,'chr8': 131738871,
+             'chr9': 124076172,'chr10': 129993255,'chr11': 121843856,'chr12': 121257530,
+             'chr13': 120284312,'chr14': 125194864,'chr15': 103494974,'chr16': 98319150,
+             'chr17': 95272651,'chr18': 90772031,'chr19': 61342430,'chrX': 166650296,
+             'chrY': 15902555} #, 'chrM': 16299}
+    
+    chrom_sizes_dict_mm10_enseml = {'10': 130694993}
+    
     print('run')
+    
+    
+    p1 = '/home/manuel/Downloads/odin/TC1-H3K4-A-D1.GRCm38.p3.q30_chr10.bam'
+    p2 = '/home/manuel/Downloads/odin/TC1-I-A-D5.GRCm38.p3.q30_chr10.bam'
+    
     a = get_normalization_factor(p1, p2, step_width=1000, zero_counts=0, \
-                                                filename='test', debug=False, chrom_sizes_dict=chrom_sizes_dict, two_sample=False)
+                                                filename='test', debug=False, chrom_sizes_dict=chrom_sizes_dict_mm10_enseml, two_sample=False)
     print(a)
     
 if __name__ == '__main__':
