@@ -1,6 +1,10 @@
 ToDo:
 get rid of option --region
 
+done:
+- fix bug with missing 'chr' prefix in BAM files
+- bugfix for --region option
+
 * ODIN-0.3.2
 - mac support
 - bug: input dna chrom does not overlap with chrom in IP, no longer an error
