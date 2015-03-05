@@ -67,7 +67,6 @@ def get_count_list(CHROM_LEN, path, stop=False):
     genomic_array = GenomicArray(CHROM_LEN, stranded=False, typecode='i', storage='step')
     i = 0
     chromosomes = set()
-    print(CHROM_LEN, file=sys.stderr)
     for chrom, pos in _get_read_info(path):
         i += 1
         
