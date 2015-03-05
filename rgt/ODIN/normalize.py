@@ -204,6 +204,7 @@ def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_siz
     #counts_1, counts_1 is a genomicarray (HTSeq) describing chr und pos of reads
     #print("Reading first input file...", file=sys.stderr)
     counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path, stop=stop)
+    print(chromosomes1, file=sys.stderr)
     #print("Reading second input file...", file=sys.stderr)
     counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path, stop=stop)
 #     print("...done", file=sys.stderr)
