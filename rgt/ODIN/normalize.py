@@ -74,9 +74,8 @@ def get_count_list(CHROM_LEN, path, stop=False):
         if stop and i == 5000000:
             break
         
-        if not chrom.startswith("chr"):
-            chrom = "chr" + chrom
-            #print(i, file=sys.stderr)
+        #if not chrom.startswith("chr"):
+        #    chrom = "chr" + chrom
 
         if chrom not in chromosomes:
             chromosomes.add(chrom)
