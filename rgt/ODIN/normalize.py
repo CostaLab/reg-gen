@@ -75,6 +75,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
         
         if not chrom.startswith("chr"):
             chrom = "chr" + chrom
+            print(i, file=sys.stderr)
 
         if chrom not in chromosomes:
             chromosomes.add(chrom)
@@ -85,7 +86,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
             continue
         
         genomic_array[ GenomicPosition(chrom, pos) ] += 1
-        print(i, file=sys.stderr)
+        
     #print('count_list', i, file=sys.stderr)
     
     return genomic_array, chromosomes
