@@ -69,7 +69,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
     chromosomes = set()
     for chrom, pos in _get_read_info(path):
         i += 1
-        print(i, file=sys.stderr)
+        
         if stop and i == 5000000:
             break
         
@@ -85,7 +85,7 @@ def get_count_list(CHROM_LEN, path, stop=False):
             continue
         
         genomic_array[ GenomicPosition(chrom, pos) ] += 1
-    
+        print(i, file=sys.stderr)
     #print('count_list', i, file=sys.stderr)
     
     return genomic_array, chromosomes
