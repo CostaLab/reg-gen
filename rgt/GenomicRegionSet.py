@@ -320,8 +320,8 @@ class GenomicRegionSet:
                         new_prox_list.append(curr_gene.split("_")[-1])
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], orientation=coord[4]))
+                #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], orientation=coord[4]))
              
         return result_grs
 
@@ -672,7 +672,8 @@ class GenomicRegionSet:
             loop = True
             while loop:
                 try:
-                    if self.sequences[i] == self.sequences[i+1]:
+                    #if self.sequences[i] == self.sequences[i+1]:
+                    if self.sequences[i].toString() == self.sequences[i+1].toString():
                         del self.sequences[i+1]
                         loop = True
                     else:

@@ -57,6 +57,9 @@ class RNADNABinding:
         return "\t".join( [ self.rna.chrom, str(self.rna.initial), str(self.rna.final), self.dna.toString(), "0", 
                             str(len(self.dna)), self.score, self.err_rate, self.err, self.motif,
                             self.strand, self.orient, self.guan_rate ] )
+
+    def __eq__(self, other):
+        return (self.dna, self.rna) == (other.dna, other.rna)
         
 class RNADNABindingSet:
     """A framework to map DNA binding sites to corresponding RNA binding sites 
@@ -126,10 +129,12 @@ class RNADNABindingSet:
     def sort_rbs(self):
         """Sort the dictionary by RNA"""
         self.sequences = sorted(self.sequences, key=lambda x: x.rna, cmp=GenomicRegion.__cmp__)
+        self.sorted_rna = True
         
     def sort_dbs(self):
         """Sort the dictionary by DNA"""
         self.sequences = sorted(self.sequences, key=lambda x: x.dna, cmp=GenomicRegion.__cmp__)
+        self.sorted_dna = True
     
     def sort_dbs_by_regions(self, regionset):
         """Sort the DBS by given GenomicRegionSet"""
@@ -188,6 +193,9 @@ class RNADNABindingSet:
 
         if not regionset.sorted: regionset.sort()
 
+        for region in regionset:
+            result[region.toString()] = BindingSiteSet("binding site:"+region.toString())
+
         iter_rd = iter(txp_copy)
         rd = iter_rd.next()
 
@@ -208,7 +216,7 @@ class RNADNABindingSet:
                     except: cont_loop = False 
                 else: 
                     j = j + 1
-                    result[regionset[j].toString()] = BindingSiteSet("RBS_"+regionset[j].toString())
+                    
                 cont_overlap = True
             
             elif rd.dna < regionset[j]:
@@ -223,7 +231,6 @@ class RNADNABindingSet:
                     cont_loop = False
                 else:
                     j = j + 1
-                    result[regionset[j].toString()] = BindingSiteSet("RBS_"+regionset[j].toString())
                     cont_overlap = False
          
 
@@ -241,6 +248,10 @@ class RNADNABindingSet:
 
         if not regionset.sorted: regionset.sort()
 
+        for region in regionset:
+            result[region.toString()] = RNADNABindingSet("RNADNA_interaction:"+region.toString())
+
+
         iter_rd = iter(txp_copy)
         rd = iter_rd.next()
 
@@ -249,6 +260,7 @@ class RNADNABindingSet:
         cont_loop = True
         pre_inter = 0
         cont_overlap = False
+        
 
         while cont_loop:
             # When the regions overlap
@@ -261,7 +273,6 @@ class RNADNABindingSet:
                     except: cont_loop = False 
                 else: 
                     j = j + 1
-                    result[regionset[j].toString()] = RNADNABindingSet("RNADNA_interaction:"+regionset[j].toString())
                 cont_overlap = True
             
             elif rd.dna < regionset[j]:
@@ -276,13 +287,11 @@ class RNADNABindingSet:
                     cont_loop = False
                 else:
                     j = j + 1
-                    result[regionset[j].toString()] = RNADNABindingSet("RNADNA_interaction:"+regionset[j].toString())
                     cont_overlap = False
         return result
 
     def sort_rd_by_rbs(self, rbss):
-        """Sort RNADNA binding information by a given GenomicRegionSet"""
-        """Sort the DBS by given GenomicRegionSet"""
+        """Sort RNADNA binding information by a given BindingSiteSet"""
         
         result = OrderedDict()
 
@@ -331,7 +340,7 @@ class RNADNABindingSet:
         return result
 
 
-    def merge_rbs(self, rm_duplicate=False, asgene_organism=None):
+    def merge_rbs(self, rm_duplicate=False, asgene_organism=None, cutoff=0):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -345,17 +354,18 @@ class RNADNABindingSet:
         new_dict = OrderedDict()
 
         for rbsm in rna_merged:
-            new_dict[rbsm] = GenomicRegionSet(rbsm.toString())
+            regions = GenomicRegionSet(rbsm.toString())
             
             for rd in self:
                 if rbsm.overlap(rd.rna):
-                    new_dict[rbsm].add(rd.dna)
-
+                    regions.add(rd.dna)
             if rm_duplicate: 
-                new_dict[rbsm].remove_duplicates()
-
-            if asgene_organism:
-                new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
+                regions.remove_duplicates()
+            if len(regions) > cutoff:
+                new_dict[rbsm] = regions
+                if asgene_organism:
+                    new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
+            else: continue
 
         self.merged_dict = new_dict
 
@@ -475,3 +485,37 @@ class RNADNABindingSet:
                 count[i] += 1
 
         return count
+
+    def remove_duplicates(self):
+        """Remove the duplicate RNA-DNA interactions and remain the unique ones. (No return)"""
+        if self.sorted_dna == False: self.sort_dbs()
+        
+        for i in range(len(self.sequences) - 1):
+            loop = True
+            while loop:
+                try:
+                    if self.sequences[i] == self.sequences[i+1]:
+                        del self.sequences[i+1]
+                        loop = True
+                    else:
+                        loop = False
+                except:
+                    loop = False
+                    continue
+
+    def remove_duplicates_by_dbs(self):
+        """Remove the duplicate RNA-DNA interactions and remain the unique ones. (No return)"""
+        if self.sorted_dna == False: self.sort_dbs()
+        
+        for i in range(len(self.sequences) - 1):
+            loop = True
+            while loop:
+                try:
+                    if self.sequences[i].dna.toString() == self.sequences[i+1].dna.toString():
+                        del self.sequences[i+1]
+                        loop = True
+                    else:
+                        loop = False
+                except:
+                    loop = False
+                    continue

@@ -47,18 +47,21 @@ class BindingSite(GenomicRegion):
     def __str__(self):
         """Give informal string representation"""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.strand, self.orientation, self.guanine_rate, self.seq ]
+                  self.motif, self.orientation, self.seq ]
         return '-'.join( [str(x) for x in infos if x] )
         
     def __repr__(self):
         """Return official representation of GenomicRegion"""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
-                  self.motif, self.strand, self.orientation, self.guanine_rate, self.seq ]
+                  self.motif, self.orientation, self.seq ]
         return ','.join( [str(x) for x in infos if x] ) 
         
     def __len__(self):
         """Return the length of the binding site """
         return self.final - self.initial
+
+    def __eq__(self, other):
+        return (self.initial, self.final) == (other.initial, other.final)
 
     def __hash__(self):
         return hash(tuple([self.chrom, self.initial, self.final]))

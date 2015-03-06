@@ -57,7 +57,7 @@ class GenomicRegion:
 
     def __eq__(self, other):
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
-        
+
     def toString(self, space=False):
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
