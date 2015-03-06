@@ -197,10 +197,10 @@ def main():
     parser_proportionplot = subparsers.add_parser('proportionplot',help='Comparing the query BEDs on reference BEDs by proportion plot.')
     
     parser_proportionplot.add_argument('output', help=helpoutput)
-    parser_proportionplot.add_argument('-r', '--reference',help=helpreference)
-    parser_proportionplot.add_argument('-q', '--query', help=helpquery)
+    parser_proportionplot.add_argument('-i', '--input',help="Define the input experimental matrix")
+    
     parser_proportionplot.add_argument('-t','--title', default='proportion_plot', help=helptitle)
-    #parser_proportionplot.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+    parser_proportionplot.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     #parser_proportionplot.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_proportionplot.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
     #parser_proportionplot.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")

@@ -104,6 +104,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, pre
     # Read txp
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
+    txp.remove_duplicates()
     #print(len(txp_de))
 
     if remove_temp:
@@ -198,6 +199,105 @@ def split_gene_name(gene_name, ani, org):
     else:
         result = p1+gene_name+p2+gene_name+p3
     return result
+
+
+def lineplot(txp, rnalen, rnaname, dir, sig_region, cut_off, log, ylabel, linelabel, 
+             filename, ac=None, showpa=False):
+    # Plotting
+    f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
+    
+
+    # Extract data points
+    x = range(rna_len)
+    if log:
+        all_y = [1] * 
+        p_y = [1] * rna_len
+        a_y = [1] * rna_len
+    else:
+        all_y = [0] * rna_len
+        p_y = [0] * rna_len
+        a_y = [0] * rna_len
+
+    txp.remove_duplicates_by_dbs()
+    for rd in txp:
+        if rd.rna.orientation == "P":
+            for i in range(rd.rna.initial, rd.rna.final):
+                p_y[i] += 1
+                all_y[i] += 1
+        if rd.rna.orientation == "A":
+            for i in range(rd.rna.initial, rd.rna.final):
+                a_y[i] += 1
+                all_y[i] += 1
+    # Log
+    if log:
+        all_y = numpy.log(all_y)
+        p_y = numpy.log(p_y)
+        a_y = numpy.log(a_y)
+        max_y = max(all_y)+0.5
+        min_y = 1
+        ylabel += "(log10)"
+    else:
+        max_y = float(max(all_y) * 1.1)
+        min_y = 0
+
+    if ac:
+        min_y = float(max_y*(-0.09))
+    
+    
+    # Plotting
+    for rbs in sig_region:
+        rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="powderblue", 
+                                 edgecolor="none", alpha=0.5, lw=None, label="Significant region")
+        ax.add_patch(rect)
+    
+    lw = 1.5
+    if showpa:
+        ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label="Parallel + Anti-parallel")
+        ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
+        ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
+    else:
+        ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label=linelabel)
+    # RNA accessbility
+    if ac:
+        n_value = read_ac(ac, cut_off, rnalen=rna_len)
+        drawing = False
+        for i in x:
+            if n_value[i] > 0:
+                if drawing:
+                    continue
+                else:
+                    last_i = i
+                    drawing = True
+            elif drawing:
+                pac = ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
+                                   hatch='///', fill=False, snap=False, linewidth=0, label="RNA accessibility"))
+                drawing = False
+            else:
+                continue
+
+    # Legend
+    handles, labels = ax.get_legend_handles_labels()
+    legend_h = []
+    legend_l = []
+    for uniqlabel in uniq(labels):
+        legend_h.append(handles[labels.index(uniqlabel)])
+        legend_l.append(uniqlabel)
+    ax.legend(legend_h, legend_l, 
+              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
+              prop={'size':9}, ncol=3)
+
+    # XY axis
+    ax.set_xlim(left=0, right=self.rna_len )
+    ax.set_ylim( [min_y, max_y] ) 
+    for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+    for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+    ax.set_xlabel(self.rna_name+" sequence (bp)", fontsize=9)
+    
+    ax.set_ylabel(ylabel,fontsize=9, rotation=90)
+
+    f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+    f.savefig(os.path.join(dir, filename), facecolor='w', edgecolor='w',  
+              bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
 #####################################################################################
 
 class TriplexSearch:
@@ -605,7 +705,7 @@ class PromoterTest:
             if pvals_corrected[i] < 0.05:
                 self.sig_region.append(rbs)
 
-    def plot_lines(self, txp, rna, dir, cut_off, log, ylabel, filename, ac=None, showpa=False):
+    def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
         rna:     File path to the RNA sequence in FASTA format
@@ -617,104 +717,9 @@ class PromoterTest:
         if not self.rna_name: self.rna_name = rnas[0].name
         self.rna_len = len(rnas[0])
         
-        # Plotting
-        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-        
-
-        # Extract data points
-        x = range(self.rna_len)
-        if log:
-            all_y = [1] * self.rna_len
-            p_y = [1] * self.rna_len
-            a_y = [1] * self.rna_len
-        else:
-            all_y = [0] * self.rna_len
-            p_y = [0] * self.rna_len
-            a_y = [0] * self.rna_len
-
-        txp.remove_duplicates_by_dbs()
-        for rd in txp:
-            if rd.rna.orientation == "P":
-                for i in range(rd.rna.initial, rd.rna.final):
-                    p_y[i] += 1
-                    all_y[i] += 1
-            if rd.rna.orientation == "A":
-                for i in range(rd.rna.initial, rd.rna.final):
-                    a_y[i] += 1
-                    all_y[i] += 1
-        # Log
-        if log:
-            all_y = numpy.log(all_y)
-            p_y = numpy.log(p_y)
-            a_y = numpy.log(a_y)
-            max_y = max(all_y)+0.5
-            min_y = 1
-            ylabel += "(log10)"
-        else:
-            max_y = float(max(all_y) * 1.1)
-            min_y = 0
-
-        if ac:
-            min_y = float(max_y*(-0.09))
-        
-        
-        # Plotting
-#        rect = patches.Rectangle(xy=(0,0), width=10, height=10, facecolor="lightgray", 
-#                                 edgecolor="none", alpha=0.5, lw=None, label="Significant region")
-        for rbs in self.sig_region:
-            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="powderblue", 
-                                     edgecolor="none", alpha=0.5, lw=None, label="Significant region")
-            ax.add_patch(rect)
-        
-        if showpa:
-            ax.plot(x, all_y, color="mediumblue", alpha=1, lw=2, label="Parallel + Anti-parallel")
-            ax.plot(x, p_y, color="purple", alpha=1, lw=2, label="Parallel")
-            ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=2, label="Anti-parallel")
-        else:
-            pall = ax.plot(x, all_y, color="mediumblue", alpha=1, lw=2, label="No. promoters")
-        # RNA accessbility
-        if ac:
-            n_value = read_ac(ac, cut_off, rnalen=self.rna_len)
-            #ax.imshow([n_value], cmap=colors.ListedColormap(['white', 'orange']), interpolation='nearest', 
-            #          extent=[0, self.rna_len, min_y, 0], aspect='auto', label="Accessibility")
-            drawing = False
-            for i in x:
-                if n_value[i] > 0:
-                    if drawing:
-                        continue
-                    else:
-                        last_i = i
-                        drawing = True
-                elif drawing:
-                    pac = ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                                       hatch='///', fill=False, snap=False, linewidth=0, label="RNA accessibility"))
-                    drawing = False
-                else:
-                    continue
-
-        #
-        handles, labels = ax.get_legend_handles_labels()
-        legend_h = []
-        legend_l = []
-        for uniqlabel in uniq(labels):
-            legend_h.append(handles[labels.index(uniqlabel)])
-            legend_l.append(uniqlabel)
-        ax.legend(legend_h, legend_l, 
-                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
-                  prop={'size':9}, ncol=3)
-
-        # XY axis
-        ax.set_xlim(left=0, right=self.rna_len )
-        ax.set_ylim( [min_y, max_y] ) 
-        for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        ax.set_xlabel(self.rna_name+" sequence (bp)", fontsize=9)
-        
-        ax.set_ylabel(ylabel,fontsize=9, rotation=90)
-
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        f.savefig(os.path.join(dir, filename), facecolor='w', edgecolor='w',  
-                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dir=dirp, sig_region=self.sig_region, 
+                 cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
+                 filename=filename, ac=ac, showpa=showpa)
 
     def promoter_profile(self):
         """count the number of DBD and DBS regarding to each promoter"""
@@ -1096,12 +1101,14 @@ class RandomTest:
                            prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=False, asgene_organism=self.organism)
         self.txp = txp
+        txp.remove_duplicates()
         self.rbss = txp.merged_dict.keys()
 
         txpf = find_triplex(rna_fasta=self.rna_fasta, dna_region=self.dna_region, 
                             temp=temp, organism=self.organism, remove_temp=remove_temp, 
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf,
                             prefix="dbs", dna_fine_posi=True)
+        txpf.remove_duplicates()
         txpf.merge_by(rbss=self.rbss, rm_duplicate=False, asgene_organism=self.organism)
         self.txpf = txpf
         
@@ -1178,15 +1185,13 @@ class RandomTest:
         self.counts_random = numpy.array(matrix)
         self.sd_random = numpy.std(self.counts_random, axis=1)
 
-    def plotrna(self, dir, ac, cut_off, showpa):
+    def plotrna(self, txp, dir, ac, cut_off, showpa, filename):
         """Generate lineplot for RNA"""
 
         # Extract data points
         x = range(self.rna_len)
         p_y = [0] * self.rna_len
         a_y = [0] * self.rna_len
-
-        txp = self.txpf
         
         for rd in txp:
             if rd.rna.orientation == "P":
@@ -1199,13 +1204,13 @@ class RandomTest:
 
         all_y = [sum(z) for z in zip(p_y, a_y)]
         max_y = float(max(all_y) * 1.1)
-        if ac: min_y = float(max_y*(-0.1))
+        if ac: min_y = float(max_y*(-0.09))
         else: min_y = 0
 
         # Plotting
         f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
         for rbs in self.sig_region:
-            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="lightgray", 
+            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="powderblue", 
                                      edgecolor="none", alpha=0.5, lw=None)
             ax.add_patch(rect)
 
@@ -1249,7 +1254,7 @@ class RandomTest:
         
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
 
-        f.savefig(os.path.join(dir, "rna.png"), facecolor='w', edgecolor='w',  
+        f.savefig(os.path.join(dir, filename), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
 
 
@@ -1315,7 +1320,8 @@ class RandomTest:
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         # Plots
-        html.add_figure("rna.png", align="left")
+        html.add_figure("ran_region.png", align="left")
+        html.add_figure("ran_dbs.png", align="left")
         html.add_figure("boxplot.png", align="left")
 
         header_list = [ "DNA Binding Domain",
