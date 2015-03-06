@@ -73,7 +73,7 @@ class AnnotationSet:
         ANNOTATION_SET = 0
         LIST = 1
 
-    def __init__(self, gene_source, tf_source=None):
+    def __init__(self, gene_source, tf_source=None, alias_source=None):
         """
         Initializes AnnotationSet.
 
@@ -93,11 +93,20 @@ class AnnotationSet:
             * A list of mtf files: The tf_list will be created based on all mtf files.
             * A list of repositories: The tf_list will be created based on the mtf files
                 associated with such repositories in data.config.
+
+        alias_source -- Alias dictionary source annotation. It can be:
+            * A dictionary: An alias dictionary will be created based on such dictionary.
+            * A string representing a alias (txt) file: An alias dictionary will be created
+                 based on such txt file.
+            * A string representing an organism: An alias dictionary will be created based
+                 on the txt file for that organism in data.config file.
         """
 
         # Class Objects
         self.gene_list = [] # Represents gene annotation.
         self.tf_list = [] # Represents TF PWM annotation.
+        self.alias_dict = dict() # Gene Symbol or other IDs -> ENSEMBL ID
+        self.symbol_dict = dict() # ENSEMBL ID -> Official gene symbol
 
         # Initializing Required Field - Gene List
         if(isinstance(gene_source,list)): # It can be a matrix - Used by internal methods.
@@ -125,6 +134,18 @@ class AnnotationSet:
                             mtf_file_list.append(mtf_file)
                     self.tf_list = self.load_tf_list(mtf_file_list)
             else: pass # TODO Throw error.
+
+        # Initializing Optional Field - Alias Dictionary
+        if(alias_source):
+            if(isinstance(alias_source,dict)): # It can be a dictionary - Used by internal methods.
+                self.alias_dict = alias_source
+            if(isinstance(alias_source,str)): # It can be a string.
+                if(os.path.isfile(alias_source)): # The string may represent a path to a txt alias file.
+                    self.load_alias_dict(alias_source)
+                else: # The string may represent an organism which points to a txt alias file within data.config.
+                    genome_data = GenomeData(alias_source)
+                    self.load_alias_dict(genome_data.get_gene_alias())
+            else: pass # TODO Throw error
 
     def load_gene_list(self, file_name):
         """
@@ -156,6 +177,10 @@ class AnnotationSet:
                 addt_element_list = filter(None,addt_element_list)
                 addt_element_list[1] = addt_element_list[1].replace("\"","") # Removing " symbol from string options
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
+
+            # Removing dot from IDs
+            addt_dict["gene_id"] = addt_dict["gene_id"].split(".")[0]
+            addt_dict["transcript_id"] = addt_dict["transcript_id"].split(".")[0]
                 
             # Creating final version of additional arguments
             final_addt_list = []
@@ -183,6 +208,34 @@ class AnnotationSet:
             
         # Termination
         gtf_file.close()
+
+    def load_alias_dict(self, file_name):
+        """
+        Reads an alias.txt file and creates a dictionary to translate gene symbols/alternative IDs to ensembl gene ID
+        
+        Keyword arguments:
+        file_name -- Alias file name.
+        
+        Return: void.
+        """
+
+        # Opening alias file
+        alias_file = open(file_name,"r")
+
+        # Iterating over alias file entries
+        for line in alias_file:
+            ll = line.strip().split("\t")
+            ensembl_id = ll[0]
+            official_name = ll[1]
+            alias_vec = ll[2].split("&")
+            self.symbol_dict[ensembl_id] = official_name
+            for e in alias_vec:
+                try: self.alias_dict[e].append(ensembl_id)
+                except Exception: self.alias_dict[e] = [ensembl_id]
+
+        # Termination
+        alias_file.close()
+        
 
     def load_tf_list(self, file_name_list):
         """
@@ -271,6 +324,42 @@ class AnnotationSet:
         """
         pass
 
+    def fix_gene_names(self,gene_set):
+        """
+        Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it
+        will be converted using alias_dict. If the gene name cannot be found then it is reported in a 
+        separate gene_set
+        
+        Keyword arguments:
+        gene_set -- A GeneSet object.
+        
+        Return:
+        mapped_gene_list -- A list of ensembl IDs
+        unmapped_gene_list -- A list of unmapped gene symbols/IDs
+        """
+        
+        # Creating resulting lists
+        mapped_gene_list = []
+        unmapped_gene_list = []
+        
+        # Iterating on gene names
+        for gene_name in gene_set.genes:
+        
+            # Verifying if it is ensembl name
+            flag_ensembl = False
+            try:
+                if(len(gene_name) >= 15 and gene_name[:3] == "ENS"): flag_ensembl = True
+            except Exception: flag_ensembl = False
+            if(flag_ensembl): mapped_gene_list.append(gene_name)
+            else:
+                try:
+                    alias_list = self.alias_dict[gene_name.upper()]
+                    if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one mathing IDs, both will be used."
+                    for e in alias_list: mapped_gene_list.append(e)
+                except Exception: unmapped_gene_list.append(gene_name)
+        
+        return mapped_gene_list, unmapped_gene_list
+
     def get(self, query=None, list_type=DataType.GENE_LIST, return_type=ReturnType.ANNOTATION_SET):
         """
         Gets subsets of either self objects and returns different types.
@@ -339,11 +428,36 @@ class AnnotationSet:
 
         # Return
         if(return_type == self.ReturnType.ANNOTATION_SET): 
-            return AnnotationSet(gene_list, tf_list)
+            return AnnotationSet(gene_list, tf_list, deepcopy(self.alias_dict))
         elif(return_type == self.ReturnType.LIST): 
             return current_list
 
-    def get_promoters(self, promoterLength=1000):
+    def get_official_symbol(self, gene_name_source):
+        """
+        Returns the official symbol(s) from gene_name_source.
+
+        Keyword arguments:
+        gene_source -- It can be a string (single gene name) or a GeneSet (multiple genes).
+
+        Return:
+        if gene_source is string then returns the converted string gene name or None if gene name could not be converted.
+        if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
+        """
+
+        if(isinstance(gene_name_source,str)):
+            try: return self.symbol_dict[gene_name_source]
+            except Exception: return None
+        else:
+            if(isinstance(gene_name_source,list)): curr_list = gene_name_source
+            else: curr_list = gene_name_source.genes
+            mapped_list = []
+            unmapped_list = []
+            for e in curr_list:
+                try: mapped_list.append(self.symbol_dict[e])
+                except Exception: unmapped_list.append(self.symbol_dict[e])
+            return mapped_list, unmapped_list
+
+    def get_promoters(self, promoterLength=1000, gene_set = None):
         """
         Gets promoters of genes given a specific promoter length.
         It returns a GenomicRegionSet with such promoters. The ID of each gene will be put
@@ -352,13 +466,21 @@ class AnnotationSet:
 
         Keyword arguments:
         promoterLength -- The length of the promoter region.
+        gene_set -- A set of genes to narrow the search.
 
         Return:
         result_grs -- A GenomicRegionSet containing the promoters.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
         # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
@@ -373,22 +495,31 @@ class AnnotationSet:
                 gr.final = gr.initial + promoterLength + 1
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
 
-    def get_tss(self):
+    def get_tss(self, gene_set = None):
         """
         Gets TSS(Transcription start site) of genes.
         It returns a GenomicRegionSet with such TSS. The ID of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
+        gene_set -- A set of genes to narrow the search.
         
         Return:
         result_grs -- A GenomicRegionSet containing TSS.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
         # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
@@ -404,22 +535,31 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
 
-    def get_tts(self):
+    def get_tts(self, gene_set = None):
         """
         Gets TTS(Transcription termination site) of genes.
         It returns a GenomicRegionSet with such TTS. The ID of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
+        gene_set -- A set of genes to narrow the search.
         
         Return:
         result_grs -- A GenomicRegionSet containing TTS.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
         # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
@@ -435,23 +575,31 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
     
-    def get_exons(self, start_site=False, end_site=False):
+    def get_exons(self, start_site=False, end_site=False, gene_set = None):
         """
         Gets exons of genes.
         It returns a GenomicRegionSet with such exons. The id of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
-        None
+        gene_set -- A set of genes to narrow the search.
 
         Return:
         result_grs -- A GenomicRegionSet containing the exons.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
-        # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
+        # Fetching exons
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
@@ -465,56 +613,70 @@ class AnnotationSet:
         elif end_site:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
         result_grs.merge()
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
     
-    def get_genes(self):
+    def get_genes(self, gene_set = None):
         """
         Gets regions of genes.
         It returns a GenomicRegionSet with such genes. The id of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
-        None
+        gene_set -- A set of genes to narrow the search.
 
         Return:
         result_grs -- A GenomicRegionSet containing the genes.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
         # Fetching genes
-        query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet
         result_grs = GenomicRegionSet("genes")
         for e in query_annset.gene_list:
-            print("gogogo!!")
             gr = e[self.GeneField.GENOMIC_REGION]
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
     
-    def get_introns(self, start_site=False, end_site=False):
+    def get_introns(self, start_site=False, end_site=False, gene_set = None):
         """
         Gets introns of genes.
         It returns a GenomicRegionSet with such introns. The id of each gene will be put
         in the NAME field of each GenomicRegion.
 
         Keyword arguments:
-        None
+        gene_set -- A set of genes to narrow the search.
 
         Return:
         result_grs -- A GenomicRegionSet containing the introns.
+        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
-        genes = self.get_genes()
-        exons = self.get_exons()
+        if(gene_set):
+            genes, unmapped_gene_list = self.get_genes(gene_set=gene_set)
+            exons, unmapped_gene_list_e = self.get_exons(gene_set=gene_set)
+        else:
+            genes = self.get_genes()
+            exons = self.get_exons()
         
         result_grs = genes.subtract(exons)
         if start_site:
             result_grs.relocate_regions("leftend", left_length=1, right_length=1)
         elif end_site:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
-        return result_grs
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs
     
     
