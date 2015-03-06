@@ -699,7 +699,8 @@ class Html:
         end_str += "</font></p>"
         self.document.append(end_str)
 
-    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, cell_align = 'center'):
+    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
+                        cell_align = 'center'):
         """ 
         Creates a zebra table.
 
@@ -719,7 +720,7 @@ class Html:
         Return:
         None -- Appends table to the document.
         """
-
+        #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
         # Starting table
         type_list = type_list.lower()
         if(isinstance(align,int)): self.document.append("<p style=\"margin-left: "+str(align)+"\">")
@@ -729,13 +730,48 @@ class Html:
         # Table header
         #self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
         self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\">")
-        self.document.append("  <thead><tr>")
-        header_str = []
-        for i in range(0,len(header_list)):
-            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+header_list[i]+"</th>")
-        header_str = "    "+"\n    ".join(header_str)
-        self.document.append(header_str)
-        self.document.append("  </tr></thead>")
+        
+        self.document.append("  <thead>")
+        if (isinstance(header_list[0], list)):
+        # For headers more than one row
+            for r, row_list in enumerate(header_list):
+                self.document.append("    <tr>")
+                header_str = []
+
+                merge_num = [1] * len(row_list)
+                for i, value in enumerate(row_list):
+                    if value == None:
+                        merge_num[last_true] += 1
+                        merge_num[i] -= 1
+                    else:
+                        last_true = i
+
+                for i in range(0,len(row_list)):
+                    if merge_num[i] > 1:
+                        header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                          "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\" "+">"+
+                                          row_list[i]+"</th>")
+                    elif merge_num[i] == 0:
+                        continue
+                    else:
+                        header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                          "\" align=\""+cell_align+"\" >"+ row_list[i]+"</th>")
+
+                header_str = "    "+"\n    ".join(header_str)
+                self.document.append(header_str)
+                self.document.append("    </tr>")
+
+        else:
+            self.document.append("    <tr>")
+            header_str = []
+            for i in range(0,len(header_list)):
+                header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
+                                  header_list[i]+"</th>")
+            header_str = "    "+"\n    ".join(header_str)
+            self.document.append(header_str)
+            self.document.append("    </tr>")
+        self.document.append("  </thead>")
+
 
         # Table body
         self.document.append("  <tbody>")

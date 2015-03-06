@@ -193,6 +193,25 @@ def main():
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
+    ################### Proportion Plot ##########################################
+    parser_proportionplot = subparsers.add_parser('proportionplot',help='Comparing the query BEDs on reference BEDs by proportion plot.')
+    
+    parser_proportionplot.add_argument('output', help=helpoutput)
+    parser_proportionplot.add_argument('-r', '--reference',help=helpreference)
+    parser_proportionplot.add_argument('-q', '--query', help=helpquery)
+    parser_proportionplot.add_argument('-t','--title', default='proportion_plot', help=helptitle)
+    #parser_proportionplot.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
+    #parser_proportionplot.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
+    parser_proportionplot.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    #parser_proportionplot.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    
+    #parser_proportionplot.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
+    #parser_proportionplot.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
+    #parser_proportionplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+    #parser_proportionplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_proportionplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
+    #parser_proportionplot.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    
     ################### Boxplot ##########################################
     
     parser_boxplot = subparsers.add_parser('boxplot',help='Boxplot based on the BAM and BED files for gene association analysis.')
@@ -471,6 +490,20 @@ def main():
         copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
         copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
 
+
+    ################### Proportion Plot ##########################################
+    if args.mode == 'proportionplot':
+        print("\n############ Proportion Plot ############")
+        # Fetching reference and query EM
+        
+        
+        parameter = parameter + inter.parameter
+        t1 = time.time()
+        print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
+        print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
+        copy_em(em=args.reference, directory=args.output, folder=args.title, filename="Reference_experimental_matrix.txt")
+        copy_em(em=args.query, directory=args.output, folder=args.title, filename="Query_experimental_matrix.txt")
     ################### Boxplot ##########################################
     if args.mode == 'boxplot':
         print("\n################# Boxplot #################")
