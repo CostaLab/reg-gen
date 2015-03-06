@@ -397,12 +397,14 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
 
         print2(summary, "Step 4: Generate plot and output html files.")
-        promoter.plot_lines(txp=promoter.txp_de, rna=args.r, dir=args.o, ac=args.ac, 
+        promoter.plot_lines(txp=promoter.txp_de, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
-                            ylabel="Number of target promoters with DBS", filename="plot_promoter.png")
-        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dir=args.o, ac=args.ac, 
+                            ylabel="Number of target promoters with DBS", 
+                            linelabel="No. promoter", filename="plot_promoter.png")
+        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
-                            ylabel="Number of DBSs on target promoters", filename="plot_dbss.png")
+                            ylabel="Number of DBSs on target promoters", 
+                            linelabel="No. DBS", filename="plot_dbss.png")
         
         promoter.gen_html(directory=args.o, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
@@ -441,7 +443,10 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.plotrna(dir=args.o, ac=args.ac, cut_off=args.cf, showpa=args.showpa)
+        randomtest.plotrna(txp=randomtest.txp, dir=args.o, ac=args.ac, cut_off=args.cf, showpa=args.showpa,
+                           filename="ran_region.png")
+        randomtest.plotrna(txp=randomtest.txpf, dir=args.o, ac=args.ac, cut_off=args.cf, showpa=args.showpa,
+                           filename="ran_dbs.png")
         randomtest.boxplot(dir=args.o)
         randomtest.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()

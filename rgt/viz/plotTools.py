@@ -1528,7 +1528,20 @@ class Intersect:
                         print2(self.parameter,r +"\t"+ q +"\t{0}\t{1}\t{2}".format(*self.test_d[ty][r][q]))
                     else:
                         print2(self.parameter,r +"\t"+ q +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r][q]))
-    
+
+###########################################################################################
+#                    Proportion plot
+###########################################################################################
+
+class Proportion:
+
+    def __init__(self, queEM, refEM, organism):
+        """Initiate the proportion plot"""
+        self.exp_que = ExperimentalMatrix()
+        self.exp_que.read(queEM)
+        self.exp_ref = ExperimentalMatrix()
+        self.exp_ref.read(refEM)
+        
 ###########################################################################################
 #                    Boxplot 
 ###########################################################################################
