@@ -308,7 +308,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip):
+               tracker, debug, norm_regions, scaling_factors_ip, save_wig):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -347,7 +347,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip)
+                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig)
     
     return multi_cov_set
 
@@ -404,6 +404,7 @@ def input(laptop):
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--par", dest="par", default=70, type="int",\
                           help="Percentile for p-value filter. [default: %default]")
+        parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw and wig. Warning: sapce consuming! [default: %default]")
         
         parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\

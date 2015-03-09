@@ -114,14 +114,21 @@ class CoverageSet:
                     if c[j] != 0:
                         print(j * self.stepsize + ((self.binsize-self.stepsize)/2), c[j], file=f)
     
-    def write_bigwig(self, filename, chrom_file):
-        _, tmp_path = tempfile.mkstemp()
-        self.write_wig(tmp_path)
-        t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
-        c = " ".join(t)
-        #print(c)
-        os.system(c)
-        os.remove(tmp_path)
+    def write_bigwig(self, filename, chrom_file, save_wig=False):
+        if save_wig:
+            tmp_path = filename + '.wig'
+            self.write_wig(tmp_path)
+            t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
+            c = " ".join(t)
+            os.system(c)
+        else:
+            _, tmp_path = tempfile.mkstemp()
+            self.write_wig(tmp_path)
+            t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
+            c = " ".join(t)
+            #print(c)
+            os.system(c)
+            os.remove(tmp_path)
 
     def coverage_from_genomicset(self,bamFile,readSize=200):
         bam = pysam.Samfile(bamFile, "rb" )
