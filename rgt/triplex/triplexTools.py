@@ -68,13 +68,19 @@ def random_each(input):
     str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
     number, rna,            region,          temp, organism,      rbss,      number of mark
 
-    7  8  9  10  11  12  13  14
-    l, e, c, fr, fm, of, mf, rm
+    7  8  9  10  11  12  13  14  15
+    l, e, c, fr, fm, of, mf, rm, filter_bed 
     """
-
-    random = input[2].random_regions(organism=input[4], multiply_factor=1, 
-                                     overlap_result=True, overlap_input=True, 
-                                     chrom_X=True, chrom_M=False)
+    # Filter BED file
+    if input[15]:
+        random = input[2].random_regions(organism=input[4], multiply_factor=1, 
+                                         overlap_result=True, overlap_input=True, 
+                                         chrom_X=True, chrom_M=False, filter_path=input[15])
+    else:
+        random = input[2].random_regions(organism=input[4], multiply_factor=1, 
+                                         overlap_result=True, overlap_input=True, 
+                                         chrom_X=True, chrom_M=False)
+        
     txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
@@ -780,10 +786,9 @@ class PromoterTest:
         #############################################################
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
-        #html.add_figure("projection_test.png", align="center")
-        #html.add_figure("plot_rna.png", align="center")
-        html.add_figure("plot_promoter.png", align="center")
-        html.add_figure("plot_dbss.png", align="center")
+        
+        html.add_figure("plot_promoter.png", align="left")
+        html.add_figure("plot_dbss.png", align="left")
         
         # Table of merged TBS on promoters
         header_list = [ ["DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None],
@@ -1141,17 +1146,19 @@ class RandomTest:
             dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, "dbs_"+obedname+".bed"))
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, filter_bed):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats-1, num=41)).tolist()
         
         # Prepare the input lists for multiprocessing
+        
         mp_input = []
         for i in range(repeats):
             mp_input.append([ str(i), self.rna_fasta, self.dna_region,
                               temp, self.organism, self.rbss, str(marks.count(i)),
-                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm) ])
+                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm),
+                              filter_bed ])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
@@ -1185,78 +1192,12 @@ class RandomTest:
         self.counts_random = numpy.array(matrix)
         self.sd_random = numpy.std(self.counts_random, axis=1)
 
-    def plotrna(self, txp, dir, ac, cut_off, showpa, filename):
+    def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, filename):
         """Generate lineplot for RNA"""
-
-        # Extract data points
-        x = range(self.rna_len)
-        p_y = [0] * self.rna_len
-        a_y = [0] * self.rna_len
         
-        for rd in txp:
-            if rd.rna.orientation == "P":
-                for i in range(rd.rna.initial, rd.rna.final):
-                    p_y[i] += 1
-            
-            if rd.rna.orientation == "A":
-                for i in range(rd.rna.initial, rd.rna.final):
-                    a_y[i] += 1
-
-        all_y = [sum(z) for z in zip(p_y, a_y)]
-        max_y = float(max(all_y) * 1.1)
-        if ac: min_y = float(max_y*(-0.09))
-        else: min_y = 0
-
-        # Plotting
-        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-        for rbs in self.sig_region:
-            rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="powderblue", 
-                                     edgecolor="none", alpha=0.5, lw=None)
-            ax.add_patch(rect)
-
-        ax.plot(x, all_y, color="mediumblue", alpha=1, lw=1.5, label="Parallel + Anti-parallel")
-        if showpa:
-            ax.plot(x, p_y, color="purple", alpha=1, lw=1.5, label="Parallel")
-            ax.plot(x, a_y, color="dimgrey", alpha=0.8, lw=1.5, label="Anti-parallel")
-       
-        # RNA accessbility
-        if ac:
-            n_value = read_ac(ac, cut_off, rnalen=self.rna_len)
-            #ax.imshow([n_value], cmap=colors.ListedColormap(['white', 'orange']), interpolation='nearest', 
-            #          extent=[0, self.rna_len, min_y, 0], aspect='auto', label="Accessibility")
-            drawing = False
-            for i in x:
-                if n_value[i] > 0:
-                    if drawing:
-                        continue
-                    else:
-                        last_i = i
-                        drawing = True
-                elif drawing:
-                    ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                                 hatch='///', fill=False, snap=False, linewidth=0))
-                    drawing = False
-                else:
-                    continue
-
-        ax.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
-                  prop={'size':9}, ncol=3)
-        ax.set_xlim(left=0, right=self.rna_len )
-        ax.set_ylim( [min_y, max_y] ) 
-        ax.yaxis.set_major_locator(MaxNLocator(integer=True))
-
-        ax.set_xlabel("RNA sequence (bp)", fontsize=9)
-        
-        ax.set_ylabel("Number of binding events",fontsize=9, rotation=90)
-        
-        for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-
-        f.savefig(os.path.join(dir, filename), facecolor='w', edgecolor='w',  
-                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
-
+        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dir=dirp, sig_region=self.sig_region, 
+                 cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
+                 filename=filename, ac=ac, showpa=showpa)
 
     def boxplot(self, dir):
         """Generate the visualized plot"""
@@ -1320,8 +1261,8 @@ class RandomTest:
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         # Plots
-        html.add_figure("ran_region.png", align="left")
-        html.add_figure("ran_dbs.png", align="left")
+        html.add_figure("lineplot_region.png", align="left")
+        html.add_figure("lineplot_dbs.png", align="left")
         html.add_figure("boxplot.png", align="left")
 
         header_list = [ "DNA Binding Domain",

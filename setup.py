@@ -57,12 +57,12 @@ tools_dictionary = {
   [],
   []
 ),
-"motifanalysisold": (
-  "rgt-motifanalysisold",
-  "rgt.motifanalysisold.main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"],
-  []
-), 
+#"motifanalysisold": (
+#  "rgt-motifanalysisold",
+#  "rgt.motifanalysisold.main:main",
+#  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"],
+#  []
+#), 
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
