@@ -65,14 +65,14 @@ class MultiCoverageSet(DualCoverageSet):
             print("Do not compute GC-content, as there is no input.", file=sys.stderr)
     
     
-    def _output_bw(self, name, chrom_sizes):
+    def _output_bw(self, name, chrom_sizes, save_wig):
         """Output bigwig files"""
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
             if self.inputs:
-                self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes)
-            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes)
+                self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes, save_wig)
+            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig)
         
         ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
         for k, d in enumerate(ra):
@@ -85,10 +85,11 @@ class MultiCoverageSet(DualCoverageSet):
                     d[j].add(g[i])
                 d[j].scale(f)
                 n = name + '-s%s.bw' %(j+1) if k == 0 else name + '-s%s-input.bw' %(j+1)
-                d[j].write_bigwig(n, chrom_sizes)
+                d[j].write_bigwig(n, chrom_sizes, save_wig)
 
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
-                 verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, factors_inputs, chrom_sizes_dict, scaling_factors_ip):
+                 verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
+                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -103,7 +104,7 @@ class MultiCoverageSet(DualCoverageSet):
         self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
         self._normalization_by_signal(name, scaling_factors_ip)
         
-        self._output_bw(name, chrom_sizes) 
+        self._output_bw(name, chrom_sizes, save_wig) 
         
         #make data in nice list of two matrices
         tmp = [[], []]
