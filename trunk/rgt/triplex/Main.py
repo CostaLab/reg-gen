@@ -150,9 +150,10 @@ def main():
     
     parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0.05)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
+    parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_randomtest.add_argument('-f', type=str, default=None, help="Input BED file for filteration in randomization")
     parser_randomtest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
-    parser_randomtest.add_argument('-cf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
+    parser_randomtest.add_argument('-accf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     
@@ -438,15 +439,18 @@ def main():
         
         print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
-                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm)
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm,
+                               filter_bed=args.f)
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.plotrna(txp=randomtest.txp, dir=args.o, ac=args.ac, cut_off=args.cf, showpa=args.showpa,
-                           filename="ran_region.png")
-        randomtest.plotrna(txp=randomtest.txpf, dir=args.o, ac=args.ac, cut_off=args.cf, showpa=args.showpa,
-                           filename="ran_dbs.png")
+        randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+                            log=args.log, ylabel="Number of target regions with DBS", 
+                            linelabel="No. target regions", filename="lineplot_region.png")
+        randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+                            log=args.log, ylabel="Number of target regions with DBS", 
+                            linelabel="No. target regions", filename="lineplot_dbs.png")
         randomtest.boxplot(dir=args.o)
         randomtest.gen_html(directory=args.o, align=50, alpha=args.a)
         t3 = time.time()
