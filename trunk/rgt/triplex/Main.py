@@ -54,7 +54,7 @@ def list_all_index(path):
     
     html = Html(name="Triplex Domain Finder", links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False)
-    header_list = ["Expeirments"]
+    header_list = ["Experiments"]
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
     type_list = 's'
@@ -107,20 +107,21 @@ def main():
     parser_promotertest = subparsers.add_parser('promotertest', help=h_promotor)
     parser_promotertest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, help="Define the RAN name")
-    parser_promotertest.add_argument('-de', help="Input file for defferentially expression gene list ")
-    parser_promotertest.add_argument('-bed', help="Input BED file of the promoter regions of defferentially expression genes")
-    parser_promotertest.add_argument('-bg', help="Input BED file of the promoter regions of background genes")
+    parser_promotertest.add_argument('-de', default=False, help="Input file for defferentially expression gene list ")
+    parser_promotertest.add_argument('-bed', default=False, help="Input BED file of the promoter regions of defferentially expression genes")
+    parser_promotertest.add_argument('-bg', default=False, help="Input BED file of the promoter regions of background genes")
     parser_promotertest.add_argument('-o', help="Output directory name for all the results and temporary files")
     
     parser_promotertest.add_argument('-organism', help='Define the organism. (Default: hg19)')
-    
+    parser_promotertest.add_argument('-genome_path',type=str, help='Define the path of genome FASTA file.')
+
     parser_promotertest.add_argument('-pl', type=int, default=1000, help="Define the promotor length (Default: 1000)")
     
     parser_promotertest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0)")
-    parser_promotertest.add_argument('-ccf', type=int, default=10, help="Define the cut off value for counting promoters and DBSs (Default: 10)")
+    parser_promotertest.add_argument('-ccf', type=int, default=20, help="Define the cut off value for counting promoters and DBSs (Default: 10)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
-    parser_promotertest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
+    parser_promotertest.add_argument('-ac', type=str, default=False, help="Input file for RNA accecibility ")
     parser_promotertest.add_argument('-accf', type=float, default=500, help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
@@ -139,7 +140,7 @@ def main():
     h_random = "Region test evaluates the association between the given lncRNA to the target regions by randomization."
     parser_randomtest = subparsers.add_parser('regiontest', help=h_random)
     parser_randomtest.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
-    parser_randomtest.add_argument('-rn', type=str, default=None, help="Define the RAN name")
+    parser_randomtest.add_argument('-rn', type=str, default=False, help="Define the RAN name")
     parser_randomtest.add_argument('-bed', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', help="Output directory name for all the results and temporary files")
     
@@ -147,12 +148,14 @@ def main():
                                    help="Number of times for randomization (Default: 10000)")
 
     parser_randomtest.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_randomtest.add_argument('-genome_path',type=str, help='Define the path of genome FASTA file.')
     
     parser_randomtest.add_argument('-a', type=int, default=0.05, help="Define alpha level for rejection p value (Default: 0.05)")
+    parser_randomtest.add_argument('-ccf', type=int, default=20, help="Define the cut off value for counting promoters and DBSs (Default: 10)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (bed, fa, txp...)")
     parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
-    parser_randomtest.add_argument('-f', type=str, default=None, help="Input BED file for filteration in randomization")
-    parser_randomtest.add_argument('-ac', type=str, default=None, help="Input file for RNA accecibility ")
+    parser_randomtest.add_argument('-f', type=str, default=False, help="Input BED file for filteration in randomization")
+    parser_randomtest.add_argument('-ac', type=str, default=False, help="Input file for RNA accecibility ")
     parser_randomtest.add_argument('-accf', type=float, default=0.01, help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
@@ -191,6 +194,13 @@ def main():
         if not args.organism: 
             print("Please define the organism. (hg19 or mm9)")
             sys.exit(1)
+        if not args.rn: 
+            print("Please define RNA sequence name.")
+            sys.exit(1)
+        if not args.genome_path: 
+            print("Please define the path of genome FASTA file.")
+            sys.exit(1)
+        
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
@@ -387,7 +397,9 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        promoter.count_frequency(temp=args.o, remove_temp=args.rt, bed_output=args.obed, cutoff=args.ccf)
+        if args.obed:
+            obed = os.path.basename(args.o)
+        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obed=obed, cutoff=args.ccf)
         promoter.fisher_exact()
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
@@ -400,14 +412,14 @@ def main():
         print2(summary, "Step 4: Generate plot and output html files.")
         promoter.plot_lines(txp=promoter.txp_de, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
-                            ylabel="Number of target promoters with DBS", 
-                            linelabel="No. promoter", filename="plot_promoter.png")
+                            ylabel="Number of target promoters with DBSs", 
+                            linelabel="No. promoters", filename="plot_promoter.png")
         promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
                             ylabel="Number of DBSs on target promoters", 
-                            linelabel="No. DBS", filename="plot_dbss.png")
+                            linelabel="No. DBSs", filename="plot_dbss.png")
         
-        promoter.gen_html(directory=args.o, align=50, alpha=args.a)
+        promoter.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         t4 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t4-t3))))
@@ -430,10 +442,13 @@ def main():
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
-        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, organism=args.organism)
-        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=args.obed,
-                              obedname=os.path.splitext(os.path.basename(args.bed))[0],
-                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf )
+        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
+                                organism=args.organism, genome_path=args.genome_path)
+        if args.obed:
+            obed = os.path.basename(args.o)
+        else: obed=False
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
+                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
         
@@ -448,11 +463,11 @@ def main():
         randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of target regions with DBS", 
                             linelabel="No. target regions", filename="lineplot_region.png")
-        randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
-                            log=args.log, ylabel="Number of target regions with DBS", 
-                            linelabel="No. target regions", filename="lineplot_dbs.png")
+        randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+                            log=args.log, ylabel="Number of DBS on target regions", 
+                            linelabel="No. DBS", filename="lineplot_dbs.png")
         randomtest.boxplot(dir=args.o)
-        randomtest.gen_html(directory=args.o, align=50, alpha=args.a)
+        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
         
