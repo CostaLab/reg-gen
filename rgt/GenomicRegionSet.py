@@ -438,27 +438,6 @@ class GenomicRegionSet:
 
         return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
-    def get_promotors(self, organism, gene_set, promoterLength=1000):
-        """Return the GenomicRegionSet corresponding to the given GeneSet according to the given organism"""
-        genome_data = GenomeData(organism)
-        
-        chsize = {}
-        with open(genome_data.get_chromosome_sizes(), "r") as f:
-            for line in f:
-                line = line.split()
-                chsize[line[0]] = int(line[1])
-
-        all_regions = GenomicRegionSet("all")
-        all_regions.read_bed(genome_data.get_association_file())
-        gene_regions = GenomicRegionSet("gene_regions")
-        for s in all_regions:
-            if s.name.upper() in gene_set.genes: 
-                if s.orientation == "+": s.initial, s.final = max(s.initial-promoterLength, 0), s.initial
-                else: s.initial, s.final = s.final, min(s.final+promoterLength, chsize[s.chrom])
-                gene_regions.add(s)
-        #gene_regions.sequences = [s for s in all_regions if s.name not in gene_set.genes]
-        self.sequences = gene_regions.sequences
-
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
         

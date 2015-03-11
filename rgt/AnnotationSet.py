@@ -1,9 +1,9 @@
 import os
 import sys
 from copy import deepcopy
-from GenomicRegion import GenomicRegion
-from GenomicRegionSet import GenomicRegionSet
-from Util import GenomeData, MotifData, AuxiliaryFunctions
+from rgt.GenomicRegion import *
+from rgt.GenomicRegionSet import *
+from rgt.Util import GenomeData, MotifData, AuxiliaryFunctions
 
 """
 Genomic Annotation from Genes
