@@ -113,7 +113,7 @@ class RNADNABindingSet:
         if sort: rna_set.sort()
         return rna_set
 
-    def get_dbs(self, sort=False, orientation=None):
+    def get_dbs(self, sort=False, orientation=None, rm_duplicate=False):
         """Return GenomicRegionSet which contains all DNA binding sites"""
         dna_set = GenomicRegionSet(name="DNA_binding_sites")
         for rd in self.sequences:
@@ -124,6 +124,7 @@ class RNADNABindingSet:
                     dna_set.add(rd.dna)
                 else: pass
         if sort: dna_set.sort()
+        if rm_duplicate: dna_set.remove_duplicates()
         return dna_set
 
     def sort_rbs(self):
@@ -253,6 +254,7 @@ class RNADNABindingSet:
 
 
         iter_rd = iter(txp_copy)
+        
         rd = iter_rd.next()
 
         last_j = len(regionset)-1
@@ -396,7 +398,7 @@ class RNADNABindingSet:
                 if line[0] == "#": continue # skip the comment line
                 
                 line = line.strip("\n")
-                line = line.split()
+                line = line.split("\t")
                 
                 if len(line) < 10: 
                     #print(line)
@@ -428,19 +430,23 @@ class RNADNABindingSet:
                                   errors_bp=line[8], motif=line[9], orientation=line[11], 
                                   guanine_rate=line[12])
                 # DNA binding site
+                rg = line[3].split(":")[1].split("-")
+                try: rg.remove("")
+                except: pass
                 if dna_fine_posi:
-                    dna_start = int(line[3].split(":")[1].split("-")[0]) + int(line[4])
-                    dna_end = int(line[3].split(":")[1].split("-")[0]) + int(line[5])
+                    dna_start = int(rg[0]) + int(line[4])
+                    dna_end = int(rg[0]) + int(line[5])
                     dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
                                         name=line[3], orientation=line[10],
                                         data=[line[6], line[9], line[11]]) # score, motif, orientation
 
                 else:
-                    dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(line[3].split(":")[1].split("-")[0]),
-                                        final=int(line[3].split(":")[1].split("-")[1]), 
-                                        name=line[3], orientation=line[10],
-                                        data=[line[6], line[9], line[11]])
-                
+                    try:
+                        dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]), 
+                                            name=line[3], orientation=line[10],
+                                            data=[line[6], line[9], line[11]])
+                    except:
+                        print(line)
                 # Map RNA binding site to DNA binding site
                 self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
 

@@ -831,7 +831,7 @@ class GenomicRegionSet:
             result = self.subtract(z)
             return result
     
-    def merge(self, w_return=False):
+    def merge(self, w_return=False, namedistinct=False):
         """Merge the regions within the GenomicRegionSet"""
         if self.sorted == False: self.sort()
         
@@ -845,9 +845,25 @@ class GenomicRegionSet:
             prev_region = self.sequences[0]
             for cur_region in self.sequences[1:]:
                 if prev_region.overlap(cur_region):
-                    prev_region.initial = min(prev_region.initial, cur_region.initial)
-                    prev_region.final = max(prev_region.final, cur_region.final)
-                    #if cur_region.name: prev_region.name += '_' + cur_region.name #use extra character to distinguish data sets
+                    if not namedistinct:
+                        prev_region.initial = min(prev_region.initial, cur_region.initial)
+                        prev_region.final = max(prev_region.final, cur_region.final)
+                    else:
+                        try:
+                            if cur_region.name == prev_region.name:
+                                prev_region.initial = min(prev_region.initial, cur_region.initial)
+                                prev_region.final = max(prev_region.final, cur_region.final)
+                            else:
+                                continue
+                        except:
+                            continue
+                    #if cur_region.name and prev_region.name:
+                    #    if cur_region.name in prev_region.name: pass
+                    #    else: prev_region.name = prev_region.name+","+cur_region.name
+                    #elif cur_region.name:
+                    #    prev_region.name = cur_region.name
+                    #else: pass
+                    #prev_region.name += '_' + cur_region.name #use extra character to distinguish data sets
                 else:
                     z.add(prev_region)
                     prev_region = cur_region
