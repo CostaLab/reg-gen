@@ -162,7 +162,7 @@ class AnnotationSet:
 
         # Reading GTF file
         for line in gtf_file:
-
+        
             # Processing line
             line = line.strip()
             if(line[0] == "#"): continue
@@ -177,12 +177,12 @@ class AnnotationSet:
                 addt_element_list = filter(None,addt_element_list)
                 addt_element_list[1] = addt_element_list[1].replace("\"","") # Removing " symbol from string options
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
-
+        
             # Removing dot from IDs
             addt_dict["gene_id"] = addt_dict["gene_id"].split(".")[0]
             addt_dict["transcript_id"] = addt_dict["transcript_id"].split(".")[0]
                 
-            # Creating final version of additional arguments
+                                                                                                                                                                                          # Creating final version of additional arguments
             final_addt_list = []
             for addt_key in ["gene_id", "transcript_id", "gene_type", "gene_status", "gene_name", 
                              "transcript_type", "transcript_status", "transcript_name", "level"]:
@@ -354,7 +354,7 @@ class AnnotationSet:
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
-                    if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one mathing IDs, both will be used."
+                    if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
                     for e in alias_list: mapped_gene_list.append(e)
                 except Exception: unmapped_gene_list.append(gene_name)
         
@@ -479,8 +479,12 @@ class AnnotationSet:
         if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        #if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        #else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
+        
+
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet

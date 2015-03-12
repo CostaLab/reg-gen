@@ -700,7 +700,7 @@ class Html:
         self.document.append(end_str)
 
     def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
-                        cell_align = 'center', auto_width=False):
+                        cell_align = 'center', auto_width=False, colorcode=None):
         """ 
         Creates a zebra table.
 
@@ -731,6 +731,10 @@ class Html:
         #self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
         if auto_width: self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\" table-layout: auto >")
         else: self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\">")
+        
+        if colorcode:
+            for line in colorcode:
+                self.document.append(line)
         
         self.document.append("  <thead>")
         if (isinstance(header_list[0], list)):
