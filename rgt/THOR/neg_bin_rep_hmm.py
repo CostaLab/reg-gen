@@ -237,8 +237,8 @@ class NegBinRepHMM(_BaseHMM):
             el[1,2] = high
             el[1,1] = low
             el[0,2] = low
-            el[0,0] = min(med, low)
-            el[1,0] = min(med, low)
+            el[0,0] = low #min(med, low)
+            el[1,0] = low #min(med, low)
         
         self._update_distr(self.mu, self.alpha)
 
