@@ -1,5 +1,6 @@
 ToDo:
 get rid of option --region
+to not throw out uncorrected p-values
 
 done:
 - fix bug with missing 'chr' prefix in BAM files
