@@ -402,10 +402,8 @@ def main():
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        if args.obed:
-            obedp = os.path.basename(args.o)
-        else:
-            obedp = None
+        if args.obed: obedp = os.path.basename(args.o)
+        else: obedp = None
         promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf)
         promoter.fisher_exact(alpha=args.a)
         t2 = time.time()

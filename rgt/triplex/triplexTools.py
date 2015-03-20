@@ -8,6 +8,8 @@ import time, datetime
 # Local Libraries
 from scipy import stats
 import numpy
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -1210,18 +1212,13 @@ class RandomTest:
         
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
-        #self.counts_dbsm = OrderedDict()
-        #self.mdbs = OrderedDict()
 
         for rbs in self.rbss:
-            #self.mdbs[rbs] = txpf.merged_dict[rbs].merge(w_return=True)
             tr = len(self.txp.merged_dict[rbs])
             self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
             self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
-            #self.counts_dbsm[rbs] = len(self.mdbs[rbs])
             
         self.region_dbd = self.txpf.sort_rbs_by_regions(self.dna_region)
-        
         
         self.region_dbs = self.txpf.sort_rd_by_regions(regionset=self.dna_region)
         self.region_dbsm = {}
@@ -1360,16 +1357,9 @@ class RandomTest:
         # Plot target regions
         plt.plot(range(1, len(self.rbss)+1), truecounts, markerfacecolor="mediumblue",
                  marker='o', markersize=5, linestyle='None', markeredgecolor="white", zorder=z+5)
-        #for i, r in enumerate(range(1, len(self.rbss)+1)):
-        #    forbar = patches.Rectangle(xy=(i+0.9,min_y), width=0.2, height=self.counts_tr.values()[i][0], 
-        #                               facecolor="mediumblue", edgecolor="none", alpha=1, lw=None)
-        #    ax.add_patch(forbar)
-        
-
         
         ax.set_xlabel("Potential DNA Binding Domains", fontsize=label_size)
         ax.set_ylabel(ylabel,fontsize=label_size, rotation=90)
-
 
         ax.set_ylim( [min_y, max_y] ) 
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
@@ -1420,9 +1410,10 @@ class RandomTest:
         html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
         html.add_figure("lineplot_dbs.png", align="left", width="45%", more_images=["boxplot_dbs.png"])
 
-        header_list = [ [" ", "Target Regions", None, "Non-target Regions", None, " ", "Target Regions", "Non-target Regions", None, " "],
-                        ["DBD", "with DBS", "without DBS", "with DBS (average)", "s.d.", "P-value", "NO. DBSs", "NO. DBSs (average)", "s.d.", "P-value"] ]
-
+        header_list = [ ["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", "Target Regions", "Non-target Regions", None, "Statistics"],
+                        ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value", "NO. DBSs", "NO. DBSs (average)", "s.d.", "<i>p</i>-value"] ]
+        header_titles = [ ["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
+                           "Regions from randomization", None, ],[]]
         type_list = 'ssssssssssssssss'
         col_size_list = [50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]
         data_table = []
@@ -1450,8 +1441,8 @@ class RandomTest:
                                 p_dbs  ])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
-
+                             auto_width=True, header_titles=None, border_list=None, sortable=False)
+        
 
         html.add_heading("Notes")
         html.add_list([ "RNA name: "+ self.rna_name,
