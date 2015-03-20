@@ -701,7 +701,7 @@ class PromoterTest:
             #os.remove(os.path.join(temp,"untargeted_promoters.bed"))
             os.remove(os.path.join(temp,"nde.fa"))
         
-    def count_frequency(self, temp, remove_temp, cutoff, obed=False):
+    def count_frequency(self, temp, remove_temp, cutoff, obedp=False):
         """Count the frequency between DE genes and non-DE genes with the given BindingSiteSet"""
         
         self.frequency = {}
@@ -764,7 +764,7 @@ class PromoterTest:
             os.remove(os.path.join(temp,"de.txp"))
             os.remove(os.path.join(temp,"nde.txp"))
 
-        if obed:
+        if obedp:
             self.de_regions.write_bed(filename=os.path.join(temp,obed+"_target_promoters.bed"))
             self.txp_de.write_bed(filename=os.path.join(temp,obed+"_binding_promoters.bed"), remove_duplicates=True)
             self.txp_def.write_bed(filename=os.path.join(temp,obed+"_dbss.bed"), remove_duplicates=True)
@@ -1106,9 +1106,7 @@ class PromoterTest:
                 dbssount = str(0)
             else:
                 dbssount = '<a href="promoters_dbds.html#'+promoter.toString()+'" style="text-align:left">'+str(len(self.promoter["de"]["dbs"][promoter.toString()]))+'</a>'
-            #counts_p[i] == 0 and counts_a[i] == 0:
-            #    continue
-            #else:
+            
             data_table.append([ str(i+1),
                                 '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                 "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
@@ -1118,15 +1116,6 @@ class PromoterTest:
                                 value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()]),
                                 "<i>"+str(int(rank_sum[i]))+"</i>"
                                 ])
-
-
-        colorcode = [ '  <colgroup>',
-                      '    <col span="2" style="background-color:#E0F8F7">',
-                      '    <col span="2" style="background-color:#A9E2F3">',
-                      '    <col span="2" style="background-color:#E0F8F7">',
-                      '    <col span="2" style="background-color:#A9E2F3">',
-                      '  </colgroup>' 
-                      ]
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titles, border_list=None, sortable=True)
@@ -1140,7 +1129,10 @@ class PromoterTest:
         # Subpages for promoter centered page
         # promoters_dbds.html
 
-        header_sub = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
+                         "Score of binding event", "Motif of binding by triple helix rule",
+                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel"]
         header_list=header_sub
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False)
@@ -1163,41 +1155,10 @@ class PromoterTest:
                                         rd.score, 
                                         rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-                
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                                     header_titles=header_titles, sortable=True)
+        html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "promoters_dbds.html"))
- 
-        if None:
-            # background.html
-            html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                        fig_rpath="./style", RGT_header=False)
-            header_list=header_promoter_centered
-            html.add_heading("Non-target promoters")
-            data_table = []
-            #counts_p = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="P"))
-            #counts_a = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="A"))
-            
-            if not self.nde_regions.sorted: self.nde_regions.sort()
-            # Iterate by each gene promoter
-            for i, promoter in enumerate(self.nde_regions):
-                if len(self.promoter["nde"]["dbs"][promoter.toString()]) == 0:
-                    continue
-                else:
-                    data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                        "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                        '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
-                                        split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
-                                        '<a href="background_dbds.html#'+promoter.toString()+
-                                        '" style="text-align:left">'+
-                                        str(len(self.promoter["nde"]["dbs"][promoter.toString()]))+'</a>',
-                                        value2str(self.promoter["nde"]["dbs_coverage"][promoter.toString()])
-                                        ])
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-            html.add_heading("Notes")
-            html.add_list(["All the prmoters without any bindings are ignored.",
-                           "DBS stands for DNA Binding Site on DNA.",
-                           "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
-            
-            html.write(os.path.join(directory,"background.html"))
 
 
 
