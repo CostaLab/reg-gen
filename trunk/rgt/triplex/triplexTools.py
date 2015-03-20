@@ -1060,7 +1060,7 @@ class PromoterTest:
             data_table = []
             for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
                 # Add information
-                data_table.append([ str(i),
+                data_table.append([ str(i+1),
                                     '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                     '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
@@ -1068,7 +1068,8 @@ class PromoterTest:
                                     str(len(self.promoter["de"]["rd"][promoter.toString()])),
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                      ])
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                                 sortable=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
             
@@ -1116,15 +1117,13 @@ class PromoterTest:
             #counts_p[i] == 0 and counts_a[i] == 0:
             #    continue
             #else:
-            data_table.append([ str(i),
+            data_table.append([ str(i+1),
                                 '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                 "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                 '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
                                 split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
                                 dbssount,
-                                "<i>"+str(int(rank_count[i]))+"</i>",
                                 value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()]),
-                                "<i>"+str(int(rank_coverage[i]))+"</i>", str(int(rank_sum[i])), 
                                 "<i>"+str(int(rank_sum[i]))+"</i>"
                                 ])
 
@@ -1142,7 +1141,7 @@ class PromoterTest:
         html.add_heading("Notes")
         html.add_list(["DBS stands for DNA Binding Site on DNA.",
                        "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
-        
+        html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"promoters.html"))
 
         ############################
