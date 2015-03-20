@@ -406,7 +406,7 @@ def main():
             obedp = os.path.basename(args.o)
         else:
             obedp = None
-        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obed=obedp, cutoff=args.ccf)
+        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf)
         promoter.fisher_exact(alpha=args.a)
         t2 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
@@ -448,14 +448,12 @@ def main():
         print2(summary, "*** Number of randomization: "+str(args.n))
         print2(summary, "*** Output directoey: "+os.path.basename(args.o))
         
-        #print2(summary, "\n"+h_random)
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
                                 organism=args.organism, genome_path=args.genome_path)
-        if args.obed:
-            obed = os.path.basename(args.o)
+        if args.obed: obed = os.path.basename(args.o)
         else: obed=False
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
