@@ -327,8 +327,9 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     ax.set_xlabel(rnaname+" sequence (bp)", fontsize=9)
     
     ax.set_ylabel(ylabel,fontsize=9, rotation=90)
-
+    
     f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+
     f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
               bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
     # PDF
@@ -823,7 +824,7 @@ class PromoterTest:
         rnas.read_fasta(rna)
         if not self.rna_name: self.rna_name = rnas[0].name
         self.rna_len = len(rnas[0])
-        
+
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa)
@@ -868,16 +869,16 @@ class PromoterTest:
 
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
 
-        check_dir(directory)
+        #check_dir(directory)
         html_header = "Triplex Domain Finder: Promoter Test"
         #fp = os.path.join(dir,outputname,title)
         self.link_d = OrderedDict()
         self.link_d["RNA"] = "index.html"
         self.link_d["Target promoters"] = "promoters.html"
         #self.link_d["Non-target promoters"] = "background.html"
-        self.link_ds = OrderedDict()
-        self.link_ds["RNA"] = "../index.html"
-        self.link_ds["Target promoters"] = "../promoters.html"
+        #self.link_ds = OrderedDict()
+        #self.link_ds["RNA"] = "../index.html"
+        #self.link_ds["Target promoters"] = "../promoters.html"
         #self.link_ds["Non-target promoters"] = "../background.html"
 
         if self.organism == "hg19": self.ani = "human"
@@ -1050,7 +1051,7 @@ class PromoterTest:
         header_list= ["#", "Target Promoter", "Gene", "No. DBSs", "DBS coverage"] 
 
         # dbds_promoters.html
-        html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
      
         for rbsm in self.frequency["promoters"]["de"].keys():    
@@ -1150,7 +1151,7 @@ class PromoterTest:
 
         header_sub = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
         header_list=header_sub
-        html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False)
         
         for i, promoter in enumerate(self.de_regions):
