@@ -89,14 +89,23 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
-                       dna_fine_posi=True)
+                       dna_fine_posi=False)
     
     txp.merge_by(rbss=input[5], rm_duplicate=True)
+
+    txpf = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
+                       organism=input[4], prefix=str(input[0]), remove_temp=True, 
+                       l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
+                       fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
+                       dna_fine_posi=True)
+    
+    txpf.merge_by(rbss=input[5], rm_duplicate=True)
+    #all_dbss = len(txp.get_dbs(rm_duplicate=True))
     #print("\t Randomization: \t"+input[0])
     sys.stdout.flush()
     print("".join(["="]*int(input[6])), end="")
 
-    return [ len(dbss) for dbss in txp.merged_dict.values() ]
+    return [ [len(tr) for tr in txp.merged_dict.values() ], [len(dbss) for dbss in txpf.merged_dict.values()] ]
 
 def get_sequence(dir, filename, regions, genome_path):
     """
@@ -224,7 +233,7 @@ def split_gene_name(gene_name, ani, org):
     return result
 
 
-def lineplot(txp, rnalen, rnaname, dir, sig_region, cut_off, log, ylabel, linelabel, 
+def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linelabel, 
              filename, ac=None, showpa=False):
     # Plotting
     f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
@@ -320,10 +329,10 @@ def lineplot(txp, rnalen, rnaname, dir, sig_region, cut_off, log, ylabel, linela
     ax.set_ylabel(ylabel,fontsize=9, rotation=90)
 
     f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-    f.savefig(os.path.join(dir, filename), facecolor='w', edgecolor='w',  
+    f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
               bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
     # PDF
-    pp = PdfPages(os.path.splitext(os.path.join(dir,filename))[0] +'.pdf')
+    pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
     pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
     pp.close()
 
@@ -595,20 +604,24 @@ class TriplexSearch:
 
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
-    def __init__(self, gene_list_file, bed, bg, organism, promoterLength, genome_path, rna_name, summary, temp):
+    def __init__(self, gene_list_file, bed, bg, organism, promoterLength, genome_path, rna_name, 
+                 summary, temp, showdbs=None):
         """Initiation"""
         self.organism = organism
         self.rna_name = rna_name
         self.genome_path = genome_path
+        self.showdbs = showdbs
         
 
         if bed and bg:
             self.de_regions = GenomicRegionSet("de genes")
             self.nde_regions = GenomicRegionSet("nde genes")
             self.de_regions.read_bed(bed)
+            self.de_regions.remove_duplicates()
             self.de_regions = self.de_regions.gene_association(organism=self.organism)
             self.nde_regions.read_bed(bg)
             self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
+            self.nde_regions.remove_duplicates()
         else:
 
             try:
@@ -693,7 +706,7 @@ class PromoterTest:
         
         self.frequency = {}
         self.frequency["promoters"] = { "de": OrderedDict(), "nde": OrderedDict() }
-        self.frequency["hits"] = { "de": OrderedDict(), "nde": OrderedDict() }
+        
         
         ########################################################
         # Count the number of targeted promoters on each merged DNA Binding Domain
@@ -728,22 +741,21 @@ class PromoterTest:
         # Count the number of hits on the promoters from each merged DBD 
         txp_def = RNADNABindingSet("DE")
         txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
-
         txp_def.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
 
         txp_ndef = RNADNABindingSet("non-DE")
         txp_ndef.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=True)
-
         txp_ndef.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
 
-        numdbs_def = len(txp_def.get_dbs(rm_duplicate=True))
-        numdbs_ndef = len(txp_ndef.get_dbs(rm_duplicate=True))
-        for rbs in self.rbss:
-            #if len(txp_def.merged_dict[rbs]) < 10: continue
-            # DE
-            self.frequency["hits"]["de"][rbs] = [ len(txp_def.merged_dict[rbs]), numdbs_def-len(txp_def.merged_dict[rbs]) ]
-            # non-DE
-            self.frequency["hits"]["nde"][rbs] = [ len(txp_ndef.merged_dict[rbs]), numdbs_ndef-len(txp_ndef.merged_dict[rbs]) ]
+        if self.showdbs:
+            self.frequency["hits"] = { "de": OrderedDict(), "nde": OrderedDict() }
+            numdbs_def = len(txp_def.get_dbs(rm_duplicate=True))
+            numdbs_ndef = len(txp_ndef.get_dbs(rm_duplicate=True))
+            for rbs in self.rbss:
+                # DE
+                self.frequency["hits"]["de"][rbs] = [ len(txp_def.merged_dict[rbs]), numdbs_def-len(txp_def.merged_dict[rbs]) ]
+                # non-DE
+                self.frequency["hits"]["nde"][rbs] = [ len(txp_ndef.merged_dict[rbs]), numdbs_ndef-len(txp_ndef.merged_dict[rbs]) ]
 
         self.txp_def = txp_def
         self.txp_ndef = txp_ndef
@@ -759,12 +771,12 @@ class PromoterTest:
             self.txp_def.write_bed(filename=os.path.join(temp,obed+"_dbss.bed"), remove_duplicates=True)
             #self.txp_ndef.write_bed(filename=os.path.join(temp,"dna_binding_sites_untar_pro.bed"), remove_duplicates=True)
 
-    def fisher_exact(self):
+    def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
         self.oddsratio = {}
         self.pvalue = {}
         pvalues = []
-        self.sig_region = []
+        self.sig_region_promoter = []
         for rbs in self.frequency["promoters"]["de"]:
             table = numpy.array([self.frequency["promoters"]["de"][rbs], self.frequency["promoters"]["nde"][rbs]])
             self.oddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
@@ -777,27 +789,30 @@ class PromoterTest:
             pvals_corrected = pvalues
         for i, rbs in enumerate(self.frequency["promoters"]["de"].keys()):
             self.pvalue[rbs] = pvals_corrected[i]
-            if pvals_corrected[i] < 0.05:
-                self.sig_region.append(rbs)
+            if pvals_corrected[i] < alpha:
+                self.sig_region_promoter.append(rbs)
 
-        
-        self.hoddsratio = {}
-        self.hpvalue = {}
-        pvalues = []
-        for rbs in self.frequency["hits"]["de"]:
-            table = numpy.array([self.frequency["hits"]["de"][rbs], self.frequency["hits"]["nde"][rbs]])
-            self.hoddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
-            pvalues.append(p)
-        # correction
-        if len(self.frequency["hits"]["de"].keys()) > 1:
-            reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
-        else:
-            pvals_corrected = pvalues
-        for i, rbs in enumerate(self.frequency["hits"]["de"].keys()):
-            self.hpvalue[rbs] = pvals_corrected[i]
+        if self.showdbs:
+            self.hoddsratio = {}
+            self.hpvalue = {}
+            pvalues = []
+            self.sig_region_dbs = []
+            for rbs in self.frequency["hits"]["de"]:
+                table = numpy.array([self.frequency["hits"]["de"][rbs], self.frequency["hits"]["nde"][rbs]])
+                self.hoddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
+                pvalues.append(p)
+            # correction
+            if len(self.frequency["hits"]["de"].keys()) > 1:
+                reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+            else:
+                pvals_corrected = pvalues
+            for i, rbs in enumerate(self.frequency["hits"]["de"].keys()):
+                self.hpvalue[rbs] = pvals_corrected[i]
+                if pvals_corrected[i] < alpha:
+                    self.sig_region_dbs.append(rbs)
             
 
-    def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, ac=None, showpa=False):
+    def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
         rna:     File path to the RNA sequence in FASTA format
@@ -809,7 +824,7 @@ class PromoterTest:
         if not self.rna_name: self.rna_name = rnas[0].name
         self.rna_len = len(rnas[0])
         
-        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dir=dirp, sig_region=self.sig_region, 
+        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa)
 
@@ -851,9 +866,9 @@ class PromoterTest:
         for promoter in self.nde_regions:
             self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(self.promoter["nde"]["merged_dbs"][promoter.toString()].total_coverage()) / len(promoter)
 
-    def gen_html(self, directory, parameters, align=50, alpha = 0.05):
+    def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
 
-        check_dir(os.path.join(directory, "supplements"))
+        check_dir(directory)
         html_header = "Triplex Domain Finder: Promoter Test"
         #fp = os.path.join(dir,outputname,title)
         self.link_d = OrderedDict()
@@ -874,69 +889,112 @@ class PromoterTest:
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         
-        html.add_figure("plot_promoter.png", align="left")
-        html.add_figure("plot_dbss.png", align="left")
+        html.add_figure("plot_promoter.png", align="left", width="45%")
+        if self.showdbs:
+            html.add_figure("plot_dbss.png", align="left", width="45%")
         
         # Table of merged TBS on promoters
-        header_list = [ ["DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, "Target Promoter", None, "Non-target Promoter", None, "Statistics", None ],
-                        [" ", "with DBS", "without DBS", "with DBS", "without DBS", "Oddsratio", "P-value", "No. DBSs", "Other DBSs", "No. DBSs", "Other DBSs","Oddsratio", "P-value"] ]
-                       #"Unique DBSs<br>Targeted promoters",
-                       #"Unique DBSs<br>Untargeted promoters" ]
+        if self.showdbs:
+            header_list = [ [ "", "", "Promoters", None, None, None, None, None, "DBSs", None, None, None, None, None ],
+                            [ "#", "DBD", 
+                              "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, 
+                              "Target Promoter", None, "Non-target Promoter", None, "Statistics", None ],
+                            [ " ", " ", 
+                              "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>", 
+                              "No. DBSs", "Other DBSs", "No. DBSs", "Other DBSs","OR", "<i>p</i>"] ]
+            header_titles = [ [ "", "", "Statistics on promoter level", None, None, None, None, None, 
+                                "Statistics on DBS level", None, None, None, None, None ],
+                              [ "Rank of the talbe",
+                                "DNA Binding Domain which is the functional region on RNA.",
+                                "Promoters of the differential expression genes.", None,
+                                "Promoters of the non-differential expression genes.", None,
+                                "Statistics based on promoters", None,
+                                "Promoters of the differential expression genes.", None,
+                                "Promoters of the non-differential expression genes.", None,
+                                "Statistics based on DBSs", None ], 
+                              [ "",
+                                "",
+                                "Number of target promoters which contain DBSs (DNA Binding Sites).",
+                                "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
+                                "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
+                                "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
+                                "Odds Ratio", "P-value",
+                                "Number of DBSs found in the target promoters.",
+                                "Number of DBSs not found in the target promoters.",
+                                "Number of DBSs found in the non-target promoters.",
+                                "Number of DBSs not found in the non-target promoters.",
+                                "Odds Ratio", "P-value" ] 
+                                ]
+            border_list = [ " style=\"border-right:1pt solid gray\"",
+                            " style=\"border-right:1pt solid gray\"", "",
+                            " style=\"border-right:1pt solid gray\"", "",
+                            " style=\"border-right:1pt solid gray\"", "",
+                            " style=\"border-right:2pt solid gray\"", "",
+                            " style=\"border-right:1pt solid gray\"", "",
+                            " style=\"border-right:1pt solid gray\"", "",
+                            " style=\"border-right:1pt solid gray\"" ]
+        else:
+            header_list = [ ["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None ],
+                            [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>" ] ]
+            header_titles = [ [ "Rank of the talbe",
+                                "DNA Binding Domain which is the functional region on RNA.",
+                                "Promoters of the differential expression genes.", None,
+                                "Promoters of the non-differential expression genes.", None,
+                                "Statistics based on promoters", None ], 
+                              [ "",
+                                "",
+                                "Number of target promoters which contain DBSs (DNA Binding Sites).",
+                                "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
+                                "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
+                                "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
+                                "Odds Ratio", "P-value" ] 
+                                ]
+            border_list = [ "style=\"border-right:1pt solid gray\"",
+                            "style=\"border-right:1pt solid gray\"", "",
+                            "style=\"border-right:1pt solid gray\"", "",
+                            "style=\"border-right:1pt solid gray\"", "",
+                            "style=\"border-right:1pt solid gray\"" ]
         
         type_list = 'ssssssssssssssssssss'
         col_size_list = [50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]
         data_table = []
+        rank=0
         for rbs in self.frequency["promoters"]["de"].keys():
-            if self.frequency["promoters"]["de"][rbs][0] < 10: continue
+            if self.frequency["promoters"]["de"][rbs][0] < ccf: continue
+            rank += 1
             if self.pvalue[rbs] < alpha:
-                data_table.append([ rbs.str_rna(pa=False), #str(len(dbss)), 
-                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.str_rna()+
-                                    '" style="text-align:left">'+
-                                    value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
-                                    value2str(self.frequency["promoters"]["de"][rbs][1]), 
-                                    '<a href="'+"supplements/dbds_background.html#"+rbs.str_rna()+
-                                    '" style="text-align:left">'+
-                                    value2str(self.frequency["promoters"]["nde"][rbs][0])+'</a>', 
-                                    value2str(self.frequency["promoters"]["nde"][rbs][1]), 
-                                    value2str(self.oddsratio[rbs]), 
-                                    "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>",
-                                    value2str(self.frequency["hits"]["de"][rbs][0]),
-                                    value2str(self.frequency["hits"]["de"][rbs][1]),
-                                    value2str(self.frequency["hits"]["nde"][rbs][0]),
-                                    value2str(self.frequency["hits"]["nde"][rbs][1]),
-                                    value2str(self.hoddsratio[rbs]),
-                                    value2str(self.hpvalue[rbs]) ])
-                                    #'<a href="'+"supplements/dbds_dbss.html#"+rbs.str_rna()+
-                                    #'" style="text-align:left">'+
-                                    #value2str(self.frequency["hits"]["de"][rbs])+'</a>', 
-                                    #'<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.str_rna()+
-                                    #'" style="text-align:left">'+
-                                    #value2str(self.frequency["hits"]["nde"][rbs])+'</a>' ])
+                p_promoter = "<font color=\"red\">"+value2str(self.pvalue[rbs])+"</font>"
             else:
-                data_table.append([ rbs.str_rna(pa=False), #str(len(dbss)), 
-                                    '<a href="'+"supplements/dbds_promoters.html#"+rbs.str_rna()+
-                                    '" style="text-align:left">'+
-                                    value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
-                                    value2str(self.frequency["promoters"]["de"][rbs][1]), 
-                                    '<a href="'+"supplements/dbds_background.html#"+rbs.str_rna()+
-                                    '" style="text-align:left">'+
-                                    value2str(self.frequency["promoters"]["nde"][rbs][0])+'</a>', 
-                                    value2str(self.frequency["promoters"]["nde"][rbs][1]), 
-                                    value2str(self.oddsratio[rbs]), value2str(self.pvalue[rbs]),
-                                    value2str(self.frequency["hits"]["de"][rbs][0]),
-                                    value2str(self.frequency["hits"]["de"][rbs][1]),
-                                    value2str(self.frequency["hits"]["nde"][rbs][0]),
-                                    value2str(self.frequency["hits"]["nde"][rbs][1]),
-                                    value2str(self.hoddsratio[rbs]),
-                                    value2str(self.hpvalue[rbs]) ])
-                                    #'<a href="'+"supplements/dbds_dbss.html#"+rbs.str_rna()+
-                                    #'" style="text-align:left">'+
-                                    #value2str(self.frequency["hits"]["de"][rbs])+'</a>', 
-                                    #'<a href="'+"supplements/dbds_bg_dbss.html#"+rbs.str_rna()+
-                                    #'" style="text-align:left">'+
-                                    #value2str(self.frequency["hits"]["nde"][rbs])+'</a>' ])
+                p_promoter = value2str(self.pvalue[rbs])
 
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            if self.showdbs:
+                if self.hpvalue[rbs] < alpha:
+                    p_hit = "<font color=\"red\">"+value2str(self.hpvalue[rbs])+"</font>"
+                else:
+                    p_hit = value2str(self.hpvalue[rbs])
+            
+            new_row = [ str(rank),
+                        rbs.str_rna(pa=False), #str(len(dbss)), 
+                        '<a href="'+"dbds_promoters.html#"+rbs.str_rna()+
+                        '" style="text-align:left">'+
+                        value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
+                        value2str(self.frequency["promoters"]["de"][rbs][1]), 
+                        value2str(self.frequency["promoters"]["nde"][rbs][0]), 
+                        value2str(self.frequency["promoters"]["nde"][rbs][1]), 
+                        value2str(self.oddsratio[rbs]), 
+                        p_promoter ]
+            if self.showdbs:
+                new_row += [ value2str(self.frequency["hits"]["de"][rbs][0]),
+                             value2str(self.frequency["hits"]["de"][rbs][1]),
+                             value2str(self.frequency["hits"]["nde"][rbs][0]),
+                             value2str(self.frequency["hits"]["nde"][rbs][1]),
+                             value2str(self.hoddsratio[rbs]),
+                             p_hit ]
+    
+            data_table.append(new_row)
+            
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                             header_titles=header_titles, border_list=border_list, sortable=True)
         
         html.add_heading("Notes")
         html.add_list([ "DBD stands for functional DNA Binding Domain on RNA.",
@@ -982,25 +1040,27 @@ class PromoterTest:
                              auto_width=True)
         
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
+        html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"index.html"))
 
         #############################################################
         # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
         #############################################################
         
-        header_list= ["Target Promoter", "Gene", "No. DBSs", "DBS coverage"] 
+        header_list= ["#", "Target Promoter", "Gene", "No. DBSs", "DBS coverage"] 
 
         # dbds_promoters.html
         html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="../style", RGT_header=False)
+                    fig_rpath="./style", RGT_header=False)
      
         for rbsm in self.frequency["promoters"]["de"].keys():    
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
                              idtag=rbsm.str_rna())
             data_table = []
-            for promoter in self.txp_de.merged_dict[rbsm]:
+            for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
                 # Add information
-                data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                data_table.append([ str(i),
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                     '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
                                     split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
@@ -1008,28 +1068,8 @@ class PromoterTest:
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                      ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-        html.write(os.path.join(directory,"supplements", "dbds_promoters.html"))
-
-        # dbds_background.html
-        if None:
-            html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
-                        fig_rpath="../style", RGT_header=False)
-          
-            for rbsm in self.frequency["promoters"]["nde"].keys():
-                
-                html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
-                                 idtag=rbsm.str_rna())
-                data_table = []
-                for promoter in self.txp_nde.merged_dict[rbsm]:
-                    data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                        "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                        '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
-                                        split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
-                                        str(len(self.promoter["nde"]["rd"][promoter.toString()])),
-                                        value2str(self.promoter["nde"]["dbs_coverage"][promoter.toString()])
-                                         ])
-                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-            html.write(os.path.join(directory,"supplements", "dbds_background.html"))
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "dbds_promoters.html"))
             
 
     def gen_html_genes(self, directory, align=50, alpha = 0.05, nonDE=False):
@@ -1048,40 +1088,35 @@ class PromoterTest:
         # promoters.html
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
-        header_promoter_centered=[ [ " ", " ", "DBSs Count", None, "DBS coverage", None, "Summary", None ],
-                                   [ "Promoter", "Gene", "No.", "#Rank", "coverage", "#Rank", "Sum", "#Rank"] ]
+        header_promoter_centered=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Sum of Ranks" ]
         header_list = header_promoter_centered
-        html.add_heading("Target promoters")
-        data_table = []
-        #counts_p = self.de_regions.counts_per_region(self.txp_de.get_dbs(sort=True, orientation="P"))
-        #counts_a = self.de_regions.counts_per_region(self.txp_de.get_dbs(sort=True, orientation="A"))
         
+        header_titles = [ "", "Target promoters", "Gene symbol", 
+                          "Number of DNA Binding sites locating within the promoter",
+                          "The proportion of promoter covered by binding sites",
+                          "Sum up the ranks from left-hand side columns"]
+        
+        html.add_heading("Target promoters")
+        data_table = [] 
 
         if not self.de_regions.sorted: self.de_regions.sort()
         # Iterate by each gene promoter
-        #nz_promoters = []
-        #for promoter in self.de_regions:
-        #    if len(self.promoter["de"]["dbs"][promoter.toString()]) > 0:
-                #print(len(self.promoter["de"]["dbs"][promoter.toString()]))
-        #        nz_promoters.append(promoter) 
-
+        
         # Calculate the ranking
-        #rank_count = len(nz_promoters)-stats.rankdata([ len(self.promoter["de"]["dbs"][p.toString()]) for p in nz_promoters ], method='max')
-        #rank_coverage = len(nz_promoters)-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in nz_promoters ], method='max')
         rank_count = len(self.de_regions)-stats.rankdata([ len(self.promoter["de"]["dbs"][p.toString()]) for p in self.de_regions ], method='max')+1
         rank_coverage = len(self.de_regions)-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions ], method='max')+1
         rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
-        sum_rank = stats.rankdata(rank_sum, method='min')
 
         for i, promoter in enumerate(self.de_regions):
             if len(self.promoter["de"]["dbs"][promoter.toString()]) == 0:
-                dbssount = str(len(self.promoter["de"]["dbs"][promoter.toString()]))
+                dbssount = str(0)
             else:
-                dbssount = '<a href="supplements/promoters_dbds.html#'+promoter.toString()+'" style="text-align:left">'+str(len(self.promoter["de"]["dbs"][promoter.toString()]))+'</a>'
+                dbssount = '<a href="promoters_dbds.html#'+promoter.toString()+'" style="text-align:left">'+str(len(self.promoter["de"]["dbs"][promoter.toString()]))+'</a>'
             #counts_p[i] == 0 and counts_a[i] == 0:
             #    continue
             #else:
-            data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+            data_table.append([ str(i),
+                                '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                 "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                 '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
                                 split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
@@ -1089,7 +1124,7 @@ class PromoterTest:
                                 "<i>"+str(int(rank_count[i]))+"</i>",
                                 value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()]),
                                 "<i>"+str(int(rank_coverage[i]))+"</i>", str(int(rank_sum[i])), 
-                                "<i>"+str(int(sum_rank[i]))+"</i>"
+                                "<i>"+str(int(rank_sum[i]))+"</i>"
                                 ])
 
 
@@ -1102,7 +1137,7 @@ class PromoterTest:
                       ]
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             colorcode=None)
+                             header_titles=header_titles, border_list=None, sortable=True)
         html.add_heading("Notes")
         html.add_list(["DBS stands for DNA Binding Site on DNA.",
                        "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
@@ -1137,66 +1172,41 @@ class PromoterTest:
                                         rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
                 
-        html.write(os.path.join(directory,"supplements", "promoters_dbds.html"))
+        html.write(os.path.join(directory, "promoters_dbds.html"))
  
-        # background.html
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False)
-        header_list=header_promoter_centered
-        html.add_heading("Non-target promoters")
-        data_table = []
-        #counts_p = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="P"))
-        #counts_a = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="A"))
-        
-        if not self.nde_regions.sorted: self.nde_regions.sort()
-        # Iterate by each gene promoter
-        for i, promoter in enumerate(self.nde_regions):
-            if len(self.promoter["nde"]["dbs"][promoter.toString()]) == 0:
-                continue
-            else:
-                data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
-                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
-                                    '<a href="supplements/background_dbds.html#'+promoter.toString()+
-                                    '" style="text-align:left">'+
-                                    str(len(self.promoter["nde"]["dbs"][promoter.toString()]))+'</a>',
-                                    value2str(self.promoter["nde"]["dbs_coverage"][promoter.toString()])
-                                    ])
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-        html.add_heading("Notes")
-        html.add_list(["All the prmoters without any bindings are ignored.",
-                       "DBS stands for DNA Binding Site on DNA.",
-                       "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
-        
-        html.write(os.path.join(directory,"background.html"))
-
         if None:
-            ############################
-            # background_dbds.html
-            html = Html(name=html_header, links_dict=self.link_ds, fig_dir=os.path.join(directory,"style"), 
-                        fig_rpath="../style", RGT_header=False)
-           
-            header_list=header_sub
+            # background.html
+            html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+                        fig_rpath="./style", RGT_header=False)
+            header_list=header_promoter_centered
+            html.add_heading("Non-target promoters")
+            data_table = []
+            #counts_p = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="P"))
+            #counts_a = self.nde_regions.counts_per_region(self.txp_nde.get_dbs(sort=True, orientation="A"))
+            
+            if not self.nde_regions.sorted: self.nde_regions.sort()
+            # Iterate by each gene promoter
             for i, promoter in enumerate(self.nde_regions):
                 if len(self.promoter["nde"]["dbs"][promoter.toString()]) == 0:
                     continue
-                else: 
-                    html.add_heading(split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism), idtag=promoter.toString())
-                    html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                            "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                            '" style="margin-left:50">'+
-                                            promoter.toString(space=True)+'</a>'])
-                    data_table = []
-                    for rd in self.promoter["nde"]["rd"][promoter.toString()]:
-                        data_table.append([ rd.rna.str_rna(pa=False),
-                                            rd.dna.toString(space=True),
-                                            rd.dna.orientation,
-                                            rd.score, 
-                                            rd.motif, rd.orient])
-                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
-                
-            html.write(os.path.join(directory,"supplements", "background_dbds.html"))
+                else:
+                    data_table.append([ '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                        "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
+                                        '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
+                                        split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                                        '<a href="background_dbds.html#'+promoter.toString()+
+                                        '" style="text-align:left">'+
+                                        str(len(self.promoter["nde"]["dbs"][promoter.toString()]))+'</a>',
+                                        value2str(self.promoter["nde"]["dbs_coverage"][promoter.toString()])
+                                        ])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.add_heading("Notes")
+            html.add_list(["All the prmoters without any bindings are ignored.",
+                           "DBS stands for DNA Binding Site on DNA.",
+                           "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
+            
+            html.write(os.path.join(directory,"background.html"))
+
 
 
 ####################################################################################
@@ -1247,15 +1257,15 @@ class RandomTest:
         
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
-        self.counts_dbsm = OrderedDict()
-        self.mdbs = OrderedDict()
+        #self.counts_dbsm = OrderedDict()
+        #self.mdbs = OrderedDict()
 
         for rbs in self.rbss:
-            self.mdbs[rbs] = txpf.merged_dict[rbs].merge(w_return=True)
+            #self.mdbs[rbs] = txpf.merged_dict[rbs].merge(w_return=True)
             tr = len(self.txp.merged_dict[rbs])
             self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
             self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
-            self.counts_dbsm[rbs] = len(self.mdbs[rbs])
+            #self.counts_dbsm[rbs] = len(self.mdbs[rbs])
             
         self.region_dbd = self.txpf.sort_rbs_by_regions(self.dna_region)
         
@@ -1276,7 +1286,7 @@ class RandomTest:
             dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, obed+".bed"))
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, filter_bed):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, filter_bed, alpha):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats-1, num=41)).tolist()
@@ -1300,49 +1310,82 @@ class RandomTest:
         print("]")
         
         # Processing the result
-        matrix = []
-        self.p_random = []
-        self.mean_random = []
-        self.sig_region = []
-        self.sig_boolean = []
+        self.region_matrix = []
+        self.dbss_matrix = []
+        self.data = {"region": {"ave": [],
+                                "sd": [],
+                                "p": [],
+                                "sig_region": [],
+                                "sig_boolean": [] },
+                     "dbs": {"ave": [],
+                             "sd": [],
+                             "p": [],
+                             "sig_region": [],
+                             "sig_boolean": [] }   }
+
+        region_counts = [ v[0] for v in mp_output ]
+        dbss_counts = [ v[1] for v in mp_output ]
 
         for i, rbs in enumerate(self.rbss):
-            #print(i)
-            counts_rbs = [ v[i] for v in mp_output ]
-            #print(len(counts_rbs))
-            matrix.append(counts_rbs)
-            p = float(len([ h for h in counts_rbs if h > self.counts_dbs[rbs] ]))/repeats
-            self.p_random.append(p)
-            if p < 0.05: 
-                self.sig_region.append(rbs)
-                self.sig_boolean.append(True)
-            else:
-                self.sig_boolean.append(False)
             
-            self.mean_random.append(numpy.mean(counts_rbs))
-        self.counts_random = numpy.array(matrix)
-        self.sd_random = numpy.std(self.counts_random, axis=1)
+            counts_regions = [ v[i] for v in region_counts ]
+            
+            self.data["region"]["ave"].append(numpy.mean(counts_regions))
+            self.data["region"]["sd"].append(numpy.std(counts_regions))
+            num_sig = len([ h for h in counts_regions if h > self.counts_tr[rbs][0] ])
+            p_region = float(num_sig)/repeats
+            self.data["region"]["p"].append(p_region)
 
-    def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, filename):
+
+            counts_dbss = [ v[i] for v in dbss_counts ]
+            
+            self.data["dbs"]["ave"].append(numpy.mean(counts_dbss))
+            self.data["dbs"]["sd"].append(numpy.std(counts_dbss))
+            num_sig = len([ h for h in counts_dbss if h > self.counts_dbs[rbs] ])
+            p_dbs = float(num_sig)/repeats
+            self.data["dbs"]["p"].append(p_dbs)
+
+            self.region_matrix.append(counts_regions)
+            self.dbss_matrix.append(counts_dbss)
+            
+            #self.p_random.append(p)
+            if p_region < alpha: 
+                self.data["region"]["sig_region"].append(rbs)
+                self.data["region"]["sig_boolean"].append(True)
+            else:
+                self.data["region"]["sig_boolean"].append(False)
+
+            if p_dbs < alpha: 
+                self.data["dbs"]["sig_region"].append(rbs)
+                self.data["dbs"]["sig_boolean"].append(True)
+            else:
+                self.data["dbs"]["sig_boolean"].append(False)
+            
+        self.region_matrix = numpy.array(self.region_matrix)
+        self.dbss_matrix = numpy.array(self.dbss_matrix)
+        #self.counts_random = numpy.array(matrix)
+        #self.data["dbs"]["sd"] = numpy.std(self.counts_random, axis=1)
+
+    def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
         
-        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dir=dirp, sig_region=self.sig_region, 
+        lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dir=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa)
 
-    def boxplot(self, dir):
+    def boxplot(self, dir, matrix, sig_region, truecounts, sig_boolean, ylabel, filename):
         """Generate the visualized plot"""
         tick_size = 8
         label_size = 9
 
         f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-        max_y = int(max([self.counts_random.max()] + [r[0] for r in self.counts_tr.values()]) *1.1) + 1
-        min_y = max(int(self.counts_random.min()*0.9) - 1, 0)
+        max_y = int(max([matrix.max()] + truecounts) *1.1) + 1
+        min_y = max(int(matrix.min()*0.9) - 1, 0)
         
         # Significant region
         rect = patches.Rectangle(xy=(1,0), width=0.8, height=max_y, facecolor="powderblue", 
                                  edgecolor="none", alpha=0.5, lw=None, label="Significant region")
-        for i, r in enumerate(self.sig_boolean):
+        for i, r in enumerate(sig_boolean):
             if r:
                 rect = patches.Rectangle(xy=(i+0.6,min_y), width=0.8, height=max_y, facecolor="powderblue", 
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
@@ -1351,7 +1394,7 @@ class RandomTest:
         
         # Plotting
         
-        bp = ax.boxplot(self.counts_random.transpose(), notch=False, sym='o', vert=True, 
+        bp = ax.boxplot(matrix.transpose(), notch=False, sym='o', vert=True, 
                         whis=1.5, positions=None, widths=None, 
                         patch_artist=True, bootstrap=None)
         z = 10
@@ -1362,7 +1405,7 @@ class RandomTest:
         plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
         
         # Plot target regions
-        plt.plot(range(1, len(self.rbss)+1), [r[0] for r in self.counts_tr.values()], markerfacecolor="mediumblue",
+        plt.plot(range(1, len(self.rbss)+1), truecounts, markerfacecolor="mediumblue",
                  marker='o', markersize=5, linestyle='None', markeredgecolor="white", zorder=z+5)
         #for i, r in enumerate(range(1, len(self.rbss)+1)):
         #    forbar = patches.Rectangle(xy=(i+0.9,min_y), width=0.2, height=self.counts_tr.values()[i][0], 
@@ -1372,7 +1415,7 @@ class RandomTest:
 
         
         ax.set_xlabel("Potential DNA Binding Domains", fontsize=label_size)
-        ax.set_ylabel("Number of regions with DBSs",fontsize=label_size, rotation=90)
+        ax.set_ylabel(ylabel,fontsize=label_size, rotation=90)
 
 
         ax.set_ylim( [min_y, max_y] ) 
@@ -1398,14 +1441,14 @@ class RandomTest:
         dot_legend.set_visible(False)
 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        f.savefig(os.path.join(dir, "boxplot.png"), facecolor='w', edgecolor='w',  
+        f.savefig(os.path.join(dir, filename+".png"), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
-        pp = PdfPages(os.path.join(dir,'boxplot.pdf'))
+        pp = PdfPages(os.path.join(dir,filename+'.pdf'))
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
-    def gen_html(self, directory, parameters, align=50, alpha = 0.05):
+    def gen_html(self, directory, parameters, align=50, alpha=0.05):
         """Generate the HTML file"""
 
         html_header = "Triplex Domain Finder: Region Test"
@@ -1421,40 +1464,37 @@ class RandomTest:
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         # Plots
-        html.add_figure("lineplot_region.png", align="left")
-        html.add_figure("lineplot_dbs.png", align="left")
-        html.add_figure("boxplot.png", align="left")
+        html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
+        html.add_figure("lineplot_dbs.png", align="left", width="45%", more_images=["boxplot_dbs.png"])
 
-        header_list = [ [" ", "Target Region", None, "Non-target Region<br>with DBS", None, " "],
-                        ["DBD", "with DBS", "without DBS", "average", "s.d.", "P-value"] ]
+        header_list = [ [" ", "Target Regions", None, "Non-target Regions", None, " ", "Target Regions", "Non-target Regions", None, " "],
+                        ["DBD", "with DBS", "without DBS", "with DBS (average)", "s.d.", "P-value", "NO. DBSs", "NO. DBSs (average)", "s.d.", "P-value"] ]
 
-        type_list = 'sssssssss'
-        col_size_list = [50,50,50,50,50,50,50,50,50]
+        type_list = 'ssssssssssssssss'
+        col_size_list = [50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]
         data_table = []
         
         for i, rbs in enumerate(self.rbss):
-            if self.p_random[i] < alpha:
-                data_table.append([ rbs.str_rna(pa=False),
-                                    '<a href="dbd_region.html#'+rbs.str_rna()+
-                                    '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
-                                    str(self.counts_tr[rbs][1]),
-                                    value2str(self.mean_random[i]), 
-                                    value2str(self.sd_random[i]), 
-                                    "<font color=\"red\">"+value2str(self.p_random[i])+"</font>" ])
-                                    #'<a href="dbd_dbs.html#'+rbs.str_rna()+
-                                    #'" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
-                                    #str(self.counts_dbsm[rbs]) ])
+            if self.data["region"]["p"][i] < alpha:
+                p_region = "<font color=\"red\">"+value2str(self.data["region"]["p"][i])+"</font>"
             else:
-                data_table.append([ rbs.str_rna(pa=False),
-                                    '<a href="dbd_region.html#'+rbs.str_rna()+
-                                    '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
-                                    str(self.counts_tr[rbs][1]),
-                                    value2str(self.mean_random[i]), 
-                                    value2str(self.sd_random[i]), 
-                                    value2str(self.p_random[i]) ])
-                                    #'<a href="dbd_dbs.html#'+rbs.str_rna()+
-                                    #'" style="text-align:left">'+str(self.counts_dbs[rbs])+'</a>', 
-                                    #str(self.counts_dbsm[rbs]) ])
+                p_region = value2str(self.data["region"]["p"][i])
+            if self.data["dbs"]["p"][i] < alpha:
+                p_dbs = "<font color=\"red\">"+value2str(self.data["dbs"]["p"][i])+"</font>"
+            else:
+                p_dbs = value2str(self.data["dbs"]["p"][i])
+
+            data_table.append([ rbs.str_rna(pa=False),
+                                '<a href="dbd_region.html#'+rbs.str_rna()+
+                                '" style="text-align:left">'+str(self.counts_tr[rbs][0])+'</a>',
+                                str(self.counts_tr[rbs][1]),
+                                value2str(self.data["region"]["ave"][i]), 
+                                value2str(self.data["region"]["sd"][i]), 
+                                p_region,
+                                str(self.counts_dbs[rbs]),
+                                value2str(self.data["dbs"]["ave"][i]), 
+                                value2str(self.data["dbs"]["sd"][i]),
+                                p_dbs  ])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True)
@@ -1539,8 +1579,8 @@ class RandomTest:
         html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         
-        header_list = [ [ " ", " ", "DBSs Count", None, "DBS coverage", None, "Sum" ],
-                        [ "Target region", "Associated Gene", "No.", "Rank", "coverage", "Rank", "Rank"] ]
+        header_list = [ [ " ", " ", "DBSs Count", None, "DBS coverage", None, "Summary", None ],
+                        [ "Target region", "Associated Gene", "No.", "#Rank", "coverage", "#Rank", "Sum", "#Rank"] ]
 
         html.add_heading("Target Regions")
         data_table = []
@@ -1559,7 +1599,9 @@ class RandomTest:
         # Calculate the ranking
         rank_count = len(nz_promoters)-stats.rankdata([ len(self.region_dbs[p.toString()]) for p in nz_promoters ], method='max')
         rank_coverage = len(nz_promoters)-stats.rankdata([ self.region_coverage[p.toString()] for p in nz_promoters ], method='max')
-        print(len(nz_promoters))
+        rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+        sum_rank = stats.rankdata(rank_sum, method='min')
+
         for i, region in enumerate(nz_promoters):
             
             
@@ -1576,7 +1618,9 @@ class RandomTest:
                                 '" style="text-align:left">'+str(len(self.region_dbs[region.toString()]))+'</a>',
                                 str(int(rank_count[i]+1)),
                                 value2str(self.region_coverage[region.toString()]),
-                                str(int(rank_coverage[i]+1)), str(int(rank_count[i] + rank_coverage[i]+2)) ])
+                                str(int(rank_coverage[i]+1)), 
+                                str(int(rank_sum[i]+2)),
+                                str(int(sum_rank[i])) ])
                                 #'<a href="region_dbsm.html#'+region.toString()+
                                 #'" style="text-align:left">'+str(len(self.region_dbsm[region.toString()]))+'</a>' ])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
