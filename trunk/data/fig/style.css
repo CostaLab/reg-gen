@@ -572,3 +572,34 @@ body
 	color: #339;
 	background: #cdcdee;
 }
+
+.tablesorter
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 16px;
+	margin: 45px;
+	/*width: 480px;*/
+	text-align: left;
+	border-collapse: collapse;
+}
+.tablesorter th
+{
+	font-size: 17px;
+	font-weight: normal;
+	padding: 8px 8px;
+	color: #039;
+}
+.tablesorter td
+{
+	padding: 8px;
+	color: #669;
+}
+.tablesorter .odd
+{
+	background: #e8edff; 
+}
+.tablesorter tr:hover td
+{
+	background: #d0dafd;
+	color: #339;
+}

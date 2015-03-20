@@ -286,6 +286,8 @@ class ImageData(ConfigurationFile):
         self.tablesorter = os.path.join(self.data_dir,"fig","jquery.tablesorter.min.js")
         self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
         self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
+        #self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
+
 
     def get_rgt_logo(self):
         """
@@ -517,7 +519,8 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False, RGT_header=True):
+    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False, 
+                 RGT_header=True, other_logo=None):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
@@ -538,7 +541,7 @@ class Html:
         # Initialize document
         if fig_dir:
             self.copy_relevent_files(fig_dir)
-            self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header)
+            self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         else:
             self.create_header()
         
@@ -563,36 +566,31 @@ class Html:
             os.mkdir(target_dir)
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
+        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
+        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery_metadata(), dst=os.path.join(target_dir,"jquery.metadata.js"))
+        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
         
         
         
-    def create_header(self, relative_dir=None, RGT_name=True):
+    def create_header(self, relative_dir=None, RGT_name=True, other_logo=None):
         """ 
         Creates default document header.
         
         Return:
         None -- Appends content to the document.
         """
-        
+        self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>') 
+            
         if relative_dir:
-            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
+            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
-            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
+            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
         else:
-            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
+            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
-            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
+            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
         
-        self.document.append('<script type="text/javascript">') 
-        self.document.append('$(document).ready(function()') 
-        self.document.append('    { ') 
-        self.document.append('        $("table").tablesorter(); ') 
-        self.document.append('    } ') 
-        self.document.append('); ') 
-        self.document.append('</script>') 
         
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
@@ -613,7 +611,10 @@ class Html:
         self.document.append("  <tr>")
         
         if relative_dir:
-            self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
+            if other_logo:
+                self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/"+other_logo+"\" width=\"130\" height=\"100\"></td>")
+            else:
+                self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
 
         else:
             self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
@@ -700,7 +701,8 @@ class Html:
         self.document.append(end_str)
 
     def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
-                        cell_align = 'center', auto_width=False, colorcode=None):
+                        cell_align = 'center', auto_width=False, colorcode=None, header_titles=None,
+                        border_list=None, sortable=False):
         """ 
         Creates a zebra table.
 
@@ -717,10 +719,22 @@ class Html:
                       l = tuple containing: ("Name","Link")
         align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
                  or string (interpreted as HTML positional argument). (default 50)
+        cell_align -- Alignment of each cell in the table (default center)
+        auto_width -- Adjust the column width by the content automatically regardless of defined col size
+        colorcode --
+        header_titles -- Given a list corresponding to the header_list, which defines all the explanation in hint windows
+        border_list -- 
         Return:
         None -- Appends table to the document.
         """
         #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
+        
+        if not border_list:
+            border_list = [""] * len(data_table[0])
+        if auto_width: auto= " table-layout: auto"
+        else: auto=""
+
+
         # Starting table
         type_list = type_list.lower()
         if(isinstance(align,int)): self.document.append("<p style=\"margin-left: "+str(align)+"\">")
@@ -729,13 +743,22 @@ class Html:
         
         # Table header
         #self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
-        if auto_width: self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\" table-layout: auto >")
-        else: self.document.append("<table id=\"hor-zebra\" class=\"tablesorter\">")
         
+        if sortable: 
+            sortableclass=" class=\"tablesorter\""
+            tableid="sortable"
+        else:
+            sortableclass=""
+            tableid="hor-zebra"
+
+        self.document.append("<table id=\""+tableid+"\""+sortableclass+auto+">")
+
         if colorcode:
             for line in colorcode:
                 self.document.append(line)
-        
+
+        #############################
+        ##### Header ################
         self.document.append("  <thead>")
         if (isinstance(header_list[0], list)):
         # For headers more than one row
@@ -753,14 +776,28 @@ class Html:
 
                 for i in range(0,len(row_list)):
                     if merge_num[i] > 1:
-                        header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                          "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\" "+">"+
-                                          row_list[i]+"</th>")
+                        if header_titles:
+                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                              "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\" "+
+                                              "title=\""+header_titles[r][i]+"\""+border_list[i+merge_num[i]-1]+auto+" >"+
+                                              row_list[i]+"</th>")
+                        else:
+                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                              "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\""+
+                                              border_list[i+merge_num[i]-1]+auto+">"+row_list[i]+"</th>")
+                        
                     elif merge_num[i] == 0:
                         continue
                     else:
-                        header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                          "\" align=\""+cell_align+"\" >"+ row_list[i]+"</th>")
+                        if header_titles:
+                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                              "\" align=\""+cell_align+"\" "+
+                                              "title=\""+header_titles[r][i]+"\""+border_list[i]+auto+">"+
+                                              row_list[i]+"</th>")
+                        else:
+                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                                              "\" align=\""+cell_align+"\""+border_list[i]+auto+">"+
+                                              row_list[i]+"</th>")
 
                 header_str = "    "+"\n    ".join(header_str)
                 self.document.append(header_str)
@@ -770,30 +807,38 @@ class Html:
             self.document.append("    <tr>")
             header_str = []
             for i in range(0,len(header_list)):
-                header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
-                                  header_list[i]+"</th>")
+                if header_titles:
+                    header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\" "+
+                                      "title=\""+header_titles[i]+"\" >"+header_list[i]+"</th>")
+                else:
+                    header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
+                                      header_list[i]+"</th>")
+                
             header_str = "    "+"\n    ".join(header_str)
             self.document.append(header_str)
             self.document.append("    </tr>")
         self.document.append("  </thead>")
 
-
-        # Table body
+        
+        #############################
+        ##### Table body ############
         self.document.append("  <tbody>")
         for i in range(0,len(data_table)):
 
             # Row type
-            if(i%2==0): self.document.append("    <tr class=\"odd\">")
+            if(i%2==0) and not sortable: self.document.append("    <tr class=\"odd\">")
             else: self.document.append("    <tr>")
 
             # Body data
             for j in range(0,len(data_table[i])):
                 if(type_list[j] == "s"):
-                    self.document.append("      <td align=\""+cell_align+"\">"+data_table[i][j]+"</td>")
+                    self.document.append("      <td align=\""+cell_align+"\" "+border_list[j]+">"+data_table[i][j]+"</td>")
                 elif(type_list[j] == "i"): 
-                    self.document.append("      <td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
+                    self.document.append("      <td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+
+                                         data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
                 elif(type_list[j] == "l"):
-                    self.document.append("      <td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+data_table[i][j][0]+"</a></td>")
+                    self.document.append("      <td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+
+                                         data_table[i][j][0]+"</a></td>")
                 else: pass # TODO ERROR
 
             # Row ending
@@ -802,7 +847,34 @@ class Html:
         # Finishing table
         self.document.append("</tbody></table></p>")
 
-    def add_figure(self, figure_path, notes=None, align = 50, color = "black", face = "Arial", size = 3, bold = False):
+    def add_fixed_rank_sortable(self):
+        """Add jquery for fixing the first column of the sortable table"""
+        scripts = ["<script>",
+                   "// add custom numbering widget",
+                   "$.tablesorter.addWidget({",
+                   "    id: 'numbering',",
+                   "    format: function(table) {",
+                   "        var c = table.config;",
+                   "        $('tr:visible', table.tBodies[0]).each(function(i) {",
+                   "            $(this).find('td').eq(0).text(i + 1);",
+                   "        });",
+                   "    }",
+                   "});",
+                   "",
+                   "$('#sortable').tablesorter({",
+                   "    // prevent first column from being sortable",
+                   "    headers: {",
+                   "        0: { sorter: false }",
+                   "    },",
+                   "    // apply custom widget",
+                   "    widgets: ['numbering']",
+                   "});",
+                   "</script>"]
+        for s in scripts:
+            self.document.append(s)
+
+    def add_figure(self, figure_path, notes=None, align=50, color="black", face="Arial", size=3, 
+                   bold=False, width="800", more_images=None):
         """ 
         Add a figure with notes underneath.
         
@@ -815,11 +887,18 @@ class Html:
         Return:
         None -- Appends the figure to the document.
         """        
-        if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"+'<img src="'+ figure_path +'" width=800></p>'
-        elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"+'<img src="'+ figure_path +'" width=800></p>'
+        if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"
+        elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"
         else: pass # TODO ERROR
+
+        img_str += '<img src="'+ figure_path +'" width='+width+'>'
         
+        if more_images:
+            for im in more_images:
+                img_str += '<img src="'+ im +'" width='+width+'>'
         
+        img_str += '</p>'
+
         self.document.append(img_str)
         if notes:
             if(isinstance(align,int)): 
