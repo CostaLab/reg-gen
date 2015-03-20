@@ -238,7 +238,6 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     # Plotting
     f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
     
-
     # Extract data points
     x = range(rnalen)
     if log:
@@ -768,9 +767,7 @@ class PromoterTest:
         if obed:
             self.de_regions.write_bed(filename=os.path.join(temp,obed+"_target_promoters.bed"))
             self.txp_de.write_bed(filename=os.path.join(temp,obed+"_binding_promoters.bed"), remove_duplicates=True)
-            #self.txp_nde.write_bed(filename=os.path.join(temp,"untargeted_binding_promoters.bed"), remove_duplicates=True)
             self.txp_def.write_bed(filename=os.path.join(temp,obed+"_dbss.bed"), remove_duplicates=True)
-            #self.txp_ndef.write_bed(filename=os.path.join(temp,"dna_binding_sites_untar_pro.bed"), remove_duplicates=True)
 
     def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
@@ -871,15 +868,10 @@ class PromoterTest:
 
         #check_dir(directory)
         html_header = "Triplex Domain Finder: Promoter Test"
-        #fp = os.path.join(dir,outputname,title)
         self.link_d = OrderedDict()
         self.link_d["RNA"] = "index.html"
         self.link_d["Target promoters"] = "promoters.html"
-        #self.link_d["Non-target promoters"] = "background.html"
-        #self.link_ds = OrderedDict()
-        #self.link_ds["RNA"] = "../index.html"
-        #self.link_ds["Target promoters"] = "../promoters.html"
-        #self.link_ds["Non-target promoters"] = "../background.html"
+        
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
@@ -975,7 +967,7 @@ class PromoterTest:
                     p_hit = value2str(self.hpvalue[rbs])
             
             new_row = [ str(rank),
-                        rbs.str_rna(pa=False), #str(len(dbss)), 
+                        rbs.str_rna(pa=False),
                         '<a href="'+"dbds_promoters.html#"+rbs.str_rna()+
                         '" style="text-align:left">'+
                         value2str(self.frequency["promoters"]["de"][rbs][0])+'</a>', 
