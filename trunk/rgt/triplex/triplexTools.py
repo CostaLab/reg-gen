@@ -31,6 +31,9 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.AnnotationSet import AnnotationSet
 #import multiprocessing
 
+target_color = "mediumblue"
+nontarget_color = "darkgrey"
+sig_clolor = "powderblue"
 ####################################################################################
 ####################################################################################
 def print2(summary, string):
@@ -279,13 +282,13 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     
     # Plotting
     for rbs in sig_region:
-        rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor="powderblue", 
+        rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor=sig_color, 
                                  edgecolor="none", alpha=0.5, lw=None, label="Significant region")
         ax.add_patch(rect)
     
     lw = 1.5
     if showpa:
-        ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label="Parallel + Anti-parallel")
+        ax.plot(x, all_y, color=target_color, alpha=1, lw=lw, label="Parallel + Anti-parallel")
         ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
         ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
     else:
@@ -827,7 +830,7 @@ class PromoterTest:
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa)
-
+    
     def promoter_profile(self):
         """count the number of DBD and DBS regarding to each promoter"""
         self.promoter = { "de": {},
@@ -866,6 +869,55 @@ class PromoterTest:
         for promoter in self.nde_regions:
             self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(self.promoter["nde"]["merged_dbs"][promoter.toString()].total_coverage()) / len(promoter)
 
+    def barplot(self, dirp, filename, sig_region):
+        """Generate the barplot to show the difference between target promoters and non-target promoters"""
+        f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
+        ind = range(len(self.rbss))
+        width = 0.35
+        
+        propor_de = [ float(b[0])/len(self.de_regions) for b in self.frequency["promoters"]["de"].values() ]
+        propor_nde = [ float(b[0])/len(self.nde_regions) for b in self.frequency["promoters"]["nde"].values() ]
+        
+        max_y = max([ max(propor_de),max(propor_nde) ]) * 1.2
+        
+        # Plotting
+        for i, rbs in enumerate(self.rbss):
+            if rbs in sig_region:
+                rect = patches.Rectangle(xy=(i,0), width=0.9, height=max_y, facecolor=sig_color, 
+                                         edgecolor="none", alpha=0.5, lw=None, label="Significant region")
+                ax.add_patch(rect)
+        
+        rects_de = ax.bar(ind, propor_de, width, color=target_color, label="Target promoters")
+        rects_nde = ax.bar(ind+width, propor_nde, width, color=nontarget_color, label="Non-target promoters")
+        
+        # Legend
+        handles, labels = ax.get_legend_handles_labels()
+        legend_h = []
+        legend_l = []
+        for uniqlabel in uniq(labels):
+            legend_h.append(handles[labels.index(uniqlabel)])
+            legend_l.append(uniqlabel)
+        ax.legend(legend_h, legend_l, 
+                  bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
+                  prop={'size':9}, ncol=3)
+
+        # XY axis
+        ax.set_ylim( [ 0, max_y] ) 
+        for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        ax.set_xlabel("DNA Binding Domains", fontsize=9)
+    
+        ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
+    
+        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+
+        f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
+                  bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
+        # PDF
+        pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
+        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        pp.close()
+        
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
 
         #check_dir(directory)
@@ -884,7 +936,8 @@ class PromoterTest:
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
         
-        html.add_figure("plot_promoter.png", align="left", width="45%")
+        html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
+        
         if self.showdbs:
             html.add_figure("plot_dbss.png", align="left", width="45%")
         
@@ -1333,11 +1386,11 @@ class RandomTest:
         min_y = max(int(matrix.min()*0.9) - 1, 0)
         
         # Significant region
-        rect = patches.Rectangle(xy=(1,0), width=0.8, height=max_y, facecolor="powderblue", 
+        rect = patches.Rectangle(xy=(1,0), width=0.8, height=max_y, facecolor=sig_color, 
                                  edgecolor="none", alpha=0.5, lw=None, label="Significant region")
         for i, r in enumerate(sig_boolean):
             if r:
-                rect = patches.Rectangle(xy=(i+0.6,min_y), width=0.8, height=max_y, facecolor="powderblue", 
+                rect = patches.Rectangle(xy=(i+0.6,min_y), width=0.8, height=max_y, facecolor=sig_color, 
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
@@ -1348,14 +1401,14 @@ class RandomTest:
                         whis=1.5, positions=None, widths=None, 
                         patch_artist=True, bootstrap=None)
         z = 10
-        plt.setp(bp['boxes'], color='darkgrey', alpha=1, edgecolor="none")
+        plt.setp(bp['boxes'], color=nontarget_color, alpha=1, edgecolor="none")
         plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=1,zorder=z, alpha=1)
         plt.setp(bp['fliers'], markerfacecolor='gray',color='white',alpha=0.3, markersize=1.8,zorder=z)
         plt.setp(bp['caps'],color='white',zorder=-1)
         plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
         
         # Plot target regions
-        plt.plot(range(1, len(self.rbss)+1), truecounts, markerfacecolor="mediumblue",
+        plt.plot(range(1, len(self.rbss)+1), truecounts, markerfacecolor=target_color,
                  marker='o', markersize=5, linestyle='None', markeredgecolor="white", zorder=z+5)
         
         ax.set_xlabel("Potential DNA Binding Domains", fontsize=label_size)
@@ -1374,7 +1427,7 @@ class RandomTest:
         ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
 
         # Legend
-        bp_legend, = plt.plot([1,1], color='darkgrey', linewidth=6, alpha=1)
+        bp_legend, = plt.plot([1,1], color=nontarget_color, linewidth=6, alpha=1)
         dot_legend, = plt.plot([1,1], color='mediumblue', linewidth=6)
 
         ax.legend( [dot_legend, bp_legend, rect], ["Target Regions", "Non-target regions", "Significant DBD"], 
