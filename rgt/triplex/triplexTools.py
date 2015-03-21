@@ -891,12 +891,15 @@ class PromoterTest:
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
                   prop={'size':9}, ncol=3)
 
+        tick_size=8
         # Y axis
         ax.set_ylim( [ 0, max_y ] ) 
         formatter = FuncFormatter(to_percent)
         # Set the formatter
         ax.yaxis.set_major_formatter(formatter)
         ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+        ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
         
         # X axis
         ax.set_xlim( [ 0, len(self.rbss) ] )
@@ -905,16 +908,11 @@ class PromoterTest:
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
         ax.tick_params(axis='x', which='both', bottom='on', top='off', labelbottom='on')
-         
-        
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         ax.set_xlabel("DNA Binding Domains", fontsize=9)
     
-        ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
-    
+        
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
@@ -952,8 +950,8 @@ class PromoterTest:
                               "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, 
                               "Target Promoter", None, "Non-target Promoter", None, "Statistics", None ],
                             [ " ", " ", 
-                              "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>", 
-                              "No. DBSs", "Other DBSs", "No. DBSs", "Other DBSs","OR", "<i>p</i>"] ]
+                              "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>-value", 
+                              "No. DBSs", "Other DBSs", "No. DBSs", "Other DBSs","OR", "<i>p</i>-value"] ]
             header_titles = [ [ "", "", "Statistics on promoter level", None, None, None, None, None, 
                                 "Statistics on DBS level", None, None, None, None, None ],
                               [ "Rank of the talbe",
@@ -1099,8 +1097,10 @@ class PromoterTest:
         # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
         #############################################################
         
-        header_list= ["#", "Target Promoter", "Gene", "No. DBSs", "DBS coverage"] 
-
+        header_list= ["#", "Target Promoter", "Gene", "DBSs counts", "DBS coverage"] 
+        header_title= ["Rank", "The given target promoter", "Gene symbol", 
+                       "Number of DNA Binding Sites binding to the promoter", 
+                       "The proportion of the promoter covered by DBS binding"]
         # dbds_promoters.html
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="./style", RGT_header=False)
@@ -1120,7 +1120,7 @@ class PromoterTest:
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                      ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 sortable=True)
+                                 header_title=header_title, sortable=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
             
