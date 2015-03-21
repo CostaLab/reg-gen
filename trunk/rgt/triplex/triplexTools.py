@@ -875,9 +875,9 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
-        rects_de = ax.bar([i-0.35 for i in ind], propor_de, width, color=target_color, 
+        rects_de = ax.bar([i+0.15 for i in ind], propor_de, width, color=target_color, 
                           edgecolor = "none", label="Target promoters")
-        rects_nde = ax.bar([i for i in ind], propor_nde, width, color=nontarget_color, 
+        rects_nde = ax.bar([i+0.15+width for i in ind], propor_nde, width, color=nontarget_color, 
                            edgecolor = "none", label="Non-target promoters")
         
         # Legend
@@ -902,7 +902,8 @@ class PromoterTest:
         ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
         
         # X axis
-        ax.set_xlim( [ -0.5, len(self.rbss)-0.5 ] )
+        ax.set_xlim( [ 0, len(self.rbss) ] )
+        ax.set_xticks([i + 0.5 for i in range(len(self.rbss))])
         ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=35, 
                             ha="right", fontsize=tick_size)
         for spine in ['top', 'right']:
