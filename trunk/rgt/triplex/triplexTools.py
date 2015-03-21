@@ -654,24 +654,22 @@ class PromoterTest:
             self.nde_gene.genes = nde_ensembl
 
             # Rename promoters
-            print("    Getting target promoters")
+            print("    Getting target promoters", end="")
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
             for promoter in de_prom[0]:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
             self.de_regions = de_prom[0]
             self.de_regions.merge(namedistinct=True)
-                
+            print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
+            
             # nonDE gene regions
-            print("    Getting non-target promoters")
+            print("    Getting non-target promoters", end="")
             nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
             for promoter in nde_prom[0]:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
             self.nde_regions = nde_prom[0]
             self.nde_regions.merge(namedistinct=True)
-
-            gene_list_file = os.path.basename(gene_list_file)
-            print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded from: "+gene_list_file)
-            print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters")
+            print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
 
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
