@@ -628,7 +628,6 @@ class PromoterTest:
             self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
             self.nde_regions.remove_duplicates()
         else:
-
             try:
                 ann = load_dump(path=temp, filename="annotation_"+organism)
             except:
@@ -654,7 +653,7 @@ class PromoterTest:
             self.nde_gene.genes = nde_ensembl
 
             # Rename promoters
-            print("    Getting target promoters", end="")
+            print("    Getting target promoters    ", end="")
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
             for promoter in de_prom[0]:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
@@ -674,34 +673,19 @@ class PromoterTest:
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
         # DE
-        #self.de_regions.write_bed(os.path.join(temp,"targeted_promoters.bed"))
-
-        #os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
-        #          "/home/joseph/Downloads/0122result/hotair_genes_promoters_up.bed"+" -fo "+os.path.join(temp,"de.fa"))
-        #os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
-        #          os.path.join(temp,"targeted_promoters.bed")+" -fo "+os.path.join(temp,"de.fa"))
         get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
                         output=os.path.join(temp, "de.txp"), 
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
-        
         # non-DE
-        #self.nde_regions.write_bed(os.path.join(temp,"untargeted_promoters.bed"))
-        #os.system("bedtools getfasta -fi /data/genome/hg19/hg19.fa -bed "+\
-        #          "/home/joseph/Downloads/0122result/hotair_promoters_bg_up.bed"+" -fo "+os.path.join(temp,"nde.fa"))
-        #os.system("bedtools getfasta -fi /data/genome/"+self.organism+"/"+self.organism+".fa -bed "+\
-        #          os.path.join(temp,"untargeted_promoters.bed")+" -fo "+os.path.join(temp,"nde.fa"))
-        
         get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
                         output=os.path.join(temp, "nde.txp"), 
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
         if remove_temp:
-            #os.remove(os.path.join(temp,"targeted_promoters.bed"))
             os.remove(os.path.join(temp,"de.fa"))
-            #os.remove(os.path.join(temp,"untargeted_promoters.bed"))
             os.remove(os.path.join(temp,"nde.fa"))
         
     def count_frequency(self, temp, remove_temp, cutoff, obedp=False):
@@ -885,8 +869,8 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
-        rects_de = ax.bar(ind, propor_de, width, color=target_color, label="Target promoters")
-        rects_nde = ax.bar([i+width for i in ind], propor_nde, width, color=nontarget_color, label="Non-target promoters")
+        rects_de = ax.bar([i+0.15 for i in ind], propor_de, width, color=target_color, label="Target promoters")
+        rects_nde = ax.bar([i+0.15+width for i in ind], propor_nde, width, color=nontarget_color, label="Non-target promoters")
         
         # Legend
         handles, labels = ax.get_legend_handles_labels()
@@ -900,7 +884,17 @@ class PromoterTest:
                   prop={'size':9}, ncol=3)
 
         # XY axis
-        ax.set_ylim( [ 0, max_y] ) 
+        ax.set_ylim( [ 0, max_y ] ) 
+        ax.set_xlim( [ 0, len(self.rbss) ] )
+        
+        ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=35, 
+                            ha="right", fontsize=tick_size)
+        for spine in ['top', 'right']:
+            ax.spines[spine].set_visible(False)
+        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
+        
+        
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         ax.set_xlabel("DNA Binding Domains", fontsize=9)
@@ -1391,7 +1385,6 @@ class RandomTest:
                 rect = patches.Rectangle(xy=(i+0.6,min_y), width=0.8, height=max_y, facecolor=sig_color, 
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
-        
         
         # Plotting
         
