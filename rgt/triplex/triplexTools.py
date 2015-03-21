@@ -875,9 +875,9 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
-        rects_de = ax.bar([i+0.15 for i in ind], propor_de, width, color=target_color, 
+        rects_de = ax.bar([i-0.35 for i in ind], propor_de, width, color=target_color, 
                           edgecolor = "none", label="Target promoters")
-        rects_nde = ax.bar([i+0.15+width for i in ind], propor_nde, width, color=nontarget_color, 
+        rects_nde = ax.bar([i for i in ind], propor_nde, width, color=nontarget_color, 
                            edgecolor = "none", label="Non-target promoters")
         
         # Legend
@@ -890,7 +890,7 @@ class PromoterTest:
         ax.legend(legend_h, legend_l, 
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
                   prop={'size':9}, ncol=3)
-
+              
         tick_size=8
         # Y axis
         ax.set_ylim( [ 0, max_y ] ) 
@@ -902,12 +902,12 @@ class PromoterTest:
         ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
         
         # X axis
-        ax.set_xlim( [ 0, len(self.rbss) ] )
+        ax.set_xlim( [ -0.5, len(self.rbss)-0.5 ] )
         ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=35, 
                             ha="right", fontsize=tick_size)
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
-        ax.tick_params(axis='x', which='both', bottom='on', top='off', labelbottom='on')
+        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         ax.set_xlabel("DNA Binding Domains", fontsize=9)
     
@@ -941,8 +941,8 @@ class PromoterTest:
         html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
         
         if self.showdbs:
-            html.add_figure("plot_dbss.png", align="left", width="45%")
-        
+            html.add_figure("plot_dbss.png", align="left", width="45%", more_images=["bar_dbss.png"])
+            
         # Table of merged TBS on promoters
         if self.showdbs:
             header_list = [ [ "", "", "Promoters", None, None, None, None, None, "DBSs", None, None, None, None, None ],
