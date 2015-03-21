@@ -33,7 +33,7 @@ from rgt.AnnotationSet import AnnotationSet
 
 target_color = "mediumblue"
 nontarget_color = "darkgrey"
-sig_clolor = "powderblue"
+sig_color = "powderblue"
 ####################################################################################
 ####################################################################################
 def print2(summary, string):
