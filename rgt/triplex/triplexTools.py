@@ -851,7 +851,7 @@ class PromoterTest:
         for promoter in self.nde_regions:
             self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(self.promoter["nde"]["merged_dbs"][promoter.toString()].total_coverage()) / len(promoter)
 
-    def barplot(self, dirp, filename, sig_region):
+    def barplot(self, dirp, filename, sig_region, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
         def to_percent(y, position):
             # Ignore the passed in position. This has the effect of scaling the default
@@ -863,9 +863,13 @@ class PromoterTest:
         ind = range(len(self.rbss))
         width = 0.35
         
-        propor_de = [ float(b[0])/len(self.de_regions) for b in self.frequency["promoters"]["de"].values() ]
-        propor_nde = [ float(b[0])/len(self.nde_regions) for b in self.frequency["promoters"]["nde"].values() ]
-        
+        if not dbs:
+            propor_de = [ float(b[0])/len(self.de_regions) for b in self.frequency["promoters"]["de"].values() ]
+            propor_nde = [ float(b[0])/len(self.nde_regions) for b in self.frequency["promoters"]["nde"].values() ]
+        else:
+            propor_de = [ float(b[0])/(b[0]+b[1])) for b in self.frequency["hits"]["de"].values() ]
+            propor_nde = [ float(b[0])/(b[0]+b[1])) for b in self.frequency["hits"]["nde"].values() ]
+            
         max_y = max([ max(propor_de),max(propor_nde) ]) * 1.2
         
         # Plotting
@@ -903,12 +907,13 @@ class PromoterTest:
         
         # X axis
         ax.set_xlim( [ 0, len(self.rbss) ] )
+        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
         ax.set_xticks([i + 0.5 for i in range(len(self.rbss))])
         ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=35, 
                             ha="right", fontsize=tick_size)
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
+        
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         ax.set_xlabel("DNA Binding Domains", fontsize=9)
     
