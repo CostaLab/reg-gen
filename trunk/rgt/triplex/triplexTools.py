@@ -1120,7 +1120,7 @@ class PromoterTest:
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                      ])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_title=header_title, sortable=True)
+                                 header_titles=header_title, sortable=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
             
