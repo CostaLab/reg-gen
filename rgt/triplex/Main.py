@@ -427,7 +427,7 @@ def main():
                                 sig_region=promoter.sig_region_dbs,
                                 ylabel="Number of DBSs on target promoters", 
                                 linelabel="No. DBSs", filename="plot_dbss.png")
-            promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs)
+            promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
             
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
