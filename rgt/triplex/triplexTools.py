@@ -752,9 +752,9 @@ class PromoterTest:
             os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
-            self.de_regions.write_bed(filename=os.path.join(temp,obed+"_target_promoters.bed"))
-            self.txp_de.write_bed(filename=os.path.join(temp,obed+"_binding_promoters.bed"), remove_duplicates=True)
-            self.txp_def.write_bed(filename=os.path.join(temp,obed+"_dbss.bed"), remove_duplicates=True)
+            self.de_regions.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
+            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_binding_promoters.bed"), remove_duplicates=True)
+            self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), remove_duplicates=True)
 
     def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
