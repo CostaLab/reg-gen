@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MaxNLocator, FuncFormatter
 from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
 import pysam
@@ -853,6 +853,12 @@ class PromoterTest:
 
     def barplot(self, dirp, filename, sig_region):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
+        def to_percent(y, position):
+            # Ignore the passed in position. This has the effect of scaling the default
+            # tick locations.
+            s = str(100 * y)
+            return s + '%'
+                
         f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
         ind = range(len(self.rbss))
         width = 0.35
@@ -869,8 +875,10 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
-        rects_de = ax.bar([i+0.15 for i in ind], propor_de, width, color=target_color, label="Target promoters")
-        rects_nde = ax.bar([i+0.15+width for i in ind], propor_nde, width, color=nontarget_color, label="Non-target promoters")
+        rects_de = ax.bar([i+0.15 for i in ind], propor_de, width, color=target_color, 
+                          edgecolor = "none", label="Target promoters")
+        rects_nde = ax.bar([i+0.15+width for i in ind], propor_nde, width, color=nontarget_color, 
+                           edgecolor = "none", label="Non-target promoters")
         
         # Legend
         handles, labels = ax.get_legend_handles_labels()
@@ -883,17 +891,21 @@ class PromoterTest:
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
                   prop={'size':9}, ncol=3)
 
-        # XY axis
+        # Y axis
         ax.set_ylim( [ 0, max_y ] ) 
-        ax.set_xlim( [ 0, len(self.rbss) ] )
+        formatter = FuncFormatter(to_percent)
+        # Set the formatter
+        ax.yaxis.set_major_formatter(formatter)
+        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
         
+        # X axis
+        ax.set_xlim( [ 0, len(self.rbss) ] )
         ax.set_xticklabels( [dbd.str_rna(pa=False) for dbd in self.rbss], rotation=35, 
                             ha="right", fontsize=tick_size)
         for spine in ['top', 'right']:
             ax.spines[spine].set_visible(False)
-        ax.tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
-        ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
-        
+        ax.tick_params(axis='x', which='both', bottom='on', top='off', labelbottom='on')
+         
         
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
