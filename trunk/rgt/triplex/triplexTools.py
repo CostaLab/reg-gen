@@ -875,7 +875,7 @@ class PromoterTest:
         # Plotting
         for i, rbs in enumerate(self.rbss):
             if rbs in sig_region:
-                rect = patches.Rectangle(xy=(i,0), width=0.9, height=max_y, facecolor=sig_color, 
+                rect = patches.Rectangle(xy=(i+0.05 ,0), width=0.9, height=max_y, facecolor=sig_color, 
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant region")
                 ax.add_patch(rect)
         
@@ -1213,13 +1213,13 @@ class PromoterTest:
                                         promoter.toString(space=True)+'</a>'])
                 data_table = []
                 
-                for rd in self.promoter["de"]["rd"][promoter.toString()]:
-                    data_table.append([ rd.rna.str_rna(pa=False),
+                for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
+                    data_table.append([ str(j+1),
+                                        rd.rna.str_rna(pa=False),
                                         rd.dna.toString(space=True),
                                         rd.dna.orientation,
                                         rd.score, 
                                         rd.motif, rd.orient])
-                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      header_titles=header_titles, sortable=True)
         html.add_fixed_rank_sortable()

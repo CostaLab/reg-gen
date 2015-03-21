@@ -861,7 +861,7 @@ class Html:
                    "    }",
                    "});",
                    "",
-                   "$('table').tablesorter({",
+                   "$('.tablesorter').tablesorter({",
                    "    // prevent first column from being sortable",
                    "    headers: {",
                    "        0: { sorter: false }",
