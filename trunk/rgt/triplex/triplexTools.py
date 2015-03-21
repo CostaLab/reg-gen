@@ -867,8 +867,8 @@ class PromoterTest:
             propor_de = [ float(b[0])/len(self.de_regions) for b in self.frequency["promoters"]["de"].values() ]
             propor_nde = [ float(b[0])/len(self.nde_regions) for b in self.frequency["promoters"]["nde"].values() ]
         else:
-            propor_de = [ float(b[0])/(b[0]+b[1])) for b in self.frequency["hits"]["de"].values() ]
-            propor_nde = [ float(b[0])/(b[0]+b[1])) for b in self.frequency["hits"]["nde"].values() ]
+            propor_de = [ float(b[0])/(b[0]+b[1]) for b in self.frequency["hits"]["de"].values() ]
+            propor_nde = [ float(b[0])/(b[0]+b[1]) for b in self.frequency["hits"]["nde"].values() ]
             
         max_y = max([ max(propor_de),max(propor_nde) ]) * 1.2
         
