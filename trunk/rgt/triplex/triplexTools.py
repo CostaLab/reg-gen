@@ -886,7 +886,7 @@ class PromoterTest:
                 ax.add_patch(rect)
         
         rects_de = ax.bar(ind, propor_de, width, color=target_color, label="Target promoters")
-        rects_nde = ax.bar(ind+width, propor_nde, width, color=nontarget_color, label="Non-target promoters")
+        rects_nde = ax.bar([i+width for i in ind], propor_nde, width, color=nontarget_color, label="Non-target promoters")
         
         # Legend
         handles, labels = ax.get_legend_handles_labels()
