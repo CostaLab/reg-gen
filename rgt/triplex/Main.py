@@ -420,6 +420,7 @@ def main():
                             sig_region=promoter.sig_region_promoter,
                             ylabel="Number of target promoters with DBSs", 
                             linelabel="No. promoters", filename="plot_promoter.png")
+        barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_region_promoter)
         if args.showdbs:
             promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
                                 cut_off=args.accf, log=args.log, showpa=args.showpa,
