@@ -286,7 +286,7 @@ class ImageData(ConfigurationFile):
         self.tablesorter = os.path.join(self.data_dir,"fig","jquery.tablesorter.min.js")
         self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
         self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
-        #self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
+        self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
 
 
     def get_rgt_logo(self):
@@ -330,6 +330,12 @@ class ImageData(ConfigurationFile):
         Returns the default sorttable code location.
         """
         return self.jquery_metadata
+        
+    def get_tdf_logo(self):
+        """
+        Returns the default TDF logo.
+        """
+        return self.tdf_logo
     
 class OverlapType:
     """
@@ -537,6 +543,7 @@ class Html:
         self.cluster_path_fix = cluster_path_fix
         self.document = []
         self.image_data = ImageData()
+        self.other_logo = other_logo
         
         # Initialize document
         if fig_dir:
@@ -570,6 +577,9 @@ class Html:
         shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
         #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery_metadata(), dst=os.path.join(target_dir,"jquery.metadata.js"))
         #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
+        if self.other_logo:
+            shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
+            
         
         
         

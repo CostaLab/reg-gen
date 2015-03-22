@@ -99,8 +99,8 @@ tools_dictionary = {
   ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
   []
 ),
-"triplex": (
-  "rgt-triplex",
+"TDF": (
+  "rgt-TDF",
   "rgt.triplex.Main:main",
   ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
   []
