@@ -151,6 +151,7 @@ def main():
     parser_randomtest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
     parser_randomtest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file.')
     
+    parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_randomtest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for DBS counts (Default: 20)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
@@ -452,7 +453,7 @@ def main():
         
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
-                                organism=args.organism, genome_path=args.genome_path)
+                                organism=args.organism, genome_path=args.genome_path, showdbs=args.showdbs)
         if args.obed: obed = os.path.basename(args.o)
         else: obed=False
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
@@ -473,24 +474,25 @@ def main():
                             log=args.log, ylabel="Number of target regions with DBS", 
                             sig_region=randomtest.data["region"]["sig_region"],
                             linelabel="No. target regions", filename="lineplot_region.png")
-        randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
-                            log=args.log, ylabel="Number of DBS on target regions",
-                            sig_region=randomtest.data["dbs"]["sig_region"], 
-                            linelabel="No. DBS", filename="lineplot_dbs.png")
-
+        
         randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix, 
                            sig_region=randomtest.data["region"]["sig_region"], 
                            truecounts=[r[0] for r in randomtest.counts_tr.values()],
                            sig_boolean=randomtest.data["region"]["sig_boolean"], 
                            ylabel="Number of target regions with DBS",
                            filename="boxplot_regions" )
-        
-        randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
-                           sig_region=randomtest.data["dbs"]["sig_region"], 
-                           truecounts=randomtest.counts_dbs.values(),
-                           sig_boolean=randomtest.data["dbs"]["sig_boolean"], 
-                           ylabel="Number of DBS on target regions",
-                           filename="boxplot_dbs" )
+        if args.showdbs:
+            randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+                                log=args.log, ylabel="Number of DBS on target regions",
+                                sig_region=randomtest.data["dbs"]["sig_region"], 
+                                linelabel="No. DBS", filename="lineplot_dbs.png")
+            
+            randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
+                               sig_region=randomtest.data["dbs"]["sig_region"], 
+                               truecounts=randomtest.counts_dbs.values(),
+                               sig_boolean=randomtest.data["dbs"]["sig_boolean"], 
+                               ylabel="Number of DBS on target regions",
+                               filename="boxplot_dbs" )
 
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a)
         t3 = time.time()
