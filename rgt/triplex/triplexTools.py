@@ -1604,7 +1604,7 @@ class RandomTest:
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
                              idtag=rbsm.str_rna())
             data_table = []
-            for i, region in enumerate(elf.txp.merged_dict[rbsm]):
+            for i, region in enumerate(self.txp.merged_dict[rbsm]):
                 # Add information
                 data_table.append([ str(i+1),
                                     '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
