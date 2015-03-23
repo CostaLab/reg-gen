@@ -222,6 +222,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
+    print('percentile', per, file=sys.stderr)
     
     tmp = []
     res = tmp_pvalues > per
@@ -229,13 +230,14 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
         if res[j]:
             tmp.append(tmp_peaks[j])
     tmp_peaks = tmp
-    
+
     #merge consecutive peaks and compute p-value
     pvalues, peaks = _merge_consecutive_bins(tmp_peaks, distr)
+    print(len(tmp_peaks))
     #postprocessing, returns GenomicRegionSet with merged regions
     regions = merge_delete(exts, merge, peaks, pvalues) 
     #regions = merge_delete([0], False, peaks, pvalues) 
-    
+    print(len(regions))
     output = []
     pvalues = []
     main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
@@ -250,7 +252,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
     
     pcutoff = -log10(pcutoff)
     pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
-    
+
     output = np.array(output)
     output = output[pv_pass]
     pvalues = list(np.array(pvalues)[pv_pass])
@@ -379,6 +381,8 @@ def input(laptop):
         options.merge=True
         options.stepsize=50
         options.binsize=100
+        options.save_wig = False
+        options.par = 70
         options.factors_inputs = None
         options.verbose = True
         options.no_gc_content = False
