@@ -30,7 +30,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
     #alpha = max(3, alpha[0,0])
-    alpha = alpha[0,0]
+    alpha = alpha[0,0] / 10000.
     tracker.write(text=str(mu) + " " + str(alpha), header="Neg. Bin. distribution for p-value estimates (mu, alpha)")
     nb = NegBin(mu, alpha)
     return {'distr_name': 'nb', 'distr': nb}
