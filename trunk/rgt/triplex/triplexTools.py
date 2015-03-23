@@ -1466,7 +1466,7 @@ class RandomTest:
         # index.html
 
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False)
+                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
         # Plots
         html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
         if self.showdbs:
@@ -1474,12 +1474,13 @@ class RandomTest:
 
         if self.showdbs:
             header_list = [ ["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", 
-                             "Target Regions", "Non-target Regions", None, "Statistics"],
+                             "Target Regions", "Non-target Regions", None, "Statistics", None],
                             ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value", 
-                             "NO. DBSs", "NO. DBSs (average)", "s.d.", "<i>p</i>-value"] ]
+                             "NO. DBSs", "NO. DBSs (average)", "s.d.", "z-score", "<i>p</i>-value"] ]
             header_titles = [ ["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
                                "Regions from randomization", None, "Statistics based on target regions",
-                               "Given target regions on DNA","Regions from randomization", None, "Statistics based on DNA Binding Sites"],
+                               "Given target regions on DNA","Regions from randomization", None, 
+                               "Statistics based on DNA Binding Sites", None],
                                ["", "", 
                                 "Number of target regions with DBS binding",
                                 "Number of target regions without DBS binding",
@@ -1487,14 +1488,14 @@ class RandomTest:
                                 "Standard deviation", "P value",
                                 "Number of related DNA Binding Sites binding to target regions",
                                 "Average number of DNA Binding Sites binding to random regions",
-                                "Standard deviation", "P-value"]]
+                                "Standard deviation", "Traget DBS counts subtracts the average counts of randomization and then divided by s.d.", "P-value"]]
             border_list = [ " style=\"border-right:1pt solid gray\"",
                             " style=\"border-right:1pt solid gray\"", "",
                             " style=\"border-right:1pt solid gray\"", "",
                             " style=\"border-right:1pt solid gray\"",
                             " style=\"border-right:2pt solid gray\"",
                             " style=\"border-right:1pt solid gray\"", "",
-                            " style=\"border-right:1pt solid gray\"",
+                            " style=\"border-right:1pt solid gray\"", "",
                             " style=\"border-right:1pt solid gray\"" ]
         else:
             header_list = [ ["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics" ],
@@ -1535,9 +1536,11 @@ class RandomTest:
                         value2str(self.data["region"]["sd"][i]), 
                         p_region ]
             if self.showdbs:
+                zscore = float(self.counts_dbs[rbs] - self.data["dbs"]["ave"][i])/self.data["dbs"]["sd"][i]
                 new_line += [str(self.counts_dbs[rbs]),
                              value2str(self.data["dbs"]["ave"][i]), 
                              value2str(self.data["dbs"]["sd"][i]),
+                             value2str(zscore),
                              p_dbs]
             data_table.append(new_line)
 
@@ -1598,7 +1601,7 @@ class RandomTest:
         #########################################################
         # dbd_region.html
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False)
+                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
      
         for rbsm in self.rbss:    
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
@@ -1628,7 +1631,7 @@ class RandomTest:
         ##############################################################################################
         # target_regions.html
         html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False)
+                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
         
         header_list = [ "#", "Target region", "Associated Gene", "DBSs Count", 
                         "DBS coverage", "Sum of ranks" ]
@@ -1682,7 +1685,7 @@ class RandomTest:
         header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation" ]
 
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False)
+                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
         
         for i, region in enumerate(self.dna_region):
             if len(self.region_dbs[region.toString()]) == 0:

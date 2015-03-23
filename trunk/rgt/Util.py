@@ -578,7 +578,8 @@ class Html:
         #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery_metadata(), dst=os.path.join(target_dir,"jquery.metadata.js"))
         #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
         if self.other_logo:
-            shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
+            if self.other_logo == "TDF":
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(), dst=os.path.join(target_dir,"tdf_logo.png"))
             
         
         
@@ -616,23 +617,25 @@ class Html:
         self.document.append("-->")
         self.document.append("</style></head>")
         self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")        
-        self.document.append("<h3 style=\"background-color:white; border-top:5px solid black; border-bottom: 5px solid black;\">")
+        self.document.append("<h3 style=\"background-color:#0080FF; background: linear-gradient(to bottom right, #648880, #084B8A);\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
+        self.document.append("     <td width=\"8%\"></td>")
+
+        if RGT_name:
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+        else:
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">"+self.name+"</font></td>")
         
         if relative_dir:
-            if other_logo:
-                self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/"+other_logo+"\" width=\"130\" height=\"100\"></td>")
+            if other_logo=="TDF":
+                self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\"></td>")
             else:
-                self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
+                self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
 
         else:
-            self.document.append("    <td width=\"8%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+            self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
         
-        if RGT_name:
-            self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
-        else:
-            self.document.append("    <td width=\"92%\"><p align=\"left\"><font color=\"black\" size=\"6\">"+self.name+"</font></td>")
         self.document.append("  </tr>")
         self.document.append("</table>")
         self.document.append("</h3>")
@@ -665,7 +668,7 @@ class Html:
         self.document.append("<p align=\"center\"><font face=\"Arial\" color=\"#000000\" size=\"2\">")
         self.document.append("For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
         self.document.append("</font></p>")
-        self.document.append("<h3 style=\"background-color:white; border-top:10px solid black;\"></h3>")
+        self.document.append("<h3 style=\"background-color:white; border-top:5px solid gray;\"></h3>")
         self.document.append("</body>")
         self.document.append("</html>")
 
