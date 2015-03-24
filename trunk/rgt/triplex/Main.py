@@ -50,17 +50,22 @@ def check_dir(path):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    link_d = {dirname:os.path.join(path,"index.html")}
+    link_d = {}
+    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+        roots = root.split('/')
+        for filename in fnmatch.filter(filenames, 'index.html'):
+            if roots[-2] == os.path.basename(os.path.dirname(path)):
+                link_d[roots[-1]] = os.path.join("../"+roots[-1], 'index.html')
     
     html = Html(name="Triplex Domain Finder", links_dict=link_d, 
-                fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False)
+                fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
     header_list = ["Experiments"]
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
     type_list = 's'
     col_size_list = [10]
     for root, dirnames, filenames in os.walk(path):
-        roots = root.split('/')
+        #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
                 data_table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
@@ -118,6 +123,7 @@ def main():
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (Default: 1000)")
     
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
+    parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list of BED file for analysis.")
     parser_promotertest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_promotertest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for promoter counts (Default: 20)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
@@ -382,6 +388,10 @@ def main():
     ##### Promoter Test ############################################################
     ################################################################################
     if args.mode == 'promotertest':
+        if args.bed and not args.bg:
+            print("Please add background promoters in BED format. (-bg)")
+            sys.exit(1)
+
         print2(summary, "\n"+"*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: "+args.r)
         print2(summary, "*** Output directory: "+os.path.basename(args.o))
@@ -396,7 +406,7 @@ def main():
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
                                 promoterLength=args.pl, summary=summary, genome_path=args.genome_path, temp=dir,
-                                showdbs=args.showdbs)
+                                showdbs=args.showdbs, score=args.score)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
         t1 = time.time()

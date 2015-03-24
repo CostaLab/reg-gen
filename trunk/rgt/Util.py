@@ -668,7 +668,7 @@ class Html:
         self.document.append("<p align=\"center\"><font face=\"Arial\" color=\"#000000\" size=\"2\">")
         self.document.append("For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
         self.document.append("</font></p>")
-        self.document.append("<h3 style=\"background-color:white; border-top:5px solid gray;\"></h3>")
+        self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray;\"></h3>")
         self.document.append("</body>")
         self.document.append("</html>")
 
