@@ -620,13 +620,7 @@ class Html:
         self.document.append("<h3 style=\"background-color:#0080FF; background: linear-gradient(to bottom right, #648880, #084B8A);\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
-        self.document.append("     <td width=\"8%\"></td>")
-
-        if RGT_name:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
-        else:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">"+self.name+"</font></td>")
-        
+        # Logo
         if relative_dir:
             if other_logo=="TDF":
                 self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\"></td>")
@@ -635,6 +629,14 @@ class Html:
 
         else:
             self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+        # Gap
+        self.document.append("     <td width=\"8%\"></td>")
+        # Title
+        if RGT_name:
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+        else:
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">"+self.name+"</font></td>")
+        
         
         self.document.append("  </tr>")
         self.document.append("</table>")

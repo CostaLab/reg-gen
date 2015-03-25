@@ -484,7 +484,6 @@ class AnnotationSet:
         if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
         
-
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet

@@ -57,7 +57,7 @@ def list_all_index(path):
             if roots[-2] == os.path.basename(os.path.dirname(path)):
                 link_d[roots[-1]] = os.path.join("../"+roots[-1], 'index.html')
     
-    html = Html(name="Triplex Domain Finder", links_dict=link_d, 
+    html = Html(name="Results in "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
     header_list = ["Experiments"]
     html.add_heading("All experiments in: "+dirname+"/")
@@ -70,7 +70,7 @@ def list_all_index(path):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
                 data_table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
-    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left")
+    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.write(os.path.join(path,"index.html"))
 
 def main():
@@ -124,6 +124,7 @@ def main():
     
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list of BED file for analysis.")
+    parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_promotertest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for promoter counts (Default: 20)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
@@ -391,6 +392,10 @@ def main():
         if args.bed and not args.bg:
             print("Please add background promoters in BED format. (-bg)")
             sys.exit(1)
+        if args.scoreh and not args.score:
+            print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
+            print("Please add '-score'.")
+            sys.exit(1)
 
         print2(summary, "\n"+"*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: "+args.r)
@@ -406,7 +411,7 @@ def main():
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
                                 promoterLength=args.pl, summary=summary, genome_path=args.genome_path, temp=dir,
-                                showdbs=args.showdbs, score=args.score)
+                                showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
         t1 = time.time()
