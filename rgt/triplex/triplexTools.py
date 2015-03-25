@@ -54,13 +54,13 @@ def value2str(value):
     if value == 0: return "0"
     if(isinstance(value,int)): return str(value)
     elif(isinstance(value,float)):
-        if value >= 1000: 
+        if abs(value) >= 1000: 
             try: r = "{}".format(int(value))
             except: r = "Inf"
-        elif 1000 > value > 10: r = "{:.1f}".format(value)
-        elif 10 > value >= 1: r = "{:.2f}".format(value)
-        elif 1 > value >= 0.05: r = "{:.2f}".format(value)
-        elif 0.05 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 1000 > abs(value) > 10: r = "{:.1f}".format(value)
+        elif 10 > abs(value) >= 1: r = "{:.2f}".format(value)
+        elif 1 > abs(value) >= 0.05: r = "{:.2f}".format(value)
+        elif 0.05 > abs(value) > 0.0001: r = "{:.4f}".format(value)
         else: r = "{:.1e}".format(value)
         return r
 
@@ -610,13 +610,14 @@ class TriplexSearch:
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, bed, bg, organism, promoterLength, genome_path, rna_name, 
-                 summary, temp, showdbs=None, score=False):
+                 summary, temp, showdbs=None, score=False, scoreh=False):
         """Initiation"""
         self.organism = organism
         self.rna_name = rna_name
         self.genome_path = genome_path
         self.showdbs = showdbs
         self.scores = None
+        self.scoreh = scoreh
 
         # Input BED files
         if bed and bg:
@@ -646,12 +647,9 @@ class PromoterTest:
 
             # DE gene regions
             self.de_gene = GeneSet("de genes")
+            self.de_gene.read(gene_list_file)
             if score:
-                self.de_gene.read(gene_list_file)
-            else:
-                self.de_gene.read(gene_list_file, extra_column=True)
-
-            #if score: self.de_gene.read_expression(gene_list_file)
+                self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh)
             
             # When there is no genes in the list
             if len(self.de_gene) == 0:
@@ -660,6 +658,8 @@ class PromoterTest:
                 sys.exit(1)
             
             de_ensembl, unmap_gs = ann.fix_gene_names(gene_set=self.de_gene)
+
+            # NonDE gene regions
             nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
             
             self.de_gene.genes = de_ensembl
@@ -669,7 +669,7 @@ class PromoterTest:
             
             # Get promoters from de genes
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
-            self.de_regions.merge(namedistinct=True)
+            de_prom[0].merge(namedistinct=True)
             for promoter in de_prom[0]:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)   
             self.de_regions = de_prom[0]
@@ -678,7 +678,7 @@ class PromoterTest:
             
             # Get promoters from nonDE gene
             nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
-            self.nde_regions.merge(namedistinct=True)
+            nde_prom[0].merge(namedistinct=True)
             for promoter in nde_prom[0]:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
             self.nde_regions = nde_prom[0]
@@ -687,15 +687,17 @@ class PromoterTest:
             
             # Loading score
             if score:
-                self.de_gene.extra_column = [float(v) for v in self.de_gene.extra_column]
-
                 self.scores = []
-                for promoter in self.de_regions:
+                for promoter in self.de_regions:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                     try: 
-                        self.scores.append(self.de_gene.extra_column[self.de_gene.genes.index(promoter.name)])
-                    except: 
+                        #print(abs(self.de_gene.values[promoter.name.upper()]))
+                        self.scores.append(abs(self.de_gene.values[promoter.name.upper()]))
+                        #self.scores.append(abs(float(self.de_gene.extra_column[promoter.name])))
+                    except:
+                        print("Warning: "+promoter.name+"\tcannot be mapped to get its score.")
                         self.scores.append(0)
-            
+                    
+
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
         # DE
@@ -822,7 +824,6 @@ class PromoterTest:
                 if pvals_corrected[i] < alpha:
                     self.sig_region_dbs.append(rbs)
             
-
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
@@ -899,6 +900,8 @@ class PromoterTest:
         max_y = max([ max(propor_de),max(propor_nde) ]) * 1.2
         
         # Plotting
+        rect = patches.Rectangle(xy=(1,0), width=0.8, height=max_y, facecolor=sig_color, 
+                                 edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
         for i, rbs in enumerate(self.rbss):
             if rbs in sig_region:
                 rect = patches.Rectangle(xy=(i+0.05 ,0), width=0.9, height=max_y, facecolor=sig_color, 
@@ -911,16 +914,15 @@ class PromoterTest:
                            edgecolor = "none", label="Non-target promoters")
         
         # Legend
-        handles, labels = ax.get_legend_handles_labels()
-        legend_h = []
-        legend_l = []
-        for uniqlabel in uniq(labels):
-            legend_h.append(handles[labels.index(uniqlabel)])
-            legend_l.append(uniqlabel)
-        ax.legend(legend_h, legend_l, 
+        tr_legend, = plt.plot([1,1], color=target_color, linewidth=6, alpha=1)
+        ntr_legend, = plt.plot([1,1], color=nontarget_color, linewidth=6, alpha=1)
+        ax.legend( [tr_legend, ntr_legend, rect], ["Target promoters", "Non-target promoters", "Significant DBD"], 
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
                   prop={'size':9}, ncol=3)
-              
+        tr_legend.set_visible(False)
+        ntr_legend.set_visible(False)
+
+
         tick_size=8
         # Y axis
         ax.set_ylim( [ 0, max_y ] ) 
@@ -941,7 +943,7 @@ class PromoterTest:
             ax.spines[spine].set_visible(False)
         
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        ax.set_xlabel("DNA Binding Domains", fontsize=9)
+        ax.set_xlabel(self.rna_name+" DNA Binding Domains", fontsize=9)
     
         
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
@@ -955,7 +957,7 @@ class PromoterTest:
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
 
         #check_dir(directory)
-        html_header = "Triplex Domain Finder: Promoter Test"
+        html_header = "Promoter Test"
         self.link_d = OrderedDict()
         self.link_d["RNA"] = "index.html"
         self.link_d["Target promoters"] = "promoters.html"
@@ -1156,10 +1158,9 @@ class PromoterTest:
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
             
-
     def gen_html_genes(self, directory, align=50, alpha = 0.05, nonDE=False):
 
-        html_header = "Triplex Domain Finder: Promoter Test"
+        html_header = "Promoter Test"
         #fp = os.path.join(dir,outputname,title)
         
         type_list = 'sssssssss'
@@ -1175,12 +1176,18 @@ class PromoterTest:
                     fig_rpath="./style", RGT_header=False, other_logo="TDF")
 
         if self.scores:
-            header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Loaded score", "Sum of Ranks" ]
+            if self.scoreh and self.de_gene:
+                score_header = self.de_gene.cond[0]
+            elif self.scoreh and not self.de_gene:
+                pass
+            else:
+                score_header = "Loaded score"
+            header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", score_header, "Sum of Ranks" ]
         
             header_titles = [ "", "Target promoters", "Gene symbol", 
                               "Number of DNA Binding sites locating within the promoter",
                               "The proportion of promoter covered by binding sites",
-                              "Scores loaded from gene list or BED input",
+                              "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead.",
                               "Sum up the ranks from left-hand side columns"]
 
         else:
@@ -1221,7 +1228,8 @@ class PromoterTest:
                         dbssount,
                         value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                         ]
-            if self.scores: newline += [self.scores[i]]
+
+            if self.scores: newline += [value2str(self.scores[i])]
 
             newline += ["<i>"+str(int(rank_sum[i]))+"</i>"]
 
@@ -1467,7 +1475,7 @@ class RandomTest:
         plt.plot(range(1, len(self.rbss)+1), truecounts, markerfacecolor=target_color,
                  marker='o', markersize=5, linestyle='None', markeredgecolor="white", zorder=z+5)
         
-        ax.set_xlabel("Potential DNA Binding Domains", fontsize=label_size)
+        ax.set_xlabel(self.rna_name+" DNA Binding Domains", fontsize=label_size)
         ax.set_ylabel(ylabel,fontsize=label_size, rotation=90)
 
         ax.set_ylim( [min_y, max_y] ) 
@@ -1483,8 +1491,9 @@ class RandomTest:
         ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
 
         # Legend
+        dot_legend, = plt.plot([1,1], color=target_color, marker='o', markersize=5, markeredgecolor="white", linestyle='None')
         bp_legend, = plt.plot([1,1], color=nontarget_color, linewidth=6, alpha=1)
-        dot_legend, = plt.plot([1,1], color='mediumblue', linewidth=6)
+        
 
         ax.legend( [dot_legend, bp_legend, rect], ["Target Regions", "Non-target regions", "Significant DBD"], 
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
@@ -1503,7 +1512,7 @@ class RandomTest:
     def gen_html(self, directory, parameters, align=50, alpha=0.05):
         """Generate the HTML file"""
 
-        html_header = "Triplex Domain Finder: Region Test"
+        html_header = "Region Set Test"
         link_ds = {"RNA":"index.html",
                    "Target regions":"target_regions.html"}
 
