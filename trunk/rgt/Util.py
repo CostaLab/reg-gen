@@ -617,7 +617,8 @@ class Html:
         self.document.append("-->")
         self.document.append("</style></head>")
         self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")        
-        self.document.append("<h3 style=\"background-color:#0080FF; background: linear-gradient(to bottom right, #648880, #084B8A);\">")
+        
+        self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray; border-bottom:3px solid gray;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
         # Logo
@@ -633,9 +634,9 @@ class Html:
         self.document.append("     <td width=\"8%\"></td>")
         # Title
         if RGT_name:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
         else:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"white\" size=\"5\">"+self.name+"</font></td>")
+            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
         
         
         self.document.append("  </tr>")

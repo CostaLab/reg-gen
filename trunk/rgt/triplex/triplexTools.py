@@ -1497,7 +1497,7 @@ class RandomTest:
 
         ax.legend( [dot_legend, bp_legend, rect], ["Target Regions", "Non-target regions", "Significant DBD"], 
                   bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
-                  prop={'size':9}, ncol=3)
+                  prop={'size':9}, ncol=3, numpoints=1)
         bp_legend.set_visible(False)
         dot_legend.set_visible(False)
 
