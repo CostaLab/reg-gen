@@ -59,18 +59,21 @@ def list_all_index(path):
     
     html = Html(name="Results in "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
-    header_list = ["Experiments"]
+    header_list = ["No.", "Experiments"]
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
     type_list = 's'
     col_size_list = [10]
+    c = 0
     for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
-                data_table.append(['<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                c += 1
+                data_table.append([c, '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
+    html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
 
 def main():
