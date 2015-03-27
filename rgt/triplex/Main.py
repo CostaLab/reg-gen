@@ -10,7 +10,7 @@ import time, datetime, getpass, fnmatch
 from rgt.GenomicRegionSet import GenomicRegionSet
 from triplexTools import TriplexSearch, PromoterTest, RandomTest
 from rgt.SequenceSet import Sequence, SequenceSet
-from rgt.Util import SequenceType, Html
+from rgt.Util import SequenceType, Html, ConfigurationFile
 
 dir = os.getcwd()
 
@@ -50,27 +50,28 @@ def check_dir(path):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    link_d = {}
-    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
-        roots = root.split('/')
-        for filename in fnmatch.filter(filenames, 'index.html'):
-            if roots[-2] == os.path.basename(os.path.dirname(path)):
-                link_d[roots[-1]] = os.path.join("../"+roots[-1], 'index.html')
+    #link_d = {}
+    #for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+    #    roots = root.split('/')
+    #    for filename in fnmatch.filter(filenames, 'index.html'):
+    #        if roots[-2] == os.path.basename(os.path.dirname(path)):
+    #            link_d[roots[-1]] = os.path.join("../"+roots[-1], 'index.html')
     
-    html = Html(name="Results in "+dirname, links_dict=link_d, 
+    link_d = {"List":"index.html"}
+    html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
     header_list = ["No.", "Experiments"]
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
-    type_list = 's'
-    col_size_list = [10]
+    type_list = 'ssss'
+    col_size_list = [10, 10, 10]
     c = 0
     for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
                 c += 1
-                data_table.append([c, '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
@@ -81,33 +82,14 @@ def main():
     ##### PARAMETERS #########################################################
     ##########################################################################
     
-    parser = argparse.ArgumentParser(description='Provides \
-                                     triplex binding sites searching tool and \
-                                     various Statistical tests for analysis. \
-                                     \nAuthor: Joseph Kuo', 
+    parser = argparse.ArgumentParser(description='Triplex Domain Finder is a statistical framework \
+                                                  for detection of triple helix potential of \
+                                                  lncRNAs from genome-wide functional data. \
+                                                  Author: Chao-Chung Kuo\
+                                                  \nVersion: 0.1.2', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
-    
-    ################### Triplex search #######################################
-
-    parser_search = subparsers.add_parser('search', help='Search the possible triplex binding sites \
-                                                          between single strand (RNA) and \
-                                                          double strand (DNA)')
-    parser_search.add_argument('-r', '-RNA', type=str, help="Input file name for RNA (in fasta format)")
-    parser_search.add_argument('-d', '-DNA', type=str, help="Input file name for DNA (in fasta or bed format)")
-    
-    parser_search.add_argument('-rt', choices= ['fasta', 'bed'], default='fasta', 
-                               help="Input file type (fasta or bed)")
-    parser_search.add_argument('-dt', choices= ['fasta', 'bed'], default='fasta', 
-                               help="Input file type (fasta or bed)")
-
-    parser_search.add_argument('-o', type=str, help="Output directory name")
-    parser_search.add_argument('-genome',type=str, help='Define the directory where the genome FASTA files locate.')
-    
-    parser_search.add_argument('-min',type=int, default=8, help="Minimum length of binding site (Default: 4)")
-    parser_search.add_argument('-max',type=int, default=None, help="Maxmum length of binding site (Default is infinite)")
-    parser_search.add_argument('-m',type=str, default="RYMPA", help="Define the motif for binding site searching (Default is RYMPA)")
-    parser_search.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     
     ################### Promoter test ##########################################
 
@@ -148,7 +130,7 @@ def main():
     
     
     ################### Random test ##########################################
-    h_random = "Region test evaluates the association between the given lncRNA to the target regions by randomization."
+    h_random = "Region set test evaluates the association between the given lncRNA to the target regions by randomization."
     parser_randomtest = subparsers.add_parser('regiontest', help=h_random)
     parser_randomtest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
@@ -181,7 +163,9 @@ def main():
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_randomtest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Set the multiprocessing")
     
-
+    ##########################################################################
+    parser_triplexator = subparsers.add_parser('triplexator', help="Setting Triplexator.")
+    parser_triplexator.add_argument('-path',type=str, metavar='  ', help='Define the path of Triplexator.')
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -200,6 +184,13 @@ def main():
         sys.exit(1)
     else:   
         args = parser.parse_args()
+        if args.mode == 'triplexator' and args.path:
+            cf = ConfigurationFile()
+            print("\tDefine Triplexator in: "+args.path)
+            with open(os.path.join(cf.data_dir,"triplexator_path.txt"), 'w') as f:
+                print(args.path, file=f)
+            sys.exit(1)
+
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
@@ -212,13 +203,14 @@ def main():
         if not args.genome_path: 
             print("Please define the path of genome FASTA file.")
             sys.exit(1)
-        if not args.l: 
-            print("Please define the minimum length and other parameters for Triplexator.")
-            sys.exit(1)
         
+        
+
+
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
+        check_dir(os.path.dirname(args.o))
         check_dir(args.o)
         # Input parameters dictionary
         summary = []

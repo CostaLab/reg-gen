@@ -26,14 +26,15 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
 from rgt.SequenceSet import Sequence, SequenceSet
 from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from rgt.Util import SequenceType, Html, OverlapType
+from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.AnnotationSet import AnnotationSet
-#import multiprocessing
+
 
 target_color = "mediumblue"
 nontarget_color = "darkgrey"
 sig_color = "powderblue"
+
 ####################################################################################
 ####################################################################################
 def print2(summary, string):
@@ -153,7 +154,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 
 def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
     """Perform Triplexator"""
-    path_triplexator = "~/Apps/triplexator/bin/triplexator"
+    triplexator_path = check_triplexator_path()
 
     arguments = " "
     if ss: arguments += "-ss "+ss+" "
@@ -169,7 +170,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
-    os.system(path_triplexator+arguments)
+    os.system(triplexator_path+arguments)
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
@@ -337,6 +338,15 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
               bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
     # PDF
+    for tick in ax.xaxis.get_major_ticks():
+        tick.label.set_fontsize(12) 
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label.set_fontsize(12)
+    ax.xaxis.label.set_size(14)
+    ax.yaxis.label.set_size(14) 
+    ax.legend(legend_h, legend_l, 
+              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
+              prop={'size':12}, ncol=3)
     pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
     pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
     pp.close()
@@ -353,6 +363,18 @@ def dump(object, path, filename):
     pickle.dump(object,file)
     file.close()
     print("\tDump to file: "+filename)
+
+def check_triplexator_path():
+    try:
+        cf = ConfigurationFile()
+        with open(os.path.join(cf.data_dir,"triplexator_path.txt")) as f:
+            l = f.readline()
+            l = l.strip("\n")
+            #l = l.split()
+            return l
+    except:
+        print("Please define the path to Triplexator by command: rgt-TDF triplexator -path <PATH>")
+        sys.exit(1)
     
 #####################################################################################
 
@@ -950,17 +972,24 @@ class PromoterTest:
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(12) 
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        ax.xaxis.label.set_size(14)
+        ax.yaxis.label.set_size(14) 
         pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
         
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
-
+        dir_name = os.path.basename(directory)
         #check_dir(directory)
-        html_header = "Promoter Test"
+        html_header = "Promoter Test: "+dir_name
         self.link_d = OrderedDict()
         self.link_d["RNA"] = "index.html"
         self.link_d["Target promoters"] = "promoters.html"
+        self.link_d["Parameters"] = "parameters.html"
         
 
         if self.organism == "hg19": self.ani = "human"
@@ -970,7 +999,7 @@ class PromoterTest:
         # Index main page
         #############################################################
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
         
@@ -1085,6 +1114,13 @@ class PromoterTest:
                         "RBS stands for RNA Binding Site on RNA.",
                         "DBS stands for DNA Binding Site on DNA."])
         
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory,"index.html"))
+
+        ################################################################
+        ############# Parameters
+        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         html.add_heading("Parameters")
         header_list = ["Description", "Arguments","Value"]
@@ -1124,8 +1160,8 @@ class PromoterTest:
                              auto_width=True)
         
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
-        html.add_fixed_rank_sortable()
-        html.write(os.path.join(directory,"index.html"))
+        #html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory,"parameters.html"))
 
         #############################################################
         # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
@@ -1137,7 +1173,7 @@ class PromoterTest:
                        "The proportion of the promoter covered by DBS binding"]
         # dbds_promoters.html
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
      
         for rbsm in self.frequency["promoters"]["de"].keys():    
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
@@ -1159,8 +1195,8 @@ class PromoterTest:
         html.write(os.path.join(directory, "dbds_promoters.html"))
             
     def gen_html_genes(self, directory, align=50, alpha = 0.05, nonDE=False):
-
-        html_header = "Promoter Test"
+        dir_name = os.path.basename(directory)
+        html_header = "Promoter Test: "+dir_name
         #fp = os.path.join(dir,outputname,title)
         
         type_list = 'sssssssss'
@@ -1173,7 +1209,7 @@ class PromoterTest:
         ##############################################################################################
         # promoters.html
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         if self.scores:
             if self.scoreh and self.de_gene:
@@ -1253,7 +1289,7 @@ class PromoterTest:
                          "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel"]
         header_list=header_sub
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="../style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         for i, promoter in enumerate(self.de_regions):
             if len(self.promoter["de"]["dbs"][promoter.toString()]) == 0:
@@ -1505,16 +1541,24 @@ class RandomTest:
         f.savefig(os.path.join(dir, filename+".png"), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
         # PDF
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(12) 
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(12)
+        ax.xaxis.label.set_size(14)
+        ax.yaxis.label.set_size(14) 
+        
         pp = PdfPages(os.path.join(dir,filename+'.pdf'))
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
     def gen_html(self, directory, parameters, align=50, alpha=0.05):
         """Generate the HTML file"""
-
-        html_header = "Region Set Test"
+        dir_name = os.path.basename(directory)
+        html_header = "Region Set Test: "+dir_name
         link_ds = {"RNA":"index.html",
-                   "Target regions":"target_regions.html"}
+                   "Target regions":"target_regions.html",
+                   "Parameters":"parameters.html"}
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
@@ -1523,7 +1567,7 @@ class RandomTest:
         # index.html
 
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         # Plots
         html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
         if self.showdbs:
@@ -1608,7 +1652,14 @@ class RandomTest:
                         "Randomization is performed for "+str(self.repeats)+" times.",
                         "DBD stands for DNA Binding Domain on RNA.",
                         "DBS stands for DNA Binding Site on DNA."])
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory,"index.html"))
 
+        ###############################################################################33
+        ################ Parameters.html
+
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         html.add_heading("Parameters")
         header_list = ["Description", "Arguments","Value"]
 
@@ -1637,8 +1688,8 @@ class RandomTest:
                              auto_width=True)
 
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
-        html.add_fixed_rank_sortable()
-        html.write(os.path.join(directory,"index.html"))
+        
+        html.write(os.path.join(directory,"parameters.html.html"))
 
 
         #############################################################
@@ -1657,7 +1708,7 @@ class RandomTest:
         #########################################################
         # dbd_region.html
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
      
         for rbsm in self.rbss:    
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
@@ -1687,7 +1738,7 @@ class RandomTest:
         ##############################################################################################
         # target_regions.html
         html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         header_list = [ "#", "Target region", "Associated Gene", "DBSs Count", 
                         "DBS coverage", "Sum of ranks" ]
@@ -1741,7 +1792,7 @@ class RandomTest:
         header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation" ]
 
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         for i, region in enumerate(self.dna_region):
             if len(self.region_dbs[region.toString()]) == 0:
