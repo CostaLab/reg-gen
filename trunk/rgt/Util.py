@@ -525,8 +525,8 @@ class Html:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", links_file=False, 
-                 RGT_header=True, other_logo=None):
+    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", 
+                 RGT_header=True, other_logo=None, homepage=None):
         """ 
         Initializes Html.
         IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
@@ -534,7 +534,7 @@ class Html:
         Variables:
         xxxxx -- Position Frequency Matrix.
         relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it. Default is None.
-        links_file -- Load the links from external file
+        
         """
 
         # Variable initializations
@@ -544,6 +544,7 @@ class Html:
         self.document = []
         self.image_data = ImageData()
         self.other_logo = other_logo
+        self.homepage = homepage
         
         # Initialize document
         if fig_dir:
@@ -552,18 +553,7 @@ class Html:
         else:
             self.create_header()
         
-        if links_file and fig_dir:
-            self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
-            self.document.append("  <tr>")
-            self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-           
-            self.document.append('<?php include "../fig/links.txt";?>')
-            
-            self.document.append("    </b></font></td>")
-            self.document.append("  </tr>")
-            self.document.append("</table>")
-        else:
-            self.add_links()
+        self.add_links()
         
         
     def copy_relevent_files(self, target_dir):
@@ -621,22 +611,30 @@ class Html:
         self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray; border-bottom:3px solid gray;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("  <tr>")
-        # Logo
-        if relative_dir:
-            if other_logo=="TDF":
-                self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\"></td>")
-            else:
-                self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\"></td>")
 
+        # Logo
+        
+        if relative_dir:            
+            self.document.append("    <td width=\"5%\">")
+            if self.homepage: self.document.append("<a href=\""+self.homepage+"\">")
+            if other_logo=="TDF":
+                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\">")
+            else:
+                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\">")
+            if self.homepage: self.document.append("</a>")
+            self.document.append("    </td>")
+            
         else:
             self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+        
+
         # Gap
-        self.document.append("     <td width=\"8%\"></td>")
+        self.document.append("     <td width=\"5%\"></td>")
         # Title
         if RGT_name:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+            self.document.append("    <td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
         else:
-            self.document.append("    <td width=\"87%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
+            self.document.append("    <td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
         
         
         self.document.append("  </tr>")
@@ -650,14 +648,18 @@ class Html:
         Return:
         None -- Appends links to the document.
         """
-        self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
-        self.document.append("  <tr>")
-        self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-        link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>" for k in self.links_dict.keys()])
-        self.document.append(link_str)
-        self.document.append("    </b></font></td>")
-        self.document.append("  </tr>")
-        self.document.append("</table>")
+        for k in self.links_dict.keys():
+
+            self.document.append("<a class=\"pure-button\" href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>")
+
+        #self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
+        #self.document.append("  <tr>")
+        #self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
+        #link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>" for k in self.links_dict.keys()])
+        #self.document.append(link_str)
+        #self.document.append("    </b></font></td>")
+        #self.document.append("  </tr>")
+        #self.document.append("</table>")
             
     
     def create_footer(self):
