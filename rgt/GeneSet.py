@@ -20,21 +20,13 @@ class GeneSet:
     def __iter__(self):
         return iter(self.genes)
 
-    def read(self, geneListFile, header=False, extra_column=False):
+    def read(self, geneListFile):
         """Read genes"""
         with open(geneListFile) as f:
-            if extra_column:
-                self.extra_column = {}
-                for line in f:            
-                    line = line.strip()
-                    l = line.split()
-                    
-                    if len(l) > 1:
-                        self.genes.append(l[0])
-                        self.extra_column[l[0]] = l[1]
-            else:
-                lines = (line.rstrip() for line in f)
-                self.genes = list(set((line for line in lines if line))) # Non-blank lines in a list
+            for line in f:            
+                line = line.strip()
+                l = line.split()
+                self.genes.append(l[0])
             
     def read_expression(self, geneListFile, header = True):
         """Read gene expression data"""
