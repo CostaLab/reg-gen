@@ -210,6 +210,7 @@ def main():
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
+        check_dir(os.path.dirname(os.path.dirname(args.o)))
         check_dir(os.path.dirname(args.o))
         check_dir(args.o)
         # Input parameters dictionary

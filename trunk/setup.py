@@ -3,6 +3,7 @@ from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
 from shutil import copy, copytree
+import distutils.dir_util
 from errno import ENOTDIR
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 from setuptools import setup, find_packages
@@ -235,8 +236,8 @@ Copy Files Dictionary:
     - Y1,Y2,...Yn: files/folders inside the path X to be copied.
 """
 copy_files_dictionary = {
-"hg19": ["association_file.bed","chrom.sizes"],
-"mm9": ["association_file.bed","chrom.sizes"],
+"hg19": ["association_file.bed","chrom.sizes","alias.txt"],
+"mm9": ["association_file.bed","chrom.sizes","alias.txt"],
 "fp_hmms": ["H3K4me3_proximal.hmm"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png"],
@@ -250,9 +251,11 @@ for copy_folder in copy_files_dictionary.keys():
         if not path.exists(copy_dest_file): 
             try: copytree(copy_source_file, copy_dest_file)
             except OSError as exc:
-                if exc.errno == ENOTDIR: copy(copy_source_file, copy_dest_file)
-                else: raise
-
+                if exc.errno == ENOTDIR: 
+                    copy(copy_source_file, copy_dest_file)
+                else: 
+                    raise
+    
 ###################################################################################################
 # Setup Function
 ###################################################################################################
