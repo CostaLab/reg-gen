@@ -147,7 +147,7 @@ class AnnotationSet:
                     self.load_alias_dict(genome_data.get_gene_alias())
             else: pass # TODO Throw error
 
-    def load_gene_list(self, file_name):
+    def load_gene_list(self, file_name, filter_havana=True):
         """
         Reads gene annotation in gtf (gencode) format. It populates self.gene_list with such entries.
 
@@ -167,6 +167,7 @@ class AnnotationSet:
             line = line.strip()
             if(line[0] == "#"): continue
             line_list = line.split("\t")
+            if(filter_havana and line_list[1] == "HAVANA"): continue
             addt_list = line_list[8].split(";")
             addt_list = filter(None,addt_list)
 
