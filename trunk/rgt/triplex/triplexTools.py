@@ -26,7 +26,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
 from rgt.SequenceSet import Sequence, SequenceSet
 from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile
+from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile, GenomeData
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.AnnotationSet import AnnotationSet
 
@@ -631,7 +631,7 @@ class TriplexSearch:
 
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
-    def __init__(self, gene_list_file, bed, bg, organism, promoterLength, genome_path, rna_name, 
+    def __init__(self, gene_list_file, bed, bg, organism, promoterLength, rna_name, 
                  summary, temp, showdbs=None, score=False, scoreh=False):
         """Initiation"""
         self.organism = organism
@@ -1321,8 +1321,7 @@ class PromoterTest:
 ####################################################################################
 
 class RandomTest:
-    def __init__(self, rna_fasta, rna_name, dna_region, organism, 
-                 genome_path, showdbs=False):
+    def __init__(self, rna_fasta, rna_name, dna_region, organism, showdbs=False):
     	self.organism = organism
         genome = GenomeData(organism)
         self.genome_path = genome.get_genome()
@@ -1387,10 +1386,10 @@ class RandomTest:
         if obed:
             btr = txp.get_dbs()
             btr = dbss.gene_association(organism=self.organism)
-            btr.write_bed(os.path.join(temp, obed+".bed"))
+            btr.write_bed(os.path.join(temp, obed+"_target_region_dbs.bed"))
             dbss = txpf.get_dbs()
             dbss = dbss.gene_association(organism=self.organism)
-            dbss.write_bed(os.path.join(temp, obed+".bed"))
+            dbss.write_bed(os.path.join(temp, obed+"_dbss.bed"))
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, filter_bed, alpha):
         """Perform randomization for the given times"""
@@ -1557,7 +1556,7 @@ class RandomTest:
     def gen_html(self, directory, parameters, align=50, alpha=0.05):
         """Generate the HTML file"""
         dir_name = os.path.basename(directory)
-        html_header = "Region Set Test: "+dir_name
+        html_header = "Genomic Region Test: "+dir_name
         link_ds = {"RNA":"index.html",
                    "Target regions":"target_regions.html",
                    "Parameters":"parameters.html"}
