@@ -635,8 +635,9 @@ class PromoterTest:
                  summary, temp, showdbs=None, score=False, scoreh=False):
         """Initiation"""
         self.organism = organism
+        genome = GenomeData(organism)
         self.rna_name = rna_name
-        self.genome_path = genome_path
+        self.genome_path = genome.get_genome()
         self.showdbs = showdbs
         self.scores = None
         self.scoreh = scoreh
@@ -691,19 +692,19 @@ class PromoterTest:
             
             # Get promoters from de genes
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
-            de_prom[0].merge(namedistinct=True)
-            for promoter in de_prom[0]:
+            de_prom.merge(namedistinct=True)
+            for promoter in de_prom:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)   
-            self.de_regions = de_prom[0]
+            self.de_regions = de_prom
             
             print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
             
             # Get promoters from nonDE gene
             nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
-            nde_prom[0].merge(namedistinct=True)
-            for promoter in nde_prom[0]:
+            nde_prom.merge(namedistinct=True)
+            for promoter in nde_prom:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
-            self.nde_regions = nde_prom[0]
+            self.nde_regions = nde_prom
             
             print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
             
@@ -803,7 +804,7 @@ class PromoterTest:
 
         if obedp:
             self.de_regions.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
-            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_binding_promoters.bed"), remove_duplicates=True)
+            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), remove_duplicates=True)
             self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), remove_duplicates=True)
 
     def fisher_exact(self, alpha):
@@ -1323,7 +1324,8 @@ class RandomTest:
     def __init__(self, rna_fasta, rna_name, dna_region, organism, 
                  genome_path, showdbs=False):
     	self.organism = organism
-        self.genome_path = genome_path
+        genome = GenomeData(organism)
+        self.genome_path = genome.get_genome()
         # RNA: Path to the FASTA file
         self.rna_fasta = rna_fasta
         self.showdbs = showdbs
@@ -1689,7 +1691,7 @@ class RandomTest:
 
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         
-        html.write(os.path.join(directory,"parameters.html.html"))
+        html.write(os.path.join(directory,"parameters.html"))
 
 
         #############################################################
