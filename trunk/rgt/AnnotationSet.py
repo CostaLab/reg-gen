@@ -458,7 +458,7 @@ class AnnotationSet:
                 except Exception: unmapped_list.append(self.symbol_dict[e])
             return mapped_list, unmapped_list
 
-    def get_promoters(self, promoterLength=1000, gene_set = None):
+    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False):
         """
         Gets promoters of genes given a specific promoter length.
         It returns a GenomicRegionSet with such promoters. The ID of each gene will be put
@@ -499,7 +499,7 @@ class AnnotationSet:
                 gr.final = gr.initial + promoterLength + 1
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
-        if(gene_set): return result_grs, unmapped_gene_list
+        if unmaplist: return result_grs, unmapped_gene_list
         else: return result_grs
 
     def get_tss(self, gene_set = None):

@@ -103,7 +103,7 @@ def main():
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
-    parser_promotertest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file')
+    #parser_promotertest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file')
 
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (Default: 1000)")
     
@@ -141,7 +141,7 @@ def main():
                                    help="Number of times for randomization (Default: 10000)")
 
     parser_randomtest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
-    parser_randomtest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file.')
+    #parser_randomtest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file.')
     
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
@@ -200,9 +200,9 @@ def main():
         if not args.rn: 
             print("Please define RNA sequence name.")
             sys.exit(1)
-        if not args.genome_path: 
-            print("Please define the path of genome FASTA file.")
-            sys.exit(1)
+        #if not args.genome_path: 
+        #    print("Please define the path of genome FASTA file.")
+        #    sys.exit(1)
         
         
 
@@ -406,7 +406,7 @@ def main():
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
-                                promoterLength=args.pl, summary=summary, genome_path=args.genome_path, temp=dir,
+                                promoterLength=args.pl, summary=summary, temp=dir,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
@@ -464,7 +464,7 @@ def main():
         
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
-                                organism=args.organism, genome_path=args.genome_path, showdbs=args.showdbs)
+                                organism=args.organism, showdbs=args.showdbs)
         if args.obed: obed = os.path.basename(args.o)
         else: obed=False
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
