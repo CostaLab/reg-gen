@@ -130,7 +130,7 @@ def main():
     
     
     ################### Random test ##########################################
-    h_random = "Region set test evaluates the association between the given lncRNA to the target regions by randomization."
+    h_random = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
     parser_randomtest = subparsers.add_parser('regiontest', help=h_random)
     parser_randomtest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
@@ -454,7 +454,7 @@ def main():
     ##### Random ###################################################################
     ################################################################################
     if args.mode == 'regiontest':
-        print2(summary, "\n"+"*************** Region Test ***************")
+        print2(summary, "\n"+"*************** Genomic Region Test ***************")
         print2(summary, "*** Input RNA sequence: "+args.r)
         print2(summary, "*** Input regions in BED: "+os.path.basename(args.bed))
         print2(summary, "*** Number of randomization: "+str(args.n))
