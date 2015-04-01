@@ -632,7 +632,7 @@ def main_enrichment():
                     if(gr.name == "."): curr_name = "."
                     else:
                         curr_gene_list = [e if e[0]!="." else e[1:] for e in gr.name.split(":")]
-                        curr_prox_list = gr.data.split(":")
+                        curr_prox_list = gr.proximity.split(":")
                         curr_name = ":".join([e[0]+"_"+e[1] for e in zip(curr_gene_list,curr_prox_list)])
                     output_file.write("\t".join([str(e) for e in [gr.chrom,gr.initial,gr.final,curr_name]])+"\n")
                 output_file.close()
