@@ -236,6 +236,7 @@ Copy Files Dictionary:
     - Y1,Y2,...Yn: files/folders inside the path X to be copied.
 """
 copy_files_dictionary = {
+".": ["setupGenomicData.py","setupLogoData.py"],
 "hg19": ["association_file.bed","chrom.sizes","alias.txt"],
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
 "fp_hmms": ["H3K4me3_proximal.hmm"],
