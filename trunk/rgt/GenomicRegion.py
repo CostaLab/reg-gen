@@ -19,7 +19,7 @@ Return true if region overlaps with argument-region, otherwise false.
 
 class GenomicRegion:
 
-    def __init__(self, chrom, initial, final, name=None, orientation=None, data=None):
+    def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
         """Initialize GenomicRegion"""
         self.chrom = str(chrom) #chrom should be a string, not an integer
         self.initial = initial
@@ -27,6 +27,7 @@ class GenomicRegion:
         self.name = name
         self.orientation = orientation
         self.data = data # data can be integer, string, list
+        self.proximity = proximity
 
     def get_data(self, as_list=False):
         """Return data as string (with special separating character (_$_)) 

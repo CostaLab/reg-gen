@@ -321,7 +321,7 @@ class GenomicRegionSet:
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
                 #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], orientation=coord[4]))
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], orientation=coord[4], proximity=new_prox_list))
              
         return result_grs
 
@@ -366,7 +366,7 @@ class GenomicRegionSet:
 
             # Fetching list of genes and proximity information
             curr_genes = gr.name.split(":")
-            curr_proxs = gr.data.split(":")
+            curr_proxs = gr.proximity.split(":")
 
             # Updating all/mapped - genes/proxs
             flag_assoc = False
