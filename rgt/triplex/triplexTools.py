@@ -30,7 +30,7 @@ from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile, GenomeD
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.AnnotationSet import AnnotationSet
 
-
+# Color code for all analysis
 target_color = "mediumblue"
 nontarget_color = "darkgrey"
 sig_color = "powderblue"
@@ -106,8 +106,6 @@ def random_each(input):
                        dna_fine_posi=True)
     
     txpf.merge_by(rbss=input[5], rm_duplicate=True)
-    #all_dbss = len(txp.get_dbs(rm_duplicate=True))
-    #print("\t Randomization: \t"+input[0])
     sys.stdout.flush()
     print("".join(["="]*int(input[6])), end="")
 
@@ -129,10 +127,6 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate BED 
-    #dna_region.write_bed(os.path.join(temp,"dna_"+prefix+".bed"))
-    # Bedtools
-    #os.system("bedtools getfasta -fi /data/genome/"+organism+"/"+organism+".fa -bed "+\
-    #          os.path.join(temp,"dna_"+prefix+".bed")+" -fo "+os.path.join(temp,"dna_"+prefix+".fa"))
     get_sequence(dir=temp, filename="dna_"+prefix+".fa", regions=dna_region, genome_path=genome_path)
 
     # Triplexator
@@ -143,10 +137,8 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
     txp.remove_duplicates()
-    #print(len(txp_de))
 
     if remove_temp:
-        #os.remove(os.path.join(temp,"dna_"+prefix+".bed"))
         os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
         os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
 
@@ -180,7 +172,6 @@ def read_ac(path, cut_off, rnalen):
     '#' will be skipped
 
     """
-    #pos = []
     access = []
     with open(path) as f:
         i = 0
@@ -191,8 +182,6 @@ def read_ac(path, cut_off, rnalen):
                 elif line[0][0] == "#": continue
                 elif len(line) < 2: continue
                 else:
-                    #pos.append(int(line[0]))
-                    #print(line)
                     v = line[1]
                     if v == "NA": 
                         access.append(0)
@@ -370,261 +359,11 @@ def check_triplexator_path():
         with open(os.path.join(cf.data_dir,"triplexator_path.txt")) as f:
             l = f.readline()
             l = l.strip("\n")
-            #l = l.split()
             return l
     except:
         print("Please define the path to Triplexator by command: rgt-TDF triplexator -path <PATH>")
         sys.exit(1)
     
-#####################################################################################
-
-class TriplexSearch:
-    """Contains functions for potential triplex forming sites on DNA or RNA.
-
-    Methods:
-        1. For RNA as input: define the TFO (triplex-forming oligonucleotides) on RNA
-        2. For DNA as input: define the TTS (triplex target sites) on DNA
-        3. For RNA and DNA as input: define the possible triplex region between RNA and DNA
-
-    Some parameters:
-
-        motifs:
-            R - the purine motif that permit guanines (G) and adenines (A)
-            Y - the pyrimidine motif that permit cytosines (C) and thymines (T)
-            M - the mixed motif, purine-pyrimdine, that permit guanines (G) and thymines (T)
-            P - parallel binding, i.e. motifs facilitating Hoogsten bonds; 
-                this covers the pyrimidine motif and the purine-pyrimidine motif in parallel configuration
-            A - anti-parallel binding, i.e. motifs facilitating reverse Hoogsten bonds; 
-                this covers the purine motif and the purine-pyrimidine motif in anti-parallel configuration
-    """
-    
-    def search_bindingsites(self, sequence_set, seq_type, motif, min_len, max_len, multiprocess=False):
-        """Find binding sites on RNA or DNA from given SequenceSet
-        
-        Parameters:
-            sequence_set:  A SequenceSet object
-            seq_type:      RNA or DNA
-            motif:         R, Y, M, P, or A
-            min_len:       Define the minimum length of RBS (default is 10 bp)
-            max_len:       Define the maximum length of RBS (default is infinite)
-        """
-        all_binding_sites = BindingSiteSet(name=sequence_set.name)
-        if not multiprocess or len(sequence_set) == 1:
-            for i,s in enumerate(sequence_set):
-                if seq_type == SequenceType.RNA:
-                    bs = self.find_rbs(s, motif, min_len, max_len)
-                elif seq_type == SequenceType.DNA:
-                    bs = self.find_dbs(s, min_len, max_len)
-                all_binding_sites.concatenate(bs)
-        else:
-            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-            mp_input = [ [s, motif, min_len, max_len] for s in sequence_set ]
-            print(mp_input)
-            if seq_type == SequenceType.RNA:
-                bs = pool.map(mp_find_rbs, mp_input)
-            elif seq_type == SequenceType.DNA:
-                bs = pool.map(mp_find_dbs, mp_input)
-            pool.close()
-            pool.join()
-            for b in bs:
-                all_binding_sites.concatenate(b)
-
-        return all_binding_sites
-
-    def find_rbs(self, a_sequence, motif, min_len, max_len):
-        """Return a BindingSiteSet with the potential RNA binding sites
-
-        Parameters:
-            a_sequence:  A Sequence object
-            min_len:     Define the minimum length of RBS (default is 10 bp)
-            max_len:     Define the maximum length of RBS (default is infinite)
-            motif:       R: G, A
-                         Y: C, T
-                         M: G, T
-                         P: C, T, G
-                         A: A, G, T
-        """
-        rbss = BindingSiteSet(name=a_sequence.name)
-
-        for m in motif:
-            # Motif choice for tfo on RNA
-            if m == "R":
-                targets = ["G", "A"]   
-            elif m == "Y":
-                targets = ["C", "T"]
-            elif m == "M":
-                targets = ["G", "T"] 
-            elif m == "P":
-                targets = ["C", "T", "G"] 
-            elif m == "A":
-                targets = ["A", "G", "T"] 
-
-            # Parsing the sequence
-
-            count = 0
-            sample = ""
-            con_rbs = False
-
-            for i, a in enumerate(a_sequence.seq):
-                if a in targets:
-                    
-                    if count < min_len:
-                        sample += a
-                        count += 1
-                    elif min_len <= count:
-                        sample += a
-                        count += 1
-                        rbs = BindingSite(chrm=a_sequence.name, initial=i-count+1, final=i+1, 
-                                          name=a_sequence.name, score=count,  errors_bp=0, 
-                                          motif=m, seq=Sequence(seq=sample, strand="RNA"))
-                        con_rbs = True
-
-                    elif max_len and count > max_len:
-                        rbss.add(rbs)
-                        con_rbs = False
-                else:
-                    sample = ""
-                    count = 0
-                    if con_rbs: 
-                        rbss.add(rbs)
-                        con_rbs = False
-        return rbss
-
-
-    def find_dbs(self, a_sequence, min_len, max_len):
-        """Return a BindingSiteSet with the potential DNA triplex binding sites
-        (including both strands)
-
-        Parameters:
-            a_sequence:  A Sequence object
-            min_len:     Define the minimum length of RBS (default is 10 bp)
-            max_len:     Define the maximum length of RBS (default is infinite)
-            region:      A BindingSite or GenomicRegion
-        """
-        
-        all_dbs = BindingSiteSet(name=a_sequence.name)
-        if len(a_sequence) < min_len: return
-        
-        targets = ["A", "G"]
-        if a_sequence.strand == "+": c_strand = "-"
-        else: c_strand = "+"
-        # Parsing the sequence
-        count_1 = 0
-        count_2 = 0
-        sample_1 = ""
-        sample_2 = ""
-        con_1 = False
-        con_2 = False
-        #l = len(a_sequence)
-
-        for i, a in enumerate(a_sequence.seq):
-        #    print(str(l)+"\t"+str(i))
-            if a in targets:
-                # Strand 2
-                if con_2:
-                    sample_2 = sample_2.replace("C","G")
-                    sample_2 = sample_2.replace("T","A")
-                    dbs_2 = BindingSite(chrm=a_sequence.name, initial=i-count_2+1, final=i+1, 
-                                        score=count_2, errors_bp=0, strand=c_strand, 
-                                        seq=Sequence(seq=sample_2, strand=c_strand))
-                    all_dbs.add(dbs_2)
-                    con_2 = False
-                sample_2 = ""
-                count_2 = 0
-
-                # Strand 1 
-                if count_1 < min_len:
-                    sample_1 += a
-                    count_1 += 1
-                elif min_len <= count_1:
-                    sample_1 += a
-                    count_1 += 1
-                    
-                    con_1 = True
-                elif max_len and count_1 > max_len:
-                    dbs_1 = BindingSite(chrm=a_sequence.name, initial=i-count_1+1, final=i+1, 
-                                        score=count_1, errors_bp=0, strand=a_sequence.strand, 
-                                        seq=Sequence(seq=sample_1, strand=a_sequence.strand))
-                    all_dbs.add(dbs_1)
-                    con_1 = False
-            else:
-                # Strand 1
-                if con_1: 
-                    dbs_1 = BindingSite(chrm=a_sequence.name, initial=i-count_1+1, final=i+1, 
-                                        score=count_1, errors_bp=0, strand=a_sequence.strand, 
-                                        seq=Sequence(seq=sample_1, strand=a_sequence.strand))
-                    all_dbs.add(dbs_1)
-                    con_1 = False
-                sample_1 = ""
-                count_1 = 0
-                # Strand 2
-                if count_2 < min_len:
-                    sample_2 += a
-                    count_2 += 1
-                elif min_len <= count_2:
-                    sample_2 += a
-                    count_2 += 1
-                    con_2 = True
-                elif max_len and count_2 > max_len:
-                    sample_2 = sample_2.replace("C","G")
-                    sample_2 = sample_2.replace("T","A")
-                    dbs_2 = BindingSite(chrm=a_sequence.name, initial=i-count_2+1, final=i+1, 
-                                        score=count_2, errors_bp=0, strand=c_strand, 
-                                        seq=Sequence(seq=sample_2, strand=c_strand))
-                    all_dbs.add(dbs_2)
-                    con_2 = False
-        return all_dbs
-        
-
-    def compare_rb_db(self, rna_seq, dna_seq, match_dict):
-        """Find the highest score between two sequences
-        Parameters:
-            rna_seq:     A RNA sequence
-            dan_seq:     A DNA sequence
-            match_dict:  A dictionary with defined matching cases
-        """
-        if not rna_seq.seq or not dna_seq.seq:
-            print("*** Error: Compare empity sequence for local alignment score.")
-            print("*** "+str(rna_seq))
-            print("*** "+str(dna_seq))
-            return
-        else:
-            m = len(rna_seq.seq)
-            n = len(dna_seq.seq)
-            
-            if m == n:
-                score = 0
-                match = ""
-                for i, r in enumerate(rna_seq.seq):
-                    if dna_seq.seq[i] in match_dict[r]:
-                        score += 1
-                        match += "|"
-                    else:
-                        match += "*"
-                        
-                return score, rna_seq.seq, match, dna_seq.seq
-            
-            elif m > n:
-                scores = []
-                matches = []
-                for i in range(m-n):
-                    score = 0
-                    match = ""
-                    for j in range(n):
-                        if dna_seq.seq[i] in match_dict[rna_seq.seq[i+j]]:
-                            score += 1
-                            match += "|"
-                        else:
-                            match += "*"
-                    scores.append(score)
-                    matches.append(match)
-                hp = [ i for i, j in enumerate(scores) if j == max(scores) ]
-                #######################################
-                ####
-                ####  ( O O )==<   ppbbppbbppbbpbpbpb
-                ####    ---
-                #######################################
-                return 
 
 ####################################################################################
 ####################################################################################
@@ -713,15 +452,14 @@ class PromoterTest:
                 self.scores = []
                 for promoter in self.de_regions:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
                     try: 
-                        #print(abs(self.de_gene.values[promoter.name.upper()]))
                         self.scores.append(abs(self.de_gene.values[promoter.name.upper()]))
-                        #self.scores.append(abs(float(self.de_gene.extra_column[promoter.name])))
                     except:
                         print("Warning: "+promoter.name+"\tcannot be mapped to get its score.")
                         self.scores.append(0)
                     
 
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
+        print("    \tRunning Triplexator...")
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
         # DE
         get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
@@ -820,7 +558,7 @@ class PromoterTest:
 
         # correction
         if len(self.frequency["promoters"]["de"].keys()) > 1:
-            reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+            reject, pvals_corrected = multiple_test_correction(pvalues, alpha=alpha, method='indep')
         else:
             pvals_corrected = pvalues
         for i, rbs in enumerate(self.frequency["promoters"]["de"].keys()):
@@ -839,7 +577,7 @@ class PromoterTest:
                 pvalues.append(p)
             # correction
             if len(self.frequency["hits"]["de"].keys()) > 1:
-                reject, pvals_corrected = multiple_test_correction(pvalues, alpha=0.05, method='indep')
+                reject, pvals_corrected = multiple_test_correction(pvalues, alpha=alpha, method='indep')
             else:
                 pvals_corrected = pvalues
             for i, rbs in enumerate(self.frequency["hits"]["de"].keys()):
@@ -872,7 +610,6 @@ class PromoterTest:
         # Each promoter to all related merged DBD
         print("\tEach promoter to all related merged DBD...")
         # Targeted promoters
-        #print(len(self.nde_regions))
         self.promoter["de"]["rd"] = self.txp_def.sort_rd_by_regions(regionset=self.de_regions)
         self.promoter["nde"]["rd"] = self.txp_ndef.sort_rd_by_regions(regionset=self.nde_regions)
         #################################################
@@ -945,7 +682,6 @@ class PromoterTest:
         tr_legend.set_visible(False)
         ntr_legend.set_visible(False)
 
-
         tick_size=8
         # Y axis
         ax.set_ylim( [ 0, max_y ] ) 
@@ -968,7 +704,6 @@ class PromoterTest:
         for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
         ax.set_xlabel(self.rna_name+" DNA Binding Domains", fontsize=9)
     
-        
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
                   bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
@@ -1118,6 +853,37 @@ class PromoterTest:
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"index.html"))
 
+        
+        #############################################################
+        # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
+        #############################################################
+        header_list= ["#", "Target Promoter", "Gene", "DBSs counts", "DBS coverage"] 
+        header_title= ["Rank", "The given target promoter", "Gene symbol", 
+                       "Number of DNA Binding Sites binding to the promoter", 
+                       "The proportion of the promoter covered by DBS binding"]
+        # dbds_promoters.html
+        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+     
+        for rbsm in self.frequency["promoters"]["de"].keys():    
+            html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
+                             idtag=rbsm.str_rna())
+            data_table = []
+            for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                # Add information
+                data_table.append([ str(i+1),
+                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
+                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
+                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                    value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                                     ])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                                 header_titles=header_title, sortable=True)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "dbds_promoters.html"))
+
         ################################################################
         ############# Parameters
         html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
@@ -1158,47 +924,14 @@ class PromoterTest:
                        ["Output format", "-of", str(self.triplexator_p[5])],
                        ["Merge features", "-mf", str(self.triplexator_p[6])] ]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
-        
+                             auto_width=True)      
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
-        #html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"parameters.html"))
 
-        #############################################################
-        # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
-        #############################################################
-        
-        header_list= ["#", "Target Promoter", "Gene", "DBSs counts", "DBS coverage"] 
-        header_title= ["Rank", "The given target promoter", "Gene symbol", 
-                       "Number of DNA Binding Sites binding to the promoter", 
-                       "The proportion of the promoter covered by DBS binding"]
-        # dbds_promoters.html
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
-     
-        for rbsm in self.frequency["promoters"]["de"].keys():    
-            html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
-                             idtag=rbsm.str_rna())
-            data_table = []
-            for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
-                # Add information
-                data_table.append([ str(i+1),
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
-                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
-                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
-                                    value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
-                                     ])
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_title, sortable=True)
-        html.add_fixed_rank_sortable()
-        html.write(os.path.join(directory, "dbds_promoters.html"))
             
     def gen_html_genes(self, directory, align=50, alpha = 0.05, nonDE=False):
         dir_name = os.path.basename(directory)
         html_header = "Promoter Test: "+dir_name
-        #fp = os.path.join(dir,outputname,title)
         
         type_list = 'sssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10]
@@ -1215,10 +948,8 @@ class PromoterTest:
         if self.scores:
             if self.scoreh and self.de_gene:
                 score_header = self.de_gene.cond[0]
-            elif self.scoreh and not self.de_gene:
-                pass
             else:
-                score_header = "Loaded score"
+                score_header = "Score"
             header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", score_header, "Sum of Ranks" ]
         
             header_titles = [ "", "Target promoters", "Gene symbol", 
@@ -1244,6 +975,7 @@ class PromoterTest:
         # Calculate the ranking
         rank_count = len(self.de_regions)-stats.rankdata([ len(self.promoter["de"]["dbs"][p.toString()]) for p in self.de_regions ], method='max')+1
         rank_coverage = len(self.de_regions)-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions ], method='max')+1
+        
         if self.scores:
             rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
             rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
@@ -1283,7 +1015,6 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # promoters_dbds.html
-
         header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
         header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
                          "Score of binding event", "Motif of binding by triple helix rule",
@@ -1397,7 +1128,6 @@ class RandomTest:
         marks = numpy.round(numpy.linspace(0, repeats-1, num=41)).tolist()
         
         # Prepare the input lists for multiprocessing
-        
         mp_input = []
         for i in range(repeats):
             mp_input.append([ str(i), self.rna_fasta, self.dna_region,
@@ -1457,10 +1187,7 @@ class RandomTest:
                 num_sig = len([ h for h in counts_dbss if h > self.counts_dbs[rbs] ])
                 p_dbs = float(num_sig)/repeats
                 self.data["dbs"]["p"].append(p_dbs)
-
-                
                 self.dbss_matrix.append(counts_dbss)
-            
          
                 if p_dbs < alpha: 
                     self.data["dbs"]["sig_region"].append(rbs)
@@ -1553,13 +1280,14 @@ class RandomTest:
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
-    def gen_html(self, directory, parameters, align=50, alpha=0.05):
+    def gen_html(self, directory, parameters, align=50, alpha=0.05, score=False):
         """Generate the HTML file"""
         dir_name = os.path.basename(directory)
         html_header = "Genomic Region Test: "+dir_name
-        link_ds = {"RNA":"index.html",
-                   "Target regions":"target_regions.html",
-                   "Parameters":"parameters.html"}
+        link_ds = OrderedDict()
+        link_ds["RNA"] = "index.html"
+        link_ds["Target regions"] = "target_regions.html"
+        link_ds["Parameters"] = "parameters.html"
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
@@ -1656,42 +1384,7 @@ class RandomTest:
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"index.html"))
 
-        ###############################################################################33
-        ################ Parameters.html
-
-        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
-                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
-        html.add_heading("Parameters")
-        header_list = ["Description", "Arguments","Value"]
-
-        data_table = [ ["RNA sequence name", "-rn", parameters.rn ],
-                       ["Input RNA sequence file", "-r", os.path.basename(parameters.r)],
-                       ["Input BED file", "-bed", os.path.basename(parameters.bed) ],
-                       ["Output directory", "-o", os.path.basename(parameters.o) ],
-                       ["Organism", "-organism", parameters.organism ],
-                       ["Number of repitetion of andomization", "-n", str(parameters.n) ],
-                       ["Alpha level for rejection p value", "-a", str(parameters.a) ],
-                       ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(parameters.ccf) ],
-                       ["Remove temporary files", "-rt", str(parameters.rt) ],
-                       ["Input BED file for masking in randomization", "-f", str(parameters.f) ],
-                       ["Input file for RNA accecibility", "-ac", str(parameters.ac) ],
-                       ["Cut off value for RNA accecibility", "-accf", str(parameters.accf) ],
-                       ["Output the BED files for DNA binding sites.", "-obed", str(parameters.obed) ],
-                       ["Show parallel and antiparallel bindings in the plot separately.", "-showpa", str(parameters.showpa) ],
-                       ["Minimum length", "-l", str(self.triplexator_p[0])],
-                       ["Maximum error rate", "-e", str(self.triplexator_p[1])],
-                       ["Tolerated number of consecutive errors", "-c", str(self.triplexator_p[2])],
-                       ["Filtering repeats", "-fr", str(self.triplexator_p[3])],
-                       ["Filtering mode", "-fm", str(self.triplexator_p[4])],
-                       ["Output format", "-of", str(self.triplexator_p[5])],
-                       ["Merge features", "-mf", str(self.triplexator_p[6])] ]
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
-
-        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         
-        html.write(os.path.join(directory,"parameters.html"))
-
 
         #############################################################
         # RNA subpage: Profile of targeted regions for each merged DNA Binding Domain
@@ -1731,7 +1424,6 @@ class RandomTest:
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbd_region.html"))
 
-
         #############################################################
         # Targeted regions centered
         #############################################################
@@ -1741,14 +1433,25 @@ class RandomTest:
         html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
-        header_list = [ "#", "Target region", "Associated Gene", "DBSs Count", 
-                        "DBS coverage", "Sum of ranks" ]
-        header_titles = [ "Rank", 
-                          "Target regions loaded from the given BED file",
-                          "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
-                          "Number of DNA Binding Sites within the region",
-                          "The proportion of the region covered by DBS binding",
-                          "Sum of all the left-hand-side ranks"]
+        if score:
+            header_list = [ "#", "Target region", "Associated Gene", "DBSs Count", 
+                            "DBS coverage", "Score", "Sum of ranks" ]
+            header_titles = [ "Rank", 
+                              "Target regions loaded from the given BED file",
+                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
+                              "Number of DNA Binding Sites within the region",
+                              "The proportion of the region covered by DBS binding",
+                              "Scores from BED file",
+                              "Sum of all the left-hand-side ranks"]
+        else:
+            header_list = [ "#", "Target region", "Associated Gene", "DBSs Count", 
+                            "DBS coverage", "Sum of ranks" ]
+            header_titles = [ "Rank", 
+                              "Target regions loaded from the given BED file",
+                              "Associated genes which is overlapping with the given region or close to it (less than 50000 bp)",
+                              "Number of DNA Binding Sites within the region",
+                              "The proportion of the region covered by DBS binding",
+                              "Sum of all the left-hand-side ranks"]
         html.add_heading("Target Regions")
         data_table = []
         
@@ -1763,21 +1466,30 @@ class RandomTest:
         # Calculate the ranking
         rank_count = len(nz_promoters)-stats.rankdata([ len(self.region_dbs[p.toString()]) for p in nz_promoters ], method='max')
         rank_coverage = len(nz_promoters)-stats.rankdata([ self.region_coverage[p.toString()] for p in nz_promoters ], method='max')
-        rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
-        sum_rank = stats.rankdata(rank_sum, method='min')
+        
+        if score:
+            rank_score = len(nz_promoters)-stats.rankdata([ float(p.data.split("\t")[0]) for p in nz_promoters ], method='max')
+            rank_sum = [x + y +z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+            sum_rank = stats.rankdata(rank_sum, method='min')
+        else:
+            rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+            sum_rank = stats.rankdata(rank_sum, method='min')
 
         for i, region in enumerate(nz_promoters):
-            
-            
-            data_table.append([ str(i+1),
-                                '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
-                                '" style="text-align:left">'+region.toString(space=True)+'</a>',
-                                split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism),
-                                '<a href="region_dbs.html#'+region.toString()+
-                                '" style="text-align:left">'+str(len(self.region_dbs[region.toString()]))+'</a>',
-                                value2str(self.region_coverage[region.toString()]),
-                                str(int(rank_sum[i]+2)) ])
+            newline = [ str(i+1),
+                        '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
+                        "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
+                        '" style="text-align:left">'+region.toString(space=True)+'</a>',
+                        split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism),
+                        '<a href="region_dbs.html#'+region.toString()+
+                        '" style="text-align:left">'+str(len(self.region_dbs[region.toString()]))+'</a>',
+                        value2str(self.region_coverage[region.toString()]) ]
+            if score:
+                newline += [ str(region.data.split("\t")[0]),
+                             str(int(rank_sum[i]+3)) ]
+            else:
+                newline += [ str(int(rank_sum[i]+2)) ]
+            data_table.append(newline)
                                 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, sortable=True)
@@ -1789,7 +1501,6 @@ class RandomTest:
         ############################
         # Subpages for targeted region centered page
         # region_dbs.html
-        
         header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation" ]
 
         html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
@@ -1816,5 +1527,38 @@ class RandomTest:
                                         rd.orient ])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      auto_width=True)
-                
         html.write(os.path.join(directory, "region_dbs.html"))
+
+        ###############################################################################33
+        ################ Parameters.html
+
+        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+        html.add_heading("Parameters")
+        header_list = ["Description", "Arguments","Value"]
+
+        data_table = [ ["RNA sequence name", "-rn", parameters.rn ],
+                       ["Input RNA sequence file", "-r", os.path.basename(parameters.r)],
+                       ["Input BED file", "-bed", os.path.basename(parameters.bed) ],
+                       ["Output directory", "-o", os.path.basename(parameters.o) ],
+                       ["Organism", "-organism", parameters.organism ],
+                       ["Number of repitetion of andomization", "-n", str(parameters.n) ],
+                       ["Alpha level for rejection p value", "-a", str(parameters.a) ],
+                       ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(parameters.ccf) ],
+                       ["Remove temporary files", "-rt", str(parameters.rt) ],
+                       ["Input BED file for masking in randomization", "-f", str(parameters.f) ],
+                       ["Input file for RNA accecibility", "-ac", str(parameters.ac) ],
+                       ["Cut off value for RNA accecibility", "-accf", str(parameters.accf) ],
+                       ["Output the BED files for DNA binding sites.", "-obed", str(parameters.obed) ],
+                       ["Show parallel and antiparallel bindings in the plot separately.", "-showpa", str(parameters.showpa) ],
+                       ["Minimum length", "-l", str(self.triplexator_p[0])],
+                       ["Maximum error rate", "-e", str(self.triplexator_p[1])],
+                       ["Tolerated number of consecutive errors", "-c", str(self.triplexator_p[2])],
+                       ["Filtering repeats", "-fr", str(self.triplexator_p[3])],
+                       ["Filtering mode", "-fm", str(self.triplexator_p[4])],
+                       ["Output format", "-of", str(self.triplexator_p[5])],
+                       ["Merge features", "-mf", str(self.triplexator_p[6])] ]
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                             auto_width=True)
+        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
+        html.write(os.path.join(directory,"parameters.html"))
