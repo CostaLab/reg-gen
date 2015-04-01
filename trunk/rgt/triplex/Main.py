@@ -8,16 +8,15 @@ import time, datetime, getpass, fnmatch
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import TriplexSearch, PromoterTest, RandomTest
+from triplexTools import PromoterTest, RandomTest
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 
 dir = os.getcwd()
 
-# To do: merge absolute path and relative path
 
 """
-Statistical tests and plotting tools for triplex binding site analysis
+Triplex Domain Finder (TDF) provides statistical tests and plotting tools for triplex binding site analysis
 
 Author: Joseph Kuo
 """
@@ -50,12 +49,6 @@ def check_dir(path):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    #link_d = {}
-    #for root, dirnames, filenames in os.walk(os.path.dirname(path)):
-    #    roots = root.split('/')
-    #    for filename in fnmatch.filter(filenames, 'index.html'):
-    #        if roots[-2] == os.path.basename(os.path.dirname(path)):
-    #            link_d[roots[-1]] = os.path.join("../"+roots[-1], 'index.html')
     
     link_d = {"List":"index.html"}
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
@@ -86,7 +79,7 @@ def main():
                                                   for detection of triple helix potential of \
                                                   lncRNAs from genome-wide functional data. \
                                                   Author: Chao-Chung Kuo\
-                                                  \nVersion: 0.1.2', 
+                                                  \nVersion: 0.1.1', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
@@ -103,7 +96,6 @@ def main():
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
-    #parser_promotertest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file')
 
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (Default: 1000)")
     
@@ -129,9 +121,9 @@ def main():
     parser_promotertest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Set the multiprocessing")
     
     
-    ################### Random test ##########################################
-    h_random = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
-    parser_randomtest = subparsers.add_parser('regiontest', help=h_random)
+    ################### Genomic Region Test ##########################################
+    h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
+    parser_randomtest = subparsers.add_parser('regiontest', help=h_region)
     parser_randomtest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
     parser_randomtest.add_argument('-bed', metavar='  ', help="Input BED file for interested regions on DNA")
@@ -141,9 +133,9 @@ def main():
                                    help="Number of times for randomization (Default: 10000)")
 
     parser_randomtest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
-    #parser_randomtest.add_argument('-genome_path',type=str, metavar='  ', help='Define the path of genome FASTA file.')
-    
+ 
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
+    parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
     parser_randomtest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_randomtest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for DBS counts (Default: 20)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
@@ -190,7 +182,6 @@ def main():
             with open(os.path.join(cf.data_dir,"triplexator_path.txt"), 'w') as f:
                 print(args.path, file=f)
             sys.exit(1)
-
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
@@ -199,13 +190,7 @@ def main():
             sys.exit(1)
         if not args.rn: 
             print("Please define RNA sequence name.")
-            sys.exit(1)
-        #if not args.genome_path: 
-        #    print("Please define the path of genome FASTA file.")
-        #    sys.exit(1)
-        
-        
-
+            sys.exit(1)  
 
         t0 = time.time()
         # Normalised output path
@@ -218,169 +203,7 @@ def main():
         summary.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         summary.append("User: " + getpass.getuser())
         summary.append("\nCommand:\n\t$ " + " ".join(sys.argv))
-
-    ################################################################################
-    ##### Search ###################################################################
-    ################################################################################
-
-    if args.mode == 'search':
-        
-        ############################################################################
-        ##### Both RNA and DNA input ###############################################
-        if args.r and args.d: 
-            print2(summary, "\nSearch potential triplex forming binding sites between RNA and DNA")
-            # Normalised paths
-            args.r = os.path.normpath(os.path.join(dir,args.r)) 
-            args.d = os.path.normpath(os.path.join(dir,args.d))
-            triplex = TriplexSearch()
-            
-            ##### Read RNA sequences ###############################################
-            print2(summary, "Step 1: Searching potential binding sites on RNA")
-            rnaname = os.path.basename(args.r).split(".")[0]
-            rnas = SequenceSet(name=rnaname, seq_type=SequenceType.RNA)
-            
-            if args.rt == 'fasta': # Input is FASTA
-                print2(summary, "\tRead RNA in FASTA: "+args.r)
-                rnas.read_fasta(args.r)
-            else: # Input is BED
-                if not args.genome: 
-                    print("Please add the directory where the genome FASTA files locate.\n")
-                    sys.exit(1)
-                
-                args.genome = os.path.normpath(os.path.join(dir,args.genome))    # Normalised paths
-                print2(summary, "\tRead RNA in BED: "+args.r)
-                print2(summary, "\tRefer to genome in FASTA: "+args.genome)
-                rnas.read_bed(args.r, args.genome)
-            
-            ##### Search RNA potential binding sites ###############################
-            # Save parameters
-            print2(summary, "\tMotif: "+args.m)
-            print2(summary, "\tMinimum length: "+args.min+" bp")
-            if args.max: print2(summary, "\tMaximum length: "+args.max+" bp")
-            else: print2(summary, "\tMaximum length: infinite")
-            
-            rbs = triplex.search_bindingsites(sequence_set=rnas, seq_type=SequenceType.RNA, 
-                                              motif=args.m, min_len=args.min, max_len=args.max)
-            rbs.write_bs(os.path.join(args.o, rnaname+".rbs"))
-            t1 = time.time()
-            print2(summary, "\tRunning time : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            print2(summary, "\tRNA binding sites are saved in: "+os.path.join(args.o, rnaname+".rbs"))
-            
-            
-            ##### Read DNA sequences ###############################################
-            print2(summary, "Step 2: Searching potential binding sites on DNA")
-            dnaname = os.path.basename(args.d).split(".")[0]
-            dnas = SequenceSet(name=dnaname, seq_type=SequenceType.DNA)
-            
-            if args.dt == 'fasta': # Input is FASTA
-                print2(summary, "\tRead DNA in FASTA: "+args.d)
-                dnas.read_fasta(args.d)
-                
-            else: # Input is BED
-                if not args.genome: 
-                    print("Please add the directory where the genome FASTA files locate.\n")
-                    sys.exit(1)
-                
-                args.genome = os.path.normpath(os.path.join(dir,args.genome))    # Normalised paths
-                print2(summary, "\tRead DNA in BED: "+args.d)
-                print2(summary, "\tRefer to genome in FASTA: "+args.genome)
-                dnas.read_bed(args.d, args.genome)
-            
-            ##### Search DNA potential binding sites ###############################
-            # Save parameters
-            print2(summary, "\tMinimum length: "+args.min+" bp")
-            if args.max: print2(summary, "\tMaximum length: "+args.max+" bp")
-            else: print2(summary, "\tMaximum length: infinite")
-            
-            dbs = triplex.search_bindingsites(sequence_set=dnas, seq_type=SequenceType.DNA, 
-                                              motif=args.m, min_len=args.min, max_len=args.max)
-            dbs.write_bs(os.path.join(args.o, dnaname+".dbs"))
-            t2 = time.time()
-            print2(summary, "\tRunning time : " + str(datetime.timedelta(seconds=round(t2-t1))))
-            print2(summary, "\tDNA binding sites are saved in: "+os.path.join(args.o, dnaname+".dbs"))
-            
-            ##### Compare the binding sites between RNA and DNA ####################
-            output_summary(summary, args.o, "summary.txt")
-        ############################################################################
-        ##### Only RNA input #######################################################
-        elif args.r and not args.d:
-            print2(summary, "\nSearch potential triplex forming binding sites on RNA")
-            
-            args.r = os.path.normpath(os.path.join(dir,args.r))   # Normalised paths
-            rnaname = os.path.basename(args.r).split(".")[0]
-            rnas = SequenceSet(name=rnaname, seq_type=SequenceType.RNA)
-            
-            # Input is FASTA
-            if args.rt == 'fasta':
-                print2(summary, "\tRead RNA in FASTA: "+args.r)
-                rnas.read_fasta(args.r)
-
-            # Input is BED
-            else:
-                if not args.genome: 
-                    print("Please add the directory where the genome FASTA files locate.\n")
-                    sys.exit(1)
-                
-                args.genome = os.path.normpath(os.path.join(dir,args.genome))    # Normalised paths
-                print2(summary, "\tRead RNA in BED: "+args.r)
-                print2(summary, "\tRefer to genome in FASTA: "+args.genome)
-                rnas.read_bed(args.r, args.genome)
-            
-            triplex = TriplexSearch()
-            print2(summary, "\tMotif: "+args.m)
-            print2(summary, "\tMinimum length: "+str(args.min))
-            print2(summary, "\tMaximum length: "+str(args.max))
-
-            bs = triplex.search_bindingsites(sequence_set=rnas, seq_type=SequenceType.RNA, 
-                                             motif=args.m, min_len=args.min, max_len=args.max, multiprocess=args.mp)
-
-            bs.write_rbs(os.path.join(args.o, rnaname+".rbs"))
-            t1 = time.time()
-            print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            print2(summary, "Results are saved in: "+os.path.join(args.o, rnaname+".rbs"))
-            output_summary(summary, args.o, "summary.txt")
-         
-        ############################################################################
-        ##### Only DNA input #######################################################
-        elif args.d and not args.r:
-            print2(summary, "\nSearch potential triplex forming binding sites on DNA")
-            
-            args.d = os.path.normpath(os.path.join(dir,args.d))   # Normalised paths
-            dnaname = os.path.basename(args.d).split(".")[0]
-            dnas = SequenceSet(name=dnaname, seq_type=SequenceType.DNA)
-            
-            # Input is FASTA
-            if args.dt == 'fasta':
-                print2(summary, "\tRead DNA in FASTA: "+args.d)
-                dnas.read_fasta(args.d)
-
-            # Input is BED
-            else:
-                if not args.genome: 
-                    print("Please add the directory where the genome FASTA files locate.\n")
-                    sys.exit(1)
-                args.genome = os.path.normpath(os.path.join(dir,args.genome))   # Normalised paths
-                print2(summary, "\tRead DNA in BED: "+args.d)
-                print2(summary, "\tRefer to genome in FASTA: "+args.genome)
-                dnas.read_bed(os.path.join(dir, args.d), args.genome)
-            
-            triplex = TriplexSearch()
-            print2(summary, "\tMinimum length: "+str(args.min))
-            print2(summary, "\tMaximum length: "+str(args.max))
-            bs = triplex.search_bindingsites(sequence_set=dnas, seq_type=SequenceType.DNA, 
-                                             motif=args.m, min_len=args.min, max_len=args.max, multiprocess=args.mp)
-
-            bs.write_dbs(os.path.join(args.o, dnaname+".dbs"))
-            t1 = time.time()
-            print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            print2(summary, "Results are saved in: "+os.path.join(args.o, dnaname+".dbs"))
-            output_summary(summary, args.o, "summary.txt")
-            
-            
-        # No input
-        else:
-            print("Please define either RNA strand or DNA strand (or both) as inputs\n")
-        
+       
     ################################################################################
     ##### Promoter Test ############################################################
     ################################################################################
@@ -505,7 +328,8 @@ def main():
                                ylabel="Number of DBS on target regions",
                                filename="boxplot_dbs" )
 
-        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a)
+        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
+                            score=args.score)
         t3 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
         

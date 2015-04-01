@@ -1315,31 +1315,3 @@ class GenomicRegionSet:
         region_set = GenomicRegionSet("Query")
         region_set.add(region)
         return self.intersect(region_set, mode=OverlapType.ORIGINAL)
-
-if __name__ == '__main__':
-    a = GenomicRegionSet(name="a")
-    a.add(GenomicRegion("chr1",10,50))
-    a.add(GenomicRegion("chr1",100,500))
-    a.add(GenomicRegion("chr1",100,500))
-    a.add(GenomicRegion("chr1",1000,5000))
-    a.add(GenomicRegion("chr2",1000,5000))
-    a.add(GenomicRegion("chr2",1000,5000))
-
-    b = GenomicRegionSet(name="b")
-    b.add(GenomicRegion("chr1",1,8))
-    b.add(GenomicRegion("chr1",20,30))
-    b.add(GenomicRegion("chr1",40,60))
-    b.add(GenomicRegion("chr1",200,300))
-    b.add(GenomicRegion("chr1",400,600))
-    b.add(GenomicRegion("chr1",4000,6000))
-    b.add(GenomicRegion("chr1",4000,6000))
-    b.add(GenomicRegion("chr1",4000,6000))
-    
-    
-    #print(len(a))
-    #print(len(b))
-    #print(a.sequences)
-    #print(b.sequences)
-    
-    c = a.counts_per_region(b)    
-    print(c)
