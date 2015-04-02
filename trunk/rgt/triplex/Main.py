@@ -5,6 +5,7 @@ import sys
 import os
 import argparse 
 import time, datetime, getpass, fnmatch
+import subprocess
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -13,7 +14,6 @@ from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 
 dir = os.getcwd()
-
 
 """
 Triplex Domain Finder (TDF) provides statistical tests and plotting tools for triplex binding site analysis
@@ -176,12 +176,28 @@ def main():
         sys.exit(1)
     else:   
         args = parser.parse_args()
+        cf = ConfigurationFile()
         if args.mode == 'triplexator' and args.path:
-            cf = ConfigurationFile()
-            print("\tDefine Triplexator in: "+args.path)
-            with open(os.path.join(cf.data_dir,"triplexator_path.txt"), 'w') as f:
-                print(args.path, file=f)
-            sys.exit(1)
+            #os.system(args.path)
+            #FNULL = open(os.devnull, 'w')
+            #out = subprocess.check_output([args.path], shell=True)
+            FNULL = open(os.devnull, 'w')
+            retcode = subprocess.call([args.path], stdout=FNULL, stderr=subprocess.STDOUT)
+            #proc.wait()
+            #out, err = proc.communicate()
+            #print("############")
+            #print(retcode)
+            if retcode == 0:
+                
+                print("\tDefine Triplexator in: "+args.path)
+                print("\tTriplexator works properly. You can start to use TDF.")
+                print("\tThis path is stored in "+os.path.join(cf.data_dir,"triplexator_path.txt"))
+                with open(os.path.join(cf.data_dir,"triplexator_path.txt"), 'w') as f:
+                    print(args.path, file=f)
+                sys.exit(1)
+            else:
+                print("\tTriplexator cannot be found by the given link. Please check http://www.regulatory-genomics.org/tdf/download-installation/ for more details.")
+
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
@@ -190,8 +206,11 @@ def main():
             sys.exit(1)
         if not args.rn: 
             print("Please define RNA sequence name.")
-            sys.exit(1)  
-
+            sys.exit(1)
+        if not os.path.isfile(os.path.join(cf.data_dir,"triplexator_path.txt")):
+            print("\tTriplexator path is not defined, please try \"rgt-TDF triplexater -path\" to define.")
+            sys.exit(1)
+            
         t0 = time.time()
         # Normalised output path
         args.o = os.path.normpath(os.path.join(dir,args.o))
@@ -274,7 +293,7 @@ def main():
         list_all_index(path=os.path.dirname(args.o))
         
     ################################################################################
-    ##### Random ###################################################################
+    ##### Genomic Region Test ######################################################
     ################################################################################
     if args.mode == 'regiontest':
         print2(summary, "\n"+"*************** Genomic Region Test ***************")
@@ -294,7 +313,6 @@ def main():
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-        
 
         print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,

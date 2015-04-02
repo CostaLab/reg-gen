@@ -626,7 +626,6 @@ class Html:
             
         else:
             self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
-        
 
         # Gap
         self.document.append("     <td width=\"5%\"></td>")
