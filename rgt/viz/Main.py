@@ -13,8 +13,8 @@ from shutil import copyfile
 
 # Local Libraries
 # Distal Libraries
-from .. GenomicRegionSet import *
-from .. ExperimentalMatrix import *
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.Util import GenomeData, OverlapType, Html
 from plotTools import Projection, Jaccard, Intersect, Boxplot, Lineplot
 
@@ -23,7 +23,6 @@ dir = os.getcwd()
 Statistical analysis methods and plotting tools for ExperimentalMatrix
 
 Author: Joseph Kuo
-
 """
 
 #################################################################################################
@@ -54,7 +53,6 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
     # Saving 
     if not extra:
         f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_inches='tight', dpi=300)
-        #f.savefig(os.path.join(pd,filename))
     else:
         f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
     
@@ -62,11 +60,6 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
         try:
             pp = PdfPages(os.path.join(pd,filename) + '.pdf')
             pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
-        
-            # Set the file's metadata via the PdfPages object:
-            #d = pp.infodict()
-            #d['Title'] = args.title
-            #d['CreationDate'] = datetime.datetime.today()
             pp.close()
         except:
             print("ERROR: Problem in PDF conversion. Skipped.")
@@ -75,14 +68,10 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
         
 def output_parameters(parameter, directory, folder, filename):
     pd = os.path.join(dir,directory,folder)
-    try:
-        os.stat(os.path.dirname(pd))
-    except:
-        os.mkdir(os.path.dirname(pd))
-    try:
-        os.stat(pd)
-    except:
-        os.mkdir(pd)    
+    try: os.stat(os.path.dirname(pd))
+    except: os.mkdir(os.path.dirname(pd))
+    try: os.stat(pd)
+    except: os.mkdir(pd)    
     if parameter:
         with open(os.path.join(pd,"parameters.txt"),'w') as f:
             for s in parameter:
@@ -91,7 +80,6 @@ def output_parameters(parameter, directory, folder, filename):
 def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
     copyfile(em, os.path.join(dir,directory,folder,filename))
     
-
 def main():
     ###############################################################################
     ##### PARAMETERS ##############################################################
@@ -192,25 +180,6 @@ def main():
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
-    
-    ################### Proportion Plot ##########################################
-    parser_proportionplot = subparsers.add_parser('proportionplot',help='Comparing the query BEDs on reference BEDs by proportion plot.')
-    
-    parser_proportionplot.add_argument('output', help=helpoutput)
-    parser_proportionplot.add_argument('-i', '--input',help="Define the input experimental matrix")
-    
-    parser_proportionplot.add_argument('-t','--title', default='proportion_plot', help=helptitle)
-    parser_proportionplot.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
-    #parser_proportionplot.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_proportionplot.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    #parser_proportionplot.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
-    
-    #parser_proportionplot.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    #parser_proportionplot.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
-    #parser_proportionplot.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
-    #parser_proportionplot.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_proportionplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    #parser_proportionplot.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
     ################### Boxplot ##########################################
     
