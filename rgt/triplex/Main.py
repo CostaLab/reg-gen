@@ -162,7 +162,7 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    elif len(sys.argv) == 2: 
+    elif len(sys.argv) == 2:  
         # retrieve subparsers from parser
         subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
         # there will probably only be one subparser_action,but better save than sorry
