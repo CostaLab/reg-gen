@@ -734,7 +734,7 @@ class PromoterTest:
         #############################################################
         # Index main page
         #############################################################
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
@@ -862,7 +862,7 @@ class PromoterTest:
                        "Number of DNA Binding Sites binding to the promoter", 
                        "The proportion of the promoter covered by DBS binding"]
         # dbds_promoters.html
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
      
         for rbsm in self.frequency["promoters"]["de"].keys():    
@@ -886,7 +886,7 @@ class PromoterTest:
 
         ################################################################
         ############# Parameters
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         html.add_heading("Parameters")
@@ -942,7 +942,7 @@ class PromoterTest:
         
         ##############################################################################################
         # promoters.html
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         if self.scores:
@@ -1020,7 +1020,7 @@ class PromoterTest:
                          "Score of binding event", "Motif of binding by triple helix rule",
                          "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel"]
         header_list=header_sub
-        html = Html(name=html_header, links_dict=self.link_d, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         for i, promoter in enumerate(self.de_regions):
@@ -1295,7 +1295,7 @@ class RandomTest:
         ##################################################
         # index.html
 
-        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         # Plots
         html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
@@ -1401,7 +1401,7 @@ class RandomTest:
                       
         #########################################################
         # dbd_region.html
-        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
      
         for rbsm in self.rbss:    
@@ -1430,7 +1430,7 @@ class RandomTest:
         
         ##############################################################################################
         # target_regions.html
-        html = Html(name=html_header, links_dict=link_ds,fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds,#fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         if score:
@@ -1503,7 +1503,7 @@ class RandomTest:
         # region_dbs.html
         header_list = ["RBS", "DBS", "Strand", "Score", "Motif", "Orientation" ]
 
-        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         
         for i, region in enumerate(self.dna_region):
@@ -1532,7 +1532,7 @@ class RandomTest:
         ###############################################################################33
         ################ Parameters.html
 
-        html = Html(name=html_header, links_dict=link_ds, fig_dir=os.path.join(directory,"style"), 
+        html = Html(name=html_header, links_dict=link_ds, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         html.add_heading("Parameters")
         header_list = ["Description", "Arguments","Value"]
