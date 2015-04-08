@@ -26,7 +26,6 @@ class GeneSet:
             for line in f:            
                 line = line.strip()
                 l = line.split()
-                print(l[0])
                 self.genes.append(l[0])
             
     def read_expression(self, geneListFile, header = True):

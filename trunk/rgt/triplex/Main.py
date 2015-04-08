@@ -177,28 +177,18 @@ def main():
     else:   
         args = parser.parse_args()
         cf = ConfigurationFile()
-        if args.mode == 'triplexator' and args.path:
-            #os.system(args.path)
-            #FNULL = open(os.devnull, 'w')
-            #out = subprocess.check_output([args.path], shell=True)
-            #FNULL = open(os.devnull, 'w')
-            #retcode = subprocess.call([args.path], stdout=FNULL, stderr=subprocess.STDOUT)
-            process = subprocess.Popen([args.path], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # wait for the process to terminate
-            out, err = process.communicate()
-            errcode = process.returncode
-            #print(retcode)
-            if errcode == 0:
-                print("** Define Triplexator in: "+args.path)
-                print("** Triplexator works properly. You can start to use TDF.")
-                print("** This path is stored in "+os.path.join(cf.data_dir,"triplexator_path.txt"))
-                with open(os.path.join(cf.data_dir,"triplexator_path.txt"), 'w') as f:
-                    print(args.path, file=f)
-                sys.exit(1)
-            else:
-                print("** Error: Triplexator cannot be found by the given link. Please check http://www.regulatory-genomics.org/tdf/download-installation/ for more details.")
-                sys.exit(1)
         
+        process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # wait for the process to terminate
+        out, err = process.communicate()
+        errcode = process.returncode
+        if errcode == 0:
+            print("** Triplexator: OK")
+        else:
+            print("** Error: Triplexator cannot be found. Please export Triplexator path into $PATH")
+            print(err)
+            sys.exit(1)
+
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
@@ -208,24 +198,6 @@ def main():
         if not args.rn: 
             print("Please define RNA sequence name.")
             sys.exit(1)
-
-        if not os.path.isfile(os.path.join(cf.data_dir,"triplexator_path.txt")):
-            print("\tTriplexator path is not defined, please try \"rgt-TDF triplexater -path <Triplexator>\" to define.")
-            sys.exit(1)
-        else:
-            with open(os.path.join(cf.data_dir,"triplexator_path.txt")) as f:
-                tp = f.readline()
-                tp = tp.strip("\n")
-                process = subprocess.Popen([tp], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                # wait for the process to terminate
-                out, err = process.communicate()
-                errcode = process.returncode
-                if errcode == 0:
-                    pass
-                else:
-                    for e in err:
-                        print(e)
-                    sys.exit(1)
 
         t0 = time.time()
         # Normalised output path
