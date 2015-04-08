@@ -56,6 +56,8 @@ if(platform not in supported_platforms):
 ###################################################################################################
 
 # Creating logos
+output_logos_dir = path.join(curr_dir,"logos")
+if(not path.exists(output_logos_dir)): mkdir(output_logos_dir)
 for dir_name, subdir_list, file_list in walk(path.join(curr_dir,"motifs")):
     base_name = path.basename(dir_name)
     if((options.hocomoco and base_name == "hocomoco") or (options.jaspar_vertebrates and base_name == "jaspar_vertebrates") or (options.uniprobe_primary and base_name == "uniprobe_primary") or (options.uniprobe_secondary and base_name == "uniprobe_secondary")):

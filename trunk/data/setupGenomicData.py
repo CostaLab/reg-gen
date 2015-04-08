@@ -74,18 +74,18 @@ if(options.hg19):
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/hg19/chromosomes/"
         chr_list = ["chr"+str(e) for e in range(1,23)+["X","Y","M"]]
-        if(not path.isfile(output_genome_file_name)):
-            output_genome_file = open(output_genome_file_name,"w")
-            for chr_name in chr_list:
-                print "Downloading hg19 genome ("+chr_name+")"
-                gz_file_name = path.join(output_location,chr_name+".fa.gz")
-                system("wget "+gen_root_url+chr_name+".fa.gz -P "+output_location)
-                gz_file = gzip.open(gz_file_name, 'rb')
-                output_genome_file.write( gz_file.read() )
-                gz_file.close()
-                remove(gz_file_name)
-                print "OK"
-            output_genome_file.close()
+        output_genome_file = open(output_genome_file_name,"w")
+        for chr_name in chr_list:
+            print "Downloading hg19 genome ("+chr_name+")"
+            gz_file_name = path.join(output_location,chr_name+".fa.gz")
+            if(path.isfile(gz_file_name)): remove(gz_file_name)
+            system("wget "+gen_root_url+chr_name+".fa.gz -P "+output_location)
+            gz_file = gzip.open(gz_file_name, 'rb')
+            output_genome_file.write( gz_file.read() )
+            gz_file.close()
+            remove(gz_file_name)
+            print "OK"
+        output_genome_file.close()
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location,"gencode_annotation.gtf")
@@ -96,15 +96,15 @@ if(options.hg19):
     else:
         gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location,"gencode.v19.annotation.gtf.gz")
+        if(path.isfile(gtf_output_file_name_gz)): remove(gtf_output_file_name_gz)
         print "Downloading hg19 GTF (gene annotation)"
-        if(not path.isfile(gtf_output_file_name)):
-            system("wget "+gtf_url+" -P "+output_location)
-            gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
-            gtf_output_file = open(gtf_output_file_name,"w")
-            gtf_output_file.write( gz_file.read() )
-            gz_file.close()
-            remove(gtf_output_file_name_gz)
-            gtf_output_file.close()
+        system("wget "+gtf_url+" -P "+output_location)
+        gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
+        gtf_output_file = open(gtf_output_file_name,"w")
+        gtf_output_file.write( gz_file.read() )
+        gz_file.close()
+        remove(gtf_output_file_name_gz)
+        gtf_output_file.close()
         print "OK"
 
 ###################################################################################################
@@ -125,18 +125,18 @@ if(options.mm9):
     else:
         gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/mm9/chromosomes/"
         chr_list = ["chr"+str(e) for e in range(1,20)+["X","Y","M"]]
-        if(not path.isfile(output_genome_file_name)):
-            output_genome_file = open(output_genome_file_name,"w")
-            for chr_name in chr_list:
-                print "Downloading MM9 genome ("+chr_name+")"
-                gz_file_name = path.join(output_location,chr_name+".fa.gz")
-                system("wget "+gen_root_url+chr_name+".fa.gz -P "+output_location)
-                gz_file = gzip.open(gz_file_name, 'rb')
-                output_genome_file.write( gz_file.read() )
-                gz_file.close()
-                remove(gz_file_name)
-                print "OK"
-            output_genome_file.close()
+        output_genome_file = open(output_genome_file_name,"w")
+        for chr_name in chr_list:
+            print "Downloading MM9 genome ("+chr_name+")"
+            gz_file_name = path.join(output_location,chr_name+".fa.gz")
+            if(path.isfile(gz_file_name)): remove(gz_file_name)
+            system("wget "+gen_root_url+chr_name+".fa.gz -P "+output_location)
+            gz_file = gzip.open(gz_file_name, 'rb')
+            output_genome_file.write( gz_file.read() )
+            gz_file.close()
+            remove(gz_file_name)
+            print "OK"
+        output_genome_file.close()
 
     # Fetching GTF
     gtf_output_file_name = path.join(output_location,"gencode_annotation.gtf")
@@ -147,15 +147,15 @@ if(options.mm9):
     else:
         gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M1/gencode.vM1.annotation.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location,"gencode.vM1.annotation.gtf.gz")
+        if(path.isfile(gtf_output_file_name_gz)): remove(gtf_output_file_name_gz)
         print "Downloading MM9 GTF (gene annotation)"
-        if(not path.isfile(gtf_output_file_name)):
-            system("wget "+gtf_url+" -P "+output_location)
-            gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
-            gtf_output_file = open(gtf_output_file_name,"w")
-            gtf_output_file.write( gz_file.read() )
-            gz_file.close()
-            remove(gtf_output_file_name_gz)
-            gtf_output_file.close()
+        system("wget "+gtf_url+" -P "+output_location)
+        gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
+        gtf_output_file = open(gtf_output_file_name,"w")
+        gtf_output_file.write( gz_file.read() )
+        gz_file.close()
+        remove(gtf_output_file_name_gz)
+        gtf_output_file.close()
         print "OK"
 
 
