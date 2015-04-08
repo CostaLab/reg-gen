@@ -146,7 +146,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 
 def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
     """Perform Triplexator"""
-    triplexator_path = check_triplexator_path()
+    #triplexator_path = check_triplexator_path()
 
     arguments = " "
     if ss: arguments += "-ss "+ss+" "
@@ -162,7 +162,8 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
-    os.system(triplexator_path+arguments)
+    #os.system(triplexator_path+arguments)
+    os.system("triplexator"+arguments)
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
