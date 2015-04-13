@@ -1762,7 +1762,7 @@ class Boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, sy, html=False, logT=False, ylim=False):
+    def plot(self, title, sy, logT=False, ylim=False):
         """ Return boxplot from the given tables.
         
         """
