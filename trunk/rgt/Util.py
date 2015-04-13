@@ -287,6 +287,7 @@ class ImageData(ConfigurationFile):
         self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
         self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
         self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
+        self.viz_logo = os.path.join(self.data_dir,"fig","viz_logo.png")
 
 
     def get_rgt_logo(self):
@@ -336,6 +337,12 @@ class ImageData(ConfigurationFile):
         Returns the default TDF logo.
         """
         return self.tdf_logo
+
+    def get_viz_logo(self):
+        """
+        Returns the default TDF logo.
+        """
+        return self.viz_logo
     
 class OverlapType:
     """
@@ -551,7 +558,7 @@ class Html:
             self.copy_relevent_files(fig_dir)
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         else:
-            self.create_header()
+            self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         
         self.add_links()
         
@@ -570,6 +577,8 @@ class Html:
         if self.other_logo:
             if self.other_logo == "TDF":
                 shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(), dst=os.path.join(target_dir,"tdf_logo.png"))
+            if self.other_logo == "viz":
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(), dst=os.path.join(target_dir,"viz_logo.png"))
             
         
         
@@ -617,8 +626,10 @@ class Html:
         if relative_dir:            
             self.document.append("    <td width=\"5%\">")
             if self.homepage: self.document.append("<a href=\""+self.homepage+"\">")
-            if other_logo=="TDF":
+            if other_logo == "TDF":
                 self.document.append("    <img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\">")
+            elif other_logo == "viz":
+                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/viz_logo.png"+"\" width=\"130\" height=\"100\">")
             else:
                 self.document.append("    <img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\">")
             if self.homepage: self.document.append("</a>")
