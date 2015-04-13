@@ -241,7 +241,7 @@ copy_files_dictionary = {
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
 "fp_hmms": ["H3K4me3_proximal.hmm"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
-"fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png"],
+"fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
     copy_dest_path = path.join(options.param_rgt_data_location,copy_folder)

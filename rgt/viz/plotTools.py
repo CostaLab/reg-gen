@@ -125,7 +125,7 @@ def colormaps(exps, colorby, definedinEM):
                 colors.append(exps.get_type(i,"color"))
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
-    if definedinEM == False:
+    else:
         
         if len(exps.get_regionsnames()) < 20:
             colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
@@ -146,10 +146,9 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                     colors[q.name] = rgb
                 else:
                     colors[q.name] = c
-    if definedinEM == False:
+    else:
         colors = OrderedDict()
         qs = []
-        
         if colorby == "regions":
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]:            
@@ -391,9 +390,8 @@ class Projection:
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
         self.lenlist = {}
-        #self.backgrounds = {}
-        print2(self.parameter, "\nProjection test")
-        print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
+        #print2(self.parameter, "\nProjection test")
+        #print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
         
         all_p = {}
         for ty in self.groupedquery.keys():
@@ -428,16 +426,16 @@ class Projection:
                     bg = self.bglist[ty][r.name][q.name]
                     ratio = self.qlist[ty][r.name][q.name]
                     p = self.plist[ty][r.name][q.name]
-                    print(p)
-                    if len(q) == 0:
-                        note = "Empty query!"
-                    elif p < 0.05 and bg > ratio: 
-                        note = "Negatively unassociated!"
-                    elif p < 0.05 and bg < ratio:
-                        note = "Positively associated!"
-                    else:
-                        note = ""
-                    print2(self.parameter, r.name+"\t"+value2str(bg)+"\t"+q.name+"\t"+value2str(ratio)+"\t"+value2str(p)+"\t"+note)
+                    #print(p)
+                    #if len(q) == 0:
+                    #    note = "Empty query!"
+                    #elif p < 0.05 and bg > ratio: 
+                    #    note = "Negatively unassociated!"
+                    #elif p < 0.05 and bg < ratio:
+                    #    note = "Positively associated!"
+                    #else:
+                    #    note = ""
+                    #print2(self.parameter, r.name+"\t"+value2str(bg)+"\t"+q.name+"\t"+value2str(ratio)+"\t"+value2str(p)+"\t"+note)
                     
                     self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
 
@@ -461,7 +459,8 @@ class Projection:
                     y = self.qlist[ty][r][q]
                     if y == 0 and logt: y = 0.000001
                     #print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
-                    ax[ind_ty].bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
+                    ax[ind_ty].bar(x, y, width=width, color=self.color_list[q], edgecolor="none", 
+                                   align='edge', log=logt)
             if logt:
                 ax[ind_ty].set_yscale('log')
             else:
@@ -501,10 +500,16 @@ class Projection:
             #im = plt.imshow(da, cmap=ax[ind_r], vmin=, vmax, origin, extent, shape, filternorm, filterrad, imlim, resample, url, hold)
 
 
-    def gen_html(self, outputname, title, align=50):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"projection.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+    def gen_html(self, directory, title, args, align=50):
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = "Projection Test: "+dir_name
+        link_d = OrderedDict()
+        link_d["Projection test"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         html.add_figure("projection_test.png", align="center")
         
         header_list = ["Reference<br>name",
@@ -546,7 +551,8 @@ class Projection:
                         else:
                             data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
+
         
         header_list=["Assumptions and hypothesis"]
         data_table = [['If the background proportion is too small, it may cause bias in p value.'],
@@ -560,10 +566,29 @@ class Projection:
             data_table.append(['The following references contain zero-length region which cause error in proportion calculation, please check it:<br>'+
                                '     <font color=\"red\">'+', '.join([s for s in nalist])+'</font></p>'])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
+        html.add_fixed_rank_sortable()
         
-        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
-        html.write(os.path.join(fp,"projection.html"))
-    
+        html.write(os.path.join(directory,os.path.join(title,"index.html")))
+
+        # Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        header_list = ["Description", "Argument", "Value"]
+        data_table = [["Reference", "-r", args.r ],
+                      ["Query", "-q", args.q],
+                      ["Output directory", "-o", os.path.basename(args.o)],
+                      ["Experiment title", "-t", args.t],
+                      #["Grouping tag", "-g", args.g],
+                      #["Coloring tag", "-c", args.c],
+                      #["Background", "-bg", args.bg],
+                      ["Organism", "-organism", args.organism]]
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
+        html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+        html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
+        html.write(os.path.join(directory,os.path.join(title,"parameters.html")))
+
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "background", "proportion", "p-value"]])
         for ty in self.plist.keys():
@@ -655,11 +680,9 @@ class Projection:
     def gen_html_distribution(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:"distribution.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"), other_logo="viz")
         for i, f in enumerate(self.fig):
             html.add_figure("distribution_test_"+str(i)+".png", align="center")
-        
-        
         
         html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
                                '** </p>'])
@@ -831,7 +854,7 @@ class Jaccard:
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:"jaccard.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"), other_logo="viz")
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
         
@@ -912,7 +935,6 @@ class Intersect:
         self.qEM.read(query_path)
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
-        self.parameter = []
         self.mode_count = mode_count
         self.organism = organism
         self.sbar = None
@@ -974,10 +996,10 @@ class Intersect:
         self.nalist = []
         if frequency: self.frequency = OrderedDict()
         
-        if self.mode_count == "bp":
-            print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
-        elif self.mode_count == "count":
-            print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
+        #if self.mode_count == "bp":
+        #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
+        #elif self.mode_count == "count":
+        #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
         
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
@@ -1011,7 +1033,7 @@ class Intersect:
                                 except: 
                                     self.frequency[ty][q.name] = [c[2]]
                             
-                            print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
+                            #print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
             
     def barplot(self, logt=False, percentage=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
@@ -1041,7 +1063,7 @@ class Intersect:
                     try: r_label.append(self.rEM.get_type(r,"factor"))
                     except: r_label.append(r)
                 if len(r_label[-1]) > 15 or len(self.counts.values()[ai][r].keys())*len(self.counts.values()[ai].keys()) > 8: 
-                    self.xtickrotation, self.xtickalign = 70,"right"
+                    self.xtickrotation, self.xtickalign = 50,"right"
                 width = 0.8/(len(self.counts.values()[ai][r].keys())+1) # Plus one background
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
@@ -1050,7 +1072,7 @@ class Intersect:
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number
                     
-                    ax.bar(x, y, width=width, color=self.color_list[q],align='edge', log=logt)
+                    ax.bar(x, y, width=width, color=self.color_list[q], edgecolor="none", align='edge', log=logt)
                     
             ax.yaxis.tick_left()
             ax.set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
@@ -1095,7 +1117,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r
                     y = self.counts.values()[ai][r][q][2] # intersect number
-                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
+                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
                     bottom = bottom + y
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
@@ -1150,7 +1172,7 @@ class Intersect:
                     for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                         x = ind_r
                         y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
-                        ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], align='center')
+                        ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
                         bottom = bottom + y
                         self.percentage[ai][r][q] = y
                 ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
@@ -1170,16 +1192,22 @@ class Intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.pbar = f
 
-    def gen_html(self, outputname, title, align):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"intersection.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
-        #html.create_header()
-        #html.add_heading(title)
+    def gen_html(self, directory, title, align, args):
+        #fp = os.path.join(dir,outputname,title)
+        #link_d = {title:"intersection.html"}
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = "Intersection Test: "+dir_name
+        link_d = OrderedDict()
+        link_d["Intersection test"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        
         html.add_figure("intersection_bar.png", align="center")
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         html.add_figure("intersection_barp.png", align="center")
-        #if self.pbar: html.add_figure("intersection_percentagebar.png", align="center")
         
         header_list = ["Reference<br>name",
                        "Query<br>name", 
@@ -1187,7 +1215,6 @@ class Intersect:
                        "Query<br>number", 
                        "Intersect.",
                        "Proportion <br>of Reference"]
-        
        
         if self.test_d: 
             header_list += ["Average<br>intersect.", "Chi-square<br>statistic", 
@@ -1237,25 +1264,40 @@ class Intersect:
                         data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
         
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
         
+        html.add_heading("Assumptions and hypothesis")
+        list_ex = ['Positive association is defined by: True intersection number > Averaged random intersection.',
+                   'Negative association is defined by: True intersection number < Averaged random intersection.']
         
-        header_list=["Assumptions and hypothesis"]
-        data_table = [['Positive association is defined by: True intersection number > Averaged random intersection.'],
-                      ['Negative association is defined by: True intersection number < Averaged random intersection.']]
         self.nalist = set(self.nalist)
         if len(self.nalist)>0:
-            data_table.append(['The following region sets contain zero-length regions which cause error in intersection calculation, please check it:<br>'+
-                               '<font color=\"red\">'+', '.join([s for s in self.nalist])+'</font>'])
-        
+            list_ex.append('The following region sets contain zero-length regions which cause error in intersection calculation, please check it:<br>'+
+                           '<font color=\"red\">'+', '.join([s for s in self.nalist])+'</font>')
         if self.test_d:
-            data_table.append(['Randomly permutation for '+ str(self.test_time)+ ' times.'])
-        
+            list_ex.append('Randomly permutation for '+ str(self.test_time)+ ' times.')
+        html.add_list(list_ex)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, title, "index.html"))
+
+        # Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        header_list = ["Description", "Argument", "Value"]
+        data_table = [["Reference", "-r", args.r ],
+                      ["Query", "-q", args.q],
+                      ["Output directory", "-o", os.path.basename(args.o)],
+                      ["Experiment title", "-t", args.t],
+                      #["Grouping tag", "-g", args.g],
+                      #["Coloring tag", "-c", args.c],
+                      #["Background", "-bg", args.bg],
+                      ["Organism", "-organism", args.organism]]
+
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
-        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
-        html.write(os.path.join(fp,"intersection.html"))
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
+        html.write(os.path.join(directory, title,"parameters.html"))
     
     def gen_html_comb(self, outputname, title, align):
         fp = os.path.join(dir,outputname,title)
@@ -1462,8 +1504,7 @@ class Intersect:
         
         
     def stest(self,repeat,threshold):
-        print2(self.parameter,"\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
-        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format("#reference","ref_number","query","que_number", "aver_inter_number","chisq_statistic", "p_value"))
+        print("\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
         self.test_time = repeat
         self.test_d = {}
         plist = OrderedDict()
@@ -1480,18 +1521,10 @@ class Intersect:
                     # True intersection
                     obs = self.counts[ty][r.name][q.name]
                     qn = q.name
-                    
                     if obs[2] == 0:
-                        
                         aveinter, chisq, p = "NA", "NA", "NA"
-                        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5}\t{6}".format(r.name,self.rlen[ty][r.name],
-                                                                                                 qn,self.qlen[ty][qn], 
-                                                                                                 aveinter, chisq, p))
                     else:
-                    
-                        
                         com = q.combine(r, change_name=False, output=True)
-                        
                         # Randomization
                         d = []
                         for i in range(repeat):
@@ -1500,35 +1533,19 @@ class Intersect:
                         da = numpy.array(d)
                         
                         exp_m = numpy.mean(da, axis=0)
-                        #exp_m = [m/n for m in exp_m] # into frequency
-                        # Chi-squire test
-                        
-                        #chisq, p = mstats.chisquare(f_exp=exp_m, f_obs=obs)
-                        #print(r.name,qn,exp_m,obs)
                         chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
-                        #chisq, p = stats.chisquare(np.array(obs),np.array(exp_m))
                         aveinter = exp_m[2]
-                        print2(self.parameter,"{0}\t{1}\t{2}\t{3}\t{4}\t{5:.2f}\t{6:.2e}".format(r.name,self.rlen[ty][r.name],
-                                                                                                 qn,self.qlen[ty][qn], 
-                                                                                                 aveinter, chisq, p))
-                        
-                    #print("    exp: "+ str(exp_m) + "\tobs: "+str(obs)+"\t"+str(chisq)+"\t"+str(p))
                     plist[ty][r.name][qn] = p
                     self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
                     
             multiple_correction(plist)
             
             #c_p = 0
-            print2(self.parameter,"\n*** Permutational test with Multitest correction ***\n")
             for r in self.test_d[ty].keys():
                 if r in self.nalist: continue
                 for q in self.test_d[ty][r].keys():
                     self.test_d[ty][r][q][2] = plist[ty][r][q]
-                    if isinstance(plist[ty][r][q], str):
-                        print2(self.parameter,r +"\t"+ q +"\t{0}\t{1}\t{2}".format(*self.test_d[ty][r][q]))
-                    else:
-                        print2(self.parameter,r +"\t"+ q +"\t{0:.1f}\t{1:.2f}\t{2:.2e}".format(*self.test_d[ty][r][q]))
-
+                    
 ###########################################################################################
 #                    Proportion plot
 ###########################################################################################
@@ -1803,7 +1820,8 @@ class Boxplot:
                         x_ticklabels.append(a)  #  + "." + c
             # Fine tuning boxplot
             #print(d)
-            bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, patch_artist=True, bootstrap=None)
+            bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, 
+                                  widths=None, patch_artist=True, bootstrap=None)
             z = 10 # zorder for bosplot
             plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
             plt.setp(bp['fliers'], markerfacecolor='gray',color='white',alpha=0.3,markersize=1.8,zorder=z)
@@ -1812,6 +1830,7 @@ class Boxplot:
             legends = []
             for patch, color in zip(bp['boxes'], color_t):
                 patch.set_facecolor(color) # When missing the data, the color patch will exceeds
+                patch.set_edgecolor("none") 
                 patch.set_zorder(z)
                 legends.append(patch)
                 
@@ -1836,24 +1855,29 @@ class Boxplot:
             #plt.setp(axarr[i].get_yticks(),visible=False)
                 
                 
-        #if sy:            
-        #    plt.setp([a.get_yticklabels() for a in axarr[1:]], visible=False)
-        #plt.legend(colors, color_tags, loc=7)
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
                  handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
                  bbox_to_anchor=(1.05, 0.5))
         f.tight_layout(pad=2, h_pad=None, w_pad=None)
         self.fig = f
     
-    def gen_html(self, outputname, title, align=50):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"boxplot.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+    def gen_html(self, directory, title, align=50):
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = title
+        link_d = OrderedDict()
+        link_d["Boxplot"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        #fp = os.path.join(dir,outputname,title)
+        
         html.add_figure("boxplot.png", align="center")
         
         
-        type_list = 'ssssssssss'
-        
+        type_list = 'ssssssssssssssssssssssssssssssssssssssssssssss'
         
         #### Calculate p value ####
         plist = {}
@@ -1899,8 +1923,15 @@ class Boxplot:
                                     row.append("<font color=\"red\">"+value2str(p)+"</font>")
                     data_table.append(row)
         
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50, sortable=True)
         
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, title, "index.html"))
+
+        ## Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+
         header_list=["Assumptions and hypothesis"]
         col_size_list = [50]
         data_table = [['All the regions among different BED files are normalized by quantile normalization.'],
@@ -1909,7 +1940,9 @@ class Boxplot:
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
-        html.write(os.path.join(fp,"boxplot.html"))
+        html.write(os.path.join(directory, title, "parameters.html"))
+
+        
 ###########################################################################################
 #                    Lineplot 
 ###########################################################################################
@@ -2118,8 +2151,6 @@ class Lineplot:
                                         else: data[s][g][c] = 0
                                     else:
                                         
-                                        #print("\n    "+s+"\t"+g+"\t"+c)
-                                        #print("    "+str(self.cuebed[bed])+"\t"+str(self.cuebam[bam]))
                                         ts = time.time()
                                         if self.annotation:
                                             i = annot_ind(self.bednames, [s,g,c])
@@ -2152,11 +2183,8 @@ class Lineplot:
                                                     avearr = numpy.vstack((avearr, car))
                                                 else:
                                                     pass
-                                            #avearr = numpy.array(cov.coverage)
-                                            #print(avearr)
-                                            #print(avearr.shape)
+                                            
                                             avearr = numpy.average(avearr, axis=0)
-                                            #numpy.transpose(avearr)
                                             
                                             if self.df: 
                                                 try: data[s][g][c].append(avearr)
@@ -2181,8 +2209,7 @@ class Lineplot:
                                 else:
                                     data[s][g][c] = out[3]     
             te = time.time()
-            #print2(self.parameter, "     Computing coverage between BED and BAM\t" + "{0:40}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
-
+            
         if self.df:
             for s in data.keys():
                 for g in data[s].keys():
@@ -2202,8 +2229,7 @@ class Lineplot:
         
         rot = 50
         ticklabelsize = 7
-        #print(len(self.data.keys()))
-        #print(len(self.data.values()[0].keys()))
+        
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) # figsize=(8.27, 11.69)
         #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
         #    axs=numpy.array([[axs,None],[None,None]])
@@ -2223,9 +2249,7 @@ class Lineplot:
                         ax = axs[i]
                     else:
                         ax = axs[it]
-                        
-                
-                
+                              
                 if it == 0:
                     if self.df:
                         ax.set_title(g+"_df",fontsize=11)
@@ -2294,12 +2318,25 @@ class Lineplot:
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
-    def gen_html(self, outputname, title, align=50):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"lineplot.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+    def gen_html(self, directory, title, align=50):
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = title
+        link_d = OrderedDict()
+        link_d["Lineplot"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         html.add_figure("lineplot.png", align="center")
         
+        
+        html.write(os.path.join(directory, title, "index.html"))
+
+        ## Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,20,20,20,20,20,20]
         header_list=["Assumptions and hypothesis"]
@@ -2307,11 +2344,13 @@ class Lineplot:
         if self.annotation:
             data_table.append("Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site.")
             
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, 
+                             cell_align="left")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
-        html.write(os.path.join(fp,"lineplot.html"))
+
+        html.write(os.path.join(directory, title, "parameters.html"))
 
         
     def hmsort(self,sort):
