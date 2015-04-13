@@ -551,7 +551,7 @@ def main():
             
             boxplot.group_data(directory = args.o, folder = args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
-            boxplot.plot(title=args.t, html=True, logT=args.nlog, sy=args.sy, ylim=args.ylim)
+            boxplot.plot(title=args.t, logT=args.nlog, sy=args.sy, ylim=args.ylim)
             #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
             output(f=boxplot.fig, directory = args.o, folder = args.t, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
             # HTML
