@@ -216,7 +216,7 @@ def main():
     parser_boxplot.add_argument('-t', metavar='  ', default='boxplot', help=helptitle)
     parser_boxplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
     parser_boxplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_boxplot.add_argument('-s', metavar='  ', default='cell', help=helpsort + " (Default:cell)")
+    parser_boxplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
     parser_boxplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
@@ -242,12 +242,13 @@ def main():
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
     parser_lineplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
     parser_lineplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_lineplot.add_argument('-s', metavar='  ', default='cell', help=helpsort + " (Default:cell)")
+    parser_lineplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
     parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
     parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
+    parser_lineplot.add_argument('-sx', action="store_true", help="Share x axis for convenience of comparison.")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
@@ -262,24 +263,24 @@ def main():
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_heatmap.add_argument('input', help=helpinput)
-    parser_heatmap.add_argument('-o', help=helpoutput)
-    parser_heatmap.add_argument('-ga','--genomic_annotation', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
-    parser_heatmap.add_argument('-t', '--title', default='heatmap', help=helptitle)
-    parser_heatmap.add_argument('-center', choices=choice_center, default='midpoint', 
+    parser_heatmap.add_argument('-o', metavar='  ', help=helpoutput)
+    parser_heatmap.add_argument('-ga', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
+    parser_heatmap.add_argument('-t', metavar='  ', default='heatmap', help=helptitle)
+    parser_heatmap.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_heatmap.add_argument('-sort',type=int, default=None, help='Define the way to sort the signals.'+
+    parser_heatmap.add_argument('-sort', metavar='  ', type=int, default=None, help='Define the way to sort the signals.'+
                                 'Default is no sorting at all, the signals arrange in the order of their position; '+
                                 '"0" is sorting by the average ranking of all signals; '+
                                 '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
-    parser_heatmap.add_argument('-s', default='cell', help=helpsort + " (Default:cell)")
-    parser_heatmap.add_argument('-g', default='regions', help=helpgroup + " (Default:regions)")
-    parser_heatmap.add_argument('-c', default='reads', help=helpcolor + " (Default:reads)")
-    parser_heatmap.add_argument('-e', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
-    parser_heatmap.add_argument('-rs', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
-    parser_heatmap.add_argument('-ss', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
-    parser_heatmap.add_argument('-bs', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-    parser_heatmap.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
+    parser_heatmap.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
+    parser_heatmap.add_argument('-g', metavar='  ', default='regions', help=helpgroup + " (Default:regions)")
+    parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
+    parser_heatmap.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
+    parser_heatmap.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
+    parser_heatmap.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
+    parser_heatmap.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+    parser_heatmap.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
     parser_heatmap.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
@@ -566,6 +567,10 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
+            if args.sy and args.sx:
+                print("** Err: -sy and -sx cannot be used simutaneously.")
+                sys.exit(1)
+
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
@@ -601,7 +606,7 @@ def main():
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.g, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy)
+            lineplot.plot(groupby=args.g, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy, sx=args.sx)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()
@@ -630,8 +635,9 @@ def main():
             print2(parameter, "\t\tStep size:\t"+str(args.ss))
             print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
         
-            lineplot = Lineplot(EMpath=args.input, title=args.title, annotation=args.genomic_annotation, 
-                                organism=args.organism, center=args.center, extend=args.e, rs=args.rs, bs=args.bs, ss=args.ss, df=False)
+            lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
+                                organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
+                                bs=args.bs, ss=args.ss, df=False)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -657,12 +663,12 @@ def main():
             lineplot.hmcmlist(colorby = args.c, definedinEM = args.color)
             lineplot.heatmap(args.log)
             for i, name in enumerate(lineplot.hmfiles):
-                output(f=lineplot.figs[i], directory = args.output, folder = args.title, filename=name,pdf=True,show=args.show)
-            lineplot.gen_htmlhm(args.output, args.title)
+                output(f=lineplot.figs[i], directory = args.o, folder = args.t, filename=name,pdf=True,show=args.show)
+            lineplot.gen_htmlhm(args.o, args.t)
             t4 = time.time()
             print2(parameter, "    --- finished in {0} secs".format(str(round(t4-t3))))
             print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))) + "(H:M:S)\n")
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.output,args.title))
-            output_parameters(parameter, directory = args.output, folder = args.title, filename="parameters.txt")
-            copy_em(em=args.input, directory=args.output, folder=args.title)
+            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
+            output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
+            copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)

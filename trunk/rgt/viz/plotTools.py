@@ -1723,9 +1723,7 @@ class Boxplot:
                 sortDict[g][a] = OrderedDict()
                 for c in self.color_tags:
                     #sortDict[g][a][c] = None
-                    
                     #print("            "+c)
-                    
                     for i, bed in enumerate(cuesbed.keys()):
                         if set([g,a,c]) >= cuesbed[bed]:
                             sortDict[g][a][c] = []
@@ -1901,12 +1899,12 @@ class Boxplot:
         for g in self.sortDict.keys():
             html.add_heading(g, size = 4, bold = False)
             data_table = []
-            col_size_list = [10]
+            col_size_list = [15]
             header_list = ["p-value"]
             for s in self.sortDict[g].keys():
                 for c in self.sortDict[g][s1].keys():
                     header_list.append(s+"\n"+c)        
-                    col_size_list.append(10)
+                    col_size_list.append(15)
             
             for s1 in self.sortDict[g].keys():
                 for c1 in self.sortDict[g][s1].keys():
@@ -1923,9 +1921,9 @@ class Boxplot:
                                     row.append("<font color=\"red\">"+value2str(p)+"</font>")
                     data_table.append(row)
         
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50, sortable=True)
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align+50)
         
-        html.add_fixed_rank_sortable()
+        #html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))
 
         ## Parameters
@@ -2120,8 +2118,7 @@ class Lineplot:
             """Find the index for annotation tag"""
             for ind, a in enumerate(bednames):
                 if a in tags: return ind
-                
-        
+
         if mp: ts = time.time()
         # Calculate for coverage
         mp_input = []
@@ -2220,24 +2217,27 @@ class Lineplot:
                             d = numpy.subtract(data[s][g][c][0],data[s][g][c][1])
                             data[s][g][c] = d
                         except: pass
+
         self.data = data
         
     def colormap(self, colorby, definedinEM):
         self.colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
         
-    def plot(self, groupby, colorby, output, printtable=False, sy=False):
+    def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False):
         
         rot = 50
         ticklabelsize = 7
         
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) # figsize=(8.27, 11.69)
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), figsize=(8.27, 11.69), dpi=300) # 
         #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
         #    axs=numpy.array([[axs,None],[None,None]])
         
         yaxmax = [0]*len(self.data.values()[0])
-        if self.df: yaxmin = [0]*len(self.data.values()[0])
-        
-        
+        sx_ymax = [0]*len(self.data.keys())
+        if self.df: 
+            yaxmin = [0]*len(self.data.values()[0])
+            sx_ymin = [0]*len(self.data.keys())
+
         for it, s in enumerate(self.data.keys()):
             for i,g in enumerate(self.data[s].keys()):
                 
@@ -2265,7 +2265,11 @@ class Lineplot:
                     
                     try: 
                         yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                        if self.df: yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                        sx_ymax[i] = max(numpy.amax(y), sx_ymax[i])
+                        if self.df: 
+                            yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                            sx_ymin[i] = min(numpy.amin(y), sx_ymin[i])
+
                     except: continue
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     ax.plot(x,y, color=self.colors[j], lw=1)
@@ -2291,13 +2295,14 @@ class Lineplot:
                 except: axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
         for it,ty in enumerate(self.data.keys()):
-            try: axs[it,0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+            try: 
+                axs[it,0].set_ylabel("{}".format(ty),fontsize=12)
             except:
                 if len(self.data.keys()) == 1:
-                    axs[0].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
+                    axs[0].set_ylabel("{}".format(ty),fontsize=12)
                 else:
-                    axs[it].set_ylabel("{}".format(ty),fontsize=12, rotation=90)
-                
+                    axs[it].set_ylabel("{}".format(ty),fontsize=12)
+                    
             if sy:
                 for i,g in enumerate(self.data[ty].keys()):
                     if self.df:
@@ -2314,6 +2319,23 @@ class Lineplot:
                                 axs[i].set_ylim([0, yaxmax[i]*1.2])
                             else:
                                 axs[it].set_ylim([0, yaxmax[i]*1.2])
+            elif sx:
+                for i,g in enumerate(self.data[ty].keys()):
+                    if self.df:
+                        try: axs[it,i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
+                        except:
+                            if len(self.data.keys()) == 1:
+                                axs[i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
+                            else:
+                                axs[it].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
+                    else:
+                        try: axs[it,i].set_ylim([0, sx_ymax[it]*1.2])
+                        except:
+                            if len(self.data.keys()) == 1:
+                                axs[i].set_ylim([0, sx_ymax[it]*1.2])
+                            else:
+                                axs[it].set_ylim([0, sx_ymax[it]*1.2])
+
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
@@ -2419,6 +2441,11 @@ class Lineplot:
                     #print(self.data[t][g][c])
                     im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
                                             vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    
+            for bi, g in enumerate(self.data[t].keys()):
+                for bj, c in enumerate(self.data[t][g].keys()):
+                    
+                    
                     #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
                     #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
@@ -2468,37 +2495,42 @@ class Lineplot:
                             pass
                         #cbar.set_label('Amplitute of signal')
                         max_value = int(max_value)
-                        width = 0.4/rows
+                        #width = 0.4/rows
                         #cbar_ax = fig.add_axes([0.01 + bj/columns, 0, width, 0.01])
                         cbar = plt.colorbar(im, cax=cbar_ax, ticks=[0, max_value], orientation='horizontal')
                         cbar.ax.set_xticklabels([0, int(max_value)])
-                        cbar.outline.set_linewidth(0.5)
+                        cbar.outline.set_linewidth(0.1)
                         
-                        
-            
+            fig.tight_layout()
+            #fig.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             #fig.tight_layout(pad=1, h_pad=1, w_pad=1)
             self.figs.append(fig)
             self.hmfiles.append("heatmap"+ "_" + t)
 
     def gen_htmlhm(self, outputname, title, align=50):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"heatmap.html"}
-        #html = Html(name="Viz", links_dict="fig/links.txt", fig_dir=os.path.join(dir,outputname,"fig"), links_file=True)
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = title
+        link_d = OrderedDict()
+        link_d["Lineplot"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         
         # Each row is a plot with its data
         for name in self.hmfiles:
             html.add_figure(name+".png", align="center")
-        
-        type_list = 'ssssssssss'
-        col_size_list = [20,20,20,20,20,20,20,20,20]
-        header_list=["Assumptions and hypothesis"]
-        data_table = [['']]
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
+        html.write(os.path.join(directory, title, "index.html"))
+
+        ## Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
-        html.write(os.path.join(fp,"heatmap.html"))
+        html.write(os.path.join(directory, title, "parameters.html"))
 
 
 
