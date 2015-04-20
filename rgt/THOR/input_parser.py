@@ -21,7 +21,8 @@ def get_data_block(filepath, feature):
             
             if not line.startswith("#") and read:
                 data.append(line)
-    if len(data) == 1:
+                
+    if len(data) == 1 and not (feature == "rep1" or feature == "rep2"):
         return data[0]
     else:
         return data
