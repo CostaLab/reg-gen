@@ -484,8 +484,15 @@ class AnnotationSet:
         #else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
+        if "ENSG00000228630" in gene_set.genes:
+            print("1     ENSG00000228630")
         
         query_annset = self.get(query_dictionary)
+        
+        for e in self.gene_list:
+            if(e[self.GeneField.GENE_ID] == "ENSG00000228630"):
+                print("Jaaaaaaaaaaaaaa")
+        
 
         # Creating GenomicRegionSet
         result_grs = GenomicRegionSet("promoters")
@@ -497,6 +504,10 @@ class AnnotationSet:
             else:
                 gr.initial = gr.final - 1
                 gr.final = gr.initial + promoterLength + 1
+
+            if(e[self.GeneField.GENE_ID] == "ENSG00000228630"):
+                print("Neinnnnnnnnnnnnnnnnn")
+
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         if unmaplist: return result_grs, unmapped_gene_list

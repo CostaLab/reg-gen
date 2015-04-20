@@ -208,25 +208,29 @@ def check_dir(path):
         os.mkdir(path)
 
 def split_gene_name(gene_name, ani, org):
-    p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
-         "&db="+org+"&singleSearch=knownCanonical&position="
-    p2 = '" style="text-align:left">'
-    p3 = '</a>'
-    
-    if ":" in gene_name:
-        genes = gene_name.split(":")
-        genes = set(genes)
-        for i, g in enumerate(genes):
-            if i == 0:
-                result = p1+g+p2+g+p3
-            else:
-                result += ","+p1+g+p2+g+p3
-    elif gene_name == ".":
-        result = "none"
 
-    else:
-        result = p1+gene_name+p2+gene_name+p3
-    return result
+    if not ani:
+        return gene_name
+    else:    
+        p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
+             "&db="+org+"&singleSearch=knownCanonical&position="
+        p2 = '" style="text-align:left">'
+        p3 = '</a>'
+        
+        if ":" in gene_name:
+            genes = gene_name.split(":")
+            genes = set(genes)
+            for i, g in enumerate(genes):
+                if i == 0:
+                    result = p1+g+p2+g+p3
+                else:
+                    result += ","+p1+g+p2+g+p3
+        elif gene_name == ".":
+            result = "none"
+
+        else:
+            result = p1+gene_name+p2+gene_name+p3
+        return result
 
 
 def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linelabel, 
@@ -395,11 +399,13 @@ class PromoterTest:
                 for promoter in self.de_regions:
                     self.scores.append(float(promoter.data.split("\t")[0]))
 
-            self.de_regions = self.de_regions.gene_association(organism=self.organism)
+            try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
+            except: pass
             self.nde_regions.read_bed(bg)
-            self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
+            try: self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
+            except: pass
             self.nde_regions.remove_duplicates()
-        
+
         # Input DE gene list
         else:
             try:
@@ -426,19 +432,20 @@ class PromoterTest:
             nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
             
             self.de_gene.genes = de_ensembl
-
+            
             self.nde_gene = GeneSet("nde genes")
             self.nde_gene.genes = nde_ensembl
             
             # Get promoters from de genes
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
+
             de_prom.merge(namedistinct=True)
             for promoter in de_prom:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)   
             self.de_regions = de_prom
             
             print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
-            
+            print2(summary, "   \t"+str(len(de_prom))+" unique target promoters are loaded")
             # Get promoters from nonDE gene
             nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
             nde_prom.merge(namedistinct=True)
@@ -447,7 +454,7 @@ class PromoterTest:
             self.nde_regions = nde_prom
             
             print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
-            
+            print2(summary, "   \t"+str(len(nde_prom))+" unique non-target promoters are loaded")
             # Loading score
             if score:
                 self.scores = []
@@ -731,6 +738,7 @@ class PromoterTest:
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
+        else: self.ani = None
 
         #############################################################
         # Index main page
@@ -872,10 +880,13 @@ class PromoterTest:
             data_table = []
             for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
                 # Add information
+                if self.ani:
+                    pr = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+"&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+'" style="text-align:left">'+promoter.toString(space=True)+'</a>'
+                else:
+                    pr = promoter.toString(space=True)
+
                 data_table.append([ str(i+1),
-                                    '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                                    "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                                    '" style="text-align:left">'+promoter.toString(space=True)+'</a>', 
+                                    pr, 
                                     split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
                                     str(len(self.promoter["de"]["rd"][promoter.toString()])),
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
@@ -969,7 +980,7 @@ class PromoterTest:
             
         html.add_heading("Target promoters")
         data_table = [] 
-
+        
         if not self.de_regions.sorted: self.de_regions.sort()
         # Iterate by each gene promoter
         
@@ -985,6 +996,7 @@ class PromoterTest:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
 
         for i, promoter in enumerate(self.de_regions):
+            
             if len(self.promoter["de"]["dbs"][promoter.toString()]) == 0:
                 dbssount = str(0)
             else:
