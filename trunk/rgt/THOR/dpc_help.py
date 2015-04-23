@@ -404,7 +404,7 @@ def input(laptop):
                           help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
                           help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
-        parser.add_option("--par", dest="par", default=70, type="int",\
+        parser.add_option("--par", dest="par", default=1, type="int",\
                           help="Percentile for p-value filter. [default: %default]")
         parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw and wig. Warning: sapce consuming! [default: %default]")
         
