@@ -260,8 +260,9 @@ class MultiCoverageSet(DualCoverageSet):
         threshold = 1.3
         #diff_cov = 20
         
-        diff_cov = max(10, np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95))
-        print('training diff_cov: %s' %diff_cov, file=sys.stderr)
+        diff_cov = max(20, np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95))
+        t = np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95)
+        print('training diff_cov: %s (%s)' %(diff_cov, t), file=sys.stderr)
         
         if test:
             diff_cov = 2
