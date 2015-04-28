@@ -724,7 +724,7 @@ class GenomicRegionSet:
             
             # When the regions overlap
             if s.overlap(b[j]):
-                if cont_overlap == False: pre_inter = j
+                if not cont_overlap: pre_inter = j
                 if whole_region: # Simply jump to next region
                     try: 
                         s = iter_a.next()
@@ -743,15 +743,18 @@ class GenomicRegionSet:
                        ------        --        ---
                     """
                     if s.final > b[j].final:
-                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial)
-                        s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final)
+                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
+                                           name=s.name, orientation=s.orientation, data=s.data)
+                        s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
+                                           name=s.name, orientation=s.orientation, data=s.data)
                         z.add(s1)
                         s = s2
                         if j < last_j: j = j + 1
                         cont_overlap = True
                         continue
                     else:
-                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial)
+                        s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
+                                           name=s.name, orientation=s.orientation, data=s.data)
                         z.add(s1)
                         try: 
                             s = iter_a.next()
@@ -765,7 +768,8 @@ class GenomicRegionSet:
                          ------  
                      ------
                     """
-                    s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final)
+                    s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
+                                       name=s.name, orientation=s.orientation, data=s.data)
                     s = s2
                     if j < last_j: j = j + 1
                     cont_overlap = True

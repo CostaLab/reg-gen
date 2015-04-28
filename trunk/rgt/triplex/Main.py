@@ -53,7 +53,7 @@ def list_all_index(path):
     link_d = {"List":"index.html"}
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
-    header_list = ["No.", "Experiments"]
+    
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
     type_list = 'ssss'
@@ -64,7 +64,16 @@ def list_all_index(path):
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
                 c += 1
-                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                if "_" in root.split('/')[-1]:
+                    tags = root.split('/')[-1].split("_")
+                    p1 = tags[0]
+                    p2 = tags[-1]
+                    data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'">'+root.split('/')[-1]+"</a>",
+                                       p1, p2])
+                    header_list = ["No.", "Experiments", "Tag1", "Tag2"]
+                else:
+                    data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'">'+root.split('/')[-1]+"</a>"])
+                    header_list = ["No.", "Experiments"]
                 #print(link_d[roots[-1]])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
