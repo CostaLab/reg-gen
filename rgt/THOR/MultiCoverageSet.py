@@ -267,6 +267,7 @@ class MultiCoverageSet(DualCoverageSet):
         if test:
             diff_cov = 2
             threshold = 1.5
+            
         
         s0, s1, s2 = [], [], []
         
