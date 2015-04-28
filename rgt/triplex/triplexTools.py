@@ -210,7 +210,11 @@ def check_dir(path):
 def split_gene_name(gene_name, ani, org):
 
     if not ani:
-        return gene_name
+        if org == "tair10":
+           p1 = '<a href="https://www.arabidopsis.org/servlets/TairObject?name='+ gene_name + '&type=locus"></a>'
+           return p1
+        else:
+            return gene_name
     else:    
         p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
              "&db="+org+"&singleSearch=knownCanonical&position="
@@ -397,7 +401,7 @@ class PromoterTest:
             if score:
                 self.scores = []
                 for promoter in self.de_regions:
-                    self.scores.append(float(promoter.data.split("\t")[0]))
+                    self.scores.append(promoter.data.split("\t")[0])
 
             try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
             except: pass
@@ -412,7 +416,8 @@ class PromoterTest:
                 ann = load_dump(path=temp, filename="annotation_"+organism)
             except:
                 ann = AnnotationSet(organism, alias_source=organism)
-                dump(object=ann, path=temp, filename="annotation_"+organism)
+                #print("DDD")
+                #dump(object=ann, path=temp, filename="annotation_"+organism)
 
             # DE gene regions
             self.de_gene = GeneSet("de genes")
@@ -425,8 +430,16 @@ class PromoterTest:
                 print("Error: No genes are loaded from: "+gene_list_file)
                 print("Please check the format.")
                 sys.exit(1)
-            
+            # Generate a dict for ID transfer
+
+
+            #print("1")
+            #print(len(self.de_gene.genes))
+
             de_ensembl, unmap_gs = ann.fix_gene_names(gene_set=self.de_gene)
+            
+            #print("2")
+            #print(len(de_ensembl))
 
             # NonDE gene regions
             nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
@@ -439,7 +452,14 @@ class PromoterTest:
             # Get promoters from de genes
             de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
 
+            print("3")
+            print(len(de_prom))
+
             de_prom.merge(namedistinct=True)
+
+            print("4")
+            print(len(de_prom))
+
             for promoter in de_prom:
                 promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)   
             self.de_regions = de_prom
@@ -738,7 +758,8 @@ class PromoterTest:
 
         if self.organism == "hg19": self.ani = "human"
         elif self.organism == "mm9": self.ani = "mouse"
-        else: self.ani = None
+        else: 
+            self.ani = None
 
         #############################################################
         # Index main page
@@ -945,8 +966,8 @@ class PromoterTest:
         dir_name = os.path.basename(directory)
         html_header = "Promoter Test: "+dir_name
         
-        type_list = 'sssssssss'
-        col_size_list = [10,10,10,10,10,10,10,10,10]
+        type_list = 'sssssssssssssss'
+        col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10]
 
         #############################################################
         # Promoter centered
@@ -959,16 +980,24 @@ class PromoterTest:
 
         if self.scores:
             if self.scoreh and self.de_gene:
-                score_header = self.de_gene.cond[0]
+                score_header = [self.de_gene.cond[0]]
             else:
-                score_header = "Score"
-            header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", score_header, "Sum of Ranks" ]
+                if "(" in self.scores[0]:
+                    scs = self.scores[0].replace("(","")
+                    scs = scs.replace(")","")
+                    scs = scs.split(",")
+                    score_header = ["Score"] * len(scs)
+                else:        
+                    score_header = ["Score"]
+            header_list = [ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage" ]
+            header_list += score_header
+            header_list += [ "Sum of Ranks" ]
         
             header_titles = [ "", "Target promoters", "Gene symbol", 
                               "Number of DNA Binding sites locating within the promoter",
-                              "The proportion of promoter covered by binding sites",
-                              "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead.",
-                              "Sum up the ranks from left-hand side columns"]
+                              "The proportion of promoter covered by binding sites" ]
+            header_titles += [ "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(score_header)
+            header_titles += [ "Sum up the ranks from left-hand side columns" ]
 
         else:
             header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Sum of Ranks" ]
@@ -989,8 +1018,37 @@ class PromoterTest:
         rank_coverage = len(self.de_regions)-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions ], method='max')+1
         
         if self.scores:
-            rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
-            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+            multiple_scores = False
+            if isinstance(self.scores[0], str):
+                if "(" in self.scores[0]:
+                    def ranking(scores):
+                        rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
+                        return rank_score
+
+                    multiple_scores = True
+                    scs = []
+                    for s in self.scores:
+                        s = s.replace("(","")
+                        s = s.replace(")","")
+                        s = s.split(",")
+                        scs.append([float(ss) for ss in s])
+                    ar = numpy.array(scs)
+                    #ar.transpose()
+                    #print(ar)
+                    rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
+                    rank_score = rank_score.transpose()
+                    rank_sum = numpy.sum(rank_score, axis=0).tolist()
+                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
+                    rank_score = rank_score.tolist()
+
+                else:
+                    self.scores = [ float(s) for s in self.scores ]     
+                    rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
+                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+    
+            else: 
+                rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
@@ -1002,19 +1060,34 @@ class PromoterTest:
             else:
                 dbssount = '<a href="promoters_dbds.html#'+promoter.toString()+'" style="text-align:left">'+str(len(self.promoter["de"]["dbs"][promoter.toString()]))+'</a>'
             
+            if self.ani:
+                region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
+                                       "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
+                                       str(promoter.final), '" style="text-align:left">',
+                                       promoter.toString(space=True), '</a>'])
+            else:
+                if self.organism == "tair10":
+                    region_link = "".join(['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=', 
+                                           promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),'">',
+                                           promoter.toString(space=True), '</a>'])
+                else: region_link = promoter.toString(space=True)
+
             newline = [ str(i+1),
-                        '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
-                        "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
-                        '" style="text-align:left">'+promoter.toString(space=True)+'</a>',
+                        region_link,
                         split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
                         dbssount,
                         value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                         ]
 
-            if self.scores: newline += [value2str(self.scores[i])]
+            if self.scores: 
+                if multiple_scores:
+                    for j in range(len(rank_score)):
+                        newline += value2str(rank_score[j][i])
+                else:
+                    newline += [value2str(self.scores[i])]
 
             newline += ["<i>"+str(int(rank_sum[i]))+"</i>"]
-
+            print(newline)
             data_table.append(newline)
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
