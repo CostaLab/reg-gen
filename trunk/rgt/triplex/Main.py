@@ -56,8 +56,8 @@ def list_all_index(path):
     
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
-    type_list = 'ssss'
-    col_size_list = [10, 10, 10]
+    type_list = 'sssss'
+    col_size_list = [10, 10, 10, 10, 10]
     c = 0
     for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')

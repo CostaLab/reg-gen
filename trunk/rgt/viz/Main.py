@@ -16,7 +16,7 @@ from shutil import copyfile
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.Util import GenomeData, OverlapType, Html
-from plotTools import Projection, Jaccard, Intersect, Boxplot, Lineplot
+from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot
 
 dir = os.getcwd()
 """
@@ -457,7 +457,7 @@ def main():
         if args.mode == 'combinatorial':
             print("\n############ Combinatorial Test ############")
             # Fetching reference and query EM
-            inter = Intersect(args.reference,args.query, mode_count=args.m, organism=args.organism)
+            comb = Combinatorial(args.reference,args.query, mode_count=args.m, organism=args.organism)
             # Setting background
             inter.background(args.bg)
             # Grouping
@@ -498,20 +498,6 @@ def main():
             copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
             list_all_index(path=args.o)
 
-        ################### Proportion Plot ##########################################
-        if args.mode == 'proportionplot':
-            print("\n############ Proportion Plot ############")
-            # Fetching reference and query EM
-            
-            
-            parameter = parameter + inter.parameter
-            t1 = time.time()
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
-            print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            output_parameters(parameter, directory = args.o, folder = args.title, filename="parameters.txt")
-            copy_em(em=args.reference, directory=args.o, folder=args.title, filename="Reference_experimental_matrix.txt")
-            copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
-            list_all_index(path=args.o)
 
         ################### Boxplot ##########################################
         if args.mode == 'boxplot':

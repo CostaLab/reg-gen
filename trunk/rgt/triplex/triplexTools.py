@@ -211,14 +211,15 @@ def split_gene_name(gene_name, ani, org):
 
     if not ani:
         if org == "tair10":
-           p1 = '<a href="https://www.arabidopsis.org/servlets/TairObject?name='+ gene_name + '&type=locus"></a>'
+           p1 = "".join(['<a href="https://www.arabidopsis.org/servlets/TairObject?name=', gene_name,
+                         '&type=locus" target="_blank">', gene_name, '</a>' ])
            return p1
         else:
             return gene_name
     else:    
         p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
              "&db="+org+"&singleSearch=knownCanonical&position="
-        p2 = '" style="text-align:left">'
+        p2 = '" style="text-align:left" target="_blank">'
         p3 = '</a>'
         
         if ":" in gene_name:
@@ -986,7 +987,9 @@ class PromoterTest:
                     scs = self.scores[0].replace("(","")
                     scs = scs.replace(")","")
                     scs = scs.split(",")
-                    score_header = ["Score"] * len(scs)
+                    #score_header = ["Score"] * len(scs)
+                    score_header = ["Fold_change", "Filtered"]
+                
                 else:        
                     score_header = ["Score"]
             header_list = [ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage" ]
@@ -1035,6 +1038,7 @@ class PromoterTest:
                     ar = numpy.array(scs)
                     #ar.transpose()
                     #print(ar)
+                    score_ar = ar.tolist()
                     rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
                     rank_score = rank_score.transpose()
                     rank_sum = numpy.sum(rank_score, axis=0).tolist()
@@ -1063,12 +1067,13 @@ class PromoterTest:
             if self.ani:
                 region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
                                        "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
-                                       str(promoter.final), '" style="text-align:left">',
+                                       str(promoter.final), '" style="text-align:left" target="_blank">',
                                        promoter.toString(space=True), '</a>'])
             else:
                 if self.organism == "tair10":
                     region_link = "".join(['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=', 
-                                           promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),'">',
+                                           promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
+                                           '" target="_blank">',
                                            promoter.toString(space=True), '</a>'])
                 else: region_link = promoter.toString(space=True)
 
@@ -1081,15 +1086,20 @@ class PromoterTest:
 
             if self.scores: 
                 if multiple_scores:
-                    for j in range(len(rank_score)):
-                        newline += value2str(rank_score[j][i])
+                    #print(score_ar)
+                    #print(len(score_ar))
+                    for j in range(len(score_ar[0])):
+                        #print(score_ar[j][i])
+                        #print(score_ar[i][j])
+                        newline += [value2str(score_ar[i][j])]
                 else:
                     newline += [value2str(self.scores[i])]
 
             newline += ["<i>"+str(int(rank_sum[i]))+"</i>"]
-            print(newline)
+            #print(newline)
             data_table.append(newline)
 
+        #print(data_table)
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titles, border_list=None, sortable=True)
         html.add_heading("Notes")
