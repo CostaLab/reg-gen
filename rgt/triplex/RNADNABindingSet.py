@@ -369,7 +369,7 @@ class RNADNABindingSet:
                     try:
                         new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
                     except:
-                        print("* No annotation file for mapping associated genes.")
+                        pass
             else: continue
 
         self.merged_dict = new_dict

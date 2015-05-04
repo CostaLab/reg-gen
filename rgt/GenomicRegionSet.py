@@ -513,7 +513,11 @@ class GenomicRegionSet:
                     if s.overlap(b[j]):
                         c = GenomicRegion(chrom=s.chrom, 
                                           initial=max(s.initial, b[j].initial), 
-                                          final=min(s.final, b[j].final))
+                                          final=min(s.final, b[j].final),
+                                          name = s.name,
+                                          orientation = s.orientation,
+                                          data = s.data, 
+                                          proximity = s.proximity)
                         z.add(c)
                         
                         if cont_overlap == False: pre_inter = j
@@ -744,9 +748,9 @@ class GenomicRegionSet:
                     """
                     if s.final > b[j].final:
                         s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                           name=s.name, orientation=s.orientation, data=s.data)
+                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
                         s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
-                                           name=s.name, orientation=s.orientation, data=s.data)
+                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
                         z.add(s1)
                         s = s2
                         if j < last_j: j = j + 1
@@ -754,7 +758,7 @@ class GenomicRegionSet:
                         continue
                     else:
                         s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
-                                           name=s.name, orientation=s.orientation, data=s.data)
+                                           name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
                         z.add(s1)
                         try: 
                             s = iter_a.next()
@@ -769,7 +773,7 @@ class GenomicRegionSet:
                      ------
                     """
                     s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
-                                       name=s.name, orientation=s.orientation, data=s.data)
+                                       name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
                     s = s2
                     if j < last_j: j = j + 1
                     cont_overlap = True
@@ -953,10 +957,10 @@ class GenomicRegionSet:
             for s in self:
                 s1 = GenomicRegion(name='upstream',chrom=s.chrom,
                                    initial=max(0, s.initial - size),
-                                   final=s.initial)
+                                   final=s.initial,data=s.data)
                 s2 = GenomicRegion(name='downstream',chrom=s.chrom,
                                    initial=max(0, s.final),
-                                   final=s.final + size)  # Adding the limit of chromosome length
+                                   final=s.final + size, data=s.data)  # Adding the limit of chromosome length
                 z.add(s1)
                 z.add(s2)
             return z
@@ -1198,14 +1202,20 @@ class GenomicRegionSet:
             # Define the position
             if center == 'midpoint':
                 mp = int(0.5*(r.initial + r.final))
-                nr = GenomicRegion(chrom=r.chrom, initial=mp, final=mp)
+                nr = GenomicRegion(chrom=r.chrom, initial=mp, final=mp, name = r.name, 
+                                   orientation = r.orientation, data = r.data, proximity = r.proximity)
+
             elif center == 'leftend':
-                nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial)
+                nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
+                                   orientation = r.orientation, data = r.data, proximity = r.proximity)
             elif center == 'rightend':
-                nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final)
+                nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
+                                   orientation = r.orientation, data = r.data, proximity = r.proximity)
             elif center == 'bothends':
-                nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial) # newbed on left end
-                nrR = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final) # newbed on right end
+                nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
+                                   orientation = r.orientation, data = r.data, proximity = r.proximity) # newbed on left end
+                nrR = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
+                                   orientation = r.orientation, data = r.data, proximity = r.proximity) # newbed on right end
             try:new_regions.add(nr)
             except: 
                 new_regions.add(nrL)
