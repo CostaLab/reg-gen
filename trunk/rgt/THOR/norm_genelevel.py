@@ -32,12 +32,15 @@ def get_experimental_matrix(bams, bed):
 def get_factor_matrix(d, colnames):
     """Give matrix describing factors between genes. Idealy, factors in a column should be approx. the same."""
     res = []
-    for i in range(d.shape[0]):
-        for j in range(d.shape[1]-1):
-            res.append(d[i,j] / d[i,j+1])
+    if d.shape[0] > 1 and d.shape[1] > 1:
+        for i in range(d.shape[0]):
+            for j in range(d.shape[1]-1):
+                res.append(d[i,j] / d[i,j+1])
     
-    res = np.matrix(res).reshape((d.shape[0], d.shape[1]-1))
-    colnames = map(lambda x: x[0] + "-" + x[1], zip(colnames[:len(colnames)-1], colnames[1:]))
+                res = np.matrix(res).reshape((d.shape[0], d.shape[1]-1))
+                colnames = map(lambda x: x[0] + "-" + x[1], zip(colnames[:len(colnames)-1], colnames[1:]))
+    else:
+        res, colnames = d, colnames
     
     return res, colnames
 
@@ -46,7 +49,12 @@ def output_R_file(name, res, colnames):
     f = open(name + 'norm.R', 'w')
     #output for R
     #everthing in one vector
+    
+    #if res.shape[1] > 0:
     l = reduce(lambda x, y: x+y, [map(lambda x: str(x), list(np.array(res[:,i]).reshape(-1,))) for i in range(res.shape[1])])
+    #else:
+    #    l = list(np.array(res.reshape(-1,)))
+    
     print('d = c(', ', '.join(l), ')', sep='', file=f)
     print('d = matrix(d, %s)' %res.shape[0], file=f)
     print('names = c("', '", "'.join(colnames), '")', sep='', file=f)
@@ -106,6 +114,10 @@ if __name__ == '__main__':
     #bams = ['/home/manuel/test1.bam', '/home/manuel/test2.bam']
     bams = ['/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep2.bam']
     bed = '/home/manuel/workspace/cluster_p/hematology/exp/exp16_check_housekeeping_genes/pot_housekeeping_genes_mm9.bed'
+    
+    bams = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_2.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_2.bam']
+    bed = '/home/manuel/hk.bed'
+    
     
     print(norm_gene_level(bams, bed, 'testname', True))
     
