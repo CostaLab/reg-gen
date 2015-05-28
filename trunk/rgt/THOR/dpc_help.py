@@ -27,7 +27,7 @@ from rgt.THOR.postprocessing import merge_delete
 from rgt.THOR.neg_bin import NegBin
 from operator import add
 from numpy import percentile
-from norm_gene_level import norm_gene_level
+from norm_genelevel import norm_gene_level
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
