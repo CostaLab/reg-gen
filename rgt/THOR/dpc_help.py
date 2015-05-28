@@ -27,6 +27,7 @@ from rgt.THOR.postprocessing import merge_delete
 from rgt.THOR.neg_bin import NegBin
 from operator import add
 from numpy import percentile
+from norm_gene_level import norm_gene_level
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -308,7 +309,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip, save_wig):
+               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes):
     """Initialize the MultiCoverageSet"""
 
     regionset = GenomicRegionSet(name)
@@ -339,6 +340,12 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         norm_regionset.read_bed(norm_regions)
     else:
         norm_regionset = None
+        
+    if housekeeping_genes:
+        scaling_factors_ip = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
+    
+    if scaling_factors_ip:
+        tracker.write(text=",".join(scaling_factors_ip), header="Scaling factors")
     
     regionset.sequences.sort()
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
@@ -387,6 +394,7 @@ def input(laptop):
         options.debug = True
         options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
         options.scaling_factors_ip = False
+        options.housekeeping_genes = False
     else:
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
@@ -408,9 +416,10 @@ def input(laptop):
                           help="Percentile for p-value filter. [default: %default]")
         parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw and wig. Warning: sapce consuming! [default: %default]")
         
-        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization")
+        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
                           help="Scaling factor for each BAM file [default: %default]")
+        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str", help="Define housekeeping genes <BED> that are used for normalization [default: %default]")
         
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
