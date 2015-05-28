@@ -37,11 +37,11 @@ def get_factor_matrix(d, colnames):
             for j in range(d.shape[1]-1):
                 res.append(d[i,j] / d[i,j+1])
     
-                res = np.matrix(res).reshape((d.shape[0], d.shape[1]-1))
-                colnames = map(lambda x: x[0] + "-" + x[1], zip(colnames[:len(colnames)-1], colnames[1:]))
+        res = np.matrix(res).reshape((d.shape[0], d.shape[1]-1))
+        colnames = map(lambda x: x[0] + "-" + x[1], zip(colnames[:len(colnames)-1], colnames[1:]))
     else:
         res, colnames = d, colnames
-    
+        
     return res, colnames
 
 def output_R_file(name, res, colnames):
