@@ -149,7 +149,7 @@ class MultiCoverageSet(DualCoverageSet):
     def _normalization_by_signal(self, name, scaling_factors_ip):
         """Normalize signal"""
         if scaling_factors_ip:
-            print("Normalize signal by scaling factors %s" %" ".join(map(lambda x: round(x, 2), scaling_factors_ip)), file=sys.stderr)
+            print("Normalize signal by scaling factors %s" %" ".join(map(lambda x: str(round(x, 2)), scaling_factors_ip)), file=sys.stderr)
             assert len(scaling_factors_ip) == len(self.covs)
             for i in range(len(scaling_factors_ip)):
                 self.covs[i].scale(scaling_factors_ip[i])
