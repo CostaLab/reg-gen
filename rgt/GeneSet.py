@@ -26,9 +26,10 @@ class GeneSet:
             for line in f:            
                 line = line.strip()
                 l = line.split()
-                self.genes.append(l[0])
+                if l[0] != "":
+                    self.genes.append(l[0])
             
-    def read_expression(self, geneListFile, header = True):
+    def read_expression(self, geneListFile, header = False):
         """Read gene expression data"""
         with open(geneListFile) as f:
             if header:
@@ -36,12 +37,16 @@ class GeneSet:
                 l = l.strip("\n")
                 l = l.split("\t")
                 self.cond = l[1:len(l)]
-            for l in f.readlines():
-                l = l.strip("\n")
-                l = l.split("\t")
-                self.genes.append(l[0].upper())
-                #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
-                self.values[l[0].upper()] = float(l[1])
+            for line in f.readlines():
+                line = line.strip("\n")
+                l = line.split("\t")
+                if l[0] != "":
+                    try:
+                        self.genes.append(l[0])
+                        #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
+                        self.values[l[0]] = l[1]
+                    except:
+                        print("*** error in loading gene: "+line)
 
     def get_all_genes(self, organism):
         """Get all gene names for a given organism"""

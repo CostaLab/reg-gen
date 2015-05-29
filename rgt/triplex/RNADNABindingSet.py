@@ -342,7 +342,7 @@ class RNADNABindingSet:
         return result
 
 
-    def merge_rbs(self, rm_duplicate=False, asgene_organism=None, cutoff=0):
+    def merge_rbs(self, rm_duplicate=False, asgene_organism=None, region_set=None, cutoff=0):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -370,11 +370,13 @@ class RNADNABindingSet:
                         new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
                     except:
                         pass
+                if region_set:
+                    new_dict[rbsm].replace_region_name(regions=region_set)
             else: continue
 
         self.merged_dict = new_dict
 
-    def merge_by(self, rbss, rm_duplicate=False, asgene_organism=False):
+    def merge_by(self, rbss, rm_duplicate=False, asgene_organism=False, region_set=None):
         """Merge the RNA Binding Sites by the given list of Binding sites"""
         new_dict = OrderedDict()
 
@@ -391,7 +393,9 @@ class RNADNABindingSet:
                 try:
                     new_dict[rbsm] = new_dict[rbsm].gene_association(organism=asgene_organism)
                 except:
-                    print("* No annotation file for mapping associated genes.")
+                    pass
+            if region_set:
+                new_dict[rbsm].replace_region_name(regions=region_set)
         self.merged_dict = new_dict
 
 
