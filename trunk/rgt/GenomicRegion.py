@@ -22,6 +22,8 @@ class GenomicRegion:
     def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
         """Initialize GenomicRegion"""
         self.chrom = str(chrom) #chrom should be a string, not an integer
+        if not isinstance( initial, int ) or not isinstance(final, int):
+            raise ValueError('The initial and final input for GenomicRegion should be integer.')
         self.initial = initial
         self.final = final
         self.name = name

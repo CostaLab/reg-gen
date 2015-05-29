@@ -207,13 +207,21 @@ def check_dir(path):
     except:
         os.mkdir(path)
 
-def split_gene_name(gene_name, ani, org):
+def split_gene_name(gene_name, org):
+    
+    if gene_name == None:
+        return ""
+    if gene_name[0:2] == "chr":
+        return gene_name
 
+    if org=="hg19": ani = "human"
+    elif org=="mm9": ani = "mouse"
+    else: ani = None
     if not ani:
         if org == "tair10":
-           p1 = "".join(['<a href="https://www.arabidopsis.org/servlets/TairObject?name=', gene_name,
-                         '&type=locus" target="_blank">', gene_name, '</a>' ])
-           return p1
+            p1 = "".join(['<a href="https://www.arabidopsis.org/servlets/TairObject?name=', gene_name,
+                          '&type=locus" target="_blank">', gene_name, '</a>' ])
+            return p1
         else:
             return gene_name
     else:    
@@ -226,15 +234,29 @@ def split_gene_name(gene_name, ani, org):
             genes = gene_name.split(":")
             genes = set(genes)
             for i, g in enumerate(genes):
-                if i == 0:
-                    result = p1+g+p2+g+p3
+                if "(" in g:
+                    d = g.partition('(')[2].partition(')')[0]
+                    g = g.partition('(')[0]
+                    if i == 0:
+                        result = p1+g+p2+g+p3+"("+d+")"
+                    else:
+                        result += ",<br>"+p1+g+p2+g+p3+"("+d+")"
                 else:
-                    result += ","+p1+g+p2+g+p3
+                    if i == 0:
+                        result = p1+g+p2+g+p3
+                    else:
+                        result += ",<br>"+p1+g+p2+g+p3
         elif gene_name == ".":
             result = "none"
 
         else:
-            result = p1+gene_name+p2+gene_name+p3
+            if "(" in gene_name:
+                d = gene_name.partition('(')[2].partition(')')[0]
+                g = gene_name.partition('(')[0]
+                result = p1+g+p2+g+p3+"("+d+")"
+            else:
+                result = p1+gene_name+p2+gene_name+p3
+        
         return result
 
 
@@ -374,6 +396,12 @@ def check_triplexator_path():
         print("Please define the path to Triplexator by command: rgt-TDF triplexator -path <PATH>")
         sys.exit(1)
     
+def rna_associated_gene(rna_str, name, organism):
+    s = rna_str.split("_")
+    g = GenomicRegionSet("RNA associated genes")
+    g.add( GenomicRegion(chrom=s[1], initial=int(s[2]), final=int(s[3]), name=name, orientation=s[4]) )
+    asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=50000, show_dis=True)
+    return asso_genes[0].name
 
 ####################################################################################
 ####################################################################################
@@ -414,78 +442,98 @@ class PromoterTest:
         # Input DE gene list
         else:
             try:
-                ann = load_dump(path=temp, filename="annotation_"+organism)
+                data = load_dump(path=temp, filename="dump_"+gene_list_file.rpartition("/")[-1].partition(".")[0])
+                self.de_gene = data[0] 
+                self.ensembl2symbol = data[1] 
+                self.nde_gene = data[2]
+                self.de_regions = data[3]
+                self.nde_regions = data[4]
+                if score: self.scores = data[5] 
+
             except:
-                ann = AnnotationSet(organism, alias_source=organism)
-                #print("DDD")
-                #dump(object=ann, path=temp, filename="annotation_"+organism)
 
-            # DE gene regions
-            self.de_gene = GeneSet("de genes")
-            self.de_gene.read(gene_list_file)
-            if score:
-                self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh)
-            
-            # When there is no genes in the list
-            if len(self.de_gene) == 0:
-                print("Error: No genes are loaded from: "+gene_list_file)
-                print("Please check the format.")
-                sys.exit(1)
-            # Generate a dict for ID transfer
+                try:
+                    ann = load_dump(path=temp, filename="annotation_"+organism)
+                except:
+                    ann = AnnotationSet(organism, alias_source=organism)
+                    #print("DDD")
+                    dump(object=ann, path=temp, filename="annotation_"+organism)
 
+                # DE gene regions
+                self.de_gene = GeneSet("de genes")
+                
+                if score:
+                    self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh)
+                else:
+                    self.de_gene.read(gene_list_file)
+                # When there is no genes in the list
+                if len(self.de_gene) == 0:
+                    print("Error: No genes are loaded from: "+gene_list_file)
+                    print("Please check the format.")
+                    sys.exit(1)
+                # Generate a dict for ID transfer
+                #print("Before fixing")
+                #print(len(self.de_gene.genes))
+                de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
+                #self.de_gene.genes = de_ensembl
+                #print("After fixing")
+                #print(len(de_ensembl))
 
-            #print("1")
-            #print(len(self.de_gene.genes))
+                # NonDE gene regions
+                nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
+                
+                self.nde_gene = GeneSet("nde genes")
+                self.nde_gene.genes = nde_ensembl
+                
+                # Get promoters from de genes
+                #print("\tGetting promoter regions...")
+                de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
 
-            de_ensembl, unmap_gs = ann.fix_gene_names(gene_set=self.de_gene)
-            
-            #print("2")
-            #print(len(de_ensembl))
+                if score: self.scores = []
+                de_prom.merge(namedistinct=True)
 
-            # NonDE gene regions
-            nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
-            
-            self.de_gene.genes = de_ensembl
-            
-            self.nde_gene = GeneSet("nde genes")
-            self.nde_gene.genes = nde_ensembl
-            
-            # Get promoters from de genes
-            de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
-
-            print("3")
-            print(len(de_prom))
-
-            de_prom.merge(namedistinct=True)
-
-            print("4")
-            print(len(de_prom))
-
-            for promoter in de_prom:
-                promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)   
-            self.de_regions = de_prom
-            
-            print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
-            print2(summary, "   \t"+str(len(de_prom))+" unique target promoters are loaded")
-            # Get promoters from nonDE gene
-            nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
-            nde_prom.merge(namedistinct=True)
-            for promoter in nde_prom:
-                promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
-            self.nde_regions = nde_prom
-            
-            print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
-            print2(summary, "   \t"+str(len(nde_prom))+" unique non-target promoters are loaded")
-            # Loading score
-            if score:
-                self.scores = []
-                for promoter in self.de_regions:                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
-                    try: 
-                        self.scores.append(abs(self.de_gene.values[promoter.name.upper()]))
-                    except:
-                        print("Warning: "+promoter.name+"\tcannot be mapped to get its score.")
-                        self.scores.append(0)
+                for promoter in de_prom:
+                    gene_sym = self.ensembl2symbol[promoter.name]
                     
+                    if score:
+                        try:
+                            s = self.de_gene.values[gene_sym]
+                        except:
+                            print(promoter.name)
+                            print("Warning: "+gene_sym+"\tcannot be mapped to get its score.")
+                            s = "0"
+                        self.scores.append(s)
+                    
+                self.de_regions = de_prom
+                
+                
+                #print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
+                print2(summary, "   \t"+str(len(de_prom))+" unique target promoters are loaded")
+                # Get promoters from nonDE gene
+                nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
+                nde_prom.merge(namedistinct=True)
+                #for promoter in nde_prom:
+                #    promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
+                self.nde_regions = nde_prom
+                
+                #print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
+                print2(summary, "   \t"+str(len(nde_prom))+" unique non-target promoters are loaded")
+                # Loading score
+                
+                data = [ self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
+                if score: data.append(self.scores)
+                dump(object=data, path=temp, filename="dump_"+gene_list_file.rpartition("/")[-1].partition(".")[0])
+                
+    def get_rna_region_str(self, rna):
+        """Getting the rna region from the information header with the pattern:
+                REGION:_chr3_51978050_51983935_-_"""
+        with open(rna) as f:
+            header = f.readline()
+            header = header.strip()
+            header = header.split()
+            #header = header.split("_")
+            s = [ e for e in header if "REGION" in e ]
+            self.rna_str = s[0]
 
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         print("    \tRunning Triplexator...")
@@ -517,20 +565,17 @@ class PromoterTest:
         # Count the number of targeted promoters on each merged DNA Binding Domain
         txp_de = RNADNABindingSet("DE")
         txp_nde = RNADNABindingSet("non-DE")
-        
         txp_de.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=False)
-        txp_de.remove_duplicates()
-        txp_de.merge_rbs(rm_duplicate=True, asgene_organism=self.organism, cutoff=cutoff)
+        #txp_de.remove_duplicates()
+        txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, region_set=self.de_regions)
         
         self.rbss = txp_de.merged_dict.keys()
-
         txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
-        txp_nde.remove_duplicates()
-        txp_nde.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
+        #txp_nde.remove_duplicates()
+        txp_nde.merge_by(rbss=self.rbss, rm_duplicate=True)#, asgene_organism=self.organism)
 
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
-
         for rbs in self.rbss:
             # DE
             self.frequency["promoters"]["de"][rbs] = [ len(txp_de.merged_dict[rbs]), 
@@ -546,11 +591,11 @@ class PromoterTest:
         # Count the number of hits on the promoters from each merged DBD 
         txp_def = RNADNABindingSet("DE")
         txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
-        txp_def.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
+        txp_def.merge_by(rbss=self.rbss, rm_duplicate=True, region_set=self.de_regions ) #asgene_organism=self.organism
 
         txp_ndef = RNADNABindingSet("non-DE")
         txp_ndef.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=True)
-        txp_ndef.merge_by(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
+        txp_ndef.merge_by(rbss=self.rbss, rm_duplicate=True)#, asgene_organism=self.organism)
 
         if self.showdbs:
             self.frequency["hits"] = { "de": OrderedDict(), "nde": OrderedDict() }
@@ -564,15 +609,14 @@ class PromoterTest:
 
         self.txp_def = txp_def
         self.txp_ndef = txp_ndef
-        
         if remove_temp:
             os.remove(os.path.join(temp,"de.txp"))
             os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
             self.de_regions.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
-            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), remove_duplicates=True)
-            self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), remove_duplicates=True)
+            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), remove_duplicates=False)
+            self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), remove_duplicates=False)
 
     def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
@@ -839,6 +883,8 @@ class PromoterTest:
         col_size_list = [50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]
         data_table = []
         rank=0
+        self.topDBD = []
+
         for rbs in self.frequency["promoters"]["de"].keys():
             if self.frequency["promoters"]["de"][rbs][0] < ccf: continue
             rank += 1
@@ -853,6 +899,12 @@ class PromoterTest:
                 else:
                     p_hit = value2str(self.hpvalue[rbs])
             
+            try:
+                if self.pvalue[rbs] < self.topDBD[1]:
+                    self.topDBD = [rbs.str_rna(pa=False), self.pvalue[rbs]]
+            except:
+                self.topDBD = [rbs.str_rna(pa=False), self.pvalue[rbs]]
+
             new_row = [ str(rank),
                         rbs.str_rna(pa=False),
                         '<a href="'+"dbds_promoters.html#"+rbs.str_rna()+
@@ -904,12 +956,17 @@ class PromoterTest:
                 # Add information
                 if self.ani:
                     pr = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+"&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+'" style="text-align:left">'+promoter.toString(space=True)+'</a>'
+                
+                elif self.organism == "tair10":
+                    pr = "".join([ '<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=', 
+                                   promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
+                                   '" target="_blank">', promoter.toString(space=True), '</a>'])
                 else:
                     pr = promoter.toString(space=True)
 
                 data_table.append([ str(i+1),
                                     pr, 
-                                    split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                                    split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
                                     str(len(self.promoter["de"]["rd"][promoter.toString()])),
                                     value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                      ])
@@ -991,7 +1048,7 @@ class PromoterTest:
                     score_header = ["Fold_change", "Filtered"]
                 
                 else:        
-                    score_header = ["Score"]
+                    score_header = ["Fold Change Score"]
             header_list = [ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage" ]
             header_list += score_header
             header_list += [ "Sum of Ranks" ]
@@ -1046,7 +1103,15 @@ class PromoterTest:
                     rank_score = rank_score.tolist()
 
                 else:
-                    self.scores = [ float(s) for s in self.scores ]     
+                    new_scores = []
+                    for s in self.scores:
+                        if s == "Inf" or s == "inf":
+                            new_scores.append(float("inf"))
+                        elif s == "-Inf" or s == "-inf":
+                            new_scores.append(-float("inf"))
+                        else: new_scores.append(abs(float(s)))
+                        
+                    self.scores = new_scores  
                     rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
     
@@ -1065,6 +1130,7 @@ class PromoterTest:
                 dbssount = '<a href="promoters_dbds.html#'+promoter.toString()+'" style="text-align:left">'+str(len(self.promoter["de"]["dbs"][promoter.toString()]))+'</a>'
             
             if self.ani:
+
                 region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
                                        "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
                                        str(promoter.final), '" style="text-align:left" target="_blank">',
@@ -1079,7 +1145,7 @@ class PromoterTest:
 
             newline = [ str(i+1),
                         region_link,
-                        split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism),
+                        split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
                         dbssount,
                         value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                         ]
@@ -1123,7 +1189,7 @@ class PromoterTest:
             if len(self.promoter["de"]["dbs"][promoter.toString()]) == 0:
                 continue
             else:         
-                html.add_heading(split_gene_name(gene_name=promoter.name, ani=self.ani, org=self.organism), idtag=promoter.toString())
+                html.add_heading(split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism), idtag=promoter.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                         '" style="margin-left:50">'+
@@ -1141,6 +1207,56 @@ class PromoterTest:
                                      header_titles=header_titles, sortable=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "promoters_dbds.html"))
+
+    def save_profile(self, output, bed, geneset):
+        """Save some statistics for comparison with other results"""
+        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
+        exp = os.path.basename(output)
+        #tag = os.path.basename(os.path.dirname(rnafile))
+        if geneset: tar_reg = os.path.basename(geneset)
+        else: tar_reg = os.path.basename(bed)
+        # RNA name with region
+        s = self.rna_str.split("_")
+        rna = '<p title="'+s[1]+":"+s[2]+"-"+s[3]+'">'+self.rna_name +"<p>"
+        # RNA associated genes
+        r_genes = rna_associated_gene(rna_str=self.rna_str, name=self.rna_name, organism=self.organism)
+        newlines = []
+        #try:
+        if os.path.isfile(pro_path):
+            with open(pro_path,'r') as f:
+                new_exp = True
+                for line in f:
+                    line = line.strip()
+                    line = line.split("\t")
+                    if line[0] == exp:
+                        newlines.append([exp, rna, output.split("_")[-1],
+                                         self.organism, tar_reg, str(len(self.sig_region_promoter)), 
+                                         self.topDBD[0], value2str(self.topDBD[1]), r_genes ])
+                        new_exp = False
+                    else:
+                        newlines.append(line)
+                if new_exp:
+                    newlines.append([exp, rna, output.split("_")[-1],
+                                     self.organism, tar_reg, str(len(self.sig_region_promoter)), 
+                                     self.topDBD[0], value2str(self.topDBD[1]), r_genes ])
+        else:
+            newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                             "Top_DBD", "p-value","RNA_associated_gene"])
+            newlines.append([exp, rna, output.split("_")[-1],
+                             self.organism, tar_reg, str(len(self.sig_region_promoter)), 
+                             self.topDBD[0], value2str(self.topDBD[1]), r_genes ])
+
+        with open(pro_path,'w') as f:
+            for lines in newlines:
+                print("\t".join(lines), file=f)
+
+
+
+
+
+
+
+
 
 
 
@@ -1510,7 +1626,7 @@ class RandomTest:
                                     '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                     "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                                     '" style="text-align:left">'+region.toString(space=True)+'</a>',
-                                    split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism),
+                                    split_gene_name(gene_name=region.name, org=self.organism),
                                     str(len(self.region_dbs[region.toString()])),
                                     value2str(self.region_coverage[region.toString()])
                                      ])
@@ -1576,7 +1692,7 @@ class RandomTest:
                         '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                         '" style="text-align:left">'+region.toString(space=True)+'</a>',
-                        split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism),
+                        split_gene_name(gene_name=region.name, org=self.organism),
                         '<a href="region_dbs.html#'+region.toString()+
                         '" style="text-align:left">'+str(len(self.region_dbs[region.toString()]))+'</a>',
                         value2str(self.region_coverage[region.toString()]) ]
@@ -1606,7 +1722,7 @@ class RandomTest:
             if len(self.region_dbs[region.toString()]) == 0:
                 continue
             else:         
-                html.add_heading("Associated gene: "+split_gene_name(gene_name=region.name, ani=self.ani, org=self.organism), idtag=region.toString())
+                html.add_heading("Associated gene: "+split_gene_name(gene_name=region.name, org=self.organism), idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                                         '" style="margin-left:50">'+

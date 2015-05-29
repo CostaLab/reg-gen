@@ -1038,4 +1038,4 @@ class AuxiliaryFunctions:
         if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
         if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
         return 0 # interval1 overlaps interval2
-
+        

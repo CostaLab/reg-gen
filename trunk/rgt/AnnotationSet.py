@@ -113,10 +113,12 @@ class AnnotationSet:
             self.gene_list = gene_source
         if(isinstance(gene_source,str)): # It can be a string.
             if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
-                self.load_gene_list(gene_source, filter_havana=False)
+                self.load_gene_list(gene_source, filter_havana=False, protein_coding=True,
+                                    known_only=True)
             else: # The string may represent an organism which points to a gtf file within data.config.
                 genome_data = GenomeData(gene_source)
-                self.load_gene_list(genome_data.get_gencode_annotation(), filter_havana=False)
+                self.load_gene_list(genome_data.get_gencode_annotation(), filter_havana=False, protein_coding=True,
+                                    known_only=True)
 
         # Initializing Optional Field - TF List
         if(tf_source):
@@ -147,7 +149,7 @@ class AnnotationSet:
                     self.load_alias_dict(genome_data.get_gene_alias())
             else: pass # TODO Throw error
 
-    def load_gene_list(self, file_name, filter_havana=True):
+    def load_gene_list(self, file_name, filter_havana=True, protein_coding=False, known_only=False):
         """
         Reads gene annotation in gtf (gencode) format. It populates self.gene_list with such entries.
 
@@ -168,7 +170,14 @@ class AnnotationSet:
             if(line[0] == "#"): continue
             line_list = line.split("\t")
             if(filter_havana and line_list[1] == "HAVANA"): continue
+
             addt_list = line_list[8].split(";")
+
+            if(protein_coding and "protein_coding" not in addt_list[2] ): continue
+            if(known_only and "KNOWN" not in addt_list[3] ): continue
+            
+            if(protein_coding and "protein_coding" not in addt_list[5] ): continue
+            if(known_only and "KNOWN" not in addt_list[6] ): continue
             addt_list = filter(None,addt_list)
 
             # Processing additional list of options
@@ -325,7 +334,7 @@ class AnnotationSet:
         """
         pass
 
-    def fix_gene_names(self,gene_set):
+    def fix_gene_names(self,gene_set,output_dict=False):
         """
         Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it
         will be converted using alias_dict. If the gene name cannot be found then it is reported in a 
@@ -343,6 +352,7 @@ class AnnotationSet:
         mapped_gene_list = []
         unmapped_gene_list = []
         
+        if output_dict: maping_dict = {}
         # Iterating on gene names
         for gene_name in gene_set.genes:
         
@@ -356,10 +366,16 @@ class AnnotationSet:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
                     if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
-                    for e in alias_list: mapped_gene_list.append(e)
+                    for e in alias_list: 
+                        mapped_gene_list.append(e)
+                        if output_dict: maping_dict[e] = gene_name
                 except Exception: unmapped_gene_list.append(gene_name)
-        
-        return mapped_gene_list, unmapped_gene_list
+        if output_dict:
+            return mapped_gene_list, unmapped_gene_list, maping_dict
+        else:
+            return mapped_gene_list, unmapped_gene_list
+
+
 
     def get(self, query=None, list_type=DataType.GENE_LIST, return_type=ReturnType.ANNOTATION_SET):
         """

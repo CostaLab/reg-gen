@@ -1719,7 +1719,7 @@ class Boxplot:
         
         # Calculate for means of ranks
         print("    Calculating for the mean of ranked data...")
-        sort_matrix = numpy.sort(self.all_table,axis=0)
+        sort_matrix = numpy.sort(self.all_table, axis=0)
         means = []
         for r in range(self.all_table.shape[0]):
             row = [x for x in sort_matrix[r,:]]

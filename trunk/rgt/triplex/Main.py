@@ -3,13 +3,16 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
-import argparse 
+import argparse
+import shutil
 import time, datetime, getpass, fnmatch
 import subprocess
+import pickle
 # Local Libraries
 # Distal Libraries
+from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import PromoterTest, RandomTest
+from triplexTools import PromoterTest, RandomTest, value2str, split_gene_name
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 
@@ -46,8 +49,11 @@ def check_dir(path):
     try: os.stat(path)
     except: os.mkdir(path)
 
+
+
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
+
     dirname = os.path.basename(path)
     
     link_d = {"List":"index.html"}
@@ -56,25 +62,41 @@ def list_all_index(path):
     
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
-    type_list = 'sssss'
-    col_size_list = [10, 10, 10, 10, 10]
+    type_list = 'sssssssssssss'
+    col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
+    header_list = ["No.", "Experiments", "RNA", "Associated genes to RNA", "Organism", #"Condition", 
+                   "Target region", "No significant DBD", "Top DBD", "p-value"]
+    profile_f = open(os.path.join(dirname, "profile.txt"),'r')
+    profile = {}
+    for line in profile_f:
+        line = line.strip()
+        line = line.split("\t")
+        profile[line[0]] = line[1:]
+    #profile = pickle.load(profile_f)
     for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
                 c += 1
-                if "_" in root.split('/')[-1]:
-                    tags = root.split('/')[-1].split("_")
-                    p1 = tags[0]
-                    p2 = tags[-1]
-                    data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'">'+root.split('/')[-1]+"</a>",
-                                       p1, p2])
-                    header_list = ["No.", "Experiments", "Tag1", "Tag2"]
-                else:
-                    data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'">'+root.split('/')[-1]+"</a>"])
-                    header_list = ["No.", "Experiments"]
-                #print(link_d[roots[-1]])
+                exp = root.split('/')[-1]
+                try:
+                    if float(profile[exp][6]) < 0.05:
+                        data_table.append([str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
+                                           profile[exp][0], 
+                                           split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]),
+                                           profile[exp][2], 
+                                           profile[exp][3], profile[exp][4], profile[exp][5], 
+                                           "<font color=\"red\">"+profile[exp][6]+"</font>" ])
+                    else:
+                        data_table.append([str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
+                                           profile[exp][0], 
+                                           split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]),
+                                           profile[exp][2], 
+                                           profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ])
+                except:
+                    print("Error in loading profile: "+exp)
+                    continue
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
@@ -98,6 +120,7 @@ def main():
     h_promotor = "Promoter test evaluates the association between the given lncRNA to the target promoters."
     parser_promotertest = subparsers.add_parser('promotertest', help=h_promotor)
     parser_promotertest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
+    #parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for paths to all RNA sequences (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, metavar='  ', help="Define the RNA name")
     parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for defferentially expression gene list (gene symbols or Ensembl ID)")
     parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of defferentially expression genes")
@@ -127,7 +150,7 @@ def main():
     parser_promotertest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexator] Method to quickly discard non-hits (Default 0).'0' = greedy approach; '1' = q-gram filtering.")
     parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
-    parser_promotertest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Set the multiprocessing")
+    parser_promotertest.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
     
     
     ################### Genomic Region Test ##########################################
@@ -186,7 +209,6 @@ def main():
     else:   
         args = parser.parse_args()
         cf = ConfigurationFile()
-        
         process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # wait for the process to terminate
         out, err = process.communicate()
@@ -247,10 +269,11 @@ def main():
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
                                 promoterLength=args.pl, summary=summary, temp=dir,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
+        promoter.get_rna_region_str(rna=args.r)
         promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
         t1 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
         if args.obed: obedp = os.path.basename(args.o)
@@ -258,12 +281,49 @@ def main():
         promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf)
         promoter.fisher_exact(alpha=args.a)
         t2 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
+        
+        if len(promoter.rbss) == 0: 
+            print("*** Find no triple helices binding on the given RNA")
 
+            pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
+            exp = os.path.basename(args.o)
+            if args.de: tar_reg = os.path.basename(args.de)
+            else: tar_reg = os.path.basename(args.bed)
+            newlines = []
+            if os.path.isfile(pro_path):
+                with open(pro_path,'r') as f:
+                    new_exp = True
+                    for line in f:
+                        line = line.strip()
+                        line = line.split()
+                        if line[0] == exp:
+                            newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg, "No triplex found", 
+                                             "-", "-", "-" ])
+                            new_exp = False
+                        else:
+                            newlines.append(line)
+                    if new_exp:
+                        newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg, "No triplex found", 
+                                             "-", "-", "-" ])
+            else:
+                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                                 "Top_DBD", "p-value","RNA_associated_gene"])
+                newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg, "No triplex found", 
+                                             "-", "-", "-" ])
+            with open(pro_path,'w') as f:
+                for lines in newlines:
+                    print("\t".join(lines), file=f)
+
+            #shutil.rmtree(args.o)
+            sys.exit(1)
         print2(summary, "Step 3: Establishing promoter profile.")
         promoter.promoter_profile()
         t3 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
 
         print2(summary, "Step 4: Generate plot and output html files.")
         promoter.plot_lines(txp=promoter.txp_de, rna=args.r, dirp=args.o, ac=args.ac, 
@@ -283,10 +343,11 @@ def main():
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         t4 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t4-t3))))
-        print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4-t0))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
+        print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
+        promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
         list_all_index(path=os.path.dirname(args.o))
         
     ################################################################################
@@ -309,14 +370,14 @@ def main():
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm,
                                filter_bed=args.f, alpha=args.a)
         t2 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t2-t1))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
         randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
@@ -346,9 +407,9 @@ def main():
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
                             score=args.score)
         t3 = time.time()
-        print2(summary, "\tRunning time is : " + str(datetime.timedelta(seconds=round(t3-t2))))
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
         
-        print2(summary, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))))
+        print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
     
         output_summary(summary, args.o, "summary.txt")
         list_all_index(path=os.path.dirname(args.o))

@@ -157,7 +157,7 @@ class GenomicRegionSet:
             for s in self:
                 print(s, file=f)
 
-    def gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
+    def gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000, show_dis=False):
         """Associates coordinates to genes given the following rules:
            1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
            2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
@@ -236,16 +236,31 @@ class GenomicRegionSet:
                     else: geneCoord = [assocDict[chrName][counter][0],assocDict[chrName][counter][1]+promoterLength]
 
                     check = AuxiliaryFunctions.overlap(coord,geneCoord) # Check overlap between coordinate and gene+promoter
-
                     if(check == 0): # If contain overlap, then check if the coordinate also contains overlap with the next gene
 
                         # Verify if next gene+promoter also overlap
                         genesList = [assocDict[chrName][counter][2]+"_PROX"] # List of overlapping genes
+                        
+                        if show_dis:
+                            dis1 = abs(coord[0] - assocDict[chrName][counter][1])
+                            dis2 = abs(coord[1] - assocDict[chrName][counter][0])
+                            if coord[1] < assocDict[chrName][counter][0]: s = "+"
+                            elif coord[0] > assocDict[chrName][counter][1]: s = "-"
+                            dis_list = [s+str(min(dis1, dis2))]
+
                         if(counter < len(assocDict[chrName])-1): # If this is not the last gene (there is a 'next') then verify overlap
                             if(assocDict[chrName][counter+1][4] == "+"): geneCoordNext = [assocDict[chrName][counter+1][0]-promoterLength,assocDict[chrName][counter+1][1]]
                             else: geneCoordNext = [assocDict[chrName][counter+1][0],assocDict[chrName][counter+1][1]+promoterLength]
                             checkNext = AuxiliaryFunctions.overlap(coord,geneCoordNext) # Verify overlap between coordinate and next gene
-                            if(checkNext == 0): genesList.append(assocDict[chrName][counter+1][2]+"_PROX") # If there is an overlap then add this gene to association list
+                            
+                            if(checkNext == 0): 
+                                genesList.append(assocDict[chrName][counter+1][2]+"_PROX") # If there is an overlap then add this gene to association list
+                                if show_dis:
+                                    dis1 = abs(coord[0] - assocDict[chrName][counter+1][1])
+                                    dis2 = abs(coord[1] - assocDict[chrName][counter+1][0])
+                                    if coord[1] < assocDict[chrName][counter+1][0]: s = "+"
+                                    elif coord[0] > assocDict[chrName][counter+1][1]: s = "-"
+                                    dis_list.append(s+str(min(dis1, dis2)))
                         #else: # If this is the last gene (there is no 'next') then dont verify overlap
 
                         # Verify if genes are enriched
@@ -259,20 +274,36 @@ class GenomicRegionSet:
 
                         # Verify overlap again using maximum distance with current gene+promoter
                         genesList = [] # List of overlapping genes
+                        if show_dis: dis_list = []
                         maxGeneCoord = [geneCoord[0]-threshDist,geneCoord[1]+threshDist]
                         maxCheck = AuxiliaryFunctions.overlap(coord,maxGeneCoord)
-                        if(maxCheck == 0): genesList.append(assocDict[chrName][counter][2]+"_DIST") # If it overlapped then put current gene in overlap list
-                    
+                        if(maxCheck == 0): 
+                            genesList.append(assocDict[chrName][counter][2]+"_DIST") # If it overlapped then put current gene in overlap list
+                            if show_dis:
+                                dis1 = abs(coord[0] - assocDict[chrName][counter][1])
+                                dis2 = abs(coord[1] - assocDict[chrName][counter][0])
+                                if coord[1] < assocDict[chrName][counter][0]: s = "+"
+                                elif coord[0] > assocDict[chrName][counter][1]: s = "-"
+                                dis_list.append(s+str(min(dis1, dis2)))
                         # Verify overlap again using maximum distance with previous gene+promoter
                         if(counter > 0): # Do this verification only if this is not the first gene
                             if(assocDict[chrName][counter-1][4] == "+"): geneCoordPrev = [assocDict[chrName][counter-1][0]-promoterLength,assocDict[chrName][counter-1][1]]
                             else: geneCoordPrev = [assocDict[chrName][counter-1][0],assocDict[chrName][counter-1][1]+promoterLength]
                             maxGeneCoordPrev = [geneCoordPrev[0]-threshDist,geneCoordPrev[1]+threshDist]
                             maxCheckPrev = AuxiliaryFunctions.overlap(coord,maxGeneCoordPrev)
-                            if(maxCheckPrev == 0): genesList.append(assocDict[chrName][counter-1][2]+"_DIST") # If it overlapped then put previous gene in overlap list
-
+    
+                            if(maxCheckPrev == 0): 
+                                genesList.append(assocDict[chrName][counter-1][2]+"_DIST") # If it overlapped then put previous gene in overlap list
+                                if show_dis:
+                                    dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
+                                    dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
+                                    if coord[1] < assocDict[chrName][counter-1][0]: s = "+"
+                                    elif coord[0] > assocDict[chrName][counter-1][1]: s = "-"
+                                    dis_list.append(s+str(min(dis1, dis2)))
                         # Verify if genes are enriched
-                        if(len(genesList) == 0): genesList.append(".") # If genesList is empty then put a '.' to represent non-association
+                        if(len(genesList) == 0): 
+                            genesList.append(".") # If genesList is empty then put a '.' to represent non-association
+                            if show_dis: dis_list.append(None)
                         else: # If genesList is not empty then verify enriched genes
                             for i in range(0,len(genesList)): # Check if genes in genesList are enriched 
                                 if(not geneFlagDict[genesList[i][:-5]]): genesList[i] = "."+genesList[i] # If the gene is not enriched, put a dot (.) in front of it (will be used by motif matching)
@@ -286,8 +317,10 @@ class GenomicRegionSet:
                 # If not breaked, then the gene list is over and the coordinate can only overlap the last gene.
                 if(not didBreak): 
                     genesList = []
+                    if show_dis: dis_list = []
                     if(len(assocDict[chrName]) == 0): # If gene list is empty then dont associate coordinate with any gene
                         genesList.append(".")
+                        if show_dis: dis_list.append(None)
                     else: # If gene list is not empty then try to verify overlap between coordinate and last gene
                         if(assocDict[chrName][counter-1][4] == "+"): geneCoordPrev = [assocDict[chrName][counter-1][0]-promoterLength,assocDict[chrName][counter-1][1]]
                         else: geneCoordPrev = [assocDict[chrName][counter-1][0],assocDict[chrName][counter-1][1]+promoterLength]
@@ -296,14 +329,22 @@ class GenomicRegionSet:
                         if(maxCheckPrev == 0): # If it overlapped then put previous gene in overlap list and check for enrichment
                             genesList.append(assocDict[chrName][counter-1][2]+"_DIST")
                             if(not geneFlagDict[genesList[0][:-5]]): genesList[0] = "."+genesList[0]
-                        else: genesList.append(".") # If does not overlap then put a '.' to represent non-association
-
+                            if show_dis:
+                                dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
+                                dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
+                                if coord[1] < assocDict[chrName][counter-1][0]: s = "+"
+                                elif coord[0] > assocDict[chrName][counter-1][1]: s = "-"
+                                dis_list.append(s+str(min(dis1, dis2)))
+                        else: 
+                            genesList.append(".") # If does not overlap then put a '.' to represent non-association
+                            dis_list.append(None)
                 # Write the curent coordinate with its corresponding overlapping genes (enriched or not)
                 aDict[chrName].append(coord[:5]) # Writing the raw coordinate until STRAND field only
                 aDict[chrName][-1][2] = ":".join(genesList) # Write list of overlapping genes
+                if show_dis: 
+                    aDict[chrName][-1].append(dis_list)
                 #aDict[chrName][-1][3] = 0 # Force the SCORE field to be '0' # EG
                 #aDict[chrName][-1][4] = "." # Force the STRAND field to be '.' # EG
-
         # Converting aDict to genomic region set
         result_grs = GenomicRegionSet(self.name+"_associated")
         for chrom in aDict.keys():
@@ -318,6 +359,12 @@ class GenomicRegionSet:
                     else:
                         new_genes_list.append("_".join(curr_gene.split("_")[:-1]))
                         new_prox_list.append(curr_gene.split("_")[-1])
+                if show_dis:
+                    for i, d in enumerate(coord[5]):
+                        if not d: continue
+                        else:
+                            new_genes_list[i] = new_genes_list[i]+"("+d+")"        
+                
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
                 #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
@@ -1330,3 +1377,40 @@ class GenomicRegionSet:
         region_set = GenomicRegionSet("Query")
         region_set.add(region)
         return self.intersect(region_set, mode=OverlapType.ORIGINAL)
+
+    def replace_region_name(self, regions):
+        """Replace the region names by the given region set"""
+        
+        if len(self) == 0 or len(regions) == 0: return
+        
+        else:
+            # If there is overlap within self or y, they should be merged first. 
+            if not self.sorted: self.sort()
+            if not regions.sorted: regions.sort()
+            
+            iter_a = iter(self)
+            s = iter_a.next()
+            last_j = len(regions)-1
+            j = 0
+            cont_loop = True
+            pre_inter = 0
+            cont_overlap = False
+            
+            while cont_loop:
+                #print(str(s),"\t",str(b[j]))
+                # When the regions overlap
+                if s.overlap(regions[j]):
+                    s.name = regions[j].name
+                    try: s = iter_a.next()
+                    except: cont_loop = False
+                    
+                elif s < regions[j]:
+                    try: s = iter_a.next()
+                    except: cont_loop = False
+                elif s > regions[j]:
+                    if j == last_j: cont_loop = False
+                    else: j = j + 1
+                else:
+                    try: s = iter_a.next()
+                    except: cont_loop = False        
+            return
