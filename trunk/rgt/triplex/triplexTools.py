@@ -397,12 +397,14 @@ def check_triplexator_path():
         sys.exit(1)
     
 def rna_associated_gene(rna_str, name, organism):
-    s = rna_str.split("_")
-    g = GenomicRegionSet("RNA associated genes")
-    g.add( GenomicRegion(chrom=s[1], initial=int(s[2]), final=int(s[3]), name=name, orientation=s[4]) )
-    asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=50000, show_dis=True)
-    return asso_genes[0].name
-
+    if rna_str:
+        s = rna_str.split("_")
+        g = GenomicRegionSet("RNA associated genes")
+        g.add( GenomicRegion(chrom=s[1], initial=int(s[2]), final=int(s[3]), name=name, orientation=s[4]) )
+        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=50000, show_dis=True)
+        return asso_genes[0].name
+    else:
+        return "."
 ####################################################################################
 ####################################################################################
 
@@ -456,7 +458,7 @@ class PromoterTest:
                     ann = load_dump(path=temp, filename="annotation_"+organism)
                 except:
                     ann = AnnotationSet(organism, alias_source=organism)
-                    #print("DDD")
+                    print("\tDumping annotation file...")
                     dump(object=ann, path=temp, filename="annotation_"+organism)
 
                 # DE gene regions
@@ -475,7 +477,7 @@ class PromoterTest:
                 #print("Before fixing")
                 #print(len(self.de_gene.genes))
                 de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
-                #self.de_gene.genes = de_ensembl
+                self.de_gene.genes = de_ensembl
                 #print("After fixing")
                 #print(len(de_ensembl))
 
@@ -483,7 +485,7 @@ class PromoterTest:
                 nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
                 
                 self.nde_gene = GeneSet("nde genes")
-                self.nde_gene.genes = nde_ensembl
+                #self.nde_gene.genes = nde_ensembl
                 
                 # Get promoters from de genes
                 #print("\tGetting promoter regions...")
@@ -533,7 +535,10 @@ class PromoterTest:
             header = header.split()
             #header = header.split("_")
             s = [ e for e in header if "REGION" in e ]
-            self.rna_str = s[0]
+            try:
+                self.rna_str = s[0]
+            except:
+                self.rna_str = None
 
     def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         print("    \tRunning Triplexator...")
@@ -763,7 +768,7 @@ class PromoterTest:
         ax.yaxis.set_major_formatter(formatter)
         ax.tick_params(axis='y', which='both', left='on', right='off', labelbottom='off')
         for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-        ax.set_ylabel("Proportion of binding promoters (%)",fontsize=9, rotation=90)
+        ax.set_ylabel("Proportion of promoters (%)",fontsize=9, rotation=90)
         
         # X axis
         ax.set_xlim( [ 0, len(self.rbss) ] )
@@ -1216,8 +1221,11 @@ class PromoterTest:
         if geneset: tar_reg = os.path.basename(geneset)
         else: tar_reg = os.path.basename(bed)
         # RNA name with region
-        s = self.rna_str.split("_")
-        rna = '<p title="'+s[1]+":"+s[2]+"-"+s[3]+'">'+self.rna_name +"<p>"
+        if self.rna_str:
+            s = self.rna_str.split("_")
+            rna = '<p title="'+s[1]+":"+s[2]+"-"+s[3]+'">'+self.rna_name +"<p>"
+        else:
+            rna = self.rna_name
         # RNA associated genes
         r_genes = rna_associated_gene(rna_str=self.rna_str, name=self.rna_name, organism=self.organism)
         newlines = []
@@ -1774,3 +1782,50 @@ class RandomTest:
                              auto_width=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory,"parameters.html"))
+
+
+    def save_profile(self, output, bed):
+        """Save some statistics for comparison with other results"""
+        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
+        exp = os.path.basename(output)
+        #tag = os.path.basename(os.path.dirname(rnafile))
+        tar_reg = os.path.basename(bed)
+        # RNA name with region
+        try:
+            s = self.rna_str.split("_")
+            rna = '<p title="'+s[1]+":"+s[2]+"-"+s[3]+'">'+self.rna_name +"<p>"
+        
+            # RNA associated genes
+            r_genes = rna_associated_gene(rna_str=self.rna_str, name=self.rna_name, organism=self.organism)
+        except:
+            rna = self.rna_name
+            r_genes = "-"
+        newlines = []
+        #try:
+        if os.path.isfile(pro_path):
+            with open(pro_path,'r') as f:
+                new_exp = True
+                for line in f:
+                    line = line.strip()
+                    line = line.split("\t")
+                    if line[0] == exp:
+                        newlines.append([exp, rna, output.split("_")[-1],
+                                         self.organism, tar_reg, str(len(self.data["region"]["sig_region"])), 
+                                         "-", "-", r_genes ])
+                        new_exp = False
+                    else:
+                        newlines.append(line)
+                if new_exp:
+                    newlines.append([exp, rna, output.split("_")[-1],
+                                         self.organism, tar_reg, str(len(self.data["region"]["sig_region"])), 
+                                         "-", "-", r_genes ])
+        else:
+            newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                             "Top_DBD", "p-value","RNA_associated_gene"])
+            newlines.append([exp, rna, output.split("_")[-1],
+                             self.organism, tar_reg, str(len(self.data["region"]["sig_region"])), 
+                             "-", "-", r_genes ])
+
+        with open(pro_path,'w') as f:
+            for lines in newlines:
+                print("\t".join(lines), file=f)

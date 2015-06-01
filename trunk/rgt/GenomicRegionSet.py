@@ -337,7 +337,7 @@ class GenomicRegionSet:
                                 dis_list.append(s+str(min(dis1, dis2)))
                         else: 
                             genesList.append(".") # If does not overlap then put a '.' to represent non-association
-                            dis_list.append(None)
+                            if show_dis: dis_list.append(None)
                 # Write the curent coordinate with its corresponding overlapping genes (enriched or not)
                 aDict[chrName].append(coord[:5]) # Writing the raw coordinate until STRAND field only
                 aDict[chrName][-1][2] = ":".join(genesList) # Write list of overlapping genes
