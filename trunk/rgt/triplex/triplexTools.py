@@ -1291,6 +1291,7 @@ class RandomTest:
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
         self.dna_region = self.dna_region.gene_association(organism=self.organism)
+        self.topDBD = []
         
     def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
@@ -1397,7 +1398,12 @@ class RandomTest:
                 self.data["region"]["sig_boolean"].append(True)
             else:
                 self.data["region"]["sig_boolean"].append(False)
-                
+            
+            try:
+                if p_region < self.topDBD[1]: self.topDBD = [rbs.str_rna(pa=False), p_region]
+            except:
+                self.topDBD = [rbs.str_rna(pa=False), p_region]
+
             # Analysis based on DBSs
             if self.showdbs:
                 counts_dbss = [ v[i] for v in dbss_counts ]
@@ -1415,6 +1421,7 @@ class RandomTest:
                 else:
                     self.data["dbs"]["sig_boolean"].append(False)
             
+
         self.region_matrix = numpy.array(self.region_matrix)
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
         
@@ -1824,7 +1831,7 @@ class RandomTest:
                              "Top_DBD", "p-value","RNA_associated_gene"])
             newlines.append([exp, rna, output.split("_")[-1],
                              self.organism, tar_reg, str(len(self.data["region"]["sig_region"])), 
-                             "-", "-", r_genes ])
+                             self.topDBD[0], value2str(self.topDBD[1]), r_genes ])
 
         with open(pro_path,'w') as f:
             for lines in newlines:
