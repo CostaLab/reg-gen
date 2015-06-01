@@ -51,7 +51,7 @@ def check_dir(path):
 
 
 
-def list_all_index(path):
+def list_all_index(path, show_RNA_ass_gene=False):
     """Creat an 'index.html' in the defined directory """
 
     dirname = os.path.basename(path)
@@ -65,8 +65,12 @@ def list_all_index(path):
     type_list = 'sssssssssssss'
     col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
-    header_list = ["No.", "Experiments", "RNA", "Associated genes to RNA", "Organism", #"Condition", 
-                   "Target region", "No significant DBD", "Top DBD", "p-value"]
+    if show_RNA_ass_gene:
+        header_list = ["No.", "Experiments", "RNA", "Associated genes to RNA", "Organism", #"Condition", 
+                       "Target region", "No significant DBD", "Top DBD", "p-value"]
+    else:
+        header_list = ["No.", "Experiments", "RNA", "Organism", #"Condition", 
+                       "Target region", "No significant DBD", "Top DBD", "p-value"]
     profile_f = open(os.path.join(dirname, "profile.txt"),'r')
     profile = {}
     for line in profile_f:
@@ -81,22 +85,27 @@ def list_all_index(path):
                 c += 1
                 exp = root.split('/')[-1]
                 try:
-                    if float(profile[exp][6]) < 0.05:
-                        data_table.append([str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
-                                           profile[exp][0], 
-                                           split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]),
-                                           profile[exp][2], 
-                                           profile[exp][3], profile[exp][4], profile[exp][5], 
-                                           "<font color=\"red\">"+profile[exp][6]+"</font>" ])
-                    else:
-                        data_table.append([str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
-                                           profile[exp][0], 
-                                           split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]),
-                                           profile[exp][2], 
-                                           profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ])
+                    new_line = [ str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
+                                 profile[exp][0] ]
                 except:
+                    continue
+                    
+                if show_RNA_ass_gene: new_line.append( split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]) )
+
+                try:
+                    if profile[exp][6] == "-":
+                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ]
+                    elif float(profile[exp][6]) < 0.05:
+                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], 
+                                      "<font color=\"red\">"+profile[exp][6]+"</font>" ]
+                    else:
+                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ]
+                    data_table.append(new_line)
+                except:
+                    print(data_table)
                     print("Error in loading profile: "+exp)
                     continue
+
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
@@ -326,19 +335,19 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
 
         print2(summary, "Step 4: Generate plot and output html files.")
-        promoter.plot_lines(txp=promoter.txp_de, rna=args.r, dirp=args.o, ac=args.ac, 
+        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
                             sig_region=promoter.sig_region_promoter,
-                            ylabel="Number of target promoters with DBSs", 
-                            linelabel="No. promoters", filename="plot_promoter.png")
+                            ylabel="Number of DBSs", 
+                            linelabel="No. DBSs", filename="plot_promoter.png")
         promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_region_promoter)
-        if args.showdbs:
-            promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
-                                cut_off=args.accf, log=args.log, showpa=args.showpa,
-                                sig_region=promoter.sig_region_dbs,
-                                ylabel="Number of DBSs on target promoters", 
-                                linelabel="No. DBSs", filename="plot_dbss.png")
-            promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
+        #if args.showdbs:
+        #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
+        #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
+        #                        sig_region=promoter.sig_region_dbs,
+        #                        ylabel="Number of DBSs on target promoters", 
+        #                        linelabel="No. DBSs", filename="plot_dbss.png")
+        #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
             
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
@@ -348,7 +357,7 @@ def main():
     
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        list_all_index(path=os.path.dirname(args.o))
+        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_str)
         
     ################################################################################
     ##### Genomic Region Test ######################################################
@@ -380,29 +389,35 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
-                            log=args.log, ylabel="Number of target regions with DBS", 
-                            sig_region=randomtest.data["region"]["sig_region"],
-                            linelabel="No. target regions", filename="lineplot_region.png")
+        
+        randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+                            log=args.log, ylabel="Number of DBS",
+                            sig_region=randomtest.data["region"]["sig_region"], 
+                            linelabel="No. DBS", filename="lineplot_region.png")
+
+        #randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+        #                    log=args.log, ylabel="Number of target regions with DBS", 
+        #                    sig_region=randomtest.data["region"]["sig_region"],
+        #                    linelabel="No. target regions", filename="lineplot_region.png")
         
         randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix, 
                            sig_region=randomtest.data["region"]["sig_region"], 
                            truecounts=[r[0] for r in randomtest.counts_tr.values()],
                            sig_boolean=randomtest.data["region"]["sig_boolean"], 
-                           ylabel="Number of target regions with DBS",
+                           ylabel="Number of target regions",
                            filename="boxplot_regions" )
-        if args.showdbs:
-            randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
-                                log=args.log, ylabel="Number of DBS on target regions",
-                                sig_region=randomtest.data["dbs"]["sig_region"], 
-                                linelabel="No. DBS", filename="lineplot_dbs.png")
+        #if args.showdbs:
+        #    randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
+        #                        log=args.log, ylabel="Number of DBS on target regions",
+        #                        sig_region=randomtest.data["dbs"]["sig_region"], 
+        #                        linelabel="No. DBS", filename="lineplot_dbs.png")
             
-            randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
-                               sig_region=randomtest.data["dbs"]["sig_region"], 
-                               truecounts=randomtest.counts_dbs.values(),
-                               sig_boolean=randomtest.data["dbs"]["sig_boolean"], 
-                               ylabel="Number of DBS on target regions",
-                               filename="boxplot_dbs" )
+        #    randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
+        #                       sig_region=randomtest.data["dbs"]["sig_region"], 
+        #                       truecounts=randomtest.counts_dbs.values(),
+        #                       sig_boolean=randomtest.data["dbs"]["sig_boolean"], 
+        #                       ylabel="Number of DBS on target regions",
+        #                       filename="boxplot_dbs" )
 
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
                             score=args.score)
@@ -412,5 +427,6 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
     
         output_summary(summary, args.o, "summary.txt")
-        list_all_index(path=os.path.dirname(args.o))
+        randomtest.save_profile(output=args.o, bed=args.bed)
+        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
         
