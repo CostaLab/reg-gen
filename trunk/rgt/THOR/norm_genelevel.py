@@ -130,7 +130,7 @@ def norm_gene_level(bams, bed, name, verbose):
         #output_R_file(name, res, colnames)
     
     #print("factors")
-    return map(lambda x: str(x), get_factors(d)), samples
+    return get_factors(d), samples
     
 
 if __name__ == '__main__':
@@ -178,8 +178,7 @@ if __name__ == '__main__':
     factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True)
     
     print(" ".join(samples))
-    print(factors)
-    print(" ".join(factors))
+    print(" ".join(map(lambda x: str(x), factors))
     
     
     #awk -vOFS='\t' '$5=="+" {print $1,$2-500,$2,$4,$5} $5=="-" {print $1,$3,$3+500,$4,$5}'
