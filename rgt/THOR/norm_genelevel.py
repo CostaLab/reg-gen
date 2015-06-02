@@ -133,7 +133,7 @@ def norm_gene_level(bams, bed, name, verbose):
     #print("factors")
     return get_factors(d), samples
     
-def output(input):
+def output(input, bed):
     factors, samples = norm_gene_level(input, bed, 'testname', False)
     
     for i in range(len(samples)):
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     #bams = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_2.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_2.bam']
     
     #mm9
-    bed = '/home/manuel/hk_genes_new_promotor_mm9.bed'
+    bed = '/home/manuel/workspace/cluster_p/THOR/exp/exp68_THOR_genenorm_newgenes/hk_genes_new_promotor_mm9.bed'
     
     b_nestler_H3K36me3_sal = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep1.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep2.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep3.bam']
     b_nestler_H3K36me3_coc = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep1.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep2.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep3.bam']
@@ -165,9 +165,20 @@ if __name__ == '__main__':
     b_zenke_cDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/cDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/cDC_WT_H3K27ac_2.bam']
     b_zenke_pDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_2.bam']
     
+    output(b_zenke_MPP + b_zenke_CDP, bed)
+    output(b_zenke_CDP + b_zenke_cDC, bed)
+    output(b_zenke_CDP + b_zenke_pDC, bed)
+    output(b_zenke_cDC + b_zenke_pDC, bed)
+    
+    print("")
+    
+    output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc, bed)
+    output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc, bed)
+    
+    
     #hg19
     #bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
-    bed = '/home/manuel/hk_genes_new_promotor.bed'
+    bed = '/home/manuel/workspace/cluster_p/THOR/exp/exp68_THOR_genenorm_newgenes/hk_genes_new_promotor_hg19.bed'
     
     b_payton_CC = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC3_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam']
     b_payton_PBBA = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
@@ -181,25 +192,15 @@ if __name__ == '__main__':
     b_blueprint_H3K4me3_macrophage = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C005VGH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S001S7H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S0022IH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00390H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BXVH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BYTH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00C0JH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NK9H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NM5H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NN3H1_H3K4me3_macrophage.bam']
     
     
-    output(b_payton_FL + b_payton_CC)
-    output(b_payton_PBBA + b_payton_CC)
+    output(b_payton_FL + b_payton_CC, bed)
+    output(b_payton_PBBA + b_payton_CC, bed)
     
     print("")
     
-    output(b_zenke_MPP + b_zenke_CDP)
-    output(b_zenke_CDP + b_zenke_cDC)
-    output(b_zenke_CDP + b_zenke_pDC)
-    output(b_zenke_cDC + b_zenke_pDC)
+    output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)
+    output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage, bed)
+    output(b_blueprint_H3K4me3_monocyte + b_blueprint_H3K4me3_macrophage, bed)
     
-    print("")
     
-    output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage)
-    output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage)
-    output(b_blueprint_H3K4me3_monocyte + b_blueprint_H3K4me3_macrophage)
-    
-    print("")
-    
-    output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc)
-    output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc)
     
     
