@@ -118,7 +118,8 @@ def norm_gene_level(bams, bed, name, verbose):
     
     colnames = gene_names
     d = np.matrix(signals, dtype=float)
-    print("samples: %s" %",".join(map(lambda x: os.path.basename(x), bams)))
+    samples = map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)
+    #print("samples: %s" %",".join(map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)))
     print("Housekeeping gene matrix (columns-genes, rows-samples)")
     print(d)
     print("")
@@ -128,21 +129,24 @@ def norm_gene_level(bams, bed, name, verbose):
         get_factor_matrix(d, colnames)
         #output_R_file(name, res, colnames)
     
-    print("factors")
-    return get_factors(d)
+    #print("factors")
+    return get_factors(d), samples
     
 
 if __name__ == '__main__':
     #bams = ['/home/manuel/test1.bam', '/home/manuel/test2.bam']
-    bams = ['/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep2.bam']
-    bed = '/home/manuel/workspace/cluster_p/hematology/exp/exp16_check_housekeeping_genes/pot_housekeeping_genes_mm9.bed'
+    #bams = ['/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_BCRABL_IM_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_JAK2VF_Rux_H3K9ac_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forBCRABL_rep2.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep1.bam', '/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/32D_mm_LV_H3K9ac_forJAK2VF_rep2.bam']
+    #bed = '/home/manuel/workspace/cluster_p/hematology/exp/exp16_check_housekeeping_genes/pot_housekeeping_genes_mm9.bed'
     
-    bams = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_2.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_2.bam']
-    bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
+    #bams = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_2.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam', '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_2.bam']
+    #bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
     
-    bams = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC3_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
+    #bams = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC3_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
     #bams = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam', '/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
     #bams = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_2.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_2.bam']
+    
+    #mm9
+    bed = '/home/manuel/hk_genes_new_promotor_mm9.bed'
     
     b_nestler_H3K36me3_sal = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep1.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep2.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_sal_rep3.bam']
     b_nestler_H3K36me3_coc = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep1.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep2.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/nestler/H3K36me3_coc_rep3.bam']
@@ -159,9 +163,9 @@ if __name__ == '__main__':
     #bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
     bed = '/home/manuel/hk_genes_new_promotor.bed'
     
-    b_payton_CC = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam']
+    b_payton_CC = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC3_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam']
     b_payton_PBBA = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
-    b_payton_FL = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL5_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL8_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL10_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL11_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL16_H3K27ac.bam']
+    b_payton_FL = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL5_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL8_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL10_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL11_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL14_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL16_H3K27ac.bam']
     
     b_blueprint_H3K27ac_monocyte = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C000S5H2_H3K27ac_monocyte.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C0010KH1_H3K27ac_monocyte.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C001UYH2_H3K27ac_monocyte.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C004SQH1_H3K27ac_monocyte.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BWXH1_H3K27ac_monocyte.bam']
     b_blueprint_H3K27ac_macrophage = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C005VGH1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S001S7H1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S0022IH1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00390H1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BYTH1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00C0JH1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NM5H1_H3K27ac_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NN3H1_H3K27ac_macrophage.bam']
@@ -171,7 +175,11 @@ if __name__ == '__main__':
     b_blueprint_H3K4me3_macrophage = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C005VGH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S001S7H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S0022IH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00390H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BXVH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BYTH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00C0JH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NK9H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NM5H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NN3H1_H3K4me3_macrophage.bam']
     
     
-    print(norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True))
+    factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True)
+    
+    print(samples)
+    print(factors)
+    
     
     #awk -vOFS='\t' '$5=="+" {print $1,$2-500,$2,$4,$5} $5=="-" {print $1,$3,$3+500,$4,$5}'
     
