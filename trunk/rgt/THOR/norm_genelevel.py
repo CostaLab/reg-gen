@@ -120,9 +120,10 @@ def norm_gene_level(bams, bed, name, verbose):
     d = np.matrix(signals, dtype=float)
     samples = map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)
     #print("samples: %s" %",".join(map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)))
-    print("Housekeeping gene matrix (columns-genes, rows-samples)")
-    print(d)
-    print("")
+    if verbose:
+        print("Housekeeping gene matrix (columns-genes, rows-samples)")
+        print(d)
+        print("")
     
     if verbose:
         #output R code to check wether gene give same signal
@@ -175,10 +176,12 @@ if __name__ == '__main__':
     b_blueprint_H3K4me3_macrophage = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C005VGH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S001S7H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S0022IH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00390H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BXVH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BYTH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00C0JH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NK9H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NM5H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NN3H1_H3K4me3_macrophage.bam']
     
     
-    factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True)
+    factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', False)
     
-    print(" ".join(samples))
-    print(" ".join(map(lambda x: str(x), factors)))
+    for i in range(len(samples)):
+        print(samples[i], factors[i], sep='\t')
+    #print(" ".join(samples))
+    #print(" ".join(map(lambda x: str(x), factors)))
     
     
     #awk -vOFS='\t' '$5=="+" {print $1,$2-500,$2,$4,$5} $5=="-" {print $1,$3,$3+500,$4,$5}'
