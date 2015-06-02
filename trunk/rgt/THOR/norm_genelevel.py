@@ -177,8 +177,8 @@ if __name__ == '__main__':
     
     factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True)
     
-    print(samples)
-    print(factors)
+    print(" ".join(samples))
+    print(" ".join(factors))
     
     
     #awk -vOFS='\t' '$5=="+" {print $1,$2-500,$2,$4,$5} $5=="-" {print $1,$3,$3+500,$4,$5}'
