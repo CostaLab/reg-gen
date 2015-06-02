@@ -170,7 +170,6 @@ if __name__ == '__main__':
     #output(b_zenke_CDP + b_zenke_pDC, bed)
     output(b_zenke_cDC + b_zenke_pDC, bed)
     
-    print("")
     
     output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc, bed)
     output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc, bed)
@@ -195,7 +194,6 @@ if __name__ == '__main__':
     output(b_payton_FL + b_payton_CC, bed)
     output(b_payton_PBBA + b_payton_CC, bed)
     
-    print("")
     
     output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)
     output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage, bed)
