@@ -166,8 +166,8 @@ if __name__ == '__main__':
     b_zenke_pDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_2.bam']
     
     output(b_zenke_MPP + b_zenke_CDP, bed)
-    output(b_zenke_CDP + b_zenke_cDC, bed)
-    output(b_zenke_CDP + b_zenke_pDC, bed)
+    #output(b_zenke_CDP + b_zenke_cDC, bed)
+    #output(b_zenke_CDP + b_zenke_pDC, bed)
     output(b_zenke_cDC + b_zenke_pDC, bed)
     
     print("")
