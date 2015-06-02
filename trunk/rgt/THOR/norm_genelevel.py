@@ -134,7 +134,7 @@ def norm_gene_level(bams, bed, name, verbose):
     return get_factors(d), samples
     
 def output(input, bed):
-    factors, samples = norm_gene_level(input, bed, 'testname', False)
+    factors, samples = norm_gene_level(input, bed, 'testname', True)
     
     for i in range(len(samples)):
         print(samples[i], factors[i], sep='\t')
