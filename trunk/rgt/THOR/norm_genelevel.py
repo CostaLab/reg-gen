@@ -184,15 +184,22 @@ if __name__ == '__main__':
     output(b_payton_FL + b_payton_CC)
     output(b_payton_PBBA + b_payton_CC)
     
+    print("")
+    
     output(b_zenke_MPP + b_zenke_CDP)
     output(b_zenke_CDP + b_zenke_cDC)
     output(b_zenke_CDP + b_zenke_pDC)
     output(b_zenke_cDC + b_zenke_pDC)
     
+    print("")
+    
     output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage)
     output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage)
     output(b_blueprint_H3K4me3_monocyte + b_blueprint_H3K4me3_macrophage)
     
+    print("")
     
+    output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc)
+    output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc)
     
     
