@@ -178,6 +178,7 @@ if __name__ == '__main__':
     factors, samples = norm_gene_level(b_payton_FL + b_payton_CC, bed, 'testname', True)
     
     print(" ".join(samples))
+    print(factors)
     print(" ".join(factors))
     
     
