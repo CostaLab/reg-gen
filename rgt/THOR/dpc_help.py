@@ -342,7 +342,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         norm_regionset = None
         
     if housekeeping_genes:
-        scaling_factors_ip = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
+        scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
     
     if scaling_factors_ip:
         tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
