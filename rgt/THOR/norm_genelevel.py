@@ -130,7 +130,7 @@ def norm_gene_level(bams, bed, name, verbose):
         #output_R_file(name, res, colnames)
     
     #print("factors")
-    return map(lambda x: float(x), get_factors(d)), samples
+    return map(lambda x: str(x), get_factors(d)), samples
     
 
 if __name__ == '__main__':
