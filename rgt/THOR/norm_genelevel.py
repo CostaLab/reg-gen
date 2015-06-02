@@ -156,7 +156,8 @@ if __name__ == '__main__':
     b_zenke_pDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_2.bam']
     
     #hg19
-    bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
+    #bed = '/home/manuel/pot_housekeeping_genes_hg19.bed'
+    bed = '/home/manuel/hk_genes_new_promotor.bed'
     
     b_payton_CC = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC3_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC4_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC5_H3K27ac.bam']
     b_payton_PBBA = ['/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA1_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA2_H3K27ac.bam','/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/PBBA4_H3K27ac.bam']
