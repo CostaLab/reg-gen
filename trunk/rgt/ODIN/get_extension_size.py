@@ -93,7 +93,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
 if __name__ == '__main__':
     #a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = get_extension_size('/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL1_H3K27ac.bam')
+    a, b = get_extension_size('/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL5_H3K27ac.bam')
     print(a, b)
     
     for el in b:
