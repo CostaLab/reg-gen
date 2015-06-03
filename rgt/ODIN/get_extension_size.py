@@ -84,7 +84,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     
     r = map(ccf, range(start, end, stepsize) )
     
-    r = map(lambda x: (x[0], x[1] + read_length),r)
+    r = map(lambda x: (x[0], x[1]),r)
     
     return max(r[read_length/stepsize*2:])[1], r
 
