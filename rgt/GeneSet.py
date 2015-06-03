@@ -31,20 +31,26 @@ class GeneSet:
             
     def read_expression(self, geneListFile, header = False):
         """Read gene expression data"""
+        
         with open(geneListFile) as f:
             if header:
                 l = f.readline()
                 l = l.strip("\n")
                 l = l.split("\t")
                 self.cond = l[1:len(l)]
+            else:
+                l = f.readline()
+                l = l.strip("\n")
+                l = l.split("\t")
+                self.cond = [str(e) for e in range(len(l)-1)]
             for line in f.readlines():
                 line = line.strip("\n")
                 l = line.split("\t")
                 if l[0] != "":
                     try:
-                        self.genes.append(l[0])
+                        self.genes.append(l[0].upper())
                         #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
-                        self.values[l[0]] = l[1]
+                        self.values[l[0].upper()] = float(l[1])
                     except:
                         print("*** error in loading gene: "+line)
 
