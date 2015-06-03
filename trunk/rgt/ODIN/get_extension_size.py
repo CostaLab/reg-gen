@@ -29,6 +29,22 @@ def get_value(d, x):
     """Return d[x] of dictionary d or 0"""
     return d[x] if d.has_key(x) else 0 
 
+def get_read_size(filename):
+    f = pysam.Samfile(filename, "rb")
+    
+    s = []
+    i = 0
+    for read in f.fetch():
+        i += 1
+        if i == 1000:
+            break
+        if not read.is_unmapped:
+            s.append(read.rlen)
+    
+    print('read length is %s' %str(sum(s)/len(s)))        
+    
+    return sum(s)/len(s)
+
 def init_cov(filename):
     file = pysam.Samfile(filename, "rb")
     
@@ -61,18 +77,25 @@ def ccf(k):
 def get_extension_size(filename, start=0, end=600, stepsize=5):
     """Return extension/shift size of reads and all computed values of the convolution. 
     Search value with a resolution of <stepsize> from start to end."""
+    read_length = get_read_size(filename)
+    start -= read_length
+    
     init_cov(filename)
     
     r = map(ccf, range(start, end, stepsize) )
     
-    return max(r[1:])[1], r[1:]
+    r = map(lambda x: (x[0], x[1] + read_length),r)
+    
+    return max(r[read_length/stepsize*2:])[1], r
 
 
 if __name__ == '__main__':
     #a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = get_extension_size('/home/manuel/workspace/cluster_p/hematology/local/new_run/bam/HEL_hg_Rux_H3K9ac_rep1.bam')
+    a, b = get_extension_size('/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/CC1_H3K27ac.bam')
     print(a, b)
     
+    for el in b:
+        print(el[1], el[0], sep='\t')
     
     
     
