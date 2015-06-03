@@ -1,5 +1,0 @@
-d = c(1277.0, 1339.0, 1425.0, 1317.0)
-d = matrix(d, 4)
-names = c("RAD9")
-par(mar=c(15,5,5,5))
-barplot(d, beside = TRUE, names.arg = names, las=2, main="Housekeeping Genes Ratio", ylab="Signal")
