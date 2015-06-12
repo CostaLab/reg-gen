@@ -888,7 +888,6 @@ class Html:
                    "        });",
                    "    }",
                    "});",
-                   "",
                    "$('.tablesorter').tablesorter({",
                    "    // prevent first column from being sortable",
                    "    headers: {",

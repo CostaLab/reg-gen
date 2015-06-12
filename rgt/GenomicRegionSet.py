@@ -157,7 +157,7 @@ class GenomicRegionSet:
             for s in self:
                 print(s, file=f)
 
-    def gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000, show_dis=False):
+    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000, threshDist=50000, show_dis=False):
         """Associates coordinates to genes given the following rules:
            1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
            2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
@@ -244,9 +244,13 @@ class GenomicRegionSet:
                         if show_dis:
                             dis1 = abs(coord[0] - assocDict[chrName][counter][1])
                             dis2 = abs(coord[1] - assocDict[chrName][counter][0])
-                            if coord[1] < assocDict[chrName][counter][0]: s = "+"
-                            elif coord[0] > assocDict[chrName][counter][1]: s = "-"
-                            dis_list = [s+str(min(dis1, dis2))]
+                            if coord[1] < assocDict[chrName][counter][0]: 
+                                dis_list = ["+"+str(min(dis1, dis2))]
+                            elif coord[0] > assocDict[chrName][counter][1]:
+                                dis_list = ["-"+str(min(dis1, dis2))]
+                            else: 
+                                dis_list = [""]
+                            
 
                         if(counter < len(assocDict[chrName])-1): # If this is not the last gene (there is a 'next') then verify overlap
                             if(assocDict[chrName][counter+1][4] == "+"): geneCoordNext = [assocDict[chrName][counter+1][0]-promoterLength,assocDict[chrName][counter+1][1]]
@@ -258,9 +262,12 @@ class GenomicRegionSet:
                                 if show_dis:
                                     dis1 = abs(coord[0] - assocDict[chrName][counter+1][1])
                                     dis2 = abs(coord[1] - assocDict[chrName][counter+1][0])
-                                    if coord[1] < assocDict[chrName][counter+1][0]: s = "+"
-                                    elif coord[0] > assocDict[chrName][counter+1][1]: s = "-"
-                                    dis_list.append(s+str(min(dis1, dis2)))
+                                    if coord[1] < assocDict[chrName][counter+1][0]: 
+                                        dis_list.append("+"+str(min(dis1, dis2)))
+                                    elif coord[0] > assocDict[chrName][counter+1][1]: 
+                                        dis_list.append("-"+str(min(dis1, dis2)))
+                                    else: 
+                                        dis_list.append("")
                         #else: # If this is the last gene (there is no 'next') then dont verify overlap
 
                         # Verify if genes are enriched
@@ -282,9 +289,11 @@ class GenomicRegionSet:
                             if show_dis:
                                 dis1 = abs(coord[0] - assocDict[chrName][counter][1])
                                 dis2 = abs(coord[1] - assocDict[chrName][counter][0])
-                                if coord[1] < assocDict[chrName][counter][0]: s = "+"
-                                elif coord[0] > assocDict[chrName][counter][1]: s = "-"
-                                dis_list.append(s+str(min(dis1, dis2)))
+                                if coord[1] < assocDict[chrName][counter][0]: 
+                                    dis_list.append("+"+str(min(dis1, dis2)))
+                                elif coord[0] > assocDict[chrName][counter][1]: 
+                                    dis_list.append("-"+str(min(dis1, dis2)))
+                                else: dis_list.append("")
                         # Verify overlap again using maximum distance with previous gene+promoter
                         if(counter > 0): # Do this verification only if this is not the first gene
                             if(assocDict[chrName][counter-1][4] == "+"): geneCoordPrev = [assocDict[chrName][counter-1][0]-promoterLength,assocDict[chrName][counter-1][1]]
@@ -297,9 +306,11 @@ class GenomicRegionSet:
                                 if show_dis:
                                     dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
                                     dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
-                                    if coord[1] < assocDict[chrName][counter-1][0]: s = "+"
-                                    elif coord[0] > assocDict[chrName][counter-1][1]: s = "-"
-                                    dis_list.append(s+str(min(dis1, dis2)))
+                                    if coord[1] < assocDict[chrName][counter-1][0]: 
+                                        dis_list.append("+"+str(min(dis1, dis2)))
+                                    elif coord[0] > assocDict[chrName][counter-1][1]: 
+                                        dis_list.append("-"+str(min(dis1, dis2)))
+                                    else: dis_list.append("")
                         # Verify if genes are enriched
                         if(len(genesList) == 0): 
                             genesList.append(".") # If genesList is empty then put a '.' to represent non-association
@@ -332,9 +343,12 @@ class GenomicRegionSet:
                             if show_dis:
                                 dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
                                 dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
-                                if coord[1] < assocDict[chrName][counter-1][0]: s = "+"
-                                elif coord[0] > assocDict[chrName][counter-1][1]: s = "-"
-                                dis_list.append(s+str(min(dis1, dis2)))
+                                if coord[1] < assocDict[chrName][counter-1][0]: 
+                                    dis_list.append("+"+str(min(dis1, dis2)))
+                                elif coord[0] > assocDict[chrName][counter-1][1]: 
+                                    dis_list.append("-"+str(min(dis1, dis2)))
+                                else: 
+                                    dis_list.append("")
                         else: 
                             genesList.append(".") # If does not overlap then put a '.' to represent non-association
                             if show_dis: dis_list.append(None)
