@@ -483,11 +483,17 @@ class RNADNABindingSet:
             for rd in self:
                 print(str(rd), file=f) 
 
-    def write_bed(self, filename, remove_duplicates=False):
-        """Write BED file for all the DNA Binding sites"""
+    def write_bed(self, filename, remove_duplicates=False, convert_dict=None):
+        """Write BED file for all the DNA Binding sites
+        filename: define the output filename
+        remove_duplicates: remove all exact duplicates
+        convert_dict: given a dictionary to change the region name
+        """
         dbss = self.get_dbs()
         if remove_duplicates:
             dbss.remove_duplicates()
+        if convert_dict:
+            dbss = dbss.change_name_by_dict(convert_dict=convert_dict)
         dbss.write_bed(filename)
 
 
