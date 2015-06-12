@@ -71,7 +71,7 @@ def list_all_index(path, show_RNA_ass_gene=False):
     else:
         header_list = ["No.", "Experiments", "RNA", "Organism", #"Condition", 
                        "Target region", "No significant DBD", "Top DBD", "p-value"]
-    profile_f = open(os.path.join(dirname, "profile.txt"),'r')
+    profile_f = open(os.path.join(path, "profile.txt"),'r')
     profile = {}
     for line in profile_f:
         line = line.strip()
@@ -269,7 +269,12 @@ def main():
 
         print2(summary, "\n"+"*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: "+args.r)
-        print2(summary, "*** Output directory: "+os.path.basename(args.o))
+        
+        if args.o.count("/") < 3:
+            print2(summary, "*** Output directory: "+ args.o)
+        else:
+            n = args.o.count("/") - 3 + 1
+            print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
 
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
