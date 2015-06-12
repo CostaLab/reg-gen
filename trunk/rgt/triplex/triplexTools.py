@@ -402,7 +402,18 @@ def rna_associated_gene(rna_str, name, organism):
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[1], initial=int(s[2]), final=int(s[3]), name=name, orientation=s[4]) )
         asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=50000, show_dis=True)
-        return asso_genes[0].name
+        
+        genes = asso_genes[0].name.split(":")
+        #proxs = asso_genes[0].proximity.split(":")
+        closest_genes = []
+        for n in genes:
+            if name not in n: closest_genes.append(n)
+        #for n in proxs:
+        #    if name not in n: closest_genes.append(n)
+        if len(closest_genes) == 0:
+            return "."
+        else:
+            return ",".join(closest_genes)
     else:
         return "."
 ####################################################################################
@@ -465,7 +476,7 @@ class PromoterTest:
                 self.de_gene = GeneSet("de genes")
                 
                 if score:
-                    self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh)
+                    self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
@@ -477,6 +488,7 @@ class PromoterTest:
                 #print("Before fixing")
                 #print(len(self.de_gene.genes))
                 de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
+                #if "ENSG" in self.ensembl2symbol.keys()[0]: self.ensembl2symbol = None
                 self.de_gene.genes = de_ensembl
                 #print("After fixing")
                 #print(len(de_ensembl))
@@ -495,13 +507,19 @@ class PromoterTest:
                 de_prom.merge(namedistinct=True)
 
                 for promoter in de_prom:
+                    #if self.ensembl2symbol:
                     gene_sym = self.ensembl2symbol[promoter.name]
-                    
+                    #else:
+                    #    gene_sym = ann.get_official_symbol(promoter.name)
+                    #    promoter.name = gene_sym
                     if score:
                         try:
-                            s = self.de_gene.values[gene_sym]
+                            #if "ENSG" in self.de_gene.values.keys()[0]:
+                            #    s = self.de_gene.values[promoter.name]
+                            #else:
+                            s = self.de_gene.values[gene_sym.upper()]
                         except:
-                            print(promoter.name)
+                            #print(promoter.name)
                             print("Warning: "+gene_sym+"\tcannot be mapped to get its score.")
                             s = "0"
                         self.scores.append(s)
@@ -528,7 +546,7 @@ class PromoterTest:
                 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
-                REGION:_chr3_51978050_51983935_-_"""
+                REGION_chr3_51978050_51983935_-_"""
         with open(rna) as f:
             header = f.readline()
             header = header.strip()
@@ -573,7 +591,6 @@ class PromoterTest:
         txp_de.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=False)
         #txp_de.remove_duplicates()
         txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, region_set=self.de_regions)
-        
         self.rbss = txp_de.merged_dict.keys()
         txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
         #txp_nde.remove_duplicates()
@@ -582,12 +599,14 @@ class PromoterTest:
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
         for rbs in self.rbss:
+
             # DE
             self.frequency["promoters"]["de"][rbs] = [ len(txp_de.merged_dict[rbs]), 
                                                        len_de - len(txp_de.merged_dict[rbs]) ]
             # non-DE
             self.frequency["promoters"]["nde"][rbs] = [ len(txp_nde.merged_dict[rbs]), 
                                                         len_nde - len(txp_nde.merged_dict[rbs]) ]
+
 
         self.txp_de = txp_de
         self.txp_nde = txp_nde
@@ -663,6 +682,31 @@ class PromoterTest:
                 if pvals_corrected[i] < alpha:
                     self.sig_region_dbs.append(rbs)
             
+    def dbd_regions(self, sig_region, output, rna):
+        """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
+        dbd = GenomicRegionSet("DBD")
+        
+
+        if not self.rna_str:
+            return
+        else:
+            for rbs in sig_region:
+                rnal = self.rna_str.split("_")
+                dbd.add( GenomicRegion(chrom=rnal[1], initial=int(rnal[2])+rbs.initial, final=int(rnal[2])+rbs.final, 
+                                       orientation=rnal[4], name=self.rna_name+" DNA binding sites: "+str(rbs.initial)+"-"+str(rbs.final) ) )
+        dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
+        # FASTA
+        seq = pysam.Fastafile(rna)
+        with open(os.path.join(output, "DBD_"+self.rna_name+".fa"), 'w') as fasta:
+            for rbs in sig_region:
+                fasta.write(">"+ rbs.toString()+" "+self.rna_name+" DNA_binding_regions\n")
+                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
+        fasta.close()
+
+        
+        #print(os.path.join(output, "DBD_"+self.rna_name+".bed"))
+
+
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
@@ -945,18 +989,99 @@ class PromoterTest:
         #############################################################
         # RNA subpage: Profile of targeted promoters for each merged DNA Binding Domain
         #############################################################
-        header_list= ["#", "Target Promoter", "Gene", "DBSs counts", "DBS coverage"] 
-        header_title= ["Rank", "The given target promoter", "Gene symbol", 
-                       "Number of DNA Binding Sites binding to the promoter", 
-                       "The proportion of the promoter covered by DBS binding"]
+        
         # dbds_promoters.html
+        
         html = Html(name=html_header, links_dict=self.link_d, #fig_dir=os.path.join(directory,"style"), 
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
-     
+        
+        if self.scores:
+            if self.scoreh and self.de_gene:
+                score_header = [self.de_gene.cond[0]]
+            else:
+                if "(" in self.scores[0]:
+                    scs = self.scores[0].replace("(","")
+                    scs = scs.replace(")","")
+                    scs = scs.split(",")
+                    #score_header = ["Score"] * len(scs)
+                    score_header = ["Fold_change", "Filtered"]
+                
+                else:        
+                    score_header = ["Fold Change Score"]
+            
+            header_list= ["#", "Promoter", "Gene", "DBSs counts", "DBS coverage"]
+            header_list += score_header
+            header_list += [ "Sum of Ranks" ]
+            header_titles = [ "", "Target promoters", "Gene symbol", 
+                              "Number of DNA Binding sites locating within the promoter",
+                              "The proportion of promoter covered by binding sites" ]
+            header_titles += [ "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(score_header)
+            header_titles += [ "Sum up the ranks from left-hand side columns" ]
+
+        else:
+            header_list=[ "#", "Promoter", "Gene", "DBSs Count", "DBS coverage", "Sum of Ranks" ]
+        
+            header_titles = [ "", "Target promoters", "Gene symbol", 
+                              "Number of DNA Binding sites locating within the promoter",
+                              "The proportion of promoter covered by binding sites",
+                              "Sum up the ranks from left-hand side columns"]
+
         for rbsm in self.frequency["promoters"]["de"].keys():    
-            html.add_heading("DNA Binding Domain: "+rbsm.str_rna(),
-                             idtag=rbsm.str_rna())
+            html.add_heading("DNA Binding Domain: "+rbsm.str_rna(), idtag=rbsm.str_rna())
             data_table = []
+            # Calculate the ranking
+            rank_count = len(self.txp_de.merged_dict[rbsm])-stats.rankdata([ len(self.promoter["de"]["rd"][p.toString()]) for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
+            rank_coverage = len(self.txp_de.merged_dict[rbsm])-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
+            if self.scores:
+                multiple_scores = False
+                if isinstance(self.scores[0], str):
+                    if "(" in self.scores[0]:
+                        def ranking(scores):
+                            rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
+                            return rank_score
+
+                        multiple_scores = True
+                        scs = []
+                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                    
+                            s = self.de_gene.values[promoter.name.upper()].replace("(","")
+                            s = s.replace(")","")
+                            s = s.split(",")
+                            scs.append([float(ss) for ss in s])
+                        ar = numpy.array(scs)
+                        #ar.transpose()
+                        #print(ar)
+                        score_ar = ar.tolist()
+                        rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
+                        rank_score = rank_score.transpose()
+                        rank_sum = numpy.sum(rank_score, axis=0).tolist()
+                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
+                        rank_score = rank_score.tolist()
+
+                    else:
+                        new_scores = []
+                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                            s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
+                            if s == "Inf" or s == "inf":
+                                new_scores.append(float("inf"))
+                            elif s == "-Inf" or s == "-inf":
+                                new_scores.append(-float("inf"))
+                            else: new_scores.append(abs(float(s)))
+                            
+                        scores = new_scores  
+                        rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
+                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+        
+                else: 
+                    scores = [ float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm] ]
+                    rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
+                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+
+            else:
+                rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+
+
+
             for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
                 # Add information
                 if self.ani:
@@ -968,15 +1093,29 @@ class PromoterTest:
                                    '" target="_blank">', promoter.toString(space=True), '</a>'])
                 else:
                     pr = promoter.toString(space=True)
+                
+                
+                newline = [ str(i+1), pr, 
+                            split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
+                            str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                            value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                            ]
+                if self.scores: 
+                    if multiple_scores:
+                        #print(score_ar)
+                        #print(len(score_ar))
+                        for j in range(len(score_ar[0])):
+                            #print(score_ar[j][i])
+                            #print(score_ar[i][j])
+                            newline += [value2str(score_ar[i][j])]
+                    else:
+                        newline += [value2str(scores[i])]
 
-                data_table.append([ str(i+1),
-                                    pr, 
-                                    split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
-                                    str(len(self.promoter["de"]["rd"][promoter.toString()])),
-                                    value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
-                                     ])
+                newline += ["<i>"+str(int(rank_sum[i]))+"</i>"]
+                #print(newline)
+                data_table.append(newline)
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_title, sortable=True)
+                                 header_titles=header_titles, sortable=True, border_list=None)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
 
@@ -1116,12 +1255,12 @@ class PromoterTest:
                             new_scores.append(-float("inf"))
                         else: new_scores.append(abs(float(s)))
                         
-                    self.scores = new_scores  
-                    rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
+                    scores = new_scores  
+                    rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
     
             else: 
-                rank_score = len(self.de_regions)-stats.rankdata(self.scores, method='max')+1
+                rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
         else:
@@ -1164,7 +1303,7 @@ class PromoterTest:
                         #print(score_ar[i][j])
                         newline += [value2str(score_ar[i][j])]
                 else:
-                    newline += [value2str(self.scores[i])]
+                    newline += [value2str(scores[i])]
 
             newline += ["<i>"+str(int(rank_sum[i]))+"</i>"]
             #print(newline)
@@ -1249,7 +1388,7 @@ class PromoterTest:
                                      self.topDBD[0], value2str(self.topDBD[1]), r_genes ])
         else:
             newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
-                             "Top_DBD", "p-value","RNA_associated_gene"])
+                             "Top_DBD", "p-value","closest_genes"])
             newlines.append([exp, rna, output.split("_")[-1],
                              self.organism, tar_reg, str(len(self.sig_region_promoter)), 
                              self.topDBD[0], value2str(self.topDBD[1]), r_genes ])

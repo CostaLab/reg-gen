@@ -29,7 +29,7 @@ class GeneSet:
                 if l[0] != "":
                     self.genes.append(l[0])
             
-    def read_expression(self, geneListFile, header = False):
+    def read_expression(self, geneListFile, header=False, valuestr=False):
         """Read gene expression data"""
         
         with open(geneListFile) as f:
@@ -50,7 +50,10 @@ class GeneSet:
                     try:
                         self.genes.append(l[0].upper())
                         #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
-                        self.values[l[0].upper()] = float(l[1])
+                        if not valuestr:
+                            self.values[l[0].upper()] = float(l[1])
+                        else:
+                            self.values[l[0].upper()] = l[1]
                     except:
                         print("*** error in loading gene: "+line)
 

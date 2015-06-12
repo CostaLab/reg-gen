@@ -5,6 +5,7 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
+from ngslib import BigWigFile
 
 """
 Represent coverage data.
@@ -243,7 +244,28 @@ class CoverageSet:
             self.coverage.append(np.array(cov))
 
         self.coverageorig = self.coverage[:]
+    
+    def coverage_from_bigwig(self, bigwig_file, stepsize=100):
+        """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>."""
+        fh = BigWigFile(bigwig_file)
         
+        #wigs = []
+        for gr in self.genomicRegions:
+            print(gr)
+            #print(gr.chrom)
+            #print(gr.initial)
+            #print(gr.final)
+            #wig = fh.fetch(chrom=gr.chrom, start=int(gr.initial), stop=int(gr.final))
+            wigs = fh.fetch(chrom="chr2", start=2000, stop=3000)
+            print(wigs.chrom)
+            for wig in wigs:
+                print("ff")
+            #    print(w.chrom,w.start,w.stop,w.score)
+        #    wigs.append(wig)
+
+        #print(wigs)
+        fh.close() # the bigwig file will be close automatically if we forget to close it.
+
         
 #     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 100, stepsize = 50, rmdup = False, mask_file=None, get_pos=False):
 #         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 

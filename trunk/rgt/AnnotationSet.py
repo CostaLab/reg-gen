@@ -113,12 +113,12 @@ class AnnotationSet:
             self.gene_list = gene_source
         if(isinstance(gene_source,str)): # It can be a string.
             if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
-                self.load_gene_list(gene_source, filter_havana=False, protein_coding=False,
-                                    known_only=False)
+                self.load_gene_list(gene_source, filter_havana=False, protein_coding=True,
+                                    known_only=True)
             else: # The string may represent an organism which points to a gtf file within data.config.
                 genome_data = GenomeData(gene_source)
-                self.load_gene_list(genome_data.get_gencode_annotation(), filter_havana=False, protein_coding=False,
-                                    known_only=False)
+                self.load_gene_list(genome_data.get_gencode_annotation(), filter_havana=False, protein_coding=True,
+                                    known_only=True)
 
         # Initializing Optional Field - TF List
         if(tf_source):
@@ -148,6 +148,7 @@ class AnnotationSet:
                     genome_data = GenomeData(alias_source)
                     self.load_alias_dict(genome_data.get_gene_alias())
             else: pass # TODO Throw error
+            
 
     def load_gene_list(self, file_name, filter_havana=True, protein_coding=False, known_only=False):
         """
@@ -361,14 +362,20 @@ class AnnotationSet:
             try:
                 if(len(gene_name) >= 15 and gene_name[:3] == "ENS"): flag_ensembl = True
             except Exception: flag_ensembl = False
-            if(flag_ensembl): mapped_gene_list.append(gene_name)
+            if(flag_ensembl): 
+                mapped_gene_list.append(gene_name)
+                if output_dict:
+                    maping_dict[gene_name] = self.get_official_symbol(gene_name)
+                    #print(gene_name+"\t"+self.get_official_symbol(gene_name))
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
                     if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
                     for e in alias_list: 
                         mapped_gene_list.append(e)
-                        if output_dict: maping_dict[e] = gene_name
+                        if output_dict: 
+                            maping_dict[e] = gene_name
+
                 except Exception: unmapped_gene_list.append(gene_name)
         if output_dict:
             return mapped_gene_list, unmapped_gene_list, maping_dict

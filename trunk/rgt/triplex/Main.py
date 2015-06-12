@@ -12,7 +12,7 @@ import pickle
 # Distal Libraries
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import PromoterTest, RandomTest, value2str, split_gene_name
+from triplexTools import PromoterTest, RandomTest, value2str, split_gene_name, rna_associated_gene
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 
@@ -66,7 +66,7 @@ def list_all_index(path, show_RNA_ass_gene=False):
     col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
     if show_RNA_ass_gene:
-        header_list = ["No.", "Experiments", "RNA", "Associated genes to RNA", "Organism", #"Condition", 
+        header_list = ["No.", "Experiments", "RNA", "Closest genes", "Organism", #"Condition", 
                        "Target region", "No significant DBD", "Top DBD", "p-value"]
     else:
         header_list = ["No.", "Experiments", "RNA", "Organism", #"Condition", 
@@ -80,16 +80,20 @@ def list_all_index(path, show_RNA_ass_gene=False):
     #profile = pickle.load(profile_f)
     for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')
-        for filename in fnmatch.filter(filenames, '*.html'):
-            if filename == 'index.html' and root.split('/')[-1] != dirname:
+        #for filename in fnmatch.filter(filenames, '*.html'):
+        #    if filename == 'index.html' and root.split('/')[-1] != dirname:
+        for i, dirname in enumerate(dirnames):
+            
+            if dirname in profile.keys():
                 c += 1
-                exp = root.split('/')[-1]
-                try:
-                    new_line = [ str(c), '<a href="'+os.path.join(exp, filename)+'">'+exp+"</a>",
+                #exp = root.split('/')[-1]
+                exp = dirname
+                if profile[exp][5] == "-":
+                    new_line = [ str(c), exp, profile[exp][0] ]
+                else:
+                    new_line = [ str(c), '<a href="'+os.path.join(exp, "index.html")+'">'+exp+"</a>",
                                  profile[exp][0] ]
-                except:
-                    continue
-                    
+                
                 if show_RNA_ass_gene: new_line.append( split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]) )
 
                 try:
@@ -102,7 +106,7 @@ def list_all_index(path, show_RNA_ass_gene=False):
                         new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ]
                     data_table.append(new_line)
                 except:
-                    print(data_table)
+                    
                     print("Error in loading profile: "+exp)
                     continue
 
@@ -299,36 +303,41 @@ def main():
             exp = os.path.basename(args.o)
             if args.de: tar_reg = os.path.basename(args.de)
             else: tar_reg = os.path.basename(args.bed)
+            r_genes = rna_associated_gene(rna_str=promoter.rna_str, name=promoter.rna_name, organism=promoter.organism)
             newlines = []
             if os.path.isfile(pro_path):
                 with open(pro_path,'r') as f:
                     new_exp = True
                     for line in f:
                         line = line.strip()
-                        line = line.split()
+                        line = line.split("\t")
                         if line[0] == exp:
                             newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "No triplex found", 
-                                             "-", "-", "-" ])
+                                             args.organism, tar_reg, "0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
                             new_exp = False
                         else:
                             newlines.append(line)
                     if new_exp:
                         newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "No triplex found", 
-                                             "-", "-", "-" ])
+                                             args.organism, tar_reg,"0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
             else:
                 newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
-                                 "Top_DBD", "p-value","RNA_associated_gene"])
+                                 "Top_DBD", "p-value","closest_genes"])
                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "No triplex found", 
-                                             "-", "-", "-" ])
+                                             args.organism, tar_reg, "0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
             with open(pro_path,'w') as f:
                 for lines in newlines:
                     print("\t".join(lines), file=f)
 
             #shutil.rmtree(args.o)
+            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_str)
             sys.exit(1)
+
+        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o, rna=args.r)
+
         print2(summary, "Step 3: Establishing promoter profile.")
         promoter.promoter_profile()
         t3 = time.time()
