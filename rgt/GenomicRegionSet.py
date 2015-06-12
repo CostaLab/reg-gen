@@ -1428,3 +1428,11 @@ class GenomicRegionSet:
                     try: s = iter_a.next()
                     except: cont_loop = False        
             return
+
+    def change_name_by_dict(self, convert_dict):
+        z = GenomicRegionSet(self.name)
+        for s in self:
+            try: name = convert_dict[s.name]
+            except: name = s.name
+            z.add(GenomicRegion(s.chrom, s.initial, s.final, name, s.orientation, s.data, s.proximity))
+        return z

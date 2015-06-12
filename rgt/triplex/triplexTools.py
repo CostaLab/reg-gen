@@ -638,9 +638,14 @@ class PromoterTest:
             os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
-            self.de_regions.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
-            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), remove_duplicates=False)
-            self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), remove_duplicates=False)
+            output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
+            output.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
+            
+            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
+                remove_duplicates=False, convert_dict=self.ensembl2symbol)
+            
+            self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), 
+                remove_duplicates=False, convert_dict=self.ensembl2symbol)
 
     def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
@@ -1141,7 +1146,7 @@ class PromoterTest:
                        ["Input file for defferentially expression gene list", "-de", de ],
                        ["Input BED file as promoters", "-bed", bed ],
                        ["Input BED file as backgrounds", "-bg", bg ],
-                       ["Output directory", "-o", os.path.basename(parameters.o) ],
+                       ["Output directory", "-o", parameters.o ],
                        ["Organism", "-organism", parameters.organism ],
                        ["Promoter length", "-pl", str(parameters.pl) ],
                        ["Alpha level for rejection p value", "-a", str(parameters.a) ],
