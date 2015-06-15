@@ -121,7 +121,6 @@ class BinomialHMM2d3s(_BaseHMM):
     def _help_do_mstep(self, stats):
         #add pseudo counts for nan entries
         help_denum = _add_pseudo_counts( stats['post'] )
-        
         self.p[0] = stats['post_emission'][0] / (self.n[0] * help_denum)
         self.p[1] = stats['post_emission'][1] / (self.n[1] * help_denum)
         
