@@ -79,13 +79,13 @@ tools_dictionary = {
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
+  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath", "ngslib"],
   []
 ), 
 "THOR": (
 "rgt-THOR",
 "rgt.THOR.THOR:main",
-["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
+["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath", "ngslib"],
 []
 ),                 
 "filterVCF": (

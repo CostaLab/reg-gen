@@ -19,7 +19,6 @@ from dpc_help import get_peaks
 from dpc_help import input
 from dpc_help import _fit_mean_var_distr
 from dpc_help import get_back
-from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
 from random import sample
 import multiprocessing
 from tracker import Tracker
@@ -44,7 +43,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     #return {'distr_name': 'binomial', 'n': n, 'p': p}
 
 def main():
-    test = False
+    test = True
     options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
 
     ######### WORK! ##########
@@ -66,16 +65,33 @@ def main():
     training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 3)
     training_set_obs = exp_data.get_observation(training_set)
     
-    init_alpha, init_mu = get_init_parameters(s0, s1, s2)
-    tracker.write(text=init_mu, header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu,alpha)")
-    tracker.write(text=init_alpha)
+    if options.distr == "negbin":
+        from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
+        init_alpha, init_mu = get_init_parameters(s0, s1, s2)
+        tracker.write(text=init_mu, header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu,alpha)")
+        tracker.write(text=init_alpha)
+        m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
+        print('Training HMM...', file=sys.stderr)
+        m.fit([training_set_obs])
+        tracker.write(text=m.mu, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
+        tracker.write(text=m.alpha)
+    elif options.distr == "binom":
+        print('use binom distr', file=sys.stderr)
+        from binom_hmm import BinomialHMM, get_init_parameters
+        tmp = 0
+        for i in range(len(exp_data.indices_of_interest)):
+            c1, c2 = exp_data._get_covs(exp_data, i)
+            tmp += np.mean([c1, c2])
+        n_, p_ = get_init_parameters(s1, s2, count=tmp)
+        print(n_, p_, file=sys.stderr)
+        tracker.write(text=n_, header="Inital parameter estimate for HMM's Bin. Emission distribution (n, p)")
+        tracker.write(text=np.asarray(p_))
+        m = BinomialHMM(n_components=3, p = p_, startprob=[1,0,0], n = n_, dim_cond_1=dims[0], dim_cond_2=dims[1])
+        print('Training HMM...', file=sys.stderr)
+        m.fit([training_set_obs])
+        tracker.write(text=m.n, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
+        tracker.write(text=m.p)
     
-    print('Training HMM...', file=sys.stderr)
-    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
-    m.fit([training_set_obs])
-
-    tracker.write(text=m.mu, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
-    tracker.write(text=m.alpha)
     tracker.write(text=m._get_transmat(), header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
@@ -90,7 +106,10 @@ def main():
         posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
         dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
     
-    distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
+    if options.distr == 'negbin':
+        distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
+    else:
+        distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0,0]}
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, p=options.par)
     
 if __name__ == '__main__':

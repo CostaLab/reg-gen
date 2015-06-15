@@ -222,6 +222,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
         tmp_data.append((c1, c2, side, distr))
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
+    print(tmp_pvalues, file=sys.stderr)
     per = np.percentile(tmp_pvalues, p)
     print('percentile', per, file=sys.stderr)
     
@@ -396,6 +397,7 @@ def input(laptop):
         options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
         options.scaling_factors_ip = False
         options.housekeeping_genes = False
+        options.distr='binom'
     else:
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
@@ -429,6 +431,10 @@ def input(laptop):
                           help="turn of GC content calculation")
         parser.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
+        
+        parser.add_option("--distr", dest="distr", default="negbin", type="str",\
+                          help="HMM's emission distribution (negbin, binom). [default: %default]")
+        
         (options, args) = parser.parse_args()
 
         if options.version:
