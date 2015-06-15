@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
-from ngslib import BigWigFile
+#from ngslib import BigWigFile
 
 """
 Represent coverage data.
