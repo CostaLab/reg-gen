@@ -109,7 +109,7 @@ def main():
     if options.distr == 'negbin':
         distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
     else:
-        distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0,0]}
+        distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0,1]}
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, p=options.par)
     
 if __name__ == '__main__':
