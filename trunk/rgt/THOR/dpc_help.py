@@ -222,7 +222,6 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
         tmp_data.append((c1, c2, side, distr))
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
-    print(tmp_pvalues, file=sys.stderr)
     per = np.percentile(tmp_pvalues, p)
     print('percentile', per, file=sys.stderr)
     
