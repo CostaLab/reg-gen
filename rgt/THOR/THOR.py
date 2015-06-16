@@ -66,7 +66,7 @@ def main():
     training_set_obs = exp_data.get_observation(training_set)
     
     if options.distr == "negbin":
-        from neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
+        from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
         init_alpha, init_mu = get_init_parameters(s0, s1, s2)
         tracker.write(text=init_mu, header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu,alpha)")
         tracker.write(text=init_alpha)
@@ -77,7 +77,7 @@ def main():
         tracker.write(text=m.alpha)
     elif options.distr == "binom":
         print('use binom distr', file=sys.stderr)
-        from binom_hmm import BinomialHMM, get_init_parameters
+        from rgt.THOR.binom_hmm import BinomialHMM, get_init_parameters
         tmp = 0
         for i in range(len(exp_data.indices_of_interest)):
             c1, c2 = exp_data._get_covs(exp_data, i)
