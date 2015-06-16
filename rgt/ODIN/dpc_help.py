@@ -179,7 +179,13 @@ def _get_log10pvalue(x):
     if x < 1e-320:
         return sys.maxint
     else:
-        return -log10(x)
+        res = 0
+        try:
+            res = -log10(x)
+        except ValueError:
+            print('something is going wrong with the p-value calculation for value %s' %x)
+            res = sys.maxint
+        return res
 
 def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
                input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
