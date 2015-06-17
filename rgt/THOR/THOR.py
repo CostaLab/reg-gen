@@ -120,9 +120,6 @@ def main():
         #m.save_setup(tracker)
         distr_pvalue={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]}
         
-        
-        
-    
     tracker.write(text=m._get_transmat(), header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
