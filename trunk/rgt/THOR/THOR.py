@@ -61,9 +61,28 @@ def main():
     exp_data.compute_putative_region_index()
 
     print('Compute training set...',file=sys.stderr)
+    
+    if options.distr == "binom":
+        cov0, cov1 = [], []
+        for i in range(exp_data.overall_coverage[0].shape[1]):
+            if i % 100000 == 0:
+                print(i, exp_data.overall_coverage[0].shape[1])
+            #if i > 80000:
+            #    break
+            cov0.append(np.sum(exp_data.overall_coverage[0][:,i]))
+            cov1.append(np.sum(exp_data.overall_coverage[1][:,i]))
+
+        exp_data.dim_1, exp_data.dim_2 = 1, 1
+        exp_data.overall_coverage[0] = np.matrix(cov0)
+        exp_data.overall_coverage[1] = np.matrix(cov1)
 
     training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 3)
     training_set_obs = exp_data.get_observation(training_set)
+    
+    #for el in training_set_obs:
+        #if np.sum(el) > 0:
+        #print("H")
+        #print(el)
     
     if options.distr == "negbin":
         from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
@@ -77,20 +96,32 @@ def main():
         tracker.write(text=m.alpha)
     elif options.distr == "binom":
         print('use binom distr', file=sys.stderr)
-        from rgt.THOR.binom_hmm import BinomialHMM, get_init_parameters
+        #from rgt.ODIN.binom_hmm_2d_3s import BinomialHMM2d3s, get_init_parameters
+        from rgt.ODIN.hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
         tmp = 0
         for i in range(len(exp_data.indices_of_interest)):
             c1, c2 = exp_data._get_covs(exp_data, i)
-            tmp += np.mean([c1, c2])
+            tmp += sum([c1, c2])
         n_, p_ = get_init_parameters(s1, s2, count=tmp)
         print(n_, p_, file=sys.stderr)
-        tracker.write(text=n_, header="Inital parameter estimate for HMM's Bin. Emission distribution (n, p)")
-        tracker.write(text=np.asarray(p_))
-        m = BinomialHMM(n_components=3, p = p_, startprob=[1,0,0], n = n_, dim_cond_1=dims[0], dim_cond_2=dims[1])
-        print('Training HMM...', file=sys.stderr)
+        #tracker.write(text=n_, header="Inital parameter estimate for HMM's Bin. Emission distribution (n, p)")
+        #tracker.write(text=np.asarray(p_))
+        #m = BinomialHMM(n_components=3, p = p_, startprob=[1,0,0], n = n_, dim_cond_1=dims[0], dim_cond_2=dims[1])
+        #print('Training HMM...', file=sys.stderr)
+        #m.fit([training_set_obs])
+        #tracker.write(text=m.n, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
+        #tracker.write(text=m.p)
+        
+        
+        #tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
+        #n_, p_ = get_init_parameters(s1, s2, count=tmp)
+        m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
         m.fit([training_set_obs])
-        tracker.write(text=m.n, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
-        tracker.write(text=m.p)
+        #m.save_setup(tracker)
+        distr_pvalue={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]}
+        
+        
+        
     
     tracker.write(text=m._get_transmat(), header="Transmission matrix")
     
@@ -109,7 +140,7 @@ def main():
     if options.distr == 'negbin':
         distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
     else:
-        distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0,1]}
+        distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0][1]}
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, p=options.par)
     
 if __name__ == '__main__':

@@ -13,6 +13,7 @@ from time import time
 from math import fabs
 from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
 # import cProfile
+import sys
 
 def get_init_parameters(s1, s2, **info):
     n_ = np.array([info['count'], info['count']])
