@@ -396,7 +396,7 @@ def input(laptop):
         options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
         options.scaling_factors_ip = False
         options.housekeeping_genes = False
-        options.distr='binom'
+        options.distr='negbin'
     else:
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")

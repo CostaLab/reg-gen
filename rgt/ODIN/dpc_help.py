@@ -319,8 +319,8 @@ def input(test):
         options.mag = 3
         options.regions = None
         genome = '/home/manuel/data/mm/mm9/mm9.fa'
-        options.ext_1 = None
-        options.ext_2 = None
+        options.ext_1 = 200
+        options.ext_2 = 200
         options.ext_input_1 = None
         options.ext_input_2 = None
         options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
@@ -328,7 +328,7 @@ def input(test):
         options.confidence_threshold=0.7
         options.foldchange=1.05
         options.pcutoff = 0.1
-        options.name='test'
+        options.name='ODINtest'
         options.distr='binom'
         options.constchrom = None #'chr1'
         options.stepsize=50
@@ -339,13 +339,14 @@ def input(test):
         options.verbose=False
         options.debug=False
         #chrom_sizes='/home/manuel/data/mm/mm9/mm9.chrom.sizes'
-        chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.sizes'
-        options.no_gc_content = False
+        chrom_sizes = '/home/manuel/workspace/cluster_p/genomes/hg/hg19.chrom.sizes'
+        options.no_gc_content = True
         options.deadzones = None #"/home/manuel/dz.bed"
         options.version=False
         options.factor_input_1=None #for BAM
         options.factor_input_2=None
         options.no_correction = False
+        options.outputdir = '/home/manuel/'
         
         if options.debug:
             options.verbose = True
