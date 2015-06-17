@@ -4,6 +4,7 @@
 import re
 import numpy as np
 
+
 class Tracker:
     def __init__(self, path):
         self.file = open(path, 'w')
