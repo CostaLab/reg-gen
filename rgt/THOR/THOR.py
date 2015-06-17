@@ -69,7 +69,7 @@ def main():
                 print(i, exp_data.overall_coverage[0].shape[1])
             #if i > 80000:
             #    break
-            cov0.append(np.sum(exp_data.overall_coverage[0][:,i]))
+            cov0.append(np.sum(exp_data.overall_coverage[0][:,i])) #np.sum(b, axis=1) ???
             cov1.append(np.sum(exp_data.overall_coverage[1][:,i]))
 
         exp_data.dim_1, exp_data.dim_2 = 1, 1
