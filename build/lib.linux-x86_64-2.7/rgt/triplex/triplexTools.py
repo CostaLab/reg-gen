@@ -419,12 +419,6 @@ def rna_associated_gene(rna_str, name, organism):
             return ",".join(closest_genes)
     else:
         return "."
-
-def rank_array(a):
-    a = numpy.array(a)
-    sa = numpy.searchsorted(numpy.sort(a), a)
-    return sa
-
 ####################################################################################
 ####################################################################################
 
@@ -1126,18 +1120,14 @@ class PromoterTest:
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(), idtag=rbsm.str_rna())
             data_table = []
             # Calculate the ranking
-            #rank_array
-            #rank_count = len(self.txp_de.merged_dict[rbsm])-rank_array([ len(self.promoter["de"]["rd"][p.toString()]) for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
-            #rank_coverage = len(self.txp_de.merged_dict[rbsm])-rank_array([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
-            rank_count = len(self.txp_de.merged_dict[rbsm])- rank_array([ len(self.promoter["de"]["rd"][p.toString()]) for p in self.txp_de.merged_dict[rbsm] ] )
-            rank_coverage = len(self.txp_de.merged_dict[rbsm])- rank_array([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.txp_de.merged_dict[rbsm] ] )
-            
+            rank_count = len(self.txp_de.merged_dict[rbsm])-stats.rankdata([ len(self.promoter["de"]["rd"][p.toString()]) for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
+            rank_coverage = len(self.txp_de.merged_dict[rbsm])-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.txp_de.merged_dict[rbsm] ], method='max')+1
             if self.scores:
                 multiple_scores = False
                 if isinstance(self.scores[0], str):
                     if "(" in self.scores[0]:
                         def ranking(scores):
-                            rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores )
+                            rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
                             return rank_score
 
                         multiple_scores = True
@@ -1169,12 +1159,12 @@ class PromoterTest:
                             else: new_scores.append(abs(float(s)))
                             
                         scores = new_scores  
-                        rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
+                        rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
                         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
         
                 else: 
                     scores = [ float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm] ]
-                    rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
+                    rank_score = len(self.txp_de.merged_dict[rbsm])-stats.rankdata(scores, method='max')+1
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
             else:
@@ -1235,13 +1225,13 @@ class PromoterTest:
             de = "False"
             bed = os.path.basename(parameters.bed)
             bg = os.path.basename(parameters.bg)
-        
+
         data_table = [ ["RNA sequence name", "-rn", parameters.rn ],
                        ["Input RNA sequence file", "-r", os.path.basename(parameters.r)],
                        ["Input file for defferentially expression gene list", "-de", de ],
                        ["Input BED file as promoters", "-bed", bed ],
                        ["Input BED file as backgrounds", "-bg", bg ],
-                       ["Output directory", "-o", "/".join(parameters.o.partition("/")[-3:]) ],
+                       ["Output directory", "-o", parameters.o ],
                        ["Organism", "-organism", parameters.organism ],
                        ["Promoter length", "-pl", str(parameters.pl) ],
                        ["Alpha level for rejection p value", "-a", str(parameters.a) ],
@@ -1318,15 +1308,15 @@ class PromoterTest:
         # Iterate by each gene promoter
         
         # Calculate the ranking
-        rank_count = len(self.de_regions)-rank_array([ len(self.promoter["de"]["dbs"][p.toString()]) for p in self.de_regions ])
-        rank_coverage = len(self.de_regions)-rank_array([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions ])
+        rank_count = len(self.de_regions)-stats.rankdata([ len(self.promoter["de"]["dbs"][p.toString()]) for p in self.de_regions ], method='max')+1
+        rank_coverage = len(self.de_regions)-stats.rankdata([ self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions ], method='max')+1
         
         if self.scores:
             multiple_scores = False
             if isinstance(self.scores[0], str):
                 if "(" in self.scores[0]:
                     def ranking(scores):
-                        rank_score = len(self.de_regions)-rank_array(scores)
+                        rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
                         return rank_score
 
                     multiple_scores = True
@@ -1356,11 +1346,11 @@ class PromoterTest:
                         else: new_scores.append(abs(float(s)))
                         
                     scores = new_scores  
-                    rank_score = len(self.de_regions)-rank_array(scores)
+                    rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
     
             else: 
-                rank_score = len(self.de_regions)-rank_array(scores)
+                rank_score = len(self.de_regions)-stats.rankdata(scores, method='max')+1
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
         else:
@@ -1931,16 +1921,16 @@ class RandomTest:
                 nz_promoters.append(promoter) 
 
         # Calculate the ranking
-        rank_count = len(nz_promoters)-rank_array([ len(self.region_dbs[p.toString()]) for p in nz_promoters ])
-        rank_coverage = len(nz_promoters)-rank_array([ self.region_coverage[p.toString()] for p in nz_promoters ])
+        rank_count = len(nz_promoters)-stats.rankdata([ len(self.region_dbs[p.toString()]) for p in nz_promoters ], method='max')
+        rank_coverage = len(nz_promoters)-stats.rankdata([ self.region_coverage[p.toString()] for p in nz_promoters ], method='max')
         
         if score:
-            rank_score = len(nz_promoters)-rank_array([ float(p.data.split("\t")[0]) for p in nz_promoters ])
+            rank_score = len(nz_promoters)-stats.rankdata([ float(p.data.split("\t")[0]) for p in nz_promoters ], method='max')
             rank_sum = [x + y +z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-            sum_rank = rank_array(rank_sum, method='min')
+            sum_rank = stats.rankdata(rank_sum, method='min')
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
-            sum_rank = rank_array(rank_sum, method='min')
+            sum_rank = stats.rankdata(rank_sum, method='min')
 
         for i, region in enumerate(nz_promoters):
             newline = [ str(i+1),

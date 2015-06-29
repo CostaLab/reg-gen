@@ -19,7 +19,7 @@ from rgt.GenomicRegionSet import *
 from rgt.CoverageSet import *
 import rgt.GeneSet
 import numpy
-
+from os import path
 
 def averageExpression(region, expression, regionsToGenes):
     """Compute average gene expression"""
@@ -91,6 +91,7 @@ if __name__ == '__main__':
         aux = region.fileName.split("/")
         fileName = aux[-1]
         fileName = fileName.split(".")
+        fileName = path.splitext(fileName)[0]
         output(genes.cond, labels, ct, outputdir + "/" + fileName[0] + ".txt")
         
         
