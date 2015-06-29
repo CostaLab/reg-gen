@@ -88,12 +88,8 @@ if __name__ == '__main__':
         = bedNew.filter_by_gene_association_old(region.fileName, genes.genes, gene_file, genome_file)
         
         [ct, labels] = averageExpression(region, genes, regionsToGenes)
-        #aux = region.fileName.split("/")
-        #fileName = aux[-1]
-        #fileName = fileName.split(".")
-        print(path.basename(region.fileName), file=sys.stderr)
         fileName = path.splitext(path.basename(region.fileName))[0]
-        output(genes.cond, labels, ct, outputdir + "/" + fileName[0] + ".txt")
+	output(genes.cond, labels, ct, path.join(outputdir, fileName + ".txt"))
         
         
 
