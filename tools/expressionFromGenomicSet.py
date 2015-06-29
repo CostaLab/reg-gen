@@ -91,8 +91,8 @@ if __name__ == '__main__':
         #aux = region.fileName.split("/")
         #fileName = aux[-1]
         #fileName = fileName.split(".")
-        print(region.fileName, file=sys.stderr)
-        fileName = path.splitext(region.fileName)[0]
+        print(path.basename(region.fileName), file=sys.stderr)
+        fileName = path.splitext(path.basename(region.fileName))[0]
         output(genes.cond, labels, ct, outputdir + "/" + fileName[0] + ".txt")
         
         
