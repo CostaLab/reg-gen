@@ -45,11 +45,15 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
 
 def main():
     test = False
-    options, bamfiles, regions, genome, chrom_sizes, dims, inputs = input(test)
+    options, bamfiles, genome, chrom_sizes, dims, inputs = input(test)
 
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
-    exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=regions, stepsize=options.stepsize, binsize=options.binsize, \
+    
+    tracker.write('test')
+    sys.exit()
+    
+    exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
@@ -80,11 +84,6 @@ def main():
     training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 3)
     training_set_obs = exp_data.get_observation(training_set)
     
-    #for el in training_set_obs:
-        #if np.sum(el) > 0:
-        #print("H")
-        #print(el)
-    
     if options.distr == "negbin":
         from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
         init_alpha, init_mu = get_init_parameters(s0, s1, s2)
@@ -112,8 +111,6 @@ def main():
         #m.fit([training_set_obs])
         #tracker.write(text=m.n, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
         #tracker.write(text=m.p)
-        
-        
         #tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
         #n_, p_ = get_init_parameters(s1, s2, count=tmp)
         m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
@@ -125,11 +122,6 @@ def main():
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    back_var, back_mean = get_back(exp_data, states)
-    tracker.write(text=back_var, header="background variance")
-    tracker.write(text=back_mean, header="background mean")
-    a = (back_var - back_mean) / (back_mean ** 2)
-    tracker.write(text=a, header="new alpha")
     
     if options.debug:
         posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
@@ -139,7 +131,8 @@ def main():
         distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
     else:
         distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0][1]}
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, p=options.par)
+    
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par)
     
 if __name__ == '__main__':
     main() 

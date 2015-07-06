@@ -198,7 +198,7 @@ class NegBinRepHMM(_BaseHMM):
     
     def _help_do_mstep(self, stats):
         for i in range(self.n_features):
-            print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
+            #print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
             #print('Perform M-step of EM algorithm (max. 20 times)', file=sys.stderr)
             self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         

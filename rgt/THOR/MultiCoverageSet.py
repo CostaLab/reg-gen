@@ -149,7 +149,9 @@ class MultiCoverageSet(DualCoverageSet):
     def _normalization_by_signal(self, name, scaling_factors_ip):
         """Normalize signal"""
         if scaling_factors_ip:
-            print("Normalize signal by scaling factors %s" %" ".join(map(lambda x: str(round(x, 2)), scaling_factors_ip)), file=sys.stderr)
+            print("Normalize signal by scaling factors...", sys.stderr)
+            print(" ".join(map(lambda x: str(round(x, 2)), scaling_factors_ip)), file=sys.stderr)
+            
             assert len(scaling_factors_ip) == len(self.covs)
             for i in range(len(scaling_factors_ip)):
                 self.covs[i].scale(scaling_factors_ip[i])
@@ -159,7 +161,7 @@ class MultiCoverageSet(DualCoverageSet):
                 print("Normalize by signal (on specified regions)", file=sys.stderr)
                 signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
             else:
-                print("Normalize by signal (genomewide)", file=sys.stderr)
+                print("Normalize genomewide by signal", file=sys.stderr)
                 signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
             
             means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
@@ -262,7 +264,9 @@ class MultiCoverageSet(DualCoverageSet):
         
         diff_cov = max(20, np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95))
         t = np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95)
-        print('training diff_cov: %s (%s)' %(diff_cov, t), file=sys.stderr)
+        
+        if debug:
+            print('training set parameters: diff_cov (percentile): %s (%s)' %(diff_cov, t), file=sys.stderr)
         
         if test:
             diff_cov = 2
@@ -286,7 +290,8 @@ class MultiCoverageSet(DualCoverageSet):
                 elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                     s0.append((i, cov1, cov2))
             
-            print(diff_cov, threshold, len(s0), len(s1), len(s2), file=sys.stderr)
+            if debug:
+                print("training set paramters: threshold", threshold, len(s0), len(s1), len(s2), file=sys.stderr)
             
             if diff_cov == 1 and threshold == 1.1:
                 print("No differential peaks detected", file=sys.stderr)
@@ -305,9 +310,6 @@ class MultiCoverageSet(DualCoverageSet):
             else:
                 rep = False
             
-        
-        
-        
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)

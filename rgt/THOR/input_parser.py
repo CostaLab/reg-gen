@@ -32,7 +32,7 @@ def input_parser(filepath):
     
     bamfiles_1 = get_data_block(filepath, "rep1")
     bamfiles_2 = get_data_block(filepath, "rep2")
-    regions = get_data_block(filepath, "regions")
+    #regions = get_data_block(filepath, "regions")
     genome = get_data_block(filepath, "genome")
     chrom_sizes = get_data_block(filepath, "chrom_sizes")
     inputs1 = get_data_block(filepath, "inputs1")
@@ -44,10 +44,10 @@ def input_parser(filepath):
         inputs = None
     else:
         inputs = inputs1 + inputs2
-    if not regions:
-        regions = None
+    #if not regions:
+    #    regions = None
     
-    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs, dims
+    return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
 
 if __name__ == '__main__':
     print(input_parser('/home/manuel/workspace/eclipse/office_share/blueprint/playground/blueprint.h3k4me1.cluster.config'))

@@ -28,6 +28,7 @@ from rgt.THOR.neg_bin import NegBin
 from operator import add
 from numpy import percentile
 from norm_genelevel import norm_gene_level
+from datetime import datetime
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -203,7 +204,7 @@ def get_back(DCS, states):
     return np.var(counts), np.mean(counts)
         
     
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
+def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
@@ -223,7 +224,9 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, p=70):
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
-    print('percentile', per, file=sys.stderr)
+    
+    if debug:
+        print('percentile for peak calling:', per, file=sys.stderr)
     
     tmp = []
     res = tmp_pvalues > per
@@ -295,16 +298,15 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
         for bamfile in bamfiles:
             e, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
             exts.append(e)
-        print(exts, file=sys.stderr)
+        print(" ".join(exts), file=sys.stderr)
 
     if inputs and not exts_inputs:
-        print("Computing read extension sizes for input-DNA...", file=sys.stderr)
-        
+        #print("Computing read extension sizes for input-DNA...", file=sys.stderr)
         #for inp in inputs:
         #    e, _ = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
         #    exts_inputs.append(e)
         exts_inputs = [5] * len(inputs)
-        print(exts_inputs, file=sys.stderr)
+        #print(" ".join(exts_inputs), file=sys.stderr)
 
     return exts, exts_inputs
 
@@ -401,43 +403,52 @@ def input(laptop):
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
-                          help="Merge peaks which have a distance less than the estimated fragment size (recommended for histone data). [default: %default]")
-        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal.  [default: %default]")
-        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal.")
-        parser.add_option("-n", "--name", default='run', dest="name", type="string",\
+                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
+        parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
-                          help="Normalization factors for inputs. If option is not chosen, estimate factors. [default: %default]")
+                          help="Normalization factors for input-DNA. If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--par", dest="par", default=1, type="int",\
                           help="Percentile for p-value filter. [default: %default]")
-        parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw and wig. Warning: sapce consuming! [default: %default]")
-        
-        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
                           help="Scaling factor for each BAM file [default: %default]")
-        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str", help="Define housekeeping genes <BED> that are used for normalization [default: %default]")
-        
+        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
+                           help="Define housekeeping genes <BED> that are used for normalization [default: %default]")
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
-        parser.add_option("--version", dest="version", default=False, action="store_true", help="Show script's version.")
+        parser.add_option("--version", dest="version", default=False, action="store_true",\
+                           help="Show script's version.")
         parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                          help="turn of GC content calculation")
+                          help="turn off GC content calculation")
+        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
+                          help="All files are stored in output directory which is created if necessary.")
+        parser.add_option("--regions", dest="regions", default=None, type="string",\
+                           help="Define regions (BED) where to call DPs.")
+        
+        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+                          help="Size of underlying bins for creating the signal.  [default: %default]")
+        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal.")
         parser.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
         
-        parser.add_option("--distr", dest="distr", default="negbin", type="str",\
-                          help="HMM's emission distribution (negbin, binom). [default: %default]")
+        ##deprecated options
+        #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
+        #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
+        #parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw as well as wig files. Warning: space consuming! [default: %default]")
+        #parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
         
         (options, args) = parser.parse_args()
-
+        options.distr = "negbin"
+        options.save_wig = False
+        options.norm_regions = None
+        
         if options.version:
-            version = "version \"0.0.1alpha\""
+            version = "version \"0.1alpha\""
             print("")
             print(version)
             sys.exit()
@@ -446,51 +457,56 @@ def input(laptop):
             parser.error("Please give config file")
             
         config_path = args[0]
-        bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
+
+        if not os.path.isfile(config_path):
+            parser.error("Config file %s does not exist!" %config_path)
+            
+        bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         
         if options.exts and len(options.exts) != len(bamfiles):
             parser.error("Number of Extension Sizes must equal number of bamfiles")
-                
         
         if options.exts_inputs and len(options.exts_inputs) != len(inputs):
             parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
             
         if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
             parser.error("Number of scaling factors must equal number of bamfiles")
-#        bamfile_2 = args[1]
-#        regions = args[2]
-#        genome = args[3]
-#        chrom_sizes = args[4]
-#        
-#        if not os.path.isfile(bamfile_1) or not os.path.isfile(bamfile_2) \
-#            or not os.path.isfile(regions) or not os.path.isfile(genome):
-#            parser.error("At least one input parameter is not a file")
-#        
-#        if options.name is None:
-#            prefix = os.path.splitext(os.path.basename(bamfile_1))[0]
-#            suffix = os.path.splitext(os.path.basename(bamfile_2))[0]
-#            options.name = "-".join(['exp', prefix, suffix])
-#        
-#        if (options.input_1 is None and options.ext_input_1 is not None) \
-#            or (options.input_2 is None and options.ext_input_2 is not None):
-#            parser.error("Read extension size without input file (use -i)")
+        
+        for bamfile in bamfiles:
+            if not os.path.isfile(bamfile):
+                parser.error("BAM file %s does not exist!" %bamfile)
+        
+        if inputs:
+            for bamfile in inputs:
+                if not os.path.isfile(bamfile):
+                    parser.error("BAM file %s does not exist!" %bamfile)
+        
+        if options.regions:
+            if not os.path.isfile(options.regions):
+                parser.error("Region file %s does not exist!" %options.regions)
+        
+        if not os.path.isfile(genome):
+            parser.error("Genome file %s does not exist!" %bamfile)
+        
+        if options.name is None:
+            d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
+            options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
     
+    if options.outputdir:
+        options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path
+        if os.path.isdir(options.outputdir) and sum(map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
+            parser.error("Output directory exists and contains files with names starting with your chosen experiment name! Do nothing to prevend file overwriting!")
+        if not os.path.exists(options.outputdir):
+            os.mkdir(options.outputdir)
+    else:
+        options.outputdir = os.getcwd() 
     
-#    if options.input_1 is None and options.input_2 is None:
-#        print("GC content is not calculated as there is no input file.", file=sys.stderr)
-#        
-#    if options.norm_strategy in [2, 4, 5] and (options.input_1 is None or options.input_2 is None):
-#        parser.error("Please define input files for this normalization strategy!")
-#        
-#    if options.norm_strategy is not None and (options.input_factor_1 is not None or options.input_factor_1 is not None ):
-#        parser.error("Input factors are not allowed for this normalization strategy!")
-#    
-#    if not options.no_gc_content and (options.input_1 is None or options.input_2 is None):
-#        parser.error("GC content can only be computed with both input files.")
+    options.name = os.path.join(options.outputdir, options.name)
     
     if options.exts is None:
         options.exts = []
+    
     if options.exts_inputs is None:
         options.exts_inputs = []
     
-    return options, bamfiles, regions, genome, chrom_sizes, dims, inputs
+    return options, bamfiles, genome, chrom_sizes, dims, inputs
