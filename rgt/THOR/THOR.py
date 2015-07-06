@@ -1,14 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-%prog
-
-Find differential peaks in regions.
-
-Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
-
-"""
-
 
 from __future__ import print_function
 import numpy as np
@@ -50,8 +41,8 @@ def main():
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     
-    tracker.write('test')
-    sys.exit()
+    #tracker.write('test')
+    #sys.exit()
     
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
@@ -59,7 +50,7 @@ def main():
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
                           housekeeping_genes=options.housekeeping_genes)
     
-    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000)
+    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000, verbose=options.debug)
     tracker.write(text=func_para[0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")
     tracker.write(text=func_para[1])
     

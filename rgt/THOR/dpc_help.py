@@ -1,5 +1,16 @@
+"""
+%prog [CONFIG]
+
+Find differential peaks in regions.
+
+Caution: Pre-paper version
+
+Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+"""
+
 from __future__ import print_function
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -29,6 +40,7 @@ from operator import add
 from numpy import percentile
 from norm_genelevel import norm_gene_level
 from datetime import datetime
+from rgt.ODIN.dpc_help import which
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -90,7 +102,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     
     return data_rep
     
-def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
+def _fit_mean_var_distr(overall_coverage, name, debug, verbose, sample_size=10000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     while not done:
@@ -102,8 +114,9 @@ def _fit_mean_var_distr(overall_coverage, name, debug, sample_size=10000):
                 v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
                 p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
                 res.append(p)
-                _plot_func(m, v, p, str(name) + "-est-func" + str(i))
-                _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
+		if verbose or debug:
+	            _plot_func(m, v, p, str(name) + "-est-func" + str(i))
+                    _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
                 if i == 1:
                     done = True
             except RuntimeError:
@@ -400,52 +413,56 @@ def input(laptop):
         options.housekeeping_genes = False
         options.distr='negbin'
     else:
-        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
-                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
-        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
-                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
+	parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
+                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
+	parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
+                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
-        parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
-                          help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
                           help="Normalization factors for input-DNA. If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--par", dest="par", default=1, type="int",\
-                          help="Percentile for p-value filter. [default: %default]")
+                          help="Percentile for p-value postprocessing filter. [default: %default]")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
-                          help="Scaling factor for each BAM file [default: %default]")
+                          help="Scaling factor for each IP-channel input BAM file [default: %default]")
         parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
                            help="Define housekeeping genes <BED> that are used for normalization [default: %default]")
         parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
                           help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true",\
                            help="Show script's version.")
-        parser.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                          help="turn off GC content calculation")
         parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
                           help="All files are stored in output directory which is created if necessary.")
-        parser.add_option("--regions", dest="regions", default=None, type="string",\
+        
+	group = OptionGroup(parser, "Advanced options")
+	group.add_option("--regions", dest="regions", default=None, type="string",\
                            help="Define regions (BED) where to call DPs.")
-        
-        parser.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+        group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal.  [default: %default]")
-        parser.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+        group.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
                           help="Stepsize with which the window consecutively slides across the genome to create the signal.")
-        parser.add_option("--debug", default=False, dest="debug", action="store_true", \
+        group.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
+	group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+                          help="turn off GC content calculation")
         
+	parser.add_option_group(group)
         ##deprecated options
         #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
         #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
         #parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw as well as wig files. Warning: space consuming! [default: %default]")
         #parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
+        #parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
+        #                  help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         
-        (options, args) = parser.parse_args()
+	(options, args) = parser.parse_args()
+
         options.distr = "negbin"
         options.save_wig = False
         options.norm_regions = None
+	options.exts_inputs = None
         
         if options.version:
             version = "version \"0.1alpha\""
@@ -492,6 +509,9 @@ def input(laptop):
             d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
             options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
     
+    if not which("wigToBigWig"):
+        print("Warning: wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
+
     if options.outputdir:
         options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path
         if os.path.isdir(options.outputdir) and sum(map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
@@ -510,3 +530,4 @@ def input(laptop):
         options.exts_inputs = []
     
     return options, bamfiles, genome, chrom_sizes, dims, inputs
+
