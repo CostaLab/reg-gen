@@ -288,7 +288,7 @@ def main():
                                 promoterLength=args.pl, summary=summary, temp=dir,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.get_rna_region_str(rna=args.r)
-        promoter.connect_rna(rna=args.r)
+        promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
 
