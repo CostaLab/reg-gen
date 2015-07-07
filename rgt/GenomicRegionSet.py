@@ -6,6 +6,7 @@ from copy import deepcopy
 import os, sys
 import time
 import copy
+import pysam
 from scipy import stats
 from Util import GenomeData, OverlapType, AuxiliaryFunctions
 from GeneSet import GeneSet
@@ -1436,3 +1437,90 @@ class GenomicRegionSet:
             except: name = s.name
             z.add(GenomicRegion(s.chrom, s.initial, s.final, name, s.orientation, s.data, s.proximity))
         return z
+
+    def load_exon_sequence(self, directory, genome_path):
+        """Load the exon sequence from the the transcripts. 
+        Input BED format should contain:
+            blockCount - The number of blocks (exons) in the BED line.
+            blockSizes - A comma-separated list of the block sizes.
+            blockStarts - A comma-separated list of block starts. 
+            see details: http://genome.ucsc.edu/FAQ/FAQformat#format1
+
+        Output:
+            Each FASTA file represants a transcript and contains all the exons within the file.
+
+        """
+        genome = pysam.Fastafile(genome_path)
+
+        for gr in self:
+            if not gr.name:
+                print("Error: For fetching exon sequences, please define the transcript name.")
+                sys.exit()
+            else:
+                f = open(os.path.join(directory, gr.name+".fa"), "w")
+                data = gr.data.split("\t")
+                #print(len(data))
+                if len(data) == 7:
+                    #print(data)
+                    n = int(data[4])
+                    
+                    blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
+                    starts = [ int(s) for s in filter(None, data[6].split(",")) ]
+                    
+                    for i in range(n):
+                        start = gr.initial + starts[i]
+                        end = start + blocks[i]
+                        print( ">"+ " ".join([gr.name+":"+str(start)+"-"+str(end), "exon:"+str(i+1), 
+                               "_".join(["REGION",gr.chrom,str(start),str(end), gr.orientation])   ]), file=f)
+                        print(genome.fetch(gr.chrom, start, end), file=f)
+                else:
+                    print("Warning: The given regions have no block information, please try write_bed_blocks")
+                f.close()
+
+    def by_names(self, names):
+        """Subset the region set by the given list of names"""
+        z = GenomicRegionSet(self.name)
+        for gr in self:
+            if gr.name in names:
+                z.add(gr)
+    
+        return z
+
+    def write_bed_blocks(self, filename):
+        """Write BED file with information of blocks e.g. exons """
+        f = open(filename, "w")
+        # z = GenomicRegionSet(self.name)
+        blocks = {}
+        for gr in self:
+            try: blocks[gr.name].add(gr)
+            except: 
+                blocks[gr.name] = GenomicRegionSet(gr.name)
+                blocks[gr.name].add(gr)
+
+        for name in blocks.keys():
+            blocks[name].merge()
+            start = min([ g.initial for g in blocks[name] ])
+            end = max([ g.final for g in blocks[name] ])
+            
+            block_width = []
+            block_start = []
+            for g in blocks[name]:
+                block_width.append(len(g)) 
+                block_start.append(g.initial - start)
+            block_count = len(blocks[name])
+            
+            print("\t".join([ blocks[name][0].chrom,
+                              str(start),
+                              str(end),
+                              name,
+                              "0",
+                              blocks[name][0].orientation,
+                              str(start),
+                              str(end),
+                              "0",
+                              str(block_count),
+                              ",".join([ str(w) for w in block_width ]),
+                              ",".join([ str(s) for s in block_start ])  ]), file = f)
+        
+        f.close()
+

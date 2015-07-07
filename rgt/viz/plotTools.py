@@ -203,8 +203,8 @@ def group_refque(rEM, qEM, groupby):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference["All region sets without grouping"] = rEM.get_regionsets()
-        groupedquery["All region sets without grouping"] = qEM.get_regionsets()
+        groupedreference["All"] = rEM.get_regionsets()
+        groupedquery["All"] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -1067,21 +1067,21 @@ class Intersect:
         """color_list is a Dict [query] : color """
         if ref_que == "que":
             self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All region sets without grouping":
-                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            if self.groupedquery.keys()[0] == "All":
+                self.color_tags = [n.name for n in self.groupedquery["All"]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
         elif ref_que == "ref":
             self.color_list = color_groupded_region(self.rEM, self.groupedreference, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All region sets without grouping":
-                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            if self.groupedquery.keys()[0] == "All":
+                self.color_tags = [n.name for n in self.groupedquery["All"]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
             
     def colors_comb(self):
         """color_list is a list : color """
         
-        if self.groupedquery.keys()[0] == "All region sets without grouping":
+        if self.groupedquery.keys()[0] == "All":
             self.color_tags = self.referencenames
         else:
             tags = []
@@ -1779,15 +1779,15 @@ class Boxplot:
         self.tag_type = [groupby, sortby, colorby]
         
         if groupby == "None":
-            self.group_tags = ["All region sets without grouping"]
+            self.group_tags = ["All"]
         else:
             self.group_tags = gen_tags(self.exps, groupby)
         if sortby == "None":
-            self.sort_tags = ["All region sets without grouping"]
+            self.sort_tags = ["All"]
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
         if colorby == "None":
-            self.color_tags = ["All region sets without grouping"]
+            self.color_tags = ["All"]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
     
@@ -2145,20 +2145,18 @@ class Lineplot:
         self.df = df
     
     def relocate_bed(self):
-        processed_beds = []
-        processed_bedsF = [] # Processed beds to be flapped
+        self.processed_beds = []
+        self.processed_bedsF = [] # Processed beds to be flapped
         
         for bed in self.beds:
             if self.center == 'bothends':
                 newbed = bed.relocate_regions(center='leftend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_beds.append(newbed)
+                self.processed_beds.append(newbed)
                 newbedF = bed.relocate_regions(center='rightend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_bedsF.append(newbedF)
+                self.processed_bedsF.append(newbedF)
             else:
                 newbed = bed.relocate_regions(center=self.center, left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_beds.append(newbed)
-        self.processed_beds = processed_beds
-        self.processed_bedsF = processed_bedsF
+                self.processed_beds.append(newbed)
         
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -2169,21 +2167,21 @@ class Lineplot:
         """
         self.tag_type = [sortby, groupby, colorby]
         if groupby == "None":
-            self.group_tags = ["All region sets without grouping"]
+            self.group_tags = ["All"]
         elif groupby == "regions" and self.annotation:
             self.group_tags = self.bednames
         else:
             self.group_tags = gen_tags(self.exps, groupby)
             
         if sortby == "None":
-            self.sort_tags = ["All region sets without grouping"]
+            self.sort_tags = ["All"]
         elif sortby == "regions" and self.annotation:
             self.sort_tags = self.bednames
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
             
         if colorby == "None":
-            self.color_tags = ["All region sets without grouping"]
+            self.color_tags = ["All"]
         elif colorby == "regions" and self.annotation:
             self.color_tags = self.bednames
         else:
@@ -2203,10 +2201,9 @@ class Lineplot:
                 self.cuebed[bed] = set([bed])
         else:
             for bed in self.bednames:
-                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type,bed))
+                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
         for bam in self.readsnames:
-            self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type,bam))
-        
+            self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
         
     def coverage(self, sortby, heatmap=False, logt=False, mp=False):
         
@@ -2220,6 +2217,7 @@ class Lineplot:
         mp_input = []
         data = OrderedDict()
         totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
+
         if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
@@ -2266,7 +2264,6 @@ class Lineplot:
                                             else:
                                                 data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
                                         else:
-                                            #print(cov.coverage)
                                             for i, car in enumerate(cov.coverage):
                                                 car = numpy.delete(car, [0,1])
                                                 if i == 0:
@@ -2276,9 +2273,8 @@ class Lineplot:
                                                     avearr = numpy.vstack((avearr, car))
                                                 else:
                                                     pass
-                                            
+
                                             avearr = numpy.average(avearr, axis=0)
-                                            
                                             if self.df: 
                                                 try: data[s][g][c].append(avearr)
                                                 except: data[s][g][c] = [avearr]
@@ -2286,6 +2282,7 @@ class Lineplot:
                                         bi += 1
                                         te = time.time()
                                         print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+
         if mp: 
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
@@ -2324,7 +2321,7 @@ class Lineplot:
         rot = 50
         ticklabelsize = 7
         
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), figsize=(8.27, 11.69), dpi=300) # 
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) #  figsize=(8.27, 11.69) 
         #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
         #    axs=numpy.array([[axs,None],[None,None]])
         
@@ -2358,15 +2355,15 @@ class Lineplot:
                     
                 for j, c in enumerate(self.data[s][g].keys()):
                     y = self.data[s][g][c]
-                    
-                    try: 
-                        yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                        sx_ymax[i] = max(numpy.amax(y), sx_ymax[i])
-                        if self.df: 
-                            yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                            sx_ymin[i] = min(numpy.amin(y), sx_ymin[i])
+                    #try: 
+                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                    sx_ymax[j] = max(numpy.amax(y), sx_ymax[j])
+                    if self.df: 
+                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                        sx_ymin[j] = min(numpy.amin(y), sx_ymin[j])
 
-                    except: continue
+                    #except: 
+                    #    continue
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     ax.plot(x,y, color=self.colors[j], lw=1)
                     # Processing for future output
@@ -2439,7 +2436,7 @@ class Lineplot:
     def gen_html(self, directory, title, align=50):
         dir_name = os.path.basename(directory)
         #check_dir(directory)
-        html_header = title
+        html_header = dir_name+" / "+title
         link_d = OrderedDict()
         link_d["Lineplot"] = "index.html"
         link_d["Parameters"] = "parameters.html"
@@ -2458,10 +2455,17 @@ class Lineplot:
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,20,20,20,20,20,20]
         header_list=["Assumptions and hypothesis"]
-        data_table = [[]]
+        data_table = []
         if self.annotation:
-            data_table.append("Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site.")
-            
+            data_table.append(["Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site."])
+        data_table.append(["Directory:      "+ directory.rpartition("/")[2] ])
+        data_table.append(["Title:          "+ title])
+        data_table.append(["Extend length:  "+str(self.extend)])
+        data_table.append(["Read size:      "+str(self.rs)])
+        data_table.append(["Bin size:       "+str(self.bs)])
+        data_table.append(["Step size:      "+str(self.ss)])
+        data_table.append(["Center mode:    "+self.center])
+
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, 
                              cell_align="left")
         

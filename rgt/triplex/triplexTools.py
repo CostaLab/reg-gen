@@ -264,12 +264,13 @@ def split_gene_name(gene_name, org):
 
 
 def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linelabel, 
-             filename, ac=None, showpa=False):
+             filename, ac=None, showpa=False, exons=None):
     # Plotting
     f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
     
     # Extract data points
     x = range(rnalen)
+    #print(rnalen)
     if log:
         all_y = [1] * rnalen
         p_y = [1] * rnalen
@@ -281,6 +282,7 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
 
     txp.remove_duplicates_by_dbs()
     for rd in txp:
+        #print(str(rd.rna.initial), str(rd.rna.final))
         if rd.rna.orientation == "P":
             for i in range(rd.rna.initial, rd.rna.final):
                 p_y[i] += 1
@@ -356,6 +358,12 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     ax.set_xlabel(rnaname+" sequence (bp)", fontsize=9)
     
     ax.set_ylabel(ylabel,fontsize=9, rotation=90)
+
+    if exons and len(exons) > 1:
+        w = 0
+        for exon in exons[:-1]:
+            w += exon[2] - exon[1]
+            ax.axvline(x=w, color="gray", alpha=0.5, zorder=100)
     
     f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
 
@@ -399,12 +407,13 @@ def check_triplexator_path():
         print("Please define the path to Triplexator by command: rgt-TDF triplexator -path <PATH>")
         sys.exit(1)
     
-def rna_associated_gene(rna_str, name, organism):
-    if rna_str:
-        s = rna_str.split("_")
+def rna_associated_gene(rna_regions, name, organism):
+    if rna_regions:
+        s = [ rna_regions[0][0], min([e[1] for e in rna_regions]), 
+              max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
-        g.add( GenomicRegion(chrom=s[1], initial=int(s[2]), final=int(s[3]), name=name, orientation=s[4]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=50000, show_dis=True)
+        g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
+        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=500000, show_dis=True)
         
         genes = asso_genes[0].name.split(":")
         #proxs = asso_genes[0].proximity.split(":")
@@ -486,6 +495,7 @@ class PromoterTest:
                 
                 if score:
                     self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
+
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
@@ -493,6 +503,7 @@ class PromoterTest:
                     print("Error: No genes are loaded from: "+gene_list_file)
                     print("Please check the format.")
                     sys.exit(1)
+
                 # Generate a dict for ID transfer
                 #print("Before fixing")
                 #print(len(self.de_gene.genes))
@@ -500,7 +511,6 @@ class PromoterTest:
                 #if "ENSG" in self.ensembl2symbol.keys()[0]: self.ensembl2symbol = None
                 self.de_gene.genes = de_ensembl
                 #print("After fixing")
-                #print(len(de_ensembl))
 
                 # NonDE gene regions
                 nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
@@ -511,7 +521,7 @@ class PromoterTest:
                 # Get promoters from de genes
                 #print("\tGetting promoter regions...")
                 de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
-
+                
                 if score: self.scores = []
                 de_prom.merge(namedistinct=True)
 
@@ -556,43 +566,66 @@ class PromoterTest:
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
+        self.rna_regions = []
         with open(rna) as f:
-            header = f.readline()
-            header = header.strip()
-            header = header.split()
-            #header = header.split("_")
-            s = [ e for e in header if "REGION" in e ]
-            try:
-                self.rna_str = s[0]
-            except:
-                self.rna_str = None
+            for line in f:
+                if line[0] == ">":
+                    line = line.strip()
+                    if "REGION" in line:
+                        line = line.split()
+                        for i, e in enumerate(line):
+                            if "REGION" in e:
+                                e = e.split("_")
+                                #print(e)
+                                self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
+                    else:
+                        self.rna_regions.append(None)
 
-    def search_triplex(self, rna, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
+    def connect_rna(self, rna, temp):
+        seq = ""
+        with open(rna) as f:
+            for line in f:
+                if line[0] != ">":
+                    line = line.strip()
+                    seq += line
+        with open(os.path.join(temp,"rna_temp.fa"), "w") as r:
+            print(">"+self.rna_name, file=r)
+            for s in [seq[i:i + 80] for i in range(0, len(seq), 80)]:
+                print(s, file=r)
+
+    def search_triplex(self, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
         print("    \tRunning Triplexator...")
+        rna = os.path.join(temp,"rna_temp.fa")
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
         
         threshold = 1000
         statinfo = os.stat(rna)
-        cf = 1
+        
+        
         if statinfo.st_size > threshold:
             print("\tSpliting RNA sequence for triplexator...")
             self.split_rna = True
             fa = open(rna)
             for line in fa:
-                if line[0] == ">": header = line
-                elif len(line) < threshold:
-                    nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
-                    nfa.write(header)
-                    nfa.write(line)
-                    nfa.close()
-                    cf += 1
+                if line[0] == ">": 
+                    header = line
+                    seq = ""
+                #elif len(line) < threshold:
+                #    nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
+                #    nfa.write(header)
+                #    nfa.write(line)
+                #    nfa.close()
+                #    cf += 1
                 else:
-                    for i in range(int(len(line)/threshold)+1):
-                        nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
-                        nfa.write(header)
-                        nfa.write(line[max(0,i*threshold-20):(i+1)*threshold+20])
-                        nfa.close()
-                        cf += 1
+                    line = line.strip()
+                    seq += line
+            cf = 1
+            for i in range(int(len(seq)/threshold)+1):
+                nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
+                nfa.write(header)
+                nfa.write(seq[max(0,(i)*threshold-20):(i+1)*threshold+20])
+                nfa.close()
+                cf += 1
             fa.close()
         
             # Running Triplexator
@@ -607,46 +640,32 @@ class PromoterTest:
                 run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"nde.fa"), 
                                 output=os.path.join(temp, "nde"+str(i)+".txp"), 
                                 l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
-        
-        else:
             
-            self.split_rna = False
-            # DE
-            get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
-                         genome_path=self.genome_path)
-            run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
-                            output=os.path.join(temp, "de.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
-            
-            # non-DE
-            get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
-                         genome_path=self.genome_path)
-            run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
-                            output=os.path.join(temp, "nde.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
-
-        if self.split_rna:
             de = open(os.path.join(temp, "de.txp"),"w")
             nde = open(os.path.join(temp, "nde.txp"),"w")
             for i in range(1,cf):
                 diff = max(0,(i-1)*threshold - 20)
 
+
                 f_de = open(os.path.join(temp, "de"+str(i)+".txp"))
                 for line in f_de: 
-                    if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): continue
+                    if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): 
+                        continue
                     else:
                         try:
                             line = line.split()
                             line[1] = str(int(line[1])+ diff ) 
                             line[2] = str(int(line[2])+ diff ) 
                             print("\t".join(line), file=de)
-                            
+                                
                         except:
                             print("\t".join(line), file=de)
                 f_de.close()
+                
                 f_nde = open(os.path.join(temp, "nde"+str(i)+".txp"))
                 for line in f_nde: 
-                    if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): continue
+                    if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): 
+                        continue
                     else:
                         try:
                             line = line.split()
@@ -664,6 +683,23 @@ class PromoterTest:
             de.close()
             nde.close()
 
+        else:
+            
+            self.split_rna = False
+            # DE
+            get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
+                         genome_path=self.genome_path)
+            run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
+                            output=os.path.join(temp, "de.txp"), 
+                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+            
+            # non-DE
+            get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
+                         genome_path=self.genome_path)
+            run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
+                            output=os.path.join(temp, "nde.txp"), 
+                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+            
         if remove_temp:
             os.remove(os.path.join(temp,"de.fa"))
             os.remove(os.path.join(temp,"nde.fa"))
@@ -778,28 +814,68 @@ class PromoterTest:
                 if pvals_corrected[i] < alpha:
                     self.sig_region_dbs.append(rbs)
             
-    def dbd_regions(self, sig_region, output, rna):
+    def dbd_regions(self, sig_region, output):
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
-        dbd = GenomicRegionSet("DBD")
+        if len(sig_region) == 0:
+            return
+
         
 
-        if not self.rna_str:
+        if not self.rna_regions:
             return
         else:
+            dbd = GenomicRegionSet("DBD")
             for rbs in sig_region:
-                rnal = self.rna_str.split("_")
-                dbd.add( GenomicRegion(chrom=rnal[1], initial=int(rnal[2])+rbs.initial, final=int(rnal[2])+rbs.final, 
-                                       orientation=rnal[4], name=self.rna_name+" DNA binding sites: "+str(rbs.initial)+"-"+str(rbs.final) ) )
+                loop = True
+                print(rbs)
+                while loop:
+                    cf = 0
+                    for exon in self.rna_regions:
+                        print(exon)
+                        tail = cf + exon[2] - exon [1]
+                        if cf <= rbs.initial <=  tail:
+                            dbdstart = cf + rbs.initial
+                            
+                            if rbs.final <= tail: 
+                                dbdend = cf + rbs.final
+                                dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                       initial=dbdstart, final=dbdend, 
+                                                       orientation=self.rna_regions[0][3], 
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"_DBD" ) )
+                                loop = False
+                            else:
+                                print()
+                                subtract = exon[2] - exon [1] - rbs.initial
+                                dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                       initial=dbdstart, final=exon[2], 
+                                                       orientation=self.rna_regions[0][3], 
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                            cf += exon[2] - exon [1]
+                        elif rbs.final <= tail: 
+                            dbdstart = exon[1]
+                            dbdend = cf + rbs.final - subtract
+                            dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                   initial=dbdstart, final=dbdend, 
+                                                   orientation=self.rna_regions[0][3], 
+                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                            loop = False
+                    print("loop ends")
+                    loop = False
+                
         dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
         # FASTA
-        seq = pysam.Fastafile(rna)
+        print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+        seq = pysam.Fastafile("rna_temp.fa")
+        print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
         with open(os.path.join(output, "DBD_"+self.rna_name+".fa"), 'w') as fasta:
+            print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
             for rbs in sig_region:
-                fasta.write(">"+ rbs.toString()+" "+self.rna_name+" DNA_binding_regions\n")
+                fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+"\n")
+                print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
                 fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
-        fasta.close()
-
         
+        
+        seq.close()
         #print(os.path.join(output, "DBD_"+self.rna_name+".bed"))
 
 
@@ -817,7 +893,7 @@ class PromoterTest:
 
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
-                 filename=filename, ac=ac, showpa=showpa)
+                 filename=filename, ac=ac, showpa=showpa, exons=self.rna_regions)
     
     def promoter_profile(self):
         """count the number of DBD and DBS regarding to each promoter"""
@@ -1460,13 +1536,15 @@ class PromoterTest:
         if geneset: tar_reg = os.path.basename(geneset)
         else: tar_reg = os.path.basename(bed)
         # RNA name with region
-        if self.rna_str:
-            s = self.rna_str.split("_")
-            rna = '<p title="'+s[1]+":"+s[2]+"-"+s[3]+'">'+self.rna_name +"<p>"
+        if self.rna_regions:
+            trans = "Transcript:"
+            for r in self.rna_regions:
+                trans += r[0]+":"+str(r[1])+"-"+str(r[2])
+            rna = '<p title="'+trans+'">'+self.rna_name +"<p>"
         else:
             rna = self.rna_name
         # RNA associated genes
-        r_genes = rna_associated_gene(rna_str=self.rna_str, name=self.rna_name, organism=self.organism)
+        r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
         newlines = []
         #try:
         if os.path.isfile(pro_path):

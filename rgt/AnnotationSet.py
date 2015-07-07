@@ -113,6 +113,7 @@ class AnnotationSet:
             self.gene_list = gene_source
         if(isinstance(gene_source,str)): # It can be a string.
             if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
+                # FTT for TDF True
                 self.load_gene_list(gene_source, filter_havana=False, protein_coding=True,
                                     known_only=True)
             else: # The string may represent an organism which points to a gtf file within data.config.
@@ -634,7 +635,8 @@ class AnnotationSet:
         result_grs = GenomicRegionSet("exon")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
-            gr.name = e[self.GeneField.GENE_ID]
+            #gr.name = e[self.GeneField.GENE_ID]
+            gr.name = e[self.GeneField.TRANSCRIPT_ID]
             result_grs.add(gr)
         if start_site:
             result_grs.relocate_regions("leftend", left_length=1, right_length=1)

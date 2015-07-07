@@ -288,8 +288,10 @@ def main():
                                 promoterLength=args.pl, summary=summary, temp=dir,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.get_rna_region_str(rna=args.r)
-        promoter.search_triplex(rna=args.r, temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
+        promoter.connect_rna(rna=args.r)
+        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
+
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -308,7 +310,7 @@ def main():
             exp = os.path.basename(args.o)
             if args.de: tar_reg = os.path.basename(args.de)
             else: tar_reg = os.path.basename(args.bed)
-            r_genes = rna_associated_gene(rna_str=promoter.rna_str, name=promoter.rna_name, organism=promoter.organism)
+            r_genes = rna_associated_gene(rna_regions=promoter.rna_regions, name=promoter.rna_name, organism=promoter.organism)
             newlines = []
             if os.path.isfile(pro_path):
                 with open(pro_path,'r') as f:
@@ -338,10 +340,10 @@ def main():
                     print("\t".join(lines), file=f)
 
             #shutil.rmtree(args.o)
-            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_str)
+            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
             sys.exit(1)
 
-        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o, rna=args.r)
+        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
 
         print2(summary, "Step 3: Establishing promoter profile.")
         promoter.promoter_profile()
@@ -371,8 +373,8 @@ def main():
     
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_str)
-        
+        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
+        os.remove(os.path.join(os.path.dirname(args.o),"rna_temp.fa"))
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################

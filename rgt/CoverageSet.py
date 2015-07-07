@@ -247,24 +247,22 @@ class CoverageSet:
     
     def coverage_from_bigwig(self, bigwig_file, stepsize=100):
         """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>."""
-        fh = BigWigFile(bigwig_file)
-        
-        #wigs = []
+        #self.coverage = []
+        bwf = BigWigFile(bigwig_file)
         for gr in self.genomicRegions:
-            print(gr)
-            #print(gr.chrom)
-            #print(gr.initial)
-            #print(gr.final)
-            #wig = fh.fetch(chrom=gr.chrom, start=int(gr.initial), stop=int(gr.final))
-            wigs = fh.fetch(chrom="chr2", start=2000, stop=3000)
-            print(wigs.chrom)
-            for wig in wigs:
-                print("ff")
-            #    print(w.chrom,w.start,w.stop,w.score)
-        #    wigs.append(wig)
-
-        #print(wigs)
-        fh.close() # the bigwig file will be close automatically if we forget to close it.
+            depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
+            self.coverage.append( np.array(depth[::stepsize]) )
+        bwf.close()
+        
+    def phastCons46way_score(self, stepsize=100):
+        """Load the phastCons46way bigwig files to fetch the scores as coverage"""
+        #self.coverage = []
+        phastCons46way_dir = "/data/phastCons46way/"
+        for gr in self.genomicRegions:
+            bwf = BigWigFile(os.path.join(phastCons46way_dir, gr.chrom+".phastCons46way.bw"))
+            depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
+            self.coverage.append( np.array(depth[::stepsize]) )
+            bwf.close()
 
         
 #     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 100, stepsize = 50, rmdup = False, mask_file=None, get_pos=False):
