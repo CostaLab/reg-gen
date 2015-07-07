@@ -41,6 +41,7 @@ from numpy import percentile
 from norm_genelevel import norm_gene_level
 from datetime import datetime
 from rgt.ODIN.dpc_help import which
+import pysam
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -226,7 +227,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     for i in range(len(DCS.indices_of_interest)):
         if states[i] not in [1,2]:
             continue #ignore background states
-        
+
         strand = '+' if states[i] == 1 else '-'
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
         c1, c2 = sum(cov1), sum(cov2)
@@ -311,7 +312,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
         for bamfile in bamfiles:
             e, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
             exts.append(e)
-        print(" ".join(exts), file=sys.stderr)
+        #print(" ".join(exts), file=sys.stderr)
 
     if inputs and not exts_inputs:
         #print("Computing read extension sizes for input-DNA...", file=sys.stderr)
@@ -323,6 +324,16 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
 
     return exts, exts_inputs
 
+def get_all_chrom(bamfiles):
+    chrom = set()
+    for bamfile in bamfiles:
+        bam = pysam.Samfile(bamfile, "rb" )
+        for read in bam.fetch():
+    	    c = bam.getrname(read.reference_id)
+	    if c not in chrom:
+		chrom.add(c)
+    return chrom
+
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes):
@@ -332,6 +343,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
+    contained_chrom = get_all_chrom(bamfiles)
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
         with open(regions) as f:
@@ -339,8 +351,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 c, s, e = line[0], int(line[1]), int(line[2])
-                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                chrom_sizes_dict[c] = e
+		if c in contained_chrom:                
+		    regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                    chrom_sizes_dict[c] = e
     else:
         print("Call DPs on whole genome.", file=sys.stderr)
         with open(chrom_sizes) as f:
@@ -348,8 +361,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 chrom, end = line[0], int(line[1])
-                regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                chrom_sizes_dict[chrom] = end
+		if chrom in contained_chrom:
+                    regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                    chrom_sizes_dict[chrom] = end
     
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')

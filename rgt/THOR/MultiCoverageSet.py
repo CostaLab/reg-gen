@@ -229,7 +229,7 @@ class MultiCoverageSet(DualCoverageSet):
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
         self.indices_of_interest = tmp2
-
+	#print(len(self.indices_of_interest), file=sys.stderr)
         #tmp = set()
         #for i in self.indices_of_interest:
         #    for j in range(max(0, i-l), i+l+1):
