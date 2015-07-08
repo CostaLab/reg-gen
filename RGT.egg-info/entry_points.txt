@@ -1,4 +1,0 @@
-[console_scripts]
-rgt-TDF = rgt.triplex.Main:main
-rgt-viz = rgt.viz.Main:main
-
