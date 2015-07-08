@@ -138,7 +138,12 @@ class SequenceSet:
                 except: strand = "+"
                 self.sequences.append(Sequence(seq=seq, name=s.__repr__(), 
                                                strand=strand))
-
+    def total_len(self):
+        tol = 0
+        for s in self:
+            tol += len(s)
+        return tol
+        
 ####################################################################################
 ####################################################################################
 
