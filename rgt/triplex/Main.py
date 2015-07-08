@@ -374,7 +374,7 @@ def main():
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
         list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-        os.remove(os.path.join(os.path.dirname(args.o),"rna_temp.fa"))
+        os.remove(os.path.join(args.o,"rna_temp.fa"))
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################

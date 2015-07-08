@@ -819,8 +819,6 @@ class PromoterTest:
         if len(sig_region) == 0:
             return
 
-        
-
         if not self.rna_regions:
             return
         else:
@@ -864,11 +862,11 @@ class PromoterTest:
                 
         dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
         # FASTA
-        print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+        
         seq = pysam.Fastafile("rna_temp.fa")
-        print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+        
         with open(os.path.join(output, "DBD_"+self.rna_name+".fa"), 'w') as fasta:
-            print("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF")
+            
             for rbs in sig_region:
                 fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+"\n")
                 print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
@@ -889,7 +887,7 @@ class PromoterTest:
         rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
         rnas.read_fasta(rna)
         if not self.rna_name: self.rna_name = rnas[0].name
-        self.rna_len = len(rnas[0])
+        self.rna_len = rnas.total_len()
 
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
