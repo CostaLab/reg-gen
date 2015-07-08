@@ -10,7 +10,7 @@ from dpc_help import get_peaks
 from dpc_help import input
 import numpy as np
 from rgt.THOR.tracker import Tracker
-from dpc_help import get_bibtex_entry
+from dpc_help import get_bibtex_entry, verify_chrom_in_paths
 
 from random import sample
 
@@ -61,12 +61,13 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = True
+    test = False
     if test:
         print("---------- TEST MODE ----------", file=sys.stderr)
     
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-    
+    verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes)
+        
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     

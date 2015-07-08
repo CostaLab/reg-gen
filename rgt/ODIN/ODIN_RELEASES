@@ -1,6 +1,4 @@
 ToDo:
-get rid of option --region
-to not throw out uncorrected p-values
 solve the following question automativally:
 	Does your chromosome size file contain the same chromosome information like your BAM file and your genome file, that is, do all these files contain e.g. chr1, chr2, ... or 1, 2, ...?
 
@@ -8,6 +6,9 @@ solve the following question automativally:
 done:
 - fix bug with missing 'chr' prefix in BAM files
 - bugfix for --region option
+- extension size estimation
+- change description of the option --region
+- to not throw out uncorrected p-values
 
 * ODIN-0.3.2
 - mac support
