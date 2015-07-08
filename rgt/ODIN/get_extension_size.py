@@ -86,7 +86,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     
     r = map(lambda x: (x[0], x[1]),r)
     
-    print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
+    #print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
     
     return max(r[read_length/stepsize*2:])[1], r
 

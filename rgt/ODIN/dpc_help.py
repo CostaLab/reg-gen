@@ -25,6 +25,7 @@ from postprocessing import merge_delete
 from math import log10
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import os
+import pysam
 
 SIGNAL_CUTOFF = 30000
 
@@ -41,6 +42,40 @@ def get_bibtex_entry():
     print("    doi = {10.1093/bioinformatics/btu722}, ", file=sys.stderr)
     print("    URL = {http://bioinformatics.oxfordjournals.org/content/30/24/3467}", file=sys.stderr)
     print("}", file=sys.stderr)
+
+def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
+    """Check whether the chromsome info overlap in bamfiles, genome path and chrom size path"""
+    chrom_bams = set()
+    chrom_genome = set()
+    chrom_chrom_sizes = set()
+    
+    #check bam files
+    for bamfile in [bamfile1, bamfile2]:
+        bam = pysam.Samfile(bamfile, "rb" )
+        for read in bam.fetch():
+            c = bam.getrname(read.reference_id)
+        if c not in chrom_bams:
+            chrom_bams.add(c)
+    
+    #check chrom_sizes
+    with open(chrom_sizes) as f:
+        for line in f:
+            line = line.split('\t')
+            if line[0] not in chrom_chrom_sizes:
+                chrom_chrom_sizes.add(line[0])
+
+    tmp = chrom_bams & chrom_chrom_sizes
+    if len(tmp) == 0:
+        return False
+
+    #check genome
+    for s in FastaReader(genome_path):
+        if s.name not in chrom_genome:
+            chrom_genome.add(s.name)
+	    if s.name in tmp: #one overlap is sufficient
+		return True
+
+    return len(chrom_bams & chrom_genome & chrom_chrom_sizes) >= 1
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
@@ -165,6 +200,12 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     
     #peaks = [(c, s, e, s1, s2, strand)]
     if not no_correction:
+        #first output uncorrected p-values
+        pv_pass = [True] * len(pvalues)
+        _output_BED(name + '-uncor', pvalues, peaks, pv_pass)
+        _output_narrowPeak(name + '-uncor', pvalues, peaks, pv_pass)
+        
+        #then correct p-values and output
         pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
         pvalues = map(_get_log10pvalue, pvalues)
@@ -390,7 +431,9 @@ def input(test):
                           help="All files are stored in output directory which is created if necessary.")
         
         group = OptionGroup(parser, "Advanced options")
-        group.add_option("--regions", dest="regions", default=None, help="regions (BED) where to search for DPs [default: entire genome]")
+        group.add_option("--regions", dest="regions", default=None,\
+                          help="regions (BED) to restrict the analysis (that is, where to train the HMM and search for DPs;\
+                           it is faster, but inaccurate) [default: entire genome]")
         group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
         group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn of GC-content calculation (faster, but less accurate) [default: %default]")
