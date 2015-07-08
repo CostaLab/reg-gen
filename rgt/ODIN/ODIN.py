@@ -66,8 +66,10 @@ def main():
         print("---------- TEST MODE ----------", file=sys.stderr)
     
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-    verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes)
-        
+    if not verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes):
+        print("error: bam, genome and chromosome files do not contain the same chromosome names!", file=sys.stderr)
+        sys.exit()
+
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     

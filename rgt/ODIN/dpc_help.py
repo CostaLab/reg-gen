@@ -57,11 +57,6 @@ def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
         if c not in chrom_bams:
             chrom_bams.add(c)
     
-    #check genome
-    for s in FastaReader(genome_path):
-        if s.name not in chrom_genome:
-            chrom_genome.add(s.name)
-    
     #check chrom_sizes
     with open(chrom_sizes) as f:
         for line in f:
@@ -69,11 +64,18 @@ def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
             if line[0] not in chrom_chrom_sizes:
                 chrom_chrom_sizes.add(line[0])
 
-    print(chrom_bams, file=sys.stderr)
-    print(chrom_genome, file=sys.stderr)
-    print(chrom_chrom_sizes, file=sys.stderr)
-    
-    return len(chrom_bams & chrom_genome & chrom_chrom_sizes) > 1
+    tmp = chrom_bams & chrom_chrom_sizes
+    if len(tmp) == 0:
+        return False
+
+    #check genome
+    for s in FastaReader(genome_path):
+        if s.name not in chrom_genome:
+            chrom_genome.add(s.name)
+	    if s.name in tmp: #one overlap is sufficient
+		return True
+
+    return len(chrom_bams & chrom_genome & chrom_chrom_sizes) >= 1
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
