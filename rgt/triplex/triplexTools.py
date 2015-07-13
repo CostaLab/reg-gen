@@ -579,7 +579,8 @@ class PromoterTest:
                                 #print(e)
                                 self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
                     else:
-                        self.rna_regions.append(None)
+                        self.rna_regions = None
+                        break
 
     def connect_rna(self, rna, temp):
         seq = ""
@@ -600,7 +601,6 @@ class PromoterTest:
         
         threshold = 1000
         statinfo = os.stat(rna)
-        
         
         if statinfo.st_size > threshold:
             print("\tSpliting RNA sequence for triplexator...")
@@ -676,10 +676,10 @@ class PromoterTest:
                             print("\t".join(line), file=nde)
                         
                 f_nde.close()
-                if remove_temp:
-                    os.remove(os.path.join(temp, "de"+str(i)+".txp"))
-                    os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
-                    os.remove(os.path.join(temp,"rna_"+str(i)))
+                #if remove_temp:
+                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
+                os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
             nde.close()
 
@@ -760,9 +760,9 @@ class PromoterTest:
 
         self.txp_def = txp_def
         self.txp_ndef = txp_ndef
-        if remove_temp:
-            os.remove(os.path.join(temp,"de.txp"))
-            os.remove(os.path.join(temp,"nde.txp"))
+        #if remove_temp:
+        os.remove(os.path.join(temp,"de.txp"))
+        os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
             output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
@@ -818,7 +818,7 @@ class PromoterTest:
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
         if len(sig_region) == 0:
             return
-
+        #print(self.rna_regions)
         if not self.rna_regions:
             return
         else:
@@ -829,7 +829,7 @@ class PromoterTest:
                 while loop:
                     cf = 0
                     for exon in self.rna_regions:
-                        print(exon)
+                        #print(exon)
                         tail = cf + exon[2] - exon [1]
                         if cf <= rbs.initial <=  tail:
                             dbdstart = cf + rbs.initial

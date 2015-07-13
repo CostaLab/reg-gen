@@ -289,8 +289,7 @@ def main():
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
-        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
+        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
 
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))

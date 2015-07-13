@@ -247,7 +247,7 @@ class CoverageSet:
     
     def coverage_from_bigwig(self, bigwig_file, stepsize=100):
         """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>."""
-        #self.coverage = []
+        self.coverage = []
         bwf = BigWigFile(bigwig_file)
         for gr in self.genomicRegions:
             depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
@@ -256,12 +256,16 @@ class CoverageSet:
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage"""
-        #self.coverage = []
+        self.coverage = []
         phastCons46way_dir = "/data/phastCons46way/"
         for gr in self.genomicRegions:
             bwf = BigWigFile(os.path.join(phastCons46way_dir, gr.chrom+".phastCons46way.bw"))
             depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
-            self.coverage.append( np.array(depth[::stepsize]) )
+            x = zip(*[iter(depth)]*stepsize)
+            #ds = [ np.mean(d) for d in x ]
+            ds = [ max(d) for d in x ]
+            self.coverage.append( np.array(ds) )
+            #self.coverage.append( np.array(depth[::stepsize]) )
             bwf.close()
 
         

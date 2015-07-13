@@ -136,8 +136,8 @@ class SequenceSet:
                 seq = ch_seq[0].seq[s.initial:s.final]
                 try: strand = s.strand
                 except: strand = "+"
-                self.sequences.append(Sequence(seq=seq, name=s.__repr__(), 
-                                               strand=strand))
+                self.sequences.append(Sequence(seq=seq, name=s.__repr__(), strand=strand))
+
     def total_len(self):
         tol = 0
         for s in self:

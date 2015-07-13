@@ -68,7 +68,8 @@ def tag_from_r(exps, tag_type, name):
         try:
             tags.append(exps.get_type(name,type))
         except: pass
-    return tags
+
+    return [x for x in tags if x is not None]
         
 def colormap(exps, colorby, definedinEM, annotation=None):
     """Generate the self.colors in the format which compatible with matplotlib"""
@@ -107,7 +108,20 @@ def colormap(exps, colorby, definedinEM, annotation=None):
         else:
             #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
+            if colorby == "reads":
+                ks = []
+                for gr in exps.get_readsnames():
+                    ks.append( exps.get_type(name=gr,field="factor") )
+                n = len(set(ks))
+            elif colorby == "regions":
+                ks = []
+                for gr in exps.get_regionsnames():
+                    ks.append( exps.get_type(name=gr,field="factor") )
+                n = len(set(ks))
+            else:
+                n = len(exps.fieldsDict[colorby].keys())
+            print(n)
+            colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -126,12 +140,18 @@ def colormaps(exps, colorby, definedinEM):
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     else:
-        
-        if len(exps.get_regionsnames()) < 20:
-            colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
-                      'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        if colorby == "reads" or colorby == "regions":
+            n = len(exp.fieldsDict["factor"].keys())
         else:
-            colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+            n = len(exp.fieldsDict[colorby].keys())
+        colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+
+        #if len(exps.get_regionsnames()) < 20:
+        #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
+        #              'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        #else:
+            #colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+        #    colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
 def color_groupded_region(EM, grouped_region, colorby, definedinEM):
@@ -203,8 +223,8 @@ def group_refque(rEM, qEM, groupby):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference["All"] = rEM.get_regionsets()
-        groupedquery["All"] = qEM.get_regionsets()
+        groupedreference[""] = rEM.get_regionsets()
+        groupedquery[""] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -1067,21 +1087,21 @@ class Intersect:
         """color_list is a Dict [query] : color """
         if ref_que == "que":
             self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All":
-                self.color_tags = [n.name for n in self.groupedquery["All"]]
+            if self.groupedquery.keys()[0] == "":
+                self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
         elif ref_que == "ref":
             self.color_list = color_groupded_region(self.rEM, self.groupedreference, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All":
-                self.color_tags = [n.name for n in self.groupedquery["All"]]
+            if self.groupedquery.keys()[0] == "":
+                self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
             
     def colors_comb(self):
         """color_list is a list : color """
         
-        if self.groupedquery.keys()[0] == "All":
+        if self.groupedquery.keys()[0] == "":
             self.color_tags = self.referencenames
         else:
             tags = []
@@ -1779,15 +1799,15 @@ class Boxplot:
         self.tag_type = [groupby, sortby, colorby]
         
         if groupby == "None":
-            self.group_tags = ["All"]
+            self.group_tags = [""]
         else:
             self.group_tags = gen_tags(self.exps, groupby)
         if sortby == "None":
-            self.sort_tags = ["All"]
+            self.sort_tags = [""]
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
         if colorby == "None":
-            self.color_tags = ["All"]
+            self.color_tags = [""]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
     
@@ -2166,27 +2186,29 @@ class Lineplot:
             sortby = 'reads','regions','cell',or 'factor'
         """
         self.tag_type = [sortby, groupby, colorby]
+        #print([sortby, groupby, colorby])
         if groupby == "None":
-            self.group_tags = ["All"]
+            self.group_tags = [""]
         elif groupby == "regions" and self.annotation:
             self.group_tags = self.bednames
         else:
             self.group_tags = gen_tags(self.exps, groupby)
             
         if sortby == "None":
-            self.sort_tags = ["All"]
+            self.sort_tags = [""]
         elif sortby == "regions" and self.annotation:
             self.sort_tags = self.bednames
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
             
         if colorby == "None":
-            self.color_tags = ["All"]
+            self.color_tags = [""]
         elif colorby == "regions" and self.annotation:
             self.color_tags = self.bednames
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
+
     def gen_cues(self):
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
@@ -2218,6 +2240,7 @@ class Lineplot:
         data = OrderedDict()
         totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
 
+        
         if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
@@ -2227,6 +2250,8 @@ class Lineplot:
                 for c in self.color_tags:
                     #if self.df: data[s][g][c] = []
                     for bed in self.cuebed.keys():
+                        #print(self.cuebed[bed])
+                        #print(set([s,g,c]))
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
                                 if self.cuebam[bam] <= set([s,g,c]):
@@ -2249,8 +2274,13 @@ class Lineplot:
                                         j = self.readsnames.index(bam)
                                         
                                         cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
-                                        cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                        cov.normRPM()
+                                        
+                                        if bam == "Conservation":
+                                            cov.phastCons46way_score(stepsize=self.ss)
+                                        else:
+                                            cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                            cov.normRPM()
+
                                         # When bothends, consider the fliping end
                                         if self.center == 'bothends':
                                             flap = CoverageSet("for flap", self.processed_bedsF[i])
@@ -2332,6 +2362,7 @@ class Lineplot:
             sx_ymin = [0]*len(self.data.keys())
 
         for it, s in enumerate(self.data.keys()):
+            
             for i,g in enumerate(self.data[s].keys()):
                 
                 try: ax = axs[it,i]
@@ -2354,10 +2385,11 @@ class Lineplot:
                     pArr = numpy.array(["Name","X","Y"]) # Header
                     
                 for j, c in enumerate(self.data[s][g].keys()):
+                    
                     y = self.data[s][g][c]
                     #try: 
                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                    sx_ymax[j] = max(numpy.amax(y), sx_ymax[j])
+                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
                     if self.df: 
                         yaxmin[i] = min(numpy.amin(y), yaxmin[i])
                         sx_ymin[j] = min(numpy.amin(y), sx_ymin[j])
@@ -2384,8 +2416,7 @@ class Lineplot:
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
                 ax.locator_params(axis = 'x', nbins = 4)
                 ax.locator_params(axis = 'y', nbins = 4)
-                try: axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-                except: axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            
                 
         for it,ty in enumerate(self.data.keys()):
             try: 
@@ -2393,6 +2424,7 @@ class Lineplot:
             except:
                 if len(self.data.keys()) == 1:
                     axs[0].set_ylabel("{}".format(ty),fontsize=12)
+                    #axs.set_ylabel("{}".format(ty),fontsize=12)
                 else:
                     axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
@@ -2428,7 +2460,12 @@ class Lineplot:
                                 axs[i].set_ylim([0, sx_ymax[it]*1.2])
                             else:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
-
+        try: 
+            axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                             columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+        except: 
+            axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
