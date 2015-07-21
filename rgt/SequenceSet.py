@@ -139,16 +139,9 @@ class SequenceSet:
                 self.sequences.append(Sequence(seq=seq, name=s.__repr__(), strand=strand))
 
     def total_len(self):
+        """Retrun the total length of the given SequenceSet"""
         tol = 0
         for s in self:
             tol += len(s)
         return tol
-        
-####################################################################################
-####################################################################################
-
-if __name__ == '__main__':
-    a = SequenceSet(name="test")
-    a.read_bed("/projects/stemaging/data/beds/f6_hyper.bed", "/media/joseph/931ef578-eebe-4ee8-ac0b-0f4690f126ed/data/genome")
-    print(len(a))
-    print(str(a[0]))
+ 

@@ -1328,15 +1328,15 @@ class GenomicRegionSet:
         if len(self) == 0: return None
         if len(regionset) == 0: return [0]*len(self)
 
-        a = copy.deepcopy(self)
-        b = copy.deepcopy(regionset)
-        if not a.sorted: a.sort()
-        if not b.sorted: b.sort()
+        #a = copy.deepcopy(con_self)
+        #b = copy.deepcopy(regionset)
+        if not self.sorted: self.sort()
+        if not regionset.sorted: regionset.sort()
         counts = []
         
-        iter_a = iter(a)
+        iter_a = iter(self)
         s = iter_a.next()
-        last_j = len(b)-1
+        last_j = len(regionset)-1
         j = 0
         cont_loop = True
         pre_inter = 0
@@ -1345,9 +1345,9 @@ class GenomicRegionSet:
         while cont_loop:
             # When the regions overlap
             #print(str(s)+"\t\t"+str(b[j]))
-            if s.overlap(b[j]):
+            if s.overlap(regionset[j]):
                 c += 1
-                if cont_overlap == False: pre_inter = j
+                if not cont_overlap: pre_inter = j
                 if j == last_j: 
                     try: 
                         s = iter_a.next()
@@ -1361,7 +1361,7 @@ class GenomicRegionSet:
                     j += 1
                 cont_overlap = True
             
-            elif s < b[j]:
+            elif s < regionset[j]:
                 try: 
                     s = iter_a.next()
                     counts.append(c)
@@ -1372,7 +1372,7 @@ class GenomicRegionSet:
                     cont_loop = False
                     counts.append(c)
             
-            elif s > b[j]:
+            elif s > regionset[j]:
                 if j == last_j:
                     try:
                         s = iter_a.next()
@@ -1395,7 +1395,6 @@ class GenomicRegionSet:
 
     def replace_region_name(self, regions):
         """Replace the region names by the given region set"""
-        
         if len(self) == 0 or len(regions) == 0: return
         
         else:
@@ -1524,3 +1523,67 @@ class GenomicRegionSet:
         
         f.close()
 
+    def coverage_per_region(self, regionset):
+        """Return a list of coverage of the given GenomicRegionSet based on the self RegionSet
+        Note: The length of the result list is the same as self GenomicRegionSet"""
+        if len(self) == 0: return None
+        if len(regionset) == 0: return [0]*len(self)
+
+        if not self.sorted: self.sort()
+        if not regionset.sorted: regionset.sort()
+        coverages = []
+        
+        iter_a = iter(self)
+        s = iter_a.next()
+        last_j = len(regionset)-1
+        j = 0
+        cont_loop = True
+        pre_inter = 0
+        cont_overlap = False
+        c = GenomicRegionSet("coverage")
+
+        while cont_loop:
+            # When the regions overlap
+            #print(str(s)+"\t\t"+str(b[j]))
+            if s.overlap(regionset[j]):
+
+                c.add(regionset[j])
+                if not cont_overlap: pre_inter = j
+                if j == last_j: 
+                    coverages.append(c.total_coverage()/len(s))
+                    try: 
+                        s = iter_a.next()
+                        c = GenomicRegionSet("coverage")
+                        j = pre_inter
+                    except: 
+                        cont_loop = False
+                else: 
+                    j += 1
+                cont_overlap = True
+
+            
+            elif s < regionset[j]:
+                overlapping = False
+                coverages.append(c.total_coverage()/len(s))
+                try: 
+                    s = iter_a.next()
+                    c = GenomicRegionSet("coverage")
+                    j = pre_inter
+                    cont_overlap = False
+                except: 
+                    cont_loop = False
+                    
+            elif s > regionset[j]:
+                overlapping = False
+                if j == last_j:
+                    coverages.append(c.total_coverage()/len(s))
+                    try:
+                        s = iter_a.next()
+                        c = GenomicRegionSet("coverage")
+
+                    except:
+                        cont_loop = False
+                else:
+                    j = j + 1
+                    cont_overlap = False
+        return coverages

@@ -2141,6 +2141,7 @@ def annotation_dump(organism):
 
 
 class Lineplot:
+
     def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df):
         # Read the Experimental Matrix
         self.title = title
@@ -2277,6 +2278,7 @@ class Lineplot:
                                         
                                         if bam == "Conservation":
                                             cov.phastCons46way_score(stepsize=self.ss)
+                                        #elif bam
                                         else:
                                             cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                             cov.normRPM()

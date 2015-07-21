@@ -259,50 +259,7 @@ def main():
     ##### Promoter Test ############################################################
     ################################################################################
     if args.mode == 'promotertest':
-        if args.bed and not args.bg:
-            print("Please add background promoters in BED format. (-bg)")
-            sys.exit(1)
-        if args.scoreh and not args.score:
-            print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
-            print("Please add '-score'.")
-            sys.exit(1)
-
-        print2(summary, "\n"+"*************** Promoter Test ****************")
-        print2(summary, "*** Input RNA sequence: "+args.r)
-        
-        if args.o.count("/") < 3:
-            print2(summary, "*** Output directory: "+ args.o)
-        else:
-            n = args.o.count("/") - 3 + 1
-            print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
-
-        args.r = os.path.normpath(os.path.join(dir,args.r))
-        
-        if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
-        if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
-        if args.bg: args.bg = os.path.normpath(os.path.join(dir,args.bg))
-
-        # Get GenomicRegionSet from the given genes
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
-                                promoterLength=args.pl, summary=summary, temp=dir,
-                                showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
-        promoter.get_rna_region_str(rna=args.r)
-        promoter.connect_rna(rna=args.r, temp=args.o)
-        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
-
-        t1 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
-
-        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        if args.obed: obedp = os.path.basename(args.o)
-        else: obedp = None
-        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf)
-        promoter.fisher_exact(alpha=args.a)
-        t2 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        
-        if len(promoter.rbss) == 0: 
+        def no_binding_code():
             print("*** Find no triple helices binding on the given RNA")
 
             pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
@@ -340,12 +297,64 @@ def main():
 
             #shutil.rmtree(args.o)
             list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
+            shutil.rmtree(args.o)
             sys.exit(1)
 
-        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
+################################################################################################3
 
+        if args.bed and not args.bg:
+            print("Please add background promoters in BED format. (-bg)")
+            sys.exit(1)
+        if args.scoreh and not args.score:
+            print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
+            print("Please add '-score'.")
+            sys.exit(1)
+
+        print2(summary, "\n"+"*************** Promoter Test ****************")
+        print2(summary, "*** Input RNA sequence: "+args.r)
+        
+        if args.o.count("/") < 3:
+            print2(summary, "*** Output directory: "+ args.o)
+        else:
+            n = args.o.count("/") - 3 + 1
+            print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
+
+        args.r = os.path.normpath(os.path.join(dir,args.r))
+        
+        if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
+        if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
+        if args.bg: args.bg = os.path.normpath(os.path.join(dir,args.bg))
+
+        # Get GenomicRegionSet from the given genes
+        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
+        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
+                                promoterLength=args.pl, summary=summary, temp=dir,
+                                showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
+        promoter.get_rna_region_str(rna=args.r)
+        promoter.connect_rna(rna=args.r, temp=args.o)
+        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
+        
+        t1 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
+
+        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
+        if args.obed: obedp = os.path.basename(args.o)
+        else: obedp = None
+        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf, l=args.l)
+        promoter.fisher_exact(alpha=args.a)
+        t2 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
+        
+        if len(promoter.rbss) == 0: 
+            no_binding_code()
+
+        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
+        os.remove(os.path.join(args.o,"rna_temp.fa"))
+        try: os.remove(os.path.join(args.o,"rna_temp.fai"))
+        except: pass
         print2(summary, "Step 3: Establishing promoter profile.")
-        promoter.promoter_profile()
+        #promoter.promoter_profile()
         t3 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
 
@@ -373,11 +382,52 @@ def main():
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
         list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-        os.remove(os.path.join(args.o,"rna_temp.fa"))
+        
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################
     if args.mode == 'regiontest':
+        def no_binding_code():
+            print("*** Find no triple helices binding on the given RNA")
+
+            pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
+            exp = os.path.basename(args.o)
+            tar_reg = os.path.basename(args.bed)
+            r_genes = rna_associated_gene(rna_regions=randomtest.rna_regions, name=randomtest.rna_name, organism=randomtest.organism)
+            newlines = []
+            if os.path.isfile(pro_path):
+                with open(pro_path,'r') as f:
+                    new_exp = True
+                    for line in f:
+                        line = line.strip()
+                        line = line.split("\t")
+                        if line[0] == exp:
+                            newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg, "0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
+                            new_exp = False
+                        else:
+                            newlines.append(line)
+                    if new_exp:
+                        newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg,"0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
+            else:
+                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                                 "Top_DBD", "p-value","closest_genes"])
+                newlines.append([exp, args.rn, args.o.split("_")[-1],
+                                             args.organism, tar_reg, "0", 
+                                             "-", "1.0", r_genes, "No triplex found" ])
+            with open(pro_path,'w') as f:
+                for lines in newlines:
+                    print("\t".join(lines), file=f)
+
+            #shutil.rmtree(args.o)
+            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=randomtest.rna_regions)
+            shutil.rmtree(args.o)
+            sys.exit(1)
+
+            #########################################################
         print2(summary, "\n"+"*************** Genomic Region Test ***************")
         print2(summary, "*** Input RNA sequence: "+args.r)
         print2(summary, "*** Input regions in BED: "+os.path.basename(args.bed))
@@ -389,8 +439,7 @@ def main():
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
                                 organism=args.organism, showdbs=args.showdbs)
-        if args.obed: obed = os.path.basename(args.o)
-        else: obed=False
+        obed = os.path.basename(args.o)
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
@@ -400,6 +449,10 @@ def main():
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm,
                                filter_bed=args.f, alpha=args.a)
+        
+        if len(randomtest.rbss) == 0: 
+            no_binding_code()
+
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
