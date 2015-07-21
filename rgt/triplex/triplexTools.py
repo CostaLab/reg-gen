@@ -720,6 +720,7 @@ class PromoterTest:
         
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
+
         self.frequency = {}
         self.frequency["promoters"] = { "de": OrderedDict(), "nde": OrderedDict() }
         
@@ -758,11 +759,15 @@ class PromoterTest:
                         #print(len(nde.merged_dict[rbs]))
                         self.frequency["promoters"]["nde"][rbs] = nde.merged_dict[rbs]
             for rbs in self.rbss:
+                print(len(self.frequency["promoters"]["nde"][rbs]))
                 self.frequency["promoters"]["nde"][rbs].remove_duplicates()
+                print(len(self.frequency["promoters"]["nde"][rbs]))
                 self.frequency["promoters"]["nde"][rbs].merge()
+                print(len(self.frequency["promoters"]["nde"][rbs]))
                 l2 = len(self.frequency["promoters"]["nde"][rbs])
-                #print(str(l2))
+                print(str(l2))
                 self.frequency["promoters"]["nde"][rbs] = [ l2, len_nde - l2 ]
+                print(self.frequency["promoters"]["nde"][rbs])
             print()
 
         else:
