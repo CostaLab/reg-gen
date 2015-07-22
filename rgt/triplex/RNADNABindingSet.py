@@ -365,7 +365,7 @@ class RNADNABindingSet:
             rna_merged.merge()
         else:
             rna_merged = rbss
-            
+
         rbsm = iter(rna_merged)
         try: r = rbsm.next()
         except: return
@@ -415,63 +415,12 @@ class RNADNABindingSet:
                 except: 
                     try: rd = con.next()
                     except: con_loop = False
-        if region_set: 
+
+        if cutoff:
             for r in self.merged_dict.keys():
-                self.merged_dict[r].replace_region_name(regions=region_set)
-        #self.merged_dict = new_dict
-
-    def merge_by(self, rbss, rm_duplicate=False, asgene_organism=False, region_set=None):
-        """Merge the RNA Binding Sites by the given list of Binding sites"""
-        if self.sorted_rna: pass
-        else: self.sort_rbs()
-        self.merged_dict = OrderedDict()
-        
-        rbsm = iter(rbss)
-        try: r = rbsm.next()
-        except: return
-        self.merged_dict[r] = GenomicRegionSet(r.toString())
-
-        con = iter(self)
-        rd = con.next()    
-        
-        con_loop = True
-        
-        while con_loop:   
-            if r.overlap(rd.rna):
-                #print(".", end="")
-                self.merged_dict[r].add(rd.dna)
-                try: 
-                    rd = con.next()
-                except: 
-                    try:
-                        r = rbsm.next()
-                        self.merged_dict[r] = GenomicRegionSet(r.toString())
-                    except: 
-                        con_loop = False
-            elif rd.rna < r: 
-                #continue
-                try: 
-                    rd = con.next()
-                except: 
-                    try:
-                        r = rbsm.next()
-                        self.merged_dict[r] = GenomicRegionSet(r.toString())
-                    except: 
-                        con_loop = False
-            elif rd.rna > r:
-                if rm_duplicate: self.merged_dict[r].remove_duplicates()
-                if asgene_organism:
-                    try:
-                        self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
-                    except:
-                        pass
-                try:
-                    r = rbsm.next()
-                    self.merged_dict[r] = GenomicRegionSet(r.toString())
-                except: 
-                    try: 
-                        rd = con.next()
-                    except: con_loop = False
+                if len(self.merged_dict[r]) < cutoff:
+                    n = self.merged_dict.pop(r, None)
+                    
         if region_set: 
             for r in self.merged_dict.keys():
                 self.merged_dict[r].replace_region_name(regions=region_set)

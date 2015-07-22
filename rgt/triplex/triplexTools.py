@@ -996,10 +996,6 @@ class PromoterTest:
                 #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
                 fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
         
-        
-        #seq.close()
-        #print(os.path.join(output, "DBD_"+self.rna_name+".bed"))
-
 
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
@@ -1796,14 +1792,14 @@ class RandomTest:
         self.region_dbs = self.txpf.sort_rd_by_regions(regionset=self.dna_region)
         self.region_dbsm = {}
         self.region_coverage = {}
-        dbss = self.txpf.get_dbs()
+        
         for region in self.dna_region:
             self.region_dbsm[region.toString()] = self.region_dbs[region.toString()].get_dbs().merge(w_return=True)
             self.region_coverage[region.toString()] = float(self.region_dbsm[region.toString()].total_coverage()) / len(region)
         
         if obed:
-            btr = txp.get_dbs()
-            btr = dbss.gene_association(organism=self.organism)
+            btr = self.txp.get_dbs()
+            btr = btr.gene_association(organism=self.organism)
             btr.write_bed(os.path.join(temp, obed+"_target_region_dbs.bed"))
             dbss = txpf.get_dbs()
             dbss = dbss.gene_association(organism=self.organism)
@@ -1891,6 +1887,74 @@ class RandomTest:
         self.region_matrix = numpy.array(self.region_matrix)
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
         
+    def dbd_regions(self, sig_region, output):
+        """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
+        if len(sig_region) == 0:
+            return
+        #print(self.rna_regions)
+        if not self.rna_regions:
+            return
+        else:
+            dbd = GenomicRegionSet("DBD")
+            for rbs in sig_region:
+                loop = True
+                #print(rbs)
+                #print(rbs.initial)
+                #print(rbs.final)
+                while loop:
+                    cf = 0
+                    for exon in self.rna_regions:
+                        #print(exon)
+                        tail = cf + exon[2] - exon [1]
+                        #print("cf:   " + str(cf))
+                        #print("tail: " + str(tail) )
+                        if cf <= rbs.initial <=  tail:
+                            dbdstart = exon[1] + cf + rbs.initial
+                            
+                            if rbs.final <= tail: 
+                                #print("1")
+                                dbdend = exon[1] + cf + rbs.final
+                                dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                       initial=dbdstart, final=dbdend, 
+                                                       orientation=self.rna_regions[0][3], 
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"_DBD" ) )
+                                loop = False
+                                break
+                            else:
+
+                                subtract = exon[2] - exon [1] - rbs.initial
+                                #print("2")
+                                #print("Subtract: "+str(subtract))
+                                dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                       initial=dbdstart, final=exon[2], 
+                                                       orientation=self.rna_regions[0][3], 
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                            cf += exon[2] - exon [1]
+                        elif rbs.final <= tail: 
+                            #print("3")
+                            dbdstart = exon[1]
+                            dbdend = exon[1] + cf + rbs.final - rbs.initial - subtract
+                            dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                   initial=dbdstart, final=dbdend, 
+                                                   orientation=self.rna_regions[0][3], 
+                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                            loop = False
+                            break
+                    
+                    loop = False
+                
+        dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
+        # FASTA
+        
+        seq = pysam.Fastafile(os.path.join(output, self.rna_fasta))
+        
+        with open(os.path.join(output, "DBD_"+self.rna_name+".fa"), 'w') as fasta:
+            
+            for rbs in sig_region:
+                fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+"\n")
+                #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
+                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
+
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
         
