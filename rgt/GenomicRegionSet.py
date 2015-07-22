@@ -713,19 +713,21 @@ class GenomicRegionSet:
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
         if self.sorted == False: self.sort()
-        for i in range(len(self.sequences) - 1):
-            loop = True
-            while loop:
-                try:
-                    #if self.sequences[i] == self.sequences[i+1]:
-                    if self.sequences[i].toString() == self.sequences[i+1].toString():
-                        del self.sequences[i+1]
-                        loop = True
-                    else:
-                        loop = False
-                except:
-                    loop = False
-                    continue
+        #for i in range(len(self.sequences) - 1):
+        i = 0
+        loop = True
+        while loop:
+            try:
+                #if self.sequences[i] == self.sequences[i+1]:
+                if self.sequences[i].toString() == self.sequences[i+1].toString():
+                    del self.sequences[i+1]
+                    #loop = True
+                else:
+                    #loop = False
+                    i += 1
+            except:
+                loop = False
+                #continue
             
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number 

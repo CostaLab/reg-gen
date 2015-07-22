@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
+import re
 import argparse
 import shutil
 import time, datetime, getpass, fnmatch
@@ -351,7 +352,7 @@ def main():
 
         promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
-        try: os.remove(os.path.join(args.o,"rna_temp.fai"))
+        try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
         print2(summary, "Step 3: Establishing promoter profile.")
         #promoter.promoter_profile()
@@ -439,6 +440,7 @@ def main():
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
                                 organism=args.organism, showdbs=args.showdbs)
+        randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
@@ -497,4 +499,6 @@ def main():
         output_summary(summary, args.o, "summary.txt")
         randomtest.save_profile(output=args.o, bed=args.bed)
         list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
-        
+        for f in os.listdir(args.o):
+            if re.search("dna*.fa", f) or re.search("dna*.txp", f):
+                os.remove(os.path.join(args.o, f))

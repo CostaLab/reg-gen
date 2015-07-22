@@ -350,7 +350,7 @@ class RNADNABindingSet:
         return result
 
 
-    def merge_rbs(self, rm_duplicate=False, asgene_organism=None, region_set=None, cutoff=0):
+    def merge_rbs(self, rbss=None, rm_duplicate=False, asgene_organism=None, region_set=None, cutoff=0):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -359,10 +359,13 @@ class RNADNABindingSet:
         """
         # A dict: RBS as key, and GenomicRegionSet as its value
         self.merged_dict = OrderedDict()
-        # Merge RBS
-        rna_merged = self.get_rbs()
-        rna_merged.merge()
-
+        if not rbss:
+            # Merge RBS
+            rna_merged = self.get_rbs()
+            rna_merged.merge()
+        else:
+            rna_merged = rbss
+            
         rbsm = iter(rna_merged)
         try: r = rbsm.next()
         except: return
@@ -385,7 +388,8 @@ class RNADNABindingSet:
                     try:
                         r = rbsm.next()
                         self.merged_dict[r] = GenomicRegionSet(r.toString())
-                    except: 
+                    except:
+                        if rm_duplicate: self.merged_dict[r].remove_duplicates()
                         con_loop = False
             elif rd.rna < r:
                 try: rd = con.next()
@@ -394,6 +398,7 @@ class RNADNABindingSet:
                         r = rbsm.next()
                         self.merged_dict[r] = GenomicRegionSet(r.toString())
                     except: 
+                        if rm_duplicate: self.merged_dict[r].remove_duplicates()
                         con_loop = False
             elif rd.rna > r:
                 if rm_duplicate: self.merged_dict[r].remove_duplicates()
