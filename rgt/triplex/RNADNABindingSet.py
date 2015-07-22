@@ -116,6 +116,7 @@ class RNADNABindingSet:
     def get_dbs(self, sort=False, orientation=None, rm_duplicate=False):
         """Return GenomicRegionSet which contains all DNA binding sites"""
         dna_set = GenomicRegionSet(name="DNA_binding_sites")
+        if len(self) == 0: return dna_set
         for rd in self.sequences:
             if not orientation:
                 dna_set.add(rd.dna)
@@ -144,7 +145,7 @@ class RNADNABindingSet:
         result = {}
 
         if not regionset.sorted: regionset.sort()
-
+        
         iter_dbs = iter(dbss)
         dbs = iter_dbs.next()
 
@@ -197,7 +198,9 @@ class RNADNABindingSet:
 
         for region in regionset:
             result[region.toString()] = BindingSiteSet("binding site:"+region.toString())
-
+        
+        if len(self) == 0: 
+            return result
         #iter_rd = iter(txp_copy)
         iter_rd = iter(self)
         rd = iter_rd.next()
@@ -243,8 +246,8 @@ class RNADNABindingSet:
     def sort_rd_by_regions(self, regionset):
         """Sort RNADNA binding information by a given GenomicRegionSet"""
         """Sort the DBS by given GenomicRegionSet"""
-        if len(self) == 0: return
-        
+
+
         result = OrderedDict()
 
         #txp_copy = copy.deepcopy(self)
@@ -256,7 +259,8 @@ class RNADNABindingSet:
         for region in regionset:
             result[region.toString()] = RNADNABindingSet("RNADNA_interaction:"+region.toString())
 
-
+        if len(self) == 0: 
+            return result
         #iter_rd = iter(txp_copy)
         iter_rd = iter(self)
         

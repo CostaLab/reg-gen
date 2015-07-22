@@ -18,6 +18,7 @@ from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
 import pysam
 import pickle
+import shutil
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
@@ -502,7 +503,8 @@ class PromoterTest:
                 if len(self.de_gene) == 0:
                     print("Error: No genes are loaded from: "+gene_list_file)
                     print("Please check the format.")
-                    sys.exit(1)
+                    shutil.rmtree(temp)
+                    sys.exit(0)
 
                 # Generate a dict for ID transfer
                 #print("Before fixing")
