@@ -243,6 +243,7 @@ class RNADNABindingSet:
     def sort_rd_by_regions(self, regionset):
         """Sort RNADNA binding information by a given GenomicRegionSet"""
         """Sort the DBS by given GenomicRegionSet"""
+        if len(self) == 0: return
         
         result = OrderedDict()
 
@@ -420,7 +421,7 @@ class RNADNABindingSet:
             for r in self.merged_dict.keys():
                 if len(self.merged_dict[r]) < cutoff:
                     n = self.merged_dict.pop(r, None)
-                    
+
         if region_set: 
             for r in self.merged_dict.keys():
                 self.merged_dict[r].replace_region_name(regions=region_set)

@@ -48,7 +48,9 @@ def output_summary(summary, directory, filename):
 def check_dir(path):
     """Check the availability of the given directory and creat it"""
     try: os.stat(path)
-    except: os.mkdir(path)
+    except: 
+        try: os.mkdir(path)
+        except: pass
 
 
 
