@@ -745,8 +745,7 @@ class PromoterTest:
             # DE
             l1 = len(self.txp_de.merged_dict[rbs])
             self.frequency["promoters"]["de"][rbs] = [ l1, len_de - l1 ]
-        print(self.cf)
-        print(self.split_rna)
+
         # nDE
         if self.split_rna:
             print("\t\t", end="")
