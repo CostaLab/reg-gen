@@ -8,6 +8,8 @@ import time, datetime
 # Local Libraries
 from scipy import stats
 import numpy
+numpy.seterr(divide='ignore', invalid='ignore')
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.patches as patches
@@ -743,7 +745,8 @@ class PromoterTest:
             # DE
             l1 = len(self.txp_de.merged_dict[rbs])
             self.frequency["promoters"]["de"][rbs] = [ l1, len_de - l1 ]
-
+        print(self.cf)
+        print(self.split_rna)
         # nDE
         if self.split_rna:
             print("\t\t", end="")
@@ -773,7 +776,7 @@ class PromoterTest:
             print()
 
         else:
-
+            
             self.txp_nde = RNADNABindingSet("non-DE")
             self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
             print("\t\t"+str(len(self.txp_nde))+"\tBinding nde promoters")
@@ -784,7 +787,6 @@ class PromoterTest:
                 l2 = len(self.txp_nde.merged_dict[rbs])
                 self.frequency["promoters"]["nde"][rbs] = [ l2, len_nde - l2 ]
                 
-
         #self.txp_de = txp_de
         #self.txp_nde = txp_nde
 
