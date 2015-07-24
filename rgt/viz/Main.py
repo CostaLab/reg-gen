@@ -502,7 +502,7 @@ def main():
         ################### Boxplot ##########################################
         if args.mode == 'boxplot':
             print("\n################# Boxplot #################")
-            boxplot = Boxplot(args.input, title=args.t, df=args.df)
+            boxplot = Boxplot(args.input, fields=[args.g, args.s, args.c], title=args.t, df=args.df)
             
             print2(parameter,"\nStep 1/5: Combining all regions")
             boxplot.combine_allregions()
@@ -574,7 +574,7 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df)
+                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.g,args.s,args.c])
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()

@@ -63,10 +63,10 @@ def gen_tags(exps, tag):
 
 def tag_from_r(exps, tag_type, name):
     tags = []
-    for type in tag_type:
-        if type == "reads" or type == "regions": type = "factor" 
+    for t in tag_type:
+        if t == "reads" or t == "regions": t = "factor" 
         try:
-            tags.append(exps.get_type(name,type))
+            tags.append(exps.get_type(name,t))
         except: pass
 
     return [x for x in tags if x is not None]
@@ -1690,11 +1690,15 @@ class Boxplot:
         parameters: list of records
         figs: a list of figure(s)
     """
-    def __init__(self,EMpath, title="boxplot", df=False):
+    def __init__(self, EMpath, fields, title="boxplot", df=False):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
+        for f in fields:
+            if f not in ["None", "reads", "regions", "factors"]:
+                self.exps.match_ms_tags(f)
+
         self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
         self.bednames = self.exps.get_regionsnames()
         self.reads = self.exps.get_readsfiles()
@@ -1717,7 +1721,7 @@ class Boxplot:
         """
         c=[]
         for rp in self.reads:
-            print("    processing: "+rp)
+            print("    processing: ..."+rp[-45:])
             r = os.path.abspath(rp)   # Here change the relative path into absolute path
             cov = CoverageSet(r,self.all_bed)
             cov.coverage_from_genomicset(r)
@@ -1922,6 +1926,10 @@ class Boxplot:
             color_t = []  # Store tag for coloring boxes
             x_ticklabels = []  # Store ticklabels
             for j, a in enumerate(self.sortDict[g].keys()):
+                if len(a)>10: 
+                    #print(a)
+                    self.xtickrotation = 70
+                    self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
                     if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
                         continue
@@ -1932,6 +1940,7 @@ class Boxplot:
                             d.append([x+1 for x in self.sortDict[g][a][c]])
                         color_t.append(self.colors[k])
                         x_ticklabels.append(a)  #  + "." + c
+
             # Fine tuning boxplot
             #print(d)
             bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, 
@@ -1951,7 +1960,8 @@ class Boxplot:
             # Fine tuning subplot
             axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sortDict[g].keys())])
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sortDict[g].keys(), self.xtickrotation, ha=self.xtickalign, fontsize=10)
+            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=self.xtickrotation, ha=self.xtickalign, fontsize=10)
+            #axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=70, ha=self.xtickalign, fontsize=10)
             
             #axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
@@ -2142,11 +2152,15 @@ def annotation_dump(organism):
 
 class Lineplot:
 
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, fields):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
+        for f in fields:
+            if f not in ["None", "reads", "regions", "factors"]:
+                self.exps.match_ms_tags(f)
+
         if annotation:
             self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
@@ -2276,9 +2290,10 @@ class Lineplot:
                                         
                                         cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                         
-                                        if bam == "Conservation":
+                                        if "Conservation" in bam:
                                             cov.phastCons46way_score(stepsize=self.ss)
-                                        #elif bam
+                                        elif "DNAm" in bam:
+                                            cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                         else:
                                             cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                             cov.normRPM()

@@ -331,7 +331,7 @@ def main():
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
-                                promoterLength=args.pl, summary=summary, temp=dir,
+                                promoterLength=args.pl, summary=summary, temp=dir, output=args.o,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)

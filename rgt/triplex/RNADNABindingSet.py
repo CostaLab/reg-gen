@@ -355,7 +355,8 @@ class RNADNABindingSet:
         return result
 
 
-    def merge_rbs(self, rbss=None, rm_duplicate=False, asgene_organism=None, region_set=None, cutoff=0):
+    def merge_rbs(self, rbss=None, rm_duplicate=False, asgene_organism=None, region_set=None, 
+                  name_replace=None, cutoff=0):
         """Merge the RNA binding regions which have overlap to each other and 
            combine their corresponding DNA binding regions.
         
@@ -423,8 +424,13 @@ class RNADNABindingSet:
                     try: rd = con.next()
                     except: con_loop = False
 
+        if region_set:
+            for r in self.merged_dict.keys():
+                self.merged_dict[r] = region_set.intersect(self.merged_dict[r], 
+                                                           mode=OverlapType.ORIGINAL, 
+                                                           rm_duplicates=rm_duplicate)
 
-        if rm_duplicate:
+        if not region_set and rm_duplicate:
             for r in self.merged_dict.keys():
                 self.merged_dict[r].remove_duplicates()
 
@@ -436,9 +442,10 @@ class RNADNABindingSet:
             for r in self.merged_dict.keys():
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass
-        if region_set: 
+
+        if name_replace: 
             for r in self.merged_dict.keys():
-                self.merged_dict[r].replace_region_name(regions=region_set)
+                self.merged_dict[r].replace_region_name(regions=name_replace)
         #self.merged_dict = new_dict
 
 

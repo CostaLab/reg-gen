@@ -251,7 +251,10 @@ class CoverageSet:
         bwf = BigWigFile(bigwig_file)
         for gr in self.genomicRegions:
             depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
-            self.coverage.append( np.array(depth[::stepsize]) )
+            x = zip(*[iter(depth)]*stepsize)
+            #ds = [ np.mean(d) for d in x ]
+            ds = [ max(d) for d in x ]
+            self.coverage.append( np.array(ds) )
         bwf.close()
         
     def phastCons46way_score(self, stepsize=100):

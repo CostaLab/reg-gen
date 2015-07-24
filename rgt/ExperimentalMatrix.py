@@ -17,7 +17,7 @@ possible_types=["genes","regions","reads"]
 class ExperimentalMatrix:
 
     def __init__(self):
-        self.names = [] # the name of experiment (filename)
+        self.names = [] # the unique name of experiment (filename)
         self.types = [] # the type of data
         self.files = {} # the path of the related file with its filename as keys
         self.fields = [] # list types of informations including names, types, files and others
@@ -147,3 +147,57 @@ class ExperimentalMatrix:
                 if name in self.fieldsDict[c][t]:
                     result.append(t)
         return result
+
+    def remove_name(self, name):
+        i = self.name.index(name)
+        del self.types[i]
+        del self.names[i]
+        self.files.pop(name, None)
+        for f in self.fieldsDict.keys():
+            for t in self.fieldsDict[f].keys(): 
+                try: self.fieldsDict[f][t].remove(name)
+                except: continue
+        try: self.objectsDict.pop(name, None)
+        except: pass
+                    
+
+    def match_ms_tags(self,field):
+        """Add more entries to match the missing tags of the given field. For example, there are tags 
+        for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. 
+        Then the regions are repeated for each tags from reads to match all reads."""
+
+        # check regions or reads have empty tag
+        beds = self.get_regionsnames()
+        ms_bed = False
+        for bed in beds:
+            if self.get_type(bed,field) == "": ms_bed = True
+
+        bams = self.get_readsnames()
+        ms_bam = False
+        for bam in bams:
+            if self.get_type(bam,field) == "": ms_bam = True
+        
+        # generate new entries
+        if ms_bed:
+            for bed in beds:
+                for t in self.fieldDict[field].keys():
+                    n = bed+"_"+t
+                    self.names.append(n)
+                    self.types.append("regions")
+                    self.files[n] = self.files[bed]
+                    self.fieldsDict[field][t].append(n)        
+                    g = GenomicRegionSet(n)
+                    g.read_bed(self.files[bed])
+                    self.objectsDict[n] = g
+                self.remove_name(bed)
+
+        elif ms_bam:
+            for bam in bams:
+                for t in self.fieldDict[field].keys():
+                    n = bam+"_"+t
+                    self.names.append(n)
+                    self.types.append("reads")
+                    self.files[n] = self.files[bam]
+                    self.fieldsDict[field][t].append(n)        
+                    #self.objectsDict
+                self.remove_name(bam)

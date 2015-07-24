@@ -443,7 +443,7 @@ def rank_array(a):
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, bed, bg, organism, promoterLength, rna_name, 
-                 summary, temp, showdbs=None, score=False, scoreh=False):
+                 summary, temp, output, showdbs=None, score=False, scoreh=False):
         """Initiation"""
         self.organism = organism
         genome = GenomeData(organism)
@@ -505,7 +505,8 @@ class PromoterTest:
                 if len(self.de_gene) == 0:
                     print("Error: No genes are loaded from: "+gene_list_file)
                     print("Please check the format.")
-                    shutil.rmtree(temp)
+                    try: shutil.rmtree(output)
+                    except: pass
                     sys.exit(0)
 
                 # Generate a dict for ID transfer
@@ -739,7 +740,8 @@ class PromoterTest:
         self.txp_de.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=False)
         print("\t\t"+str(len(self.txp_de))+"\tBinding de promoters")
         #txp_de.remove_duplicates()
-        self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, region_set=self.de_regions)
+        self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, 
+                              region_set=self.de_regions, name_replace=self.de_regions)
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
             # DE
@@ -755,7 +757,7 @@ class PromoterTest:
                 nde.read_txp(os.path.join(temp, "nde"+str(i)+".txp"), dna_fine_posi=False, 
                              shift= max(0,(i-1)*self.threshold - l))
                 
-                nde.merge_rbs(rbss=self.rbss, rm_duplicate=True)
+                nde.merge_rbs(rbss=self.rbss, region_set=self.nde_regions, rm_duplicate=True)
                 for rbs in self.rbss:
                     #print(nde.merged_dict[rbs])
                     try:
@@ -780,7 +782,7 @@ class PromoterTest:
             self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
             print("\t\t"+str(len(self.txp_nde))+"\tBinding nde promoters")
             #txp_nde.remove_duplicates()
-            self.txp_nde.merge_rbs(rbss=self.rbss, rm_duplicate=True)#, asgene_organism=self.organism)
+            self.txp_nde.merge_rbs(rbss=self.rbss, region_set=self.nde_regions, rm_duplicate=True)#, asgene_organism=self.organism)
 
             for rbs in self.rbss:
                 l2 = len(self.txp_nde.merged_dict[rbs])
@@ -797,7 +799,7 @@ class PromoterTest:
         # DE
         self.txp_def = RNADNABindingSet("DE")
         self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
-        self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True, region_set=self.de_regions ) #asgene_organism=self.organism
+        self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True, name_replace=self.de_regions ) #asgene_organism=self.organism
         print("\t\t"+str(len(self.txp_def))+"\tBinding sites on de promoters")
         
         # Promoter profiling
@@ -1766,7 +1768,7 @@ class RandomTest:
                            temp=temp, organism=self.organism, remove_temp=remove_temp, 
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=self.genome_path,
                            prefix="targeted_region", dna_fine_posi=False)
-        txp.merge_rbs(rm_duplicate=True, asgene_organism=self.organism, cutoff=cutoff)
+        txp.merge_rbs(rm_duplicate=True, region_set=self.dna_region, asgene_organism=self.organism, cutoff=cutoff)
         self.txp = txp
         txp.remove_duplicates()
         self.rbss = txp.merged_dict.keys()
