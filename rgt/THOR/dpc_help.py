@@ -321,7 +321,10 @@ def get_strand_lag(pos, neg):
         p = map(lambda x: int(x), pos[i].split('-'))
         n = map(lambda x: int(x), neg[i].split('-'))
         
-        res2.append(sum(p)/float(sum(n)))
+        if sum(n) > 0:
+            res2.append(sum(p)/float(sum(n)))
+        else:
+            res2.append(sys.maxint)
         res.append(sum(map(lambda x: fabs(x[0]-x[1]), zip(p, n))) / (sum(p) + sum(n)))
     
     return res, res2 
