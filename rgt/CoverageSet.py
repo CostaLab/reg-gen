@@ -152,7 +152,7 @@ class CoverageSet:
         else:
             return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None):
+    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, get_strand_info = False):
         """Return list of arrays describing the coverage of each genomicRegions from <bam_file>. 
         Consider reads in <bam_file> with a extension size of <read_size>.
         Remove duplicates (read with same position) with rmdup=True (default).
@@ -168,6 +168,10 @@ class CoverageSet:
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         #print("Loading reads of %s..." %self.name, file=sys.stderr)
         
+        if get_strand_info:
+            strand_info = {}
+            get_strand_info
+        
         #check whether one should mask
         next_it = True
         if mask_file is not None and os.path.exists(mask_file):
@@ -181,7 +185,11 @@ class CoverageSet:
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
-
+            
+            if get_strand_info:
+                cov_strand = [0,0] * (len(region) / stepsize)
+                self.cov_strand_all = []
+            
             positions = []
             j = 0
             read_length = -1
@@ -207,10 +215,16 @@ class CoverageSet:
                                 continue #pos in mask region
                         
                         positions.append(pos)
+                        
+                        if get_strand_info:
+                            if pos not in strand_info:
+                                strand_info[pos] = (1,0) if read.is_reverse else (0,1)
+                        
             except ValueError:
                 pass
             if rmdup:
                 positions = list(set(positions))
+                
             positions.sort()
             positions.reverse()
             
@@ -219,6 +233,9 @@ class CoverageSet:
                 win_s = max(0, i * stepsize - binsize*0.5) + region.initial
                 win_e = i * stepsize + binsize*0.5 + region.initial 
                 c = 0
+                if get_strand_info:
+                    sum_strand_info = [0,0]
+                
                 taken = []
                 while True:
                     s = positions.pop()
@@ -226,6 +243,10 @@ class CoverageSet:
                     taken.append(s)
                     if s < win_e: #read within window
                         c += 1
+                        if get_strand_info:
+                            sum_strand_info[0] += strand_info[s][0]
+                            sum_strand_info[1] += strand_info[s][1]
+                        
                     if s >= win_e or not positions:
                         taken.reverse()
                         for s in taken:
@@ -238,11 +259,15 @@ class CoverageSet:
                 
                 if i < len(cov):
                     cov[i] = c
+                    if get_strand_info:
+                        cov_strand[i] = sum_strand_info
 
                 i += 1
 
             self.coverage.append(np.array(cov))
-
+            if get_strand_info:
+                self.cov_strand_all.append(np.array(cov_strand))
+            
         self.coverageorig = self.coverage[:]
     
     def coverage_from_bigwig(self, bigwig_file, stepsize=100):

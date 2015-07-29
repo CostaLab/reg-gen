@@ -179,30 +179,38 @@ def _merge_consecutive_bins(tmp_peaks, distr):
     <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
     peaks = []
     pvalues = []
+    strands_pos = []
+    strands_neg = []
     i, j, = 0, 0
     while i < len(tmp_peaks):
         j+=1
-        c, s, e, c1, c2, strand = tmp_peaks[i]
+        c, s, e, c1, c2, strand, strand_pos, strand_neg = tmp_peaks[i]
         v1 = c1
         v2 = c2
         
+        tmp_pos = [str(strand_pos)]
+        tmp_neg = [str(strand_neg)]
         #merge bins
         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
             v1 = map(add, v1, tmp_peaks[i+1][3])
             v2 = map(add, v2, tmp_peaks[i+1][4])
+            tmp_pos.append(str(tmp_peaks[i+1][6]))
+            tmp_neg.append(str(tmp_peaks[i+1][7]))
             i += 1
         s1 = v1
         s2 = v2
         side = 'l' if strand == '+' else 'r'
         pvalues.append((s1, s2, side, distr))
+        strands_pos.append("-".join(tmp_pos))
+        strands_neg.append("-".join(tmp_neg))
         peaks.append((c, s, e, s1, s2, strand))
         i += 1
     
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
-    
-    return pvalues, peaks
+    assert len(strands_pos) == len(pvalues)
+    return pvalues, peaks, strands_pos, strands_neg
 
 def get_back(DCS, states):
     counts = []
@@ -230,9 +238,23 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
 
         strand = '+' if states[i] == 1 else '-'
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
+        
+        cov1_strand = DCS.overall_coverage_strand[0][:,DCS.indices_of_interest[i]]
+        cov1_strand = map(lambda x: x[0], np.asarray((cov1_strand)))
+        cov2_strand = DCS.overall_coverage_strand[1][:,DCS.indices_of_interest[i]]
+        cov2_strand = map(lambda x: x[0], np.asarray((cov2_strand)))
+        all_strand = [0, 0] #postive, negative overlapping reads
+        for el in [cov1_strand, cov2_strand]:
+            if type(el) == list:
+                for el2 in el:
+                    if type(el2) == list:
+                        all_strand[0] += el2[0]
+                        all_strand[1] += el2[1]
+        
         c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand))
+        
+        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, all_strand[0], all_strand[1]))
         side = 'l' if strand == '+' else 'r'
         tmp_data.append((c1, c2, side, distr))
     
@@ -250,20 +272,26 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     tmp_peaks = tmp
 
     #merge consecutive peaks and compute p-value
-    pvalues, peaks = _merge_consecutive_bins(tmp_peaks, distr)
+    pvalues, peaks, strands_pos, strands_neg = _merge_consecutive_bins(tmp_peaks, distr)
     #postprocessing, returns GenomicRegionSet with merged regions
-    regions = merge_delete(exts, merge, peaks, pvalues) 
+    regions = merge_delete(exts, merge, peaks, pvalues, strands_pos, strands_neg)
     #regions = merge_delete([0], False, peaks, pvalues) 
     output = []
     pvalues = []
+    strands_pos = []
+    strands_neg= []
     main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
     int_sep = ';' #sep counts in <counts>
     
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
-        counts = ",".join(tmp).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
-        pvalue = float(tmp[len(tmp)-1].replace(")", "").strip())
+        counts = ",".join(tmp[0:len(tmp)-2]).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
+        pvalue = float(tmp[len(tmp)-3].replace(")", "").strip())
+        s_pos = tmp[len(tmp)-2].replace(")", "").replace("'", "").strip()
+        s_neg = tmp[len(tmp)-1].replace(")", "").replace("'", "").strip()
         pvalues.append(pvalue)
+        strands_pos.append(s_pos)
+        strands_neg.append(s_neg)
         output.append((el.chrom, el.initial, el.final, el.orientation, counts))
     
     pcutoff = -log10(pcutoff)
@@ -272,14 +300,33 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     output = np.array(output)
     output = output[pv_pass]
     pvalues = list(np.array(pvalues)[pv_pass])
+    
+    strands_pos = list(np.array(strands_pos)[pv_pass])
+    strands_neg = list(np.array(strands_neg)[pv_pass])
+    
+    strand_lag, strand_leg_ratio = get_strand_lag(strands_pos, strands_neg)
+    
     output = map(lambda x: tuple(x), list(output))
     
     assert(len(output) == len(pvalues))
     
-    _output_BED(name, output, pvalues)
-    _output_narrowPeak(name, output, pvalues)
+    _output_BED(name, output, pvalues, strand_lag, strand_leg_ratio, strands_pos, strands_neg)
+    #_output_narrowPeak(name, output, pvalues, strands_pos, strands_neg)
 
-def _output_BED(name, output, pvalues):
+def get_strand_lag(pos, neg):
+    assert len(pos) == len(neg)
+    res, res2 = [], []
+    
+    for i in range(len(pos)):
+        p = map(lambda x: int(x), pos[i].split('-'))
+        n = map(lambda x: int(x), neg[i].split('-'))
+        
+        res2.append(sum(p)/float(sum(n)))
+        res.append(sum(map(lambda x: fabs(x[0]-x[1]), zip(p, n))) / (sum(p) + sum(n)))
+    
+    return res, res2 
+
+def _output_BED(name, output, pvalues, strand_lag, strand_leg_ratio, strands_pos, strands_neg):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
@@ -287,7 +334,7 @@ def _output_BED(name, output, pvalues):
     
     for i in range(len(pvalues)):
         c, s, e, strand, counts = output[i]
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
+        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, strand_lag[i], strand_leg_ratio[i], strands_pos[i], strands_neg[i], sep='\t', file=f)
     
     f.close()
 
@@ -343,7 +390,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
-    contained_chrom = get_all_chrom(bamfiles)
+    #contained_chrom = get_all_chrom(bamfiles)
+    contained_chrom = ['chr1']
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
         with open(regions) as f:
@@ -384,7 +432,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig)
+                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True)
     
     return multi_cov_set
 
@@ -407,9 +455,12 @@ def input(laptop):
         print("---------- TEST MODE ----------", file=sys.stderr)
         (options, args) = parser.parse_args()
         config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
+        args.append('')
+        args[0] = config_path
         #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
-        bamfiles, regions, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.exts = [200, 200, 200, 200, 200]
+        bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
+        options.regions = '/home/ma608711/data/testdata_THOR/region.bed'
+        options.exts = [200, 200, 200, 200]
         options.exts_inputs = None #[200, 200, 200, 200, 200]
         options.pcutoff = 1
         options.name='test'
@@ -426,12 +477,14 @@ def input(laptop):
         options.scaling_factors_ip = False
         options.housekeeping_genes = False
         options.distr='negbin'
+        options.version = None
+        options.outputdir = None
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
-	parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
                           help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
-	parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
@@ -473,55 +526,55 @@ def input(laptop):
         
 	(options, args) = parser.parse_args()
 
-        options.distr = "negbin"
-        options.save_wig = False
-        options.norm_regions = None
-	options.exts_inputs = None
+    options.distr = "negbin"
+    options.save_wig = False
+    options.norm_regions = None
+    options.exts_inputs = None
         
-        if options.version:
-            version = "version \"0.1alpha\""
-            print("")
-            print(version)
-            sys.exit()
+    if options.version:
+        version = "version \"0.1alpha\""
+        print("")
+        print(version)
+        sys.exit()
+    
+    if len(args) != 1:
+        parser.error("Please give config file")
         
-        if len(args) != 1:
-            parser.error("Please give config file")
-            
-        config_path = args[0]
+    config_path = args[0]
 
-        if not os.path.isfile(config_path):
-            parser.error("Config file %s does not exist!" %config_path)
-            
-        bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
+    if not os.path.isfile(config_path):
+        parser.error("Config file %s does not exist!" %config_path)
         
-        if options.exts and len(options.exts) != len(bamfiles):
-            parser.error("Number of Extension Sizes must equal number of bamfiles")
+    bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
+    
+    if options.exts and len(options.exts) != len(bamfiles):
+        parser.error("Number of Extension Sizes must equal number of bamfiles")
+    
+    if options.exts_inputs and len(options.exts_inputs) != len(inputs):
+        parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
         
-        if options.exts_inputs and len(options.exts_inputs) != len(inputs):
-            parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
-            
-        if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
-            parser.error("Number of scaling factors must equal number of bamfiles")
-        
-        for bamfile in bamfiles:
+    if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
+        parser.error("Number of scaling factors must equal number of bamfiles")
+    
+    for bamfile in bamfiles:
+        if not os.path.isfile(bamfile):
+            parser.error("BAM file %s does not exist!" %bamfile)
+    
+    if inputs:
+        for bamfile in inputs:
             if not os.path.isfile(bamfile):
                 parser.error("BAM file %s does not exist!" %bamfile)
-        
-        if inputs:
-            for bamfile in inputs:
-                if not os.path.isfile(bamfile):
-                    parser.error("BAM file %s does not exist!" %bamfile)
-        
-        if options.regions:
-            if not os.path.isfile(options.regions):
-                parser.error("Region file %s does not exist!" %options.regions)
-        
-        if not os.path.isfile(genome):
-            parser.error("Genome file %s does not exist!" %bamfile)
-        
-        if options.name is None:
-            d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
-            options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
+    
+    if options.regions:
+        if not os.path.isfile(options.regions):
+            parser.error("Region file %s does not exist!" %options.regions)
+    
+    if not os.path.isfile(genome):
+        parser.error("Genome file %s does not exist!" %bamfile)
+    
+    if options.name is None:
+        d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
+        options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
     
     if not which("wigToBigWig"):
         print("Warning: wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)

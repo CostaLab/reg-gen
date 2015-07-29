@@ -36,6 +36,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
 
 def main():
     test = False
+    
     options, bamfiles, genome, chrom_sizes, dims, inputs = input(test)
 
     ######### WORK! ##########

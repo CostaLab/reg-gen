@@ -13,19 +13,19 @@ from copy import deepcopy
 EPSILON = 1**-320
 
 class MultiCoverageSet(DualCoverageSet):
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset):
+    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
         """Return self.covs and self.inputs as CoverageSet"""
         self.exts = exts
         self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
         for i, c in enumerate(self.covs):
             c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize)
+                                stepsize=stepsize, get_strand_info = strand_cov)
         self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
         if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize)
+                                stepsize=stepsize, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.inputs = []
@@ -34,7 +34,7 @@ class MultiCoverageSet(DualCoverageSet):
             self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
             for i, c in enumerate(self.norm_regions):
                 c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                    stepsize=stepsize)
+                                    stepsize=stepsize, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.norm_regions = None
@@ -89,7 +89,7 @@ class MultiCoverageSet(DualCoverageSet):
 
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
-                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig):
+                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -99,7 +99,7 @@ class MultiCoverageSet(DualCoverageSet):
         self.dim_1, self.dim_2 = dims
         
         #make data nice
-        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset)
+        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
         self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
         self._normalization_by_signal(name, scaling_factors_ip)
@@ -108,13 +108,17 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data in nice list of two matrices
         tmp = [[], []]
+        tmp2 = [[], []]
         for k in range(2):
             it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
             for i in it:
                 tmp_el = reduce(lambda x,y: np.concatenate((x,y)), [self.covs[i].coverage[j] for j in range(len(self.covs[i].genomicRegions))])
                 tmp[k].append(tmp_el)
+                tmp_el = reduce(lambda x,y: np.concatenate((x,y)), [self.covs[i].cov_strand_all[j] for j in range(len(self.covs[i].genomicRegions))])
+                tmp2[k].append(tmp_el)
             
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
+        self.overall_coverage_strand = [np.matrix(tmp2[0]), np.matrix(tmp2[1])]
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
