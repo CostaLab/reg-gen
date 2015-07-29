@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
+import re
 import argparse
 import shutil
 import time, datetime, getpass, fnmatch
@@ -47,7 +48,9 @@ def output_summary(summary, directory, filename):
 def check_dir(path):
     """Check the availability of the given directory and creat it"""
     try: os.stat(path)
-    except: os.mkdir(path)
+    except: 
+        try: os.mkdir(path)
+        except: pass
 
 
 
@@ -328,7 +331,7 @@ def main():
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
-                                promoterLength=args.pl, summary=summary, temp=dir,
+                                promoterLength=args.pl, summary=summary, temp=dir, output=args.o,
                                 showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
@@ -351,7 +354,7 @@ def main():
 
         promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
-        try: os.remove(os.path.join(args.o,"rna_temp.fai"))
+        try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
         print2(summary, "Step 3: Establishing promoter profile.")
         #promoter.promoter_profile()
@@ -439,6 +442,7 @@ def main():
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
         randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
                                 organism=args.organism, showdbs=args.showdbs)
+        randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
@@ -457,6 +461,7 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
+        randomtest.dbd_regions(sig_region=randomtest.data["dbs"]["sig_region"], output=args.o)
         
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",
@@ -497,4 +502,6 @@ def main():
         output_summary(summary, args.o, "summary.txt")
         randomtest.save_profile(output=args.o, bed=args.bed)
         list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
-        
+        for f in os.listdir(args.o):
+            if re.search("dna*.fa", f) or re.search("dna*.txp", f):
+                os.remove(os.path.join(args.o, f))
