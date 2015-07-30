@@ -393,8 +393,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
-    #contained_chrom = get_all_chrom(bamfiles)
-    contained_chrom = ['chr1']
+    contained_chrom = get_all_chrom(bamfiles)
+    #contained_chrom = ['chr1']
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
         with open(regions) as f:
