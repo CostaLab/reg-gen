@@ -183,12 +183,14 @@ class CoverageSet:
         
         chrom_regions = [r.chrom for r in self.genomicRegions.sequences] #chroms by regions
         
+        if get_strand_info:
+            self.cov_strand_all = []
+        
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
             
             if get_strand_info:
                 cov_strand = [0,0] * (len(region) / stepsize)
-                self.cov_strand_all = []
             
             positions = []
             j = 0

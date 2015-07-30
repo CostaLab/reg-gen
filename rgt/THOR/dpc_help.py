@@ -325,7 +325,11 @@ def get_strand_lag(pos, neg):
             res2.append(sum(p)/float(sum(n)))
         else:
             res2.append(sys.maxint)
-        res.append(sum(map(lambda x: fabs(x[0]-x[1]), zip(p, n))) / (sum(p) + sum(n)))
+            
+        if sum(p) + sum(n) > 0:
+            res.append(sum(map(lambda x: fabs(x[0]-x[1]), zip(p, n))) / (sum(p) + sum(n)))
+        else:
+            res.append(sys.maxint)
     
     return res, res2 
 
@@ -415,7 +419,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
 		if chrom in contained_chrom:
                     regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
                     chrom_sizes_dict[chrom] = end
-    
+
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
         norm_regionset.read_bed(norm_regions)
