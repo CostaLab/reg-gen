@@ -379,9 +379,9 @@ def get_all_chrom(bamfiles):
     for bamfile in bamfiles:
         bam = pysam.Samfile(bamfile, "rb" )
         for read in bam.fetch():
-    	    c = bam.getrname(read.reference_id)
-	    if c not in chrom:
-		chrom.add(c)
+            c = bam.getrname(read.reference_id)
+            if c not in chrom:
+                chrom.add(c)
     return chrom
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
