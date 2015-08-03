@@ -35,7 +35,7 @@ def _get_pvalue_distr(exp_data, mu, alpha, tracker):
     #return {'distr_name': 'binomial', 'n': n, 'p': p}
 
 def main():
-    test = False
+    test = True
     
     options, bamfiles, genome, chrom_sizes, dims, inputs = input(test)
 

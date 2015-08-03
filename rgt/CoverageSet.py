@@ -168,10 +168,6 @@ class CoverageSet:
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         #print("Loading reads of %s..." %self.name, file=sys.stderr)
         
-        if get_strand_info:
-            strand_info = {}
-            get_strand_info
-        
         #check whether one should mask
         next_it = True
         if mask_file is not None and os.path.exists(mask_file):
@@ -190,7 +186,8 @@ class CoverageSet:
             cov = [0] * (len(region) / stepsize)
             
             if get_strand_info:
-                cov_strand = [0,0] * (len(region) / stepsize)
+                cov_strand = [[0,0]] * (len(region) / stepsize)
+                strand_info = {}
             
             positions = []
             j = 0
@@ -220,7 +217,7 @@ class CoverageSet:
                         
                         if get_strand_info:
                             if pos not in strand_info:
-                                strand_info[pos] = (1,0) if read.is_reverse else (0,1)
+                                strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
                         
             except ValueError:
                 pass
@@ -263,7 +260,6 @@ class CoverageSet:
                     cov[i] = c
                     if get_strand_info:
                         cov_strand[i] = sum_strand_info
-
                 i += 1
 
             self.coverage.append(np.array(cov))

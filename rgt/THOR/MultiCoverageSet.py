@@ -101,25 +101,33 @@ class MultiCoverageSet(DualCoverageSet):
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
         self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
-        self._normalization_by_signal(name, scaling_factors_ip)
+        #self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
+        #self._normalization_by_signal(name, scaling_factors_ip)
         
-        self._output_bw(name, chrom_sizes, save_wig) 
+        #self._output_bw(name, chrom_sizes, save_wig) 
         
         #make data in nice list of two matrices
         tmp = [[], []]
-        tmp2 = [[], []]
+        tmp2 = [[[], []], [[], []]]
         for k in range(2):
             it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
             for i in it:
                 tmp_el = reduce(lambda x,y: np.concatenate((x,y)), [self.covs[i].coverage[j] for j in range(len(self.covs[i].genomicRegions))])
                 tmp[k].append(tmp_el)
-                tmp_el = reduce(lambda x,y: np.concatenate((x,y)), [self.covs[i].cov_strand_all[j] for j in range(len(self.covs[i].genomicRegions))])
-                tmp2[k].append(tmp_el)
+                
+                a = [self.covs[i].cov_strand_all[j] for j in range(len(self.covs[i].genomicRegions))]
+                
+                tmp_el = reduce(lambda x,y: np.concatenate((x,y)), a)
+                tmp_el = map(lambda x: (x[0], x[1]), tmp_el)
+                #a_1 = map(lambda x: x[0], tmp_el)
+                #a_2 = map(lambda x: x[1], tmp_el)
+                tmp2[k][0].append(map(lambda x: x[0], tmp_el))
+                tmp2[k][1].append(map(lambda x: x[1], tmp_el))
+                #tmp2[1].append(a_2)
             
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
-        self.overall_coverage_strand = [np.matrix(tmp2[0]), np.matrix(tmp2[1])]
         
+        self.overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
     

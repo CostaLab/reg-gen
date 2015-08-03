@@ -239,17 +239,18 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         strand = '+' if states[i] == 1 else '-'
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
         
-        cov1_strand = DCS.overall_coverage_strand[0][:,DCS.indices_of_interest[i]]
-        cov1_strand = map(lambda x: x[0], np.asarray((cov1_strand)))
-        cov2_strand = DCS.overall_coverage_strand[1][:,DCS.indices_of_interest[i]]
-        cov2_strand = map(lambda x: x[0], np.asarray((cov2_strand)))
+        cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
+        #cov1_strand = map(lambda x: x[0], np.asarray((cov1_strand)))
+        cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
+        #cov2_strand = map(lambda x: x[0], np.asarray((cov2_strand)))
         all_strand = [0, 0] #postive, negative overlapping reads
-        for el in [cov1_strand, cov2_strand]:
-            if type(el) == list:
-                for el2 in el:
-                    if type(el2) == list:
-                        all_strand[0] += el2[0]
-                        all_strand[1] += el2[1]
+        #for el in [cov1_strand, cov2_strand]:
+        #    if type(el) == list:
+        #        for el2 in el:
+        #            if type(el2) == list:
+        #                all_strand[0] += el2[0]
+        #                all_strand[1] += el2[1]
+        all_strand[0], all_strand[1] = cov1_strand, cov2_strand
         
         c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
