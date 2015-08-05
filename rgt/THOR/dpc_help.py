@@ -26,7 +26,7 @@ from input_parser import input_parser
 #from rgt.ODIN import ODIN
 import matplotlib as mpl #necessary to plot without x11 server (for cluster)
 mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-from matplotlib.pyplot import *
+import matplotlib.pyplot as plt
 from random import sample
 from scipy.optimize import curve_fit
 import numpy as np
@@ -55,21 +55,46 @@ def _func_quad_2p(x, a, c):
     else:
         return max(x, fabs(a) * x**2 + x + fabs(c))
 
-def _plot_func(m, v, p, name, xlimpara=None, ylimpara=None):
+def _write_emp_func_data(data, outputdir, name):
+    """Write mean and variance data"""
+    assert len(data[0]) == len(data[1])
+    f = open(FOLDER_REPORT_DATA + name + '.data', 'w')
+    for i in range(len(data[0])):
+        print(data[0][i], data[1][i], sep='\t', file=f)
+    f.close()
+    
+
+def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
-    x = linspace(0, max(m), max(m)+1)
-    y = _func_quad_2p(x, p[0], p[1])
-    
-    if xlimpara is not None:
-        xlim([0, xlimpara])
-    if ylimpara is not None:
-        ylim([0, ylimpara])
-    
-    plot(x, y)
-    scatter(m, v)
-    
-    savefig(name + ".png")
-    close()
+
+    maxs = [] #max for x (mean), max for y (var)
+    for i in range(2): 
+        tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
+        maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
+
+    for i in range(2):
+        x = linspace(0, max(plot_data[i][0]), max(plot_data[i][0])+1)
+        y = _func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
+        
+        for j in range(2):
+            #use matplotlib to plot function and datapoints
+            #and save datapoints to files
+            ext = 'original'
+            if j == 1:
+                plt.xlim([0, maxs[0]])
+                plt.ylim([0, maxs[1]])
+                ext = 'norm'
+            ax = plt.subplot(111)
+            plt.plot(x, y, 'r', label = 'empirical datapoints') #plot polynom
+            plt.scatter(plot_data[i][0], plot_data[i][1], label = 'fitted polynomial') #plot datapoints
+            ax.legend()
+            plt.xlabel('mean')
+            plt.ylabel('variance')
+            plt.title('Estimated Mean-Variance Function')
+            name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
+            _write_emp_func_data(plot_data[i], outputdir, name)
+            plt.savefig(FOLDER_REPORT_PICS + name + '.png')
+            plt.close()
 
 def _get_data_rep(overall_coverage, name, debug, sample_size):
     """Return list of (mean, var) points for samples 0 and 1"""
@@ -103,9 +128,11 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     
     return data_rep
     
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, sample_size=10000):
+def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, sample_size=10000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
+    plot_data = [] #means, vars, paras
+    
     while not done:
         data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
         res = []
@@ -115,14 +142,15 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, sample_size=1000
                 v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
                 p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
                 res.append(p)
-		if verbose or debug:
-	            _plot_func(m, v, p, str(name) + "-est-func" + str(i))
-                    _plot_func(m, v, p, str(name) + "-est-func-constraint" + str(i), xlimpara=200, ylimpara=3000)
+                plot_data.append((m, v, p))
                 if i == 1:
                     done = True
             except RuntimeError:
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break #restart for loop
+    
+    if verbose or debug:
+        _plot_func(plot_data, outputdir)
                 
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
 
@@ -486,7 +514,7 @@ def input(laptop):
         options.housekeeping_genes = False
         options.distr='negbin'
         options.version = None
-        options.outputdir = None
+        options.outputdir = '/home/manuel/test/'
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
@@ -597,6 +625,22 @@ def input(laptop):
         options.outputdir = os.getcwd() 
     
     options.name = os.path.join(options.outputdir, options.name)
+    
+    os.mkdir(os.path.join(options.outputdir, 'report/'))
+    os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
+    os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
+    
+    global FOLDER_REPORT
+    global FOLDER_REPORT_PICS
+    global FOLDER_REPORT_DATA
+    global OUTPUTDIR
+    global NAME
+    
+    FOLDER_REPORT = os.path.join(options.outputdir, 'report/')
+    FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report/pics/')
+    FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report/pics/data/')
+    OUTPUTDIR = options.outputdir
+    NAME = options.name
     
     if options.exts is None:
         options.exts = []

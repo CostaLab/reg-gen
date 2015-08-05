@@ -100,11 +100,11 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
-        self._normalization_by_signal(name, scaling_factors_ip)
+        #self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
+        #self._normalization_by_input(path_bamfiles, path_inputs, name, debug)
+        #self._normalization_by_signal(name, scaling_factors_ip)
         
-        self._output_bw(name, chrom_sizes, save_wig) 
+        #self._output_bw(name, chrom_sizes, save_wig) 
         
         #make data in nice list of two matrices
         tmp = [[], []]
@@ -127,7 +127,9 @@ class MultiCoverageSet(DualCoverageSet):
             
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
         
+        #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
         self.overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
+        
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
     
