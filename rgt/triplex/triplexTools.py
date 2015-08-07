@@ -507,7 +507,7 @@ class PromoterTest:
                     print("Please check the format.")
                     try: shutil.rmtree(output)
                     except: pass
-                    sys.exit(0)
+                    sys.exit(1)
 
                 # Generate a dict for ID transfer
                 #print("Before fixing")
