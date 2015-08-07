@@ -55,7 +55,7 @@ def _func_quad_2p(x, a, c):
     else:
         return max(x, fabs(a) * x**2 + x + fabs(c))
 
-def _write_emp_func_data(data, outputdir, name):
+def _write_emp_func_data(data, name):
     """Write mean and variance data"""
     assert len(data[0]) == len(data[1])
     f = open(FOLDER_REPORT_DATA + name + '.data', 'w')
@@ -92,7 +92,7 @@ def _plot_func(plot_data, outputdir):
             plt.ylabel('variance')
             plt.title('Estimated Mean-Variance Function')
             name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
-            _write_emp_func_data(plot_data[i], outputdir, name)
+            _write_emp_func_data(plot_data[i], name)
             plt.savefig(FOLDER_REPORT_PICS + name + '.png')
             plt.close()
 
@@ -267,7 +267,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         strand = '+' if states[i] == 1 else '-'
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
         
-        cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
+        cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         #cov1_strand = map(lambda x: x[0], np.asarray((cov1_strand)))
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
         #cov2_strand = map(lambda x: x[0], np.asarray((cov2_strand)))
@@ -383,6 +383,17 @@ def _output_narrowPeak(name, output, pvalues):
         print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
     f.close()
 
+#def _output_ext_data(ext_data, bamfile):
+#    #write data
+#    name = os.path.basename(os.path.splitext(a)[0])
+#    f = open(FOLDER_REPORT_DATA +)
+    
+#    f = open(FOLDER_REPORT_DATA + + name + '.data', 'w')
+#    for i in range(len(data[0])):
+#        print(data[0][i], data[1][i], sep='\t', file=f)
+#    f.close()
+    
+
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     """Compute Extension sizes for bamfiles and input files"""
     start = 0
@@ -393,7 +404,8 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     if not exts:
         print("Computing read extension sizes for ChIP-DNA...", file=sys.stderr)
         for bamfile in bamfiles:
-            e, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
+            e, ext_data = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
+            #_output_ext_data(ext_data, bamfile)
             exts.append(e)
         #print(" ".join(exts), file=sys.stderr)
 
@@ -496,7 +508,7 @@ def input(laptop):
         #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
         bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
         options.regions = '/home/ma608711/data/testdata_THOR/region.bed'
-        options.exts = [200, 200, 200, 200]
+        options.exts = [200, 200, 200, 200, 200]
         options.exts_inputs = None #[200, 200, 200, 200, 200]
         options.pcutoff = 1
         options.name='test'
@@ -515,6 +527,7 @@ def input(laptop):
         options.distr='negbin'
         options.version = None
         options.outputdir = '/home/manuel/test/'
+        options.report = True
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
@@ -538,6 +551,8 @@ def input(laptop):
                            help="Show script's version.")
         parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
                           help="All files are stored in output directory which is created if necessary.")
+        parser.add_option("--report", dest="report", default=False, action="store_true", \
+                          help="report.")
         
 	group = OptionGroup(parser, "Advanced options")
 	group.add_option("--regions", dest="regions", default=None, type="string",\
@@ -626,9 +641,10 @@ def input(laptop):
     
     options.name = os.path.join(options.outputdir, options.name)
     
-    os.mkdir(os.path.join(options.outputdir, 'report/'))
-    os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
-    os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
+    if options.report:
+        os.mkdir(os.path.join(options.outputdir, 'report/'))
+        os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
+        os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
     
     global FOLDER_REPORT
     global FOLDER_REPORT_PICS
