@@ -128,7 +128,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     
     return data_rep
     
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, sample_size=10000):
+def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, sample_size=10000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
@@ -149,7 +149,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, sampl
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break #restart for loop
     
-    if verbose or debug:
+    if report:
         _plot_func(plot_data, outputdir)
                 
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
@@ -202,43 +202,49 @@ def _get_covs(DCS, i, as_list=False):
     
     return cov1, cov2
 
+def _get_log_ratio(l1, l2):
+    l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
+    if l2 > 0 and l2 > 0:
+        return log(l1/l2)
+    else:
+        return sys.maxint
+
 def _merge_consecutive_bins(tmp_peaks, distr):
     """Merge consecutive peaks and compute p-value. Return list 
     <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
     peaks = []
     pvalues = []
-    strands_pos = []
-    strands_neg = []
     i, j, = 0, 0
+    
     while i < len(tmp_peaks):
         j+=1
         c, s, e, c1, c2, strand, strand_pos, strand_neg = tmp_peaks[i]
         v1 = c1
         v2 = c2
         
-        tmp_pos = [str(strand_pos)]
-        tmp_neg = [str(strand_neg)]
+        tmp_pos = [strand_pos]
+        tmp_neg = [strand_neg]
         #merge bins
         while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
             v1 = map(add, v1, tmp_peaks[i+1][3])
             v2 = map(add, v2, tmp_peaks[i+1][4])
-            tmp_pos.append(str(tmp_peaks[i+1][6]))
-            tmp_neg.append(str(tmp_peaks[i+1][7]))
+            tmp_pos.append(tmp_peaks[i+1][6])
+            tmp_neg.append(tmp_peaks[i+1][7])
             i += 1
-        s1 = v1
-        s2 = v2
+        
         side = 'l' if strand == '+' else 'r'
-        pvalues.append((s1, s2, side, distr))
-        strands_pos.append("-".join(tmp_pos))
-        strands_neg.append("-".join(tmp_neg))
-        peaks.append((c, s, e, s1, s2, strand))
+        pvalues.append((v1, v2, side, distr))
+        
+        ratio = _get_log_ratio(tmp_pos, tmp_neg)
+        peaks.append((c, s, e, v1, v2, strand, ratio))
         i += 1
     
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
-    assert len(strands_pos) == len(pvalues)
-    return pvalues, peaks, strands_pos, strands_neg
+    
+    return pvalues, peaks
+    
 
 def get_back(DCS, states):
     counts = []
@@ -253,7 +259,7 @@ def get_back(DCS, states):
 #     print(np.mean(counts), file=sys.stderr)
     return np.var(counts), np.mean(counts)
         
-    
+
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
@@ -268,22 +274,12 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         cov1, cov2 = _get_covs(DCS, i, as_list=True)
         
         cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
-        #cov1_strand = map(lambda x: x[0], np.asarray((cov1_strand)))
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
-        #cov2_strand = map(lambda x: x[0], np.asarray((cov2_strand)))
-        all_strand = [0, 0] #postive, negative overlapping reads
-        #for el in [cov1_strand, cov2_strand]:
-        #    if type(el) == list:
-        #        for el2 in el:
-        #            if type(el2) == list:
-        #                all_strand[0] += el2[0]
-        #                all_strand[1] += el2[1]
-        all_strand[0], all_strand[1] = cov1_strand, cov2_strand
         
         c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, all_strand[0], all_strand[1]))
+        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
         side = 'l' if strand == '+' else 'r'
         tmp_data.append((c1, c2, side, distr))
     
@@ -301,27 +297,22 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     tmp_peaks = tmp
 
     #merge consecutive peaks and compute p-value
-    pvalues, peaks, strands_pos, strands_neg = _merge_consecutive_bins(tmp_peaks, distr)
+    pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr)
     #postprocessing, returns GenomicRegionSet with merged regions
-    regions = merge_delete(exts, merge, peaks, pvalues, strands_pos, strands_neg)
+    regions = merge_delete(exts, merge, peaks, pvalues)
     #regions = merge_delete([0], False, peaks, pvalues) 
     output = []
     pvalues = []
-    strands_pos = []
-    strands_neg= []
     main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
     int_sep = ';' #sep counts in <counts>
     
     for i, el in enumerate(regions):
         tmp = el.data.split(',')
-        counts = ",".join(tmp[0:len(tmp)-2]).replace('], [', ';').replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
-        pvalue = float(tmp[len(tmp)-3].replace(")", "").strip())
-        s_pos = tmp[len(tmp)-2].replace(")", "").replace("'", "").strip()
-        s_neg = tmp[len(tmp)-1].replace(")", "").replace("'", "").strip()
+        counts = ",".join(tmp[0:len(tmp)-1]).replace('], [', int_sep).replace('], ', int_sep).replace('([', '').replace(')', '').replace(', ', main_sep)
+        pvalue = float(tmp[len(tmp)-2].replace(")", "").strip())
+        ratio = float(tmp[len(tmp)-1].replace(")", "").strip())
         pvalues.append(pvalue)
-        strands_pos.append(s_pos)
-        strands_neg.append(s_neg)
-        output.append((el.chrom, el.initial, el.final, el.orientation, counts))
+        output.append((el.chrom, el.initial, el.final, el.orientation, counts, ratio))
     
     pcutoff = -log10(pcutoff)
     pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
@@ -330,47 +321,22 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     output = output[pv_pass]
     pvalues = list(np.array(pvalues)[pv_pass])
     
-    strands_pos = list(np.array(strands_pos)[pv_pass])
-    strands_neg = list(np.array(strands_neg)[pv_pass])
-    
-    strand_lag, strand_leg_ratio = get_strand_lag(strands_pos, strands_neg)
-    
     output = map(lambda x: tuple(x), list(output))
     
     assert(len(output) == len(pvalues))
     
-    _output_BED(name, output, pvalues, strand_lag, strand_leg_ratio, strands_pos, strands_neg)
+    _output_BED(name, output, pvalues)
     #_output_narrowPeak(name, output, pvalues, strands_pos, strands_neg)
 
-def get_strand_lag(pos, neg):
-    assert len(pos) == len(neg)
-    res, res2 = [], []
-    
-    for i in range(len(pos)):
-        p = map(lambda x: int(x), pos[i].split('-'))
-        n = map(lambda x: int(x), neg[i].split('-'))
-        
-        if sum(n) > 0:
-            res2.append(sum(p)/float(sum(n)))
-        else:
-            res2.append(sys.maxint)
-            
-        if sum(p) + sum(n) > 0:
-            res.append(sum(map(lambda x: fabs(x[0]-x[1]), zip(p, n))) / (sum(p) + sum(n)))
-        else:
-            res.append(sys.maxint)
-    
-    return res, res2 
-
-def _output_BED(name, output, pvalues, strand_lag, strand_leg_ratio, strands_pos, strands_neg):
+def _output_BED(name, output, pvalues):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
     bedscore = 1000
     
     for i in range(len(pvalues)):
-        c, s, e, strand, counts = output[i]
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, strand_lag[i], strand_leg_ratio[i], strands_pos[i], strands_neg[i], sep='\t', file=f)
+        c, s, e, strand, counts, ratio = output[i]
+        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, ratio, sep='\t', file=f)
     
     f.close()
 
@@ -431,15 +397,19 @@ def get_all_chrom(bamfiles):
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes):
+               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, test):
     """Initialize the MultiCoverageSet"""
-
+    
     regionset = GenomicRegionSet(name)
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
-    contained_chrom = get_all_chrom(bamfiles)
-    #contained_chrom = ['chr1']
+    if test:
+        contained_chrom = ['chr1', 'chr2']
+    else:
+        contained_chrom = get_all_chrom(bamfiles)
+        #contained_chrom = ['chr19']
+    
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
         with open(regions) as f:
@@ -460,7 +430,11 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
 		if chrom in contained_chrom:
                     regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
                     chrom_sizes_dict[chrom] = end
-
+    
+    if not regionset.sequences:
+        print('something wrong here', file=sys.stderr)
+        sys.exit(2)
+    
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
         norm_regionset.read_bed(norm_regions)
@@ -507,9 +481,9 @@ def input(laptop):
         args[0] = config_path
         #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
         bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.regions = '/home/ma608711/data/testdata_THOR/region.bed'
+        options.regions = None #'/home/ma608711/data/testdata_THOR/region.bed'
         options.exts = [200, 200, 200, 200, 200]
-        options.exts_inputs = None #[200, 200, 200, 200, 200]
+        options.exts_inputs = [200, 200, 200, 200, 200]
         options.pcutoff = 1
         options.name='test'
         options.merge=True
@@ -521,13 +495,13 @@ def input(laptop):
         options.verbose = True
         options.no_gc_content = False
         options.debug = True
-        options.norm_regions = '/home/manuel/data/testdata/norm_regions.bed'
+        options.norm_regions = None #'/home/manuel/data/testdata/norm_regions.bed'
         options.scaling_factors_ip = False
         options.housekeeping_genes = False
         options.distr='negbin'
         options.version = None
-        options.outputdir = '/home/manuel/test/'
-        options.report = True
+        options.outputdir = None #'/home/manuel/test/'
+        options.report = False
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")

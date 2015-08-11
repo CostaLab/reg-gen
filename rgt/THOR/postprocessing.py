@@ -43,7 +43,7 @@ def output(name, regions):
     
     return output
 
-def merge_delete(ext_size, merge, peak_list, pvalue_list, strands_pos, strands_neg):
+def merge_delete(ext_size, merge, peak_list, pvalue_list):
 #     peaks_gain = read_diffpeaks(path)
     
     regions_plus = GenomicRegionSet('regions') #pot. mergeable
@@ -52,9 +52,9 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list, strands_pos, strands_n
     last_orientation = ""
     
     for i, t in enumerate(peak_list):
-        chrom, start, end, c1, c2, strand = t[0], t[1], t[2], t[3], t[4], t[5],
+        chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
         r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '', \
-                          orientation = strand, data = str((c1, c2, pvalue_list[i], strands_pos[i], strands_neg[i])))
+                          orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
         if end - start > ext_size:
             if strand == '+':
                 if last_orientation == '+':

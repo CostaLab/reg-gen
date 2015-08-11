@@ -298,11 +298,11 @@ class MultiCoverageSet(DualCoverageSet):
     
                 #apply criteria for initial peak calling
                 if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                    s1.append((i, cov1, cov2))
+                    s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                    s2.append((i, cov1, cov2))
+                    s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
-                    s0.append((i, cov1, cov2))
+                    s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
             
             if debug:
                 print("training set paramters: threshold", threshold, len(s0), len(s1), len(s2), file=sys.stderr)
