@@ -126,7 +126,7 @@ class NegBinRepHMM(_BaseHMM):
     def _initialize_sufficient_statistics(self):
         stats = super(NegBinRepHMM, self)._initialize_sufficient_statistics()
         stats['post'] = np.zeros([self.n_features, self.n_components])
-        stats['post_emission'] = np.zeros([self.n_features, self.n_components])
+        stats['post_emission'] = np.zeros([self.n_features, self.n_components]) #dim X states
         
         return stats
     
@@ -138,16 +138,34 @@ class NegBinRepHMM(_BaseHMM):
             pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
-                    #if any(posteriors[t] * symbol[i]) > 10*-300:
-                    #    print(posteriors[t] * symbol[i], file=sys.stderr)
-                    
+                    #if symbol[i] > 0:
+                        #print('h', posteriors[t] , symbol[i], pot_it)
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
         
-        stats['post'][0] = stats['post'][0]*self.dim[0]
-        stats['post'][1] = stats['post'][1]*self.dim[1]
+        stats['post'][0] = stats['post'][0] * self.dim[0]
+        stats['post'][1] = stats['post'][1] * self.dim[1]
+        #print(stats['post_emission'])
+        #print(stats['post'])
         
         stats['posterior'] = np.copy(posteriors)
+    
+    def _help_do_mstep(self, stats):
+        #for i in range(self.n_features):
+        #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
+        #print('help_do_mstep', self.mu)
+        self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+        #self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][0][0] + stats['post'][0][1])
+        self.mu[0,0] = self.mu[1,1]
         
+        self.mu[1,2] = self.mu[0,1]
+        self.mu[0,2] = self.mu[1,1]
+        self.mu[0,1] = self.mu[0,0]
+        
+        tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
+        self.alpha = np.matrix(tmp_a)
+        self._update_distr(self.mu, self.alpha)
+    
     def _valid_posteriors(self, posteriors, obs):
     
         warnings.filterwarnings('error')
@@ -196,15 +214,7 @@ class NegBinRepHMM(_BaseHMM):
         posteriors = self._valid_posteriors(posteriors, obs)
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
-    def _help_do_mstep(self, stats):
-        for i in range(self.n_features):
-            #print('help_m_step', 'i', stats['post_emission'][i], stats['post'][i], file=sys.stderr)
-            #print('Perform M-step of EM algorithm (max. 20 times)', file=sys.stderr)
-            self.mu[i] = stats['post_emission'][i] / stats['post'][i]
-        
-        tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
-        self.alpha = np.matrix(tmp_a)
-        self._update_distr(self.mu, self.alpha)
+    
     
     def _count(self, posts):
         c_1, c_2 = 1, 1

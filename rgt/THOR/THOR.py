@@ -49,9 +49,9 @@ def main():
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
-                          housekeeping_genes=options.housekeeping_genes)
+                          housekeeping_genes=options.housekeeping_genes, test=test)
     
-    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000, verbose=options.debug)
+    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000, verbose=options.debug, outputdir = options.outputdir, report=options.report)
     tracker.write(text=func_para[0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")
     tracker.write(text=func_para[1])
     
@@ -64,8 +64,6 @@ def main():
         for i in range(exp_data.overall_coverage[0].shape[1]):
             if i % 100000 == 0:
                 print(i, exp_data.overall_coverage[0].shape[1])
-            #if i > 80000:
-            #    break
             cov0.append(np.sum(exp_data.overall_coverage[0][:,i])) #np.sum(b, axis=1) ???
             cov1.append(np.sum(exp_data.overall_coverage[1][:,i]))
 
@@ -73,9 +71,9 @@ def main():
         exp_data.overall_coverage[0] = np.matrix(cov0)
         exp_data.overall_coverage[1] = np.matrix(cov1)
 
-    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 3)
+    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 1)
     training_set_obs = exp_data.get_observation(training_set)
-    
+    #print(training_set_obs[training_set_obs>0])
     if options.distr == "negbin":
         from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
         init_alpha, init_mu = get_init_parameters(s0, s1, s2)
@@ -128,4 +126,3 @@ def main():
     
 if __name__ == '__main__':
     main() 
-    

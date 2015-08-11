@@ -127,7 +127,9 @@ class MultiCoverageSet(DualCoverageSet):
             
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
         
+        #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
         self.overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
+        
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
     
@@ -296,11 +298,11 @@ class MultiCoverageSet(DualCoverageSet):
     
                 #apply criteria for initial peak calling
                 if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                    s1.append((i, cov1, cov2))
+                    s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                    s2.append((i, cov1, cov2))
+                    s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
-                    s0.append((i, cov1, cov2))
+                    s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
             
             if debug:
                 print("training set paramters: threshold", threshold, len(s0), len(s1), len(s2), file=sys.stderr)
