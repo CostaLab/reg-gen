@@ -13,14 +13,16 @@ import pickle
 # Distal Libraries
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import PromoterTest, RandomTest, value2str, split_gene_name, rna_associated_gene
+from triplexTools import PromoterTest, RandomTest, value2str,\
+                         split_gene_name, rna_associated_gene
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 
 dir = os.getcwd()
 
 """
-Triplex Domain Finder (TDF) provides statistical tests and plotting tools for triplex binding site analysis
+Triplex Domain Finder (TDF) provides statistical tests and plotting tools for 
+triplex binding site analysis
 
 Author: Joseph Kuo
 """
@@ -41,7 +43,8 @@ def output_summary(summary, directory, filename):
     except: os.mkdir(pd)    
     if summary:
         with open(os.path.join(pd,filename),'w') as f:
-            print("********* RGT Triplex: Summary information *********", file=f)
+            print("********* RGT Triplex: Summary information *********", 
+                  file=f)
             for s in summary:
                 print(s, file=f)
     
@@ -61,7 +64,8 @@ def list_all_index(path, show_RNA_ass_gene=False):
     
     link_d = {"List":"index.html"}
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
-                fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="TDF")
+                fig_dir=os.path.join(path,"style"), fig_rpath="./style", 
+                RGT_header=False, other_logo="TDF")
     
     html.add_heading("All experiments in: "+dirname+"/")
     data_table = []
@@ -69,11 +73,14 @@ def list_all_index(path, show_RNA_ass_gene=False):
     col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
     if show_RNA_ass_gene:
-        header_list = ["No.", "Experiments", "RNA", "Closest genes", "Organism", #"Condition", 
-                       "Target region", "No significant DBD", "Top DBD", "p-value"]
+        header_list = ["No.", "Experiments", "RNA", "Closest genes", 
+                       "Organism", "Target region", "No significant DBD",
+                       "Top DBD", "p-value"]
     else:
         header_list = ["No.", "Experiments", "RNA", "Organism", #"Condition", 
-                       "Target region", "No significant DBD", "Top DBD", "p-value"]
+                       "Target region", "No significant DBD",
+                       "Top DBD", "p-value"]
+
     profile_f = open(os.path.join(path, "profile.txt"),'r')
     profile = {}
     for line in profile_f:
@@ -81,39 +88,60 @@ def list_all_index(path, show_RNA_ass_gene=False):
         line = line.split("\t")
         profile[line[0]] = line[1:]
     #profile = pickle.load(profile_f)
-    for root, dirnames, filenames in os.walk(path):
+    
+    #for root, dirnames, filenames in os.walk(path):
         #roots = root.split('/')
         #for filename in fnmatch.filter(filenames, '*.html'):
         #    if filename == 'index.html' and root.split('/')[-1] != dirname:
-        for i, dirname in enumerate(dirnames):
+    #    for i, dirname in enumerate(dirnames):
             
-            if dirname in profile.keys():
-                c += 1
-                #exp = root.split('/')[-1]
-                exp = dirname
-                if profile[exp][5] == "-":
-                    new_line = [ str(c), exp, profile[exp][0] ]
-                else:
-                    new_line = [ str(c), '<a href="'+os.path.join(exp, "index.html")+'">'+exp+"</a>",
-                                 profile[exp][0] ]
-                
-                if show_RNA_ass_gene: new_line.append( split_gene_name(gene_name=profile[exp][7], org=profile[exp][2]) )
+            #if dirname in profile.keys():
+    for i, exp in enumerate(profile.keys()):
+        #print(exp)
+        c += 1
+        #exp = root.split('/')[-1]
+        #exp = dirn
+        #if profile[exp][5] == "-":
+        #    new_line = [ str(c), exp, profile[exp][0] ]
+        #else:
+        try:
+            if profile[exp][6] == "-":
+                new_line = [ str(c), exp,
+                             profile[exp][0] ]
+            else:
+                new_line = [ str(c), 
+                             '<a href="'+os.path.join(exp, "index.html")+\
+                             '">'+exp+"</a>",
+                             profile[exp][0] ]
 
-                try:
-                    if profile[exp][6] == "-":
-                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ]
-                    elif float(profile[exp][6]) < 0.05:
-                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], 
-                                      "<font color=\"red\">"+profile[exp][6]+"</font>" ]
-                    else:
-                        new_line += [ profile[exp][2], profile[exp][3], profile[exp][4], profile[exp][5], profile[exp][6] ]
-                    data_table.append(new_line)
-                except:
-                    
-                    print("Error in loading profile: "+exp)
-                    continue
+            if show_RNA_ass_gene: 
+                new_line.append( 
+                    split_gene_name(gene_name=profile[exp][7], 
+                                    org=profile[exp][2]) 
+                    )
 
-    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
+            if profile[exp][6] == "-":
+                new_line += [ profile[exp][2], profile[exp][3], 
+                              profile[exp][4], 
+                              profile[exp][5], profile[exp][6] ]
+
+            elif float(profile[exp][6]) < 0.05:
+                new_line += [ profile[exp][2], profile[exp][3], 
+                              profile[exp][4], 
+                              profile[exp][5], 
+                              "<font color=\"red\">"+\
+                              profile[exp][6]+"</font>" ]
+            else:
+                new_line += [ profile[exp][2], profile[exp][3], 
+                              profile[exp][4], 
+                              profile[exp][5], profile[exp][6] ]
+            data_table.append(new_line)
+        except:
+            print("Error in loading profile: "+exp)
+            continue
+
+    html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
+                          align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
 
@@ -158,7 +186,9 @@ def main():
     parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
+    parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
     
+
     parser_promotertest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
     parser_promotertest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
     parser_promotertest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
@@ -375,7 +405,7 @@ def main():
         #                        ylabel="Number of DBSs on target promoters", 
         #                        linelabel="No. DBSs", filename="plot_dbss.png")
         #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
-            
+        if args.motif: promoter.gen_motifs(temp=args.o)
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         t4 = time.time()
@@ -461,7 +491,8 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.dbd_regions(sig_region=randomtest.data["dbs"]["sig_region"], output=args.o)
+        print(randomtest.data["region"]["sig_region"])
+        randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
         
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",

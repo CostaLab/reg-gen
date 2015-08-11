@@ -5,7 +5,7 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
-#from ngslib import BigWigFile
+from ngslib import BigWigFile
 
 """
 Represent coverage data.
@@ -272,12 +272,15 @@ class CoverageSet:
         """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>."""
         self.coverage = []
         bwf = BigWigFile(bigwig_file)
+
         for gr in self.genomicRegions:
-            depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
-            x = zip(*[iter(depth)]*stepsize)
-            #ds = [ np.mean(d) for d in x ]
-            ds = [ max(d) for d in x ]
+            depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
+            ds = []
+            for i in range(0, gr.final-gr.initial):
+                d = [ depth[j] for j in range(i,i+stepsize) ]
+                ds.append(sum(d)/len(d))
             self.coverage.append( np.array(ds) )
+
         bwf.close()
         
     def phastCons46way_score(self, stepsize=100):
@@ -286,12 +289,12 @@ class CoverageSet:
         phastCons46way_dir = "/data/phastCons46way/"
         for gr in self.genomicRegions:
             bwf = BigWigFile(os.path.join(phastCons46way_dir, gr.chrom+".phastCons46way.bw"))
-            depth = bwf.pileup(gr.chrom, gr.initial, gr.final)
-            x = zip(*[iter(depth)]*stepsize)
-            #ds = [ np.mean(d) for d in x ]
-            ds = [ max(d) for d in x ]
+            depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
+            ds = []
+            for i in range(0, gr.final-gr.initial):
+                d = [ depth[j] for j in range(i,i+stepsize) ]
+                ds.append(sum(d)/len(d))
             self.coverage.append( np.array(ds) )
-            #self.coverage.append( np.array(depth[::stepsize]) )
             bwf.close()
 
         

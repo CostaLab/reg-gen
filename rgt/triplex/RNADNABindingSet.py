@@ -1,6 +1,8 @@
 # Python Libraries
 from __future__ import print_function
 from collections import *
+import numpy
+import pysam
 # Local Libraries
 
 # Distal Libraries
@@ -113,16 +115,22 @@ class RNADNABindingSet:
         if sort: rna_set.sort()
         return rna_set
 
-    def get_dbs(self, sort=False, orientation=None, rm_duplicate=False):
+    def get_dbs(self, sort=False, orientation=None, rm_duplicate=False, dbd_tag=False):
         """Return GenomicRegionSet which contains all DNA binding sites"""
         dna_set = GenomicRegionSet(name="DNA_binding_sites")
         if len(self) == 0: return dna_set
         for rd in self.sequences:
+            if dbd_tag:
+                dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final, 
+                                    name=rd.rna.str_rna(), orientation=rd.dna.orientation)
+            else:
+                dbs = rd.dna
+
             if not orientation:
-                dna_set.add(rd.dna)
+                dna_set.add(dbs)
             else:
                 if orientation == rd.orient:
-                    dna_set.add(rd.dna)
+                    dna_set.add(dbs)
                 else: pass
         if sort: dna_set.sort()
         if rm_duplicate: dna_set.remove_duplicates()
@@ -542,7 +550,7 @@ class RNADNABindingSet:
         remove_duplicates: remove all exact duplicates
         convert_dict: given a dictionary to change the region name
         """
-        dbss = self.get_dbs()
+        dbss = self.get_dbs(dbd_tag=True)
         if remove_duplicates:
             dbss.remove_duplicates()
         if convert_dict:
@@ -593,3 +601,69 @@ class RNADNABindingSet:
                 except:
                     loop = False
                     continue
+
+    def generate_jaspar_matrix(self, genome_path, rbss=None):
+        
+        nucl = {"A":0 , "C":1 , "G":2 , "T":3 ,
+                "a":0 , "c":1 , "g":2 , "t":3 }
+        genome = pysam.Fastafile(genome_path)
+        # A dict: RBS as key, and matrix as its value
+        self.pwm_dict = OrderedDict()
+        #print("merge_rbs")
+
+        if not rbss:
+            # Merge RBS
+            rna_merged = self.get_rbs()
+            rna_merged.merge()
+        else:
+            rna_merged = rbss
+
+        for r in rna_merged:
+            # Two same size matrix: P & A
+            self.pwm_dict[r] = [ numpy.zeros((4, len(r))), numpy.zeros((4, len(r))) ]
+
+        rbsm = iter(rna_merged)
+        try: r = rbsm.next()
+        except: return
+                
+        if self.sorted_rna: pass
+        else: self.sort_rbs()
+
+        con = iter(self)
+        try: rd = con.next()
+        except: return
+
+        con_loop = True
+        while con_loop:
+            #print(".", end="")
+            if r.overlap(rd.rna):
+                seq = genome.fetch(rd.dna.chrom, max(0, rd.dna.initial), rd.dna.final)
+                if rd.orient == "A": 
+                    pa = 1
+                    seq = seq[::-1]
+                else: 
+                    pa = 0
+                print(seq)
+                ind = rd.rna.initial - r.initial
+                for i, a in enumerate(seq):
+                    self.pwm_dict[r][pa][ nucl[a], ind + i ] += 1
+
+                try: rd = con.next()
+                except: 
+                    try:
+                        r = rbsm.next()
+                    except:
+                        con_loop = False
+            elif rd.rna < r:
+                try: rd = con.next()
+                except: 
+                    try:
+                        r = rbsm.next()
+                    except: 
+                        con_loop = False
+            elif rd.rna > r:
+                try:
+                    r = rbsm.next()
+                except: 
+                    try: rd = con.next()
+                    except: con_loop = False

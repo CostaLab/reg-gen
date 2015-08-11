@@ -21,6 +21,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pysam
 import pickle
 import shutil
+from Bio import motifs
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
@@ -452,6 +453,7 @@ class PromoterTest:
         self.showdbs = showdbs
         self.scores = None
         self.scoreh = scoreh
+        self.motif = OrderedDict()
 
         # Input BED files
         if bed and bg:
@@ -464,7 +466,8 @@ class PromoterTest:
             if score:
                 self.scores = []
                 for promoter in self.de_regions:
-                    self.scores.append(promoter.data.split("\t")[0])
+                    if promoter.data: self.scores.append(promoter.data.split("\t")[0])
+                    else: self.scores = None
 
             try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
             except: pass
@@ -873,9 +876,7 @@ class PromoterTest:
                 self.frequency["hits"]["nde"][rbs] = [ l2 , numdbs_ndef - l2 ]
         
 
-        #self.txp_def = txp_def
-        #self.txp_ndef = txp_ndef
-        #if remove_temp:
+        
         os.remove(os.path.join(temp,"de.txp"))
         if self.split_rna:
              for i in self.cf:
@@ -883,14 +884,17 @@ class PromoterTest:
         else: os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
-            output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
-            output.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
-            
-            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
-                remove_duplicates=False, convert_dict=self.ensembl2symbol)
+            try: 
+                output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
+                output.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
+                self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
+                                      remove_duplicates=False, convert_dict=self.ensembl2symbol)
+            except: 
+                self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
+                                      remove_duplicates=False)
             
             self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), 
-                remove_duplicates=False, convert_dict=self.ensembl2symbol)
+                remove_duplicates=False)
 
     def fisher_exact(self, alpha):
         """Return oddsratio and pvalue"""
@@ -951,41 +955,45 @@ class PromoterTest:
                     cf = 0
                     for exon in self.rna_regions:
                         #print(exon)
-                        tail = cf + exon[2] - exon [1]
+                        l = exon[2] - exon[1]
+                        tail = cf + l
                         #print("cf:   " + str(cf))
                         #print("tail: " + str(tail) )
                         if cf <= rbs.initial <=  tail:
-                            dbdstart = exon[1] + cf + rbs.initial
+                            dbdstart = exon[1] + rbs.initial - cf
                             
                             if rbs.final <= tail: 
                                 #print("1")
-                                dbdend = exon[1] + cf + rbs.final
+                                dbdend = exon[1] + rbs.final -cf
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
                                                        name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"_DBD" ) )
                                 loop = False
                                 break
-                            else:
+                            elif rbs.final > tail:
 
-                                subtract = exon[2] - exon [1] - rbs.initial
+                                subtract = l + cf - rbs.initial
                                 #print("2")
                                 #print("Subtract: "+str(subtract))
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=exon[2], 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
-                            cf += exon[2] - exon [1]
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"split_DBD" ) )
+                        
                         elif rbs.final <= tail: 
                             #print("3")
                             dbdstart = exon[1]
-                            dbdend = exon[1] + cf + rbs.final - rbs.initial - subtract
+                            dbdend = exon[1] + rbs.final - rbs.initial - subtract
                             dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                    initial=dbdstart, final=dbdend, 
                                                    orientation=self.rna_regions[0][3], 
-                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"split_DBD" ) )
                             loop = False
                             break
+                        
+                        cf += l
+                        
                     
                     loop = False
                 
@@ -1139,6 +1147,37 @@ class PromoterTest:
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
         
+
+    def gen_motifs(self, temp):
+        """Generate motifs for all binding sites"""
+        
+        # DE DBS
+        self.txp_def.generate_jaspar_matrix(genome_path=self.genome_path, rbss=self.rbss)
+
+        for dbd in self.txp_def.pwm_dict.keys():
+            
+            # P
+            pwmf = os.path.join(temp,'temp_P.pwm')
+            logo_file_name = os.path.join(temp,'m_'+dbd.str_rna()+'.svg')
+            numpy.savetxt(pwmf, self.txp_def.pwm_dict[dbd][0], fmt='%1.0f',
+                          delimiter=' ', newline='\n')
+            pwm_file = open(pwmf,"r")
+            pwm = motifs.read(pwm_file, "pfm")
+            pwm.weblogo(logo_file_name, format="SVG", stack_width = "medium", color_scheme = "color_classic")
+            pwm_file.close()
+            # A
+            pwmf = os.path.join(temp,'temp_A.pwm')
+            logo_file_name = os.path.join(temp,'m_'+dbd.str_rna()+'.svg')
+            numpy.savetxt(pwmf, self.txp_def.pwm_dict[dbd][1], fmt='%1.0f',
+                          delimiter=' ', newline='\n')
+            pwm_file = open(pwmf,"r")
+            pwm = motifs.read(pwm_file, "pfm")
+            pwm.weblogo(logo_file_name, format="SVG", stack_width = "medium", color_scheme = "color_classic")
+            pwm_file.close()
+
+
+        # non-DE DBS
+
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
         dir_name = os.path.basename(directory)
         #check_dir(directory)
@@ -1281,6 +1320,19 @@ class PromoterTest:
                         "RBS stands for RNA Binding Site on RNA.",
                         "DBS stands for DNA Binding Site on DNA."])
         
+
+        #### Table for motif
+        if self.motif:
+            data_table = []
+            header_list = ["DBD", "Motif"]
+            for dbd, f in self.motif.iteritems():
+                svg = '<object type="image/svg+xml" data="'+f+'">Your browser does not support SVG</object>'
+                new_row = [dbd,svg]
+                data_table.append(new_row)
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+
+
+        ####
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"index.html"))
 
@@ -1362,19 +1414,28 @@ class PromoterTest:
                         rank_score = rank_score.tolist()
 
                     else:
-                        new_scores = []
-                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
-                            s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
-                            if s == "Inf" or s == "inf":
-                                new_scores.append(float("inf"))
-                            elif s == "-Inf" or s == "-inf":
-                                new_scores.append(-float("inf"))
-                            else: new_scores.append(abs(float(s)))
-                            
-                        scores = new_scores  
-                        rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
-                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-        
+                        try:
+                            new_scores = []
+                            for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                                try:
+                                    s = self.de_gene.values[self.ensembl2symbol
+                                    [promoter.name].upper()]
+                                except:
+                                    s = new_scores.append(abs(float(s)))
+                                if s == "Inf" or s == "inf":
+                                    new_scores.append(float("inf"))
+                                elif s == "-Inf" or s == "-inf":
+                                    new_scores.append(-float("inf"))
+                                else: new_scores.append(abs(float(s)))
+                                
+                            scores = new_scores  
+                            rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
+                            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                        except:
+                            scores = [int(i) for i in self.scores]
+                            rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
+                            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+            
                 else: 
                     scores = [ float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm] ]
                     rank_score = len(self.txp_de.merged_dict[rbsm])-rank_array(scores)
@@ -1398,11 +1459,18 @@ class PromoterTest:
                     pr = promoter.toString(space=True)
                 
                 
-                newline = [ str(i+1), pr, 
-                            split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
-                            str(len(self.promoter["de"]["rd"][promoter.toString()])),
-                            value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
-                            ]
+                try:
+                    newline = [ str(i+1), pr, 
+                                split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
+                                str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                                ]
+                except:
+                    newline = [ str(i+1), pr, 
+                                split_gene_name(gene_name=promoter.name, org=self.organism),
+                                str(len(self.promoter["de"]["rd"][promoter.toString()])),
+                                value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                                ]
                 if self.scores: 
                     if multiple_scores:
                         #print(score_ar)
@@ -1590,9 +1658,11 @@ class PromoterTest:
                                            promoter.toString(space=True), '</a>'])
                 else: region_link = promoter.toString(space=True)
 
+            try: gn = self.ensembl2symbol[promoter.name]
+            except: gn = promoter.name
             newline = [ str(i+1),
                         region_link,
-                        split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
+                        split_gene_name(gene_name=gn, org=self.organism),
                         dbssount,
                         value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                         ]
@@ -1635,8 +1705,10 @@ class PromoterTest:
         for i, promoter in enumerate(self.de_regions):
             if self.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
-            else:         
-                html.add_heading(split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism), idtag=promoter.toString())
+            else:
+                try: gn = self.ensembl2symbol[promoter.name]
+                except: gn = promoter.name
+                html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                                         "&position="+promoter.chrom+"%3A"+str(promoter.initial)+"-"+str(promoter.final)+
                                         '" style="margin-left:50">'+
@@ -1910,15 +1982,16 @@ class RandomTest:
                     cf = 0
                     for exon in self.rna_regions:
                         #print(exon)
-                        tail = cf + exon[2] - exon [1]
+                        l = exon[2] - exon[1]
+                        tail = cf + l
                         #print("cf:   " + str(cf))
                         #print("tail: " + str(tail) )
                         if cf <= rbs.initial <=  tail:
-                            dbdstart = exon[1] + cf + rbs.initial
+                            dbdstart = exon[1] - cf + rbs.initial
                             
                             if rbs.final <= tail: 
                                 #print("1")
-                                dbdend = exon[1] + cf + rbs.final
+                                dbdend = exon[1] - cf + rbs.final
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
@@ -1926,26 +1999,25 @@ class RandomTest:
                                 loop = False
                                 break
                             else:
-
-                                subtract = exon[2] - exon [1] - rbs.initial
+                                subtract = l - rbs.initial
                                 #print("2")
                                 #print("Subtract: "+str(subtract))
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=exon[2], 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
-                            cf += exon[2] - exon [1]
+                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"split_DBD" ) )
+                            
                         elif rbs.final <= tail: 
                             #print("3")
                             dbdstart = exon[1]
-                            dbdend = exon[1] + cf + rbs.final - rbs.initial - subtract
+                            dbdend = exon[1] + rbs.final - rbs.initial - subtract
                             dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                    initial=dbdstart, final=dbdend, 
                                                    orientation=self.rna_regions[0][3], 
-                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"_DBD" ) )
+                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"split_DBD" ) )
                             loop = False
                             break
-                    
+                        cf += l
                     loop = False
                 
         dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
