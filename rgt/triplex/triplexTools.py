@@ -494,7 +494,10 @@ class PromoterTest:
                 except:
                     ann = AnnotationSet(organism, alias_source=organism)
                     print("\tDumping annotation file...")
+                    t1 = time.time()
                     dump(object=ann, path=temp, filename="annotation_"+organism)
+                    t2 = time.time()
+                    print("\t"+str(datetime.timedelta(seconds=round(t2-t1))))
 
                 # DE gene regions
                 self.de_gene = GeneSet("de genes")
@@ -695,7 +698,7 @@ class PromoterTest:
                             
                     f_nde.close()
                 #if remove_temp:
-                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                #os.remove(os.path.join(temp, "de"+str(i)+".txp"))
                 #os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
                 os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
@@ -968,7 +971,7 @@ class PromoterTest:
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"_DBD" ) )
+                                                       name=str(rbs.initial)+"-"+str(rbs.final) ) )
                                 loop = False
                                 break
                             elif rbs.final > tail:
@@ -979,22 +982,24 @@ class PromoterTest:
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=exon[2], 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"split_DBD" ) )
+                                                       name=str(rbs.initial)+"-"+str(rbs.initial+subtract)+"_split1" ) )
                         
-                        elif rbs.final <= tail: 
+                        elif rbs.initial < cf and rbs.final <= tail: 
                             #print("3")
                             dbdstart = exon[1]
                             dbdend = exon[1] + rbs.final - rbs.initial - subtract
                             dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                    initial=dbdstart, final=dbdend, 
                                                    orientation=self.rna_regions[0][3], 
-                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"split_DBD" ) )
+                                                   name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
                             loop = False
                             break
-                        
+
+                        elif rbs.initial > tail:
+                            pass
+
                         cf += l
                         
-                    
                     loop = False
                 
         dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
@@ -1995,7 +2000,7 @@ class RandomTest:
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"_DBD" ) )
+                                                       name=str(dbdstart)+"-"+str(dbdend) ) )
                                 loop = False
                                 break
                             else:
@@ -2005,7 +2010,7 @@ class RandomTest:
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=exon[2], 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=self.rna_name+":"+str(dbdstart)+"-"+str(exon[2])+"split_DBD" ) )
+                                                       name=str(dbdstart)+"-"+str(exon[2])+"_split1" ) )
                             
                         elif rbs.final <= tail: 
                             #print("3")
@@ -2014,7 +2019,7 @@ class RandomTest:
                             dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                    initial=dbdstart, final=dbdend, 
                                                    orientation=self.rna_regions[0][3], 
-                                                   name=self.rna_name+":"+str(dbdstart)+"-"+str(dbdend)+"split_DBD" ) )
+                                                   name=str(dbdstart)+"-"+str(dbdend)+"_split2" ) )
                             loop = False
                             break
                         cf += l
