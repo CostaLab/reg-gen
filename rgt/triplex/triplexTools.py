@@ -21,7 +21,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pysam
 import pickle
 import shutil
-from Bio import motifs
+#from Bio import motifs
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
