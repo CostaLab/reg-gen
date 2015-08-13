@@ -91,7 +91,7 @@ def main():
     if options.debug:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
-    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom)
+    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom, min_fc=options.foldchange)
     training_set_obs = exp_data.get_observation(training_set)
     
     _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.debug)
