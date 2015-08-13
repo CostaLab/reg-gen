@@ -204,8 +204,20 @@ def _get_covs(DCS, i, as_list=False):
 
 def _get_log_ratio(l1, l2):
     l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
-    if l2 > 0 and l2 > 0:
-        return log(l1/l2)
+    try:
+        res = l1/l2
+    except:
+        return sys.maxint
+    
+    if res > 0:
+        try:
+            res = log(res)
+            if np.isinf(res):
+                return sys.maxint
+            return res
+        except:
+            print('error to compute log ratio', l1, l2, file=sys.stderr)
+            return sys.maxint
     else:
         return sys.maxint
 
