@@ -1,5 +1,7 @@
 ToDo:
-- foldchange option is deprecated
+
+done
+- foldchange option is now available, was deprecated for some reasons
 
 ODIN-0.4
 - solve the following question automativally:
