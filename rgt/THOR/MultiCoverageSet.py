@@ -222,7 +222,7 @@ class MultiCoverageSet(DualCoverageSet):
         """Return indices of observations. Do not consider indices contained in <mask> array"""
         if not mask.size:
             mask = np.array([True]*self._get_bin_number())
-            
+	print(mask[0:100], file=sys.stderr)
         return np.asarray(np.concatenate((self.overall_coverage[0][:,mask].T, self.overall_coverage[1][:,mask].T), axis=1))
     
     def _compute_score(self):
@@ -240,9 +240,12 @@ class MultiCoverageSet(DualCoverageSet):
         
         self._compute_score()
         self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
+	print('len', len(self.indices_of_interest), file=sys.stderr)
         tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 3)[0]
         tmp2 = np.intersect1d(self.indices_of_interest, tmp)
         self.indices_of_interest = tmp2
+	print('len', len(self.indices_of_interest), file=sys.stderr)
+	print(self.indices_of_interest[:100], file=sys.stderr)
 	#print(len(self.indices_of_interest), file=sys.stderr)
         #tmp = set()
         #for i in self.indices_of_interest:
@@ -273,14 +276,14 @@ class MultiCoverageSet(DualCoverageSet):
     
     def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
-        threshold = 2.5
+        threshold = 3
         #diff_cov = 20
         
-        diff_cov = max(20, np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95))
-        t = np.percentile(np.append(np.asarray(self.overall_coverage[0].flatten())[0], np.asarray(self.overall_coverage[1].flatten())[0]), 95)
+	t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), 99))
+        diff_cov = max(20, t)
         
-        if debug:
-            print('training set parameters: diff_cov (percentile): %s (%s)' %(diff_cov, t), file=sys.stderr)
+	#if debug:
+        print('training set parameters: diff_cov (percentile): %s (%s)' %(diff_cov, t), file=sys.stderr)
         
         if test:
             diff_cov = 2
@@ -301,7 +304,7 @@ class MultiCoverageSet(DualCoverageSet):
                     s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                     s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
-                elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
+                else:
                     s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
             
             if debug:
@@ -323,7 +326,8 @@ class MultiCoverageSet(DualCoverageSet):
                 threshold = max(threshold, 1.1)
             else:
                 rep = False
-            
+        print('final threahld cutoff', threshold, diff_cov, file=sys.stderr)
+
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)

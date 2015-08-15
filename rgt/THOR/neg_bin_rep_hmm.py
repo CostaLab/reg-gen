@@ -154,13 +154,17 @@ class NegBinRepHMM(_BaseHMM):
         #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         #print('help_do_mstep', self.mu)
         self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
-        #self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][0][0] + stats['post'][0][1])
+        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
+        
+        #self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+        
+        #self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
+        
         self.mu[0,0] = self.mu[1,1]
         
         self.mu[1,2] = self.mu[0,1]
         self.mu[0,2] = self.mu[1,1]
-        self.mu[0,1] = self.mu[0,0]
+        self.mu[1,0] = self.mu[0,0]
         
         tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         self.alpha = np.matrix(tmp_a)
@@ -233,8 +237,8 @@ class NegBinRepHMM(_BaseHMM):
     def _do_mstep(self, stats, params):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
         self._help_do_mstep(stats)
-        self.count_s1, self.count_s2 = self._count(stats['posterior'])
-        self.merge_distr()
+        #self.count_s1, self.count_s2 = self._count(stats['posterior'])
+        #self.merge_distr()
        
     def merge_distr(self):
         f = self.count_s2 / float(self.count_s1 + self.count_s2) #TODO exp_data.
@@ -272,5 +276,5 @@ if __name__ == '__main__':
     e = m2.predict(X)
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
-    
+    #print(np.max(posteriors, axis=1))
     print(m2.mu)
