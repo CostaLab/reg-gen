@@ -58,12 +58,6 @@ tools_dictionary = {
   [],
   []
 ),
-#"motifanalysisold": (
-#  "rgt-motifanalysisold",
-#  "rgt.motifanalysisold.main:main",
-#  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.60","pandas==0.7.1","fisher>=0.1.0","statsmodels>=0.4.0","HTML>=0.04","matplotlib>=1.1.0"],
-#  []
-#), 
 "motifanalysis": (
   "rgt-motifanalysis",
   "rgt.motifanalysis.Main:main",
@@ -73,7 +67,7 @@ tools_dictionary = {
 "hint": (
   "rgt-hint",
   "rgt.HINT.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn<=0.14","pysam>=0.7.5"],
+  ["numpy>=1.4.0","scipy>=0.7.0","hmmlearn>=0.1.1","pysam>=0.7.5","ngslib>=1.1.14"],
   []
 ), 
 "ODIN": (
@@ -218,7 +212,13 @@ data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
 data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
 data_config_file.write("[HmmData]\n")
-data_config_file.write("default_hmm: fp_hmms/H3K4me3_proximal.hmm\n\n")
+data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
+data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
+data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
+data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
+data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
+data_config_file.write("default_bias_table_F: fp_hmms/single_hit_bias_table_F.txt\n")
+data_config_file.write("default_bias_table_R: fp_hmms/single_hit_bias_table_R.txt\n\n")
 data_config_file.close()
 
 # Creating data.config.path
@@ -239,7 +239,7 @@ copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
 "hg19": ["association_file.bed","chrom.sizes","alias.txt"],
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
-"fp_hmms": ["H3K4me3_proximal.hmm"],
+"fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
