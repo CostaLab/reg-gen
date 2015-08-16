@@ -71,7 +71,7 @@ def main():
         exp_data.overall_coverage[0] = np.matrix(cov0)
         exp_data.overall_coverage[1] = np.matrix(cov1)
 
-    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 1)
+    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 5000, 1)
     training_set_obs = exp_data.get_observation(training_set)
     #print(training_set_obs[training_set_obs>0])
     if options.distr == "negbin":
