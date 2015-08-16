@@ -108,6 +108,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data in nice list of two matrices
         print('start making matrix', file=sys.stderr)
+        sys.stderr.flush()
         tmp = [[], []]
         tmp2 = [[[], []], [[], []]]
         for k in range(2):
@@ -126,6 +127,7 @@ class MultiCoverageSet(DualCoverageSet):
                 tmp2[k][1].append(map(lambda x: x[1], tmp_el))
                 #tmp2[1].append(a_2)
         print('end making matrix', file=sys.stderr)
+        sys.stderr.flush()
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
         
         #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
