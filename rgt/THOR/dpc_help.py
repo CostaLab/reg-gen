@@ -607,7 +607,7 @@ def input(laptop):
             parser.error("Region file %s does not exist!" %options.regions)
     
     if not os.path.isfile(genome):
-        parser.error("Genome file %s does not exist!" %bamfile)
+        parser.error("Genome file %s does not exist!" %genome)
     
     if options.name is None:
         d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
