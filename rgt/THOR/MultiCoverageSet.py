@@ -107,6 +107,7 @@ class MultiCoverageSet(DualCoverageSet):
         self._output_bw(name, chrom_sizes, save_wig) 
         
         #make data in nice list of two matrices
+        print('start making matrix', file=sys.stderr)
         tmp = [[], []]
         tmp2 = [[[], []], [[], []]]
         for k in range(2):
@@ -124,7 +125,7 @@ class MultiCoverageSet(DualCoverageSet):
                 tmp2[k][0].append(map(lambda x: x[0], tmp_el))
                 tmp2[k][1].append(map(lambda x: x[1], tmp_el))
                 #tmp2[1].append(a_2)
-            
+        print('end making matrix', file=sys.stderr)
         self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
         
         #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
@@ -132,6 +133,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
+        print('end init multi cov set', file=sys.stderr)
     
     def get_max_colsum(self):
         """Sum over all columns and add maximum"""
