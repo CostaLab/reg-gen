@@ -51,7 +51,7 @@ def main():
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
                           housekeeping_genes=options.housekeeping_genes, test=test)
     
-    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=20000, verbose=options.debug, outputdir = options.outputdir, report=options.report)
+    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, sample_size=5000, verbose=options.debug, outputdir = options.outputdir, report=options.report)
     tracker.write(text=func_para[0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) ")
     tracker.write(text=func_para[1])
     
