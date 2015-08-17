@@ -280,7 +280,7 @@ class MultiCoverageSet(DualCoverageSet):
     
     def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
-        threshold = 3
+        threshold = 1.3
         #diff_cov = 20
         
 	t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), 99))
@@ -305,11 +305,11 @@ class MultiCoverageSet(DualCoverageSet):
     
                 #apply criteria for initial peak calling
                 if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                    s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
+                    s1.append((i, cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                    s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
+                    s2.append((i, cov1, cov2)) #new approach! indices_of_interest
                 else:
-                    s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
+                    s0.append((i, cov1, cov2)) #new approach! indices_of_interest
             
             if debug:
                 print("training set paramters: threshold", threshold, len(s0), len(s1), len(s2), file=sys.stderr)
