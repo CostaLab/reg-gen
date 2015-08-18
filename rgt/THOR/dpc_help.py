@@ -406,8 +406,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     if test:
         contained_chrom = ['chr1', 'chr2']
     else:
-        #contained_chrom = get_all_chrom(bamfiles)
-        contained_chrom = ['chr19', 'chr18']
+        contained_chrom = get_all_chrom(bamfiles)
+        #contained_chrom = ['chr19', 'chr18']
     
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
