@@ -55,7 +55,7 @@ class NegBinRepHMM(_BaseHMM):
                  transmat=None, startprob_prior=None, transmat_prior=None, func=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
-                 random_state=None, n_iter=10, thresh=1e-2,
+                 random_state=None, n_iter=30, thresh=1e-2,
                  params=string.ascii_letters,
                  init_params=string.ascii_letters):
     
@@ -72,7 +72,61 @@ class NegBinRepHMM(_BaseHMM):
         self.mu = mu
         self._update_distr(self.mu, self.alpha)
         self.func = func
-        
+        self.em_prob = 0
+    
+    
+    def fit(self, obs):
+        """Estimate model parameters.
+
+        An initialization step is performed before entering the EM
+        algorithm. If you want to avoid this step, pass proper
+        ``init_params`` keyword argument to estimator's constructor.
+
+        Parameters
+        ----------
+        obs : list
+            List of array-like observation sequences, each of which
+            has shape (n_i, n_features), where n_i is the length of
+            the i_th observation.
+
+        Notes
+        -----
+        In general, `logprob` should be non-decreasing unless
+        aggressive pruning is used.  Decreasing `logprob` is generally
+        a sign of overfitting (e.g. a covariance parameter getting too
+        small).  You can fix this by getting more training data,
+        or strengthening the appropriate subclass-specific regularization
+        parameter.
+        """
+        self._init(obs, self.init_params)
+
+        logprob = []
+        for i in range(self.n_iter):
+            # Expectation step
+            stats = self._initialize_sufficient_statistics()
+            curr_logprob = 0
+            for seq in obs:
+                framelogprob = self._compute_log_likelihood(seq)
+                lpr, fwdlattice = self._do_forward_pass(framelogprob)
+                bwdlattice = self._do_backward_pass(framelogprob)
+                gamma = fwdlattice + bwdlattice
+                posteriors = np.exp(gamma.T - logsumexp(gamma, axis=1)).T
+                curr_logprob += lpr
+                self._accumulate_sufficient_statistics(
+                    stats, seq, framelogprob, posteriors, fwdlattice,
+                    bwdlattice, self.params)
+            logprob.append(curr_logprob)
+
+            # Check for convergence.
+            if i > 0 and logprob[-1] - logprob[-2] < self.thresh:
+                break
+
+            # Maximization step
+            self._do_mstep(stats, self.params)
+        print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
+        self.em_prob = logprob[-1]
+        return self
+    
     def _update_distr(self, mu, alpha):
         """Update distributions assigned to each state with new mu and alpha"""
         raw1 = [NegBin(mu[0, 0], alpha[0, 0]), NegBin(mu[0, 1], alpha[0, 1]), NegBin(mu[0, 2], alpha[0, 2])]

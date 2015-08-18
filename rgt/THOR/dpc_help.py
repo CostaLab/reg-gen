@@ -189,18 +189,7 @@ def _compute_pvalue((x, y, side, distr)):
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
 
-def _get_covs(DCS, i, as_list=False):
-    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
-    if not as_list:
-        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
-        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
-    else:
-        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
-        cov1 = map(lambda x: x[0], np.asarray((cov1)))
-        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
-        cov2 = map(lambda x: x[0], np.asarray((cov2)))
-    
-    return cov1, cov2
+
 
 def _get_log_ratio(l1, l2):
     l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
@@ -258,19 +247,18 @@ def _merge_consecutive_bins(tmp_peaks, distr):
     return pvalues, peaks
     
 
-def get_back(DCS, states):
-    counts = []
-#     print("H", file=sys.stderr)
-    for i in range(len(DCS.indices_of_interest)):
-        if states[i] == 0:
-            cov1, cov2 = _get_covs(DCS, i)
-            counts.append(cov1)
-            counts.append(cov2)
-#     print(len(counts), file=sys.stderr)
-#     print(np.var(counts), file=sys.stderr)
-#     print(np.mean(counts), file=sys.stderr)
-    return np.var(counts), np.mean(counts)
-        
+def _get_covs(DCS, i, as_list=False):
+    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
+    if not as_list:
+        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
+        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+    else:
+        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
+        cov1 = map(lambda x: x[0], np.asarray((cov1)))
+        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
+        cov2 = map(lambda x: x[0], np.asarray((cov2)))
+    
+    return cov1, cov2
 
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
@@ -288,12 +276,11 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
         
-        c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
         side = 'l' if strand == '+' else 'r'
-        tmp_data.append((c1, c2, side, distr))
+        tmp_data.append((sum(cov1), sum(cov2), side, distr))
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
@@ -419,8 +406,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     if test:
         contained_chrom = ['chr1', 'chr2']
     else:
-        contained_chrom = get_all_chrom(bamfiles)
-        #contained_chrom = ['chr19']
+        #contained_chrom = get_all_chrom(bamfiles)
+        contained_chrom = ['chr19', 'chr18']
     
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
@@ -453,7 +440,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     else:
         norm_regionset = None
         
-    if housekeeping_genes:
+    if not scaling_factors_ip and housekeeping_genes:
         scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
     
     if scaling_factors_ip:
@@ -493,7 +480,7 @@ def input(laptop):
         args[0] = config_path
         #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
         bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.regions = None #'/home/ma608711/data/testdata_THOR/region.bed'
+        options.regions = '/home/manuel/r.bed'
         options.exts = [200, 200, 200, 200, 200]
         options.exts_inputs = [200, 200, 200, 200, 200]
         options.pcutoff = 1
@@ -523,7 +510,7 @@ def input(laptop):
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
-        parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
+        parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback", callback=_callback_list_float,\
                           help="Normalization factors for input-DNA. If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--par", dest="par", default=1, type="int",\
                           help="Percentile for p-value postprocessing filter. [default: %default]")
@@ -591,11 +578,18 @@ def input(laptop):
         parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
         
     if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
-        parser.error("Number of scaling factors must equal number of bamfiles")
-    
+        parser.error("Number of scaling factors for IP must equal number of bamfiles")
+        
     for bamfile in bamfiles:
         if not os.path.isfile(bamfile):
             parser.error("BAM file %s does not exist!" %bamfile)
+    
+    if not inputs and options.factors_inputs:
+        print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)
+        options.factors_inputs = None
+    
+    if options.factors_inputs and len(options.factors_inputs) != len(bamfiles):
+        parser.error("factors for input-DNA must equal number of BAM files!")
     
     if inputs:
         for bamfile in inputs:

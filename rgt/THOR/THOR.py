@@ -10,7 +10,6 @@ from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
 from dpc_help import _fit_mean_var_distr
-from dpc_help import get_back
 from random import sample
 import multiprocessing
 from tracker import Tracker
@@ -59,71 +58,44 @@ def main():
 
     print('Compute training set...',file=sys.stderr)
     sys.stderr.flush()
-    if options.distr == "binom":
-        cov0, cov1 = [], []
-        for i in range(exp_data.overall_coverage[0].shape[1]):
-            if i % 100000 == 0:
-                print(i, exp_data.overall_coverage[0].shape[1])
-            cov0.append(np.sum(exp_data.overall_coverage[0][:,i])) #np.sum(b, axis=1) ???
-            cov1.append(np.sum(exp_data.overall_coverage[1][:,i]))
-
-        exp_data.dim_1, exp_data.dim_2 = 1, 1
-        exp_data.overall_coverage[0] = np.matrix(cov0)
-        exp_data.overall_coverage[1] = np.matrix(cov1)
-    sys.stderr.flush()
-    training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 1)
-    training_set_obs = exp_data.get_observation(training_set)
+    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 1)
+    
     sys.stderr.flush()
     #print(training_set_obs[training_set_obs>0])
     if options.distr == "negbin":
         from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
-        init_alpha, init_mu = get_init_parameters(s0, s1, s2)
-        tracker.write(text=init_mu, header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu,alpha)")
-        tracker.write(text=init_alpha)
-        m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
         print('Training HMM...', file=sys.stderr)
         sys.stderr.flush()
+        init_alpha, init_mu = get_init_parameters(s0, s1, s2)
+        m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
+        training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
         m.fit([training_set_obs])
+        for i in range(5):
+            print(i, file=sys.stderr)
+            init_alpha, init_mu = get_init_parameters(s0, s1, s2)
+            m_new = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
+             
+            training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
+            m_new.fit([training_set_obs])
+            if m_new.em_prob > m.em_prob:
+                print('take HMM no. %s, new: %s, old: %s ' %(i, m_new.em_prob, m.em_prob), file=sys.stderr)
+                m = m_new
+                 
+        tracker.write(text=init_mu, header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu,alpha)")
+        tracker.write(text=init_alpha)
         tracker.write(text=m.mu, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
         tracker.write(text=m.alpha)
-    elif options.distr == "binom":
-        print('use binom distr', file=sys.stderr)
-        #from rgt.ODIN.binom_hmm_2d_3s import BinomialHMM2d3s, get_init_parameters
-        from rgt.ODIN.hmm_binom_2d3s import BinomialHMM2d3s, get_init_parameters
-        tmp = 0
-        for i in range(len(exp_data.indices_of_interest)):
-            c1, c2 = exp_data._get_covs(exp_data, i)
-            tmp += sum([c1, c2])
-        n_, p_ = get_init_parameters(s1, s2, count=tmp)
-        print(n_, p_, file=sys.stderr)
-        #tracker.write(text=n_, header="Inital parameter estimate for HMM's Bin. Emission distribution (n, p)")
-        #tracker.write(text=np.asarray(p_))
-        #m = BinomialHMM(n_components=3, p = p_, startprob=[1,0,0], n = n_, dim_cond_1=dims[0], dim_cond_2=dims[1])
-        #print('Training HMM...', file=sys.stderr)
-        #m.fit([training_set_obs])
-        #tracker.write(text=m.n, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
-        #tracker.write(text=m.p)
-        #tmp = sum( [ exp_data.first_overall_coverage[i] + exp_data.second_overall_coverage[i] for i in exp_data.indices_of_interest]) / 2
-        #n_, p_ = get_init_parameters(s1, s2, count=tmp)
-        m = BinomialHMM2d3s(n_components=3, n=n_, p=p_)
-        m.fit([training_set_obs])
-        #m.save_setup(tracker)
-        distr_pvalue={'distr_name': "binomial", 'n': m.n[0], 'p': m.p[0][1]}
-        
+         
     tracker.write(text=m._get_transmat(), header="Transmission matrix")
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    
-    if options.debug:
-        posteriors = m.predict_proba(exp_data.get_observation(exp_data.indices_of_interest))
-        dump_posteriors_and_viterbi(name=options.name, posteriors=posteriors, states=states, DCS=exp_data)
-    
+     
     if options.distr == 'negbin':
         distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
     else:
         distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0][1]}
-    
+     
     get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par)
     
 if __name__ == '__main__':
