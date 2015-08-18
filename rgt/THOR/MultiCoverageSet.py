@@ -102,10 +102,45 @@ class MultiCoverageSet(DualCoverageSet):
                 yield self.covs[i].coverage[j]
             elif type == 'strand':
                 yield self.covs[i].cov_strand_all[j]
+            elif type == 'normregion':
+                yield self.norm_regions[i].coverage[j]
     
+    def _help_init_overall_coverage(self, cov_strand=True):
+        #make data in nice list of two matrices
+        print('start making matrix', file=sys.stderr)
+        sys.stderr.flush()
+        tmp = [[], []]
+        tmp2 = [[[], []], [[], []]]
+        for k in range(2):
+            it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
+            for i in it:
+                if cov_strand:
+                    tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'cov'))
+                    tmp[k].append(tmp_el)
+                 
+                    tmp_el = map(lambda x: (x[0], x[1]), reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand')))
+                    tmp2[k][0].append(map(lambda x: x[0], tmp_el))
+                    tmp2[k][1].append(map(lambda x: x[1], tmp_el))
+                else:
+                    tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'normregion'))
+                    tmp[k].append(tmp_el)
+
+        print('end making matrix', file=sys.stderr)
+        sys.stderr.flush()
+        if cov_strand:
+            #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
+            overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
+            #list of matrices: #replicates (row) x #bins (columns)
+            overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
+         
+            return overall_coverage, overall_coverage_strand
+        else:
+            return [np.matrix(tmp[0]), np.matrix(tmp[1])]
+        
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
-                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov):
+                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
+                 tracker):
         """Compute CoverageSets, GC-content and normalization"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -118,31 +153,11 @@ class MultiCoverageSet(DualCoverageSet):
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
         self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs, debug)
-        self._normalization_by_signal(name, scaling_factors_ip)
         
-        #self._output_bw(name, chrom_sizes, save_wig) 
+        self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
-        #make data in nice list of two matrices
-        print('start making matrix', file=sys.stderr)
-        sys.stderr.flush()
-        tmp = [[], []]
-        tmp2 = [[[], []], [[], []]]
-        for k in range(2):
-            it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
-            for i in it:
-                tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'cov'))
-                tmp[k].append(tmp_el)
-                 
-                tmp_el = map(lambda x: (x[0], x[1]), reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand')))
-                tmp2[k][0].append(map(lambda x: x[0], tmp_el))
-                tmp2[k][1].append(map(lambda x: x[1], tmp_el))
-
-        print('end making matrix', file=sys.stderr)
-        sys.stderr.flush()
-        self.overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])] #list of matrices: #replicates (row) x #bins (columns)
-         
-        #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
-        self.overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
+        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset)
+        self._output_bw(name, chrom_sizes, save_wig) 
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
@@ -183,39 +198,100 @@ class MultiCoverageSet(DualCoverageSet):
                     self.covs[i].subtract(self.inputs[i])
                     
                 
-    def _normalization_by_signal(self, name, scaling_factors_ip):
+#     def _norm_signal_global:
+#         """deprecated"""
+#         if self.norm_regions:
+#                 print("Normalize by signal (on specified regions)", file=sys.stderr)
+#                 signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+#             else:
+#                 print("Normalize genomewide by signal", file=sys.stderr)
+#                 signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+#              
+#             means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
+#             max_index = means_signal.index(max(means_signal))
+#              
+#             if max_index == 1:
+#                 r = range(self.dim_1)
+#                 f = means_signal[1] / means_signal[0]
+#                 print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
+#             if max_index == 0:
+#                 r = range(self.dim_1, self.dim_1 + self.dim_2)
+#                 f = means_signal[0] / means_signal[1]
+#                 print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
+#              
+#             for i in r:
+#                 self.covs[i].scale(f)
+    
+    def _trim4TMM(self, m_values, a_values, m_threshold=80, a_threshold=95):
+        """q=20 or q=5"""
+        assert len(m_values) == len(a_values)
+        
+        mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
+        m_values = m_values[mask]
+        a_values = a_values[mask]
+        
+        perc_m_l = np.percentile(m_values, 100-m_threshold)
+        perc_m_h = np.percentile(m_values, m_threshold)
+        perc_a_l = np.percentile(a_values, 100-a_threshold)
+        perc_a_h = np.percentile(a_values, a_threshold)
+        
+        res = filter(lambda x: not(x[0]>perc_m_h or x[0]<perc_m_l),\
+                     filter(lambda x: not(x[1]>perc_a_h or x[1]<perc_a_l), zip(list(m_values.squeeze()),list(a_values.squeeze()))))
+        
+        if res:
+            return np.asarray(map(lambda x: x[0], res)), np.asarray(map(lambda x: x[1], res))
+        else:
+            print('TMM normalization: nothing trimmed...', file=sys.stderr)
+            return np.asarray(m_values), np.asarray(a_values)
+    
+    def _norm_TMM(self, overall_coverage):
+        """Normalize with TMM approach, based on PePr"""
+        scaling_factors_ip = []
+        for j, cond_max in enumerate([self.dim_1, self.dim_2]):
+            for i in range(cond_max): #normalize all replicates
+                ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0), dtype='float')/ (self.dim_1 + self.dim_2)
+                mask_ref = ref > 0
+                ref = ref[mask_ref]
+                data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref]
+                
+                tmp = zip(data_rep, ref, data_rep + ref)
+                tmp.sort(key = lambda x: x[2], reverse=True)
+                tmp = tmp[:min(len(tmp), 10000)]
+                
+                data_rep = np.asarray(map(lambda x: x[0], tmp))
+                ref = np.asarray(map(lambda x: x[1], tmp))
+                m_values = np.log(data_rep / ref)
+                a_values = 0.5 * np.log(data_rep * ref)
+                m_values, a_values = self._trim4TMM(m_values, a_values) 
+                f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
+                print('scaling factor ', f, file=sys.stderr)
+                scaling_factors_ip.append(f)
+                
+        return scaling_factors_ip
+    
+    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset):
         """Normalize signal"""
+        if not scaling_factors_ip and housekeeping_genes:
+            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
+        
         if scaling_factors_ip:
             print("Normalize signal by scaling factors...", file=sys.stderr)
-            print(" ".join(map(lambda x: str(round(x, 2)), scaling_factors_ip)), file=sys.stderr)
-            
-            assert len(scaling_factors_ip) == len(self.covs)
-            for i in range(len(scaling_factors_ip)):
-                self.covs[i].scale(scaling_factors_ip[i])
+            for j, cond in enumerate([self.dim_1, self.dim_2]):
+                for i in range(cond): #normalize all replicates
+                    k = i if j == 0 else i+self.dim_1
+                    self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
         else:
-        
-            if self.norm_regions:
-                print("Normalize by signal (on specified regions)", file=sys.stderr)
-                signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
+            if norm_regionset:
+                norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
+                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage)
             else:
-                print("Normalize genomewide by signal", file=sys.stderr)
-                signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-            
-            means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
-            max_index = means_signal.index(max(means_signal))
-            
-            if max_index == 1:
-                r = range(self.dim_1)
-                f = means_signal[1] / means_signal[0]
-                print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-            if max_index == 0:
-                r = range(self.dim_1, self.dim_1 + self.dim_2)
-                f = means_signal[0] / means_signal[1]
-                print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-            
-            for i in r:
-                self.covs[i].scale(f)
-           
+                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach from PePr
+            for i in range(len(scaling_factors_ip)):
+                self.covs[i].scale(scaling_factors_ip[i]) 
+        
+        tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
+        
+                
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
         iter = self.genomicRegions.__iter__()

@@ -407,7 +407,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         contained_chrom = ['chr1', 'chr2']
     else:
         contained_chrom = get_all_chrom(bamfiles)
-        #contained_chrom = ['chr19', 'chr18']
+        #contained_chrom = ['chr19']
     
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
@@ -440,11 +440,6 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     else:
         norm_regionset = None
         
-    if not scaling_factors_ip and housekeeping_genes:
-        scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
-    
-    if scaling_factors_ip:
-        tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
     
     regionset.sequences.sort()
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
@@ -453,7 +448,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True)
+                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
+                                  housekeeping_genes=housekeeping_genes, tracker=tracker)
     
     return multi_cov_set
 
@@ -527,8 +523,8 @@ def input(laptop):
         parser.add_option("--report", dest="report", default=False, action="store_true", \
                           help="report.")
         
-	group = OptionGroup(parser, "Advanced options")
-	group.add_option("--regions", dest="regions", default=None, type="string",\
+        group = OptionGroup(parser, "Advanced options")
+        group.add_option("--regions", dest="regions", default=None, type="string",\
                            help="Define regions (BED) where to call DPs.")
         group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal.  [default: %default]")
@@ -536,10 +532,11 @@ def input(laptop):
                           help="Stepsize with which the window consecutively slides across the genome to create the signal.")
         group.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
-	group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn off GC content calculation")
+        parser.add_option_group(group)
+        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
         
-	parser.add_option_group(group)
         ##deprecated options
         #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
         #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
@@ -552,7 +549,7 @@ def input(laptop):
 
     options.distr = "negbin"
     options.save_wig = False
-    options.norm_regions = None
+    #options.norm_regions = None
     options.exts_inputs = None
         
     if options.version:
