@@ -370,12 +370,12 @@ class MultiCoverageSet(DualCoverageSet):
         self.write_test_samples(name + '-s1', s1_v)
         self.write_test_samples(name + '-s2', s2_v)
     
-    def get_training_set(self, test, exp_data, debug, name, y=5000, ex=2):
+    def get_training_set(self, test, exp_data, debug, name, foldchange, min_t, y=5000, ex=2):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
-        threshold = 1.3
+        threshold = foldchange
         #diff_cov = 20
         t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), 99))
-        diff_cov = max(20, t)
+        diff_cov = max(min_t, t)
         
         if test:
             diff_cov = 2

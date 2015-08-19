@@ -58,7 +58,7 @@ def main():
 
     print('Compute training set...',file=sys.stderr)
     sys.stderr.flush()
-    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, 10000, 1)
+    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, 10000, 1)
     
     sys.stderr.flush()
     #print(training_set_obs[training_set_obs>0])

@@ -403,11 +403,11 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
-    if test:
-        contained_chrom = ['chr1', 'chr2']
-    else:
-        contained_chrom = get_all_chrom(bamfiles)
-        #contained_chrom = ['chr19']
+#     if test:
+#         contained_chrom = ['chr1', 'chr2']
+#     else:
+#         #contained_chrom = get_all_chrom(bamfiles)
+#         contained_chrom = ['chr1', 'chr2']
     
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
@@ -416,9 +416,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 c, s, e = line[0], int(line[1]), int(line[2])
-		if c in contained_chrom:                
-		    regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                    chrom_sizes_dict[c] = e
+		#if c in contained_chrom:                
+                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                chrom_sizes_dict[c] = e
     else:
         print("Call DPs on whole genome.", file=sys.stderr)
         with open(chrom_sizes) as f:
@@ -426,9 +426,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 chrom, end = line[0], int(line[1])
-		if chrom in contained_chrom:
-                    regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                    chrom_sizes_dict[chrom] = end
+		#if chrom in contained_chrom:
+                regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                chrom_sizes_dict[chrom] = end
     
     if not regionset.sequences:
         print('something wrong here', file=sys.stderr)
@@ -522,6 +522,10 @@ def input(laptop):
                           help="All files are stored in output directory which is created if necessary.")
         parser.add_option("--report", dest="report", default=False, action="store_true", \
                           help="report.")
+        parser.add_option("-f", "--foldchange", dest="foldchange", default=1.3, type="float",\
+                          help="Foldchange for trainingsset [default: %default]")
+        parser.add_option("-t", "--threshold", dest="threshold", default=20, type="float",\
+                          help="Foldchange for trainingsset [default: %default]")
         
         group = OptionGroup(parser, "Advanced options")
         group.add_option("--regions", dest="regions", default=None, type="string",\
