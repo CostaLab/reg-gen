@@ -522,9 +522,9 @@ def input(laptop):
                           help="All files are stored in output directory which is created if necessary.")
         parser.add_option("--report", dest="report", default=False, action="store_true", \
                           help="report.")
-        parser.add_option("-f", "--foldchange", dest="foldchange", default=1.3, type="float",\
+        parser.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",\
                           help="Foldchange for trainingsset [default: %default]")
-        parser.add_option("-t", "--threshold", dest="threshold", default=20, type="float",\
+        parser.add_option("-t", "--threshold", dest="threshold", default=95, type="float",\
                           help="Foldchange for trainingsset [default: %default]")
         parser.add_option("--size", dest="size_ts", default=10000, type="int",\
                           help="10000 of 2 free parameters for HMM, else 1000 [default: %default]")
