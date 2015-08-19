@@ -375,8 +375,8 @@ class MultiCoverageSet(DualCoverageSet):
         threshold = foldchange
         #diff_cov = 20
         t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), 99))
-        diff_cov = max(min_t, t)
-        
+        #diff_cov = max(min_t, t)
+        diff_cov = min_t
         if test:
             diff_cov = 2
             threshold = 1.5
