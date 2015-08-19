@@ -526,6 +526,8 @@ def input(laptop):
                           help="Foldchange for trainingsset [default: %default]")
         parser.add_option("-t", "--threshold", dest="threshold", default=20, type="float",\
                           help="Foldchange for trainingsset [default: %default]")
+        parser.add_option("--size", dest="size_ts", default=10000, type="int",\
+                          help="10000 of 2 free parameters for HMM, else 1000 [default: %default]")
         
         group = OptionGroup(parser, "Advanced options")
         group.add_option("--regions", dest="regions", default=None, type="string",\
@@ -540,7 +542,8 @@ def input(laptop):
                           help="turn off GC content calculation")
         parser.add_option_group(group)
         parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
-        
+        group.add_option("--three-parameter", default=False, dest="hmm_free_para", action="store_true", \
+                          help="HMM with 3 free parameters[default: %default]")
         ##deprecated options
         #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
         #                  help="HMM's emission distribution (negbin, binom). [default: %default]")

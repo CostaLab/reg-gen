@@ -58,7 +58,7 @@ def main():
 
     print('Compute training set...',file=sys.stderr)
     sys.stderr.flush()
-    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, 10000, 1)
+    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, options.size_ts, 1)
     
     sys.stderr.flush()
     #print(training_set_obs[training_set_obs>0])
@@ -69,14 +69,14 @@ def main():
         init_alpha, init_mu = get_init_parameters(s0, s1, s2)
         m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
         training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
-        m.fit([training_set_obs])
+        m.fit([training_set_obs], options.hmm_free_para)
         for i in range(5):
             print(i, file=sys.stderr)
             init_alpha, init_mu = get_init_parameters(s0, s1, s2)
             m_new = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
              
             training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
-            m_new.fit([training_set_obs])
+            m_new.fit([training_set_obs], options.hmm_free_para)
             if m_new.em_prob > m.em_prob:
                 print('take HMM no. %s, new: %s, old: %s ' %(i, m_new.em_prob, m.em_prob), file=sys.stderr)
                 m = m_new

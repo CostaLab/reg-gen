@@ -75,7 +75,7 @@ class NegBinRepHMM(_BaseHMM):
         self.em_prob = 0
     
     
-    def fit(self, obs):
+    def fit(self, obs, three_para):
         """Estimate model parameters.
 
         An initialization step is performed before entering the EM
@@ -122,7 +122,7 @@ class NegBinRepHMM(_BaseHMM):
                 break
 
             # Maximization step
-            self._do_mstep(stats, self.params)
+            self._do_mstep(stats, self.params, three_para)
         print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
         self.em_prob = logprob[-1]
         return self
@@ -203,22 +203,27 @@ class NegBinRepHMM(_BaseHMM):
         
         stats['posterior'] = np.copy(posteriors)
     
-    def _help_do_mstep(self, stats):
+    def _help_do_mstep(self, stats, three_para):
         #for i in range(self.n_features):
         #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         #print('help_do_mstep', self.mu)
-        self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-        #self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
         
-        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
-        
-        self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
-        
-        #self.mu[0,0] = self.mu[1,1]
-        
-        self.mu[1,2] = self.mu[0,1]
-        self.mu[0,2] = self.mu[1,1]
-        self.mu[1,0] = self.mu[0,0]
+        if three_para:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+            self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
+            
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
+        else:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
+            
+            self.mu[0,0] = self.mu[1,1]
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
         
         tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         self.alpha = np.matrix(tmp_a)
@@ -288,9 +293,9 @@ class NegBinRepHMM(_BaseHMM):
         return c_1, c_2
         
     
-    def _do_mstep(self, stats, params):
+    def _do_mstep(self, stats, params, three_para):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
-        self._help_do_mstep(stats)
+        self._help_do_mstep(stats, three_para)
         print('mstep', file=sys.stderr)
         #self.count_s1, self.count_s2 = self._count(stats['posterior'])
         #self.merge_distr()
@@ -325,7 +330,7 @@ if __name__ == '__main__':
     X, Z = m.sample(20)
     
     m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
-    m2.fit([X])
+    m2.fit([X], three_para=False)
     
     posteriors = m.predict_proba(X)
     e = m2.predict(X)
