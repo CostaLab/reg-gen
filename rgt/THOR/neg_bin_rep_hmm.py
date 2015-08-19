@@ -208,13 +208,13 @@ class NegBinRepHMM(_BaseHMM):
         #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         #print('help_do_mstep', self.mu)
         self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
+        #self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
         
-        #self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
         
-        #self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
+        self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
         
-        self.mu[0,0] = self.mu[1,1]
+        #self.mu[0,0] = self.mu[1,1]
         
         self.mu[1,2] = self.mu[0,1]
         self.mu[0,2] = self.mu[1,1]
