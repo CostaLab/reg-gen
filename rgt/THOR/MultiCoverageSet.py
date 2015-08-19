@@ -374,9 +374,9 @@ class MultiCoverageSet(DualCoverageSet):
         """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
         threshold = foldchange
         #diff_cov = 20
-        t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), 99))
+        t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), min_t))
         #diff_cov = max(min_t, t)
-        diff_cov = min_t
+        diff_cov = t
         if test:
             diff_cov = 2
             threshold = 1.5
