@@ -986,7 +986,8 @@ class Html:
 
         # Writing document to file
         f = open(file_name,"w")
-        for e in self.document: f.write(e+"\n")
+        for e in self.document:
+            if e: f.write(e+"\n")
         f.close()
 
 class AuxiliaryFunctions:

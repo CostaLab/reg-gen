@@ -383,7 +383,8 @@ class GenomicRegionSet:
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
                 #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], orientation=coord[4], proximity=new_prox_list))
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], 
+                                             orientation=coord[4], proximity=new_prox_list))
              
         return result_grs
 
@@ -656,6 +657,94 @@ class GenomicRegionSet:
             #z.sort()
             return z
     
+    def intersect_count(self, regionset, mode_count="count", threshold=False):
+        """ Return the number of regions in regionset A&B in following order:
+        1. A - B
+        2. B - A
+        3. intersection of A and B
+        """
+        a = copy.deepcopy(self)
+        b = copy.deepcopy(regionset)
+
+        if len(a) == 0:
+            return 0, len(b), 0
+        elif len(b) == 0: 
+            return len(a), 0, 0
+
+        else:
+            # If there is overlap within self or y, they should be merged first. 
+            if not a.sorted: a.sort()
+            if not b.sorted: b.sort()
+            
+            a.merge()
+            b.merge()
+
+            if mode_count=="count":
+                if threshold:
+                    if a.total_coverage() == 0:
+                        print("\n ** Warning : "+ bed1.name +" has no length (only points) for finding intersection with given threshold.")
+                        sys.exit(1)
+                    if b.total_coverage() == 0:
+                        print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
+                        sys.exit(1)
+                    if 50 >= threshold > 0:
+                        a.extend(-threshold,-threshold, percentage=True)
+                    elif threshold > 50 or threshold < 0:
+                        print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
+                        sys.exit(1)
+                
+                iter_a = iter(a)
+                s = iter_a.next()
+                last_j = len(b)-1
+                j = 0
+                cont_loop = True
+                pre_inter = 0
+                cont_overlap = False
+                
+                c_a = len(a)
+                c_b = len(b)
+                c_ab = 0
+
+                while cont_loop:
+                    # When the regions overlap
+                    if s.overlap(b[j]):
+                        c_ab += 1
+                        
+                        if cont_overlap == False: pre_inter = j
+                        if j == last_j: 
+                            try: 
+                                s = iter_a.next()
+                                c_a -= 1
+                            except: cont_loop = False 
+                        else: 
+                            j = j + 1
+                            c_b -= 1
+                        cont_overlap = True
+                    
+                    elif s < b[j]:
+                        try: 
+                            s = iter_a.next()
+                            j = pre_inter
+                            cont_overlap = False
+                        except: cont_loop = False 
+                    
+                    elif s > b[j]:
+                        if j == last_j:
+                            cont_loop = False
+                        else:
+                            j = j + 1
+                            cont_overlap = False
+                return c_a, c_b, c_ab
+
+            elif mode_count=="bp":
+                intersect_r = a.intersect(b, mode=OverlapType.OVERLAP)
+                len_inter = intersect_r.total_coverage()
+                allbed1 = a.total_coverage()
+                allbed2 = b.total_coverage()
+                len_12 = allbed1 - len_inter
+                len_21 = allbed2 - len_inter
+                return len_12, len_21, len_inter
+             
     def closest(self,y):
         """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 
            If there are intersection, return False.
@@ -1452,31 +1541,72 @@ class GenomicRegionSet:
 
         """
         genome = pysam.Fastafile(genome_path)
-
-        for gr in self:
-            if not gr.name:
-                print("Error: For fetching exon sequences, please define the transcript name.")
-                sys.exit()
-            else:
-                f = open(os.path.join(directory, gr.name+".fa"), "w")
-                data = gr.data.split("\t")
-                #print(len(data))
-                if len(data) == 7:
-                    #print(data)
-                    n = int(data[4])
-                    
-                    blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
-                    starts = [ int(s) for s in filter(None, data[6].split(",")) ]
-                    
-                    for i in range(n):
-                        start = gr.initial + starts[i]
-                        end = start + blocks[i]
-                        print( ">"+ " ".join([gr.name+":"+str(start)+"-"+str(end), "exon:"+str(i+1), 
-                               "_".join(["REGION",gr.chrom,str(start),str(end), gr.orientation])   ]), file=f)
-                        print(genome.fetch(gr.chrom, start, end), file=f)
+        if len(self.sequences[0].data.split("\t")) == 7:
+            for gr in self:
+                if not gr.name:
+                    print("Error: For fetching exon sequences, please define the transcript name.")
+                    sys.exit()
                 else:
-                    print("Warning: The given regions have no block information, please try write_bed_blocks")
-                f.close()
+                    f = open(os.path.join(directory, gr.name+".fa"), "w")
+                    data = gr.data.split("\t")
+                    #print(len(data))
+                    if len(data) == 7:
+                        #print(data)
+                        n = int(data[4])
+                        
+                        blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
+                        starts = [ int(s) for s in filter(None, data[6].split(",")) ]
+                        
+                        for i in range(n):
+                            start = gr.initial + starts[i]
+                            end = start + blocks[i]
+                            print( ">"+ " ".join([gr.name+":"+str(start)+"-"+str(end), "exon:"+str(i+1), 
+                                   "_".join(["REGION",gr.chrom,str(start),str(end), gr.orientation])   ]), file=f)
+                            print(genome.fetch(gr.chrom, start, end), file=f)
+                    else:
+                        print("Warning: The given regions have no block information, please try write_bed_blocks")
+                    f.close()
+        else:
+            pre_id = ""
+            for gr in self:
+                if pre_id == "": 
+                    pre_id = gr.name
+                    z = GenomicRegionSet(gr.name)
+                    z.add(gr)
+                elif gr.name == pre_id:
+                    z.add(gr)
+                else:
+                    f = open(os.path.join(directory, pre_id+".fa"), "w")
+                    for i, g in enumerate(z):
+                        print( ">"+ " ".join([g.name, 
+                                              "exon:"+str(i+1), 
+                                              "_".join(["REGION",
+                                                        g.chrom,
+                                                        str(g.initial),str(g.final), 
+                                                        gr.orientation]) 
+                                              ]), file=f)
+                        print(genome.fetch(g.chrom, g.initial, g.final), file=f)
+                    f.close()
+
+                    pre_id = gr.name
+                    z = GenomicRegionSet(gr.name)
+                    z.add(gr)
+
+            # Last TX
+            f = open(os.path.join(directory, pre_id+".fa"), "w")
+            for i, g in enumerate(z):
+                print( ">"+ " ".join([g.name, 
+                                      "exon:"+str(i+1), 
+                                      "_".join(["REGION",
+                                                g.chrom,
+                                                str(g.initial),str(g.final), 
+                                                gr.orientation]) 
+                                      ]), file=f)
+                print(genome.fetch(g.chrom, g.initial, g.final), file=f)
+            f.close()
+            
+
+
 
     def by_names(self, names):
         """Subset the region set by the given list of names"""

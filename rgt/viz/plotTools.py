@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
+import matplotlib.ticker as mtick
 from matplotlib import cm
 import itertools
 import pickle
@@ -121,7 +122,8 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             else:
                 n = len(exps.fieldsDict[colorby].keys())
             print(n)
-            colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+            #colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+            colors = plt.cm.Dark2(numpy.linspace(0, 1, n)).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -174,12 +176,16 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                 for q in grouped_region[ty]:            
                     qs.append(q.name)
             qs = list(set(qs))
+            # Accent Spectral hsv Set1
             colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(qs))).tolist()
+            
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
+            
             colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(types))).tolist()
+            
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]: 
                     i = types.index(EM.get_type(q.name, colorby))
@@ -208,17 +214,22 @@ def remove_duplicates(grouped_dict):
         for r in grouped_dict[ty]:
             r.remove_duplicates()
 
-def group_refque(rEM, qEM, groupby):
+def group_refque(rEM,  qEM, groupby, rRegion=None, qRegion=None):
     """ Group regionsets of rEM and qEM according to groupby """
     groupedreference = OrderedDict()  # Store all bed names according to their types
     groupedquery = OrderedDict()  # Store all bed names according to their types
+    if rRegion: rregs = rRegion
+    else: rregs = rEM.get_regionsets()
+    if qRegion: qregs = qRegion
+    else: qregs = qEM.get_regionsets()
+
     if groupby:
-        for r in rEM.get_regionsets():
+        for r in rregs:
             ty = rEM.get_type(r.name,groupby)
             try: groupedreference[ty].append(r)
             except: groupedreference[ty] =[r]
         
-        for q in qEM.get_regionsets():
+        for q in qregs:
             ty = qEM.get_type(q.name,groupby)
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
@@ -239,17 +250,18 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
                 print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
                 sys.exit(1)
             if 50 >= threshold > 0:
-                bed1.extend(-threshold,-threshold,percentage=True)
+                bed1.extend(-threshold,-threshold, percentage=True)
             elif threshold > 50 or threshold < 0:
                 print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
                 sys.exit(1)
         ##if bed1.total_coverage() == 0: bed1.extend(0,1)
         #if bed2.total_coverage() == 0: bed2.extend(0,1)
-        intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
-        #intersect_r.remove_duplicates()
+        intersect_r = bed1.intersect(bed2, mode=OverlapType.OVERLAP)
         c_inter = len(intersect_r)
-        c_12 = len(bed1) - c_inter
-        c_21 = len(bed2) - c_inter
+        intersect_1 = bed1.intersect(intersect_r, mode=OverlapType.ORIGINAL)
+        c_12 = len(bed1) - len(intersect_1)
+        intersect_2 = bed2.intersect(intersect_r, mode=OverlapType.ORIGINAL)
+        c_21 = len(bed2) - len(intersect_2)
         #print(c_12, c_21, c_inter)
         return c_12, c_21, c_inter
         
@@ -360,6 +372,12 @@ def compute_coverage(input):
     te = time.time()
     print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
+
+def mp_count_intersets(inps):
+    # [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+    random_r,random_q = inps[0].random_split(size=inps[1])                           
+    d = random_r.intersect_count(random_q, mode_count=inps[2], threshold=inps[3])
+    return d
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -1068,18 +1086,32 @@ class Intersect:
         self.sbar = None
         self.pbar = None
         self.test_d = None
+        #self.background = None
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
         bgbed = GenomicRegionSet(name="Background")
         if path:
             bgbed.read_bed(path)
+            nq = []
+            print("\tTrimming the queries by the given background: "+path)
+            
+            for q in self.query:
+                qq = q.intersect(bgbed, mode=OverlapType.ORIGINAL)
+                nq.append( qq )
+            self.query = nq
+
         else:
             bgbed.get_genome_data(organism=self.organism)
-        self.backgroung = bgbed
+
+        #self.background = bgbed
+
 
     def group_refque(self, groupby):
-        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
+        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, 
+                                                                groupby, 
+                                                                self.references, 
+                                                                self.query)
         remove_duplicates(self.groupedreference)
         remove_duplicates(self.groupedquery)
         
@@ -1112,13 +1144,15 @@ class Intersect:
             self.color_tags = tags
         self.color_list = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.color_tags))).tolist()
     
-    def extend_ref(self,percentage):
+    def extend_ref(self, percentage):
         """percentage must be positive value"""
         for ty in self.groupedreference:
             for r in self.groupedreference[ty]:
-                r.extend(left=percentage,right=percentage,percentage=True)
-        
+                r.extend(left=percentage,right=percentage,percentage=False)
+                r.merge()
+
     def count_intersect(self, threshold, frequency=False):
+
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
         self.nalist = []
@@ -1128,7 +1162,7 @@ class Intersect:
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         #elif self.mode_count == "count":
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
-        
+
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
@@ -1154,7 +1188,10 @@ class Intersect:
                             elif self.mode_count == "count": qlen = len(q)
                             self.qlen[ty][q.name] = qlen
                             # Define different mode of intersection and count here
-                            c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+                            print(".", end="")
+                            sys.stdout.flush()
+                            c = r.intersect_count(q, mode_count=self.mode_count, threshold=threshold)
+                            #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
                             self.counts[ty][r.name][q.name] = c
                             if frequency: 
                                 try: self.frequency[ty][q.name].append(c[2])
@@ -1162,7 +1199,9 @@ class Intersect:
                                     self.frequency[ty][q.name] = [c[2]]
                             
                             #print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
-            
+        print()
+        sys.stdout.flush()
+
     def barplot(self, logt=False, percentage=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
@@ -1196,7 +1235,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     if percentage:
-                        y = (self.counts.values()[ai][r][q][2] + plus)/lr
+                        y = 100 * (self.counts.values()[ai][r][q][2] + plus)/lr
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number
                     
@@ -1216,6 +1255,10 @@ class Intersect:
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
         elif self.mode_count == "count":
             if percentage:
+                fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
+                yticks = mtick.FormatStrFormatter(fmt)
+                ax.yaxis.set_major_formatter(yticks)
+
                 f.text(-0.025, 0.5, "Intersected percantage", rotation="vertical", va="center")
             else:
                 f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
@@ -1234,7 +1277,8 @@ class Intersect:
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
             ax.set_title(self.counts.keys()[ai], y=1)
-            r_label = []   
+            r_label = []
+
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 if len(axs) == 1: r_label.append(r)
                 else: 
@@ -1242,10 +1286,14 @@ class Intersect:
                     except: r_label.append(r)
                 width = 0.6
                 bottom = 0
-                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                reverse_q = self.counts.values()[ai][r].keys()[::-1]
+                #ql = len(reverse_q) - 1
+                rc = self.color_tags[::-1]
+                for ind_q, q in enumerate(reverse_q):
                     x = ind_r
                     y = self.counts.values()[ai][r][q][2] # intersect number
-                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
+                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], 
+                           edgecolor="none", align='center', label=rc[ind_q])
                     bottom = bottom + y
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
@@ -1253,7 +1301,14 @@ class Intersect:
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             
-            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+            #handles, labels = ax.get_legend_handles_labels()
+            #nhandles = []
+            #for t in self.color_tags:
+            #    nhandles.append( handles[labels.index(t)] )
+            #print(self.color_tags)
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = OrderedDict(reversed(zip(labels, handles)))
+            ax.legend(by_label.values(), by_label.keys(), loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
@@ -1299,17 +1354,25 @@ class Intersect:
                 else:
                     for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                         x = ind_r
-                        y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
-                        ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
+                        y = 100 * float(self.counts.values()[ai][r][q][2])/sumlength # percentage
+                        ax.bar(x, y, width=width, bottom=bottom, 
+                               color=self.color_list[q], edgecolor="none", align='center')
                         bottom = bottom + y
                         self.percentage[ai][r][q] = y
-                ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
+                
+                ax.bar(x,100-bottom,width=width, bottom=bottom, 
+                       color=self.color_list["No intersection"], align='center')
+            
             ax.yaxis.tick_left()
+
             ax.set_xticks(range(len(r_label)))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
-            ax.set_ylim([0,1])
+            ax.set_ylim([0,100])
+
+            
+
             legend_labels = self.color_tags + ["No intersection"]
             ax.legend(legend_labels, loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
@@ -1325,7 +1388,7 @@ class Intersect:
         #link_d = {title:"intersection.html"}
         dir_name = os.path.basename(directory)
         #check_dir(directory)
-        html_header = "Intersection Test: "+dir_name
+        html_header = "Intersection Test: "+dir_name + "/"+title
         link_d = OrderedDict()
         link_d["Intersection test"] = "index.html"
         link_d["Parameters"] = "parameters.html"
@@ -1334,10 +1397,12 @@ class Intersect:
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         
         html.add_figure("intersection_bar.png", align="center")
-        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         html.add_figure("intersection_barp.png", align="center")
+        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        header_list = ["Reference<br>name",
+        
+        header_list = ["#",
+                       "Reference<br>name",
                        "Query<br>name", 
                        "Reference<br>number", 
                        "Query<br>number", 
@@ -1355,9 +1420,11 @@ class Intersect:
         for ind_ty, ty in enumerate(self.counts.keys()):
             html.add_heading(ty, size = 4, bold = False)
             data_table = []
+            c = 0
             for ind_r,r in enumerate(self.counts[ty]):
                 for ind_q, q in enumerate(self.counts[ty][r]):
                     if r == q: continue
+                    c += 1
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
                     intern = self.counts[ty][r][q][2]
                     if self.test_d:
@@ -1365,31 +1432,31 @@ class Intersect:
                         chisqua = value2str(self.test_d[ty][r][q][1])
                         pv = self.test_d[ty][r][q][2]
                         if isinstance(pv, str):
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                            data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                               str(intern), "{:.2f}%".format(100*pt),
                                               aveinter, chisqua, pv,"-"])
                         else: 
                             npv = 1 - pv
                             if pv < 0.05:
                                 if intern > aveinter:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
                                 else:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
                             elif self.test_d[ty][r][q][2] >= 0.05:
                                 if intern > aveinter:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
                                 else:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
-                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                        data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
@@ -1632,7 +1699,8 @@ class Intersect:
         
         
     def stest(self,repeat,threshold):
-        print("\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
+
+        print("\n\tIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
         self.test_time = repeat
         self.test_d = {}
         plist = OrderedDict()
@@ -1642,29 +1710,50 @@ class Intersect:
             plist[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
                 if r.name in self.nalist: continue
+                print("\t"+r.name)
                 self.test_d[ty][r.name] = {}
                 plist[ty][r.name] = OrderedDict()
+                print("\t.", end="")
+                sys.stdout.flush()
                 for q in self.groupedquery[ty]:
+                    print(".", end="")
+                    sys.stdout.flush()
                     if q.name in self.nalist: continue
                     # True intersection
                     obs = self.counts[ty][r.name][q.name]
                     qn = q.name
                     if obs[2] == 0:
-                        aveinter, chisq, p = "NA", "NA", "NA"
+                        aveinter, chisq, p = "NA", "NA", "1"
                     else:
                         com = q.combine(r, change_name=False, output=True)
                         # Randomization
                         d = []
-                        for i in range(repeat):
-                            random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
-                            d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
-                        da = numpy.array(d)
+                        
+                        inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+                        mp_input = [ inp for i in range(repeat) ]
+
+                        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                        mp_output = pool.map(mp_count_intersets, mp_input)
+                        pool.close()
+                        pool.join()
+
+
+
+                        #for i in range(repeat):
+                        #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                        #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
+                            #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
+                        da = numpy.array(mp_output)
                         
                         exp_m = numpy.mean(da, axis=0)
+                        #print(exp_m)
+                        #print(obs)
                         chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                         aveinter = exp_m[2]
+
                     plist[ty][r.name][qn] = p
                     self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
+                print()
                     
             multiple_correction(plist)
             
@@ -2239,9 +2328,11 @@ class Lineplot:
         else:
             for bed in self.bednames:
                 self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
+                try: self.cuebed[bed].remove("None")
+                except: pass
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
-        
+
     def coverage(self, sortby, heatmap=False, logt=False, mp=False):
         
         def annot_ind(bednames, tags):
@@ -2292,7 +2383,7 @@ class Lineplot:
                                         
                                         if "Conservation" in bam:
                                             cov.phastCons46way_score(stepsize=self.ss)
-                                        elif "DNAm" in bam:
+                                        elif ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
                                             cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                         else:
                                             cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
@@ -2361,8 +2452,11 @@ class Lineplot:
         self.data = data
         
     def colormap(self, colorby, definedinEM):
-        self.colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
-        
+        colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
+        self.colors = {}
+        for i, c in enumerate(self.color_tags):
+            self.colors[c] = colors[i]
+
     def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False):
         
         rot = 50
@@ -2414,7 +2508,7 @@ class Lineplot:
                     #except: 
                     #    continue
                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                    ax.plot(x,y, color=self.colors[j], lw=1)
+                    ax.plot(x,y, color=self.colors[c], lw=1)
                     # Processing for future output
                     if printtable:
                         [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]

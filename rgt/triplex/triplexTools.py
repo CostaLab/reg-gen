@@ -417,8 +417,10 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=500000, show_dis=True)
-        
+        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=100000, show_dis=True)
+        print(name)
+        print(asso_genes[0].name)
+        print(asso_genes[0].proximity)
         genes = asso_genes[0].name.split(":")
         #proxs = asso_genes[0].proximity.split(":")
         closest_genes = []
@@ -444,7 +446,8 @@ def rank_array(a):
 class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, bed, bg, organism, promoterLength, rna_name, 
-                 summary, temp, output, showdbs=None, score=False, scoreh=False):
+                 summary, temp, output, showdbs=None, score=False, scoreh=False,
+                 filter_havana=True, protein_coding=False, known_only=True):
         """Initiation"""
         self.organism = organism
         genome = GenomeData(organism)
@@ -492,7 +495,10 @@ class PromoterTest:
                 try:
                     ann = load_dump(path=temp, filename="annotation_"+organism)
                 except:
-                    ann = AnnotationSet(organism, alias_source=organism)
+                    ann = AnnotationSet(organism, alias_source=organism,
+                                        filter_havana=filter_havana, 
+                                        protein_coding=protein_coding, 
+                                        known_only=known_only)
                     print("\tDumping annotation file...")
                     t1 = time.time()
                     dump(object=ann, path=temp, filename="annotation_"+organism)
@@ -698,7 +704,7 @@ class PromoterTest:
                             
                     f_nde.close()
                 #if remove_temp:
-                #os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
                 #os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
                 os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
@@ -1519,6 +1525,9 @@ class PromoterTest:
                        ["Input BED file as backgrounds", "-bg", bg ],
                        ["Output directory", "-o", "/".join(parameters.o.partition("/")[-3:]) ],
                        ["Organism", "-organism", parameters.organism ],
+                       ["filter_havana", "-filter_havana", parameters.filter_havana ],
+                       ["protein_coding", "-protein_coding", parameters.protein_coding ],
+                       ["known_only", "-known_only", parameters.known_only ],
                        ["Promoter length", "-pl", str(parameters.pl) ],
                        ["Alpha level for rejection p value", "-a", str(parameters.a) ],
                        ["Cut off value for filtering out the low counts of DBSs", "-ccf", str(parameters.ccf) ],

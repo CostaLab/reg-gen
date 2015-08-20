@@ -163,7 +163,7 @@ def main():
                                   'count' outputs the number of overlapped regions.\
                                   'bp' outputs the coverage(basepair) of intersection.")
     parser_intersect.add_argument('-tc', metavar='  ', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
+    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in bp) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20 bp in order to include proximal queries.")
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -368,7 +368,8 @@ def main():
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="reference_experimental_matrix.txt")
             copy_em(em=args.q, directory=args.o, folder=args.t, filename="query_experimental_matrix.txt")
             list_all_index(path=args.o)
-            
+
+        ###########################################################################
         ################### Intersect Test ##########################################
         if args.mode == 'intersect':
             print2(parameter, "\n############ Intersection Test ############")
@@ -376,6 +377,8 @@ def main():
             print2(parameter, "\tQuery:            "+args.q)
             print2(parameter, "\tOutput directory: "+os.path.basename(args.o))
             print2(parameter, "\tExperiment title: "+args.t)
+            
+            
             # Fetching reference and query EM
             inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
             # Setting background
@@ -391,9 +394,12 @@ def main():
                 sys.exit(1)
             
             inter.colors(args.c, args.color)
+            print("\tProcessing data.", end="")
+            sys.stdout.flush()
             inter.count_intersect(threshold=args.tc)
             
             # generate pdf
+            print("\tGenerate graphics...")
             inter.barplot(logt=args.log)
             output(f=inter.bar, directory = args.o, folder = args.t, filename="intersection_bar",
                    extra=plt.gci(), pdf=True,show=args.show)
@@ -405,6 +411,7 @@ def main():
                    extra=plt.gci(), pdf=True,show=args.show)
             
             if args.stest > 0:
+                print("\tStatistical testing by randomizing the regions...")
                 inter.stest(repeat=args.stest,threshold=args.tc)
             
             # generate html
@@ -417,7 +424,9 @@ def main():
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="reference_experimental_matrix.txt")
             copy_em(em=args.q, directory=args.o, folder=args.t, filename="query_experimental_matrix.txt")
             list_all_index(path=args.o)
-            ################### Jaccard test ##########################################
+
+        ###########################################################################
+        ################### Jaccard test ##########################################
         if args.mode == "jaccard":
             """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
             
@@ -453,6 +462,7 @@ def main():
             copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
             list_all_index(path=args.o)
 
+        ###########################################################################
         ################### Combinatorial Test ##########################################
         if args.mode == 'combinatorial':
             print("\n############ Combinatorial Test ############")
@@ -498,7 +508,7 @@ def main():
             copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
             list_all_index(path=args.o)
 
-
+        ###########################################################################
         ################### Boxplot ##########################################
         if args.mode == 'boxplot':
             print("\n################# Boxplot #################")

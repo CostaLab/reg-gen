@@ -73,7 +73,8 @@ class AnnotationSet:
         ANNOTATION_SET = 0
         LIST = 1
 
-    def __init__(self, gene_source, tf_source=None, alias_source=None):
+    def __init__(self, gene_source, tf_source=None, alias_source=None, 
+                 filter_havana=True, protein_coding=False, known_only=True):
         """
         Initializes AnnotationSet.
 
@@ -114,12 +115,16 @@ class AnnotationSet:
         if(isinstance(gene_source,str)): # It can be a string.
             if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
                 # FTT for TDF True
-                self.load_gene_list(gene_source, filter_havana=True, protein_coding=False,
-                                    known_only=False)
+                self.load_gene_list(gene_source, 
+                                    filter_havana=filter_havana, 
+                                    protein_coding=protein_coding,
+                                    known_only=known_only)
             else: # The string may represent an organism which points to a gtf file within data.config.
                 genome_data = GenomeData(gene_source)
-                self.load_gene_list(genome_data.get_gencode_annotation(), filter_havana=True, protein_coding=False,
-                                    known_only=False)
+                self.load_gene_list(genome_data.get_gencode_annotation(), 
+                                    filter_havana=filter_havana, 
+                                    protein_coding=protein_coding,
+                                    known_only=known_only)
 
         # Initializing Optional Field - TF List
         if(tf_source):

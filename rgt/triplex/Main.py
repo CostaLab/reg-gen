@@ -166,8 +166,8 @@ def main():
     parser_promotertest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
     #parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for paths to all RNA sequences (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, metavar='  ', help="Define the RNA name")
-    parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for defferentially expression gene list (gene symbols or Ensembl ID)")
-    parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of defferentially expression genes")
+    parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for target gene list (gene symbols or Ensembl ID)")
+    parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of target genes")
     parser_promotertest.add_argument('-bg', default=False, metavar='  ', help="Input BED file of the promoter regions of background genes")
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
     
@@ -179,7 +179,7 @@ def main():
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list of BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
-    parser_promotertest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for promoter counts (Default: 20)")
+    parser_promotertest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for promoter counts (Default: 40)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
@@ -187,6 +187,9 @@ def main():
     parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
+    parser_promotertest.add_argument('-filter_havana', type=str, default="T", metavar='  ', help="Apply filtering to remove HAVANA entries.")
+    parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
+    parser_promotertest.add_argument('-known_only', type=str, default="T", metavar='  ', help="Apply filtering to get only known genes.")
     
 
     parser_promotertest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
@@ -221,7 +224,7 @@ def main():
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
     parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
     parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
-    parser_randomtest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
+    parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     
     parser_randomtest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
@@ -360,9 +363,11 @@ def main():
 
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, organism=args.organism, 
-                                promoterLength=args.pl, summary=summary, temp=dir, output=args.o,
-                                showdbs=args.showdbs, score=args.score, scoreh=args.scoreh)
+        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, 
+                                organism=args.organism, promoterLength=args.pl, summary=summary, 
+                                temp=dir, output=args.o, showdbs=args.showdbs, score=args.score, 
+                                scoreh=args.scoreh, filter_havana=args.filter_havana, 
+                                protein_coding=args.protein_coding, known_only=args.known_only)
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
