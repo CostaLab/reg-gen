@@ -82,7 +82,6 @@ def output_R_file(name, res, colnames):
     print('par(mar=c(15,5,5,5))', file=f)
     print('barplot(d, beside = TRUE, names.arg = names, las=2, main="Housekeeping Genes Ratio", ylab="Signal")', file=f)
     
-
 def get_factors(data):
     #normalize: increase values to highest value
     d = deepcopy(data)  
