@@ -404,7 +404,7 @@ class MultiCoverageSet(DualCoverageSet):
                     s1.append((i, cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                     s2.append((i, cov1, cov2)) #new approach! indices_of_interest
-                else: #elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
+                elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                     s0.append((i, cov1, cov2)) #new approach! indices_of_interest
             
                 if len(s0) > y and len(s1) > y and len(s2) > y:
