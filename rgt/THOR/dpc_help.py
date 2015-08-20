@@ -189,23 +189,24 @@ def _compute_pvalue((x, y, side, distr)):
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
 
-def _get_covs(DCS, i, as_list=False):
-    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
-    if not as_list:
-        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
-        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
-    else:
-        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
-        cov1 = map(lambda x: x[0], np.asarray((cov1)))
-        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
-        cov2 = map(lambda x: x[0], np.asarray((cov2)))
-    
-    return cov1, cov2
+
 
 def _get_log_ratio(l1, l2):
     l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
-    if l2 > 0 and l2 > 0:
-        return log(l1/l2)
+    try:
+        res = l1/l2
+    except:
+        return sys.maxint
+    
+    if res > 0:
+        try:
+            res = log(res)
+            if np.isinf(res):
+                return sys.maxint
+            return res
+        except:
+            print('error to compute log ratio', l1, l2, file=sys.stderr)
+            return sys.maxint
     else:
         return sys.maxint
 
@@ -246,19 +247,18 @@ def _merge_consecutive_bins(tmp_peaks, distr):
     return pvalues, peaks
     
 
-def get_back(DCS, states):
-    counts = []
-#     print("H", file=sys.stderr)
-    for i in range(len(DCS.indices_of_interest)):
-        if states[i] == 0:
-            cov1, cov2 = _get_covs(DCS, i)
-            counts.append(cov1)
-            counts.append(cov2)
-#     print(len(counts), file=sys.stderr)
-#     print(np.var(counts), file=sys.stderr)
-#     print(np.mean(counts), file=sys.stderr)
-    return np.var(counts), np.mean(counts)
-        
+def _get_covs(DCS, i, as_list=False):
+    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
+    if not as_list:
+        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
+        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+    else:
+        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
+        cov1 = map(lambda x: x[0], np.asarray((cov1)))
+        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
+        cov2 = map(lambda x: x[0], np.asarray((cov2)))
+    
+    return cov1, cov2
 
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
@@ -276,12 +276,11 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
         
-        c1, c2 = sum(cov1), sum(cov2)
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
         side = 'l' if strand == '+' else 'r'
-        tmp_data.append((c1, c2, side, distr))
+        tmp_data.append((sum(cov1), sum(cov2), side, distr))
     
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
@@ -404,11 +403,11 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     chrom_sizes_dict = {}
     #if regions option is set, take the values, otherwise the whole set of 
     #chromosomes as region to search for DPs
-    if test:
-        contained_chrom = ['chr1', 'chr2']
-    else:
-        contained_chrom = get_all_chrom(bamfiles)
-        #contained_chrom = ['chr19']
+#     if test:
+#         contained_chrom = ['chr1', 'chr2']
+#     else:
+#         #contained_chrom = get_all_chrom(bamfiles)
+#         contained_chrom = ['chr1', 'chr2']
     
     if regions is not None:
         print("Call DPs on specified regions.", file=sys.stderr)
@@ -417,9 +416,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 c, s, e = line[0], int(line[1]), int(line[2])
-		if c in contained_chrom:                
-		    regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                    chrom_sizes_dict[c] = e
+		#if c in contained_chrom:                
+                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                chrom_sizes_dict[c] = e
     else:
         print("Call DPs on whole genome.", file=sys.stderr)
         with open(chrom_sizes) as f:
@@ -427,9 +426,9 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                 line = line.strip()
                 line = line.split('\t')
                 chrom, end = line[0], int(line[1])
-		if chrom in contained_chrom:
-                    regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                    chrom_sizes_dict[chrom] = end
+		#if chrom in contained_chrom:
+                regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                chrom_sizes_dict[chrom] = end
     
     if not regionset.sequences:
         print('something wrong here', file=sys.stderr)
@@ -441,11 +440,6 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     else:
         norm_regionset = None
         
-    if housekeeping_genes:
-        scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
-    
-    if scaling_factors_ip:
-        tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
     
     regionset.sequences.sort()
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
@@ -454,7 +448,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True)
+                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
+                                  housekeeping_genes=housekeeping_genes, tracker=tracker)
     
     return multi_cov_set
 
@@ -481,7 +476,7 @@ def input(laptop):
         args[0] = config_path
         #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
         bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.regions = None #'/home/ma608711/data/testdata_THOR/region.bed'
+        options.regions = '/home/manuel/r.bed'
         options.exts = [200, 200, 200, 200, 200]
         options.exts_inputs = [200, 200, 200, 200, 200]
         options.pcutoff = 1
@@ -511,7 +506,7 @@ def input(laptop):
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
                           help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
-        parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="float",\
+        parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback", callback=_callback_list_float,\
                           help="Normalization factors for input-DNA. If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--par", dest="par", default=1, type="int",\
                           help="Percentile for p-value postprocessing filter. [default: %default]")
@@ -527,9 +522,15 @@ def input(laptop):
                           help="All files are stored in output directory which is created if necessary.")
         parser.add_option("--report", dest="report", default=False, action="store_true", \
                           help="report.")
+        parser.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",\
+                          help="Foldchange for trainingsset [default: %default]")
+        parser.add_option("-t", "--threshold", dest="threshold", default=95, type="float",\
+                          help="Foldchange for trainingsset [default: %default]")
+        parser.add_option("--size", dest="size_ts", default=10000, type="int",\
+                          help="10000 of 2 free parameters for HMM, else 1000 [default: %default]")
         
-	group = OptionGroup(parser, "Advanced options")
-	group.add_option("--regions", dest="regions", default=None, type="string",\
+        group = OptionGroup(parser, "Advanced options")
+        group.add_option("--regions", dest="regions", default=None, type="string",\
                            help="Define regions (BED) where to call DPs.")
         group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal.  [default: %default]")
@@ -537,10 +538,12 @@ def input(laptop):
                           help="Stepsize with which the window consecutively slides across the genome to create the signal.")
         group.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
-	group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn off GC content calculation")
-        
-	parser.add_option_group(group)
+        parser.add_option_group(group)
+        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
+        group.add_option("--three-parameter", default=False, dest="hmm_free_para", action="store_true", \
+                          help="HMM with 3 free parameters[default: %default]")
         ##deprecated options
         #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
         #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
@@ -553,7 +556,7 @@ def input(laptop):
 
     options.distr = "negbin"
     options.save_wig = False
-    options.norm_regions = None
+    #options.norm_regions = None
     options.exts_inputs = None
         
     if options.version:
@@ -579,11 +582,18 @@ def input(laptop):
         parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
         
     if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
-        parser.error("Number of scaling factors must equal number of bamfiles")
-    
+        parser.error("Number of scaling factors for IP must equal number of bamfiles")
+        
     for bamfile in bamfiles:
         if not os.path.isfile(bamfile):
             parser.error("BAM file %s does not exist!" %bamfile)
+    
+    if not inputs and options.factors_inputs:
+        print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)
+        options.factors_inputs = None
+    
+    if options.factors_inputs and len(options.factors_inputs) != len(bamfiles):
+        parser.error("factors for input-DNA must equal number of BAM files!")
     
     if inputs:
         for bamfile in inputs:
@@ -595,7 +605,7 @@ def input(laptop):
             parser.error("Region file %s does not exist!" %options.regions)
     
     if not os.path.isfile(genome):
-        parser.error("Genome file %s does not exist!" %bamfile)
+        parser.error("Genome file %s does not exist!" %genome)
     
     if options.name is None:
         d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")

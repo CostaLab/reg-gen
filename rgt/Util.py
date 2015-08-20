@@ -247,13 +247,55 @@ class HmmData(ConfigurationFile):
         Initializes HmmData.
         """
         ConfigurationFile.__init__(self)
-        self.default_hmm = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm'))
+        self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
+        self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
+        self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
+        self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
+        self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
+        self.default_bias_table_F = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F'))
+        self.default_bias_table_R = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R'))
 
-    def get_default_hmm(self):
+    def get_default_hmm_dnase(self):
         """
-        Returns the current default hmm.
+        Returns the current default DNase only hmm.
         """
-        return self.default_hmm
+        return self.default_hmm_dnase
+
+    def get_default_hmm_dnase_bc(self):
+        """
+        Returns the current default DNase only hmm.
+        """
+        return self.default_hmm_dnase_bc
+
+    def get_default_hmm_histone(self):
+        """
+        Returns the current default Histone only hmm.
+        """
+        return self.default_hmm_histone
+
+    def get_default_hmm_dnase_histone(self):
+        """
+        Returns the current default DNase+histone hmm.
+        """
+        return self.default_hmm_dnase_histone
+
+    def get_default_hmm_dnase_histone_bc(self):
+        """
+        Returns the current default DNase+histone hmm.
+        """
+        return self.default_hmm_dnase_histone_bc
+
+    def get_default_bias_table_F(self):
+        """
+        Returns the current default bias table for the forward strand.
+        """
+        return self.default_bias_table_F
+
+    def get_default_bias_table_R(self):
+        """
+        Returns the current default bias table for the reverse strand.
+        """
+        return self.default_bias_table_R
 
 class ImageData(ConfigurationFile):
     """
@@ -1038,4 +1080,10 @@ class AuxiliaryFunctions:
         if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
         if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
         return 0 # interval1 overlaps interval2
+
+    @staticmethod
+    def revcomp(s):
+        revDict = dict([("A","T"),("T","A"),("C","G"),("G","C"),("N","N")])
+        return "".join([revDict[e] for e in s[::-1]])
+
         

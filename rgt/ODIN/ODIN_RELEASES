@@ -1,9 +1,11 @@
 ToDo:
-solve the following question automativally:
+
+done
+- foldchange option is now available, was deprecated for some reasons
+
+ODIN-0.4
+- solve the following question automativally:
 	Does your chromosome size file contain the same chromosome information like your BAM file and your genome file, that is, do all these files contain e.g. chr1, chr2, ... or 1, 2, ...?
-
-
-done:
 - fix bug with missing 'chr' prefix in BAM files
 - bugfix for --region option
 - extension size estimation

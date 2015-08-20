@@ -285,13 +285,13 @@ class DualCoverageSet():
                 chrom, start, end = self._index2coordinates(i)
                 print(chrom, start, end, file=f)
             
-    def get_training_set(self, exp_data, x, verbose, name, debug, constraint_chrom):
+    def get_training_set(self, exp_data, x, verbose, name, debug, constraint_chrom, min_fc=2.0):
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
         ts1 = set()
         ts2 = set()
-        threshold = 2.0
+        threshold = min_fc
         diff_cov = 10
         
         if constraint_chrom is not None:

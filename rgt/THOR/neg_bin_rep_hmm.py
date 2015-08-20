@@ -55,7 +55,7 @@ class NegBinRepHMM(_BaseHMM):
                  transmat=None, startprob_prior=None, transmat_prior=None, func=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
-                 random_state=None, n_iter=10, thresh=1e-2,
+                 random_state=None, n_iter=30, thresh=1e-2,
                  params=string.ascii_letters,
                  init_params=string.ascii_letters):
     
@@ -72,7 +72,61 @@ class NegBinRepHMM(_BaseHMM):
         self.mu = mu
         self._update_distr(self.mu, self.alpha)
         self.func = func
-        
+        self.em_prob = 0
+    
+    
+    def fit(self, obs, three_para):
+        """Estimate model parameters.
+
+        An initialization step is performed before entering the EM
+        algorithm. If you want to avoid this step, pass proper
+        ``init_params`` keyword argument to estimator's constructor.
+
+        Parameters
+        ----------
+        obs : list
+            List of array-like observation sequences, each of which
+            has shape (n_i, n_features), where n_i is the length of
+            the i_th observation.
+
+        Notes
+        -----
+        In general, `logprob` should be non-decreasing unless
+        aggressive pruning is used.  Decreasing `logprob` is generally
+        a sign of overfitting (e.g. a covariance parameter getting too
+        small).  You can fix this by getting more training data,
+        or strengthening the appropriate subclass-specific regularization
+        parameter.
+        """
+        self._init(obs, self.init_params)
+
+        logprob = []
+        for i in range(self.n_iter):
+            # Expectation step
+            stats = self._initialize_sufficient_statistics()
+            curr_logprob = 0
+            for seq in obs:
+                framelogprob = self._compute_log_likelihood(seq)
+                lpr, fwdlattice = self._do_forward_pass(framelogprob)
+                bwdlattice = self._do_backward_pass(framelogprob)
+                gamma = fwdlattice + bwdlattice
+                posteriors = np.exp(gamma.T - logsumexp(gamma, axis=1)).T
+                curr_logprob += lpr
+                self._accumulate_sufficient_statistics(
+                    stats, seq, framelogprob, posteriors, fwdlattice,
+                    bwdlattice, self.params)
+            logprob.append(curr_logprob)
+
+            # Check for convergence.
+            if i > 0 and logprob[-1] - logprob[-2] < self.thresh:
+                break
+
+            # Maximization step
+            self._do_mstep(stats, self.params, three_para)
+        print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
+        self.em_prob = logprob[-1]
+        return self
+    
     def _update_distr(self, mu, alpha):
         """Update distributions assigned to each state with new mu and alpha"""
         raw1 = [NegBin(mu[0, 0], alpha[0, 0]), NegBin(mu[0, 1], alpha[0, 1]), NegBin(mu[0, 2], alpha[0, 2])]
@@ -149,18 +203,27 @@ class NegBinRepHMM(_BaseHMM):
         
         stats['posterior'] = np.copy(posteriors)
     
-    def _help_do_mstep(self, stats):
+    def _help_do_mstep(self, stats, three_para):
         #for i in range(self.n_features):
         #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
         #print('help_do_mstep', self.mu)
-        self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-        self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
-        #self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][0][0] + stats['post'][0][1])
-        self.mu[0,0] = self.mu[1,1]
         
-        self.mu[1,2] = self.mu[0,1]
-        self.mu[0,2] = self.mu[1,1]
-        self.mu[0,1] = self.mu[0,0]
+        if three_para:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+            self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
+            
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
+        else:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
+            
+            self.mu[0,0] = self.mu[1,1]
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
         
         tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
         self.alpha = np.matrix(tmp_a)
@@ -230,11 +293,12 @@ class NegBinRepHMM(_BaseHMM):
         return c_1, c_2
         
     
-    def _do_mstep(self, stats, params):
+    def _do_mstep(self, stats, params, three_para):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
-        self._help_do_mstep(stats)
-        self.count_s1, self.count_s2 = self._count(stats['posterior'])
-        self.merge_distr()
+        self._help_do_mstep(stats, three_para)
+        print('mstep', file=sys.stderr)
+        #self.count_s1, self.count_s2 = self._count(stats['posterior'])
+        #self.merge_distr()
        
     def merge_distr(self):
         f = self.count_s2 / float(self.count_s1 + self.count_s2) #TODO exp_data.
@@ -266,11 +330,11 @@ if __name__ == '__main__':
     X, Z = m.sample(20)
     
     m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
-    m2.fit([X])
+    m2.fit([X], three_para=False)
     
     posteriors = m.predict_proba(X)
     e = m2.predict(X)
     for i, el in enumerate(X):
         print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
-    
+    #print(np.max(posteriors, axis=1))
     print(m2.mu)

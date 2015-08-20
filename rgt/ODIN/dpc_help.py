@@ -367,7 +367,7 @@ def input(test):
         options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.confidence_threshold=0.7
-        options.foldchange=1.05
+        options.foldchange=2
         options.pcutoff = 0.1
         options.name='ODINtest'
         options.distr='binom'
@@ -445,7 +445,7 @@ def input(test):
                           help="Normalization factor for second input. If option is not chosen, estimate factor. [default: %default]")
         group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
                           help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
-        group.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
+        group.add_option("-f", "--foldchange", default=2.0, dest="foldchange", type="float",\
                           help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
         group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal [default: %default]")
