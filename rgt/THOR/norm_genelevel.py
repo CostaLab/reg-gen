@@ -87,10 +87,9 @@ def get_factors(data):
     #normalize: increase values to highest value
     d = deepcopy(data)  
     colmax = np.mean(d, axis=0)
-
     for i in range(d.shape[0]):
         for j in range(d.shape[1]):
-            d[i,j] = colmax[:,j][0,0]/d[i,j]
+            d[i,j] = d[i,j]/colmax[:,j][0,0]
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
 
@@ -165,14 +164,14 @@ if __name__ == '__main__':
     b_zenke_cDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/cDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/cDC_WT_H3K27ac_2.bam']
     b_zenke_pDC = ['/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_1.bam','/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/pDC_WT_H3K27ac_2.bam']
     
-    output(b_zenke_MPP + b_zenke_CDP, bed)
-    #output(b_zenke_CDP + b_zenke_cDC, bed)
-    #output(b_zenke_CDP + b_zenke_pDC, bed)
-    output(b_zenke_cDC + b_zenke_pDC, bed)
+#     output(b_zenke_MPP + b_zenke_CDP, bed)
+#     output(b_zenke_CDP + b_zenke_cDC, bed)
+#     output(b_zenke_CDP + b_zenke_pDC, bed)
+#     output(b_zenke_cDC + b_zenke_pDC, bed)
     
     
-    output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc, bed)
-    output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc, bed)
+    #output(b_nestler_H3K36me3_sal + b_nestler_H3K36me3_coc, bed)
+    #output(b_nestler_H3K36me1_sal + b_nestler_H3K36me1_coc, bed)
     
     
     #hg19
@@ -193,11 +192,11 @@ if __name__ == '__main__':
     
     output(b_payton_FL + b_payton_CC, bed)
     output(b_payton_PBBA + b_payton_CC, bed)
-    
-    
-    output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)
-    output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage, bed)
-    output(b_blueprint_H3K4me3_monocyte + b_blueprint_H3K4me3_macrophage, bed)
+#      
+#      
+#     output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)
+#     output(b_blueprint_H3K4me1_monocyte + b_blueprint_H3K4me1_macrophage, bed)
+#     output(b_blueprint_H3K4me3_monocyte + b_blueprint_H3K4me3_macrophage, bed)
     
     
     
