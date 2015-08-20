@@ -138,6 +138,8 @@ class ExperimentalMatrix:
                 for t in self.fieldsDict[f].keys(): 
                     if name in self.fieldsDict[f][t]:
                         return t
+        return "None"
+
                     
     def get_types(self,name):
         """ Fetch all extra informations as a list according to the given name """
