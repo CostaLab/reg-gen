@@ -90,7 +90,7 @@ def get_factors(data):
 
     for i in range(d.shape[0]):
         for j in range(d.shape[1]):
-            d[i,j] = colmax[:,j][0,0]/d[i,j]
+            d[i,j] = d[i,j]/colmax[:,j][0,0]
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
 
