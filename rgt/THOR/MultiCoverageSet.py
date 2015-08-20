@@ -10,6 +10,7 @@ from rgt.ODIN.DualCoverageSet import DualCoverageSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from copy import deepcopy
 import gc
+from math import fabs
 
 EPSILON = 1**-320
 
@@ -97,12 +98,14 @@ class MultiCoverageSet(DualCoverageSet):
         
     
     def _help_get_data(self, i, type):
-        for j in range(len(self.covs[i].genomicRegions)):
-            if type == 'cov':
-                yield self.covs[i].coverage[j]
-            elif type == 'strand':
-                yield self.covs[i].cov_strand_all[j]
-            elif type == 'normregion':
+        if type != 'normregion':
+            for j in range(len(self.covs[i].genomicRegions)):
+                if type == 'cov':
+                    yield self.covs[i].coverage[j]
+                elif type == 'strand':
+                    yield self.covs[i].cov_strand_all[j]
+        elif type == 'normregion':
+            for j in range(len(self.norm_regions[i].genomicRegions)):
                 yield self.norm_regions[i].coverage[j]
     
     def _help_init_overall_coverage(self, cov_strand=True):
@@ -235,8 +238,12 @@ class MultiCoverageSet(DualCoverageSet):
         perc_a_l = np.percentile(a_values, 100-a_threshold)
         perc_a_h = np.percentile(a_values, a_threshold)
         
-        res = filter(lambda x: not(x[0]>perc_m_h or x[0]<perc_m_l),\
+        try:
+            res = filter(lambda x: not(x[0]>perc_m_h or x[0]<perc_m_l),\
                      filter(lambda x: not(x[1]>perc_a_h or x[1]<perc_a_l), zip(list(m_values.squeeze()),list(a_values.squeeze()))))
+        except:
+            print('something wrong %s %s' %(len(m_values), len(a_values)), file=sys.stderr)
+            return np.asarray(m_values), np.asarray(a_values)
         
         if res:
             return np.asarray(map(lambda x: x[0], res)), np.asarray(map(lambda x: x[1], res))
@@ -253,7 +260,6 @@ class MultiCoverageSet(DualCoverageSet):
                 mask_ref = ref > 0
                 ref = ref[mask_ref]
                 data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref]
-                
                 tmp = zip(data_rep, ref, data_rep + ref)
                 tmp.sort(key = lambda x: x[2], reverse=True)
                 tmp = tmp[:min(len(tmp), 10000)]
@@ -262,7 +268,7 @@ class MultiCoverageSet(DualCoverageSet):
                 ref = np.asarray(map(lambda x: x[1], tmp))
                 m_values = np.log(data_rep / ref)
                 a_values = 0.5 * np.log(data_rep * ref)
-                m_values, a_values = self._trim4TMM(m_values, a_values) 
+                m_values, a_values = self._trim4TMM(m_values, a_values)
                 f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
                 print('scaling factor ', f, file=sys.stderr)
                 scaling_factors_ip.append(f)
@@ -398,7 +404,7 @@ class MultiCoverageSet(DualCoverageSet):
                     s1.append((i, cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                     s2.append((i, cov1, cov2)) #new approach! indices_of_interest
-                else:
+                else: #elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
                     s0.append((i, cov1, cov2)) #new approach! indices_of_interest
             
                 if len(s0) > y and len(s1) > y and len(s2) > y:
