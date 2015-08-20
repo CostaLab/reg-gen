@@ -37,7 +37,7 @@ def get_factor_matrix(d, colnames):
     original_f = get_factors(d)
 
     if d.shape[0] > 1 and d.shape[1] > 1:
-        print("column/gene wise analysis")
+        print("column/gene wise analysis", file=sys.stderr)
         for i in range(d.shape[1]):
             data = deepcopy(d)
             data = np.delete(data, i, 1) #remove gene i
@@ -46,10 +46,10 @@ def get_factor_matrix(d, colnames):
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(original_f, f))) / float(len(f))
             
             
-            print(colnames[i], i, res, f)
-        print("")
+            print(colnames[i], i, res, f, file=sys.stderr)
+        print("", file=sys.stderr)
         
-        print("row/sample wise analysis")
+        print("row/sample wise analysis", file=sys.stderr)
         for i in range(d.shape[0]):
             data = deepcopy(d)
             data = np.delete(data, i, 0) #remove sample i
@@ -61,8 +61,8 @@ def get_factor_matrix(d, colnames):
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(tmp, f))) / float(len(f))
             
             
-            print(i, res, f)
-        print("")
+            print(i, res, f, file=sys.stderr)
+        print("", file=sys.stderr)
             
      
 def output_R_file(name, res, colnames):
@@ -121,9 +121,9 @@ def norm_gene_level(bams, bed, name, verbose):
     samples = map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)
     #print("samples: %s" %",".join(map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)))
     if verbose:
-        print("Housekeeping gene matrix (columns-genes, rows-samples)")
-        print(d)
-        print("")
+        print("Housekeeping gene matrix (columns-genes, rows-samples)", file=sys.stderr)
+        print(d, file=sys.stderr)
+        print("", file=sys.stderr)
     
     if verbose:
         #output R code to check wether gene give same signal

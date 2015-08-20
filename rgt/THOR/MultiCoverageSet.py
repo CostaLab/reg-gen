@@ -11,6 +11,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from copy import deepcopy
 import gc
 from math import fabs
+from norm_genelevel import norm_gene_level
 
 EPSILON = 1**-320
 
@@ -270,7 +271,7 @@ class MultiCoverageSet(DualCoverageSet):
                 a_values = 0.5 * np.log(data_rep * ref)
                 m_values, a_values = self._trim4TMM(m_values, a_values)
                 f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
-                print('scaling factor ', f, file=sys.stderr)
+                
                 scaling_factors_ip.append(f)
                 
         return scaling_factors_ip
@@ -294,7 +295,9 @@ class MultiCoverageSet(DualCoverageSet):
                 scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach from PePr
             for i in range(len(scaling_factors_ip)):
                 self.covs[i].scale(scaling_factors_ip[i]) 
-        
+                
+        for f in scaling_factors_ip:
+            print('scaling factor ', f, file=sys.stderr)
         tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
         
                 
