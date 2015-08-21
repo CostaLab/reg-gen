@@ -73,7 +73,7 @@ def main():
         training_set_obs = exp_data.get_observation(training_set)
         m.fit([training_set_obs], options.hmm_free_para)
         
-        for i in range(5):
+        for i in range(0):
             print(i, file=sys.stderr)
             
             training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, options.size_ts, 10)

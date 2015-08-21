@@ -267,7 +267,7 @@ class MultiCoverageSet(DualCoverageSet):
                 
                 data_rep = np.asarray(map(lambda x: x[0], tmp))
                 ref = np.asarray(map(lambda x: x[1], tmp))
-                m_values = np.log(data_rep / ref)
+                m_values = np.log(ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * ref)
                 m_values, a_values = self._trim4TMM(m_values, a_values)
                 f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
