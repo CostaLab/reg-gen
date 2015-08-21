@@ -457,6 +457,8 @@ class PromoterTest:
         self.scores = None
         self.scoreh = scoreh
         self.motif = OrderedDict()
+        
+        
 
         # Input BED files
         if bed and bg:
@@ -481,8 +483,10 @@ class PromoterTest:
 
         # Input DE gene list
         else:
+            dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
+                                 filter_havana + protein_coding + known_only])
             try:
-                data = load_dump(path=temp, filename="dump_"+gene_list_file.rpartition("/")[-1].rpartition(".")[0])
+                data = load_dump(path=temp, filename=dumpname)
                 self.de_gene = data[0] 
                 self.ensembl2symbol = data[1] 
                 self.nde_gene = data[2]
@@ -492,18 +496,22 @@ class PromoterTest:
 
             except:
 
-                try:
-                    ann = load_dump(path=temp, filename="annotation_"+organism)
-                except:
-                    ann = AnnotationSet(organism, alias_source=organism,
-                                        filter_havana=filter_havana, 
-                                        protein_coding=protein_coding, 
-                                        known_only=known_only)
-                    print("\tDumping annotation file...")
-                    t1 = time.time()
-                    dump(object=ann, path=temp, filename="annotation_"+organism)
-                    t2 = time.time()
-                    print("\t"+str(datetime.timedelta(seconds=round(t2-t1))))
+                t1 = time.time()
+                if filter_havana=="T": filter_havana=True
+                else: filter_havana=False
+                if protein_coding=="T": protein_coding=True
+                else: protein_coding=False
+                if known_only=="T": known_only=True
+                else: known_only=False
+                ann = AnnotationSet(organism, alias_source=organism,
+                                    filter_havana=filter_havana, 
+                                    protein_coding=protein_coding, 
+                                    known_only=known_only)
+                #print("\tDumping annotation file...")
+                
+                #dump(object=ann, path=temp, filename="annotation_"+organism)
+                t2 = time.time()
+                print("\t"+str(datetime.timedelta(seconds=round(t2-t1))))
 
                 # DE gene regions
                 self.de_gene = GeneSet("de genes")
@@ -530,16 +538,19 @@ class PromoterTest:
                 #print("After fixing")
 
                 # NonDE gene regions
+                #print("Total genes: "+str(len(ann.symbol_dict.keys())))
                 nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
-                
+                #print("nde   "+ str(len(nde_ensembl)))
+
                 self.nde_gene = GeneSet("nde genes")
-                #self.nde_gene.genes = nde_ensembl
+                self.nde_gene.genes = nde_ensembl
                 
                 # Get promoters from de genes
                 #print("\tGetting promoter regions...")
                 de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
                 
                 if score: self.scores = []
+                
                 de_prom.merge(namedistinct=True)
 
                 for promoter in de_prom:
@@ -562,12 +573,19 @@ class PromoterTest:
                     
                 self.de_regions = de_prom
                 
-                
+                #all_prom = ann.get_promoters(promoterLength=promoterLength)
+                #print("All promoters: "+str(len(all_prom)))
+                #all_prom.write_bed("all_promoters.bed")
+
                 #print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
                 print2(summary, "   \t"+str(len(de_prom))+" unique target promoters are loaded")
                 # Get promoters from nonDE gene
                 nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
+                #print("nde promoters: "+str(len(nde_prom)))
+                #nde_prom.write_bed("nde_promoters_unmerged.bed")
                 nde_prom.merge(namedistinct=True)
+                #print("nde promoters: "+str(len(nde_prom)))
+                #nde_prom.write_bed("nde_promoters_merged.bed")
                 #for promoter in nde_prom:
                 #    promoter.name = ann.get_official_symbol(gene_name_source=promoter.name)
                 self.nde_regions = nde_prom
@@ -578,7 +596,7 @@ class PromoterTest:
                 
                 data = [ self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
                 if score: data.append(self.scores)
-                dump(object=data, path=temp, filename="dump_"+gene_list_file.rpartition("/")[-1].rpartition(".")[0])
+                dump(object=data, path=temp, filename=dumpname)
                 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
@@ -664,6 +682,7 @@ class PromoterTest:
             
             de = open(os.path.join(temp, "de.txp"),"w")
             #nde = open(os.path.join(temp, "nde.txp"),"w")
+            
             for i in self.cf:
                 diff = max(0,(i-1)*self.threshold - l)
 
@@ -684,6 +703,7 @@ class PromoterTest:
                             #de.write("\t".join(line))
                 f_de.close()
                 
+
                 if None:
                     f_nde = open(os.path.join(temp, "nde"+str(i)+".txp"))
                     for line in f_nde: 

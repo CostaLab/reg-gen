@@ -619,6 +619,7 @@ def main():
             # Most part of heat map are the same as lineplot, so it share the same class as lineplot
             # Read experimental matrix
             t0 = time.time()
+
             if "reads" not in (args.g, args.c, args.s):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
@@ -630,10 +631,10 @@ def main():
             print2(parameter, "\t\tBin size:\t"+str(args.bs))
             print2(parameter, "\t\tStep size:\t"+str(args.ss))
             print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
-        
+
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=False)
+                                bs=args.bs, ss=args.ss, df=False, fields=[args.g,args.s,args.c])
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
