@@ -58,7 +58,7 @@ def main():
 
     print('Compute training set...',file=sys.stderr)
     sys.stderr.flush()
-    l, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, options.size_ts, 1)
+    
     
     sys.stderr.flush()
     #print(training_set_obs[training_set_obs>0])
@@ -66,17 +66,22 @@ def main():
         from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters
         print('Training HMM...', file=sys.stderr)
         sys.stderr.flush()
+        
+        training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, options.size_ts, 3)
         init_alpha, init_mu = get_init_parameters(s0, s1, s2)
         m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
-        training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
+        training_set_obs = exp_data.get_observation(training_set)
         m.fit([training_set_obs], options.hmm_free_para)
+        
         for i in range(5):
             print(i, file=sys.stderr)
+            
+            training_set, s0, s1, s2 = exp_data.get_training_set(test, exp_data, options.debug, options.name, options.foldchange, options.threshold, options.size_ts, 10)
             init_alpha, init_mu = get_init_parameters(s0, s1, s2)
             m_new = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
-             
-            training_set_obs = exp_data.get_observation(sample(range(exp_data.overall_coverage[0].shape[1]), l))
+            training_set_obs = exp_data.get_observation(training_set)
             m_new.fit([training_set_obs], options.hmm_free_para)
+            
             if m_new.em_prob > m.em_prob:
                 print('take HMM no. %s, new: %s, old: %s ' %(i, m_new.em_prob, m.em_prob), file=sys.stderr)
                 m = m_new
@@ -85,8 +90,9 @@ def main():
         tracker.write(text=init_alpha)
         tracker.write(text=m.mu, header="Final HMM's Neg. Bin. Emission distribution (mu,alpha)")
         tracker.write(text=m.alpha)
-         
+    
     tracker.write(text=m._get_transmat(), header="Transmission matrix")
+    
     
     print("Computing HMM's posterior probabilities and Viterbi path", file=sys.stderr)
     states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))

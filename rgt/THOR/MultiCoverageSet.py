@@ -399,16 +399,16 @@ class MultiCoverageSet(DualCoverageSet):
         
         rep=True
         while rep:
-            for i in range(len(self.indices_of_interest)):
+            for i in sample(range(len(self.indices_of_interest)), min(y, len(self.indices_of_interest))):
                 cov1, cov2 = self._get_covs(exp_data, i)
-    
+                
                 #apply criteria for initial peak calling
                 if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                    s1.append((i, cov1, cov2)) #new approach! indices_of_interest
+                    s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                    s2.append((i, cov1, cov2)) #new approach! indices_of_interest
+                    s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
                 else: #elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
-                    s0.append((i, cov1, cov2)) #new approach! indices_of_interest
+                    s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
             
                 if len(s0) > y and len(s1) > y and len(s2) > y:
                     break
@@ -457,19 +457,19 @@ class MultiCoverageSet(DualCoverageSet):
         s2_v = map(lambda x: (x[1], x[2]), s2)
         
         #enlarge training set(assumption everything is in indices_of_interest)
-#         extension_set = set()
-#         for i, _, _ in s0 + s1 + s2:
-#             for j in range(max(0, i - ex), i + ex + 1):
-#                 extension_set.add(j)
-#         
-#         tmp = s0 + s1 + s2
-#         training_set = map(lambda x: x[0], tmp) + list(extension_set)
-#         
-#         training_set = list(training_set)
-#         training_set.sort()
-#         if debug:
-#             self.debug_output_get_training_set(name, training_set, s0_v, s1_v, s2_v)
+        extension_set = set()
+        for i, _, _ in s0 + s1 + s2:
+            for j in range(max(0, i - ex), i + ex + 1):
+                extension_set.add(j)
+         
+        tmp = s0 + s1 + s2
+        training_set = map(lambda x: x[0], tmp) + list(extension_set)
+         
+        training_set = list(training_set)
+        training_set.sort()
+        if debug:
+            self.debug_output_get_training_set(name, training_set, s0_v, s1_v, s2_v)
         
-        return l, s0_v, s1_v, s2_v
+        return training_set, s0_v, s1_v, s2_v
         
         
