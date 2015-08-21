@@ -88,9 +88,10 @@ def get_factors(data):
     #normalize: increase values to highest value
     d = deepcopy(data)  
     colmax = np.mean(d, axis=0)
+    print(colmax, file=sys.stderr)
     for i in range(d.shape[0]):
         for j in range(d.shape[1]):
-            d[i,j] = d[i,j]/colmax[:,j][0,0]
+            d[i,j] = colmax[:,j][0,0]/d[i,j]
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
 
@@ -191,8 +192,8 @@ if __name__ == '__main__':
     b_blueprint_H3K4me3_macrophage = ['/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/C005VGH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S001S7H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S0022IH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00390H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BXVH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00BYTH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00C0JH1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NK9H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NM5H1_H3K4me3_macrophage.bam','/home/manuel/workspace/cluster_p//blueprint/raw/new_run/bams/S00NN3H1_H3K4me3_macrophage.bam']
     
     
-    output(b_payton_FL + b_payton_CC, bed)
-    output(b_payton_PBBA + b_payton_CC, bed)
+#     output(b_payton_FL + b_payton_CC, bed)
+    output(b_payton_CC + b_payton_PBBA, bed)
 #      
 #      
 #     output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)
