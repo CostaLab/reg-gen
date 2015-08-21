@@ -21,6 +21,8 @@ from matplotlib.backends.backend_pdf import PdfPages
 import pysam
 import pickle
 import shutil
+from Bio.Seq import Seq
+from Bio.Alphabet import IUPAC
 #from Bio import motifs
 
 # Distal Libraries
@@ -123,11 +125,13 @@ def get_sequence(dir, filename, regions, genome_path):
     with open(os.path.join(dir, filename), 'w') as output:
         for region in regions:
             print(">"+ region.toString(), file=output)
-            print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
+            if region.orientation == "-":
+                seq = Seq(genome.fetch(region.chrom, max(0, region.initial), region.final), IUPAC.unambiguous_dna)
+                seq = seq.reverse_complement()
+                print(seq, file=output)
+            else:
+                print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
 
-def split_fasta(input, temp, cutoff):
-    """"Split the FASTA file which is too big for Triplexator to compute"""
-    
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=True, 
                  c=None, fr=None, fm=None, of=None, mf=None, rm=None):
@@ -419,8 +423,8 @@ def rna_associated_gene(rna_regions, name, organism):
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
         asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=100000, show_dis=True)
         print(name)
-        print(asso_genes[0].name)
-        print(asso_genes[0].proximity)
+        print( [ a.name for a in asso_genes ] )
+        print( [ a.proximity for a in asso_genes ])
         genes = asso_genes[0].name.split(":")
         #proxs = asso_genes[0].proximity.split(":")
         closest_genes = []
@@ -977,56 +981,112 @@ class PromoterTest:
             dbd = GenomicRegionSet("DBD")
             for rbs in sig_region:
                 loop = True
-                #print(rbs)
-                #print(rbs.initial)
-                #print(rbs.final)
-                while loop:
-                    cf = 0
-                    for exon in self.rna_regions:
-                        #print(exon)
-                        l = exon[2] - exon[1]
-                        tail = cf + l
-                        #print("cf:   " + str(cf))
-                        #print("tail: " + str(tail) )
-                        if cf <= rbs.initial <=  tail:
-                            dbdstart = exon[1] + rbs.initial - cf
+                print(rbs)
+                print(rbs.initial)
+                print(rbs.final)
+                print(rbs.orientation)
+                print()
+                
+                if self.rna_regions[0][3] == "-":
+                    rna_regions = self.rna_regions[::-1]
+
+                    while loop:
+                        cf = 0
+                        for exon in rna_regions:
+                            print(exon)
+
+                            l = abs(exon[2] - exon[1])
+                            tail = cf + l
+                            print("cf:   " + str(cf))
+                            print("tail: " + str(tail) )
+                            if cf <= rbs.initial <=  tail:
+                                dbdstart = exon[2] - rbs.initial + cf
+                                
+                                if rbs.final <= tail: 
+                                    #print("1")
+                                    dbdend = exon[2] - rbs.final + cf
+                                    dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                           initial=dbdstart, final=dbdend, 
+                                                           orientation=self.rna_regions[0][3], 
+                                                           name=str(rbs.initial)+"-"+str(rbs.final) ) )
+                                    loop = False
+                                    break
+                                elif rbs.final > tail:
+
+                                    subtract = l + cf - rbs.initial
+                                    #print("2")
+                                    #print("Subtract: "+str(subtract))
+                                    dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                           initial=dbdstart, final=exon[1], 
+                                                           orientation=self.rna_regions[0][3], 
+                                                           name=str(rbs.initial)+"-"+str(rbs.initial+subtract)+"_split1" ) )
                             
-                            if rbs.final <= tail: 
-                                #print("1")
-                                dbdend = exon[1] + rbs.final -cf
+                            elif rbs.initial < cf and rbs.final <= tail: 
+                                #print("3")
+                                dbdstart = exon[2]
+                                dbdend = exon[2] - rbs.final + rbs.initial + subtract
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=str(rbs.initial)+"-"+str(rbs.final) ) )
+                                                       name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
                                 loop = False
                                 break
-                            elif rbs.final > tail:
 
-                                subtract = l + cf - rbs.initial
-                                #print("2")
-                                #print("Subtract: "+str(subtract))
+                            elif rbs.initial > tail:
+                                pass
+
+                            cf += l
+                            
+                        loop = False
+                else:
+
+                    while loop:
+                        cf = 0
+                        for exon in self.rna_regions:
+                            #print(exon)
+                            l = exon[2] - exon[1]
+                            tail = cf + l
+                            #print("cf:   " + str(cf))
+                            #print("tail: " + str(tail) )
+                            if cf <= rbs.initial <=  tail:
+                                dbdstart = exon[1] + rbs.initial - cf
+                                
+                                if rbs.final <= tail: 
+                                    #print("1")
+                                    dbdend = exon[1] + rbs.final -cf
+                                    dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                           initial=dbdstart, final=dbdend, 
+                                                           orientation=self.rna_regions[0][3], 
+                                                           name=str(rbs.initial)+"-"+str(rbs.final) ) )
+                                    loop = False
+                                    break
+                                elif rbs.final > tail:
+
+                                    subtract = l + cf - rbs.initial
+                                    #print("2")
+                                    #print("Subtract: "+str(subtract))
+                                    dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
+                                                           initial=dbdstart, final=exon[2], 
+                                                           orientation=self.rna_regions[0][3], 
+                                                           name=str(rbs.initial)+"-"+str(rbs.initial+subtract)+"_split1" ) )
+                            
+                            elif rbs.initial < cf and rbs.final <= tail: 
+                                #print("3")
+                                dbdstart = exon[1]
+                                dbdend = exon[1] + rbs.final - rbs.initial - subtract
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
-                                                       initial=dbdstart, final=exon[2], 
+                                                       initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
-                                                       name=str(rbs.initial)+"-"+str(rbs.initial+subtract)+"_split1" ) )
-                        
-                        elif rbs.initial < cf and rbs.final <= tail: 
-                            #print("3")
-                            dbdstart = exon[1]
-                            dbdend = exon[1] + rbs.final - rbs.initial - subtract
-                            dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
-                                                   initial=dbdstart, final=dbdend, 
-                                                   orientation=self.rna_regions[0][3], 
-                                                   name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
-                            loop = False
-                            break
+                                                       name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
+                                loop = False
+                                break
 
-                        elif rbs.initial > tail:
-                            pass
+                            elif rbs.initial > tail:
+                                pass
 
-                        cf += l
-                        
-                    loop = False
+                            cf += l
+                            
+                        loop = False
                 
         dbd.write_bed(filename=os.path.join(output, "DBD_"+self.rna_name+".bed"))
         # FASTA

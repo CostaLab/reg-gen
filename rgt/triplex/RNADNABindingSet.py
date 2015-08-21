@@ -45,7 +45,7 @@ class RNADNABinding:
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
         self.motif = rna.motif
-        self.strand = dna.orientation
+        #self.strand = dna.orientation
         self.orient = rna.orientation
         self.score = score
         self.err_rate = err_rate
