@@ -280,6 +280,16 @@ class MultiCoverageSet(DualCoverageSet):
         """Normalize signal"""
         if not scaling_factors_ip and housekeeping_genes:
             scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
+        elif not scaling_factors_ip:
+            if norm_regionset:
+                norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
+                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage)
+            else:
+                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach from PePr
+        
+        for i in range(len(scaling_factors_ip)):
+            print('scaling factor ', scaling_factors_ip[i], file=sys.stderr)
+            self.covs[i].scale(scaling_factors_ip[i]) 
         
         if scaling_factors_ip:
             print("Normalize signal by scaling factors...", file=sys.stderr)
@@ -287,17 +297,7 @@ class MultiCoverageSet(DualCoverageSet):
                 for i in range(cond): #normalize all replicates
                     k = i if j == 0 else i+self.dim_1
                     self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
-        else:
-            if norm_regionset:
-                norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
-                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage)
-            else:
-                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach from PePr
-            for i in range(len(scaling_factors_ip)):
-                self.covs[i].scale(scaling_factors_ip[i]) 
-                
-        for f in scaling_factors_ip:
-            print('scaling factor ', f, file=sys.stderr)
+        
         tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
         
                 
