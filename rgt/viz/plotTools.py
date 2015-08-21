@@ -143,9 +143,9 @@ def colormaps(exps, colorby, definedinEM):
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     else:
         if colorby == "reads" or colorby == "regions":
-            n = len(exp.fieldsDict["factor"].keys())
+            n = len(exps.fieldsDict["factor"].keys())
         else:
-            n = len(exp.fieldsDict[colorby].keys())
+            n = len(exps.fieldsDict[colorby].keys())
         colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
 
         #if len(exps.get_regionsnames()) < 20:
@@ -2398,7 +2398,7 @@ class Lineplot:
                                         # Averaging the coverage of all regions of each bed file
                                         if heatmap:
                                             if logt:
-                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage)) # Store the array into data list
+                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
                                             else:
                                                 data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
                                         else:
@@ -2660,8 +2660,9 @@ class Lineplot:
                     #print(data[t][bed].values()[0])
  
     def hmcmlist(self, colorby, definedinEM):
-        self.colors = colormaps(self.exps, colorby, definedinEM)
-    
+        #self.colors = colormaps(self.exps, colorby, definedinEM)
+        self.colors = ["Reds", "Blues", "Oranges", "Greens", "Purples"]
+
     def heatmap(self, logt):
         tickfontsize = 6
         ratio = 10
@@ -2687,11 +2688,17 @@ class Lineplot:
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
                     #print(self.data[t][g][c])
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
-                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    #print(self.colors)
+                    #print(bj)
+                    #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
                     
-            for bi, g in enumerate(self.data[t].keys()):
-                for bj, c in enumerate(self.data[t][g].keys()):
+                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=plt.get_cmap("Blues"))
+            
+
+            #for bi, g in enumerate(self.data[t].keys()):
+            #    for bj, c in enumerate(self.data[t][g].keys()):
                     
                     
                     #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
@@ -2735,28 +2742,30 @@ class Lineplot:
                         #axs[rows,bj].set_ticks_position('none')
                         #axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
                         #axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-                        if logt:
-                            cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
-                            cbar.set_label('log10', fontsize=tickfontsize)
-                        else:
-                            #cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
-                            pass
+                        
+                        
                         #cbar.set_label('Amplitute of signal')
                         max_value = int(max_value)
                         #width = 0.4/rows
                         #cbar_ax = fig.add_axes([0.01 + bj/columns, 0, width, 0.01])
                         cbar = plt.colorbar(im, cax=cbar_ax, ticks=[0, max_value], orientation='horizontal')
                         cbar.ax.set_xticklabels([0, int(max_value)])
-                        cbar.outline.set_linewidth(0.1)
+                        if logt:
+                            cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                            cbar.set_label('log10', fontsize=tickfontsize)
+                        #else:
+                        #cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                        #pass
+                        #cbar.outline.set_linewidth(0.1)
                         
-            fig.tight_layout()
+            #fig.tight_layout()
             #fig.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             #fig.tight_layout(pad=1, h_pad=1, w_pad=1)
             self.figs.append(fig)
             self.hmfiles.append("heatmap"+ "_" + t)
 
     def gen_htmlhm(self, outputname, title, align=50):
-        dir_name = os.path.basename(directory)
+        dir_name = os.path.basename(outputname)
         #check_dir(directory)
         html_header = title
         link_d = OrderedDict()
@@ -2770,7 +2779,7 @@ class Lineplot:
         # Each row is a plot with its data
         for name in self.hmfiles:
             html.add_figure(name+".png", align="center")
-        html.write(os.path.join(directory, title, "index.html"))
+        html.write(os.path.join(outputname, title, "index.html"))
 
         ## Parameters
         html = Html(name=html_header, links_dict=link_d,
@@ -2778,7 +2787,7 @@ class Lineplot:
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
-        html.write(os.path.join(directory, title, "parameters.html"))
+        html.write(os.path.join(outputname, title, "parameters.html"))
 
 
 
