@@ -55,9 +55,10 @@ class HelpfulOptionParser(OptionParser):
 
 if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
-    (options, args) = parser.parse_args()
+    
     parser.add_option("--dist", dest="dist", default=50000, type="int",\
                           help="threshDist of GenomicReginSet.filter_by_gene_association_old. [default: %default]")
+    (options, args) = parser.parse_args()
     if len(args) != 4:
         parser.error("Exactly three parameters are needed: experimental matrix, gene expression, annotation path and prefix for output")
     
