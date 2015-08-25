@@ -1172,9 +1172,8 @@ class GenomicRegionSet:
         for s in self:
             try: length = length + len(s)
             except: 
-                print(s)
-                print(len(s))
-                sys.exit(1)
+                print("Warning: cannot get length of "+str(s)+ " skipped")
+                continue
         return length
     
     def get_genome_data(self,organism, chrom_X=True, chrom_Y=False, chrom_M=False):

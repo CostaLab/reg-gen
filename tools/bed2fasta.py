@@ -44,6 +44,7 @@ def load_exon_sequence(bed, directory, genome_path):
                     blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
                     starts = [ int(s) for s in filter(None, data[6].split(",")) ]
                     printstr = []
+
                     for i in range(n):
                         start = gr.initial + starts[i]
                         end = start + blocks[i]
@@ -51,7 +52,7 @@ def load_exon_sequence(bed, directory, genome_path):
                         if gr.orientation == "-":
                             seq = Seq(genome.fetch(gr.chrom, start-1, end-1), IUPAC.unambiguous_dna)
                             seq = seq.reverse_complement()
-                            p = [ ">"+ " ".join([ gr.name+":"+str(start)+"-"+str(end), 
+                            p = [ ">"+ " ".join([ gr.name, 
                                                   "exon:"+str(n-i), 
                                                   "_".join(["REGION",gr.chrom,
                                                             str(start),str(end), 
@@ -60,12 +61,15 @@ def load_exon_sequence(bed, directory, genome_path):
                             
                             printstr.append(p)
                             
+
                         else:
-                            p = [ ">"+ " ".join([gr.name+":"+str(start)+"-"+str(end), "exon:"+str(i+1), 
+                            p = [ ">"+ " ".join([gr.name, "exon:"+str(i+1), 
                                   "_".join(["REGION",gr.chrom,str(start),str(end), gr.orientation]) ]),
                                   genome.fetch(gr.chrom, start-1, end-1)
                                 ]
                             printstr.append(p)
+                            
+
                     if gr.orientation == "-": printstr = printstr[::-1]
                     for i in range(n):
                         print(printstr[i][0], file=f)

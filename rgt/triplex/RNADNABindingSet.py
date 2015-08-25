@@ -463,7 +463,7 @@ class RNADNABindingSet:
         with open(filename) as f:
             for line in f:
                 if line[0] == "#": continue # skip the comment line
-                
+                if "\tchrM:" in line: continue # skip chromosome Mitocondria
                 line = line.strip("\n")
                 line = line.split("\t")
                 

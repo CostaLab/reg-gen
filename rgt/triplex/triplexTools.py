@@ -430,6 +430,7 @@ def rna_associated_gene(rna_regions, name, organism):
         closest_genes = []
         for n in genes:
             if name not in n: closest_genes.append(n)
+        closest_genes = set(closest_genes)
         #for n in proxs:
         #    if name not in n: closest_genes.append(n)
         if len(closest_genes) == 0:
@@ -1022,7 +1023,7 @@ class PromoterTest:
                                                            initial=dbdstart, final=dbdend, 
                                                            orientation=self.rna_regions[0][3], 
                                                            name=str(rbs.initial)+"-"+str(rbs.final) ) )
-                                    dbdmap[str(rbs)] = dbd[-1].toString()
+                                    dbdmap[str(rbs)] = dbd[-1].toString() + " strand:-"
                                     loop = False
                                     break
                                 elif rbs.final > tail:
@@ -1045,7 +1046,7 @@ class PromoterTest:
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
                                                        name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
-                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString()
+                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString() + " strand:-"
                                 loop = False
                                 break
 
@@ -1075,7 +1076,7 @@ class PromoterTest:
                                                            initial=dbdstart, final=dbdend, 
                                                            orientation=self.rna_regions[0][3], 
                                                            name=str(rbs.initial)+"-"+str(rbs.final) ) )
-                                    dbdmap[str(rbs)] = dbd[-1].toString()
+                                    dbdmap[str(rbs)] = dbd[-1].toString() + " strand:+"
                                     loop = False
                                     break
                                 elif rbs.final > tail:
@@ -1096,7 +1097,7 @@ class PromoterTest:
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
                                                        name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
-                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString()
+                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString() + " strand:+"
                                 loop = False
                                 break
 
@@ -1439,7 +1440,7 @@ class PromoterTest:
                 svg = '<object type="image/svg+xml" data="'+f+'">Your browser does not support SVG</object>'
                 new_row = [dbd,svg]
                 data_table.append(new_row)
-        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
 
         ####
@@ -1851,12 +1852,13 @@ class PromoterTest:
         if self.rna_regions:
             trans = "Transcript:"
             for r in self.rna_regions:
-                trans += r[0]+":"+str(r[1])+"-"+str(r[2])
+                trans += " "+ r[0]+":"+str(r[1])+"-"+str(r[2])
             rna = '<p title="'+trans+'">'+self.rna_name +"<p>"
         else:
             rna = self.rna_name
         # RNA associated genes
         r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
+        
         newlines = []
         #try:
         if os.path.isfile(pro_path):
