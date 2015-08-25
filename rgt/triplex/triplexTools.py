@@ -421,10 +421,10 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=100000, show_dis=True)
-        print(name)
-        print( [ a.name for a in asso_genes ] )
-        print( [ a.proximity for a in asso_genes ])
+        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=500000, show_dis=True)
+        #print(name)
+        #print( [ a.name for a in asso_genes ] )
+        #print( [ a.proximity for a in asso_genes ])
         genes = asso_genes[0].name.split(":")
         #proxs = asso_genes[0].proximity.split(":")
         closest_genes = []
@@ -620,9 +620,14 @@ class PromoterTest:
                                     self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
                                 except:
                                     self.rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
+
                     else:
                         self.rna_regions = None
                         break
+        if self.rna_regions:
+            self.rna_regions.sort(key=lambda x: x[1])
+            if self.rna_regions[0][3] == "-":
+                self.rna_regions = self.rna_regions[::-1]
 
     def connect_rna(self, rna, temp):
         seq = ""
@@ -631,6 +636,7 @@ class PromoterTest:
                 if line[0] != ">":
                     line = line.strip()
                     seq += line
+
         with open(os.path.join(temp,"rna_temp.fa"), "w") as r:
             print(">"+self.rna_name, file=r)
             for s in [seq[i:i + 80] for i in range(0, len(seq), 80)]:
@@ -727,8 +733,8 @@ class PromoterTest:
                                 #nde.write("\t".join(line)+"\n")
                             
                     f_nde.close()
-                #if remove_temp:
-                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                if remove_temp:
+                    os.remove(os.path.join(temp, "de"+str(i)+".txp"))
                 #os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
                 os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
@@ -979,36 +985,42 @@ class PromoterTest:
             return
         else:
             dbd = GenomicRegionSet("DBD")
+            dbdmap = {}
+            if len(self.rna_regions) == 1:
+                print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
             for rbs in sig_region:
                 loop = True
-                print(rbs)
-                print(rbs.initial)
-                print(rbs.final)
-                print(rbs.orientation)
-                print()
+
+                #print(rbs)
+                #print(rbs.initial)
+                #print(rbs.final)
+                #print(rbs.orientation)
+                #print()
                 
                 if self.rna_regions[0][3] == "-":
-                    rna_regions = self.rna_regions[::-1]
+                    #rna_regions = self.rna_regions[::-1]
 
                     while loop:
                         cf = 0
-                        for exon in rna_regions:
-                            print(exon)
+                        for exon in self.rna_regions:
+                            #print(exon)
 
                             l = abs(exon[2] - exon[1])
                             tail = cf + l
-                            print("cf:   " + str(cf))
-                            print("tail: " + str(tail) )
+                            #print("cf:   " + str(cf))
+                            #print("tail: " + str(tail) )
                             if cf <= rbs.initial <=  tail:
                                 dbdstart = exon[2] - rbs.initial + cf
                                 
                                 if rbs.final <= tail: 
                                     #print("1")
                                     dbdend = exon[2] - rbs.final + cf
+                                    if dbdstart > dbdend: dbdstart, dbdend = dbdend, dbdstart
                                     dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                            initial=dbdstart, final=dbdend, 
                                                            orientation=self.rna_regions[0][3], 
                                                            name=str(rbs.initial)+"-"+str(rbs.final) ) )
+                                    dbdmap[str(rbs)] = dbd[-1].toString()
                                     loop = False
                                     break
                                 elif rbs.final > tail:
@@ -1016,6 +1028,7 @@ class PromoterTest:
                                     subtract = l + cf - rbs.initial
                                     #print("2")
                                     #print("Subtract: "+str(subtract))
+                                    if dbdstart > exon[1]: dbdstart, exon[1] = exon[1], dbdstart
                                     dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                            initial=dbdstart, final=exon[1], 
                                                            orientation=self.rna_regions[0][3], 
@@ -1025,10 +1038,12 @@ class PromoterTest:
                                 #print("3")
                                 dbdstart = exon[2]
                                 dbdend = exon[2] - rbs.final + rbs.initial + subtract
+                                if dbdstart > dbdend: dbdstart, dbdend = dbdend, dbdstart
                                 dbd.add( GenomicRegion(chrom=self.rna_regions[0][0], 
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
                                                        name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
+                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString()
                                 loop = False
                                 break
 
@@ -1058,6 +1073,7 @@ class PromoterTest:
                                                            initial=dbdstart, final=dbdend, 
                                                            orientation=self.rna_regions[0][3], 
                                                            name=str(rbs.initial)+"-"+str(rbs.final) ) )
+                                    dbdmap[str(rbs)] = dbd[-1].toString()
                                     loop = False
                                     break
                                 elif rbs.final > tail:
@@ -1078,6 +1094,7 @@ class PromoterTest:
                                                        initial=dbdstart, final=dbdend, 
                                                        orientation=self.rna_regions[0][3], 
                                                        name=str(cf)+"-"+str(rbs.final)+"_split2" ) )
+                                dbdmap[str(rbs)] = dbd[-2].toString() + " & " + dbd[-1].toString()
                                 loop = False
                                 break
 
@@ -1096,7 +1113,7 @@ class PromoterTest:
         with open(os.path.join(output, "DBD_"+self.rna_name+".fa"), 'w') as fasta:
             
             for rbs in sig_region:
-                fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+"\n")
+                fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ dbdmap[str(rbs)]+"\n")
                 #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
                 fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
         

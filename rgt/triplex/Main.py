@@ -137,7 +137,8 @@ def list_all_index(path, show_RNA_ass_gene=False):
                               profile[exp][5], profile[exp][6] ]
             data_table.append(new_line)
         except:
-            print("Error in loading profile: "+exp)
+            if exp != "Experiment":
+                print("Error in loading profile: "+exp)
             continue
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
@@ -178,7 +179,7 @@ def main():
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list of BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
-    parser_promotertest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
+    parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_promotertest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for promoter counts (Default: 40)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
