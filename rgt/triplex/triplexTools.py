@@ -787,6 +787,7 @@ class PromoterTest:
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
             # DE
+            self.txp_de.merged_dict[rbs].remove_duplicates()
             l1 = len(self.txp_de.merged_dict[rbs])
             self.frequency["promoters"]["de"][rbs] = [ l1, len_de - l1 ]
 
@@ -813,6 +814,7 @@ class PromoterTest:
                 #print(len(self.frequency["promoters"]["nde"][rbs]))
                 #self.frequency["promoters"]["nde"][rbs].merge()
                 #print(len(self.frequency["promoters"]["nde"][rbs]))
+                self.frequency["promoters"]["nde"][rbs].remove_duplicates()
                 l2 = len(self.frequency["promoters"]["nde"][rbs])
                 #print(str(l2))
                 self.frequency["promoters"]["nde"][rbs] = [ l2, len_nde - l2 ]
@@ -943,7 +945,7 @@ class PromoterTest:
         self.sig_region_promoter = []
         for rbs in self.frequency["promoters"]["de"]:
             table = numpy.array([self.frequency["promoters"]["de"][rbs], self.frequency["promoters"]["nde"][rbs]])
-            #print(table)
+            print(table)
             self.oddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
             pvalues.append(p)
 

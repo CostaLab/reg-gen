@@ -1170,7 +1170,11 @@ class GenomicRegionSet:
         """ Return the sum of all lengths of regions. """
         length = 0
         for s in self:
-            length = length + len(s)
+            try: length = length + len(s)
+            except: 
+                print(s)
+                print(len(s))
+                sys.exit(1)
         return length
     
     def get_genome_data(self,organism, chrom_X=True, chrom_Y=False, chrom_M=False):
