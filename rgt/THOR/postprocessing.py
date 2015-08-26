@@ -10,6 +10,9 @@ from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
 import re
+from scipy.stats.mstats import zscore
+from rgt.motifanalysis.Statistics import multiple_test_correction
+import numpy as np
 
 def merge_data(regions):
     for el in regions:
@@ -90,6 +93,32 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     return results
 
+def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction):
+    """Filter DPs by strang lag and pvalue"""
+    zscore_ratios = zscore(ratios)
+    ratios_pass = np.where(np.bitwise_and(zscore_ratios>-2, zscore_ratios<2) == True, True, False)
+    if not no_correction:
+        pvalues = map(lambda x: 10**-x, pvalues)
+        pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
+    else:
+        pv_pass = np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False)
+    
+    filter_pass = np.bitwise_and(ratios_pass, pv_pass)
+    
+    assert len(pv_pass) == len(ratios_pass)
+    assert len(output) == len(pvalues)
+    assert len(filter_pass) == len(pvalues)
+    
+    return output, pvalues, filter_pass
+
+def filter_deadzones(bed_deadzones, peak_regions):
+    """Filter by peaklist by deadzones"""
+    deadzones = GenomicRegionSet('deadzones')
+    deadzones.read_bed(bed_deadzones)
+    peak_regions = peak_regions.subtract(deadzones, whole_region=True)
+    
+    return peak_regions
+    
 if __name__ == '__main__':
     ext_size1 = int(sys.argv[1]) #100
     ext_size2 = int(sys.argv[2]) #100

@@ -26,6 +26,7 @@ from math import log10
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import os
 import pysam
+import numpy as np
 
 SIGNAL_CUTOFF = 30000
 
@@ -210,7 +211,7 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
         pvalues = map(_get_log10pvalue, pvalues)
     else:
-        pv_pass = [True] * len(pvalues)
+        pv_pass = list(np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False))
     
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)

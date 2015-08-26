@@ -18,12 +18,10 @@ from rgt.ODIN.get_extension_size import get_extension_size
 import os.path
 import sys
 from MultiCoverageSet import MultiCoverageSet
-#from get_gen_pvalue import get_log_pvalue
 from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
 from math import log, log10
 import multiprocessing
 from input_parser import input_parser
-#from rgt.ODIN import ODIN
 import matplotlib as mpl #necessary to plot without x11 server (for cluster)
 mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 import matplotlib.pyplot as plt
@@ -32,9 +30,7 @@ from scipy.optimize import curve_fit
 import numpy as np
 from numpy import linspace
 from math import fabs
-#from rgt.ODIN.postprocessing import merge_delete
-from rgt.THOR.postprocessing import merge_delete
-#from rgt.ODIN.dpc_help import _output_BED, _output_narrowPeak
+from rgt.THOR.postprocessing import merge_delete, filter_by_pvalue_strand_lag, filter_deadzones
 from rgt.THOR.neg_bin import NegBin
 from operator import add
 from numpy import percentile
@@ -260,7 +256,7 @@ def _get_covs(DCS, i, as_list=False):
     
     return cov1, cov2
 
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
+def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
@@ -295,13 +291,14 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
             tmp.append(tmp_peaks[j])
     tmp_peaks = tmp
 
-    #merge consecutive peaks and compute p-value
-    pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr)
-    #postprocessing, returns GenomicRegionSet with merged regions
-    regions = merge_delete(exts, merge, peaks, pvalues)
-    #regions = merge_delete([0], False, peaks, pvalues) 
+    
+    pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr) #merge consecutive peaks and compute p-value
+    regions = merge_delete(exts, merge, peaks, pvalues) #postprocessing, returns GenomicRegionSet with merged regions
+    if deadzones:
+        regions = filter_deadzones(deadzones, regions)
     output = []
     pvalues = []
+    ratios = []
     main_sep = ':' #sep <counts> main_sep <counts> main_sep <pvalue>
     int_sep = ';' #sep counts in <counts>
     
@@ -311,31 +308,24 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, p=70):
         pvalue = float(tmp[len(tmp)-2].replace(")", "").strip())
         ratio = float(tmp[len(tmp)-1].replace(")", "").strip())
         pvalues.append(pvalue)
-        output.append((el.chrom, el.initial, el.final, el.orientation, counts, ratio))
+        ratios.append(ratio)
+        output.append((el.chrom, el.initial, el.final, el.orientation, counts))
     
-    pcutoff = -log10(pcutoff)
-    pv_pass = np.where(np.asarray(pvalues) >= pcutoff, True, False)
+    output, pvalues, filter_pass = filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction)
+    _output_BED(name, output, pvalues, filter_pass)
+    _output_narrowPeak(name, output, pvalues, strands_pos, strands_neg)
 
-    output = np.array(output)
-    output = output[pv_pass]
-    pvalues = list(np.array(pvalues)[pv_pass])
-    
-    output = map(lambda x: tuple(x), list(output))
-    
-    assert(len(output) == len(pvalues))
-    
-    _output_BED(name, output, pvalues)
-    #_output_narrowPeak(name, output, pvalues, strands_pos, strands_neg)
 
-def _output_BED(name, output, pvalues):
+def _output_BED(name, output, pvalues, filter):
     f = open(name + '-diffpeaks.bed', 'w')
      
     colors = {'+': '255,0,0', '-': '0,255,0'}
     bedscore = 1000
     
     for i in range(len(pvalues)):
-        c, s, e, strand, counts, ratio = output[i]
-        print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, ratio, sep='\t', file=f)
+        c, s, e, strand, counts = output[i]
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
     
     f.close()
 
@@ -348,16 +338,6 @@ def _output_narrowPeak(name, output, pvalues):
         print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
     f.close()
 
-#def _output_ext_data(ext_data, bamfile):
-#    #write data
-#    name = os.path.basename(os.path.splitext(a)[0])
-#    f = open(FOLDER_REPORT_DATA +)
-    
-#    f = open(FOLDER_REPORT_DATA + + name + '.data', 'w')
-#    for i in range(len(data[0])):
-#        print(data[0][i], data[1][i], sep='\t', file=f)
-#    f.close()
-    
 
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
     """Compute Extension sizes for bamfiles and input files"""
@@ -528,6 +508,9 @@ def input(laptop):
                           help="Foldchange for trainingsset [default: %default]")
         parser.add_option("--size", dest="size_ts", default=10000, type="int",\
                           help="10000 of 2 free parameters for HMM, else 1000 [default: %default]")
+        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
+                          help="No Benjamini/Hochberg p-value multiple testing correction [default: %default]")
+        parser.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
         
         group = OptionGroup(parser, "Advanced options")
         group.add_option("--regions", dest="regions", default=None, type="string",\
