@@ -388,7 +388,7 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
               bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
               prop={'size':12}, ncol=3)
     pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-    pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+    pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
     pp.close()
 
 def load_dump(path, filename):
@@ -1118,7 +1118,10 @@ class PromoterTest:
             for rbs in sig_region:
                 fasta.write(">"+ self.rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ dbdmap[str(rbs)]+"\n")
                 #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
-                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)+"\n" )
+                if dbdmap[str(rbs)][-1] == "-":
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
+                else: 
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
         
 
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
