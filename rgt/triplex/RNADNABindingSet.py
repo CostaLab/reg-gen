@@ -40,6 +40,9 @@ class RNADNABinding:
     
     """
 
+    __slots__ = ['rna', 'dna', 'motif', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 
+                 'rna_seq', 'dna_seq', 'match' ]
+
     def __init__(self, rna, dna, score, err_rate, err, guan_rate, rna_seq=None, dna_seq=None, match=None):
         """Initiation"""
         self.rna = rna  # BindingSite
@@ -82,6 +85,7 @@ class RNADNABindingSet:
         [12] Guanine-rate
     
     """
+    __slots__ = ['name', 'sequences', 'sorted_dna', 'sorted_rna' ]
 
     def __init__(self, name):
         """Initialize"""

@@ -9,6 +9,7 @@ import shutil
 import time, datetime, getpass, fnmatch
 import subprocess
 import pickle
+from collections import OrderedDict
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegion import GenomicRegion
@@ -57,14 +58,16 @@ def check_dir(path):
 
 
 
-def list_all_index(path, show_RNA_ass_gene=False):
+def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     """Creat an 'index.html' in the defined directory """
 
     dirname = os.path.basename(path)
     
-    link_d = {"List":"index.html"}
+    if link_d: pass
+    else: link_d = {"List":"index.html"}
+
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
-                fig_dir=os.path.join(path,"style"), fig_rpath="./style", 
+                fig_rpath="./style", fig_dir=os.path.join(path,"style"), 
                 RGT_header=False, other_logo="TDF")
     
     html.add_heading("All experiments in: "+dirname+"/")
@@ -74,12 +77,12 @@ def list_all_index(path, show_RNA_ass_gene=False):
     c = 0
     if show_RNA_ass_gene:
         header_list = ["No.", "Experiments", "RNA", "Closest genes", 
-                       "Organism", "Target region", "No significant DBD",
-                       "Top DBD", "p-value"]
+                       "No sig. DBD",
+                       "Top DBD", "p-value", "Organism", "Target region"]
     else:
-        header_list = ["No.", "Experiments", "RNA", "Organism", #"Condition", 
-                       "Target region", "No significant DBD",
-                       "Top DBD", "p-value"]
+        header_list = ["No.", "Experiments", "RNA", "No sig. DBD",
+                       "Top DBD", "p-value", "Organism", #"Condition", 
+                       "Target region" ]
 
     profile_f = open(os.path.join(path, "profile.txt"),'r')
     profile = {}
@@ -105,7 +108,7 @@ def list_all_index(path, show_RNA_ass_gene=False):
         #    new_line = [ str(c), exp, profile[exp][0] ]
         #else:
         try:
-            if profile[exp][6] == "-":
+            if profile[exp][5] == "-":
                 new_line = [ str(c), exp,
                              profile[exp][0] ]
             else:
@@ -121,20 +124,20 @@ def list_all_index(path, show_RNA_ass_gene=False):
                     )
 
             if profile[exp][6] == "-":
-                new_line += [ profile[exp][2], profile[exp][3], 
-                              profile[exp][4], 
-                              profile[exp][5], profile[exp][6] ]
+                new_line += [ profile[exp][4], 
+                              profile[exp][5], profile[exp][6],
+                              profile[exp][2], profile[exp][3] ]
 
             elif float(profile[exp][6]) < 0.05:
-                new_line += [ profile[exp][2], profile[exp][3], 
-                              profile[exp][4], 
+                new_line += [ profile[exp][4], 
                               profile[exp][5], 
                               "<font color=\"red\">"+\
-                              profile[exp][6]+"</font>" ]
+                              profile[exp][6]+"</font>",
+                              profile[exp][2], profile[exp][3] ]
             else:
-                new_line += [ profile[exp][2], profile[exp][3], 
-                              profile[exp][4], 
-                              profile[exp][5], profile[exp][6] ]
+                new_line += [ profile[exp][4], 
+                              profile[exp][5], profile[exp][6],
+                              profile[exp][2], profile[exp][3] ]
             data_table.append(new_line)
         except:
             if exp != "Experiment":
@@ -142,9 +145,25 @@ def list_all_index(path, show_RNA_ass_gene=False):
             continue
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
-                          align=50, cell_align="left", sortable=True)
+                          align=10, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
+
+def revise_index(root, show_RNA_ass_gene=False):
+    "Revise other index.html in the same project"
+    
+    dirlist = {}
+    plist = {}
+    for item in os.listdir(root):
+        h = os.path.join(root, item, "index.html")
+        if os.path.isfile(h):
+            dirlist[os.path.basename(item)] = "../"+item+"/index.html"
+            plist[os.path.basename(item)] = h
+    dirlist = OrderedDict(sorted(dirlist.items()))
+    #print(dirlist)
+    for d, p in plist.iteritems():
+        list_all_index(path=os.path.dirname(p), 
+                       link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
 
 def main():
     ##########################################################################
@@ -165,7 +184,7 @@ def main():
     h_promotor = "Promoter test evaluates the association between the given lncRNA to the target promoters."
     parser_promotertest = subparsers.add_parser('promotertest', help=h_promotor)
     parser_promotertest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
-    #parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for paths to all RNA sequences (in fasta format)")
+    parser_promotertest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for paths to all RNA sequences (in fasta format)")
     parser_promotertest.add_argument('-rn', type=str, default=None, metavar='  ', help="Define the RNA name")
     parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for target gene list (gene symbols or Ensembl ID)")
     parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of target genes")
@@ -207,6 +226,7 @@ def main():
     h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
     parser_randomtest = subparsers.add_parser('regiontest', help=h_region)
     parser_randomtest.add_argument('-r', type=str, metavar='  ', help="Input file name for RNA sequence (in fasta format)")
+    parser_randomtest.add_argument('-rl', type=str, default=None, metavar='  ', help="Input list for paths to all RNA sequences (in fasta format)")
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
     parser_randomtest.add_argument('-bed', metavar='  ', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
@@ -218,8 +238,8 @@ def main():
  
     parser_randomtest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
     parser_randomtest.add_argument('-score', action="store_true", help="Load score column from input BED file")
-    parser_randomtest.add_argument('-a', type=int, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
-    parser_randomtest.add_argument('-ccf', type=int, default=20, metavar='  ', help="Define the cut off value for DBS counts (Default: 20)")
+    parser_randomtest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
+    parser_randomtest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for DBS counts (Default: 20)")
     parser_randomtest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_randomtest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
@@ -276,9 +296,48 @@ def main():
         if not args.organism: 
             print("Please define the organism. (hg19 or mm9)")
             sys.exit(1)
-        if not args.rn: 
+        if not args.rn and not args.rl: 
             print("Please define RNA sequence name.")
             sys.exit(1)
+        if args.r and args.rl:
+            print("Both -r and -rl are given. TDF will skip -r and process -rl ")
+        if args.rl:
+            with open(args.rl) as f:
+                for line in f:
+                    line = line.strip()
+                    rn = os.path.basename(line).rpartition(".")[0]
+                    print("\tProcessing: "+rn)
+                    #print(ps)
+                    command = ["rgt-TDF", args.mode, 
+                               "-r", line, "-rn", rn,
+                               "-o", os.path.join(args.o, rn),
+                               "-organism", args.organism ]
+                    if args.de and not args.bed: command += ["-de", args.de]
+                    if args.bed and args.bg: command += ["-bed", args.bed, "-bg", args.bg]
+
+                    if args.score: command += ["-score"]
+                    if args.rt: command += ["-rt" ]
+                    if args.pl != 1000: command += ["-pl", args.pl]
+                    if args.ccf != 40: command += ["-ccf", args.ccf]
+                    if args.obed: command += ["-obed"]
+                    if args.a != 0.05: command += ["-a", args.a]
+                    if args.filter_havana == 'F': command += ["-filter_havana", 'F']
+                    if args.protein_coding == 'T': command += ["-protein_coding", 'T']
+                    if args.known_only == 'F': command += ["-known_only", 'F']
+                    
+                    if args.rm: command += ["-rm" ]
+                    if args.fr != 'off': command += ["-fr", args.fr ]
+                    if args.c != 2: command += ["-c", args.c ]
+                    if args.e != 20: command += ["-e", args.e ]
+                    if args.of != 1: command += ["-of", args.of ]
+                    if args.l != 15: command += ["-l", args.l ]
+                    if args.fr != 'off': command += ["-fr", args.fr ]
+                    if args.fr != 'off': command += ["-fr", args.fr ]
+                    if args.fr != 'off': command += ["-fr", args.fr ]
+
+                    subprocess.call(command)
+
+            sys.exit(0)
 
         t0 = time.time()
         # Normalised output path
@@ -333,7 +392,8 @@ def main():
                     print("\t".join(lines), file=f)
 
             #shutil.rmtree(args.o)
-            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
+            #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
+            revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
             shutil.rmtree(args.o)
             sys.exit(1)
 
@@ -420,8 +480,8 @@ def main():
     
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-        
+        #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
+        revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################
@@ -480,6 +540,7 @@ def main():
                                 organism=args.organism, showdbs=args.showdbs)
         randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
+        randomtest.connect_rna(rna=args.r, temp=args.o)
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
@@ -497,9 +558,13 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
         print2(summary, "Step 3: Generating plot and output HTML")
-        print(randomtest.data["region"]["sig_region"])
         randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
         
+        os.remove(os.path.join(args.o,"rna_temp.fa"))
+        try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
+        except: pass
+        
+
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",
                             sig_region=randomtest.data["region"]["sig_region"], 
@@ -531,6 +596,7 @@ def main():
 
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
                             score=args.score)
+
         t3 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
         

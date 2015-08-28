@@ -30,6 +30,8 @@ Return intersection with region.
 
 class GenomicRegionSet:
 
+    #__slots__ = ['name', 'sequences', 'sorted', 'fileName', 'genome_path' ]
+
     def __init__(self, name):
         """Initialize a set of GenomicRegions"""
         self.name = name

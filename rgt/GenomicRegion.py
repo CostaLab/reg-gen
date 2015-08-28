@@ -19,6 +19,8 @@ Return true if region overlaps with argument-region, otherwise false.
 
 class GenomicRegion:
 
+    #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
+
     def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
         """Initialize GenomicRegion"""
         self.chrom = str(chrom) #chrom should be a string, not an integer

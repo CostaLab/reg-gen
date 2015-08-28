@@ -702,7 +702,10 @@ class Html:
         """
         for k in self.links_dict.keys():
 
-            self.document.append("<a class=\"pure-button\" href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>")
+            self.document.append("<a class=\"pure-button\" href=\""+\
+                                 os.path.join(self.cluster_path_fix,self.links_dict[k])+\
+                                 "\">"+\
+                                 "<font size='1'>"+k+"</font>"+"</a>")
 
         #self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         #self.document.append("  <tr>")
