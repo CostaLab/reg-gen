@@ -2,6 +2,7 @@ ToDo:
 
 done
 - foldchange option is now available, was deprecated for some reasons
+- bugfix when no-correction is on: filter by theshold that is given by option and do not output everything
 
 ODIN-0.4
 - solve the following question automativally:

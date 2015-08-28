@@ -41,9 +41,6 @@ def main():
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     
-    #tracker.write('test')
-    #sys.exit()
-    
     exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
@@ -102,7 +99,9 @@ def main():
     else:
         distr = {'distr_name': 'binomial', 'n': m.n[0], 'p': m.p[0][1]}
      
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par)
+    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, \
+              exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par,\
+              no_correction=options.no_correction, deadzones=options.deadzones)
     
 if __name__ == '__main__':
     main() 
