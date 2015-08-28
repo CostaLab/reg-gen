@@ -13,6 +13,7 @@ class BindingSite(GenomicRegion):
 
     Authors: Joseph Kuo
     """
+    __slots__ = ['name', 'score', 'errors_bp', 'motif', 'orientation', 'seq' ]
 
     def __init__(self, chrom, initial, final, name=None, score=None, errors_bp=None, motif=None, 
                  strand=None, orientation=None, guanine_rate=None, seq=None):
@@ -146,27 +147,3 @@ class BindingSiteSet(GenomicRegionSet):
                 count += 1
         return count
 
-
-
-####################################################################################
-#   Test
-####################################################################################
-
-if __name__ == '__main__':
-    a = BindingSiteSet(name="a")
-    a.add(BindingSite(SequenceType.RNA, "a",1,5))
-    a.add(BindingSite(SequenceType.RNA, "a",10,15))
-    
-    b = BindingSiteSet(name="b")
-    b.add(BindingSite(SequenceType.RNA, "b",4,8))
-    
-    print(len(a))
-    print(len(b))
-    print(a.sequences)
-    print(b.sequences)
-    
-    a.subtract(b)
-    a.merge()
-    print(a.sequences)
-    print(b.sequences)
-    
