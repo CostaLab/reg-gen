@@ -71,6 +71,8 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                 RGT_header=False, other_logo="TDF")
     
     html.add_heading("All experiments in: "+dirname+"/")
+
+    
     data_table = []
     type_list = 'sssssssssssss'
     col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
@@ -146,6 +148,9 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
                           align=10, cell_align="left", sortable=True)
+
+    html.add_figure("dendrogram.png", align="center", width="90%")
+
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
 
@@ -156,12 +161,14 @@ def revise_index(root, show_RNA_ass_gene=False):
     plist = {}
     for item in os.listdir(root):
         h = os.path.join(root, item, "index.html")
-        if os.path.isfile(h):
+        pro = os.path.join(root, item, "profile.txt")
+        if os.path.isfile(pro):
             dirlist[os.path.basename(item)] = "../"+item+"/index.html"
             plist[os.path.basename(item)] = h
     dirlist = OrderedDict(sorted(dirlist.items()))
     #print(dirlist)
     for d, p in plist.iteritems():
+        print(d)
         list_all_index(path=os.path.dirname(p), 
                        link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
 
@@ -472,8 +479,13 @@ def main():
         #                        linelabel="No. DBSs", filename="plot_dbss.png")
         #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
         if args.motif: promoter.gen_motifs(temp=args.o)
+
+        
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
+        promoter.save_ranktable(path=os.path.dirname(args.o))
+        promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
+        
         t4 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
@@ -482,6 +494,8 @@ def main():
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
         #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
         revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
+
+
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################

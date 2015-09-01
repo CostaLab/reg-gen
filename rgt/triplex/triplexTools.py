@@ -18,6 +18,8 @@ import matplotlib.cm as cm
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from matplotlib import colors
 from matplotlib.backends.backend_pdf import PdfPages
+#import pylab
+import scipy.cluster.hierarchy as sch
 import pysam
 import pickle
 import shutil
@@ -379,24 +381,25 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     
     ax.set_ylabel(ylabel,fontsize=9, rotation=90)
     
-    if exons and len(exons) > 1:
-        w = 0
-        i = 0
-        h = (max_y - min_y)*0.02
+    if None:
+        if exons and len(exons) > 1:
+            w = 0
+            i = 0
+            h = (max_y - min_y)*0.02
 
-        for exon in exons:
-            l = abs(exon[2] - exon[1])
-            
-            #print([i,l,w])
-            #ax.axvline(x=w, color="gray", alpha=0.5, zorder=100)
-            if i % 2 == 0:
-                rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="moccasin")
-            else:
-                rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="gold")
-            ax.add_patch(rect)
-            i += 1
-            w += l
-        ax.text(rnalen*0.01, max_y-2*h, "exon boundaries", fontsize=5, color='black')
+            for exon in exons:
+                l = abs(exon[2] - exon[1])
+                
+                #print([i,l,w])
+                #ax.axvline(x=w, color="gray", alpha=0.5, zorder=100)
+                if i % 2 == 0:
+                    rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="moccasin")
+                else:
+                    rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="gold")
+                ax.add_patch(rect)
+                i += 1
+                w += l
+            ax.text(rnalen*0.01, max_y-2*h, "exon boundaries", fontsize=5, color='black')
 
     f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
 
@@ -1687,7 +1690,7 @@ class PromoterTest:
     def gen_html_genes(self, directory, align=50, alpha = 0.05, nonDE=False):
         dir_name = os.path.basename(directory)
         html_header = "Promoter Test: "+dir_name
-        
+        self.ranktable = {}
         type_list = 'sssssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10]
 
@@ -1809,6 +1812,9 @@ class PromoterTest:
 
             try: gn = self.ensembl2symbol[promoter.name]
             except: gn = promoter.name
+
+            self.ranktable[gn] = str(int(rank_sum[i]))
+            
             newline = [ str(i+1),
                         region_link,
                         split_gene_name(gene_name=gn, org=self.organism),
@@ -1929,13 +1935,138 @@ class PromoterTest:
                 print("\t".join(lines), file=f)
 
 
+    def save_ranktable(self, path):
+        """Save the summary rank into the table for heatmap"""
+        table = os.path.join(path, "ranktable.txt")
+        # self.ranktable = {}
+        rank_table = []
+
+        if os.path.isfile(table):
+            # Table exists
+            f = open(table)
+            for i, line in enumerate(f):
+                line = line.strip().split()
+
+                if i == 0: 
+
+                    if not line: 
+                        break
+                        exist = False
+                    if self.rna_name in line: 
+                        # lncRNA exists
+                        exist = True
+                        ind_rna = line.index(self.rna_name)
+                        header = line
+                        
+                    else:
+                        
+                        exist = False
+                        line.append(self.rna_name)
+                        header = line
+
+                else:
+
+                    if exist and ind_rna:
+                        try: 
+                            line[ ind_rna + 1 ] = self.ranktable[ line[0] ]
+                            rank_table.append( line )
+                        except:
+                            rank_table.append( line )
+                    else:
+                        try: 
+                            line.append( self.ranktable[ line[0] ] )
+                            rank_table.append( line )
+                        except:
+                            rank_table.append( line )
+            f.close()
+
+        else:
+            # Table not exists
+
+            header = [ "gene", self.rna_name ]
+            for k, v in self.ranktable.iteritems():
+                rank_table.append( [k, v] )
+
+        # Write into file
+        g = open(table, "w")
+        
+        print("\t".join(header), file=g)
+        for l in rank_table:
+            print("\t".join(l), file=g)
+        g.close()
+
+    def heatmap(self, table, temp):
+        """Generate heatmap for comparisons among genes and lncRNAs"""
+
+        # Generate random features and distance matrix.
+        
+        genes = []
+        data = []
+        if not os.path.isfile(os.path.join(temp,table)):
+            print("*** No rank table is found.")
+            return
+
+        f = open(os.path.join(temp,table))
+
+        for i, line in enumerate(f):
+            line = line.strip().split()
+            if i == 0:
+                rnas = line[1:]
+            else:
+                genes.append(line[0])
+                data.append([ int(v) for v in line[1:] ])
+
+        f.close()
+        data = numpy.array(data)
+        print(type(data))
+        print(data.shape)
+   
+        # Compute and plot first dendrogram.
+        fig = plt.figure(figsize=(4 + int(data.shape[1]*1.6), int(data.shape[0]*0.2)))
+        #fig.suptitle("Heatmap of summary ranks", fontsize=20, y=0.95)
+        
+        ax1 = fig.add_axes([0.09,0.05,0.2,0.9])
+        Y = sch.linkage(data, method='single')
+        Z1 = sch.dendrogram(Y, orientation='right')
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+
+        # Compute and plot second dendrogram.
+        ax2 = fig.add_axes([0.3, 1.1, 0.55,0.04])
+        #tdata = numpy.transpose(data)
+        Y = sch.linkage(data.T, method='single')
+        Z2 = sch.dendrogram(Y)
+        ax2.set_xticks([])
+        ax2.set_yticks([])
+
+        # Plot distance matrix.
+        axmatrix = fig.add_axes([0.3,0.05,0.55,0.9])
+        #axmatrix = fig.add_axes()
+        idx1 = Z1['leaves']
+        idx2 = Z2['leaves']
+        data = data[idx1,:]
+        data = data[:,idx2]
+        im = axmatrix.matshow(data, aspect='auto', origin='lower', cmap=plt.cm.YlGnBu)
 
 
+        axmatrix.set_xticks(range(data.shape[1]))
+        axmatrix.set_xticklabels( [ rnas[i] for i in idx2 ], minor=False, ha="left")
+        axmatrix.xaxis.set_label_position('top')
+        axmatrix.xaxis.tick_top()
+        plt.xticks(rotation=70, fontsize=15)
 
+        axmatrix.set_yticks(range(data.shape[0]))
+        axmatrix.set_yticklabels( [ genes[i] for i in idx1 ], minor=False)
+        axmatrix.yaxis.set_label_position('right')
+        axmatrix.yaxis.tick_right()
+        plt.yticks(rotation=0, fontsize=12)
 
-
-
-
+        # Plot colorbar.
+        axcolor = fig.add_axes([0.1,0.02,0.8,0.01])
+        plt.colorbar(im, cax=axcolor, orientation='horizontal')
+        axcolor.set_xlabel('summary rank')
+        fig.savefig(os.path.join(temp,'dendrogram.png'))
+        fig.savefig(os.path.join(temp,'dendrogram.pdf'), format="pdf")
 
 
 ####################################################################################
