@@ -2022,7 +2022,8 @@ class PromoterTest:
         print(data.shape)
    
         # Compute and plot first dendrogram.
-        fig = plt.figure(figsize=(4 + int(data.shape[1]*1.6), int(data.shape[0]*0.2)))
+        fig = plt.figure(figsize=( max(20, 4 + int(data.shape[1]*1.6)), 
+                                   max(80, int(data.shape[0]*0.2))))
         #fig.suptitle("Heatmap of summary ranks", fontsize=20, y=0.95)
         
         ax1 = fig.add_axes([0.09,0.05,0.2,0.9])
@@ -2053,7 +2054,7 @@ class PromoterTest:
         axmatrix.set_xticklabels( [ rnas[i] for i in idx2 ], minor=False, ha="left")
         axmatrix.xaxis.set_label_position('top')
         axmatrix.xaxis.tick_top()
-        plt.xticks(rotation=70, fontsize=15)
+        plt.xticks(rotation=70, fontsize=12)
 
         axmatrix.set_yticks(range(data.shape[0]))
         axmatrix.set_yticklabels( [ genes[i] for i in idx1 ], minor=False)

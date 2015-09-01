@@ -148,8 +148,8 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
                           align=10, cell_align="left", sortable=True)
-
-    html.add_figure("dendrogram.png", align="center", width="90%")
+    if os.path.isfile(os.path.join(path,"dendrogram.png")):
+        html.add_figure("dendrogram.png", align="center", width="90%")
 
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
@@ -168,7 +168,6 @@ def revise_index(root, show_RNA_ass_gene=False):
     dirlist = OrderedDict(sorted(dirlist.items()))
     #print(dirlist)
     for d, p in plist.iteritems():
-        print(d)
         list_all_index(path=os.path.dirname(p), 
                        link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
 
@@ -485,7 +484,7 @@ def main():
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         promoter.save_ranktable(path=os.path.dirname(args.o))
         promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
-        
+
         t4 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
