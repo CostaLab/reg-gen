@@ -193,7 +193,7 @@ if __name__ == '__main__':
     
     
     output(b_payton_FL + b_payton_CC, bed)
-    output(b_payton_CC + b_payton_PBBA, bed)
+    #output(b_payton_CC + b_payton_PBBA, bed)
       
       
 #     output(b_blueprint_H3K27ac_monocyte + b_blueprint_H3K27ac_macrophage, bed)

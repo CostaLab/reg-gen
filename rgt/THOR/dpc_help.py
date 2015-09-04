@@ -313,7 +313,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     
     output, pvalues, filter_pass = filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction)
     _output_BED(name, output, pvalues, filter_pass)
-    _output_narrowPeak(name, output, pvalues, strands_pos, strands_neg)
+    _output_narrowPeak(name, output, pvalues, filter_pass)
 
 
 def _output_BED(name, output, pvalues, filter):
@@ -329,13 +329,14 @@ def _output_BED(name, output, pvalues, filter):
     
     f.close()
 
-def _output_narrowPeak(name, output, pvalues):
+def _output_narrowPeak(name, output, pvalues, filter):
     """Output in narrowPeak format,
     see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
     f = open(name + '-diffpeaks.narrowPeak', 'w')
     for i in range(len(pvalues)):
         c, s, e, strand, _ = output[i]
-        print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
     f.close()
 
 

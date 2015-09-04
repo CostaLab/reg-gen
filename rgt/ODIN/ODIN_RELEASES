@@ -1,4 +1,5 @@
 ToDo:
+- input scaling factor fails sometimes... make it to 1 (?) if this is the case
 
 done
 - foldchange option is now available, was deprecated for some reasons
