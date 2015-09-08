@@ -1489,7 +1489,7 @@ class GenomicRegionSet:
         region_set.add(region)
         return self.intersect(region_set, mode=OverlapType.ORIGINAL)
 
-    def replace_region_name(self, regions):
+    def replace_region_name(self, regions, combine=False):
         """Replace the region names by the given region set"""
         if len(self) == 0 or len(regions) == 0: return
         
@@ -1510,7 +1510,10 @@ class GenomicRegionSet:
                 #print(str(s),"\t",str(b[j]))
                 # When the regions overlap
                 if s.overlap(regions[j]):
-                    s.name = regions[j].name
+                    if combine:
+                        s.name = s.name+"_"+regions[j].name
+                    else:
+                        s.name = regions[j].name
                     try: s = iter_a.next()
                     except: cont_loop = False
                     

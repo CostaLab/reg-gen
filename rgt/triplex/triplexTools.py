@@ -11,14 +11,15 @@ import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
 
 import matplotlib
-matplotlib.use('Agg')
-import matplotlib.patches as patches
+
+from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 import matplotlib.cm as cm
 from matplotlib.ticker import MaxNLocator, FuncFormatter
 from matplotlib import colors
-from matplotlib.backends.backend_pdf import PdfPages
-#import pylab
+
+import pylab
 import scipy.cluster.hierarchy as sch
 import pysam
 import pickle
@@ -264,12 +265,21 @@ def split_gene_name(gene_name, org):
                         result += ","+p1+g+p2+g+p3
             if dlist:
                 i = dlist.index(min(dlist))
-                result = p1+glist[i]+p2+glist[i]+p3+"("+str(dlist[i])+")"
-                try:
-                    i = dlist.index(max(dlist))
-                    result += ","+p1+glist[i]+p2+glist[i]+p3+"("+str(dlist[i])+")"
-                except:
-                    pass
+                if dlist[i] < 0: 
+                    ds = str(dlist[i])
+                    result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+                    try:
+                        j = dlist.index(max(dlist))
+                        if dlist[j] < 0: rds = str(dlist[j])
+                        else:
+                            rds = "+"+ str(dlist[j])
+                            result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
+                    except:
+                        pass
+                else: 
+                    ds = "+"+str(dlist[i])
+                    result = p1+glist[i]+p2+glist[i]+p3+"("+str(dlist[i])+")"
+                
                     
         elif gene_name == ".":
             result = "none"
@@ -639,9 +649,11 @@ class PromoterTest:
     """Test the association between given triplex and differential expression genes"""
     def __init__(self, gene_list_file, bed, bg, organism, promoterLength, rna_name, 
                  summary, temp, output, showdbs=None, score=False, scoreh=False,
-                 filter_havana=True, protein_coding=False, known_only=True):
+                 filter_havana=True, protein_coding=False, known_only=True, gtf=None):
         """Initiation"""
         self.organism = organism
+        if gtf: self.gtf = gtf
+        else: self.gtf = organism
         genome = GenomeData(organism)
         self.rna_name = rna_name
         self.genome_path = genome.get_genome()
@@ -675,8 +687,12 @@ class PromoterTest:
 
         # Input DE gene list
         else:
-            dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
-                                 filter_havana + protein_coding + known_only])
+            if gtf:
+                dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
+                                     gtf.rpartition("/")[-1].rpartition(".")[0]])
+            else:
+                dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
+                                     filter_havana + protein_coding + known_only])
             try:
                 data = load_dump(path=temp, filename=dumpname)
                 self.de_gene = data[0] 
@@ -689,22 +705,23 @@ class PromoterTest:
             except:
 
                 t1 = time.time()
+                # Setting annotationSet
                 if filter_havana=="T": filter_havana=True
                 else: filter_havana=False
                 if protein_coding=="T": protein_coding=True
                 else: protein_coding=False
                 if known_only=="T": known_only=True
                 else: known_only=False
-                ann = AnnotationSet(organism, alias_source=organism,
+
+                ann = AnnotationSet(gene_source=self.gtf, alias_source=organism,
                                     filter_havana=filter_havana, 
                                     protein_coding=protein_coding, 
                                     known_only=known_only)
-                #print("\tDumping annotation file...")
                 
-                #dump(object=ann, path=temp, filename="annotation_"+organism)
                 t2 = time.time()
                 print("\t"+str(datetime.timedelta(seconds=round(t2-t1))))
 
+                ######################################################
                 # DE gene regions
                 self.de_gene = GeneSet("de genes")
                 
@@ -721,30 +738,28 @@ class PromoterTest:
                     except: pass
                     sys.exit(1)
 
+                print2(summary, "   \t"+str(len(self.de_gene))+"\tinput genes ")
                 # Generate a dict for ID transfer
-                #print("Before fixing")
-                #print(len(self.de_gene.genes))
                 de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
+                print2(summary, "   \t"+str(len(de_ensembl))+"\tgenes are mapped to Ensembl ID")
+                if len(unmap_gs) > 0:
+                    print2(summary, "   \t"+str(len(unmap_gs))+"\tunmapped genes: "+ ",".join(unmap_gs))
+                
                 #if "ENSG" in self.ensembl2symbol.keys()[0]: self.ensembl2symbol = None
                 self.de_gene.genes = de_ensembl
                 #print("After fixing")
-
-                # NonDE gene regions
-                #print("Total genes: "+str(len(ann.symbol_dict.keys())))
-                nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
-                #print("nde   "+ str(len(nde_ensembl)))
-
-                self.nde_gene = GeneSet("nde genes")
-                self.nde_gene.genes = nde_ensembl
-                
-                # Get promoters from de genes
-                #print("\tGetting promoter regions...")
-                de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
+                de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength, 
+                                                                gene_set=self.de_gene,
+                                                                unmaplist=True)
+                print2(summary, "   \t"+str(len(de_prom))+"\tmapped promoters")
+                if len(unmapped_gene_list) > 0:
+                    print2(summary, "   \t"+str(len(unmapped_gene_list))+"\tunmapped promoters: "+ ",".join(unmapped_gene_list))
                 
                 if score: self.scores = []
-                
                 de_prom.merge(namedistinct=True)
+                print2(summary, "   \t"+str(len(de_prom))+"\tmerged promoters ")
 
+                print2(summary, "   \t"+str(len(de_prom))+"\tunique target promoters are loaded")
                 for promoter in de_prom:
                     #if self.ensembl2symbol:
                     gene_sym = self.ensembl2symbol[promoter.name]
@@ -764,18 +779,37 @@ class PromoterTest:
                         self.scores.append(s)
                     
                 self.de_regions = de_prom
+
+                ######################################################
+                # NonDE gene regions
+                #print("Total genes: "+str(len(ann.symbol_dict.keys())))
+                nde_ensembl = [ g for g in ann.symbol_dict.keys() if g not in de_ensembl ]
+                #print("nde   "+ str(len(nde_ensembl)))
+                print2(summary, "   \t"+str(len(nde_ensembl))+"\tnon-target genes")
+                self.nde_gene = GeneSet("nde genes")
+                self.nde_gene.genes = nde_ensembl
+                
+                # Get promoters from de genes
+                #print("\tGetting promoter regions...")
+                #de_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.de_gene)
+                
                 
                 #all_prom = ann.get_promoters(promoterLength=promoterLength)
                 #print("All promoters: "+str(len(all_prom)))
                 #all_prom.write_bed("all_promoters.bed")
 
                 #print2(summary, "   \t"+str(len(de_ensembl))+" unique target promoters are loaded")
-                print2(summary, "   \t"+str(len(de_prom))+" unique target promoters are loaded")
+                
                 # Get promoters from nonDE gene
-                nde_prom = ann.get_promoters(promoterLength=promoterLength, gene_set=self.nde_gene)
+                nde_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength, 
+                                                                 gene_set=self.nde_gene,
+                                                                 unmaplist=True)
+                print2(summary, "   \t"+str(len(nde_prom))+"\tmapped non-target promoters")
                 #print("nde promoters: "+str(len(nde_prom)))
                 #nde_prom.write_bed("nde_promoters_unmerged.bed")
+                
                 nde_prom.merge(namedistinct=True)
+                print2(summary, "   \t"+str(len(nde_prom))+"\tmerged non-target promoters")
                 #print("nde promoters: "+str(len(nde_prom)))
                 #nde_prom.write_bed("nde_promoters_merged.bed")
                 #for promoter in nde_prom:
@@ -783,13 +817,14 @@ class PromoterTest:
                 self.nde_regions = nde_prom
                 
                 #print2(summary, "   \t"+str(len(nde_ensembl))+" unique non-target promoters are loaded")
-                print2(summary, "   \t"+str(len(nde_prom))+" unique non-target promoters are loaded")
+                print2(summary, "   \t"+str(len(nde_prom))+"\tunique non-target promoters are loaded")
                 # Loading score
                 
                 data = [ self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
                 if score: data.append(self.scores)
-                dump(object=data, path=temp, filename=dumpname)
-                
+                #dump(object=data, path=temp, filename=dumpname)
+
+
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
@@ -1691,6 +1726,7 @@ class PromoterTest:
         dir_name = os.path.basename(directory)
         html_header = "Promoter Test: "+dir_name
         self.ranktable = {}
+        self.dbstable = {}
         type_list = 'sssssssssssssss'
         col_size_list = [10,10,10,10,10,10,10,10,10,10,10,10,10]
 
@@ -1814,6 +1850,7 @@ class PromoterTest:
             except: gn = promoter.name
 
             self.ranktable[gn] = str(int(rank_sum[i]))
+            self.dbstable[gn] = str(int(self.promoter["de"]["dbs"][promoter.toString()]))
             
             newline = [ str(i+1),
                         region_link,
@@ -1935,20 +1972,20 @@ class PromoterTest:
                 print("\t".join(lines), file=f)
 
 
-    def save_ranktable(self, path):
+    def save_table(self, path, table, filename):
         """Save the summary rank into the table for heatmap"""
-        table = os.path.join(path, "ranktable.txt")
+        "lncRNA_target_ranktable.txt"
+        
+        table_path = os.path.join(path, filename)
         # self.ranktable = {}
         rank_table = []
 
-        if os.path.isfile(table):
+        if os.path.isfile(table_path):
             # Table exists
-            f = open(table)
+            f = open(table_path)
             for i, line in enumerate(f):
                 line = line.strip().split()
-
                 if i == 0: 
-
                     if not line: 
                         break
                         exist = False
@@ -1956,25 +1993,22 @@ class PromoterTest:
                         # lncRNA exists
                         exist = True
                         ind_rna = line.index(self.rna_name)
-                        header = line
-                        
+                        header = line     
                     else:
-                        
                         exist = False
                         line.append(self.rna_name)
                         header = line
 
                 else:
-
                     if exist and ind_rna:
                         try: 
-                            line[ ind_rna + 1 ] = self.ranktable[ line[0] ]
+                            line[ ind_rna + 1 ] = table[ line[0] ]
                             rank_table.append( line )
                         except:
                             rank_table.append( line )
                     else:
                         try: 
-                            line.append( self.ranktable[ line[0] ] )
+                            line.append( table[ line[0] ] )
                             rank_table.append( line )
                         except:
                             rank_table.append( line )
@@ -1982,13 +2016,12 @@ class PromoterTest:
 
         else:
             # Table not exists
-
             header = [ "gene", self.rna_name ]
-            for k, v in self.ranktable.iteritems():
+            for k, v in table.iteritems():
                 rank_table.append( [k, v] )
 
         # Write into file
-        g = open(table, "w")
+        g = open(table_path, "w")
         
         print("\t".join(header), file=g)
         for l in rank_table:
@@ -1999,7 +2032,6 @@ class PromoterTest:
         """Generate heatmap for comparisons among genes and lncRNAs"""
 
         # Generate random features and distance matrix.
-        
         genes = []
         data = []
         if not os.path.isfile(os.path.join(temp,table)):
@@ -2066,8 +2098,8 @@ class PromoterTest:
         axcolor = fig.add_axes([0.1,0.02,0.8,0.01])
         plt.colorbar(im, cax=axcolor, orientation='horizontal')
         axcolor.set_xlabel('summary rank')
-        fig.savefig(os.path.join(temp,'dendrogram.png'))
-        fig.savefig(os.path.join(temp,'dendrogram.pdf'), format="pdf")
+        fig.savefig(os.path.join(temp,'lncRNA_target_dendrogram.png'))
+        fig.savefig(os.path.join(temp,'lncRNA_target_dendrogram.pdf'), format="pdf")
 
 
 ####################################################################################

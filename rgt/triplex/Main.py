@@ -10,6 +10,13 @@ import time, datetime, getpass, fnmatch
 import subprocess
 import pickle
 from collections import OrderedDict
+import numpy
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+import scipy.cluster.hierarchy as sch
+
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegion import GenomicRegion
@@ -68,7 +75,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_rpath="./style", fig_dir=os.path.join(path,"style"), 
-                RGT_header=False, other_logo="TDF")
+                RGT_header=False, other_logo="TDF", homepage="../index.html")
     
     html.add_heading("All experiments in: "+dirname+"/")
 
@@ -148,8 +155,8 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
                           align=10, cell_align="left", sortable=True)
-    if os.path.isfile(os.path.join(path,"dendrogram.png")):
-        html.add_figure("dendrogram.png", align="center", width="90%")
+    #if os.path.isfile(os.path.join(path,"lncRNA_target_dendrogram.png")):
+    #    html.add_figure("lncRNA_target_dendrogram.png", align="center", width="90%")
 
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
@@ -170,6 +177,85 @@ def revise_index(root, show_RNA_ass_gene=False):
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p), 
                        link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
+
+def gen_heatmap(path):
+    """Generate the heatmap to show the sig RNA in among conditions"""
+    matrix = OrderedDict()
+    rnas = []
+    for item in os.listdir(path):
+        print(item)
+        print(os.path.isdir(os.path.join(path,item)))
+        if not os.path.isdir(os.path.join(path,item)): continue
+        if item == "style": continue
+        #if item == "index.html": continue
+        matrix[item] = {}
+        pro = os.path.join(path, item, "profile.txt")
+        with open(pro) as f:
+            for line in f:
+                line = line.strip().split("\t")
+                if line[0] == "Experiment": continue
+                if line[6] == "-": continue
+                matrix[item][line[0]] = float(line[7])
+                rnas.append(line[0])
+    rnas = list(set(rnas))
+    # Convert into array
+    ar = []
+    for exp in matrix.keys():
+        row = []
+        for rna in rnas:
+            try: row.append(matrix[exp][rna])
+            except: row.append(1)
+        ar.append(row)
+    ar = numpy.array(ar)
+    ar = numpy.transpose(ar)
+    print(ar.shape)
+    data = ar[~numpy.all(ar == 1, axis=1)]
+    print(data.shape)
+
+
+    fig = plt.figure(figsize=(5,50))
+
+    ax1 = fig.add_axes([0.09,0.05,0.2,0.9])
+    Y = sch.linkage(data, method='single')
+    Z1 = sch.dendrogram(Y, orientation='right')
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # Compute and plot second dendrogram.
+    ax2 = fig.add_axes([0.3, 1.1, 0.55,0.04])
+    #tdata = numpy.transpose(data)
+    Y = sch.linkage(data.T, method='single')
+    Z2 = sch.dendrogram(Y)
+    ax2.set_xticks([])
+    ax2.set_yticks([])
+
+    # Plot distance matrix.
+    axmatrix = fig.add_axes([0.3,0.05,0.55,0.9])
+    #axmatrix = fig.add_axes()
+    idx1 = Z1['leaves']
+    #idx2 = Z2['leaves']
+    data = data[idx1,:]
+    #data = data[:,idx2]
+    im = axmatrix.matshow(data, aspect='auto', origin='lower', cmap=plt.cm.YlGnBu_r)
+
+    axmatrix.set_xticks(range(data.shape[1]))
+    axmatrix.set_xticklabels( matrix.keys(), minor=False, ha="left")
+    axmatrix.xaxis.set_label_position('top')
+    axmatrix.xaxis.tick_top()
+    plt.xticks(rotation=70, fontsize=12)
+
+    axmatrix.set_yticks(range(data.shape[0]))
+    axmatrix.set_yticklabels( [ rnas[i] for i in idx1 ], minor=False)
+    axmatrix.yaxis.set_label_position('right')
+    axmatrix.yaxis.tick_right()
+    plt.yticks(rotation=0, fontsize=12)
+
+    # Plot colorbar.
+    axcolor = fig.add_axes([0.1,0.02,0.8,0.01])
+    plt.colorbar(im, cax=axcolor, orientation='horizontal')
+    axcolor.set_xlabel('p value')
+    fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.png'))
+    fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.pdf'), format="pdf")
 
 def main():
     ##########################################################################
@@ -198,6 +284,7 @@ def main():
     parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
+    parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
 
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (Default: 1000)")
     
@@ -266,6 +353,9 @@ def main():
     ##########################################################################
     parser_triplexator = subparsers.add_parser('triplexator', help="Setting Triplexator.")
     parser_triplexator.add_argument('-path',type=str, metavar='  ', help='Define the path of Triplexator.')
+    ##########################################################################
+    parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
+    parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -284,7 +374,50 @@ def main():
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        cf = ConfigurationFile()
+        #cf = ConfigurationFile()
+        ####################################################################################
+        ######### Integration
+        if args.mode == "integrate":
+            condition_list = [] # name, link, no. tests, no. sig.
+            for item in os.listdir(args.path):
+                if item == "style": continue
+                if item == "index.html": continue
+                h = os.path.join(item, "index.html")
+                pro = os.path.join(args.path, item, "profile.txt")
+                nt = 0
+                ns = 0
+                with open(pro) as f:
+                    for line in f:
+                        line = line.strip().split("\t")
+                        if line[0] == "Experiment": continue
+                        nt += 1
+                        if float(line[7]) < 0.05: ns += 1
+                condition_list.append( [item, h, str(nt), str(ns)] )
+            link_d = {"List":"index.html"}
+            fp = condition_list[0][0] + "/style"
+            html = Html(name="Directory: "+args.path, links_dict=link_d, 
+                        fig_rpath=fp, #fig_dir=fp, 
+                        RGT_header=False, other_logo="TDF")
+            html.add_heading("All conditions in: "+args.path+"/")
+            data_table = []
+            type_list = 'sssssssssssss'
+            col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+            c = 0
+            header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
+            for i, exp in enumerate(condition_list):
+                c += 1
+                data_table.append([str(c), 
+                                   '<a href="'+exp[1]+'">'+exp[0]+"</a>",
+                                   exp[2], exp[3] ])
+            html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
+                                  align=10, cell_align="left", sortable=True)
+            html.add_fixed_rank_sortable()
+            html.write(os.path.join(args.path,"index.html"))
+            #revise_index(root=args.path, show_RNA_ass_gene=True)
+            gen_heatmap(path=args.path)
+            sys.exit(0)
+        #######################################################################################
+        ######## Test triplexator
         process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # wait for the process to terminate
         out, err = process.communicate()
@@ -295,7 +428,9 @@ def main():
             print("** Error: Triplexator cannot be found. Please export Triplexator path into $PATH")
             print(err)
             sys.exit(1)
-
+        
+        #######################################################################
+        #### Checking arguments
         if not args.o: 
             print("Please define the output diractory name. \n")
             sys.exit(1)
@@ -430,7 +565,7 @@ def main():
 
         # Get GenomicRegionSet from the given genes
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, rna_name=args.rn, bed=args.bed, bg=args.bg, 
+        promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg, 
                                 organism=args.organism, promoterLength=args.pl, summary=summary, 
                                 temp=dir, output=args.o, showdbs=args.showdbs, score=args.score, 
                                 scoreh=args.scoreh, filter_havana=args.filter_havana, 
@@ -482,8 +617,12 @@ def main():
         
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
-        promoter.save_ranktable(path=os.path.dirname(args.o))
-        promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
+        promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable, 
+                                filename="lncRNA_target_ranktable.txt")
+        promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable, 
+                                filename="lncRNA_target_dbstable.txt")
+
+        #promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
 
         t4 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))

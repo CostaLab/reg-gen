@@ -115,6 +115,9 @@ class AnnotationSet:
         if(isinstance(gene_source,str)): # It can be a string.
             if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
                 # FTT for TDF True
+                #filter_havana = False
+                protein_coding = False
+                known_only = False
                 self.load_gene_list(gene_source, 
                                     filter_havana=filter_havana, 
                                     protein_coding=protein_coding,
@@ -168,7 +171,7 @@ class AnnotationSet:
         # Opening GTF file
         try: gtf_file = open(file_name,"r")
         except Exception: pass # TODO
-
+        
         # Reading GTF file
         for line in gtf_file:
         
@@ -176,8 +179,10 @@ class AnnotationSet:
             line = line.strip()
             if(line[0] == "#"): continue
             line_list = line.split("\t")
-            if(filter_havana and line_list[1] == "HAVANA"): continue
-
+            try:
+                if(filter_havana and line_list[1] == "HAVANA"): continue
+            except: pass
+            
             addt_list = line_list[8].split(";")
 
             if(protein_coding and "protein_coding" not in addt_list[2] ): continue
@@ -185,6 +190,7 @@ class AnnotationSet:
             
             if(protein_coding and "protein_coding" not in addt_list[5] ): continue
             if(known_only and "KNOWN" not in addt_list[6] ): continue
+            
             addt_list = filter(None,addt_list)
 
             # Processing additional list of options
@@ -197,7 +203,8 @@ class AnnotationSet:
         
             # Removing dot from IDs
             addt_dict["gene_id"] = addt_dict["gene_id"].split(".")[0]
-            addt_dict["transcript_id"] = addt_dict["transcript_id"].split(".")[0]
+            try: addt_dict["transcript_id"] = addt_dict["transcript_id"].split(".")[0]
+            except: pass
                 
                                                                                                                                                                                           # Creating final version of additional arguments
             final_addt_list = []
@@ -210,7 +217,7 @@ class AnnotationSet:
             current_score = 0
             if(AuxiliaryFunctions.string_is_int(line_list[5])):
                 current_score = AuxiliaryFunctions.correct_standard_bed_score(line_list[5])
-
+            
             # Creating GenomicRegion
             genomic_region = GenomicRegion(chrom = line_list[0], 
                                            initial = int(line_list[3])-1, 
@@ -222,7 +229,7 @@ class AnnotationSet:
             extra_index_elements = [[],[]] # One list for each: EXACT_GENE_MATCHES, INEXACT_GENE_MATCHES
             final_vector = [genomic_region,line_list[1],line_list[2],line_list[7]] + final_addt_list + extra_index_elements
             self.gene_list.append(final_vector)
-            
+            #print(final_vector)
         # Termination
         gtf_file.close()
 
@@ -341,7 +348,7 @@ class AnnotationSet:
         """
         pass
 
-    def fix_gene_names(self,gene_set,output_dict=False):
+    def fix_gene_names(self,gene_set,output_dict=False,mute_warn=False):
         """
         Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it
         will be converted using alias_dict. If the gene name cannot be found then it is reported in a 
@@ -376,7 +383,9 @@ class AnnotationSet:
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
-                    if(len(alias_list) > 1): print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
+                    if(len(alias_list) > 1): 
+                        if not mute_warn: 
+                            print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
                     for e in alias_list: 
                         mapped_gene_list.append(e)
                         if output_dict: 

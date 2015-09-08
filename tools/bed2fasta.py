@@ -22,10 +22,21 @@ def load_exon_sequence(bed, directory, genome_path):
     """
     regionset = GenomicRegionSet("bed")
     regionset.read_bed(bed)
+    regionset.sort()
+
     
     genome = pysam.Fastafile(genome_path)
     
-    if len(regionset.sequences[0].data.split("\t")) == 7:
+    try:
+        if len(regionset.sequences[0].data.split("\t")) == 7: 
+            blockinfor = True
+            no_exon = False
+    except:
+        blockinfor = False
+        regionset.sequences.sort(key=lambda g: g.name)
+        no_exon = True
+
+    if blockinfor:
         
         for gr in regionset:
             if not gr.name:
@@ -38,7 +49,7 @@ def load_exon_sequence(bed, directory, genome_path):
                 data = gr.data.split("\t")
                 #print(len(data))
                 if len(data) == 7:
-                    print(data)
+                    #print(data)
                     n = int(data[4])
                     
                     blocks = [ int(b) for b in filter(None, data[5].split(",")) ]
@@ -48,12 +59,18 @@ def load_exon_sequence(bed, directory, genome_path):
                     for i in range(n):
                         start = gr.initial + starts[i]
                         end = start + blocks[i]
+                        if no_exon and i == 0:
+                            ex = ""
+                        elif gr.orientation == "-":
+                            ex = "exon:"+str(n-i)
+                        else:
+                            ex = "exon:"+str(i+1)
 
                         if gr.orientation == "-":
                             seq = Seq(genome.fetch(gr.chrom, start-1, end-1), IUPAC.unambiguous_dna)
                             seq = seq.reverse_complement()
                             p = [ ">"+ " ".join([ gr.name, 
-                                                  "exon:"+str(n-i), 
+                                                  ex, 
                                                   "_".join(["REGION",gr.chrom,
                                                             str(start),str(end), 
                                                             gr.orientation]) ]),
@@ -63,7 +80,7 @@ def load_exon_sequence(bed, directory, genome_path):
                             
 
                         else:
-                            p = [ ">"+ " ".join([gr.name, "exon:"+str(i+1), 
+                            p = [ ">"+ " ".join([gr.name, ex, 
                                   "_".join(["REGION",gr.chrom,str(start),str(end), gr.orientation]) ]),
                                   genome.fetch(gr.chrom, start-1, end-1)
                                 ]
@@ -82,6 +99,9 @@ def load_exon_sequence(bed, directory, genome_path):
     else:
         pre_id = ""
         for gr in regionset:
+            if not gr.name: 
+                gr.name = gr.toString()
+
             if pre_id == "": 
                 pre_id = gr.name
                 z = GenomicRegionSet(gr.name)
@@ -91,13 +111,11 @@ def load_exon_sequence(bed, directory, genome_path):
             else:
                 f = open(os.path.join(directory, pre_id+".fa"), "w")
                 for i, g in enumerate(z):
-                    print( ">"+ " ".join([g.name, 
-                                          "exon:"+str(i+1), 
-                                          "_".join(["REGION",
-                                                    g.chrom,
-                                                    str(g.initial),str(g.final), 
-                                                    gr.orientation]) 
-                                          ]), file=f)
+                    try: regiontag = "_".join(["REGION", g.chrom, str(g.initial),str(g.final), gr.orientation])
+                    except: regiontag = "_".join(["REGION", g.chrom, str(g.initial),str(g.final)] )
+
+                    print( ">"+ " ".join([g.name,  
+                                          regiontag ]), file=f)
                     print(genome.fetch(g.chrom, g.initial, g.final), file=f)
                 f.close()
 
@@ -108,13 +126,10 @@ def load_exon_sequence(bed, directory, genome_path):
         # Last TX
         f = open(os.path.join(directory, pre_id+".fa"), "w")
         for i, g in enumerate(z):
+            try: regiontag = "_".join(["REGION", g.chrom, str(g.initial),str(g.final), gr.orientation])
+            except: regiontag = "_".join(["REGION", g.chrom, str(g.initial),str(g.final)] )
             print( ">"+ " ".join([g.name, 
-                                  "exon:"+str(i+1), 
-                                  "_".join(["REGION",
-                                            g.chrom,
-                                            str(g.initial),str(g.final), 
-                                            gr.orientation]) 
-                                  ]), file=f)
+                                  regiontag ]), file=f)
             print(genome.fetch(g.chrom, g.initial, g.final), file=f)
         f.close()
         
@@ -146,7 +161,9 @@ elif os.path.isdir(args.bed):
                 print(filename)
                 fn = os.path.basename(filename)
                 fn = fn.partition(".bed")[0]
-                load_exon_sequence(bed=os.path.join(args.bed,filename), 
-                                   directory=os.path.join(args.output,fn), 
-                                   genome_path=genome.get_genome())
-
+                try:
+                    load_exon_sequence(bed=os.path.join(args.bed,filename), 
+                                       directory=os.path.join(args.output,fn), 
+                                       genome_path=genome.get_genome())
+                except:
+                    pass
