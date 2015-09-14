@@ -41,7 +41,7 @@ def get_read_size(filename):
         if not read.is_unmapped:
             s.append(read.rlen)
     
-    print('read length is %s' %str(sum(s)/len(s)))        
+    #print('read length is %s' %str(sum(s)/len(s)))        
     
     return sum(s)/len(s)
 

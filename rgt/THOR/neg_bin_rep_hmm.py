@@ -28,6 +28,15 @@ from neg_bin import NegBin
 import warnings
 warnings.filterwarnings('error')
 
+def _get_pvalue_distr(exp_data, mu, alpha, tracker):
+    """Derive NB1 parameters for p-value calculation"""
+    mu = mu[0,0]
+    alpha = alpha[0,0] / 10000.
+    tracker.write(text=str(mu), header="Neg. Bin. distribution for p-value estimates (mu)")
+    tracker.write(text=str(alpha), header="Neg. Bin. distribution for p-value estimates (alpha)")
+    
+    nb = NegBin(mu, alpha)
+    return {'distr_name': 'nb', 'distr': nb}
 
 def get_init_parameters(s0, s1, s2, **info):
     """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
@@ -123,7 +132,7 @@ class NegBinRepHMM(_BaseHMM):
 
             # Maximization step
             self._do_mstep(stats, self.params, three_para)
-        print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
+        #print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
         self.em_prob = logprob[-1]
         return self
     
@@ -144,7 +153,6 @@ class NegBinRepHMM(_BaseHMM):
                 return max((var - m) / m**2, 1e-300)
             else:
                 return 1e-300
-    
     
     def _compute_log_likelihood(self, X):
         matrix = []
@@ -192,42 +200,12 @@ class NegBinRepHMM(_BaseHMM):
             pot_it = [range(self.dim[0]), range(self.dim[0], self.dim[0] + self.dim[1])] #consider both classes
             for j, it in enumerate(pot_it):
                 for i in it:
-                    #if symbol[i] > 0:
-                        #print('h', posteriors[t] , symbol[i], pot_it)
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
         
         stats['post'][0] = stats['post'][0] * self.dim[0]
         stats['post'][1] = stats['post'][1] * self.dim[1]
-        #print(stats['post_emission'])
-        #print(stats['post'])
         
         stats['posterior'] = np.copy(posteriors)
-    
-    def _help_do_mstep(self, stats, three_para):
-        #for i in range(self.n_features):
-        #    self.mu[i] = stats['post_emission'][i] / stats['post'][i]
-        #print('help_do_mstep', self.mu)
-        
-        if three_para:
-            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
-            self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
-            
-            self.mu[1,2] = self.mu[0,1]
-            self.mu[0,2] = self.mu[1,1]
-            self.mu[1,0] = self.mu[0,0]
-        else:
-            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
-            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
-            
-            self.mu[0,0] = self.mu[1,1]
-            self.mu[1,2] = self.mu[0,1]
-            self.mu[0,2] = self.mu[1,1]
-            self.mu[1,0] = self.mu[0,0]
-        
-        tmp_a = [map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)]
-        self.alpha = np.matrix(tmp_a)
-        self._update_distr(self.mu, self.alpha)
     
     def _valid_posteriors(self, posteriors, obs):
     
@@ -277,28 +255,28 @@ class NegBinRepHMM(_BaseHMM):
         posteriors = self._valid_posteriors(posteriors, obs)
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
-    
-    
-    def _count(self, posts):
-        c_1, c_2 = 1, 1
-        
-        for s0, s1, s2 in posts:        
-            if s0 > 0.5:
-                c_1 += 0
-                c_2 += 0
-            elif s1 >= s2:
-                c_1 += 1
-            elif s2 > s1:
-                c_2 += 1
-        return c_1, c_2
-        
-    
     def _do_mstep(self, stats, params, three_para):
         super(NegBinRepHMM, self)._do_mstep(stats, params)
-        self._help_do_mstep(stats, three_para)
-        print('mstep', file=sys.stderr)
-        #self.count_s1, self.count_s2 = self._count(stats['posterior'])
-        #self.merge_distr()
+        
+        if three_para:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2]) / (stats['post'][1][1] + stats['post'][0][2])
+            self.mu[0,0] = (stats['post_emission'][0][0] + stats['post_emission'][1][0]) / (stats['post'][0][0] + stats['post'][1][0])
+            
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
+        else:
+            self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
+            self.mu[1,1] = (stats['post_emission'][1][1] + stats['post_emission'][0][2] + stats['post_emission'][0][0] + stats['post_emission'][0][1]) / (stats['post'][1][1] + stats['post'][0][2] + stats['post'][0][0] + stats['post'][0][1])
+            
+            self.mu[0,0] = self.mu[1,1]
+            self.mu[1,2] = self.mu[0,1]
+            self.mu[0,2] = self.mu[1,1]
+            self.mu[1,0] = self.mu[0,0]
+        
+        self.alpha = np.matrix([map(lambda m: self.get_alpha(m), np.asarray(self.mu[i])[0]) for i in range(self.n_features)])
+        self._update_distr(self.mu, self.alpha)
        
     def merge_distr(self):
         f = self.count_s2 / float(self.count_s1 + self.count_s2) #TODO exp_data.

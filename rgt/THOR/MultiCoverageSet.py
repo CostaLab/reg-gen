@@ -14,6 +14,9 @@ from math import fabs
 from norm_genelevel import norm_gene_level
 
 EPSILON = 1**-320
+ROUND_PRECISION = 3
+DEBUG = None
+VERBOSE = None
 
 class MultiCoverageSet(DualCoverageSet):
     def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
@@ -49,7 +52,7 @@ class MultiCoverageSet(DualCoverageSet):
     
         return cov1, cov2
     
-    def _compute_gc_content(self, no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict):
+    def _compute_gc_content(self, no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict):
         """Compute GC-content"""
         if not no_gc_content and path_inputs:
             print("Compute GC-content", file=sys.stderr)
@@ -61,11 +64,11 @@ class MultiCoverageSet(DualCoverageSet):
                 self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(inputfile.coverage, gc_content_cov, avg_gc_content)
             
-                if verbose:
+                if VERBOSE:
                     self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
                     cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         else:
-            print("Do not compute GC-content, as there is no input.", file=sys.stderr)
+            print("Do not compute GC-content, as there is no input", file=sys.stderr)
     
     
     def _output_bw(self, name, chrom_sizes, save_wig):
@@ -110,11 +113,11 @@ class MultiCoverageSet(DualCoverageSet):
                 yield self.norm_regions[i].coverage[j]
     
     def _help_init_overall_coverage(self, cov_strand=True):
-        #make data in nice list of two matrices
-        print('start making matrix', file=sys.stderr)
-        sys.stderr.flush()
+        """Convert coverage data (and optionally strand data) to matrix list"""
+        
         tmp = [[], []]
         tmp2 = [[[], []], [[], []]]
+        
         for k in range(2):
             it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
             for i in it:
@@ -129,8 +132,6 @@ class MultiCoverageSet(DualCoverageSet):
                     tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'normregion'))
                     tmp[k].append(tmp_el)
 
-        print('end making matrix', file=sys.stderr)
-        sys.stderr.flush()
         if cov_strand:
             #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
             overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
@@ -145,7 +146,7 @@ class MultiCoverageSet(DualCoverageSet):
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker):
-        """Compute CoverageSets, GC-content and normalization"""
+        """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
         self.stepsize = stepsize
@@ -153,10 +154,14 @@ class MultiCoverageSet(DualCoverageSet):
         self.chrom_sizes_dict = chrom_sizes_dict
         self.dim_1, self.dim_2 = dims
         
+        global DEBUG, VERBOSE
+        DEBUG = debug
+        VERBOSE = verbose
+        
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
-        self._compute_gc_content(no_gc_content, verbose, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs, debug)
+        self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
+        self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs)
         
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
@@ -165,7 +170,6 @@ class MultiCoverageSet(DualCoverageSet):
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
-        print('end init multi cov set', file=sys.stderr)
     
     def get_max_colsum(self):
         """Sum over all columns and add maximum"""
@@ -177,55 +181,31 @@ class MultiCoverageSet(DualCoverageSet):
             for i in range(self.overall_coverage[j].shape[1]):
                 print(self.overall_coverage[j][:,i].T, file=f)
     
-    def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs, debug):
-        """Normalize with regard to input file"""
-        print("Normalize by input-DNA", file=sys.stderr)
+    def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs):
+        """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
+        
+        print("Normalize input-DNA", file=sys.stderr)
         
         if factors_inputs:
-            print("Normalize input-DNA with predefined factors", file=sys.stderr)
+            print("Use with predefined factors", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 self.inputs[i].scale(factors_inputs[i])
                 self.covs[i].subtract(self.inputs[i])
         elif path_inputs:
-            print("Compute input-DNA factors")
+            print("Compute factors", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 0 if i < self.dim_1 else 1
                 j = 0 if i < self.dim_1 else 1
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
-                                                filename=name + '-norm' + str(i), debug=debug, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
-                
+                                                filename=name + '-norm' + str(i), debug=DEBUG, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
                 if n is not None:
                     print("Normalize input of Signal %s, Rep %s with factor %s"\
-                           %(sig, rep, round(n, 3)) , file=sys.stderr)
+                           %(sig, rep, round(n, ROUND_PRECISION)) , file=sys.stderr)
                     self.inputs[i].scale(n)
                     self.covs[i].subtract(self.inputs[i])
+        
                     
-                
-#     def _norm_signal_global:
-#         """deprecated"""
-#         if self.norm_regions:
-#                 print("Normalize by signal (on specified regions)", file=sys.stderr)
-#                 signals = [sum([sum(self.norm_regions[k].coverage[i]) for i in range(len(self.norm_regions[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-#             else:
-#                 print("Normalize genomewide by signal", file=sys.stderr)
-#                 signals = [sum([sum(self.covs[k].coverage[i]) for i in range(len(self.covs[k].genomicRegions))]) for k in range(self.dim_1 + self.dim_2)]
-#              
-#             means_signal = [np.mean(signals[:self.dim_1]), np.mean(signals[self.dim_1:])]
-#             max_index = means_signal.index(max(means_signal))
-#              
-#             if max_index == 1:
-#                 r = range(self.dim_1)
-#                 f = means_signal[1] / means_signal[0]
-#                 print("Normalize first set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-#             if max_index == 0:
-#                 r = range(self.dim_1, self.dim_1 + self.dim_2)
-#                 f = means_signal[0] / means_signal[1]
-#                 print("Normalize second set of replicates with factor %s" %(round(f, 2)), file=sys.stderr)
-#              
-#             for i in r:
-#                 self.covs[i].scale(f)
-    
     def _trim4TMM(self, m_values, a_values, m_threshold=80, a_threshold=95):
         """q=20 or q=5"""
         assert len(m_values) == len(a_values)
@@ -267,6 +247,9 @@ class MultiCoverageSet(DualCoverageSet):
                 
                 data_rep = np.asarray(map(lambda x: x[0], tmp))
                 ref = np.asarray(map(lambda x: x[1], tmp))
+                data_rep = data_rep[data_rep > 0]
+                ref = ref[data_rep > 0]
+                
                 m_values = np.log(ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * ref)
                 m_values, a_values = self._trim4TMM(m_values, a_values)
@@ -278,25 +261,31 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset):
         """Normalize signal"""
+        
+        print('Normalize ChIP-seq profiles', file=sys.stderr)
+        
         if not scaling_factors_ip and housekeeping_genes:
+            print('Use housekeeping gene approach', file=sys.stderr)
             scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
         elif not scaling_factors_ip:
             if norm_regionset:
+                print('Use TMM approach based on peaks', file=sys.stderr)
                 norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
                 scaling_factors_ip = self._norm_TMM(norm_regionset_coverage)
             else:
-                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach from PePr
+                print('Use global TMM approach ', file=sys.stderr)
+                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach
         
         for i in range(len(scaling_factors_ip)):
-            print('scaling factor ', scaling_factors_ip[i], file=sys.stderr)
             self.covs[i].scale(scaling_factors_ip[i]) 
         
         if scaling_factors_ip:
-            print("Normalize signal by scaling factors...", file=sys.stderr)
             for j, cond in enumerate([self.dim_1, self.dim_2]):
                 for i in range(cond): #normalize all replicates
                     k = i if j == 0 else i+self.dim_1
                     self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
+                    if DEBUG:
+                        print('Use scaling factor %s' %round(scaling_factors_ip[k], ROUND_PRECISION), file=sys.stderr)
         
         tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
         
@@ -367,7 +356,7 @@ class MultiCoverageSet(DualCoverageSet):
             print(el1, el2, sep='\t', file=f)
         f.close()
     
-    def debug_output_get_training_set(self, name, training_set, s0_v, s1_v, s2_v):
+    def output_training_set(self, name, training_set, s0_v, s1_v, s2_v):
         """Output debug info for training_set computation."""
         f=open(name + '-trainingset.bed', 'w')
         for l in training_set:
@@ -379,24 +368,21 @@ class MultiCoverageSet(DualCoverageSet):
         self.write_test_samples(name + '-s1', s1_v)
         self.write_test_samples(name + '-s2', s2_v)
     
-    def get_training_set(self, test, exp_data, debug, name, foldchange, min_t, y=5000, ex=2):
-        """Return genomic positions (max <y> positions) and enlarge them by <ex> bins to train HMM."""
+    def get_training_set(self, test, exp_data, name, foldchange, min_t, y=5000, ex=2):
+        """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>."""
         threshold = foldchange
-        #diff_cov = 20
-        t = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), min_t))
-        #diff_cov = max(min_t, t)
-        diff_cov = t
+        diff_cov = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - \
+                                            np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), min_t))
+
         if test:
-            diff_cov = 2
-            threshold = 1.5
-            
-        print('training set parameters: diff_cov (percentile): %s (%s)' %(diff_cov, t), file=sys.stderr)
+            diff_cov, threshold = 2, 1.5
+        
+        if DEBUG:  
+            print('Training set parameters: threshold: %s, diff_cov: %s' %(threshold, diff_cov), file=sys.stderr)
         
         s0, s1, s2 = [], [], []
         
-        #if debug:
-        #    self.output_overall_coverage('signal')
-        
+        #compute training set parameters, re-compute training set if criteria do not hold
         rep=True
         while rep:
             for i in sample(range(len(self.indices_of_interest)), min(y, len(self.indices_of_interest))):
@@ -404,17 +390,14 @@ class MultiCoverageSet(DualCoverageSet):
                 
                 #apply criteria for initial peak calling
                 if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
-                    s1.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
+                    s1.append((self.indices_of_interest[i], cov1, cov2))
                 elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
-                    s2.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
-                else: #elif fabs(cov1 - cov2) < diff_cov/2 and cov1 + cov2 > diff_cov/4:
-                    s0.append((self.indices_of_interest[i], cov1, cov2)) #new approach! indices_of_interest
+                    s2.append((self.indices_of_interest[i], cov1, cov2))
+                else:
+                    s0.append((self.indices_of_interest[i], cov1, cov2))
             
                 if len(s0) > y and len(s1) > y and len(s2) > y:
                     break
-            
-            if debug:
-                print("training set paramters: threshold", threshold, len(s0), len(s1), len(s2), file=sys.stderr)
             
             if diff_cov == 1 and threshold == 1.1:
                 print("No differential peaks detected", file=sys.stderr)
@@ -432,8 +415,11 @@ class MultiCoverageSet(DualCoverageSet):
                 threshold = max(threshold, 1.1)
             else:
                 rep = False
-        print('final threahld cutoff', threshold, diff_cov, file=sys.stderr)
-
+        
+        if DEBUG:       
+            print('Final training set parameters: threshold: %s, diff_cov: %s' %(threshold, diff_cov), file=sys.stderr)
+        
+        #optimize training set, extend each bin
         tmp = []
         for i, el in enumerate([s0, s1, s2]):
             el = np.asarray(el)
@@ -456,10 +442,9 @@ class MultiCoverageSet(DualCoverageSet):
         s1_v = map(lambda x: (x[1], x[2]), s1)
         s2_v = map(lambda x: (x[1], x[2]), s2)
         
-        #enlarge training set(assumption everything is in indices_of_interest)
         extension_set = set()
         for i, _, _ in s0 + s1 + s2:
-            for j in range(max(0, i - ex), i + ex + 1):
+            for j in range(max(0, i - ex), i + ex + 1): #extend bins
                 extension_set.add(j)
          
         tmp = s0 + s1 + s2
@@ -467,8 +452,9 @@ class MultiCoverageSet(DualCoverageSet):
          
         training_set = list(training_set)
         training_set.sort()
-        if debug:
-            self.debug_output_get_training_set(name, training_set, s0_v, s1_v, s2_v)
+        
+        if DEBUG:
+            self.output_training_set(name, training_set, s0_v, s1_v, s2_v)
         
         return training_set, s0_v, s1_v, s2_v
         

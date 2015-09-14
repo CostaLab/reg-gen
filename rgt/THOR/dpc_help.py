@@ -15,7 +15,7 @@ from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ODIN.get_extension_size import get_extension_size
-import os.path
+from os.path import splitext, basename
 import sys
 from MultiCoverageSet import MultiCoverageSet
 from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
@@ -38,6 +38,9 @@ from norm_genelevel import norm_gene_level
 from datetime import datetime
 from rgt.ODIN.dpc_help import which
 import pysam
+import os.path
+
+FOLDER_REPORT = None
 
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
@@ -58,7 +61,6 @@ def _write_emp_func_data(data, name):
     for i in range(len(data[0])):
         print(data[0][i], data[1][i], sep='\t', file=f)
     f.close()
-    
 
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
@@ -81,8 +83,8 @@ def _plot_func(plot_data, outputdir):
                 plt.ylim([0, maxs[1]])
                 ext = 'norm'
             ax = plt.subplot(111)
-            plt.plot(x, y, 'r', label = 'empirical datapoints') #plot polynom
-            plt.scatter(plot_data[i][0], plot_data[i][1], label = 'fitted polynomial') #plot datapoints
+            plt.plot(x, y, 'r', label = 'fitted polynomial') #plot polynom
+            plt.scatter(plot_data[i][0], plot_data[i][1], label = 'empirical datapoints') #plot datapoints
             ax.legend()
             plt.xlabel('mean')
             plt.ylabel('variance')
@@ -124,7 +126,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     
     return data_rep
     
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, sample_size=10000):
+def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, sample_size=5000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
@@ -166,26 +168,9 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     f.close()
     g.close()
 
-lookup_pvalues = {}
 def _compute_pvalue((x, y, side, distr)):
-    #return 0.2
-#     var =  np.var( x + y )
-#     mu = np.mean( x + y )
-#     alpha = max((var - mu) / np.square(mu), 0.00000000001)
-#     m = NegBin(mu, alpha)
-#     distr = {'distr_name': 'nb', 'distr': m}
-#     
-#     a, b = int(np.mean(x)), int(np.mean(y))
-#     k = (a, b, mu, alpha)
-#     if not lookup_pvalues.has_key(k):
-#         lookup_pvalues[k] = -get_log_pvalue_new(a, b, side, distr)
-#     
-#     return lookup_pvalues[k]
-    
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
-
-
 
 def _get_log_ratio(l1, l2):
     l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
@@ -281,9 +266,6 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
     
-    if debug:
-        print('percentile for peak calling:', per, file=sys.stderr)
-    
     tmp = []
     res = tmp_pvalues > per
     for j in range(len(res)):
@@ -339,29 +321,49 @@ def _output_narrowPeak(name, output, pvalues, filter):
             print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
     f.close()
 
+def _output_ext_data(ext_data_list, bamfiles):
+    """Output textfile and png file of read size estimation"""
+    names = [splitext(basename(bamfile))[0] for bamfile in bamfiles]
 
-def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose):
+    for k, ext_data in enumerate(ext_data_list):
+        f = open(FOLDER_REPORT_DATA + 'fragment_size_estimate_' + names[k] + '.data', 'w')
+        for d in ext_data:
+            print(d[0], d[1], sep='\t', file=f)
+        f.close()
+    
+    for i, ext_data in enumerate(ext_data_list):
+        d1 = map(lambda x: x[0], ext_data)
+        d2 = map(lambda x: x[1], ext_data)
+        ax = plt.subplot(111)
+        plt.xlabel('shift')
+        plt.ylabel('convolution')
+        plt.title('Fragment Size Estimation')
+        plt.plot(d2, d1, label=names[i])
+    
+    ax.legend()
+    plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
+    plt.close()
+    
+def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
     """Compute Extension sizes for bamfiles and input files"""
     start = 0
     end = 600
     ext_stepsize = 5
-
+    
+    ext_data_list = []
     #compute extension size
     if not exts:
-        print("Computing read extension sizes for ChIP-DNA...", file=sys.stderr)
+        print("Computing read extension sizes for ChIP-seq profiles", file=sys.stderr)
         for bamfile in bamfiles:
             e, ext_data = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
-            #_output_ext_data(ext_data, bamfile)
             exts.append(e)
-        #print(" ".join(exts), file=sys.stderr)
-
+            ext_data_list.append(ext_data)
+    
+    if report and not exts:
+        _output_ext_data(ext_data_list, bamfiles)
+    
     if inputs and not exts_inputs:
-        #print("Computing read extension sizes for input-DNA...", file=sys.stderr)
-        #for inp in inputs:
-        #    e, _ = get_extension_size(inp, start=start, end=end, stepsize=ext_stepsize)
-        #    exts_inputs.append(e)
         exts_inputs = [5] * len(inputs)
-        #print(" ".join(exts_inputs), file=sys.stderr)
 
     return exts, exts_inputs
 
@@ -377,7 +379,8 @@ def get_all_chrom(bamfiles):
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, test):
+               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
+               test, report):
     """Initialize the MultiCoverageSet"""
     
     regionset = GenomicRegionSet(name)
@@ -423,8 +426,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         
     
     regionset.sequences.sort()
-    exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, verbose)
-    tracker.write(text=str(exts).strip('[]'), header="Extension size (rep1, rep2, input1, input2)")
+    exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
+    tracker.write(text=" ".join(map(lambda x: str(x), exts)), header="Extension size (rep1, rep2, input1, input2)")
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
@@ -474,7 +477,6 @@ def input(laptop):
         options.norm_regions = None #'/home/manuel/data/testdata/norm_regions.bed'
         options.scaling_factors_ip = False
         options.housekeeping_genes = False
-        options.distr='negbin'
         options.version = None
         options.outputdir = None #'/home/manuel/test/'
         options.report = False
@@ -537,10 +539,8 @@ def input(laptop):
         #                  help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
         
 	(options, args) = parser.parse_args()
-
-    options.distr = "negbin"
+    
     options.save_wig = False
-    #options.norm_regions = None
     options.exts_inputs = None
         
     if options.version:
@@ -556,7 +556,7 @@ def input(laptop):
 
     if not os.path.isfile(config_path):
         parser.error("Config file %s does not exist!" %config_path)
-        
+
     bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
     
     if options.exts and len(options.exts) != len(bamfiles):
@@ -564,14 +564,14 @@ def input(laptop):
     
     if options.exts_inputs and len(options.exts_inputs) != len(inputs):
         parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
-        
+    
     if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
         parser.error("Number of scaling factors for IP must equal number of bamfiles")
-        
+
     for bamfile in bamfiles:
         if not os.path.isfile(bamfile):
             parser.error("BAM file %s does not exist!" %bamfile)
-    
+
     if not inputs and options.factors_inputs:
         print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)
         options.factors_inputs = None
