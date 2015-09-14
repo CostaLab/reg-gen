@@ -239,6 +239,7 @@ copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
 "hg19": ["association_file.bed","chrom.sizes","alias.txt"],
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
+"zv9": ["association_file.bed","chrom.sizes","alias.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
