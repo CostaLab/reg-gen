@@ -54,20 +54,20 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _compute_gc_content(self, no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict):
         """Compute GC-content"""
-        if not no_gc_content and path_inputs:
+        if not no_gc_content and path_inputs and self.gc_content_cov is None:
             print("Compute GC-content", file=sys.stderr)
             for i, cov in enumerate(self.covs):
                 inputfile = self.inputs[i] #1 to 1 mapping between input and cov
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
-                gc_content_cov, avg_gc_content, gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, chrom_sizes_dict)
+                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, chrom_sizes_dict)
                 self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
                 self._norm_gc_content(inputfile.coverage, gc_content_cov, avg_gc_content)
             
-                if VERBOSE:
-                    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
-                    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
-        else:
+                #if VERBOSE:
+                #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
+                #    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
+        elif path_inputs is None and VERBOSE:
             print("Do not compute GC-content, as there is no input", file=sys.stderr)
     
     
@@ -76,22 +76,22 @@ class MultiCoverageSet(DualCoverageSet):
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
-            if self.inputs:
-                self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes, save_wig)
-            self.covs[i].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig)
+            #if self.inputs:
+            #    self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
+            self.covs[i].write_bigwig(name + '-' + str(self.counter) + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
         
-        ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
-        for k, d in enumerate(ra):
-            g = self.covs if k == 0 else self.inputs
-            for j in range(2):
-                d[j] = deepcopy(g[0]) if j == 0 else deepcopy(g[self.dim_1])
-                r = range(1, self.dim_1) if j == 0 else range(self.dim_1 + 1, self.dim_1 + self.dim_2)
-                f = 1./self.dim_1 if j == 0 else 1./self.dim_2
-                for i in r:
-                    d[j].add(g[i])
-                d[j].scale(f)
-                n = name + '-s%s.bw' %(j+1) if k == 0 else name + '-s%s-input.bw' %(j+1)
-                d[j].write_bigwig(n, chrom_sizes, save_wig)
+        #ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
+        #for k, d in enumerate(ra):
+        #    g = self.covs if k == 0 else self.inputs
+        #    for j in range(2):
+        #        d[j] = deepcopy(g[0]) if j == 0 else deepcopy(g[self.dim_1])
+        #        r = range(1, self.dim_1) if j == 0 else range(self.dim_1 + 1, self.dim_1 + self.dim_2)
+        #        f = 1./self.dim_1 if j == 0 else 1./self.dim_2
+        #        for i in r:
+        #            d[j].add(g[i])
+        #        d[j].scale(f)
+        #        n = name + '-s%s.bw' %(j+1) if k == 0 else name + '-s%s-input.bw' %(j+1)
+        #        d[j].write_bigwig(n, chrom_sizes, save_wig=save_wig, end=self.end)
         
         self.covs_avg = None
         self.input_avg = None
@@ -141,11 +141,14 @@ class MultiCoverageSet(DualCoverageSet):
             return overall_coverage, overall_coverage_strand
         else:
             return [np.matrix(tmp[0]), np.matrix(tmp[1])]
-        
+    
+    def count_positive_signal(self):
+        return np.sum([self.covs[i].coverage for i in range(self.dim_1 + self.dim_2)])
+    
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
-                 tracker):
+                 tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -153,6 +156,16 @@ class MultiCoverageSet(DualCoverageSet):
         self.name = name
         self.chrom_sizes_dict = chrom_sizes_dict
         self.dim_1, self.dim_2 = dims
+        self.exts = exts
+        self.exts_inputs = exts_inputs
+        self.gc_content_cov = gc_content_cov
+        self.avg_gc_content = avg_gc_content
+        self.gc_hist = gc_hist
+        self.scaling_factors_ip = scaling_factors_ip
+        self.factors_inputs = factors_inputs
+        self.end = end
+        self.counter = counter
+        self.no_data = False
         
         global DEBUG, VERBOSE
         DEBUG = debug
@@ -160,13 +173,17 @@ class MultiCoverageSet(DualCoverageSet):
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
+        if self.count_positive_signal() < 1:
+            self.no_data = True
+            return None
         self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
         self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs)
         
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
         self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset)
-        self._output_bw(name, chrom_sizes, save_wig) 
+        if output_bw:
+            self._output_bw(name, chrom_sizes, save_wig) 
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
@@ -184,7 +201,8 @@ class MultiCoverageSet(DualCoverageSet):
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         
-        print("Normalize input-DNA", file=sys.stderr)
+        if VERBOSE:
+            print("Normalize input-DNA", file=sys.stderr)
         
         if factors_inputs:
             print("Use with predefined factors", file=sys.stderr)
@@ -192,6 +210,7 @@ class MultiCoverageSet(DualCoverageSet):
                 self.inputs[i].scale(factors_inputs[i])
                 self.covs[i].subtract(self.inputs[i])
         elif path_inputs:
+            factors_inputs = []
             print("Compute factors", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 rep = i if i < self.dim_1 else i-self.dim_1
@@ -204,6 +223,9 @@ class MultiCoverageSet(DualCoverageSet):
                            %(sig, rep, round(n, ROUND_PRECISION)) , file=sys.stderr)
                     self.inputs[i].scale(n)
                     self.covs[i].subtract(self.inputs[i])
+                    factors_inputs.append(n)
+        
+        self.factors_inputs = factors_inputs
         
                     
     def _trim4TMM(self, m_values, a_values, m_threshold=80, a_threshold=95):
@@ -211,6 +233,7 @@ class MultiCoverageSet(DualCoverageSet):
         assert len(m_values) == len(a_values)
         
         mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
+        
         m_values = m_values[mask]
         a_values = a_values[mask]
         
@@ -238,6 +261,7 @@ class MultiCoverageSet(DualCoverageSet):
         for j, cond_max in enumerate([self.dim_1, self.dim_2]):
             for i in range(cond_max): #normalize all replicates
                 ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0), dtype='float')/ (self.dim_1 + self.dim_2)
+                
                 mask_ref = ref > 0
                 ref = ref[mask_ref]
                 data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref]
@@ -252,17 +276,21 @@ class MultiCoverageSet(DualCoverageSet):
                 
                 m_values = np.log(ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * ref)
-                m_values, a_values = self._trim4TMM(m_values, a_values)
-                f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
-                
-                scaling_factors_ip.append(f)
+                try:
+                    m_values, a_values = self._trim4TMM(m_values, a_values)
+                    f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
+                    scaling_factors_ip.append(f)
+                except:
+                    print('TMM not sucessfully', file=sys.stderr)
+                    scaling_factors_ip.append(1)
                 
         return scaling_factors_ip
     
     def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset):
         """Normalize signal"""
         
-        print('Normalize ChIP-seq profiles', file=sys.stderr)
+        if VERBOSE:
+            print('Normalize ChIP-seq profiles', file=sys.stderr)
         
         if not scaling_factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
@@ -286,6 +314,8 @@ class MultiCoverageSet(DualCoverageSet):
                     self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
                     if DEBUG:
                         print('Use scaling factor %s' %round(scaling_factors_ip[k], ROUND_PRECISION), file=sys.stderr)
+        
+        self.scaling_factors_ip = scaling_factors_ip
         
         tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
         

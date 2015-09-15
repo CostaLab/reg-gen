@@ -104,18 +104,19 @@ class CoverageSet:
                             print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
                                   j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
                         
-    def write_wig(self, filename):
-        with open(filename, 'w') as f:
-            i = 0
-            for region in self.genomicRegions:
-                print('variableStep chrom=' + str(region.chrom) + ' span=' +str(self.stepsize), file=f)
-                c = self.coverage[i]
-                i += 1
-                for j in range(len(c)):
-                    if c[j] != 0:
-                        print(j * self.stepsize + ((self.binsize-self.stepsize)/2), c[j], file=f)
+    def write_wig(self, filename, end):
+        f = open(filename, 'w')
+        i = 0
+        for region in self.genomicRegions:
+            print('variableStep chrom=' + str(region.chrom) + ' span=' +str(self.stepsize), file=f)
+            c = self.coverage[i]
+            i += 1
+            for j in range(len(c)):
+                if c[j] != 0:
+                    print(j * self.stepsize + ((self.binsize-self.stepsize)/2), c[j], file=f)
+        f.close()
     
-    def write_bigwig(self, filename, chrom_file, save_wig=False):
+    def write_bigwig(self, filename, chrom_file, end=True, save_wig=False):
         if save_wig:
             tmp_path = filename + '.wig'
             self.write_wig(tmp_path)
@@ -124,7 +125,7 @@ class CoverageSet:
             os.system(c)
         else:
             _, tmp_path = tempfile.mkstemp()
-            self.write_wig(tmp_path)
+            self.write_wig(tmp_path, end)
             t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
             c = " ".join(t)
             #print(c)

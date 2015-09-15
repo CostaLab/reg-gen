@@ -39,9 +39,39 @@ from datetime import datetime
 from rgt.ODIN.dpc_help import which
 import pysam
 import os.path
+import tempfile
 
 FOLDER_REPORT = None
 
+def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
+    for i in range(len(bamfiles)):
+        rep = i if i < dims[0] else i - dims[0]
+        sig = 1 if i < dims[0] else 2
+        _, tmp_path = tempfile.mkstemp()
+        files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
+        if len(no_bw_files) > len(bamfiles):
+            t = ['bigWigMerge'] + files + [tmp_path]
+            c = " ".join(t)
+            os.system(c)
+            #print(c, file=sys.stderr)
+            
+            t = ['bedGraphToBigWig', tmp_path, chrom_sizes, options.name + '-s%s-rep%s.bw' %(sig, rep)]
+            c = " ".join(t)
+            os.system(c)
+            #print(c, file=sys.stderr)
+            
+            t = ['rm'] + files
+            c = " ".join(t)
+            os.system(c)
+            #print(c, file=sys.stderr)
+        else:
+            ftarget = [options.name + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
+            for i in range(len(ftarget)):
+                c = ['mv', files[i], ftarget[i]]
+                c = " ".join(c)
+                os.system(c)
+                #print(c, file=sys.stderr)
+            
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
     x may be an array or a single float"""
@@ -293,9 +323,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
         ratios.append(ratio)
         output.append((el.chrom, el.initial, el.final, el.orientation, counts))
     
-    output, pvalues, filter_pass = filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction)
-    _output_BED(name, output, pvalues, filter_pass)
-    _output_narrowPeak(name, output, pvalues, filter_pass)
+    return ratios, pvalues, output
 
 
 def _output_BED(name, output, pvalues, filter):
@@ -380,43 +408,11 @@ def get_all_chrom(bamfiles):
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
-               test, report):
+               test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
+               gc_hist=None, output_bw=True):
     """Initialize the MultiCoverageSet"""
-    
-    regionset = GenomicRegionSet(name)
-    chrom_sizes_dict = {}
-    #if regions option is set, take the values, otherwise the whole set of 
-    #chromosomes as region to search for DPs
-#     if test:
-#         contained_chrom = ['chr1', 'chr2']
-#     else:
-#         #contained_chrom = get_all_chrom(bamfiles)
-#         contained_chrom = ['chr1', 'chr2']
-    
-    if regions is not None:
-        print("Call DPs on specified regions.", file=sys.stderr)
-        with open(regions) as f:
-            for line in f:
-                line = line.strip()
-                line = line.split('\t')
-                c, s, e = line[0], int(line[1]), int(line[2])
-		#if c in contained_chrom:                
-                regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                chrom_sizes_dict[c] = e
-    else:
-        print("Call DPs on whole genome.", file=sys.stderr)
-        with open(chrom_sizes) as f:
-            for line in f:
-                line = line.strip()
-                line = line.split('\t')
-                chrom, end = line[0], int(line[1])
-		#if chrom in contained_chrom:
-                regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                chrom_sizes_dict[chrom] = end
-    
-    if not regionset.sequences:
-        print('something wrong here', file=sys.stderr)
-        sys.exit(2)
+    regionset = regions
+    regionset.sequences.sort()
     
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
@@ -425,16 +421,16 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         norm_regionset = None
         
     
-    regionset.sequences.sort()
+    
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
-    tracker.write(text=" ".join(map(lambda x: str(x), exts)), header="Extension size (rep1, rep2, input1, input2)")
+    
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
-                                  housekeeping_genes=housekeeping_genes, tracker=tracker)
-    
+                                  housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
+                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw)
     return multi_cov_set
 
 
@@ -595,8 +591,8 @@ def input(laptop):
         d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
         options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
     
-    if not which("wigToBigWig"):
-        print("Warning: wigToBigWig programm not found! Signal will not be stored!", file=sys.stderr)
+    if not which("wigToBigWig") or not which("bedGraphToBigWig") or not which("bigWigMerge"):
+        print("Warning: wigToBigWig, bigWigMerge or bedGraphToBigWig not found! Signal will not be stored!", file=sys.stderr)
 
     if options.outputdir:
         options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path

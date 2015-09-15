@@ -36,7 +36,7 @@ class Tracker:
             for i, el in enumerate(tmp):
                 i += 1
                 new.append(el)
-                if i > 0 and i % 3 == 0 and i < len(tmp):
+                if i > 0 and i % 3 == 0 and i < len(tmp) and len(tmp) % 3 == 0:
                     new.append('<br>')
                 
             text = " ".join(new)

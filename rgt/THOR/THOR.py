@@ -3,9 +3,12 @@
 
 from __future__ import print_function
 import sys
-from dpc_help import get_peaks, input, _fit_mean_var_distr, initialize
+from dpc_help import get_peaks, input, _fit_mean_var_distr, initialize, _output_BED, _output_narrowPeak, merge_output
 from tracker import Tracker
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
+from rgt.THOR.RegionGiver import RegionGiver
+from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
+
 TEST = False #enable to test THOR locally
 
 def _write_info(tracker, report, **data):
@@ -20,16 +23,22 @@ def _write_info(tracker, report, **data):
     
     if report:
         tracker.make_html()
+
+def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker):
+    """Train HMM"""
     
-def main():
-    options, bamfiles, genome, chrom_sizes, dims, inputs = input(TEST)
-    tracker = Tracker(options.name + '-setup.info')
-    #print(FOLDER_REPORT, file=sys.stderr)
-    exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
+    while True:
+        train_regions = region_giver.get_training_regionset()
+        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs, debug=options.debug,\
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
-                          housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report)
+                          housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report, chrom_sizes_dict=region_giver.get_chrom_dict(),\
+                          end=True, counter=0, output_bw=False)
+        if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
+            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
+            break
+    
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, verbose=options.verbose, \
                                           outputdir = options.outputdir, report=options.report)
     exp_data.compute_putative_region_index()
@@ -43,13 +52,51 @@ def main():
     print('Train HMM', file=sys.stderr)
     m.fit([training_set_obs], options.hmm_free_para)
     
+    return m, exp_data, func_para, init_mu, init_alpha
+
+def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m):
+    """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
+    output, pvalues, ratios = [], [], []
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
-    states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-    
-    distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
-    get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, \
+    no_bw_files = []
+    for i, r in enumerate(region_giver):
+        end = True if i == len(region_giver) - 1 else False
+        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=r, stepsize=options.stepsize, binsize=options.binsize, \
+                          bamfiles = bamfiles, exts=exp_data.exts, inputs=inputs, exts_inputs=exp_data.exts_inputs, debug=options.debug,\
+                          verbose = False, no_gc_content=options.no_gc_content, factors_inputs=exp_data.factors_inputs, chrom_sizes=chrom_sizes, \
+                          tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = exp_data.scaling_factors_ip, save_wig=options.save_wig, \
+                          housekeeping_genes=options.housekeeping_genes, test=TEST, report=False, chrom_sizes_dict=region_giver.get_chrom_dict(),\
+                          gc_content_cov=exp_data.gc_content_cov, avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist, end=end, counter=i)
+        if exp_data.no_data:
+            continue
+        no_bw_files.append(i)
+        exp_data.compute_putative_region_index()
+        states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
+        
+        distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
+        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, \
               exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par,\
               no_correction=options.no_correction, deadzones=options.deadzones)
+        
+        output += inst_output
+        pvalues += inst_pvalues
+        ratios += inst_ratios
+    
+    res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output, options.no_correction)
+    
+    _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
+    _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
+    
+    merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes)
+    
+def main():
+    options, bamfiles, genome, chrom_sizes, dims, inputs = input(TEST)
+    tracker = Tracker(options.name + '-setup.info')
+    region_giver = RegionGiver(chrom_sizes, options.regions)
+    
+    m, exp_data, func_para, init_mu, init_alpha = train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker)
+    
+    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
     
