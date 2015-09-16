@@ -8,6 +8,7 @@ from tracker import Tracker
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
+import os.path
 
 TEST = False #enable to test THOR locally
 
@@ -37,12 +38,13 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
                           end=True, counter=0, output_bw=False)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
             tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
+            tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
             break
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, verbose=options.verbose, \
                                           outputdir = options.outputdir, report=options.report)
     exp_data.compute_putative_region_index()
-
+    
     print('Compute HMM\'s training set', file=sys.stderr)
     training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange, options.threshold, options.size_ts, 3)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
@@ -51,16 +53,19 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
     
     print('Train HMM', file=sys.stderr)
     m.fit([training_set_obs], options.hmm_free_para)
-    
-    return m, exp_data, func_para, init_mu, init_alpha
+    distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
+        
+    return m, exp_data, func_para, init_mu, init_alpha, distr
 
-def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m):
+def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
-    output, pvalues, ratios = [], [], []
+    output, pvalues, ratios, no_bw_files = [], [], [], []
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
-    no_bw_files = []
+    
     for i, r in enumerate(region_giver):
         end = True if i == len(region_giver) - 1 else False
+        print("- taking into account %s" %r.sequences[0].chrom, file=sys.stderr)
+        
         exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=r, stepsize=options.stepsize, binsize=options.binsize, \
                           bamfiles = bamfiles, exts=exp_data.exts, inputs=inputs, exts_inputs=exp_data.exts_inputs, debug=options.debug,\
                           verbose = False, no_gc_content=options.no_gc_content, factors_inputs=exp_data.factors_inputs, chrom_sizes=chrom_sizes, \
@@ -69,15 +74,19 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
                           gc_content_cov=exp_data.gc_content_cov, avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist, end=end, counter=i)
         if exp_data.no_data:
             continue
+        
         no_bw_files.append(i)
         exp_data.compute_putative_region_index()
+        
+        if exp_data.indices_of_interest is None:
+            continue
+        
         states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
         
-        distr = _get_pvalue_distr(exp_data, m.mu, m.alpha, tracker)
         inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data, distr=distr, merge=options.merge, \
               exts=exp_data.exts, pcutoff=options.pcutoff, debug=options.debug, p=options.par,\
               no_correction=options.no_correction, deadzones=options.deadzones)
-        
+
         output += inst_output
         pvalues += inst_pvalues
         ratios += inst_ratios
@@ -91,12 +100,11 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
     
 def main():
     options, bamfiles, genome, chrom_sizes, dims, inputs = input(TEST)
-    tracker = Tracker(options.name + '-setup.info')
+    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes, dims, inputs, options)
     region_giver = RegionGiver(chrom_sizes, options.regions)
+    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker)
     
-    m, exp_data, func_para, init_mu, init_alpha = train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker)
-    
-    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m)
+    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
     

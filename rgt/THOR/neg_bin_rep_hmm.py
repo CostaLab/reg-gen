@@ -28,7 +28,7 @@ from neg_bin import NegBin
 import warnings
 warnings.filterwarnings('error')
 
-def _get_pvalue_distr(exp_data, mu, alpha, tracker):
+def _get_pvalue_distr(mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
     mu = mu[0,0]
     alpha = alpha[0,0] / 10000.

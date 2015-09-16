@@ -61,8 +61,8 @@ class MultiCoverageSet(DualCoverageSet):
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
                 self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, chrom_sizes_dict)
-                self._norm_gc_content(cov.coverage, gc_content_cov, avg_gc_content)
-                self._norm_gc_content(inputfile.coverage, gc_content_cov, avg_gc_content)
+                self._norm_gc_content(cov.coverage, self.gc_content_cov, self.avg_gc_content)
+                self._norm_gc_content(inputfile.coverage, self.gc_content_cov, self.avg_gc_content)
             
                 #if VERBOSE:
                 #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
@@ -148,7 +148,8 @@ class MultiCoverageSet(DualCoverageSet):
     def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
-                 tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True):
+                 tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
+                 folder_report=None):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -166,6 +167,7 @@ class MultiCoverageSet(DualCoverageSet):
         self.end = end
         self.counter = counter
         self.no_data = False
+        self.FOLDER_REPORT = folder_report
         
         global DEBUG, VERBOSE
         DEBUG = debug
@@ -205,7 +207,8 @@ class MultiCoverageSet(DualCoverageSet):
             print("Normalize input-DNA", file=sys.stderr)
         
         if factors_inputs:
-            print("Use with predefined factors", file=sys.stderr)
+            if VERBOSE:
+                print("Use with predefined factors", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 self.inputs[i].scale(factors_inputs[i])
                 self.covs[i].subtract(self.inputs[i])
@@ -294,7 +297,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         if not scaling_factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
-            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True)
+            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT)
         elif not scaling_factors_ip:
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)
@@ -317,7 +320,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         self.scaling_factors_ip = scaling_factors_ip
         
-        tracker.write(text=map(lambda x: str(x), scaling_factors_ip), header="Scaling factors")
+        
         
                 
     def _index2coordinates(self, index):
@@ -365,11 +368,14 @@ class MultiCoverageSet(DualCoverageSet):
         - score must be > 0, i.e. everthing
         - overall coverage in library 1 and 2 must be > 3"""
         
-        self._compute_score()
-        self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
-        tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 10)[0]
-        tmp2 = np.intersect1d(self.indices_of_interest, tmp)
-        self.indices_of_interest = tmp2
+        try:
+            self._compute_score()
+            self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
+            tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 10)[0]
+            tmp2 = np.intersect1d(self.indices_of_interest, tmp)
+            self.indices_of_interest = tmp2
+        except:
+            self.indices_of_interest = None
         #print(len(self.indices_of_interest), file=sys.stderr)
         #tmp = set()
         #for i in self.indices_of_interest:

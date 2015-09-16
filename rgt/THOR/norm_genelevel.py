@@ -30,9 +30,13 @@ def get_experimental_matrix(bams, bed):
     
     return m
 
-def get_factor_matrix(d, colnames):
+def get_factor_matrix(d, colnames, folder, samples, verbose):
     """Give matrix describing factors between genes. Idealy, factors in a column should be approx. the same."""
     res = []
+    
+    if folder:
+        f_gene = open(folder + '/pics/data/gene.data', 'w')
+        f_sample = open(folder + 'pics/data/sample.data', 'w')
     
     original_f = get_factors(d)
 
@@ -45,11 +49,16 @@ def get_factor_matrix(d, colnames):
             assert len(f) == len(original_f)
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(original_f, f))) / float(len(f))
             
+            if folder:
+                print(colnames[i], res, file=f_gene)
             
-            print(colnames[i], i, res, f, file=sys.stderr)
-        print("", file=sys.stderr)
+            if verbose:
+                print(colnames[i], i, res, f, file=sys.stderr)
         
-        print("row/sample wise analysis", file=sys.stderr)
+        if verbose:
+            print("", file=sys.stderr)
+        
+            print("row/sample wise analysis", file=sys.stderr)
         for i in range(d.shape[0]):
             data = deepcopy(d)
             data = np.delete(data, i, 0) #remove sample i
@@ -60,10 +69,16 @@ def get_factor_matrix(d, colnames):
             assert len(f) == len(tmp)
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(tmp, f))) / float(len(f))
             
-            
-            print(i, res, f, file=sys.stderr)
-        print("", file=sys.stderr)
-            
+            if folder:
+                print(samples[i], res, file=f_sample)
+            if verbose:
+                print(samples[i], res, f, file=sys.stderr)
+        if verbose:
+            print("", file=sys.stderr)
+    
+    if folder:
+        f_gene.close()
+        f_sample.close()
      
 def output_R_file(name, res, colnames):
     """"Write R code to file to check whether genes give same signal among the samples"""
@@ -94,10 +109,9 @@ def get_factors(data):
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
 
-def norm_gene_level(bams, bed, name, verbose):
+def norm_gene_level(bams, bed, name, verbose, folder):
     """Normalize bam files on a gene level. Give out list of normalization factors."""
     m = get_experimental_matrix(bams, bed)
-    
     d = zip(m.types, m.names)
     d = map(lambda x: x[1], filter(lambda x: x[0] == 'reads', d)) #list of names which are reads
     
@@ -125,9 +139,9 @@ def norm_gene_level(bams, bed, name, verbose):
         print(d, file=sys.stderr)
         print("", file=sys.stderr)
     
-    if verbose:
+    if verbose or folder:
         #output R code to check wether gene give same signal
-        get_factor_matrix(d, colnames)
+        get_factor_matrix(d, colnames, folder, samples, verbose)
         #output_R_file(name, res, colnames)
     
     #print("factors")

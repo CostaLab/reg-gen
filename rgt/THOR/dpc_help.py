@@ -50,6 +50,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
         _, tmp_path = tempfile.mkstemp()
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
+            files = filter(lambda x: os.path.isfile(x), files)
             t = ['bigWigMerge'] + files + [tmp_path]
             c = " ".join(t)
             os.system(c)
@@ -293,6 +294,10 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
         side = 'l' if strand == '+' else 'r'
         tmp_data.append((sum(cov1), sum(cov2), side, distr))
     
+    if not tmp_data:
+        print('no data', file=sys.stderr)
+        return [], [], []
+    
     tmp_pvalues = map(_compute_pvalue, tmp_data)
     per = np.percentile(tmp_pvalues, p)
     
@@ -387,7 +392,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
             exts.append(e)
             ext_data_list.append(ext_data)
     
-    if report and not exts:
+    if report and ext_data_list:
         _output_ext_data(ext_data_list, bamfiles)
     
     if inputs and not exts_inputs:
@@ -420,17 +425,14 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     else:
         norm_regionset = None
         
-    
-    
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
-    
     
     multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
                                   housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
-                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw)
+                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT)
     return multi_cov_set
 
 

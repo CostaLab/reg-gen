@@ -62,11 +62,12 @@ class RegionGiver:
     def get_training_regionset(self):
         r = GenomicRegionSet('')
         r.add(self.regionset[self.counter])
-        self.counter += 1
+        
         if self.counter == len(self.chrom_sizes_dict):
             return None
         else:
             return r
+        self.counter += 1
             
             
 #if regions option is set, take the values, otherwise the whole set of 
