@@ -30,11 +30,11 @@ def get_experimental_matrix(bams, bed):
     
     return m
 
-def get_factor_matrix(d, colnames, folder, samples, verbose):
+def get_factor_matrix(d, colnames, folder, samples, verbose, report):
     """Give matrix describing factors between genes. Idealy, factors in a column should be approx. the same."""
     res = []
     
-    if folder:
+    if report:
         f_gene = open(folder + '/pics/data/gene.data', 'w')
         f_sample = open(folder + 'pics/data/sample.data', 'w')
     
@@ -49,7 +49,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose):
             assert len(f) == len(original_f)
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(original_f, f))) / float(len(f))
             
-            if folder:
+            if report:
                 print(colnames[i], res, file=f_gene)
             
             if verbose:
@@ -69,14 +69,14 @@ def get_factor_matrix(d, colnames, folder, samples, verbose):
             assert len(f) == len(tmp)
             res = sum(map(lambda x: (x[0]-x[1])**2, zip(tmp, f))) / float(len(f))
             
-            if folder:
+            if report:
                 print(samples[i], res, file=f_sample)
             if verbose:
                 print(samples[i], res, f, file=sys.stderr)
         if verbose:
             print("", file=sys.stderr)
     
-    if folder:
+    if report:
         f_gene.close()
         f_sample.close()
      
@@ -109,7 +109,7 @@ def get_factors(data):
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
 
-def norm_gene_level(bams, bed, name, verbose, folder):
+def norm_gene_level(bams, bed, name, verbose, folder, report):
     """Normalize bam files on a gene level. Give out list of normalization factors."""
     m = get_experimental_matrix(bams, bed)
     d = zip(m.types, m.names)
@@ -139,9 +139,9 @@ def norm_gene_level(bams, bed, name, verbose, folder):
         print(d, file=sys.stderr)
         print("", file=sys.stderr)
     
-    if verbose or folder:
+    if verbose or report:
         #output R code to check wether gene give same signal
-        get_factor_matrix(d, colnames, folder, samples, verbose)
+        get_factor_matrix(d, colnames, folder, samples, verbose, report)
         #output_R_file(name, res, colnames)
     
     #print("factors")

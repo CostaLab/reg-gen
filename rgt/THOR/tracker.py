@@ -12,7 +12,7 @@ from datetime import datetime
 
 class Tracker:
     data = []
-    def __init__(self, p, bamfiles, genome, chrom_sizes, dims, inputs, options):
+    def __init__(self, p, bamfiles, genome, chrom_sizes, dims, inputs, options, version):
         self.file = open(p, 'w')
         self.bamfiles = bamfiles
         self.genome = genome
@@ -21,6 +21,7 @@ class Tracker:
         self.inputs = inputs
         self.samples = map(lambda x: path.splitext(path.basename(x))[0], bamfiles)
         self.options = options
+        self.version = version
     
     def write(self, text, header):
         if header:
@@ -119,11 +120,11 @@ class Tracker:
         elif self.options.scaling_factors_ip:
             norm = 'Predefined Values'
         else:
-            norm = TMM
+            norm = 'TMM'
         
-        d = [['Name', options.name], ['time', str(datetime.now())], ['BAM files', b], ['genome', self.genome], ['chromosome sizes', self.chrom_sizes],\
-             ['Normalization Strategy', norm], ['version', self.options.version], ['merge DPs', self.options.merge], ['p-value cutoff', self.options.pcutoff],\
-             ['deadzones', self.options.deadzones]]
+        d = [['Name', self.options.name], ['time', str(datetime.now())], ['BAM files', b], ['genome', self.genome], ['chromosome sizes', self.chrom_sizes],\
+             ['Normalization Strategy', norm], ['version', self.version], ['merge DPs', str(self.options.merge)], ['p-value cutoff', str(self.options.pcutoff)],\
+             ['deadzones', str(self.options.deadzones)]]
         
         if self.inputs:
             a = []

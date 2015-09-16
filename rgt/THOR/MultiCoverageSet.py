@@ -149,7 +149,7 @@ class MultiCoverageSet(DualCoverageSet):
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
-                 folder_report=None):
+                 folder_report=None, report=None):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -183,7 +183,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
-        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset)
+        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report)
         if output_bw:
             self._output_bw(name, chrom_sizes, save_wig) 
         
@@ -289,7 +289,7 @@ class MultiCoverageSet(DualCoverageSet):
                 
         return scaling_factors_ip
     
-    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset):
+    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset, report):
         """Normalize signal"""
         
         if VERBOSE:
@@ -297,7 +297,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         if not scaling_factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
-            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT)
+            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT, report=report)
         elif not scaling_factors_ip:
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)

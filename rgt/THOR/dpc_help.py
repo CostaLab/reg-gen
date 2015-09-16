@@ -1,9 +1,8 @@
 """
 %prog [CONFIG]
 
-Find differential peaks in regions.
-
-Caution: Pre-paper version
+Find differential peaks in multiple ChIP-seq profiles 
+between two distinct biological conditions.
 
 Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
@@ -432,7 +431,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
                                   housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
-                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT)
+                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report)
     return multi_cov_set
 
 
@@ -483,51 +482,54 @@ def input(laptop):
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
                           help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
+        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
+                           help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
+        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
+                          help="Store files in output directory. [default: %default]")
+        parser.add_option("--report", dest="report", default=False, action="store_true", \
+                          help="Generate HTML report about experiment. [default: %default]")
+        parser.add_option("--deadzones", dest="deadzones", default=None, \
+                          help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
+        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
+                          help="Do not use multipe test correction for p-values (Benjamini/Hochberg). [default: %default]")
         parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
                           help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
         parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
-                          help="Read's extension size for BAM files. If option is not chosen, estimate extension sizes. [default: %default]")
+                          help="Read's extension size for BAM files (comma separated list for each BAM file in config file).\
+                          If option is not chosen, estimate extension sizes. [default: %default]")
         parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback", callback=_callback_list_float,\
-                          help="Normalization factors for input-DNA. If option is not chosen, estimate factors. [default: %default]")
-        parser.add_option("--par", dest="par", default=1, type="int",\
-                          help="Percentile for p-value postprocessing filter. [default: %default]")
+                          help="Normalization factors for input-DNA (comma separated list for each BAM file in config file).\
+                          If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
-                          help="Scaling factor for each IP-channel input BAM file [default: %default]")
-        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
-                           help="Define housekeeping genes <BED> that are used for normalization [default: %default]")
-        parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
-                          help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
+                          help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for each BAM file in config file. If option is not chosen, follow normalization strategy (TMM or HK approach) [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true",\
                            help="Show script's version.")
-        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
-                          help="All files are stored in output directory which is created if necessary.")
-        parser.add_option("--report", dest="report", default=False, action="store_true", \
-                          help="report.")
-        parser.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",\
-                          help="Foldchange for trainingsset [default: %default]")
-        parser.add_option("-t", "--threshold", dest="threshold", default=95, type="float",\
-                          help="Foldchange for trainingsset [default: %default]")
-        parser.add_option("--size", dest="size_ts", default=10000, type="int",\
-                          help="10000 of 2 free parameters for HMM, else 1000 [default: %default]")
-        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
-                          help="No Benjamini/Hochberg p-value multiple testing correction [default: %default]")
-        parser.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
         
         group = OptionGroup(parser, "Advanced options")
         group.add_option("--regions", dest="regions", default=None, type="string",\
-                           help="Define regions (BED) where to call DPs.")
+                           help="Define regions (BED format) to restrict the analysis, that is, where to train the HMM and search for DPs.\
+                           It is faster, but less precise.")
         group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal.  [default: %default]")
+                          help="Size of underlying bins for creating the signal. [default: %default]")
         group.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal.")
+                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
         group.add_option("--debug", default=False, dest="debug", action="store_true", \
                           help="Output debug information. Warning: space consuming! [default: %default]")
         group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                          help="turn off GC content calculation")
+                          help="Do not normalize towards GC content. [default: %default]")
+        group.add_option("--norm-regions", default=None, dest="norm_regions", type="str", \
+                          help="Restrict normalization to particular regions (BED format). [default: %default]")
+        group.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",\
+                          help="Fold change parameter to define training set (t_1, see paper). [default: %default]")
+        group.add_option("-t", "--threshold", dest="threshold", default=95, type="float",\
+                          help="Minimum signal support for differential peaks to define training set as percentage (t_2, see paper). [default: %default]")
+        group.add_option("--size", dest="size_ts", default=10000, type="int",\
+                          help="Number of bins the HMM's training set constists of. [default: %default]")
+        group.add_option("--par", dest="par", default=1, type="int",\
+                          help="Percentile for p-value postprocessing filter. [default: %default]")
+        
         parser.add_option_group(group)
-        parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
-        group.add_option("--three-parameter", default=False, dest="hmm_free_para", action="store_true", \
-                          help="HMM with 3 free parameters[default: %default]")
+        
         ##deprecated options
         #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
         #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
@@ -535,14 +537,20 @@ def input(laptop):
         #parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
         #parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
         #                  help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
+        #parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
+        #                  help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
+        #group.add_option("--three-parameter", default=False, dest="hmm_free_para", action="store_true", \
+        #                  help="HMM with 3 free parameters[default: %default]")
         
 	(options, args) = parser.parse_args()
     
     options.save_wig = False
     options.exts_inputs = None
-        
+    options.verbose = False
+    options.hmm_free_para = False
+    
+    version = "version \"0.1alpha\""
     if options.version:
-        version = "version \"0.1alpha\""
         print("")
         print(version)
         sys.exit()
@@ -630,5 +638,5 @@ def input(laptop):
     if options.exts_inputs is None:
         options.exts_inputs = []
     
-    return options, bamfiles, genome, chrom_sizes, dims, inputs
+    return options, bamfiles, genome, chrom_sizes, dims, inputs, version
 
