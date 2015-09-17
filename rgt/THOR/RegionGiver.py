@@ -66,8 +66,9 @@ class RegionGiver:
         if self.counter == len(self.chrom_sizes_dict):
             return None
         else:
+            self.counter += 1
             return r
-        self.counter += 1
+        
             
             
 #if regions option is set, take the values, otherwise the whole set of 

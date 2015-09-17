@@ -41,7 +41,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
     original_f = get_factors(d)
 
     if d.shape[0] > 1 and d.shape[1] > 1:
-        print("column/gene wise analysis", file=sys.stderr)
+        print("-gene (column) wise evaluation", file=sys.stderr)
         for i in range(d.shape[1]):
             data = deepcopy(d)
             data = np.delete(data, i, 1) #remove gene i
@@ -53,12 +53,12 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
                 print(colnames[i], res, file=f_gene)
             
             if verbose:
-                print(colnames[i], i, res, f, file=sys.stderr)
+                print(colnames[i], res, file=sys.stderr)
         
         if verbose:
             print("", file=sys.stderr)
         
-            print("row/sample wise analysis", file=sys.stderr)
+            print("-sample (row) wise evaluation", file=sys.stderr)
         for i in range(d.shape[0]):
             data = deepcopy(d)
             data = np.delete(data, i, 0) #remove sample i
@@ -72,7 +72,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
             if report:
                 print(samples[i], res, file=f_sample)
             if verbose:
-                print(samples[i], res, f, file=sys.stderr)
+                print(samples[i], res, file=sys.stderr)
         if verbose:
             print("", file=sys.stderr)
     
@@ -135,7 +135,7 @@ def norm_gene_level(bams, bed, name, verbose, folder, report):
     samples = map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)
     #print("samples: %s" %",".join(map(lambda x: os.path.splitext(os.path.basename(x))[0], bams)))
     if verbose:
-        print("Housekeeping gene matrix (columns-genes, rows-samples)", file=sys.stderr)
+        print("-Housekeeping gene matrix (columns-genes, rows-samples)", file=sys.stderr)
         print(d, file=sys.stderr)
         print("", file=sys.stderr)
     

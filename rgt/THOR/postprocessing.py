@@ -14,6 +14,7 @@ from scipy.stats.mstats import zscore
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import numpy as np
 
+
 def merge_data(regions):
     for el in regions:
         tmp = el.data
@@ -101,7 +102,7 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction)
         pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
-        pv_pass = np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False)
+        pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
     
     filter_pass = np.bitwise_and(ratios_pass, pv_pass)
     
