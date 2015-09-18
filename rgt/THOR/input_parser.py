@@ -44,12 +44,14 @@ def input_parser(filepath):
         inputs = None
     else:
         inputs = inputs1 + inputs2
+    if not genome:
+        genome = None
     #if not regions:
     #    regions = None
     
     return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
 
 if __name__ == '__main__':
-    print(input_parser('/home/manuel/workspace/eclipse/office_share/blueprint/playground/blueprint.h3k4me1.cluster.config'))
+    print(input_parser('/home/manuel/blueprint.h3k4me1.cluster.config')[1])
 
 

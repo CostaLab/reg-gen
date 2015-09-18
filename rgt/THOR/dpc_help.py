@@ -565,6 +565,9 @@ def input(laptop):
 
     bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
     
+    if not genome:
+        options.no_gc_content = True
+    
     if options.exts and len(options.exts) != len(bamfiles):
         parser.error("Number of Extension Sizes must equal number of bamfiles")
     
@@ -594,7 +597,7 @@ def input(laptop):
         if not os.path.isfile(options.regions):
             parser.error("Region file %s does not exist!" %options.regions)
     
-    if not os.path.isfile(genome):
+    if genome and not os.path.isfile(genome):
         parser.error("Genome file %s does not exist!" %genome)
     
     if options.name is None:
@@ -607,7 +610,7 @@ def input(laptop):
     if options.outputdir:
         options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path
         if os.path.isdir(options.outputdir) and sum(map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
-            parser.error("Output directory exists and contains files with names starting with your chosen experiment name! Do nothing to prevend file overwriting!")
+            parser.error("Output directory exists and contains files with names starting with your chosen experiment name! Do nothing to prevent file overwriting!")
         if not os.path.exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:
@@ -615,6 +618,10 @@ def input(laptop):
     
     options.name = os.path.join(options.outputdir, options.name)
     
+    
+    if os.path.isdir(os.path.join(options.outputdir, 'report/')):
+        parser.error("Folder 'report' already exits in output directory! Do nothing to prevent file overwriting! Please rename report folder or change working directory of THOR with the option --output-dir")
+       
     if options.report:
         os.mkdir(os.path.join(options.outputdir, 'report/'))
         os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
@@ -631,6 +638,9 @@ def input(laptop):
     FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report/pics/data/')
     OUTPUTDIR = options.outputdir
     NAME = options.name
+    
+    if not inputs or not genome:
+        print("Warning: Do not compute GC-content, as there is no input or no genome file", file=sys.stderr)
     
     if options.exts is None:
         options.exts = []

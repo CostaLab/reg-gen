@@ -67,8 +67,7 @@ class MultiCoverageSet(DualCoverageSet):
                 #if VERBOSE:
                 #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
                 #    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
-        elif path_inputs is None and VERBOSE:
-            print("Do not compute GC-content, as there is no input", file=sys.stderr)
+        
     
     
     def _output_bw(self, name, chrom_sizes, save_wig):

@@ -1,9 +1,10 @@
 ToDo:
 - input scaling factor fails sometimes... make it to 1 (?) if this is the case
+- bw tools automatically in bin PATH
 
 done
 - foldchange option is now available, was deprecated for some reasons
-- bugfix when no-correction is on: filter by theshold that is given by option and do not output everything
+- bugfix when no-correction is on: filter by threshold that is given by option and do not output everything
 
 ODIN-0.4
 - solve the following question automativally:

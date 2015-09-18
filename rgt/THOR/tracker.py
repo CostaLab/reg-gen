@@ -15,7 +15,10 @@ class Tracker:
     def __init__(self, p, bamfiles, genome, chrom_sizes, dims, inputs, options, version):
         self.file = open(p, 'w')
         self.bamfiles = bamfiles
-        self.genome = genome
+        if genome is None:
+            self.genome = "None"
+        else:
+            self.genome = genome
         self.chrom_sizes = chrom_sizes
         self.dims = dims
         self.inputs = inputs
