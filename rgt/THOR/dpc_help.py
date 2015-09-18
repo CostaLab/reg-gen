@@ -549,7 +549,7 @@ def input(laptop):
     options.verbose = False
     options.hmm_free_para = False
     
-    version = "version \"0.1alpha\""
+    version = "version \"0.1beta\""
     if options.version:
         print("")
         print(version)
