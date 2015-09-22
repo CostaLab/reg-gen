@@ -548,8 +548,8 @@ class GenomicRegionSet:
             y              ----------      ---------------              ----
             Result                                ------
         """
-        a = copy.deepcopy(self)
-        b = copy.deepcopy(y)
+        a = self
+        b = y
         
         z = GenomicRegionSet(a.name + "_" + b.name)
         # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
@@ -561,6 +561,8 @@ class GenomicRegionSet:
             if not b.sorted: b.sort()
             
             if mode == OverlapType.OVERLAP:
+                a = copy.deepcopy(self)
+                b = copy.deepcopy(y)
                 a.merge()
                 b.merge()
             

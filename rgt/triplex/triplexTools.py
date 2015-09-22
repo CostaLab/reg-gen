@@ -498,13 +498,14 @@ def dbd_regions(exons, sig_region, rna_name, output):
             print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
         for rbs in sig_region:
             loop = True
-
+            #print(exons)
             #print(rbs)
             #print(rbs.initial)
             #print(rbs.final)
             #print(rbs.orientation)
             #print()
-            
+            #print(exons[0][3])
+
             if exons[0][3] == "-":
               
                 while loop:
@@ -516,6 +517,7 @@ def dbd_regions(exons, sig_region, rna_name, output):
                         tail = cf + l
                         #print("cf:   " + str(cf))
                         #print("tail: " + str(tail) )
+
                         if cf <= rbs.initial <=  tail:
                             dbdstart = exon[2] - rbs.initial + cf
                             
@@ -592,7 +594,7 @@ def dbd_regions(exons, sig_region, rna_name, output):
                                                        initial=dbdstart, final=exon[2], 
                                                        orientation=exons[0][3], 
                                                        name=str(rbs.initial)+"-"+str(rbs.initial+subtract)+"_split1" ) )
-                        
+
                         elif rbs.initial < cf and rbs.final <= tail: 
                             #print("3")
                             dbdstart = exon[1]
@@ -617,10 +619,15 @@ def dbd_regions(exons, sig_region, rna_name, output):
     
     seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
     
+    #print(dbdmap)
+
     with open(os.path.join(output, "DBD_"+rna_name+".fa"), 'w') as fasta:
         
         for rbs in sig_region:
-            fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ dbdmap[str(rbs)]+"\n")
+            try: info = dbdmap[str(rbs)]
+            except: 
+                continue
+            fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
             #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
             if dbdmap[str(rbs)][-1] == "-":
                 fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
@@ -822,7 +829,7 @@ class PromoterTest:
                 
                 data = [ self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
                 if score: data.append(self.scores)
-                #dump(object=data, path=temp, filename=dumpname)
+                dump(object=data, path=temp, filename=dumpname)
 
 
     def get_rna_region_str(self, rna):
@@ -985,8 +992,6 @@ class PromoterTest:
         self.frequency = {}
         self.frequency["promoters"] = { "de": OrderedDict(), "nde": OrderedDict() }
         
-        
-
         ########################################################
         # Count the number of targeted promoters on each merged DNA Binding Domain
         print("\tCounting frequency of promoters on DBD...")
@@ -1019,8 +1024,9 @@ class PromoterTest:
                     try:
                         self.frequency["promoters"]["nde"][rbs].combine(nde.merged_dict[rbs])
                     except:
-                        #print(len(nde.merged_dict[rbs]))
                         self.frequency["promoters"]["nde"][rbs] = nde.merged_dict[rbs]
+                        
+                        
             for rbs in self.rbss:
                 #print(len(self.frequency["promoters"]["nde"][rbs]))
                 #self.frequency["promoters"]["nde"][rbs].remove_duplicates()
@@ -1064,21 +1070,21 @@ class PromoterTest:
                           "nde": {} }
 
         self.promoter["de"]["rd"] = self.txp_def.sort_rd_by_regions(regionset=self.de_regions)
-        self.promoter["de"]["merged_dbs"] = {}
+        #self.promoter["de"]["merged_dbs"] = {}
         self.promoter["de"]["dbs"] = {}
         self.promoter["de"]["dbs_coverage"] = {}
         
         for promoter in self.de_regions:
             dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
-            m_dbs = dbs.merge(w_return=True)
+            #m_dbs = dbs.merge(w_return=True)
             self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
-            self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(m_dbs.total_coverage()) / len(promoter)
+            #self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
 
 
         ######################
         # nDE
-        self.promoter["nde"]["merged_dbs"] = {}
+        #self.promoter["nde"]["merged_dbs"] = {}
         self.promoter["nde"]["dbs"] = {}
         self.promoter["nde"]["dbs_coverage"] = {}
 
@@ -1109,11 +1115,11 @@ class PromoterTest:
 
         counts = self.nde_regions.counts_per_region(regionset=ndef_dbs)
         #ndef_dbs.merge()
-        mcounts = self.nde_regions.counts_per_region(regionset=ndef_dbs)
+        #mcounts = self.nde_regions.counts_per_region(regionset=ndef_dbs)
         coverage = self.nde_regions.coverage_per_region(regionset=ndef_dbs)
         for i, p in enumerate(self.de_regions):
             self.promoter["nde"]["dbs"][p.toString()] = counts[i]
-            self.promoter["nde"]["merged_dbs"][p.toString()] = mcounts[i]
+            #self.promoter["nde"]["merged_dbs"][p.toString()] = mcounts[i]
             self.promoter["nde"]["dbs_coverage"][p.toString()] = coverage[i]
 
 
@@ -1222,17 +1228,17 @@ class PromoterTest:
         self.promoter["nde"]["rd"] = self.txp_ndef.sort_rd_by_regions(regionset=self.nde_regions)
         self.txp_ndef = None
         # Untargeted promoters
-        self.promoter["nde"]["merged_dbs"] = {}
+        #self.promoter["nde"]["merged_dbs"] = {}
         self.promoter["nde"]["dbs"] = {}
         self.promoter["nde"]["dbs_coverage"] = {}
 
         for promoter in self.nde_regions:
         #for k, rds in self.promoter["nde"]["rd"].items():
             dbs = self.promoter["nde"]["rd"][promoter.toString()].get_dbs()
-            m_dbs = dbs.merge(w_return=True)
+            #m_dbs = dbs.merge(w_return=True)
             self.promoter["nde"]["dbs"][promoter.toString()] = len(dbs)
-            self.promoter["nde"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(m_dbs.total_coverage()) / len(promoter)
+            #self.promoter["nde"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+            self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
         self.promoter["nde"]["rd"] = [] # remove to save memory
 
         #################################################
@@ -1240,16 +1246,16 @@ class PromoterTest:
 
         self.promoter["de"]["rd"] = self.txp_def.sort_rd_by_regions(regionset=self.de_regions)
         #self.txp_def = None
-        self.promoter["de"]["merged_dbs"] = {}
+        #self.promoter["de"]["merged_dbs"] = {}
         self.promoter["de"]["dbs"] = {}
         self.promoter["de"]["dbs_coverage"] = {}
         
         for promoter in self.de_regions:
             dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
-            m_dbs = dbs.merge(w_return=True)
+            #m_dbs = dbs.merge(w_return=True)
             self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
-            self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(m_dbs.total_coverage()) / len(promoter)
+            #self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
         
     def barplot(self, dirp, filename, sig_region, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""

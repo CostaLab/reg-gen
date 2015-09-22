@@ -356,6 +356,9 @@ def main():
     ##########################################################################
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
+    ##########################################################################
+    parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
+    parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -416,6 +419,13 @@ def main():
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
             sys.exit(0)
+        ####################################################################################
+        ######### updatehtml
+        elif args.mode == "updatehtml":
+            revise_index(root=args.path, show_RNA_ass_gene=True)
+            sys.exit(0)
+
+
         #######################################################################################
         ######## Test triplexator
         process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

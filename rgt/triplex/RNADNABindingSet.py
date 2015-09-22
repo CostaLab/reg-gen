@@ -499,7 +499,9 @@ class RNADNABindingSet:
                     rna_start, rna_end = int(line[1])+shift, int(line[2])+shift
                 else:
                     rna_start, rna_end = int(line[1]), int(line[2])
+                
                 if rna_start > rna_end: rna_start, rna_end =  rna_end, rna_start
+
                 rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6], 
                                   errors_bp=line[8], motif=line[9], orientation=line[11], 
                                   guanine_rate=line[12])
@@ -507,6 +509,7 @@ class RNADNABindingSet:
                 rg = line[3].split(":")[1].split("-")
                 try: rg.remove("")
                 except: pass
+                
                 if dna_fine_posi:
                     dna_start = int(rg[0]) + int(line[4])
                     dna_end = int(rg[0]) + int(line[5])

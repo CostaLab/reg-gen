@@ -27,7 +27,7 @@ class GeneSet:
                 line = line.strip()
                 l = line.split()
                 if l[0] != "":
-                    self.genes.append(l[0])
+                    self.genes.append(l[0].upper())
             
     def read_expression(self, geneListFile, header=False, valuestr=False):
         """Read gene expression data"""

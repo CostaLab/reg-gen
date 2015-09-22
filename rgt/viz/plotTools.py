@@ -2471,7 +2471,11 @@ class Lineplot:
         if self.df: 
             yaxmin = [0]*len(self.data.values()[0])
             sx_ymin = [0]*len(self.data.keys())
-
+        
+        if printtable: 
+            bott = self.extend-int(0.5*self.ss)
+            pArr = [["Group_tag","Sort_tag","Color_tag"]+[str(x) for x in range(-bott, bott, self.ss)] ] # Header
+                
         for it, s in enumerate(self.data.keys()):
             
             for i,g in enumerate(self.data[s].keys()):
@@ -2492,8 +2496,6 @@ class Lineplot:
                         ax.set_title(g,fontsize=11)
                     
                 # Processing for future output
-                if printtable:
-                    pArr = numpy.array(["Name","X","Y"]) # Header
                     
                 for j, c in enumerate(self.data[s][g].keys()):
                     
@@ -2510,23 +2512,17 @@ class Lineplot:
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     ax.plot(x,y, color=self.colors[c], lw=1)
                     # Processing for future output
-                    if printtable:
-                        [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
-                        name = numpy.array(*len(x))
-                        xvalue = numpy.array(x)
-                        yvalue = numpy.array(y)
-                        conArr = numpy.vstack([name,xvalue,yvalue])
-                        conArr = numpy.transpose(conArr)
-                        pArr = numpy.vstack([pArr, conArr])
-                if printtable:
-                    [bam] = [bam for bam in self.readsnames if [g,c,s] in self.cuebam[bam]]
-                    output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
+                    if printtable: pArr.append([g,s,c]+list(y))
+
+                
                 
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
                 ax.locator_params(axis = 'x', nbins = 4)
                 ax.locator_params(axis = 'y', nbins = 4)
+        if printtable:
+            output_array(pArr, directory = output, folder =self.title,filename="plot_table.txt")
             
                 
         for it,ty in enumerate(self.data.keys()):
