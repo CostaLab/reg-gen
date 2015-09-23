@@ -203,3 +203,4 @@ class ExperimentalMatrix:
                     self.fieldsDict[field][t].append(n)        
                     #self.objectsDict
                 self.remove_name(bam)
+        

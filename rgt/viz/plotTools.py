@@ -2257,6 +2257,8 @@ class Lineplot:
             self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
             self.bednames = self.exps.get_regionsnames()
             self.annotation = None
+            
+
         self.reads = self.exps.get_readsfiles()
         self.readsnames = self.exps.get_readsnames()
         self.fieldsDict = self.exps.fieldsDict
@@ -2267,6 +2269,7 @@ class Lineplot:
         self.bs = bs
         self.ss = ss
         self.df = df
+
     
     def relocate_bed(self):
         self.processed_beds = []
@@ -2475,7 +2478,7 @@ class Lineplot:
         if printtable: 
             bott = self.extend-int(0.5*self.ss)
             pArr = [["Group_tag","Sort_tag","Color_tag"]+[str(x) for x in range(-bott, bott, self.ss)] ] # Header
-                
+        nit = len(self.data.keys())
         for it, s in enumerate(self.data.keys()):
             
             for i,g in enumerate(self.data[s].keys()):
@@ -2511,6 +2514,8 @@ class Lineplot:
                     #    continue
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     ax.plot(x,y, color=self.colors[c], lw=1)
+                    if it < nit - 1:
+                        ax.set_xticklabels([])
                     # Processing for future output
                     if printtable: pArr.append([g,s,c]+list(y))
 
@@ -2519,11 +2524,15 @@ class Lineplot:
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
-                ax.locator_params(axis = 'x', nbins = 4)
-                ax.locator_params(axis = 'y', nbins = 4)
+                try:
+                    ax.locator_params(axis = 'x', nbins = 4)
+                    ax.locator_params(axis = 'y', nbins = 4)
+                except:
+                    pass
         if printtable:
             output_array(pArr, directory = output, folder =self.title,filename="plot_table.txt")
-            
+        
+
                 
         for it,ty in enumerate(self.data.keys()):
             try: 

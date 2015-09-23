@@ -52,6 +52,9 @@ class GenomicRegion:
         if self.name is not None:
             s += '\t' + self.name
         if self.orientation is not None:
+            try: score = str(float(self.data))
+            except: score = "."
+            s += '\t' + score
             s += '\t' + self.orientation
         if self.data is not None:
             s += '\t' + str(self.data)

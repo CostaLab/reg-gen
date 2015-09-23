@@ -576,6 +576,10 @@ def main():
             if "regions" not in (args.g, args.c, args.s):
                 print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
+
+            if not os.path.isfile(args.input):
+                print("Please check the input experimental matrix again. The given path is wrong.")
+                sys.exit(1)
             print2(parameter, "Parameters:\tExtend length:\t"+str(args.e))
             print2(parameter, "\t\tRead size:\t"+str(args.rs))
             print2(parameter, "\t\tBin size:\t"+str(args.bs))
