@@ -67,19 +67,19 @@ tools_dictionary = {
 "hint": (
   "rgt-hint",
   "rgt.HINT.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","hmmlearn>=0.1.1","pysam>=0.7.5","ngslib>=1.1.14"],
+  ["numpy>=1.4.0","scipy>=0.7.0","hmmlearn>=0.1.1","pysam>=0.7.5"],
   []
 ), 
 "ODIN": (
   "rgt-ODIN",
   "rgt.ODIN.ODIN:main",
-  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath", "ngslib"],
+  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
   []
 ), 
 "THOR": (
 "rgt-THOR",
 "rgt.THOR.THOR:main",
-["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath", "ngslib"],
+["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
 ["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
 ),                 
 "filterVCF": (
