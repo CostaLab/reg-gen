@@ -9,7 +9,7 @@ import shutil
 import time, datetime, getpass, fnmatch
 import subprocess
 import pickle
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import numpy
 import matplotlib
 matplotlib.use('Agg')
@@ -25,6 +25,7 @@ from triplexTools import PromoterTest, RandomTest, value2str,\
                          split_gene_name, rna_associated_gene
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
+from rgt.motifanalysis.Statistics import multiple_test_correction
 
 dir = os.getcwd()
 
@@ -257,6 +258,55 @@ def gen_heatmap(path):
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.png'))
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.pdf'), format="pdf")
 
+def generate_rna_exp_pv_table(root, multi_corr=True):
+    "Generate p value table for Experiments vs RNA in the same project"
+    
+    nested_dict = lambda: defaultdict(nested_dict)
+    #nested_dict = lambda: defaultdict(lambda: 'n.a.')
+
+    data = nested_dict()
+    rnas = []
+    
+    for item in os.listdir(root):
+        pro = os.path.join(root, item, "profile.txt")
+        if os.path.isfile(pro):
+            with open(pro) as f:
+                for line in f:
+                    if line.startswith("Experiment"): continue
+                    else:
+                        line = line.strip().split("\t")
+                        data[item][line[0]] = float(line[7])
+                        rnas.append(line[0])
+                        
+    
+    exp_list = sorted(data.keys())
+    rnas = sorted(list(set(rnas)))
+    
+    pvs = []
+    for rna in rnas:
+        for exp in exp_list:
+            if data[exp][rna]: pvs.append(data[exp][rna])
+    reject, pvals_corrected = multiple_test_correction(pvs, alpha=0.05, method='indep')
+
+    with open(os.path.join(root, "table_exp_rna_pv.txt"), "w") as t:
+        print("\t".join(["RNA_ID"] + exp_list), file=t)
+        i = 0
+        for rna in rnas:
+            newline = [rna]
+            for exp in exp_list:
+                if data[exp][rna]:
+                    newline.append(str(pvals_corrected[i]))
+                    i += 1
+                else:
+                    newline.append("n.a.")
+            print("\t".join(newline), file=t)
+
+                
+    exit(0)
+    for d, p in plist.iteritems():
+        list_all_index(path=os.path.dirname(p), 
+                       link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
+
 def main():
     ##########################################################################
     ##### PARAMETERS #########################################################
@@ -423,6 +473,7 @@ def main():
         ######### updatehtml
         elif args.mode == "updatehtml":
             revise_index(root=args.path, show_RNA_ass_gene=True)
+            generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
 
 

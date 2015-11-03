@@ -1649,3 +1649,13 @@ class GenomicRegionSet:
                     j = j + 1
                     cont_overlap = False
         return coverages
+
+    def extract_blocks(self):
+        regions = []
+        for rg in self:
+            try: 
+                z = rg.extract_blocks()
+            except:
+                z = [ rg ]
+            regions = regions + z
+        self.sequences = regions
