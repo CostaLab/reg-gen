@@ -17,6 +17,7 @@ from matplotlib import cm
 import itertools
 import pickle
 import multiprocessing
+from matplotlib_venn import venn2, venn3
 
 # Local Libraries
 # Distal Libraries
@@ -274,20 +275,6 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
         len_21 = allbed2 - len_inter
         return len_12, len_21, len_inter
 
-def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
-    mode = eval("OverlapType."+m)
-    #ABC
-    AB = bedA.intersect(bedB, mode)
-    BC = bedB.intersect(bedC, mode)
-    AC = bedA.intersect(bedC, mode)
-    ABC = AB.intersect(BC, mode)
-    Abc = bedA.subtract(AB.combine(AC))
-    aBc = bedB.subtract(AB.combine(BC))
-    ABc = AB.subtract(ABC)
-    abC = bedC.subtract(AC.combine(BC))
-    AbC = AC.subtract(ABC)
-    aBC = BC.subtract(ABC)
-    return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
 def value2str(value):
     if (isinstance(value,str)): return value
@@ -378,6 +365,48 @@ def mp_count_intersets(inps):
     random_r,random_q = inps[0].random_split(size=inps[1])                           
     d = random_r.intersect_count(random_q, mode_count=inps[2], threshold=inps[3])
     return d
+
+def mp_count_intersect(inputs):
+    # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
+    q = inputs[0]
+    nalist = inputs[1]
+    mode_count = inputs[2]
+    #qlen_dict = inputs[3]
+    threshold = inputs[4]
+    #counts = inputs[5]
+    frequency = inputs[6]
+    #self_frequency = inputs[7]
+    ty = inputs[8]
+    r = inputs[9]
+
+    output = [q.name]
+
+    if q.total_coverage() == 0 and len(q)>0:
+        output.append(q.name)
+
+    else:
+        output.append(None)
+
+        if mode_count == "bp": qlen = q.total_coverage()
+        elif mode_count == "count": qlen = len(q)
+        
+        output.append(qlen)
+        # Define different mode of intersection and count here
+        print(".", end="")
+        sys.stdout.flush()
+        c = r.intersect_count(q, mode_count=mode_count, threshold=threshold)
+        #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+        output.append(c)
+        #counts[ty][r.name][q.name] = c
+        if frequency: 
+            output.append(c[2])
+            #try: self_frequency[ty][q.name].append(c[2])
+            #except: 
+            #    self_frequency[ty][q.name] = [c[2]]
+    
+    # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
+    return output
+
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -1137,7 +1166,7 @@ class Intersect:
             self.color_tags = self.referencenames
         else:
             tags = []
-            for t in [n.name for n in self.groupedreference.values()[0]]:
+            for t in [ n.name for n in self.groupedreference.values()[0] ]:
                 nt = t.replace(self.groupedreference.keys()[0],"")
                 nt = nt.replace("_","")
                 tags.append(nt)
@@ -1156,6 +1185,7 @@ class Intersect:
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
         self.nalist = []
+
         if frequency: self.frequency = OrderedDict()
         
         #if self.mode_count == "bp":
@@ -1178,28 +1208,29 @@ class Intersect:
                     elif self.mode_count == "count": rlen = len(r)
                     self.rlen[ty][r.name] = rlen
                     
-                    
+                    mp_input = []
                     for q in self.groupedquery[ty]:
-                        if q.total_coverage() == 0 and len(q)>0:
-                            self.nalist.append(q.name)
-                            continue
+                        mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
+                                          self.counts, frequency, self.frequency, ty, r ])
+                    # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
+                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                    mp_output = pool.map(mp_count_intersect, mp_input)
+                    pool.close()
+                    pool.join()
+                    
+                    # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
+                    for output in mp_output:
+                        if output[1]: self.nalist.append(output[1])
                         else:
-                            if self.mode_count == "bp": qlen = q.total_coverage()
-                            elif self.mode_count == "count": qlen = len(q)
-                            self.qlen[ty][q.name] = qlen
-                            # Define different mode of intersection and count here
-                            print(".", end="")
-                            sys.stdout.flush()
-                            c = r.intersect_count(q, mode_count=self.mode_count, threshold=threshold)
-                            #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
-                            self.counts[ty][r.name][q.name] = c
-                            if frequency: 
-                                try: self.frequency[ty][q.name].append(c[2])
-                                except: 
-                                    self.frequency[ty][q.name] = [c[2]]
-                            
+                            self.qlen[ty][output[0]] = output[2]
+                            self.counts[ty][r.name][output[0]] = output[3]
+                            try: self.frequency[ty][output[0]].append(output[3][2])       
+                            except: self.frequency[ty][output[0]] = [ output[3][2] ]
                             #print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
-        print()
+        print(self.nalist)
+        print(self.qlen)
+        print(self.counts)
+        print(self.frequency)
         sys.stdout.flush()
 
     def barplot(self, logt=False, percentage=False):
@@ -1494,17 +1525,23 @@ class Intersect:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, title,"parameters.html"))
     
-    def gen_html_comb(self, outputname, title, align):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"combinatorial.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+    def gen_html_comb(self, directory, title, align, args):
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = "Combinatorial Test: "+dir_name + "/"+title
+        link_d = OrderedDict()
+        link_d["Combinatorial test"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+        
+        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+
         #html.create_header()
         #html.add_heading(title)
         
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** </p>'])
+        #html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+ '** </p>'])
         
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -1513,25 +1550,39 @@ class Intersect:
             header_list = ["Query<br>name", "Query<br>number", "Frequencies"]
             type_list = 'sssss'
             col_size_list = [10,10,30,10] 
-        
+            #print(self.frequency[ty].keys())
+            sys.stdout.flush()
+
             for ind_q, q in enumerate(self.frequency[ty].keys()):
-                data_table.append([q,  str(self.qlen[ty][q]), ",".join(["%05d" % v for v in self.frequency[ty][q]])])
+                
+                data_table.append([q,  str(self.qlen[ty][q]), ",".join([ str(v).rjust(7, " ") for v in self.frequency[ty][q]])])
                 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
             
             header_list = ["Query 1", "Query 2", "Chi square", "p value"]
-            data_table = []  
-            for ind_q1, q1 in enumerate(self.frequency[ty].keys()[:-1]):
-                for ind_q2, q2 in enumerate(self.frequency[ty].keys()[ind_q1+1:]):
-                    if q1 == q2: continue
-                    else:
-                        chisq, p, dof, expected = stats.chi2_contingency([self.frequency[ty][q1],self.frequency[ty][q2]])
-                        if p < 0.05:
-                            data_table.append([q1,q2,value2str(chisq), "<font color=\"red\">"+value2str(p)+"</font>"])
-                        else:
-                            data_table.append([q1,q2,value2str(chisq), value2str(p)])
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
-            
+            data_table = []
+            n = len(self.frequency[ty].keys())
+            for q in itertools.combinations(range(n),2):
+                #print(q)
+                q1 = self.frequency[ty].keys()[q[0]]
+                q2 = self.frequency[ty].keys()[q[1]]
+                
+                sumqf = [x + y for x, y in zip(self.frequency[ty][q1], self.frequency[ty][q2])]
+                nonzero = [i for i, e in enumerate(sumqf) if e != 0]
+                qf1 = [self.frequency[ty][q1][i] for i in nonzero ]
+                qf2 = [self.frequency[ty][q2][i] for i in nonzero ]
+                
+                
+                chisq, p, dof, expected = stats.chi2_contingency([qf1,qf2])
+                if p < 0.05:
+                    data_table.append([q1,q2,value2str(chisq), "<font color=\"red\">"+value2str(p)+"</font>"])
+                else:
+                    data_table.append([q1,q2,value2str(chisq), value2str(p)])
+
+            if len(data_table):
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            else:
+                html.add_free_content(["No overlapping regions found."])
         """
         header_list = ["Order"] + self.orig_refs 
         type_list = 'sssss' * len(self.referencenames)
@@ -1544,26 +1595,42 @@ class Intersect:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         """
         
-        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(dir_name, title,"index.html"))
+    
+        # Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        header_list = ["Description", "Argument", "Value"]
+        data_table = [["Reference", "-r", args.r ],
+                      ["Query", "-q", args.q],
+                      ["Output directory", "-o", os.path.basename(args.o)],
+                      ["Experiment title", "-t", args.t],
+                      #["Grouping tag", "-g", args.g],
+                      #["Coloring tag", "-c", args.c],
+                      #["Background", "-bg", args.bg],
+                      ["Organism", "-organism", args.organism]]
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
-        html.write(os.path.join(fp,"combinatorial.html"))
-    
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
+        html.write(os.path.join(directory, title,"parameters.html"))
+
     def posi2region(self, regions, p):
-        all = range(len(regions))
+        #all = range(len(regions))
         new_r = GenomicRegionSet(name="")
         for r in p:
             new_r.combine(regions[r])
         return new_r
     
     def posi2set(self,regions, p):
-        all = range(len(regions))
+        alln = range(len(regions))
         inter_r = copy.deepcopy(regions[p[0]])
 
-        for i in all:
+        for i in alln:
             #print("inter_r: "+inter_r.name)
             if i in p[1:]:
-                inter_r = inter_r.intersect(regions[i],mode=OverlapType.OVERLAP)
+                inter_r = inter_r.intersect(regions[i], mode=OverlapType.OVERLAP)
             elif i == p[0]: pass
             else:
                 inter_r = inter_r.subtract(regions[i], whole_region=False)
@@ -1590,6 +1657,7 @@ class Intersect:
             for i in range(1,n):
                 new_refsp[ty].append(itertools.combinations(range(n),i))
             for posi in new_refsp[ty]:
+                #print(posi)
                 posi = [list(i) for i in posi]
                 
                 for p in posi:
@@ -1633,7 +1701,7 @@ class Intersect:
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
                 for p in posi:
-                    print("   " + str(p))
+                    #print("   " + str(p))
                     pr = self.posi2region(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
@@ -1678,7 +1746,8 @@ class Intersect:
             ax.set_xticks(range(len(q_label)))
             ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-            ax.set_xlim([-0.5, ind_q+0.5])
+            ax.set_xlim([-0.5, len(q_label)+0.5])
+            ax.set_ylim([0, 1])
             
             legends.reverse()
             r_label.reverse()
@@ -1697,6 +1766,16 @@ class Intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.sbar = f
         
+    def comb_venn(self, filename):
+        if len(self.references) == 2:
+            print(2)
+        elif len(self.references) == 3:
+            plt.figure(figsize=(4,4))
+            plt.title("Venn diagram of references")
+            self.venn = venn3(subsets = (1, 1, 1, 2, 1, 2, 2), set_labels = self.referencenames)
+            plt.savefig(filename)
+        else:
+            print("*** For plotting Venn diagram, the number of references must be 2 or 3.")
         
     def stest(self,repeat,threshold):
 

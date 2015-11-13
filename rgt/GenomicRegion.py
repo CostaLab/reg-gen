@@ -49,15 +49,22 @@ class GenomicRegion:
     def __str__(self):
         """Give informal string representation"""
         s = '\t'.join( [self.chrom, str(self.initial), str(self.final)] )
-        if self.name is not None:
-            s += '\t' + self.name
-        if self.orientation is not None:
-            try: score = str(float(self.data))
+        # Name
+        if self.name is not None: s += '\t' + self.name
+        else: s += '\t' + self.toString()
+        # Score
+        if not self.data: score = "."
+        else:
+            data = self.data.split("\t")
+            try: score = str(float(data[0]))
             except: score = "."
-            s += '\t' + score
-            s += '\t' + self.orientation
-        if self.data is not None:
-            s += '\t' + str(self.data)
+        s += '\t' + score
+        # Orientation
+        if self.orientation: s += '\t' + self.orientation
+        else: s += '\t' + "."
+        # Else
+        if self.data:
+            s += '\t' + "\t".join(data[1:])
         return s
 
     def __hash__(self):
@@ -118,3 +125,22 @@ class GenomicRegion:
                     return 1
                 else:
                     return 0
+
+    def extract_blocks(self):
+        """Extract the block information in self.data in to GenomicRegionSet"""
+        z = []
+        data = self.data.split("\t")
+        nexon = int(data[4])
+        width = data[5].split(",")
+        posit = data[6].split(",")
+        for i in range(nexon):
+            if self.orientation == "-":
+                n = "_exon_"+str(nexon - i)
+            else:
+                n = "_exon_"+str(i + 1)
+                
+            z.append(GenomicRegion(chrom=self.chrom, 
+                                   initial=self.initial+int(posit[i]), 
+                                   final=self.initial+int(posit[i])+int(width[i]), 
+                                   name=self.name+n, orientation=self.orientation, data=data[0] ))
+        return z

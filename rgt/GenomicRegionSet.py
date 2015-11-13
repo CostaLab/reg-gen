@@ -551,7 +551,7 @@ class GenomicRegionSet:
         a = self
         b = y
         
-        z = GenomicRegionSet(a.name + "_" + b.name)
+        z = GenomicRegionSet(a.name + " + " + b.name)
         # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
         if len(a) == 0 or len(b) == 0: return z
         
@@ -667,6 +667,8 @@ class GenomicRegionSet:
         2. B - A
         3. intersection of A and B
         """
+        #a = self
+        #b = regionset
         a = copy.deepcopy(self)
         b = copy.deepcopy(regionset)
 
@@ -1046,14 +1048,14 @@ class GenomicRegionSet:
             a.sequences.extend(region_set.sequences)
             if change_name:
                 if a.name == "" : a.name = region_set.name
-                else: a.name = a.name + "_" + region_set.name
+                else: a.name = a.name + " + " + region_set.name
             a.sorted = False
             return a
         else:
             self.sequences.extend(region_set.sequences)
             if change_name:
                 if self.name == "" : self.name = region_set.name
-                else: self.name = self.name + "_" + region_set.name
+                else: self.name = self.name + " + " + region_set.name
             self.sorted = False
         
     def cluster(self,max_distance):
@@ -1649,3 +1651,13 @@ class GenomicRegionSet:
                     j = j + 1
                     cont_overlap = False
         return coverages
+
+    def extract_blocks(self):
+        regions = []
+        for rg in self:
+            try: 
+                z = rg.extract_blocks()
+            except:
+                z = [ rg ]
+            regions = regions + z
+        self.sequences = regions

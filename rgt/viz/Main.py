@@ -174,10 +174,10 @@ def main():
     parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.')
     
     parser_jaccard.add_argument('-o', help=helpoutput) 
-    parser_jaccard.add_argument('-r', '--reference',help=helpreference)
-    parser_jaccard.add_argument('-q', '--query', help=helpquery)
-    parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
-    parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
+    parser_jaccard.add_argument('-r', metavar='  ',help=helpreference)
+    parser_jaccard.add_argument('-q', metavar='  ', help=helpquery)
+    parser_jaccard.add_argument('-t', metavar='  ', default='jaccard_test', help=helptitle)
+    parser_jaccard.add_argument('-rt',metavar='  ', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
     parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
@@ -190,9 +190,9 @@ def main():
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
     
     parser_combinatorial.add_argument('-o', help=helpoutput)
-    parser_combinatorial.add_argument('-r', '--reference',help=helpreference)
-    parser_combinatorial.add_argument('-q', '--query', help=helpquery)
-    parser_combinatorial.add_argument('-t','--title', default='combinatorial_test', help=helptitle)
+    parser_combinatorial.add_argument('-r', metavar='  ', help=helpreference)
+    parser_combinatorial.add_argument('-q', metavar='  ', help=helpquery)
+    parser_combinatorial.add_argument('-t', metavar='  ', default='combinatorial_test', help=helptitle)
     parser_combinatorial.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_combinatorial.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
@@ -205,6 +205,7 @@ def main():
     parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
     parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
@@ -415,7 +416,7 @@ def main():
                 inter.stest(repeat=args.stest,threshold=args.tc)
             
             # generate html
-            inter.gen_html(args.o, args.t, align=50, args=args)
+            inter.gen_html(directory=args.o, title=args.t, align=50, args=args)
             
             t1 = time.time()
             print2(parameter, "\nAll related files are saved in:  "+ os.path.join(os.path.basename(args.o),args.t))
@@ -467,7 +468,8 @@ def main():
         if args.mode == 'combinatorial':
             print("\n############ Combinatorial Test ############")
             # Fetching reference and query EM
-            comb = Combinatorial(args.reference,args.query, mode_count=args.m, organism=args.organism)
+            #comb = Combinatorial(args.r,args.q, mode_count=args.m, organism=args.organism)
+            inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
             # Setting background
             inter.background(args.bg)
             # Grouping
@@ -491,22 +493,28 @@ def main():
             #if args.stackedbar:
             #inter.colors(args.c, args.color,ref_que = "ref")
             inter.comb_stacked_plot()
-            output(f=inter.sbar, directory = args.o, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
+            
+
+            output(f=inter.sbar, directory = args.o, folder = args.t, filename="intersection_stackedbar",
+                   extra=plt.gci(), pdf=True, show=args.show)
+            if args.venn:
+                inter.comb_venn(filename = os.path.join(args.o, args.t, "intersection_venn.png"))
+                
             #if args.lineplot:
             #    inter.comb_lineplot()
             if args.stest > 0:
                 inter.stest(repeat=args.stest,threshold=args.tc)
             # generate html
-            inter.gen_html_comb(args.o, args.title, align=50)
+            inter.gen_html_comb(directory=args.o, title=args.t, align=50, args=args)
             
-            parameter = parameter + inter.parameter
+            #parameter = parameter + inter.parameter
             t1 = time.time()
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
+            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            output_parameters(parameter, directory = args.o, folder = args.title, filename="parameters.txt")
-            copy_em(em=args.reference, directory=args.o, folder=args.title, filename="Reference_experimental_matrix.txt")
-            copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
-            list_all_index(path=args.o)
+            output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
+            copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
+            copy_em(em=args.q, directory=args.o, folder=args.t, filename="Query_experimental_matrix.txt")
+            #list_all_index(path=args.o)
 
         ###########################################################################
         ################### Boxplot ##########################################

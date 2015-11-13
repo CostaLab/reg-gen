@@ -1,6 +1,8 @@
 ToDo:
 - input scaling factor fails sometimes... make it to 1 (?) if this is the case
 - bw tools automatically in bin PATH
+- strand lag for ODIN?
+- TMM for ODIN?
 
 done
 - foldchange option is now available, was deprecated for some reasons
