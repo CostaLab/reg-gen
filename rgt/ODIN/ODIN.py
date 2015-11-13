@@ -9,7 +9,7 @@ from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
 import numpy as np
-from rgt.THOR.tracker import Tracker
+from rgt.ODIN.tracker import Tracker
 from dpc_help import get_bibtex_entry, verify_chrom_in_paths
 
 from random import sample

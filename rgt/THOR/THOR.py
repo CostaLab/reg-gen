@@ -42,7 +42,7 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
             break
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, verbose=options.verbose, \
-                                          outputdir = options.outputdir, report=options.report)
+                                          outputdir = options.outputdir, report=options.report, poisson = options.poisson)
     exp_data.compute_putative_region_index()
     
     print('Compute HMM\'s training set', file=sys.stderr)

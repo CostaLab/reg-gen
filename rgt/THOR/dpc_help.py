@@ -1,5 +1,5 @@
 """
-%prog [CONFIG]
+%prog [options] CONFIG
 
 Find differential peaks in multiple ChIP-seq profiles 
 between two distinct biological conditions.
@@ -156,10 +156,12 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     
     return data_rep
     
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, sample_size=5000):
+def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
+    
+    
     
     while not done:
         data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
@@ -179,9 +181,19 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
     
     if report:
         _plot_func(plot_data, outputdir)
-                
+    
+    print(res, file=sys.stderr)
+    
+    if poisson:
+        print("Use Poisson distribution as emission", file=sys.stderr)
+        p[0] = 0
+        p[1] = 0
+        res = [np.array([0, 0]), np.array([0, 0])]
+    
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
-
+    
+    
+    
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     print("Computing info...", file=sys.stderr)
     f = open(name + '-posts.bed', 'w')
@@ -527,6 +539,8 @@ def input(laptop):
                           help="Number of bins the HMM's training set constists of. [default: %default]")
         group.add_option("--par", dest="par", default=1, type="int",\
                           help="Percentile for p-value postprocessing filter. [default: %default]")
+        group.add_option("--poisson", default=False, dest="poisson", action="store_true", \
+                          help="Use binomial distribution as emmission. [default: %default]")
         
         parser.add_option_group(group)
         

@@ -49,14 +49,11 @@ def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
     chrom_bams = set()
     chrom_genome = set()
     chrom_chrom_sizes = set()
-    
     #check bam files
-    for bamfile in [bamfile1, bamfile2]:
-        bam = pysam.Samfile(bamfile, "rb" )
-        for read in bam.fetch():
-            c = bam.getrname(read.reference_id)
-        if c not in chrom_bams:
-            chrom_bams.add(c)
+    chrom_bams_1 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile1)))
+    chrom_bams_2 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile2)))
+    chrom_bams = chrom_bams_1 & chrom_bams_2
+    
     
     #check chrom_sizes
     with open(chrom_sizes) as f:
@@ -64,18 +61,18 @@ def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
             line = line.split('\t')
             if line[0] not in chrom_chrom_sizes:
                 chrom_chrom_sizes.add(line[0])
-
+    
     tmp = chrom_bams & chrom_chrom_sizes
     if len(tmp) == 0:
         return False
-
+    
     #check genome
     for s in FastaReader(genome_path):
         if s.name not in chrom_genome:
             chrom_genome.add(s.name)
 	    if s.name in tmp: #one overlap is sufficient
 		return True
-
+    
     return len(chrom_bams & chrom_genome & chrom_chrom_sizes) >= 1
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
@@ -467,7 +464,7 @@ def input(test):
             options.verbose = True
         
         if options.version:
-            version = "version \"0.4\""
+            version = "version \"0.4.1\""
             print("")
             print(version)
             sys.exit()
