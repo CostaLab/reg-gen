@@ -122,7 +122,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(set(ks))
             else:
                 n = len(exps.fieldsDict[colorby].keys())
-            print(n)
+            #print(n)
             #colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
             colors = plt.cm.Dark2(numpy.linspace(0, 1, n)).tolist()
     return colors
@@ -325,8 +325,19 @@ def compute_coverage(input):
     
     ts = time.time()
     cov = CoverageSet(input[0].name+".", input[0])
-    cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
-    cov.normRPM()
+
+
+    if "Conservation" in input[1]:
+        cov.phastCons46way_score(stepsize=input[4])
+    elif ".bigWig" in input[1] or ".bw" in input[1]:
+        cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
+    else:
+        cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+        cov.normRPM()
+
+
+    #cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+    #cov.normRPM()
     # When bothends, consider the fliping end
     if input[5] == 'bothends':
         flap = CoverageSet("for flap", input[0])
@@ -1097,6 +1108,7 @@ class Combinatorial:
                     pr = self.posi2region(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
+
 ###########################################################################################
 #                    Inersection test
 ###########################################################################################
@@ -1224,14 +1236,19 @@ class Intersect:
                         else:
                             self.qlen[ty][output[0]] = output[2]
                             self.counts[ty][r.name][output[0]] = output[3]
-                            try: self.frequency[ty][output[0]].append(output[3][2])       
-                            except: self.frequency[ty][output[0]] = [ output[3][2] ]
+                            #print(r.name)
+                            #print(output[0])
+                            #print(output[3])
+                            try: self.frequency[ty][output[0]][r.name] = output[3][2]
+                            except: 
+                                self.frequency[ty][output[0]] = {}
+                                self.frequency[ty][output[0]][r.name] = output[3][2]
                             #print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
-        print(self.nalist)
-        print(self.qlen)
-        print(self.counts)
-        print(self.frequency)
-        sys.stdout.flush()
+        #print(self.nalist)
+        #print(self.qlen)
+        #print(self.counts)
+        #print(self.frequency)
+        #sys.stdout.flush()
 
     def barplot(self, logt=False, percentage=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
@@ -1554,8 +1571,9 @@ class Intersect:
             sys.stdout.flush()
 
             for ind_q, q in enumerate(self.frequency[ty].keys()):
-                
-                data_table.append([q,  str(self.qlen[ty][q]), ",".join([ str(v).rjust(7, " ") for v in self.frequency[ty][q]])])
+                html.add_figure("venn_"+ty+"_"+q+".png", align="center",  width="600")
+                data_table.append([q,  str(self.qlen[ty][q]), 
+                                   ",".join([ str(v).rjust(7, " ") for v in self.frequency[ty][q].values()])])
                 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
             
@@ -1567,10 +1585,10 @@ class Intersect:
                 q1 = self.frequency[ty].keys()[q[0]]
                 q2 = self.frequency[ty].keys()[q[1]]
                 
-                sumqf = [x + y for x, y in zip(self.frequency[ty][q1], self.frequency[ty][q2])]
+                sumqf = [x + y for x, y in zip(self.frequency[ty][q1].values(), self.frequency[ty][q2].values())]
                 nonzero = [i for i, e in enumerate(sumqf) if e != 0]
-                qf1 = [self.frequency[ty][q1][i] for i in nonzero ]
-                qf2 = [self.frequency[ty][q2][i] for i in nonzero ]
+                qf1 = [self.frequency[ty][q1].values()[i] for i in nonzero ]
+                qf2 = [self.frequency[ty][q2].values()[i] for i in nonzero ]
                 
                 
                 chisq, p, dof, expected = stats.chi2_contingency([qf1,qf2])
@@ -1732,10 +1750,12 @@ class Intersect:
                     except: q_label.append(q)
                 width = 0.6
                 bottom = 0
-                summ = sum(self.frequency[ty][q])
-                for ind_r, rc in enumerate(self.frequency[ty][q]):
+                summ = sum(self.frequency[ty][q].values())
+                for ind_r,r in enumerate(self.referencenames):
+                #for ind_r, rc in enumerate(self.frequency[ty][q]):
+                    rc = self.frequency[ty][q][r]
                     if ind_q == 0: 
-                        r = self.groupedreference[ty][ind_r].name
+                        #r = self.groupedreference[ty][ind_r].name
                         r_label.append(r)
                     x = ind_q
                     y = rc/summ # intersect number
@@ -1766,14 +1786,27 @@ class Intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.sbar = f
         
-    def comb_venn(self, filename):
+    def comb_venn(self, directory):
         if len(self.references) == 2:
             print(2)
         elif len(self.references) == 3:
-            plt.figure(figsize=(4,4))
-            plt.title("Venn diagram of references")
-            self.venn = venn3(subsets = (1, 1, 1, 2, 1, 2, 2), set_labels = self.referencenames)
-            plt.savefig(filename)
+            for ind_ty, ty in enumerate(self.groupedreference.keys()):
+                for q in self.query:
+                    plt.figure(figsize=(6,4))
+                    plt.title("Venn Diagram: "+q.name)
+                    freq = []
+                    for r in self.groupedreference[ty]:
+                        freq.append(self.frequency[ty][q.name][r.name])
+
+                    
+                    #print([r.name for r in self.groupedreference[ty]])
+                    self.venn = venn3(subsets = [ freq[i] for i in [0,1,3,2,4,5,6] ], 
+                                      set_labels =[ n.name for n in self.references ] )
+                    plt.annotate(str(len(q) - sum(freq)), xy=(0.1, 0.1), xytext=(-120, -120),
+                                 ha='left', textcoords='offset points', 
+                                 bbox=dict(boxstyle='round,pad=0.5', fc='gray', alpha=0.1))
+                    plt.savefig(os.path.join(directory, "venn_"+ty+"_"+q.name+".png"))
+                    plt.savefig(os.path.join(directory, "venn_"+ty+"_"+q.name+".pdf"), format='pdf')
         else:
             print("*** For plotting Venn diagram, the number of references must be 2 or 3.")
         
@@ -2876,4 +2909,85 @@ class Lineplot:
 
 
 
+###########################################################################################
+#                    Venn Diagram
+###########################################################################################
+
+class Venn:
+    def __init__(self, sets, organism):
+        self.sets = sets
+        self.num = len(sets)
+        self.organism = organism
+        self.process_genesets()
+
+    def process_genesets(self):
+        self.gene_sets = []
+        for gs in self.sets:
+            if gs.endswith(".bed"):
+                gregions = GenomicRegionSet(gs)
+                gregions.read_bed(gs)
+                associated_gr = gregions.gene_association(organism=self.organism, 
+                    promoterLength=1000, threshDist=0, show_dis=False)
+                genes = []
+                for r in associated_gr: 
+                    if ":" in r.name:
+                        rgg = r.name.upper().split(":")
+                        genes += rgg
+                    else: genes.append(r.name.upper())
+                self.gene_sets.append(set(genes))
+                
+            elif gs.endswith(".txt"):
+                genes = []
+                with open(gs) as f:
+                    for line in f:
+                        g = line.strip().split()
+                        genes.append(g[0].upper())
+                self.gene_sets.append(set(genes))
+
+    def venn_diagram(self, directory, title, labels):
+        
+        if len(self.sets) == 2: 
+            from matplotlib_venn import venn2
+
+            f = plt.figure(figsize=(10,10))
+            inter = len(self.gene_sets[0].intersection(self.gene_sets[1]))
+            fig_venn = venn2(subsets = (len(self.gene_sets[0]) - inter, inter, len(self.gene_sets[1]) - inter),
+                             set_labels = (self.sets[0].partition("/")[2].partition(".")[0], 
+                                           self.sets[1].partition("/")[2].partition(".")[0]))
+            plt.title("Sample Venn diagram")
+            return f
+
+        elif len(self.sets) == 3:
+            from matplotlib_venn import venn3
+            def write_genes(filename, geneset):
+                with open(filename, "w") as g:
+                    for gene in geneset: print(gene, file=g)
+
+            f = plt.figure(figsize=(10,10))
+
+            s100 = self.gene_sets[0] - self.gene_sets[1] - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+".txt"),
+                        geneset=s100)
+            s010 = self.gene_sets[1] - self.gene_sets[0] - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[1]+".txt"),
+                        geneset=s010)
+            s001 = self.gene_sets[2] - self.gene_sets[0] - self.gene_sets[1]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[2]+".txt"),
+                        geneset=s001)
+            s111 = self.gene_sets[0].intersection(self.gene_sets[1].intersection(self.gene_sets[2]))
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[1]+"_"+labels[2]+".txt"),
+                        geneset=s111)
+            s110 = self.gene_sets[0].intersection(self.gene_sets[1]) - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[1]+".txt"),
+                        geneset=s110)
+            s011 = self.gene_sets[1].intersection(self.gene_sets[2]) - self.gene_sets[0]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[1]+"_"+labels[2]+".txt"),
+                        geneset=s011)
+            s101 = self.gene_sets[0].intersection(self.gene_sets[2]) - self.gene_sets[1]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[2]+".txt"),
+                        geneset=s101)
+            
+            fig_venn = venn3(subsets = (len(s100),len(s010),len(s110),len(s001),len(s101),len(s011),len(s111)),
+                             set_labels = labels)
+            return f
 

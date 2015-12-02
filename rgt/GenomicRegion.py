@@ -133,9 +133,11 @@ class GenomicRegion:
         nexon = int(data[4])
         width = data[5].split(",")
         posit = data[6].split(",")
+        reverse = False
         for i in range(nexon):
             if self.orientation == "-":
                 n = "_exon_"+str(nexon - i)
+                reverse = True
             else:
                 n = "_exon_"+str(i + 1)
                 
@@ -143,4 +145,5 @@ class GenomicRegion:
                                    initial=self.initial+int(posit[i]), 
                                    final=self.initial+int(posit[i])+int(width[i]), 
                                    name=self.name+n, orientation=self.orientation, data=data[0] ))
-        return z
+        if reverse: return z[::-1]
+        else: return z

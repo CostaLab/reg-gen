@@ -16,7 +16,7 @@ from shutil import copyfile
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.Util import GenomeData, OverlapType, Html
-from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot
+from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot, Venn
 
 dir = os.getcwd()
 """
@@ -231,7 +231,7 @@ def main():
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    choice_center = ['midpoint','leftend','rightend','bothends','upstream','downstream'] 
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_lineplot.add_argument('input', help=helpinput)
@@ -288,6 +288,21 @@ def main():
     parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
+    ################### Venn Diagram ########################################
+    parser_venn = subparsers.add_parser('venn', help='Generate Venn Diagram with peaks of gene list.')
+    
+    parser_venn.add_argument('-s1', metavar='  ', default=None, help="Define the file for gene set 1 (BED or gene list)")
+    parser_venn.add_argument('-s2', metavar='  ', default=None, help="Define the file for gene set 2 (BED or gene list)")
+    parser_venn.add_argument('-s3', metavar='  ', default=None, help="Define the file for gene set 3 (BED or gene list)")
+    parser_venn.add_argument('-s4', metavar='  ', default=None, help="Define the file for gene set 3 (BED or gene list)")
+    parser_venn.add_argument('-l1', metavar='  ', default=None, help="Define label on venn diagram for set 1")
+    parser_venn.add_argument('-l2', metavar='  ', default=None, help="Define label on venn diagram for set 2")
+    parser_venn.add_argument('-l3', metavar='  ', default=None, help="Define label on venn diagram for set 3")
+    parser_venn.add_argument('-l4', metavar='  ', default=None, help="Define label on venn diagram for set 4")
+    parser_venn.add_argument('-o', metavar='  ', help=helpoutput)
+    parser_venn.add_argument('-t', metavar='  ', default='venn_diagram', help=helptitle)
+    parser_venn.add_argument('-organism', metavar='  ', help='Define the organism. ')
+
     ################### Integration ##########################################
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
     parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
@@ -498,7 +513,7 @@ def main():
             output(f=inter.sbar, directory = args.o, folder = args.t, filename="intersection_stackedbar",
                    extra=plt.gci(), pdf=True, show=args.show)
             if args.venn:
-                inter.comb_venn(filename = os.path.join(args.o, args.t, "intersection_venn.png"))
+                inter.comb_venn(directory = os.path.join(args.o, args.t))
                 
             #if args.lineplot:
             #    inter.comb_lineplot()
@@ -681,3 +696,14 @@ def main():
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)
+
+        
+        ################### Venn Diagram ##########################################
+        if args.mode=='venn':
+            print("\n################# Venn Diagram ###############")
+            if not os.path.exists(os.path.join(args.o, args.t)):
+                os.makedirs(os.path.join(args.o, args.t))
+            sets = [s for s in [args.s1, args.s2, args.s3, args.s4] if s ]
+            venn = Venn(sets=sets, organism=args.organism)
+            f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
+            output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)

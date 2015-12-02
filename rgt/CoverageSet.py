@@ -280,7 +280,11 @@ class CoverageSet:
             for i in range(0, gr.final-gr.initial):
                 d = [ depth[j] for j in range(i,i+stepsize) ]
                 ds.append(sum(d)/len(d))
-            self.coverage.append( np.array(ds) )
+
+            if gr.orientation == "-":
+                self.coverage.append( np.array(list(reversed(ds))) )
+            else:
+                self.coverage.append( np.array(ds) )
 
         bwf.close()
         
@@ -295,10 +299,32 @@ class CoverageSet:
             for i in range(0, gr.final-gr.initial):
                 d = [ depth[j] for j in range(i,i+stepsize) ]
                 ds.append(sum(d)/len(d))
-            self.coverage.append( np.array(ds) )
+                
+            if gr.orientation == "-":
+                self.coverage.append( np.array(list(reversed(ds))) )
+            else:
+                self.coverage.append( np.array(ds) )
+
             bwf.close()
 
+    def count_unique_reads(self, bamFile):
+        """Count the number of unique reads on the given GenomicRegionSet"""
+        bam = pysam.Samfile(bamFile, "rb" )
+        #self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+        reads = []
+        for i,region in enumerate(self.genomicRegions):
+            #print(bam.fetch(region.chrom,region.initial,region.final))
+            #try:
+            for r in bam.fetch(region.chrom,region.initial,region.final):
+                reads.append(r.qname)
+            #except:
+            #    print("\tError: "+str(region))
+
+        reads = list(set(reads))
+        return len(reads)
         
+
+
 #     def coverage_from_bam(self, bamFile, readSize = 200, binsize = 100, stepsize = 50, rmdup = False, mask_file=None, get_pos=False):
 #         """Return list of arrays describing the coverage of each genomicRegions from <bamFile>. 
 #         Consider reads in <bamFile> with a length of <readSize>.

@@ -834,7 +834,8 @@ class PromoterTest:
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
-                REGION_chr3_51978050_51983935_-_"""
+                REGION_chr3_51978050_51983935_-_
+            or  chr3:51978050-51983935 -    """
         self.rna_regions = []
         with open(rna) as f:
             for line in f:
@@ -850,6 +851,18 @@ class PromoterTest:
                                     self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
                                 except:
                                     self.rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
+                    
+                    elif "chr" in line:
+                        line = line.partition("chr")[2]
+                        chrom = "chr" + line.partition(":")[0]
+                        start = int(line.partition(":")[2].partition("-")[0])
+                        end = int(line.partition(":")[2].partition("-")[2].split()[0])
+                        sign = line.partition(":")[2].partition("-")[2].split()[1]
+                        if sign == "+" or sign == "-" or sign == ".":
+                            self.rna_regions.append([chrom, start, end, sign])
+
+                        else:
+                            print(line)
 
                     else:
                         self.rna_regions = None

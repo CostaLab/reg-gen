@@ -1355,6 +1355,10 @@ class GenomicRegionSet:
             leftend      -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
             rightend      -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
             bothends  -- locate the new region's center as original region's both ends
+            downstream -- rightend in positive strand and leftend in negative strand
+            upstream -- leftend in positive strand and rightend in negative strand
+            
+
         left_length:
         right_length:
             The length to extend from the center
@@ -1373,6 +1377,20 @@ class GenomicRegionSet:
             elif center == 'rightend':
                 nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
                                    orientation = r.orientation, data = r.data, proximity = r.proximity)
+            elif center == 'downstream':
+                if r.orientation == "-":
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
+                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
+                else:
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
+                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
+            elif center == 'upstream':
+                if r.orientation == "-":
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
+                                       orientation = r.orientation, data = r.data, proximity = r.proximity)                    
+                else:
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
+                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
             elif center == 'bothends':
                 nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
                                    orientation = r.orientation, data = r.data, proximity = r.proximity) # newbed on left end
