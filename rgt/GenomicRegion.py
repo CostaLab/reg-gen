@@ -147,3 +147,13 @@ class GenomicRegion:
                                    name=self.name+n, orientation=self.orientation, data=data[0] ))
         if reverse: return z[::-1]
         else: return z
+
+    def distance(self, y):
+        """Return the distance between two GenomicRegions. If overlapping, return 0; 
+           if on different chromosomes, return None"""
+        if self.chrom == y.chrom:
+            if self.overlap(y): return 0
+            elif self < y: return y.initial - self.final
+            else: return self.initial - y.final
+        else:
+            return None

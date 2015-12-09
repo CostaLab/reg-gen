@@ -751,7 +751,7 @@ class GenomicRegionSet:
                 len_21 = allbed2 - len_inter
                 return len_12, len_21, len_inter
              
-    def closest(self,y):
+    def closest(self,y, distance=False):
         """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 
            If there are intersection, return False.
         
@@ -762,49 +762,116 @@ class GenomicRegionSet:
         z -- the region(s) which is nearest to self
         
         """
+
+        def jump_s(s, j, mind, last_j):
+            try: 
+                s = con_self.next()
+                #print(s)
+                mind = float("inf")
+                j = lastj
+                cont_loop = True
+                return s, mind, j, cont_loop
+            except: 
+                #print(mind)
+                cont_loop = False
+                return s, mind, j, cont_loop
+
         if len(self) == 0 or len(y) == 0:
             return GenomicRegionSet('Empty set') 
-        elif len(self.intersect(y)) != 0:
-            return False
+        #elif len(self.intersect(y)) != 0:
+        #    if distance:
+        #        return 0
+        #    else:
+        #        return False
         else:
-            z_dict = {}  # For storing the distance and the regions
+            #z_dict = {}  # For storing the distance and the regions
+            if distance: z = []
+            else: z = GenomicRegionSet("closest regions")
+            #dict_r = {}
+        
             if self.sorted == False: self.sort()
             if y.sorted == False: y.sort()
+        
             con_self = iter(self)
-            con_y = iter(y)
+
             s = con_self.next()
-            ss = con_y.next()
+            j = 0
+            last_j = 0
+            mj = len(y)
+            mins = y[j]
             cont_loop = True
+
+            mind = float("inf")
+
             while cont_loop:
-                if s.chrom == ss.chrom:
-                    # ----
-                    #        ------
-                    if s < ss:
-                        z_dict[ss.initial - s.final] = ss
-                        try: s = con_self.next()
-                        except: cont_loop = False
-                    #          ------
-                    #  -----
-                    elif s > ss:
-                        z_dict[s.initial - ss.final] = ss
-                        try: ss = con_y.next()
-                        except: cont_loop = False
-                elif s.chrom != ss.chrom:
-                    if s < ss:
-                        try: s = con_self.next()
-                        except: cont_loop = False
-                    elif s > ss:
-                        try: ss = con_y.next()
-                        except: cont_loop = False
+                
+                d = s.distance(y[j])
+                #print(str(y[j])+"\t"+str(d)+"\t"+str(s))
+
+                if d == 0:
+                # Overlap
+                    if distance: z.append(0)
+                    else: 
+                        try: gn = "close_to_"+s.name
+                        except: gn = "close_to_"+s.toString()
+                        g = GenomicRegion(chrom=y[j].chrom, initial=y[j].initial, 
+                                          final=y[j].final, name=gn, 
+                                          orientation=y[j].orientation )
+                        z.add(g)
+                    #dict_r[s.toString()] = j
+                    last_j = j
+                    s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
+ 
+                elif not d:
+                # different chromosomes
+                    if searching and mind != float("inf"):
+                        if distance: z.append(mind)
+                        else: 
+                            try: gn = "close_to_"+s.name
+                            except: gn = "close_to_"+s.toString()
+                            g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
+                                              final=y[last_j].final, name=gn, 
+                                              orientation=y[last_j].orientation )
+                            z.add(g)
+                        #dict_r[s.toString()] = lastj
+                        searching = False
+                    
+                    if s > y[j]:
+                        try: j += 1
+                        except: s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
+                    elif s < y[j]:
+                        s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
+                    
+
+                else:
+                # on the same chromosome but different loci
+                    if d < mind:
+                        mind = d
+                        lastj = j
+                        try: j += 1
+                        except: s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
+
+                    elif d > mind:
+                        #print(mind)
+                        
+                        if distance: z.append(mind)
+                        else: 
+                            try: gn = "close_to_"+s.name
+                            except: gn = "close_to_"+s.toString()
+                            g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
+                                              final=y[last_j].final, name=gn, 
+                                              orientation=y[last_j].orientation )
+                            z.add(g)
+                        #dict_r[s.toString()] = lastj
+                        s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
+
+                    searching = True
+
+                if j == mj: cont_loop = False
             
-            if len(z_dict.keys()) == 0:
-                return GenomicRegionSet('Empty set')
-            else:
-                minimum_distance = min(z_dict.keys())
-                z = GenomicRegionSet('Closest region')
-                z.add(z_dict[minimum_distance])
-                return z
             
+            return z
+        
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
         if self.sorted == False: self.sort()
