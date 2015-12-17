@@ -60,26 +60,26 @@ if __name__ == "__main__":
     ############### GTF add transcripts ######################################
     parser_gtfat = subparsers.add_parser('gtf_add_transcripts', 
                                          help="[GTF] Add transcripts from the existed exons")
-    parser_gtfat.add_argument('-i', '-input', type=str, help="Input GTF file")
-    parser_gtfat.add_argument('-o', '-output', type=str, help="Output GTF file")
+    parser_gtfat.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
+    parser_gtfat.add_argument('-o', metavar='  ', type=str, help="Output GTF file")
 
     ############### GTF to BED ###############################################
     parser_gtf2bed = subparsers.add_parser('gtf_to_bed', 
                                            help="[GTF] Convert GTF file to BED by the given biotype")
-    parser_gtf2bed.add_argument('-i', '-input', type=str, help="Input GTF file")
-    parser_gtf2bed.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-t', '-target', type=str, help="Define the target Biotype\
+    parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
+    parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_gtf2bed.add_argument('-t', metavar='  ', type=str, help="Define the target Biotype\
                                                                  (e.g. gene or exon or transcript...)")
-    parser_gtf2bed.add_argument('-b', '-block', action="store_true", 
+    parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
 
     ############### GTF to FASTA #############################################
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
                                              help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
-    parser_gtf2fasta.add_argument('-i', '-input', type=str, help="Input GTF file")
-    parser_gtf2fasta.add_argument('-o', '-output', type=str, help="Output FASTA file")
-    parser_gtf2fasta.add_argument('-t', '-transcript', type=str, help="Define the target transcript")
-    parser_gtf2fasta.add_argument('-g', '-gene', type=str, help="Define the target gene")
+    parser_gtf2fasta.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
+    parser_gtf2fasta.add_argument('-o', metavar='  ', type=str, help="Output FASTA file")
+    parser_gtf2fasta.add_argument('-t', metavar='  ', type=str, help="Define the target transcript")
+    parser_gtf2fasta.add_argument('-g', metavar='  ', type=str, help="Define the target gene")
     parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
     
     ############### BED add score ############################################
@@ -87,6 +87,18 @@ if __name__ == "__main__":
     parser_bedac.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedac.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', type=str, help="Define value to add")
+
+    ############### BED rename ###############################################
+    parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
+    parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
+    parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_bedrename.add_argument('-d', action="store_true", help="Show the distance")
+    parser_bedrename.add_argument('-organism',metavar='  ', type=str, help="Define the organism")
+    parser_bedrename.add_argument('-l', metavar='  ', type=int, default=1000, 
+                                  help="Define the length of promoter region (default:1000 bp)")
+    parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
+                                  help="Define the threshold of distance (default:50000bp")
+    
 
     ############### BED extend ###############################################
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
@@ -255,6 +267,20 @@ if __name__ == "__main__":
             for line in f:
                 line = line.strip() 
                 print(line+"\t"+args.v, file=g)
+
+    ############### BED rename regions #######################################
+    elif args.mode == "bed_rename":
+        print(tag+": [BED] Rename regions by associated genes")
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
+
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        renamebed = bed.gene_association(gene_set=None, organism=args.organism, 
+                                         promoterLength=args.l, 
+                                         threshDist=args.t, show_dis=args.d)
+        renamebed.write_bed(args.o)
 
     ############### BED extend ###############################################
     elif args.mode == "bed_extend":
