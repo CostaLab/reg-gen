@@ -3,10 +3,14 @@
 """
 %prog <BAM> <BAM> <FASTA> <CHROM SIZES>
 
-Find differential peaks between two <BAM> files in <FASTA> genome.
+ODIN detects differential peaks in two ChIP-seq profiles associated
+with two distinct biological conditions.
 
-Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+Copyright (C) 2014-2016  Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
+This program comes with ABSOLUTELY NO WARRANTY. This is free 
+software, and you are welcome to redistribute it under certain 
+conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function

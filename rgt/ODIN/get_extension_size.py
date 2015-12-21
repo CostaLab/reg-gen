@@ -1,6 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+ODIN detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
+
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 Estimate extension size of reads for an ChIP-seq experiment.
 
 Author: Manuel Allhoff
@@ -16,6 +34,8 @@ Methods:
 
 get_extension_size(bamfile)
 Return shift/extension size of reads descriebed by BAM file.
+
+@author: Manuel Allhoff
 
 """
 

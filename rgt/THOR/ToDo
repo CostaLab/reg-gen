@@ -1,3 +1,6 @@
+- GPL v3 license
+- bw tools automatically in PATH
+
 ToDo:
  - remove ngslib from dependencies of website
  - narrowPeak, Bed file p-value bug
@@ -5,5 +8,3 @@ ToDo:
 
 THOR-0.1
  - no ngslib dependies any longer
-
-Can anything inherit? MultiCoverageSet inherits from DualCoverageSet? dpc_help (THOR) from the one of ODIN?

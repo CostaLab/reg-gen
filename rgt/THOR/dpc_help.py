@@ -1,11 +1,14 @@
 """
 %prog [options] CONFIG
 
-Find differential peaks in multiple ChIP-seq profiles 
-between two distinct biological conditions.
+THOR detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
 
-Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+Copyright (C) 2014-2016  Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
+This program comes with ABSOLUTELY NO WARRANTY. This is free 
+software, and you are welcome to redistribute it under certain 
+conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function
@@ -182,7 +185,6 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
     if report:
         _plot_func(plot_data, outputdir)
     
-    print(res, file=sys.stderr)
     
     if poisson:
         print("Use Poisson distribution as emission", file=sys.stderr)

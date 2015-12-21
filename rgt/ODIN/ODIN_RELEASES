@@ -5,6 +5,7 @@ ToDo:
 - TMM for ODIN?
 
 done
+- GPL v3 licence
 - foldchange option is now available, was deprecated for some reasons
 - bugfix when no-correction is on: filter by threshold that is given by option and do not output everything
 
