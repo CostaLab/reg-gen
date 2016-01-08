@@ -3,6 +3,7 @@ from rgt.GenomicRegionSet import *
 from rgt.GeneSet import *
 import numpy
 import sys
+import os
 from collections import *
 
 """

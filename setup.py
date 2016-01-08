@@ -1,4 +1,5 @@
 import sys # Cannot be changed
+import os
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
@@ -6,7 +7,7 @@ from shutil import copy, copytree
 import distutils.dir_util
 from errno import ENOTDIR
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Extension
 
 """
 Installs the RGT tool with standard setuptools options and additional
@@ -24,8 +25,8 @@ options specific for RGT.
 
 supported_platforms = ["linux","linux2","darwin"]
 if(platform not in supported_platforms):
-  print("ERROR: This package currently supports only unix-based systems (Linux and MAC OS X).")
-  exit(0)
+    print("ERROR: This package currently supports only unix-based systems (Linux and MAC OS X).")
+    exit(0)
 
 ###################################################################################################
 # Parameters
@@ -53,52 +54,52 @@ Tools Dictionary Standard:
 """
 tools_dictionary = {
 "core": (
-  None,
-  None,
-  [],
-  []
+    None,
+    None,
+    [],
+    []
 ),
 "motifanalysis": (
-  "rgt-motifanalysis",
-  "rgt.motifanalysis.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
-  ["data/bin/bedToBigBed","data/bin/bigBedToBed"]
+    "rgt-motifanalysis",
+    "rgt.motifanalysis.Main:main",
+    ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
+    ["data/bin/bedToBigBed","data/bin/bigBedToBed"]
 ), 
 "hint": (
-  "rgt-hint",
-  "rgt.HINT.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","hmmlearn>=0.1.1","pysam>=0.7.5"],
-  []
+    "rgt-hint",
+    "rgt.HINT.Main:main",
+    ["numpy>=1.4.0","scipy>=0.7.0","hmmlearn>=0.1.1","pysam>=0.7.5"],
+    []
 ), 
 "ODIN": (
-  "rgt-ODIN",
-  "rgt.ODIN.ODIN:main",
-  ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-  []
+    "rgt-ODIN",
+    "rgt.ODIN.ODIN:main",
+    ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
+    []
 ), 
 "THOR": (
-"rgt-THOR",
-"rgt.THOR.THOR:main",
-["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
-["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
+    "rgt-THOR",
+    "rgt.THOR.THOR:main",
+    ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
+    ["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
 ),                 
 "filterVCF": (
-"rgt-filterVCF",
-"rgt.filterVCF.filterVCF:main",
-["PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
-[]
+    "rgt-filterVCF",
+    "rgt.filterVCF.filterVCF:main",
+    ["PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
+    []
 ),
 "viz": (
-  "rgt-viz",
-  "rgt.viz.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
+    "rgt-viz",
+    "rgt.viz.Main:main",
+      ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0"],
   []
 ),
 "TDF": (
-  "rgt-TDF",
-  "rgt.triplex.Main:main",
-  ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5"],
-  []
+    "rgt-TDF",
+    "rgt.triplex.Main:main",
+    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5"],
+    []
 )
 }
 
@@ -255,7 +256,7 @@ for copy_folder in copy_files_dictionary.keys():
             except OSError as exc:
                 if exc.errno == ENOTDIR: 
                     copy(copy_source_file, copy_dest_file)
-                else: 
+                else:
                     raise
     
 ###################################################################################################
@@ -286,22 +287,42 @@ long_description =readme_file.read() + "nn"
 readme_file.close()
 
 # Setup Function
-setup(name = "RGT",
-      version = current_version,
-      description = short_description,
-      long_description = long_description,
-      classifiers = classifiers_list,
-      keywords = ", ".join(keywords_list),
-      author = ", ".join(author_list),
-      author_email = corresponding_mail,
-      license = license_type,
-      packages = find_packages(),
-      package_data = package_data_dictionary,
-      entry_points = current_entry_points,
-      install_requires = current_install_requires,
-      scripts = external_scripts
-)
 
+
+if "viz" in options.param_rgt_tool:
+    module_wig = Extension('wWigIO',['external/KentLib/wWigIO/wWigIO.c'],
+                           extra_link_args=['-DMACHTYPE_x86_64','-lz','-lm','external/KentLib/lib/jkweb.a'],
+                           extra_compile_args='-w -shared -fPIC -p -Iexternal/KentLib/inc'.split(' '))
+    setup(name = "RGT",
+          version = current_version,
+          description = short_description,
+          long_description = long_description,
+          classifiers = classifiers_list,
+          keywords = ", ".join(keywords_list),
+          author = ", ".join(author_list),
+          author_email = corresponding_mail,
+          license = license_type,
+          packages = find_packages(),
+          package_data = package_data_dictionary,
+          entry_points = current_entry_points,
+          install_requires = current_install_requires,
+          scripts = external_scripts,
+          ext_modules=[module_wig] )
+else:
+    setup(name = "RGT",
+          version = current_version,
+          description = short_description,
+          long_description = long_description,
+          classifiers = classifiers_list,
+          keywords = ", ".join(keywords_list),
+          author = ", ".join(author_list),
+          author_email = corresponding_mail,
+          license = license_type,
+          packages = find_packages(),
+          package_data = package_data_dictionary,
+          entry_points = current_entry_points,
+          install_requires = current_install_requires,
+          scripts = external_scripts )
 ###################################################################################################
 # Termination
 ###################################################################################################
@@ -319,5 +340,3 @@ if(current_user):
     current_user_uid = getpwnam(current_user).pw_uid
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(options.param_rgt_data_location,current_user_uid,current_user_gid,default_file_permission,default_path_permission)
-
-

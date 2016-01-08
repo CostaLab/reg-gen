@@ -56,7 +56,8 @@ class GenomicRegion:
         if not self.data: score = "."
         else:
             data = self.data.split("\t")
-            try: score = str(float(data[0]))
+            try: 
+                score = data[0]
             except: score = "."
         s += '\t' + score
         # Orientation

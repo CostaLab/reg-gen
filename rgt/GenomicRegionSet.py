@@ -73,10 +73,13 @@ class GenomicRegionSet:
             for s in self.sequences:
                 s.extend(left, right)
 
-    def sort(self):
+    def sort(self, key=None, reverse=False):
         """Sort Elements by criteria defined by a GenomicRegion"""
-        self.sequences.sort(cmp=GenomicRegion.__cmp__)
-        self.sorted = True
+        if key:
+            self.sequences.sort(key=key, reverse=reverse)
+        else:
+            self.sequences.sort(cmp=GenomicRegion.__cmp__)
+            self.sorted = True
 
     def read_bed(self, filename):
         """Read BED file and add every row as a GenomicRegion.
@@ -401,7 +404,8 @@ class GenomicRegionSet:
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
                 #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3], 
+                
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3],
                                              orientation=coord[4], proximity=new_prox_list))
              
         return result_grs
@@ -1747,7 +1751,7 @@ class GenomicRegionSet:
                     cont_overlap = False
                 except: 
                     cont_loop = False
-                    
+
             elif s > regionset[j]:
                 overlapping = False
                 if j == last_j:
@@ -1772,3 +1776,6 @@ class GenomicRegionSet:
                 z = [ rg ]
             regions = regions + z
         self.sequences = regions
+
+    def sort_score(self):
+        self.sort(key=lambda x: float(x.data.split("\t")[0]), reverse=True)
