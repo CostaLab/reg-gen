@@ -14,6 +14,29 @@ Contents:
 .. automodule:: GenomicRegion
     :members:
 
+.. automodule:: GenomicRegionSet
+    :members:
+
+.. automodule:: CoverageSet
+    :members:
+
+.. automodule:: AnnotationSet
+    :members:
+
+.. automodule:: ExperimentalMatrix
+    :members:
+
+.. automodule:: GeneSet
+    :members:
+
+.. automodule:: SequenceSet
+    :members:
+
+.. automodule:: Util
+    :members:
+
+.. automodule:: MotifSet
+    :members:
 
 Indices and tables
 ==================
