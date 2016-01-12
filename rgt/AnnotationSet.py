@@ -1,8 +1,8 @@
 import os
 import sys
 from copy import deepcopy
-from rgt.GenomicRegion import *
-from rgt.GenomicRegionSet import *
+#from rgt.GenomicRegion import *
+#from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData, MotifData, AuxiliaryFunctions
 
 """
