@@ -1,23 +1,24 @@
-"""
-A GenomicRegion describes a genomic region.
-
-Authors: Ivan G. Costa, Manuel Allhoff
-
-Define a GenomicRegion on [initial, final) on a particular chromosome.
-The coordinates are 0-based.
-
-Methods:
-
-extend(left, right):
-Extend the region to the left and right side.
-Negative values are allowed.
-
-overlap(region):
-Return true if region overlaps with argument-region, otherwise false.
-
-"""
-
 class GenomicRegion:
+    """
+    This class describes a genomic region.  
+    
+    Define a GenomicRegion on [initial, final) on a particular chromosome.
+    
+    .. note:
+        The coordinates are 0-based.
+    
+    Methods:
+    
+    extend(left, right):
+    Extend the region to the left and right side.
+    Negative values are allowed.
+    
+    overlap(region):
+    Return true if region overlaps with argument-region, otherwise false.
+    
+    Authors: Ivan G. Costa, Manuel Allhoff
+    
+    """
 
     #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
 
