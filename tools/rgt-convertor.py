@@ -82,6 +82,7 @@ if __name__ == "__main__":
     parser_gtf2fasta.add_argument('-g', metavar='  ', type=str, help="Define the target gene")
     parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
     
+    
     ############### BED add score ############################################
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
     parser_bedac.add_argument('-i', '-input', type=str, help="Input BED file")
@@ -255,8 +256,6 @@ if __name__ == "__main__":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
         
-
-
 
     ############### BED add score ############################################
     elif args.mode == "bed_add_score":
