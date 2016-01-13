@@ -2991,5 +2991,4 @@ class Venn:
                              set_labels = labels)
             return f
 
-    def venn_table(self, directory, title, labels):
-        
+#    def venn_table(self, directory, title, labels):

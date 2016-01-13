@@ -92,20 +92,20 @@ def random_each(input):
     """
     # Filter BED file
     if input[15]:
-        random = input[2].random_regions(organism=input[4], multiply_factor=1, 
-                                         overlap_result=True, overlap_input=True, 
+        random = input[2].random_regions(organism=input[4], multiply_factor=1,
+                                         overlap_result=True, overlap_input=True,
                                          chrom_X=True, chrom_M=False, filter_path=input[15])
     else:
-        random = input[2].random_regions(organism=input[4], multiply_factor=1, 
-                                         overlap_result=True, overlap_input=True, 
+        random = input[2].random_regions(organism=input[4], multiply_factor=1,
+                                         overlap_result=True, overlap_input=True,
                                          chrom_X=True, chrom_M=False)
-        
-    txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
-                       organism=input[4], prefix=str(input[0]), remove_temp=True, 
-                       l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
+
+    txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3],
+                       organism=input[4], prefix=str(input[0]), remove_temp=True,
+                       l=int(input[7]), e=int(input[8]), c=input[9], fr=input[10],
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
                        dna_fine_posi=False)
-    
+
     txp.merge_rbs(rbss=input[5], rm_duplicate=True)
 
     txpf = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3], 
@@ -113,7 +113,7 @@ def random_each(input):
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
                        dna_fine_posi=True)
-    
+
     txpf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
     print("".join(["="]*int(input[6])), end="")
@@ -2290,24 +2290,22 @@ class RandomTest:
             # Analysis based on DBSs
             if self.showdbs:
                 counts_dbss = [ v[i] for v in dbss_counts ]
-            
+
                 self.data["dbs"]["ave"].append(numpy.mean(counts_dbss))
                 self.data["dbs"]["sd"].append(numpy.std(counts_dbss))
                 num_sig = len([ h for h in counts_dbss if h > self.counts_dbs[rbs] ])
                 p_dbs = float(num_sig)/repeats
                 self.data["dbs"]["p"].append(p_dbs)
                 self.dbss_matrix.append(counts_dbss)
-         
                 if p_dbs < alpha: 
                     self.data["dbs"]["sig_region"].append(rbs)
                     self.data["dbs"]["sig_boolean"].append(True)
                 else:
                     self.data["dbs"]["sig_boolean"].append(False)
-            
 
         self.region_matrix = numpy.array(self.region_matrix)
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
-        
+
     def dbd_regions(self, sig_region, output):
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
         dbd_regions(exons=self.rna_regions, sig_region=sig_region, rna_name=self.rna_name, output=output)
@@ -2315,7 +2313,7 @@ class RandomTest:
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
-        
+
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region, 
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa)
@@ -2395,7 +2393,7 @@ class RandomTest:
         pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
         pp.close()
 
-    def gen_html(self, directory, parameters, align=50, alpha=0.05, score=False):
+    def gen_html(self, directory, parameters, obed, align=50, alpha=0.05, score=False):
         """Generate the HTML file"""
         dir_name = os.path.basename(directory)
         html_header = "Genomic Region Test: "+dir_name
@@ -2574,38 +2572,47 @@ class RandomTest:
         if not self.dna_region.sorted: self.dna_region.sort()
         # Iterate by each gene promoter
 
-        nz_promoters = []
-        for promoter in self.dna_region:
-            if len(self.region_dbs[promoter.toString()]) > 0:
-                nz_promoters.append(promoter) 
+        #nz_promoters = self.dna_region
+        #for promoter in self.dna_region:
+        #    if len(self.region_dbs[promoter.toString()]) > 0:
+        #        nz_promoters.append(promoter) 
 
         # Calculate the ranking
-        rank_count = len(nz_promoters)-rank_array([ len(self.region_dbs[p.toString()]) for p in nz_promoters ])
-        rank_coverage = len(nz_promoters)-rank_array([ self.region_coverage[p.toString()] for p in nz_promoters ])
+        rank_count = len(self.dna_region)-rank_array([ len(self.region_dbs[p.toString()]) for p in self.dna_region ])
+        rank_coverage = len(self.dna_region)-rank_array([ self.region_coverage[p.toString()] for p in self.dna_region ])
         
         if score:
-            rank_score = len(nz_promoters)-rank_array([ float(p.data.split("\t")[0]) for p in nz_promoters ])
+            rank_score = len(self.dna_region)-rank_array([ float(p.data.split("\t")[0]) for p in self.dna_region ])
             rank_sum = [x + y +z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
             sum_rank = rank_array(rank_sum) #  method='min'
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
             sum_rank = rank_array(rank_sum)
 
-        for i, region in enumerate(nz_promoters):
+        for i, region in enumerate(self.dna_region):
+            dbs_counts = str(len(self.region_dbs[region.toString()]))
+            dbs_cover = value2str(self.region_coverage[region.toString()])
             newline = [ str(i+1),
                         '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db='+self.organism+
                         "&position="+region.chrom+"%3A"+str(region.initial)+"-"+str(region.final)+
                         '" style="text-align:left">'+region.toString(space=True)+'</a>',
                         split_gene_name(gene_name=region.name, org=self.organism),
                         '<a href="region_dbs.html#'+region.toString()+
-                        '" style="text-align:left">'+str(len(self.region_dbs[region.toString()]))+'</a>',
-                        value2str(self.region_coverage[region.toString()]) ]
+                        '" style="text-align:left">'+dbs_counts+'</a>',
+                        dbs_cover ]
             if score:
-                newline += [ str(region.data.split("\t")[0]),
+                dbs_score = str(region.data.split("\t")[0])
+                newline += [ dbs_score,
                              str(int(rank_sum[i]+3)) ]
             else:
-                newline += [ str(int(rank_sum[i]+2)) ]
+                ranking = str(int(rank_sum[i]+2))
+                newline += [ ranking ]
+            
             data_table.append(newline)
+            if score:
+                region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, ranking])
+            else:
+                region.data = "\t".join([dbs_counts, dbs_cover, ranking])
                                 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, sortable=True)
@@ -2613,6 +2620,10 @@ class RandomTest:
         html.add_list(["All target regions without any bindings are ignored." ])
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory,"target_regions.html"))
+        
+        self.dna_region.sort_score()
+        self.dna_region.write_bed(os.path.join(directory, obed+"_target_regions.bed"))
+            
 
         ############################
         # Subpages for targeted region centered page

@@ -125,10 +125,11 @@ class RNADNABindingSet:
         if len(self) == 0: return dna_set
         for rd in self.sequences:
             if dbd_tag:
-                dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final, 
+                dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final,
                                     name=rd.rna.str_rna(), orientation=rd.dna.orientation)
             else:
-                dbs = rd.dna
+                dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final,
+                                    name=rd.dna.name, orientation=rd.dna.orientation)
 
             if not orientation:
                 dna_set.add(dbs)

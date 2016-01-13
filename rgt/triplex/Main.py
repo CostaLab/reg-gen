@@ -807,13 +807,13 @@ def main():
         #                       filename="boxplot_dbs" )
 
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
-                            score=args.score)
+                            score=args.score, obed=obed)
 
         t3 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
-        
+
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
-    
+
         output_summary(summary, args.o, "summary.txt")
         randomtest.save_profile(output=args.o, bed=args.bed)
         list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
