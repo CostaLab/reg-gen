@@ -241,9 +241,9 @@ def main():
     parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_lineplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
+    parser_lineplot.add_argument('-g', metavar='  ', default='None', help=helpgroup + " (Default:None)")
     parser_lineplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_lineplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
+    parser_lineplot.add_argument('-s', metavar='  ', default='reads', help=helpsort + " (Default:reads)")
     parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -616,7 +616,7 @@ def main():
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
             t1 = time.time()
-            print2(parameter, "    --- finished in {0} secs".format(str(round(t1-t0))))
+            print2(parameter, "\t--- finished in {0} secs".format(str(round(t1-t0))))
             
             if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
@@ -624,7 +624,7 @@ def main():
             lineplot.gen_cues()
             lineplot.coverage(sortby=args.s, mp=args.mp)
             t2 = time.time()
-            print2(parameter, "    --- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
+            print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
@@ -633,7 +633,7 @@ def main():
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()
-            print2(parameter, "    --- finished in {0} secs".format(str(round(t3-t2))))
+            print2(parameter, "\t--- finished in {0} secs".format(str(round(t3-t2))))
             print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))) + "(H:M:S)\n")
             print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
