@@ -1,8 +1,13 @@
+"""
+GenomicRegion
+===================
+GenomicRegion describes a genomic region.
+
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+"""
 class GenomicRegion:
-    """GenomicRegion describes a genomic region.
-    
-        *Keyword arguments:*
-        
+    """*Keyword arguments:*
+
         - chrom -- Chromosome.
         - initial -- Start position
         - final -- End position
@@ -10,16 +15,10 @@ class GenomicRegion:
         - orientation -- Orientation of the region, "+" or "-"
         - data -- Extra information
         - proximity -- Close genes
-        
-        @author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
-        
     """
     #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
 
     def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
-        """Initialize GenomicRegion
-
-        """
         self.chrom = str(chrom) #chrom should be a string, not an integer
         if not isinstance( initial, int ) or not isinstance(final, int):
             raise ValueError('The initial and final input for GenomicRegion should be integer.')
@@ -31,12 +30,11 @@ class GenomicRegion:
         self.proximity = proximity
 
     def get_data(self, as_list=False):
-        """Return data as string (with special separating character (_$_)) or as list
+        """Return data as string (with special separating character (_$_)) or as list.
 
         *Keyword arguments:*
         
-        - as_list -- Return a list instead of a string
-                
+        - as_list -- Return a list instead of a string.
         """
         if not as_list:
             return self.data
@@ -45,11 +43,11 @@ class GenomicRegion:
             return tmp
 
     def __len__(self):
-        """Return length of GenomicRegion"""
+        """Return length of GenomicRegion."""
         return self.final - self.initial
 
     def __str__(self):
-        """Give informal string representation"""
+        """Give informal string representation."""
         s = '\t'.join( [self.chrom, str(self.initial), str(self.final)] )
         # Name
         if self.name is not None: s += '\t' + self.name
@@ -77,10 +75,11 @@ class GenomicRegion:
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
 
     def toString(self, space=False):
-        """Return a string of GenomicRegion by its position
+        """Return a string of GenomicRegion by its position.
 
-        Keyword arguments:
-        space -- insert spaces between the values
+        *Keyword arguments:*
+
+        - space -- insert spaces between the values.
         """
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
@@ -88,11 +87,12 @@ class GenomicRegion:
             return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 
     def extend(self, left, right):
-        """Extend GenomicRegion on both sides
+        """Extend GenomicRegion on both sides.
 
-        Keyword arguments:
-        left -- Define the length to extend on left
-        right -- Define the length to extend on right
+        *Keyword arguments:*
+        
+        - left -- Define the length to extend on left.
+        - right -- Define the length to extend on right.
         """
         self.initial -= left
         self.final += right 
@@ -106,8 +106,9 @@ class GenomicRegion:
     def overlap(self, region):
         """Return True, if GenomicRegion overlaps with region, else False.
 
-        Keyword arguments:
-        region -- Given GenomicRegion to compare
+        *Keyword arguments:*
+
+        - region -- Given GenomicRegion to compare.
         """
         if region.chrom == self.chrom:
             if self.initial <= region.initial:
@@ -121,14 +122,15 @@ class GenomicRegion:
         return False
                     
     def __repr__(self):
-        """Return official representation of GenomicRegion"""
+        """Return official representation of GenomicRegion."""
         return ','.join( [self.chrom, str(self.initial), str(self.final)] )
 
     def __cmp__(self, region):
-        """Return negative value if x < y, zero if x == y and strictly positive if x > y
+        """Return negative value if x < y, zero if x == y and strictly positive if x > y.
 
-        Keyword arguments:
-        region -- Given GenomicRegion to compare
+        *Keyword arguments:*
+
+        - region -- Given GenomicRegion to compare.
         """
         if self.chrom < region.chrom:
             return -1
@@ -148,7 +150,7 @@ class GenomicRegion:
                     return 0
 
     def extract_blocks(self):
-        """Extract the block information in self.data in to GenomicRegionSet"""
+        """Extract the block information in self.data into a GenomicRegionSet."""
         z = []
         data = self.data.split("\t")
         nexon = int(data[4])
@@ -170,11 +172,12 @@ class GenomicRegion:
         else: return z
 
     def distance(self, y):
-        """Return the distance between two GenomicRegions. If overlapping, return 0; 
-        if on different chromosomes, return None
+        """Return the distance between two GenomicRegions. If overlapping, return 0; if on different chromosomes, return None.
 
-        Keyword arguments:
-        y -- Given GenomicRegion to compare"""
+        *Keyword arguments:*
+
+        - y -- Given GenomicRegion to compare.
+        """
         
         if self.chrom == y.chrom:
             if self.overlap(y): return 0

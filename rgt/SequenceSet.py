@@ -1,3 +1,4 @@
+
 # Python Libraries
 from __future__ import print_function
 import os
@@ -10,12 +11,15 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
+"""
+Sequence
+===================
+Sequence describes the sequence with ATCG as alphabets as well as its types.
 
+Author: Joseph Kuo
+"""
 class Sequence():
-    """Describe the Sequence with ATCG as alphabets as well as its types
 
-    Author: JosephKuo
-    """
 
     def __init__(self, seq, strand, name=None):
         """Initiation"""
@@ -62,11 +66,16 @@ class Sequence():
 
 ####################################################################################
 ####################################################################################
- 
+
+"""
+SequenceSet
+===================
+SequenceSet represents the collection of sequences and their functions.
+
+@author: Joseph Kuo
+"""
+
 class SequenceSet:           
-    """Define the collection of sequences and their functions
-    Author: joseph Kuo
-    """
 
     def __init__(self, name, seq_type):
         """Initiation"""

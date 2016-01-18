@@ -1,3 +1,10 @@
+"""
+GenomicRegionSet
+===================
+GenomicRegionSet represent a list of GenomicRegions.
+
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+"""
 ###############################################################################
 # Libraries
 ###############################################################################
@@ -19,13 +26,13 @@ from GeneSet import GeneSet
 ###############################################################################
 
 class GenomicRegionSet:
-    """Represent a list of GenomicRegions
-    @author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+    """*Keyword arguments:*
+
+        - name -- Name of the GenomicRegionSet
     """
     #__slots__ = ['name', 'sequences', 'sorted', 'fileName', 'genome_path' ]
 
     def __init__(self, name):
-        """Initialize a set of GenomicRegions"""
         self.name = name
         self.sequences = []
         self.sorted = False
@@ -33,11 +40,11 @@ class GenomicRegionSet:
         self.genome_path = ""
 
     def get_chrom(self):
-        """Return all chromosomes"""
+        """Return all chromosomes."""
         return [r.chrom for r in self.sequences]
 
     def add(self, region):
-        """Add GenomicRegion"""
+        """Add GenomicRegion."""
         self.sequences.append(region)
         self.sorted = False
 
@@ -51,9 +58,11 @@ class GenomicRegionSet:
         return self.sequences[key]
 
     def extend(self, left, right, percentage=False):
-        """Perform extend step for every element
+        """Perform extend step for every element.
 
-        percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
+        *Keyword arguments:*
+
+        - percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
         """
         if percentage:
             if percentage > -50:
@@ -67,7 +76,13 @@ class GenomicRegionSet:
                 s.extend(left, right)
 
     def sort(self, key=None, reverse=False):
-        """Sort Elements by criteria defined by a GenomicRegion"""
+        """Sort Elements by criteria defined by a GenomicRegion.
+
+        *Keyword arguments:*
+
+        - key -- given the key for comparison.
+        - reverse -- reverse the sorting result.
+        """
         if key:
             self.sequences.sort(key=key, reverse=reverse)
         else:
@@ -76,10 +91,12 @@ class GenomicRegionSet:
 
     def read_bed(self, filename):
         """Read BED file and add every row as a GenomicRegion.
-        Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion.
-        All other columns (5, 7, 8, ...) are put to the data variable of the GenomicRegion.
-        The numbers in parentheses are the columns of the BED format.
-        See BED format at: http://genome.ucsc.edu/FAQ/FAQformat.html#format1 """
+
+        *Keyword arguments:*
+
+        - filename -- define the path to the BED file.
+        .. note:: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion. The numbers in parentheses are the columns of the BED format.
+        """
         self.fileName = filename
         with open(filename) as f:
             error_line = 0  # Count error line
@@ -118,7 +135,11 @@ class GenomicRegionSet:
 
     def read_bedgraph(self, filename):
         """Read BEDGRAPH file and add every row as a GenomicRegion.
-        See BEDGRAPH format at: http://genome.ucsc.edu/goldenPath/help/bedgraph.html """
+
+        *Keyword arguments:*
+
+        - filename -- define the path to the BEDGRAPH file.
+        """
         self.fileName = filename
         with open(filename) as f:
             for line in f:
@@ -136,7 +157,12 @@ class GenomicRegionSet:
             self.sort()
 
     def random_subregions(self, size):
-        """Return a subsampling of the genomic region set with a specific number of regions"""
+        """Return a subsampling of the genomic region set with a specific number of regions.
+
+        *Keyword arguments:*
+
+        - size -- define number of the subsampling regions.
+        """
         z = GenomicRegionSet(self.name + '_random')
         samp = random.sample(range(len(self)), size)
         for i in samp:
@@ -145,7 +171,12 @@ class GenomicRegionSet:
         return z
 
     def random_split(self, size):
-        """Return two exclusive GenomicRegionSets from self randomly """
+        """Return two exclusive GenomicRegionSets from self randomly.
+
+        *Keyword arguments:*
+
+        - size -- define number of the spliting regions.
+        """
         a, b = GenomicRegionSet('random_split1'), GenomicRegionSet('random_split2')
         samp = random.sample(range(len(self)), size)
         for i in range(len(self)):
@@ -156,7 +187,12 @@ class GenomicRegionSet:
         return a, b
 
     def write_bed(self, filename):
-        """Write GenomicRegions to BED file"""
+        """Write GenomicRegions to BED file.
+
+        *Keyword arguments:*
+
+        - filename -- define the path to the BED file.
+        """
         with open(filename, 'w') as f:
             for s in self:
                 print(s, file=f)

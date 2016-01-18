@@ -1,3 +1,11 @@
+"""
+ExperimentalMatrix
+===================
+ExperimentalMatrix describes an experiment.
+
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+"""
+
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
 from rgt.GeneSet import *
@@ -6,12 +14,6 @@ import sys
 import os
 from collections import *
 
-"""
-Describe an experiment.
-
-Authors: Ivan G. Costa, Manuel Allhoff
-
-"""
 
 possible_types=["genes","regions","reads"]
 

@@ -1,3 +1,12 @@
+"""
+CoverageSet
+===================
+CoverageSet represents coverage data. CoverageSet has an instance of GenomicRegionSet. It has the coverage data for its GenomicRegionSet.
+The coverage depends on the binsize.
+
+Author: Ivan G. Costa, Manuel Allhoff
+"""
+
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnresolvedImport
@@ -7,31 +16,6 @@ import os
 import tempfile
 import wWigIO
 #from ngslib import BigWigFile
-
-"""
-Represent coverage data.
-
-Authors: Ivan G. Costa, Manuel Allhoff
-
-CoverageSet has an instance of GenomicRegionSet. 
-It has the coverage data for its GenomicRegionSet.
-The coverage depends on the binsize.
-
-Methods:
-
-coverageFromBam(filename):
-Compute coverage of GenomicRegionSet based on BAM file.
-
-writeBed:
-Output coverage in BED format.
-
-subtract:
-Subtract coverage from CoverageSet object
-
-scale:
-Scale coverage by factor
-
-"""
 
 class BigWigFile():
     '''

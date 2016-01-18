@@ -1,16 +1,17 @@
+"""
+AnnotationSet
+===================
+AnnotationSet represent genomic annotation from genes.
+
+Author: Eduardo G. Gusmao.
+"""
+
 import os
 import sys
 from copy import deepcopy
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData, MotifData, AuxiliaryFunctions
-
-"""
-Genomic Annotation from Genes
-
-Authors: Eduardo G. Gusmao.
-
-"""
 
 class AnnotationSet:
     """
