@@ -1,9 +1,11 @@
 """
-A GenomicVariant describes a SNP oder InDel.
+GenomicVariant
+===================
+GenomicVariant describes a SNP oder InDel.
 
-Authors: Manuel Allhoff
-
+@author: Manuel Allhoff
 """
+
 
 from rgt.GenomicRegion import GenomicRegion
 

@@ -1,3 +1,11 @@
+"""
+Util classes
+===================
+The Util classes contains many utilities needed by other classes such as the paths to input files.
+
+@author:Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
+"""
+
 from __future__ import print_function
 import os
 import sys
@@ -5,13 +13,6 @@ import ConfigParser
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
 
-"""
-The Util classes contains many utilities needed by other classes
-such as the paths to input files.
-
-Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
-
-"""
 
 class ConfigurationFile:
     """

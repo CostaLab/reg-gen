@@ -1,14 +1,15 @@
+"""
+GenomicVariantSet
+===================
+GenomicVariantSet represents list of GenomicVariant.
+
+@author: Manuel Allhoff
+"""
 from __future__ import print_function
 from rgt.GenomicVariant import GenomicVariant
 from rgt.GenomicRegionSet import GenomicRegionSet
 import vcf
 
-"""
-Represent list of GenomicVariant.
-
-Authors: Manuel Allhoff
-
-"""
 
 class GenomicVariantSet(GenomicRegionSet):
 
