@@ -418,6 +418,28 @@ class CoverageSet:
                 self.cov_strand_all.append(np.array(cov_strand))
             
         self.coverageorig = self.coverage[:]
+        self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
+    
+    def index2coordinates(self, index, r):
+        """Translate index within coverage array to genomic coordinates."""
+        iter = r.__iter__()
+        r = iter.next()
+        sum = r.final
+        last = 0
+        i = 0
+        while sum <= index * self.stepsize:
+            last += len(self.coverage[i])
+            try:
+                r = iter.next()
+            except StopIteration:
+                sum += r.final
+                i += 1
+                break
+            sum += r.final
+            i += 1
+        
+        return r.chrom, (index-last) * self.stepsize, \
+            min((index-last) * self.stepsize + self.stepsize, r.final)
     
     def coverage_from_bigwig(self, bigwig_file, stepsize=100):
         """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>."""
