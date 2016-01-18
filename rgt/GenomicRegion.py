@@ -1,42 +1,24 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""GenomicRegion describes a genomic region.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
-"""
-
-###############################################################################
-# Class
-###############################################################################
-
 class GenomicRegion:
-    """GenomicRegion describes a genomic region."""
+    """GenomicRegion describes a genomic region.
+    
+        *Keyword arguments:*
+        
+        - chrom -- Chromosome.
+        - initial -- Start position
+        - final -- End position
+        - name -- Name of the region
+        - orientation -- Orientation of the region, "+" or "-"
+        - data -- Extra information
+        - proximity -- Close genes
+        
+        @author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+        
+    """
     #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
 
     def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
         """Initialize GenomicRegion
 
-        Keyword arguments:
-        chrom -- Chromosome
-        initial -- Start position
-        final -- End position
-        name -- Name of the region
-        orientation -- Orientation of the region, "+" or "-"
-        data -- Extra information
-        proximity -- Close genes
         """
         self.chrom = str(chrom) #chrom should be a string, not an integer
         if not isinstance( initial, int ) or not isinstance(final, int):
@@ -51,9 +33,10 @@ class GenomicRegion:
     def get_data(self, as_list=False):
         """Return data as string (with special separating character (_$_)) or as list
 
-        Keyword arguments:
-        as_list -- Return a list instead of a string
-
+        *Keyword arguments:*
+        
+        - as_list -- Return a list instead of a string
+                
         """
         if not as_list:
             return self.data

@@ -1,23 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-"""Represent a list of GenomicRegions.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
-"""
-
 ###############################################################################
 # Libraries
 ###############################################################################
@@ -30,7 +10,7 @@ import random
 from copy import deepcopy
 from scipy import stats
 # Internal
-from GenomicRegion import *
+from GenomicRegion import GenomicRegion
 from Util import GenomeData, OverlapType, AuxiliaryFunctions
 from GeneSet import GeneSet
 
@@ -39,7 +19,9 @@ from GeneSet import GeneSet
 ###############################################################################
 
 class GenomicRegionSet:
-
+    """Represent a list of GenomicRegions
+    @author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+    """
     #__slots__ = ['name', 'sequences', 'sorted', 'fileName', 'genome_path' ]
 
     def __init__(self, name):

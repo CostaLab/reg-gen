@@ -105,8 +105,8 @@ class GenomeData(ConfigurationFile):
         """
         Returns the current path to the chromosome sizes text file.
         """
-        return self.chromosome_sizes
-
+        return self.chromosome_sizes   
+    
     def get_association_file(self):
         """
         Returns the current path to the gene association text file.
