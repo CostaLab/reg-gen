@@ -18,6 +18,8 @@ import itertools
 import pickle
 import multiprocessing
 from matplotlib_venn import venn2, venn3
+import urllib2
+import re
 
 # Local Libraries
 # Distal Libraries
@@ -43,7 +45,12 @@ def print2(parameter, string):
 def unique(a):
     seen = set()
     return [seen.add(x) or x for x in a if x not in seen]
-        
+
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+        if re.search(pattern, f):
+            os.remove(os.path.join(dir, f))
+
 def gen_tags(exps, tag):
     """Generate the unique tags from the EM according to the given tag. """
     if tag == "reads":
@@ -417,6 +424,15 @@ def mp_count_intersect(inputs):
     
     # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
     return output
+
+def get_url(url, filename):
+    #file_name = url.split('/')[-1]
+    u = urllib2.urlopen(url)
+    print("** Loading "+url, end="")
+    f = open(filename, 'wb')
+    print(u.read(), file=f)
+    f.close()
+    print("\t... Done")
 
 ###########################################################################################
 #                    Projection test
@@ -2427,6 +2443,9 @@ class Lineplot:
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
+        print("\tGroup labels:\t"+",".join(self.group_tags))
+        print("\tSort labels:\t"+",".join(self.sort_tags))
+        print("\tColor labels:\t"+",".join(self.color_tags))
 
     def gen_cues(self):
         self.cuebed = OrderedDict()
@@ -2475,6 +2494,8 @@ class Lineplot:
                         #print(set([s,g,c]))
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
+                                #print(self.cuebam[bam])
+                                #print(set([s,g,c]))
                                 if self.cuebam[bam] <= set([s,g,c]):
                                     if mp: 
                                         if self.annotation:
@@ -2499,7 +2520,17 @@ class Lineplot:
                                         if "Conservation" in bam:
                                             cov.phastCons46way_score(stepsize=self.ss)
                                         elif ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
-                                            cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                            if self.reads[j].startswith("http://"):
+                                                
+                                                tab = self.reads[j].split('/')[-1]
+                                                temp = os.path.join(os.getcwd(),"temp_bigwig_"+tab)
+                                                get_url(url=self.reads[j], filename=temp)
+                                                cov.coverage_from_bigwig(bigwig_file=temp, stepsize=self.ss)
+                                                #os.remove(temp)
+                                            else:
+                                                
+                                                cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+
                                         else:
                                             cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                             cov.normRPM()
@@ -2534,8 +2565,9 @@ class Lineplot:
                                             else: data[s][g][c] = avearr # Store the array into data list
                                         bi += 1
                                         te = time.time()
-                                        print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
-
+                                        print2(self.parameter, "\t("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                        #sys.stdout.flush()
+        
         if mp: 
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
@@ -2563,8 +2595,10 @@ class Lineplot:
                             d = numpy.subtract(data[s][g][c][0],data[s][g][c][1])
                             data[s][g][c] = d
                         except: pass
-
+      
         self.data = data
+        
+        purge(os.getcwd(),"temp_bigwig_")
         
     def colormap(self, colorby, definedinEM):
         colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
@@ -2650,11 +2684,13 @@ class Lineplot:
             try: 
                 axs[it,0].set_ylabel("{}".format(ty),fontsize=12)
             except:
-                if len(self.data.keys()) == 1:
-                    axs[0].set_ylabel("{}".format(ty),fontsize=12)
+                try: axs[it].set_ylabel("{}".format(ty),fontsize=12)
+                except: axs.set_ylabel("{}".format(ty),fontsize=12)
+                #if len(self.data.keys()) == 1:
+                #    axs.set_ylabel("{}".format(ty),fontsize=12)
                     #axs.set_ylabel("{}".format(ty),fontsize=12)
-                else:
-                    axs[it].set_ylabel("{}".format(ty),fontsize=12)
+                #else:
+                #    axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
             if sy:
                 for i,g in enumerate(self.data[ty].keys()):
@@ -2691,9 +2727,13 @@ class Lineplot:
         try: 
             axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
                              columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-        except: 
-            axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+        except:
+            try:
+                axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+            except:
+                axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                           columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
         f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f

@@ -1,29 +1,43 @@
-class GenomicRegion:
-    """
-    This class describes a genomic region.  
-    
-    Define a GenomicRegion on [initial, final) on a particular chromosome.
-    
-    .. note:
-        The coordinates are 0-based.
-    
-    Methods:
-    
-    extend(left, right):
-    Extend the region to the left and right side.
-    Negative values are allowed.
-    
-    overlap(region):
-    Return true if region overlaps with argument-region, otherwise false.
-    
-    Authors: Ivan G. Costa, Manuel Allhoff
-    
-    """
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""GenomicRegion describes a genomic region.
 
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+"""
+
+###############################################################################
+# Class
+###############################################################################
+
+class GenomicRegion:
+    """GenomicRegion describes a genomic region."""
     #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
 
     def __init__(self, chrom, initial, final, name=None, orientation=None, data=None, proximity = None):
-        """Initialize GenomicRegion"""
+        """Initialize GenomicRegion
+
+        Keyword arguments:
+        chrom -- Chromosome
+        initial -- Start position
+        final -- End position
+        name -- Name of the region
+        orientation -- Orientation of the region, "+" or "-"
+        data -- Extra information
+        proximity -- Close genes
+        """
         self.chrom = str(chrom) #chrom should be a string, not an integer
         if not isinstance( initial, int ) or not isinstance(final, int):
             raise ValueError('The initial and final input for GenomicRegion should be integer.')
@@ -35,8 +49,12 @@ class GenomicRegion:
         self.proximity = proximity
 
     def get_data(self, as_list=False):
-        """Return data as string (with special separating character (_$_)) 
-        or as list"""
+        """Return data as string (with special separating character (_$_)) or as list
+
+        Keyword arguments:
+        as_list -- Return a list instead of a string
+
+        """
         if not as_list:
             return self.data
         else:
@@ -76,13 +94,23 @@ class GenomicRegion:
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
 
     def toString(self, space=False):
+        """Return a string of GenomicRegion by its position
+
+        Keyword arguments:
+        space -- insert spaces between the values
+        """
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
         else:
             return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 
     def extend(self, left, right):
-        """Extend GenomicRegion both-sided"""
+        """Extend GenomicRegion on both sides
+
+        Keyword arguments:
+        left -- Define the length to extend on left
+        right -- Define the length to extend on right
+        """
         self.initial -= left
         self.final += right 
         
@@ -93,7 +121,11 @@ class GenomicRegion:
         self.initial = max(self.initial, 0)
 
     def overlap(self, region):
-        """Return True, if GenomicRegion overlaps with region, else False."""
+        """Return True, if GenomicRegion overlaps with region, else False.
+
+        Keyword arguments:
+        region -- Given GenomicRegion to compare
+        """
         if region.chrom == self.chrom:
             if self.initial <= region.initial:
                 if self.final > region.initial:
@@ -110,7 +142,11 @@ class GenomicRegion:
         return ','.join( [self.chrom, str(self.initial), str(self.final)] )
 
     def __cmp__(self, region):
-        """Return negative value if x < y, zero if x == y and strictly positive if x > y"""
+        """Return negative value if x < y, zero if x == y and strictly positive if x > y
+
+        Keyword arguments:
+        region -- Given GenomicRegion to compare
+        """
         if self.chrom < region.chrom:
             return -1
         elif self.chrom > region.chrom:
@@ -152,7 +188,11 @@ class GenomicRegion:
 
     def distance(self, y):
         """Return the distance between two GenomicRegions. If overlapping, return 0; 
-           if on different chromosomes, return None"""
+        if on different chromosomes, return None
+
+        Keyword arguments:
+        y -- Given GenomicRegion to compare"""
+        
         if self.chrom == y.chrom:
             if self.overlap(y): return 0
             elif self < y: return y.initial - self.final
