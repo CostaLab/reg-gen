@@ -5,7 +5,7 @@ GeneSet
 ===================
 GeneSet describes genes and their expression.
 
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 
 ###############################################################################
@@ -110,7 +110,7 @@ class GeneSet:
         """Subtract another GeneSet.
         
         *Keyword arguments:*
-        
+
         - gene_set -- Another GeneSet for subtracting with.
         """
         self.genes = [gene for gene in self.genes if gene not in gene_set.genes]

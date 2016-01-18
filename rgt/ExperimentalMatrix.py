@@ -3,7 +3,7 @@ ExperimentalMatrix
 ===================
 ExperimentalMatrix describes an experiment.
 
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 
 from __future__ import print_function

@@ -3,7 +3,7 @@ GenomicVariant
 ===================
 GenomicVariant describes a SNP oder InDel.
 
-@author: Manuel Allhoff
+Author: Manuel Allhoff
 """
 
 

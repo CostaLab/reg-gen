@@ -4,7 +4,7 @@ CoverageSet
 CoverageSet represents coverage data. CoverageSet has an instance of GenomicRegionSet. It has the coverage data for its GenomicRegionSet.
 The coverage depends on the binsize.
 
-@author: Ivan G. Costa, Manuel Allhoff
+Author: Ivan G. Costa, Manuel Allhoff
 """
 
 from __future__ import print_function

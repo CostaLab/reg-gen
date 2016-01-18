@@ -3,7 +3,7 @@ GenomicVariantSet
 ===================
 GenomicVariantSet represents list of GenomicVariant.
 
-@author: Manuel Allhoff
+Author: Manuel Allhoff
 """
 from __future__ import print_function
 from rgt.GenomicVariant import GenomicVariant

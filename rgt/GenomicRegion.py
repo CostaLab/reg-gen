@@ -3,7 +3,7 @@ GenomicRegion
 ===================
 GenomicRegion describes a genomic region.
 
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 class GenomicRegion:
     """*Keyword arguments:*

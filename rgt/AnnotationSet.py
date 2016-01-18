@@ -3,7 +3,7 @@ AnnotationSet
 ===================
 AnnotationSet represent genomic annotation from genes.
 
-@author: Eduardo G. Gusmao.
+Author: Eduardo G. Gusmao.
 """
 
 import os

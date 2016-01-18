@@ -3,7 +3,7 @@ GenomicRegionSet
 ===================
 GenomicRegionSet represent a list of GenomicRegions.
 
-@author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 ###############################################################################
 # Libraries

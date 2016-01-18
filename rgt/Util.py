@@ -3,7 +3,7 @@ Util classes
 ===================
 The Util classes contains many utilities needed by other classes such as the paths to input files.
 
-@author:Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
+Author:Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
 
 from __future__ import print_function

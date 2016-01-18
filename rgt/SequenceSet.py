@@ -16,7 +16,7 @@ Sequence
 ===================
 Sequence describes the sequence with ATCG as alphabets as well as its types.
 
-@author: Joseph Kuo
+Author: Joseph Kuo
 """
 class Sequence():
 
