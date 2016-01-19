@@ -1,34 +1,60 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 ExperimentalMatrix
 ===================
 ExperimentalMatrix describes an experiment.
 
-Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
+Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo.
 """
 
+# Python
 from __future__ import print_function
-from rgt.GenomicRegionSet import *
-from rgt.GeneSet import *
-import numpy
-import sys
 import os
+import sys
 from collections import *
 
+# Internal
+from rgt.GenomicRegionSet import *
+from rgt.GeneSet import *
+
+# External
+import numpy
 
 possible_types=["genes","regions","reads"]
 
 class ExperimentalMatrix:
+    """ Describes an experimental matrix.
+
+    *Variables:*
+
+    - names -- The unique name of experiment (filename).
+    - types -- The type of data.
+    - files -- The path of the related file with its filename as keys.
+    - fields -- List types of informations including names, types, files and others.
+    - fieldsDict -- Its keys are just self.fields, and the values are extra informations.
+    - objectsDict -- Key is the names; value is GenomicRegionSet or GeneSet.
+    """
 
     def __init__(self):
-        self.names = [] # the unique name of experiment (filename)
-        self.types = [] # the type of data
-        self.files = {} # the path of the related file with its filename as keys
-        self.fields = [] # list types of informations including names, types, files and others
-        self.fieldsDict = {} # its keys are just self.fields, and the values are extra informations        
-        self.objectsDict = {} # key is the names; value is GenomicRegionSet or GeneSet
+        self.names = []
+        self.types = []
+        self.files = {}
+        self.fields = []
+        self.fieldsDict = {}
+        self.objectsDict = {}
         
     def read(self, file_path, is_bedgraph=False, verbose=False):
-        """Read Experimental matrix file, which looks like:
+        """Read Experimental matrix file.
+
+        *Keyword arguments:*
+
+        - file_path -- Experimental matrix file path + name.
+        - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+        - verbose -- Verbose output (default = False).
+
+        *Example of experimental matrix file:*
+
         name    type    file    further1
         MPP_PU1    regions    fil21.bed    addidional_info1
         CDP_PU1    regions    file2.bed    addidional_info2
@@ -45,8 +71,6 @@ class ExperimentalMatrix:
         #assert(header[1] == "type")
         #assert(header[2] == "file")
         #self.fields = header
-        
-        
         
         for line in f:
             # Neglect comment lines
@@ -96,24 +120,33 @@ class ExperimentalMatrix:
         self.load_objects(is_bedgraph, verbose=verbose)
         
     def get_genesets(self):
-        """Return GeneSets"""
+        """Returns the GeneSets."""
         return [self.objectsDict[i] for i in self.names[self.types=="genes"]]
 
     def get_regionsets(self):
-        """Return RegionSets"""
+        """Returns the RegionSets."""
         return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
     
     def get_regionsnames(self):
+        """Returns the region names."""
         return [i for i in self.names[self.types=="regions"]]
     
     def get_readsfiles(self):
+        """Returns the 'read' type files."""
         return [self.files[i] for i in self.names[self.types=="reads"]]
 
     def get_readsnames(self):
+        """Returns the 'read' type names."""
         return [i for i in self.names[self.types=="reads"]]
 
     def load_objects(self, is_bedgraph, verbose=False):
-        """Load files and initialize object"""
+        """Load files and initialize object.
+
+        *Keyword arguments:*
+
+        - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+        - verbose -- Verbose output (default = False).
+        """
         for i, t in enumerate(self.types):
             if verbose: print("Loading file ", self.files[self.names[i]], file = sys.stderr)
             
@@ -135,7 +168,13 @@ class ExperimentalMatrix:
                 self.objectsDict[self.names[i]] = genes
             
     def get_type(self,name,field):
-        """ Return the type according to the given name and field. """
+        """Return the type according to the given name and field.
+
+        *Keyword arguments:*
+
+        - name -- Name to return.
+        - field -- Field to return.
+        """
         for f in self.fieldsDict.keys():
             if f == field:
                 for t in self.fieldsDict[f].keys(): 
@@ -145,7 +184,12 @@ class ExperimentalMatrix:
 
                     
     def get_types(self,name):
-        """ Fetch all extra informations as a list according to the given name """
+        """Fetch all extra informations as a list according to the given name.
+
+        *Keyword arguments:*
+
+        - name -- Name to return.
+        """
         result = []
         for c in self.fieldsDict.keys():
             for t in self.fieldsDict[c].keys():
@@ -154,6 +198,13 @@ class ExperimentalMatrix:
         return result
 
     def remove_name(self, name):
+        """Removes experiments by name.
+
+        *Keyword arguments:*
+
+        - name -- Name to remove.
+        """
+
         i = self.name.index(name)
         del self.types[i]
         del self.names[i]
@@ -167,9 +218,12 @@ class ExperimentalMatrix:
                     
 
     def match_ms_tags(self,field):
-        """Add more entries to match the missing tags of the given field. For example, there are tags 
-        for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. 
-        Then the regions are repeated for each tags from reads to match all reads."""
+        """Add more entries to match the missing tags of the given field. For example, there are tags for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. Then the regions are repeated for each tags from reads to match all reads.
+
+        *Keyword arguments:*
+
+        - field -- Field to add extra entries.
+        """
 
         # check regions or reads have empty tag
         beds = self.get_regionsnames()

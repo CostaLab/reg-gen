@@ -1,26 +1,73 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 AnnotationSet
 ===================
 AnnotationSet represent genomic annotation from genes.
 
-Author: Eduardo G. Gusmao.
+Author: Eduardo G. Gusmao, Joseph Kuo.
 """
 
+# Python
+from __future__ import print_function
 import os
 import sys
 from copy import deepcopy
+
+# Internal
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData, MotifData, AuxiliaryFunctions
 
 class AnnotationSet:
-    """
-    Annotation of genes and TFs' PWMs.
+    """This class represents genomic annotation from genes.
+
+    *Keyword arguments:*
+
+    - gene_source -- Gene source annotation. It will be used to create the gene_list
+                   element. It can be:
+        - A matrix (list of lists): An AnnotationSet will be created based on such
+             matrix.
+        - A string representing a gtf file: An AnnotationSet will be created based
+             on such gtf file.
+        - A string representing an organism: An AnnotationSet will be created based
+             on the gtf file for that organism in data.config file.
+
+    - tf_source -- TF source annotation. After initialization, this object is mapped with 
+                 gene_list. It can be:
+        - A matrix (list of lists): Represents a final tf_list element.
+        - A list of mtf files: The tf_list will be created based on all mtf files.
+        - A list of repositories: The tf_list will be created based on the mtf files
+            associated with such repositories in data.config.
+
+    - alias_source -- Alias dictionary source annotation. It can be:
+        - A dictionary: An alias dictionary will be created based on such dictionary.
+        - A string representing a alias (txt) file: An alias dictionary will be created
+             based on such txt file.
+        - A string representing an organism: An alias dictionary will be created based
+             on the txt file for that organism in data.config file.
     """
 
     class GeneField:
-        """
-        Gtf fields constants.
+        """Gtf fields constants.
+
+        *Constants:*
+
+        - GENOMIC_REGION.
+        - ANNOTATION_SOURCE.
+        - FEATURE_TYPE.
+        - GENOMIC_PHASE.
+        - GENE_ID.
+        - TRANSCRIPT_ID.
+        - GENE_TYPE.
+        - GENE_STATUS.
+        - GENE_NAMES.
+        - TRANSCRIPT_TYPE.
+        - TRANSCRIPT_STATUS.
+        - TRANSCRIPT_NAME.
+        - LEVEL.
+        - EXACT_GENE_MATCHES.
+        - INEXACT_GENE_MATCHES.
         """
 
         # Gff Fields 
@@ -45,8 +92,17 @@ class AnnotationSet:
         INEXACT_GENE_MATCHES = 14
 
     class TfField:
-        """
-        Mtf fields constants.
+        """Mtf fields constants.
+
+        *Constants:*
+
+        - MATRIX_ID.
+        - SOURCE.
+        - VERSION.
+        - GENE_NAMES.
+        - GROUP.
+        - EXACT_GENE_MATCHES.
+        - INEXACT_GENE_MATCHES.
         """
 
         # Mtf Fields
@@ -61,48 +117,29 @@ class AnnotationSet:
         INEXACT_GENE_MATCHES = 6
 
     class DataType:
-        """
-        Data type constants.
+        """Data type constants.
+
+        *Constants:*
+
+        - GENE_LIST.
+        - TF_LIST.
         """
         GENE_LIST = 0
         TF_LIST = 1
 
     class ReturnType:
-        """
-        Return type constants.
+        """Return type constants.
+
+        *Constants:*
+
+        - ANNOTATION_SET.
+        - LIST.
         """
         ANNOTATION_SET = 0
         LIST = 1
 
     def __init__(self, gene_source, tf_source=None, alias_source=None, 
                  filter_havana=True, protein_coding=False, known_only=True):
-        """
-        Initializes AnnotationSet.
-
-        Keyword arguments:
-        gene_source -- Gene source annotation. It will be used to create the gene_list
-                       element. It can be:
-            * A matrix (list of lists): An AnnotationSet will be created based on such
-                 matrix.
-            * A string representing a gtf file: An AnnotationSet will be created based
-                 on such gtf file.
-            * A string representing an organism: An AnnotationSet will be created based
-                 on the gtf file for that organism in data.config file.
-
-        tf_source -- TF source annotation. After initialization, this object is mapped with 
-                     gene_list. It can be:
-            * A matrix (list of lists): Represents a final tf_list element.
-            * A list of mtf files: The tf_list will be created based on all mtf files.
-            * A list of repositories: The tf_list will be created based on the mtf files
-                associated with such repositories in data.config.
-
-        alias_source -- Alias dictionary source annotation. It can be:
-            * A dictionary: An alias dictionary will be created based on such dictionary.
-            * A string representing a alias (txt) file: An alias dictionary will be created
-                 based on such txt file.
-            * A string representing an organism: An alias dictionary will be created based
-                 on the txt file for that organism in data.config file.
-        """
 
         # Class Objects
         self.gene_list = [] # Represents gene annotation.
@@ -161,14 +198,13 @@ class AnnotationSet:
             
 
     def load_gene_list(self, file_name, filter_havana=True, protein_coding=False, known_only=False):
-        """
-        Reads gene annotation in gtf (gencode) format. It populates self.gene_list with such entries.
-
-        Keyword arguments:
-        file_name -- The gencode .gtf file name.
+        """Reads gene annotation in gtf (gencode) format. It populates self.gene_list with such entries.
         
-        Return: void.
+        *Keyword arguments:*
+
+        - file_name -- The gencode .gtf file name.
         """
+
         # Opening GTF file
         try: gtf_file = open(file_name,"r")
         except Exception: pass # TODO
@@ -230,18 +266,16 @@ class AnnotationSet:
             extra_index_elements = [[],[]] # One list for each: EXACT_GENE_MATCHES, INEXACT_GENE_MATCHES
             final_vector = [genomic_region,line_list[1],line_list[2],line_list[7]] + final_addt_list + extra_index_elements
             self.gene_list.append(final_vector)
-            #print(final_vector)
+
         # Termination
         gtf_file.close()
 
     def load_alias_dict(self, file_name):
-        """
-        Reads an alias.txt file and creates a dictionary to translate gene symbols/alternative IDs to ensembl gene ID
+        """Reads an alias.txt file and creates a dictionary to translate gene symbols/alternative IDs to ensembl gene ID
         
-        Keyword arguments:
-        file_name -- Alias file name.
-        
-        Return: void.
+        *Keyword arguments:*
+
+        - file_name -- Alias file name.
         """
 
         # Opening alias file
@@ -263,14 +297,11 @@ class AnnotationSet:
         
 
     def load_tf_list(self, file_name_list):
-        """
-        Reads TF annotation in mtf (internal -- check manual) format. It populates self.tf_list with such entries.
-        Everytime a TF annotation is loaded, a mapping with gene list is performed.
+        """Reads TF annotation in mtf (internal -- check manual) format. It populates self.tf_list with such entries. Everytime a TF annotation is loaded, a mapping with gene list is performed.
         
-        Keyword arguments:
-        file_name_list -- A list with .mtf files.
-        
-        Return: void.
+        *Keyword arguments:*
+
+        - file_name_list -- A list with .mtf files.
         """
 
         # Iterating over the file name list
@@ -299,17 +330,12 @@ class AnnotationSet:
         self.map_lists()
 
     def map_lists(self):
-        """
-        Maps self.gene_list with self.tf_list in various ways.
-        """
-        self.exact_mapping(caps=True)
+        """Maps self.gene_list with self.tf_list in various ways."""
+        self.exact_mapping()
         #self.inexact_mapping()
 
-    def exact_mapping(self, caps=True):
-        """
-        Maps (O(n log n)) exact entries of self.gene_list's gene names with self.tf_list's gene names.
-        The mapping populates self.mapping_list with
-        """
+    def exact_mapping(self):
+        """Maps (O(n log n)) exact entries of self.gene_list's gene names with self.tf_list's gene names."""
         
         # Sorting lists
         self.gene_list = sorted(self.gene_list, key=lambda k: k[self.GeneField.GENE_NAMES])
@@ -344,23 +370,22 @@ class AnnotationSet:
                 curr_tf_index += 1
 
     def inexact_mapping(self):
-        """
-        TODO
-        """
-        pass
+        """Comming soon!"""
+        pass # TODO
 
     def fix_gene_names(self,gene_set,output_dict=False,mute_warn=False):
-        """
-        Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it
-        will be converted using alias_dict. If the gene name cannot be found then it is reported in a 
-        separate gene_set
+        """Checks if all gene names in gene_set are ensembl IDs. If a gene is not in ensembl format, it will be converted using alias_dict. If the gene name cannot be found then it is reported in a separate gene_set
         
-        Keyword arguments:
-        gene_set -- A GeneSet object.
+        *Keyword arguments:*
+
+        - gene_set -- A GeneSet object.
+        - output_dict -- Also output the mapping dictionary (default = False).
+        - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = False).
         
-        Return:
-        mapped_gene_list -- A list of ensembl IDs
-        unmapped_gene_list -- A list of unmapped gene symbols/IDs
+        *Return:*
+
+        - mapped_gene_list -- A list of ensembl IDs
+        - unmapped_gene_list -- A list of unmapped gene symbols/IDs
         """
         
         # Creating resulting lists
@@ -380,13 +405,12 @@ class AnnotationSet:
                 mapped_gene_list.append(gene_name)
                 if output_dict:
                     maping_dict[gene_name] = self.get_official_symbol(gene_name)
-                    #print(gene_name+"\t"+self.get_official_symbol(gene_name))
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
                     if(len(alias_list) > 1): 
                         if not mute_warn: 
-                            print "Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used."
+                            print("Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used.")
                     for e in alias_list: 
                         mapped_gene_list.append(e)
                         if output_dict: 
@@ -401,20 +425,21 @@ class AnnotationSet:
 
 
     def get(self, query=None, list_type=DataType.GENE_LIST, return_type=ReturnType.ANNOTATION_SET):
-        """
-        Gets subsets of either self objects and returns different types.
+        """Gets subsets of either self objects and returns different types.
 
-        Keyword arguments:
-        query -- A parameter that allows for subsets of self to be fetched. It can be:
-            * None: All fields/values are going to be returned.
-            * A dictionary: Subsets the desired list according to this structure. Each
+        *Keyword arguments:*
+
+        - query -- A parameter that allows for subsets of self to be fetched. It can be:
+            - None: All fields/values are going to be returned.
+            - A dictionary: Subsets the desired list according to this structure. Each
                   key must be a field (please refer to AnnotationSet.GeneField or AnnotationSet.TfField)
                   that must point to a single value or a list of values.
-        list_type -- Indicates which list should be subsetted/returned. Please refer to AnnotationSet.DataType.
-        return_type -- Indicates what should be returned. Please refer to AnnotationSet.ReturnType.
+        - list_type -- Indicates which list should be subsetted/returned. Please refer to AnnotationSet.DataType.
+        - return_type -- Indicates what should be returned. Please refer to AnnotationSet.ReturnType.
 
-        Return:
-        result_list -- A <return_type> containing the requested <list_type> subsetted according to <query>.
+        *Return:*
+
+        - result_list -- A <return_type> containing the requested <list_type> subsetted according to <query>.
         """
 
         # Fetching local copies of the lists
@@ -473,15 +498,16 @@ class AnnotationSet:
             return current_list
 
     def get_official_symbol(self, gene_name_source):
-        """
-        Returns the official symbol(s) from gene_name_source.
+        """Returns the official symbol(s) from gene_name_source.
 
-        Keyword arguments:
+        *Keyword arguments:*
+
         gene_source -- It can be a string (single gene name) or a GeneSet (multiple genes).
 
-        Return:
-        if gene_source is string then returns the converted string gene name or None if gene name could not be converted.
-        if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
+        *Return:*
+
+        - if gene_source is string then returns the converted string gene name or None if gene name could not be converted.
+        - if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
         """
 
         if(isinstance(gene_name_source,str)):
@@ -498,19 +524,18 @@ class AnnotationSet:
             return mapped_list, unmapped_list
 
     def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False):
-        """
-        Gets promoters of genes given a specific promoter length.
-        It returns a GenomicRegionSet with such promoters. The ID of each gene will be put
-        in the NAME field of each GenomicRegion. Each promoter includes also the coordinate of
-        the 5' base pair, therefore each promoter actual length is promoterLength+1.
+        """Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters. The ID of each gene will be put in the NAME field of each GenomicRegion. Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual length is promoterLength+1.
 
-        Keyword arguments:
-        promoterLength -- The length of the promoter region.
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
 
-        Return:
-        result_grs -- A GenomicRegionSet containing the promoters.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        - promoterLength -- The length of the promoter region.
+        - gene_set -- A set of genes to narrow the search.
+        - unmaplist -- If True than also return the unmappable genes list (default = False).
+
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing the promoters.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -543,17 +568,16 @@ class AnnotationSet:
         else: return result_grs
 
     def get_tss(self, gene_set = None):
-        """
-        Gets TSS(Transcription start site) of genes.
-        It returns a GenomicRegionSet with such TSS. The ID of each gene will be put
-        in the NAME field of each GenomicRegion.
+        """Gets TSS(Transcription start site) of genes. It returns a GenomicRegionSet with such TSS. The ID of each gene will be put in the NAME field of each GenomicRegion.
 
-        Keyword arguments:
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
+
+        - gene_set -- A set of genes to narrow the search.
         
-        Return:
-        result_grs -- A GenomicRegionSet containing TSS.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing TSS.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -583,17 +607,16 @@ class AnnotationSet:
         else: return result_grs
 
     def get_tts(self, gene_set = None):
-        """
-        Gets TTS(Transcription termination site) of genes.
-        It returns a GenomicRegionSet with such TTS. The ID of each gene will be put
-        in the NAME field of each GenomicRegion.
+        """Gets TTS(Transcription termination site) of genes. It returns a GenomicRegionSet with such TTS. The ID of each gene will be put in the NAME field of each GenomicRegion.
 
-        Keyword arguments:
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
+
+        - gene_set -- A set of genes to narrow the search.
         
-        Return:
-        result_grs -- A GenomicRegionSet containing TTS.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing TTS.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -623,17 +646,18 @@ class AnnotationSet:
         else: return result_grs
     
     def get_exons(self, start_site=False, end_site=False, gene_set = None):
-        """
-        Gets exons of genes.
-        It returns a GenomicRegionSet with such exons. The id of each gene will be put
-        in the NAME field of each GenomicRegion.
+        """Gets exons of genes. It returns a GenomicRegionSet with such exons. The id of each gene will be put in the NAME field of each GenomicRegion.
 
-        Keyword arguments:
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
 
-        Return:
-        result_grs -- A GenomicRegionSet containing the exons.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        - start_site -- Whether to relocate the start sites.
+        - end_site -- Whether to relocate the end sites.
+        - gene_set -- A set of genes to narrow the search.
+
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing the exons.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -662,17 +686,16 @@ class AnnotationSet:
         else: return result_grs
     
     def get_genes(self, gene_set = None):
-        """
-        Gets regions of genes.
-        It returns a GenomicRegionSet with such genes. The id of each gene will be put
-        in the NAME field of each GenomicRegion.
+        """Gets regions of genes. It returns a GenomicRegionSet with such genes. The id of each gene will be put in the NAME field of each GenomicRegion.
 
-        Keyword arguments:
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
 
-        Return:
-        result_grs -- A GenomicRegionSet containing the genes.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        - gene_set -- A set of genes to narrow the search.
+
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing the genes.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -696,17 +719,18 @@ class AnnotationSet:
         else: return result_grs
     
     def get_introns(self, start_site=False, end_site=False, gene_set = None):
-        """
-        Gets introns of genes.
-        It returns a GenomicRegionSet with such introns. The id of each gene will be put
-        in the NAME field of each GenomicRegion.
+        """Gets introns of genes. It returns a GenomicRegionSet with such introns. The id of each gene will be put in the NAME field of each GenomicRegion.
 
-        Keyword arguments:
-        gene_set -- A set of genes to narrow the search.
+        *Keyword arguments:*
 
-        Return:
-        result_grs -- A GenomicRegionSet containing the introns.
-        unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        - start_site -- Whether to relocate the start sites.
+        - end_site -- Whether to relocate the end sites.
+        - gene_set -- A set of genes to narrow the search.
+
+        *Return:*
+
+        - result_grs -- A GenomicRegionSet containing the introns.
+        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         if(gene_set):
