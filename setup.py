@@ -56,8 +56,8 @@ tools_dictionary = {
 "core": (
     None,
     None,
-    [],
-    []
+    ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
+    ["data/bin/bedToBigBed","data/bin/bigBedToBed","data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
