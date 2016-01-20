@@ -3,7 +3,6 @@ GenomicRegionSet
 ===================
 GenomicRegionSet represent a list of GenomicRegions.
 
-Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 ###############################################################################
 # Libraries
@@ -204,18 +203,20 @@ class GenomicRegionSet:
            3. If peak is between two genes (not overlapping neither), then both genes are annotated.
            4. If the distance between peak and gene is greater than a threshold distance, then it is not annotated.
 
-        Keyword arguments:
-        gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
-        organism -- Organism in order to fetch genomic data. (default hg19)
-        promoterLength -- Length of the promoter region. (default 1000)
-        threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+        *Keyword arguments:*
 
-        Returns:
-        result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
-                      1. name: String of genes associated with that coordinate separated by ':'
-                      2. data: String of proximity information (if the coordinate matched to the corresponding gene in the
-                               previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
-                      The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
+        - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
+        - organism -- Organism in order to fetch genomic data. (default hg19)
+        - promoterLength -- Length of the promoter region. (default 1000)
+        - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+        - show_dis -- Show distance to the closest genes in parentheses.
+
+        *Returns:*
+
+        - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
+        1. name: String of genes associated with that coordinate separated by ':'
+        2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
+        The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
         """
 
         # Initializations
@@ -441,23 +442,25 @@ class GenomicRegionSet:
 
     def filter_by_gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
         """Updates self in order to keep only the coordinates associated to genes which are in gene_set.
-           It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX)
-           or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in
-           gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported
-           as mapped gene.
+        It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX)
+        or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in
+        gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported
+        as mapped gene.
 
-           Keyword arguments:
-             gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
-             organism -- Organism in order to fetch genomic data. (default hg19)
-             promoterLength -- Length of the promoter region. (default 1000)
-             threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+        *Keyword arguments:*
 
-           Returns:
-             None -- Updates self in order to keep only the coordinates associated to genes which are in gene_set
-             all_genes = GeneSet that contains all genes associated with the coordinates
-             mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
-             all_proxs = List that contains all the proximity information of genes associated with the coordinates
-             mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
+        - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
+        - organism -- Organism in order to fetch genomic data. (default hg19)
+        - promoterLength -- Length of the promoter region. (default 1000)
+        - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+
+       *Returns:*
+
+        - None -- Updates self in order to keep only the coordinates associated to genes which are in gene_set
+        - all_genes = GeneSet that contains all genes associated with the coordinates
+        - mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
+        - all_proxs = List that contains all the proximity information of genes associated with the coordinates
+        - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
         """
 
         # Making association with gene_set
@@ -555,47 +558,43 @@ class GenomicRegionSet:
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
 
-        (mode = OverlapType.OVERLAP)
+        *Keyword arguments:*
+
+        - y -- the GenomicRegionSet which to compare with.
+        - mode -- OverlapType.OVERLAP, OverlapType.ORIGINAL or OverlapType.COMP_INCL.
+        - rm_duplicates -- remove duplicates within the output GenomicRegionSet
+
+        *Return:*
+        
+        - A GenomicRegionSet according to the given overlapping mode.
+
+        1. mode = OverlapType.OVERLAP
+        
         Return new GenomicRegionSet including only the overlapping regions with y.
-        ** it will merge the regions **
-            Keyword arguments:
-            y -- the GenomicRegionSet which to compare with
+        .. note:: it will merge the regions.
+        
+        Graphical explanation:
+        self       ----------              ------
+        y                 ----------                    ----
+        Result            ---
 
-            Return:
-            z -- a new GenomicRegionSet including only the overlapping regions
-
-            Graphical explanation:
-            self       ----------              ------
-            y                 ----------                    ----
-            Result            ---
-
-        (mode = OverlapType.ORIGINAL)
+        2. mmode = OverlapType.ORIGINAL
+        
         Return the regions of original GenomicRegionSet which have any intersections with y.
 
-            Keyword arguments:
-            y -- the GenomicRegionSet which to compare with
+        Graphical explanation:
+        self       ----------              ------
+        y              ----------                    ----
+        Result     ----------
 
-            Return:
-            z -- the regions of original GenomicRegionSet which have any intersections with y
-
-            Graphical explanation:
-            self       ----------              ------
-            y              ----------                    ----
-            Result     ----------
-
-        (mode = OverlapType.COMP_INCL)
+        3. mode = OverlapType.COMP_INCL
+        
         Return region(s) of the GenomicRegionSet which are 'completely' included by y.
 
-            Keyword arguments:
-            y -- the GenomicRegionSet which to compare with
-
-            Return:
-            z -- region(s) of self which are 'completely' included by y
-
-            Graphical explanation:
-            self        -------------             ------
-            y              ----------      ---------------              ----
-            Result                                ------
+        Graphical explanation:
+        self        -------------             ------
+        y              ----------      ---------------              ----
+        Result                                ------
         """
         a = self
         b = y

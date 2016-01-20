@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 GenomicRegion
 ===================
 GenomicRegion describes a genomic region.
 
-Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 class GenomicRegion:
     """*Keyword arguments:*

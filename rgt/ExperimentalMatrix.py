@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 ExperimentalMatrix
 ===================
 ExperimentalMatrix describes an experiment.
 
-Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo.
 """
 
 # Python

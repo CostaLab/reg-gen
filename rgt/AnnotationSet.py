@@ -5,7 +5,6 @@ AnnotationSet
 ===================
 AnnotationSet represent genomic annotation from genes.
 
-Author: Eduardo G. Gusmao, Joseph Kuo.
 """
 
 # Python

@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 GeneSet
 ===================
 GeneSet describes genes and their expression.
 
-Author: Ivan G. Costa, Manuel Allhoff, Joseph Kuo
 """
 
 ###############################################################################
