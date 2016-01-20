@@ -43,7 +43,11 @@ class GenomicRegionSet:
         return [r.chrom for r in self.sequences]
 
     def add(self, region):
-        """Add GenomicRegion."""
+        """Add GenomicRegion.
+
+        *Keyword arguments:*
+            - region -- The GenomicRegion to be added.
+        """
         self.sequences.append(region)
         self.sorted = False
 
@@ -61,7 +65,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
+            - percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
         """
         if percentage:
             if percentage > -50:
@@ -79,8 +83,8 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - key -- given the key for comparison.
-        - reverse -- reverse the sorting result.
+            - key -- given the key for comparison.
+            - reverse -- reverse the sorting result.
         """
         if key:
             self.sequences.sort(key=key, reverse=reverse)
@@ -93,8 +97,8 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - filename -- define the path to the BED file.
-        .. note:: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion. The numbers in parentheses are the columns of the BED format.
+            - filename -- define the path to the BED file.
+            .. note:: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion. The numbers in parentheses are the columns of the BED format.
         """
         self.fileName = filename
         with open(filename) as f:
@@ -137,7 +141,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - filename -- define the path to the BEDGRAPH file.
+            - filename -- define the path to the BEDGRAPH file.
         """
         self.fileName = filename
         with open(filename) as f:
@@ -160,7 +164,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - size -- define number of the subsampling regions.
+            - size -- define number of the subsampling regions.
         """
         z = GenomicRegionSet(self.name + '_random')
         samp = random.sample(range(len(self)), size)
@@ -174,7 +178,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - size -- define number of the spliting regions.
+            - size -- define number of the spliting regions.
         """
         a, b = GenomicRegionSet('random_split1'), GenomicRegionSet('random_split2')
         samp = random.sample(range(len(self)), size)
@@ -190,7 +194,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - filename -- define the path to the BED file.
+            - filename -- define the path to the BED file.
         """
         with open(filename, 'w') as f:
             for s in self:
@@ -198,25 +202,26 @@ class GenomicRegionSet:
 
     def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000, threshDist=50000, show_dis=False):
         """Associates coordinates to genes given the following rules:
-           1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
-           2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
-           3. If peak is between two genes (not overlapping neither), then both genes are annotated.
-           4. If the distance between peak and gene is greater than a threshold distance, then it is not annotated.
+        
+            1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
+            2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
+            3. If peak is between two genes (not overlapping neither), then both genes are annotated.
+            4. If the distance between peak and gene is greater than a threshold distance, then it is not annotated.
 
         *Keyword arguments:*
 
-        - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
-        - organism -- Organism in order to fetch genomic data. (default hg19)
-        - promoterLength -- Length of the promoter region. (default 1000)
-        - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
-        - show_dis -- Show distance to the closest genes in parentheses.
+            - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
+            - organism -- Organism in order to fetch genomic data. (default hg19)
+            - promoterLength -- Length of the promoter region. (default 1000)
+            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+            - show_dis -- Show distance to the closest genes in parentheses.
 
         *Returns:*
 
-        - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
-        1. name: String of genes associated with that coordinate separated by ':'
-        2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
-        The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
+            - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
+                1. name: String of genes associated with that coordinate separated by ':'
+                2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
+                The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
         """
 
         # Initializations
@@ -442,25 +447,23 @@ class GenomicRegionSet:
 
     def filter_by_gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
         """Updates self in order to keep only the coordinates associated to genes which are in gene_set.
-        It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX)
-        or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in
-        gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported
-        as mapped gene.
+        
+        It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX) or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported as mapped gene.
 
         *Keyword arguments:*
 
-        - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
-        - organism -- Organism in order to fetch genomic data. (default hg19)
-        - promoterLength -- Length of the promoter region. (default 1000)
-        - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+            - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
+            - organism -- Organism in order to fetch genomic data. (default hg19)
+            - promoterLength -- Length of the promoter region. (default 1000)
+            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
 
        *Returns:*
 
-        - None -- Updates self in order to keep only the coordinates associated to genes which are in gene_set
-        - all_genes = GeneSet that contains all genes associated with the coordinates
-        - mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
-        - all_proxs = List that contains all the proximity information of genes associated with the coordinates
-        - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
+            - None -- Updates self in order to keep only the coordinates associated to genes which are in gene_set
+            - all_genes = GeneSet that contains all genes associated with the coordinates
+            - mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
+            - all_proxs = List that contains all the proximity information of genes associated with the coordinates
+            - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
         """
 
         # Making association with gene_set
@@ -560,41 +563,45 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-        - y -- the GenomicRegionSet which to compare with.
-        - mode -- OverlapType.OVERLAP, OverlapType.ORIGINAL or OverlapType.COMP_INCL.
-        - rm_duplicates -- remove duplicates within the output GenomicRegionSet
+            - y -- the GenomicRegionSet which to compare with.
+            - mode -- OverlapType.OVERLAP, OverlapType.ORIGINAL or OverlapType.COMP_INCL.
+            - rm_duplicates -- remove duplicates within the output GenomicRegionSet
 
         *Return:*
         
-        - A GenomicRegionSet according to the given overlapping mode.
+            - A GenomicRegionSet according to the given overlapping mode.
 
-        1. mode = OverlapType.OVERLAP
+        *mode = OverlapType.OVERLAP*
         
-        Return new GenomicRegionSet including only the overlapping regions with y.
-        .. note:: it will merge the regions.
+            Return new GenomicRegionSet including only the overlapping regions with y.
+
+            .. note:: it will merge the regions.
         
-        Graphical explanation:
-        self       ----------              ------
-        y                 ----------                    ----
-        Result            ---
+            Graphical explanation::
 
-        2. mmode = OverlapType.ORIGINAL
+                self       ----------              ------
+                y                 ----------                    ----
+                Result            ---
+
+        *mode = OverlapType.ORIGINAL*
         
-        Return the regions of original GenomicRegionSet which have any intersections with y.
+            Return the regions of original GenomicRegionSet which have any intersections with y.
 
-        Graphical explanation:
-        self       ----------              ------
-        y              ----------                    ----
-        Result     ----------
+            Graphical explanation::
 
-        3. mode = OverlapType.COMP_INCL
+                self       ----------              ------
+                y              ----------                    ----
+                Result     ----------
+
+        *mode = OverlapType.COMP_INCL*
         
-        Return region(s) of the GenomicRegionSet which are 'completely' included by y.
+            Return region(s) of the GenomicRegionSet which are 'completely' included by y.
 
-        Graphical explanation:
-        self        -------------             ------
-        y              ----------      ---------------              ----
-        Result                                ------
+            Graphical explanation::
+
+                self        -------------             ------
+                y              ----------      ---------------              ----
+                Result                                ------
         """
         a = self
         b = y
@@ -710,10 +717,17 @@ class GenomicRegionSet:
             return z
 
     def intersect_count(self, regionset, mode_count="count", threshold=False):
-        """ Return the number of regions in regionset A&B in following order:
-        1. A - B
-        2. B - A
-        3. intersection of A and B
+        """Return the number of regions in regionset A&B in following order: (A-B, B-A, intersection)
+
+        *Keyword arguments:*
+
+            - regionset -- the GenomicRegionSet which to compare with.
+            - mode_count -- count the number of regions or to measure the length of intersection.
+            - threshold -- Define the cutoff of the proportion of the intersecting region (0~50%)
+
+        *Return:*
+        
+            - A tupple of numbers: (A-B, B-A, intersection)
         """
         #a = self
         #b = regionset
@@ -800,15 +814,16 @@ class GenomicRegionSet:
                 return len_12, len_21, len_inter
              
     def closest(self,y, distance=False):
-        """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 
-           If there are intersection, return False.
+        """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. If there are intersection, return False.
         
-        Keyword arguments:
-        y -- the GenomicRegionSet which to compare with
-        
-        Return:
-        z -- the region(s) which is nearest to self
-        
+        *Keyword arguments:*
+
+            - y -- the GenomicRegionSet which to compare with
+            - distance -- show the distance in parentheses
+
+        *Return:*
+
+            - A GenomicRegionSet which contains the nearest regions to the self
         """
 
         def jump_s(s, j, mind, last_j):
@@ -916,8 +931,7 @@ class GenomicRegionSet:
                     searching = True
 
                 if j == mj: cont_loop = False
-            
-            
+
             return z
         
     def remove_duplicates(self):
@@ -940,17 +954,16 @@ class GenomicRegionSet:
                 #continue
             
     def window(self,y,adding_length = 1000):
-        """Return the overlapping regions of self and y with adding a specified number 
-        (1000, by default) of base pairs upstream and downstream of each region in self. 
-        In effect, this allows regions in y that are near regions in self to be detected.
+        """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs upstream and downstream of each region in self. In effect, this allows regions in y that are near regions in self to be detected.
         
-        Keyword arguments:
-        y -- the GenomicRegionSet which to compare with
-        adding_length -- the length of base pairs added to upstream and downstream of self (default 1000)
+        *Keyword arguments:*
+
+            - y -- the GenomicRegionSet which to compare with
+            - adding_length -- the length of base pairs added to upstream and downstream of self (default 1000)
         
-        Return:
-        z -- a GenomicRegionSet including the regions of overlapping between extended self and original y.
-        
+        *Return:*
+
+            - A GenomicRegionSet including the regions of overlapping between extended self and original y.
         """
         if len(self) == 0 or len(y) == 0:
             return GenomicRegionSet('None region')
@@ -963,19 +976,21 @@ class GenomicRegionSet:
     def subtract(self,y,whole_region=False):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
-        Keyword arguments:
-        y -- the GenomicRegionSet which to subtract by
-        whole_region -- subtract the whole region, not partially
-        Return:
-        z -- the remaining regions of self after subtraction
+        *Keyword arguments:*
+
+            - y -- the GenomicRegionSet which to subtract by
+            - whole_region -- subtract the whole region, not partially
+
+        *Return:*
+
+            - A GenomicRegionSet which contains the remaining regions of self after subtraction
         
-        Graphical explanation:
-        self     ----------              ------
-        y               ----------                    ----
-        Result   -------                 ------
-        
+        Graphical explanation::
+
+            self     ----------              ------
+            y               ----------                    ----
+            Result   -------                 ------
         """
-        
         
         z = GenomicRegionSet(self.name + ' - ' + y.name)
         if len(self) == 0 or len(y) == 0: return self
@@ -995,10 +1010,9 @@ class GenomicRegionSet:
     
         while cont_loop:
             #print("Compare: "+s.__repr__()+"\t"+b[j].__repr__())
-            """
-            ----------------------
-            -----  --    ----    -----  ----
-            """
+            
+            #----------------------
+            #-----  --    ----    -----  ----
             
             # When the regions overlap
             if s.overlap(b[j]):
@@ -1011,15 +1025,13 @@ class GenomicRegionSet:
                         continue
                     except:  cont_loop = False
                 
-                """
-                ------        -----      -------       ---        ------    -----  --
-                   ------        --        ---       --------  ------       -----  -----
-                """
+
+                #------        -----      -------       ---        ------    -----  --
+                #   ------        --        ---       --------  ------       -----  -----
                 if s.initial < b[j].initial:
-                    """
-                    ------        -----      -------
-                       ------        --        ---
-                    """
+                    
+                    #------        -----      -------
+                    #   ------        --        ---
                     if s.final > b[j].final:
                         s1 = GenomicRegion(chrom=s.chrom, initial=s.initial, final=b[j].initial,
                                            name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
@@ -1042,10 +1054,9 @@ class GenomicRegionSet:
                         except: cont_loop = False
                     
                 elif s.final > b[j].final:
-                    """
-                         ------  
-                     ------
-                    """
+                    
+                    #     ------  
+                    # ------
                     s2 = GenomicRegion(chrom=s.chrom, initial=b[j].final, final=s.final,
                                        name=s.name, orientation=s.orientation, data=s.data, proximity=s.proximity)
                     s = s2
@@ -1053,10 +1064,9 @@ class GenomicRegionSet:
                     cont_overlap = True
                     continue
                 else:
-                    """
-                         ---       -----  --
-                       --------    -----  -----
-                    """
+                    
+                    #     ---       -----  --
+                    #   --------    -----  -----
                     try: 
                         s = iter_a.next()
                         j = pre_inter
@@ -1092,17 +1102,19 @@ class GenomicRegionSet:
     def subtract_aregion(self,y):
         """Return a GenomicRegionSet excluded the overlapping regions with y.
         
-        Keyword arguments:
-        y -- the GenomicRegion which to subtract by
+        *Keyword arguments:*
+
+            - y -- the GenomicRegion which to subtract by
         
-        Return:
-        result -- the remaining regions of self after subtraction
+        *Return:*
+
+            - the remaining regions of self after subtraction
         
-        Graphical explanation:
-        self     ----------              ------
-        y               ----------
-        Result   -------                 ------
-        
+        Graphical explanation::
+
+            self     ----------              ------
+            y               ----------
+            Result   -------                 ------
         """
         if len(self) == 0:
             return GenomicRegionSet('None region')
@@ -1114,7 +1126,13 @@ class GenomicRegionSet:
             return result
     
     def merge(self, w_return=False, namedistinct=False):
-        """Merge the regions within the GenomicRegionSet"""
+        """Merge the regions within the GenomicRegionSet
+
+        *Keyword arguments:*
+
+            - w_return -- If TRUE, it returns a GenomicRegionSet; if FASLSE, it merge the regions in place.
+            - namedistinct -- Merge the regions which have the same names only.
+        """
         if self.sorted == False: self.sort()
         
         if len(self.sequences) in [0, 1]:
@@ -1157,7 +1175,14 @@ class GenomicRegionSet:
                     self.sequences = z.sequences     
                 
     def combine(self, region_set, change_name=True, output=False):
-        """ Adding another GenomicRegionSet without merging the overlapping regions. """
+        """Adding another GenomicRegionSet without merging the overlapping regions.
+
+        *Keyword arguments:*
+
+            - region_set -- the GenomicRegion which to combine with
+            - change_name -- Combine the names as a new name for the combined regions
+            - output -- If TRUE, it returns a GenomicRegionSet; if FASLSE, it merge the regions in place.
+        """
         if output:
             a = copy.deepcopy(self)
             a.sequences.extend(region_set.sequences)
@@ -1176,18 +1201,20 @@ class GenomicRegionSet:
     def cluster(self,max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
         
-        Keyword arguments:
-        max_distance -- the maximum distance between regions within the same cluster
+        *Keyword arguments:*
+
+            - max_distance -- the maximum distance between regions within the same cluster
         
-        Return:
-        z -- a GenomicRegionSet including clusters
+        *Return:*
+
+            - A GenomicRegionSet including clusters
         
-        Graphical explanation:
-        self           ----           ----            ----
-                          ----             ----                 ----
-        Result(d=1)    -------        ---------       ----      ----
-        Result(d=10)   ---------------------------------------------        
-        
+        Graphical explanation::
+
+            self           ----           ----            ----
+                              ----             ----                 ----
+            Result(d=1)    -------        ---------       ----      ----
+            Result(d=10)   ---------------------------------------------        
         """
         if self.sorted == False: self.sort()
         
@@ -1213,16 +1240,18 @@ class GenomicRegionSet:
     def flank(self,size):
         """Return two flanking intervals with given size from both ends of each region.
         
-        Keyword arguments:
-        size -- the length of flanking intervals (default = SAME length as the region)
+        *Keyword arguments:*
+
+            - size -- the length of flanking intervals (default = SAME length as the region)
         
-        Return:
-        z -- a GenomicRegionSet including all flanking intervals
+        *Return:*
+
+            - z -- A GenomicRegionSet including all flanking intervals
         
-        Graphical explanation:
-        self        -----           --            ---
-        Result -----     -----    --  --       ---   ---
-        
+        Graphical explanation::
+
+            self        -----           --            ---
+            Result -----     -----    --  --       ---   ---
         """
         if len(self) == 0:
             return GenomicRegionSet("Empty")
@@ -1240,20 +1269,22 @@ class GenomicRegionSet:
             return z
     
     def jaccard(self,query):
-        """Return jaccard index, a value of similarity of these two GenomicRegionSet
+        """Return jaccard index, a value of similarity of these two GenomicRegionSet.
         
-        Keyword arguments:
-        query -- the GenomicRegionSet which to compare with
+        *Keyword arguments:*
+
+            - query -- the GenomicRegionSet which to compare with.
         
-        Return:
-        similarity -- (Total length of overlapping regions)/(Total length of original regions)
+        *Return:*
+
+            - similarity -- (Total length of overlapping regions)/(Total length of original regions)
         
-        Graphical explanation:
-        self           --8--      ---10---    -4-
-        query     ---10---             ---10---
-        intersect      -5-             -4-    2
-        similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
-                      = 11/31
+        ::
+            self           --8--      ---10---    -4-
+            query     ---10---             ---10---
+            intersect      -5-             -4-    2
+            similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
+                          = 11/31
         """
         a = copy.deepcopy(self)
         b = copy.deepcopy(query)

@@ -2612,7 +2612,11 @@ class Lineplot:
         ticklabelsize = 7
         
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) #  figsize=(8.27, 11.69) 
-        #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
+        if len(self.data.keys()) * len(self.data.values()[0]) <= 4: 
+            f.set_size_inches(4, 4)
+        elif 4 < len(self.data.keys()) * len(self.data.values()[0]) <= 8: 
+            f.set_size_inches(5, 5)
+            
         #    axs=numpy.array([[axs,None],[None,None]])
         
         yaxmax = [0]*len(self.data.values()[0])
