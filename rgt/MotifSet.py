@@ -267,24 +267,24 @@ class MotifSet:
         - motifs_map -- Mapping of motifs.
         """
 
-      f = open(out_file,"w")
-      f.write("\t"+("\t".join(self.conditions))+"\n")
-      motifs=motifs_map.keys()       
-      for v in self.motifs_enrichment.keys():
-        values=self.motifs_enrichment[v]
-        filter_p=False
-        p_values=[]
-        for c in self.conditions:
-           try:
-             pvalue=values[c]
-             p_values.append(str(pvalue))    
-             if pvalue<=threshold:
-               filter_p=True
-           except:
-             p_values.append("1")
-        if ((filter_p) & (v in motifs)):
-          genes="|".join(motifs_map[v])
-          f.write(v+"|"+genes+"\t"+("\t".join(p_values))+"\n")
+        f = open(out_file,"w")
+        f.write("\t"+("\t".join(self.conditions))+"\n")
+        motifs=motifs_map.keys()       
+        for v in self.motifs_enrichment.keys():
+            values=self.motifs_enrichment[v]
+            filter_p=False
+            p_values=[]
+            for c in self.conditions:
+                try:
+                    pvalue=values[c]
+                    p_values.append(str(pvalue))    
+                    if pvalue<=threshold:
+                        filter_p=True
+                except:
+                    p_values.append("1")
+            if ((filter_p) & (v in motifs)):
+                genes="|".join(motifs_map[v])
+                f.write(v+"|"+genes+"\t"+("\t".join(p_values))+"\n")
 
 
 #    def read_motif_targets(self,file_name,condition,pvalue_threshold):

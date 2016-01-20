@@ -3,16 +3,20 @@ GenomicVariantSet
 ===================
 GenomicVariantSet represents list of GenomicVariant.
 
-Author: Manuel Allhoff
 """
+
 from __future__ import print_function
 from rgt.GenomicVariant import GenomicVariant
 from rgt.GenomicRegionSet import GenomicRegionSet
 import vcf
 
-
 class GenomicVariantSet(GenomicRegionSet):
+    """*Keyword arguments:*
 
+        - vcf_path -- VCF file
+        - name -- name
+    """
+    
     def __init__(self, vcf_path = None, name='GenomicVariantSet'):
         """Initialize"""
         GenomicRegionSet.__init__(self, name = name)
@@ -20,12 +24,31 @@ class GenomicVariantSet(GenomicRegionSet):
             self.read_vcf(vcf_path)
     
     def sort(self):
-        """Sort Elements by criteria defined by a GenomicRegion"""
+        """Sort elements by criteria defined by GenomicVariant.
+        
+        .. note:: By default, the genomic position is used as sorting criteria.
+        
+        """
         self.sequences.sort(cmp = GenomicVariant.__cmp__)
         self.sorted = True
          
     def read_vcf(self, vcf_path):
-        """Read SNPs and InDels form VCF file"""
+        """
+        Read SNPs and InDels from a VCF file.
+        
+        *Keyword arguments:*
+
+        - vcf_path -- VCF file
+        
+        .. note:: vcf_path can also be defined in the initialization.
+        
+        *Example:*
+            We load a VCF file::
+            
+            >>>from rgt.GenomicVariantSet import GenomicVariantSet
+            >>>snps_sample1 = GenomicVariantSet('snps.vcf', name='sample1')
+        """
+    
         self.reader = vcf.Reader(open(vcf_path), 'r')
          
         self.metadata = self.reader.metadata
@@ -40,7 +63,15 @@ class GenomicVariantSet(GenomicRegionSet):
             self.add(variant)
     
     def write_vcf(self, vcf_path):
-        """Write VCF file"""
+        """
+        Write VCF file.
+        
+        *Keyword arguments:*
+
+        - vcf_path -- VCF file
+        
+        """
+        
         if not self.reader:
             raise Exception("No data available")
          
@@ -50,16 +81,43 @@ class GenomicVariantSet(GenomicRegionSet):
             writer.write_record(record)
  
     def filter_dbSNP(self):
-        """Filter for dbSNP"""
+        """Filter for dbSNP.
+        
+        .. note:: the vcf file must already contain the dbSNP annotation.
+        
+        """
+        
         self.sequences = filter(lambda x: 'DB' not in x.info.keys(), self.sequences)
     
     def filter(self, at, op, t):
-        """Filter for Attributes evaluate( at = <MQ, DP> <operator> <t> )"""
+        """
+        Filter for attributes. 
+        
+        *Keyword arguments:*
+
+        - at -- VCF file
+        - op -- operation to perform
+        - t -- threshold
+        
+        *Example:*
+            We load a VCF file::
+            
+            >>>from rgt.GenomicVariantSet import GenomicVariantSet
+            >>>snps_sample1 = GenomicVariantSet('snps.vcf', name='sample1')
+            
+            And we filter by the mapping quality::
+             
+            >>>snps_sample1.filter(at='MQ', op'>', t=30)
+            
+            The mapping quality is tagged as MQ in the VCF file. We only want to keep SNPs that have a mapping quality higher than 30.
+            
+            .. note:: operation <op> and threhold <t> depend on the filtering tag <at>
+        
+        """
         self.sequences = filter(lambda x: eval(str(x.info[at]) + op + str(t)), self.sequences)
     
     def _reconstruct_info(self, GenomicRegionSet):
-        """Reconstruct all information for GenomicVariantSet that
-        get lost when using a GenomicRegionSet method"""
+        """Reconstruct all information for GenomicVariantSet that get lost when using a GenomicRegionSet method"""
         tmp_sequences = []
         for genomic_region in GenomicRegionSet:
             c, p = genomic_region.chrom, genomic_region.initial
@@ -71,11 +129,28 @@ class GenomicVariantSet(GenomicRegionSet):
         return tmp_sequences
     
     def subtract(self, x):
+        """
+        Subtract GenomicVariantSet.
+        
+        *Keyword arguments:*
+
+        - x -- instance of GenomicVariantSet which is subtracted
+        
+        """
         tmp = GenomicRegionSet.subtract(self, x, whole_region=False)
         self.sequences = self._reconstruct_info(tmp)
     
-    def intersect(self, y):
-        tmp = self._intersect(y)
+    def intersect(self, x):
+        """
+        Intersect GenomicVariantSet.
+        
+        *Keyword arguments:*
+
+        - x -- instance of GenomicVariantSet
+        
+        """
+        
+        tmp = self._intersect(x)
         self.sequences = self._reconstruct_info(tmp)
     
     def _intersect(self, y, rm_duplicates=False):

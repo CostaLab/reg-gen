@@ -23,28 +23,20 @@ class AnnotationSet:
 
     *Keyword arguments:*
 
-    - gene_source -- Gene source annotation. It will be used to create the gene_list
-                   element. It can be:
-        - A matrix (list of lists): An AnnotationSet will be created based on such
-             matrix.
-        - A string representing a gtf file: An AnnotationSet will be created based
-             on such gtf file.
-        - A string representing an organism: An AnnotationSet will be created based
-             on the gtf file for that organism in data.config file.
+    - gene_source -- Gene source annotation. It will be used to create the gene_list element. It can be:
+        - A matrix (list of lists): An AnnotationSet will be created based on such matrix.
+        - A string representing a gtf file: An AnnotationSet will be created based on such gtf file.
+        - A string representing an organism: An AnnotationSet will be created based on the gtf file for that organism in data.config file.
 
-    - tf_source -- TF source annotation. After initialization, this object is mapped with 
-                 gene_list. It can be:
+    - tf_source -- TF source annotation. After initialization, this object is mapped with gene_list. It can be:
         - A matrix (list of lists): Represents a final tf_list element.
         - A list of mtf files: The tf_list will be created based on all mtf files.
-        - A list of repositories: The tf_list will be created based on the mtf files
-            associated with such repositories in data.config.
+        - A list of repositories: The tf_list will be created based on the mtf files associated with such repositories in data.config.
 
     - alias_source -- Alias dictionary source annotation. It can be:
         - A dictionary: An alias dictionary will be created based on such dictionary.
-        - A string representing a alias (txt) file: An alias dictionary will be created
-             based on such txt file.
-        - A string representing an organism: An alias dictionary will be created based
-             on the txt file for that organism in data.config file.
+        - A string representing a alias (txt) file: An alias dictionary will be created based on such txt file.
+        - A string representing an organism: An alias dictionary will be created based on the txt file for that organism in data.config file.
     """
 
     class GeneField:
