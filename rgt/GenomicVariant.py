@@ -1,18 +1,32 @@
 """
 GenomicVariant
 ===================
-GenomicVariant describes a SNP oder InDel.
+GenomicVariant is a specialized GenomicRegion class and describes a SNP or InDel.
 
-Author: Manuel Allhoff
 """
 
 
 from rgt.GenomicRegion import GenomicRegion
 
 class GenomicVariant(GenomicRegion):
+    """*Keyword arguments:*
 
+        - chrom -- chromosome
+        - pos -- position
+        - ref -- reference nucleotide
+        - alt -- alternative nucleotide
+        - qual -- quality
+        - filter -- filter
+        - id -- id
+        - info -- further informaton
+        - format -- SNP format
+        - genotype -- genotype
+        - samples -- sample
+        
+    .. note:: all necessary information are contained in a VCF file.
+    """
+    
     def __init__(self, chrom, pos, ref, alt, qual, filter = None, id = None, info = None, format = None, genotype = None, samples = None):
-        """Initialize"""
         GenomicRegion.__init__(self, chrom, pos, pos + 1)
         
         self.chrom = str(chrom)

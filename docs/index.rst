@@ -20,6 +20,12 @@ Contents:
 .. automodule:: CoverageSet
     :members:
 
+.. automodule:: GenomicVariant
+    :members:
+
+.. automodule:: GenomicVariantSet
+    :members:
+
 .. automodule:: AnnotationSet
     :members:
 

@@ -1182,13 +1182,14 @@ class GenomicRegionSet:
         Return:
         z -- a GenomicRegionSet including clusters
         
-        Graphical explanation:
-        self           ----           ----            ----
-                          ----             ----                 ----
-        Result(d=1)    -------        ---------       ----      ----
-        Result(d=10)   ---------------------------------------------        
+        Graphical explanation::
         
+            self           ----           ----            ----
+                              ----             ----                 ----
+            Result(d=1)    -------        ---------       ----      ----
+            Result(d=10)   ---------------------------------------------
         """
+        
         if self.sorted == False: self.sort()
         
         if len(self) == 0:
@@ -1321,8 +1322,7 @@ class GenomicRegionSet:
         Keyword arguments:
         organism -- which organism's genome to use. (hg19, mm9)
         total_size -- Given the number of result random regions.
-        multiply_factor -- this factor multiplies to the number of entries is the number of exporting random regions.
-                           ** total_size has higher priority than multiply_factor. **
+        multiply_factor -- this factor multiplies to the number of entries is the number of exporting random regions. ** total_size has higher priority than multiply_factor. **
         overlap_result -- the results whether overlap with each other or not. (True/False)
         overlap_input -- the results whether overlap with input entries or not. (True/False)
         chrom_M -- the result should cover mitochondria chromosome or not. (True/False)

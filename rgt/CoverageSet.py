@@ -14,6 +14,7 @@ import os
 import tempfile
 import wWigIO
 from helper import BigWigFile
+from rgt.ODIN.gc_content import get_gc_context
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -491,6 +492,27 @@ class CoverageSet:
 
             bwf.close()
 
+    def norm_gc_content(self, cov, genome_path, chrom_sizes):
+        chrom_sizes_dict = {}
+        
+        with open(chrom_sizes) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                c, e = line[0], int(line[1])
+                chrom_sizes_dict[c] = e
+        
+        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
+                
+        for i in range(len(self.coverage)):
+            assert len(self.coverage[i]) == len(gc_cov[i])
+            self.coverage[i] = np.array(self.coverage[i])
+            gc_cov[i] = np.array(gc_cov[i])
+            gc_cov[i][gc_cov[i] < 10*-300] = gc_avg #sometimes zeros occur, do not consider
+            self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
+            self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0)) #neg. values to 0
+            self.coverage[i] = self.coverage[i].astype(int)
+            
     def count_unique_reads(self, bamFile):
         """Count the number of unique reads on for class variable <genomicRegions>.
         
