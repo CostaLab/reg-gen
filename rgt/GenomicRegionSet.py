@@ -98,6 +98,7 @@ class GenomicRegionSet:
         *Keyword arguments:*
 
             - filename -- define the path to the BED file.
+
             .. note:: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion. The numbers in parentheses are the columns of the BED format.
         """
         self.fileName = filename
@@ -219,8 +220,10 @@ class GenomicRegionSet:
         *Returns:*
 
             - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
+                
                 1. name: String of genes associated with that coordinate separated by ':'
                 2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
+                
                 The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
         """
 
@@ -577,7 +580,7 @@ class GenomicRegionSet:
 
             .. note:: it will merge the regions.
         
-            Graphical explanation::
+            ::
 
                 self       ----------              ------
                 y                 ----------                    ----
@@ -587,7 +590,7 @@ class GenomicRegionSet:
         
             Return the regions of original GenomicRegionSet which have any intersections with y.
 
-            Graphical explanation::
+            ::
 
                 self       ----------              ------
                 y              ----------                    ----
@@ -597,7 +600,7 @@ class GenomicRegionSet:
         
             Return region(s) of the GenomicRegionSet which are 'completely' included by y.
 
-            Graphical explanation::
+            ::
 
                 self        -------------             ------
                 y              ----------      ---------------              ----
@@ -985,7 +988,7 @@ class GenomicRegionSet:
 
             - A GenomicRegionSet which contains the remaining regions of self after subtraction
         
-        Graphical explanation::
+        ::
 
             self     ----------              ------
             y               ----------                    ----
@@ -1205,7 +1208,6 @@ class GenomicRegionSet:
 
             - max_distance -- the maximum distance between regions within the same cluster
         
-<<<<<<< HEAD
         *Return:*
 
             - A GenomicRegionSet including clusters
@@ -1216,14 +1218,6 @@ class GenomicRegionSet:
                               ----             ----                 ----
             Result(d=1)    -------        ---------       ----      ----
             Result(d=10)   ---------------------------------------------        
-=======
-        Graphical explanation::
-        
-            self           ----           ----            ----
-                              ----             ----                 ----
-            Result(d=1)    -------        ---------       ----      ----
-            Result(d=10)   ---------------------------------------------
->>>>>>> 37e292c807a981f2f98946f7000e9dc292c2726e
         """
         
         if self.sorted == False: self.sort()
@@ -1290,11 +1284,11 @@ class GenomicRegionSet:
             - similarity -- (Total length of overlapping regions)/(Total length of original regions)
         
         ::
-            self           --8--      ---10---    -4-
-            query     ---10---             ---10---
-            intersect      -5-             -4-    2
-            similarity:   ( 5 + 4 + 2)/[(8 + 10 + 4) + (10 +10) - (5 + 4 + 2)]
-                          = 11/31
+
+            self              --8--      ---10---    -4-
+            query        ---10---             ---10---
+            intersect         -5-             -4-    2
+            similarity: (5+4+2)/[(8+10+4)+(10+10)-(5+4+2)] = 11/31
         """
         a = copy.deepcopy(self)
         b = copy.deepcopy(query)
@@ -1318,7 +1312,7 @@ class GenomicRegionSet:
         return similarity
     
     def within_overlap(self):
-        """ Check whether there is overlapping within or not. """
+        """Check whether there is overlapping within or not. """
         refer_posi = GenomicRegion(name="reference",chrom="chr1",initial=0,final=0)
         if self.sorted == False: self.sort()
         
@@ -1329,7 +1323,7 @@ class GenomicRegionSet:
         return False
 
     def total_coverage(self):
-        """ Return the sum of all lengths of regions. """
+        """Return the sum of all lengths of regions. """
         length = 0
         for s in self:
             try: length = length + len(s)
@@ -1339,7 +1333,15 @@ class GenomicRegionSet:
         return length
     
     def get_genome_data(self,organism, chrom_X=True, chrom_Y=False, chrom_M=False):
-        """ Add genome data from database into the GenomicRegionSet. """
+        """Add genome data from database into the GenomicRegionSet.
+
+        *Keyword arguments:*
+
+            - organism -- Define the organism
+            - chrom_X -- Include chromosome X
+            - chrom_Y -- Include chromosome Y
+            - chrom_M -- Include mitochondrial chromosome
+        """
         genome = GenomeData(organism)
         chromosome_file = open(genome.get_chromosome_sizes(),'r')
         for line in chromosome_file:
@@ -1355,33 +1357,36 @@ class GenomicRegionSet:
 
         chromosome_file.close()
         
-    def random_regions(self, organism, total_size=None, multiply_factor=1, overlap_result=True, overlap_input=True, 
+    def random_regions(self, organism, total_size=None, multiply_factor=1, 
+                       overlap_result=True, overlap_input=True, 
                        chrom_X=False, chrom_M=False, filter_path=None):
         """Return a GenomicRegionSet which contains the random regions generated by given entries and given number on the given organism.
         
-        Keyword arguments:
-        organism -- which organism's genome to use. (hg19, mm9)
-        total_size -- Given the number of result random regions.
-        multiply_factor -- this factor multiplies to the number of entries is the number of exporting random regions. ** total_size has higher priority than multiply_factor. **
-        overlap_result -- the results whether overlap with each other or not. (True/False)
-        overlap_input -- the results whether overlap with input entries or not. (True/False)
-        chrom_M -- the result should cover mitochondria chromosome or not. (True/False)
-        filter_path -- Given the path of filter BED file
+        *Keyword arguments:*
+
+            - organism -- Define organism's genome to use. (hg19, mm9)
+            - total_size -- Given the number of result random regions.
+            - multiply_factor -- This factor multiplies to the number of entries is the number of exporting random regions. ** total_size has higher priority than multiply_factor. **
+            - overlap_result -- The results whether overlap with each other or not. (True/False)
+            - overlap_input -- The results whether overlap with input entries or not. (True/False)
+            - chrom_X -- The result covers chromosome X or not. (True/False)
+            - chrom_M -- The result covers mitochondria chromosome or not. (True/False)
+            - filter_path -- Given the path of filter BED file
         
-        Return:
-        z -- a GenomicRegionSet which contains the random regions
-        
+        *Return:*
+
+            - z -- A GenomicRegionSet which contains the random regions
         """
         # Dealing with positions of random regions
         def list_max(chrom_list, result_map):
-            """ Generate a list containing maximum length for each chromosome """
+            """Generate a list containing maximum length for each chromosome."""
             map_max = [] # Store the minimum length corresponding to chrom_list
             for ch in chrom_list:
                 map_max.append(max([len(s) for s in result_map.any_chrom(ch)])) 
             return map_max
         
         def randoming(length, result_map, chrom_list, map_max, choices):
-            """ Return a new GenomicRegion as the result of randomization. """
+            """Return a new GenomicRegion as the result of randomization."""
             cont_loop = True
             candidate_chrom = [chrom_list[i] for i,l in enumerate(map_max) if l > length] # screen for the potential chromosomes which has space
             while True:
@@ -1469,7 +1474,20 @@ class GenomicRegionSet:
         return z
     
     def projection_test(self, query, organism, extra=None, background=None):
-        """" Return the p value of binomial test. """
+        """"Return the p value of binomial test.
+
+        *Keyword arguments:*
+
+            - query -- A GenomicRegionSet as query
+            - organism -- Define the organism
+            - extra -- Return the extra statistics
+            - background -- Use a GenomicRegionSet as the background
+
+        *Returns:*
+
+            - extra=True -- (possibility, ration, p-value)
+            - extra=False -- p-value
+        """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
         if self.total_coverage() == 0 and len(self) > 0:
@@ -1501,7 +1519,18 @@ class GenomicRegionSet:
             return p
 
     def any_chrom(self,chrom,len_min=False, len_max=False):
-        """ Return a list of regions which belongs to given chromosome. (used in random_regions) """
+        """Return a list of regions which belongs to given chromosome.
+
+        *Keyword arguments:*
+
+            - chrom -- Define chromosome
+            - len_min -- minimum length
+            - len_max -- maximum length
+
+        *Returns:*
+
+            - A list of regions which belongs to given chromosome.
+        """
         if len_min == False and len_max == False:
             return [s for s in self if s.chrom == chrom] 
         elif len_min > 0 and len_max == False:
@@ -1511,22 +1540,22 @@ class GenomicRegionSet:
         else:
             return [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max] 
         
-    def relocate_regions(self,center='midpoint', left_length=2000, right_length=2000):
-        """ Return a new GenomicRegionSet which relocates the regions by given center and extend length.
+    def relocate_regions(self,center='midpoint',left_length=2000,right_length=2000):
+        """Return a new GenomicRegionSet which relocates the regions by given center and extend length.
         
-        Parameters:
-        center:    
-            midpoint  -- locate the new region's center as original region's midpoint
-            leftend      -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
-            rightend      -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
-            bothends  -- locate the new region's center as original region's both ends
-            downstream -- rightend in positive strand and leftend in negative strand
-            upstream -- leftend in positive strand and rightend in negative strand
-            
+        *Key arguments:*
 
-        left_length:
-        right_length:
-            The length to extend from the center
+            - center -- Define the referring point of each region
+
+                1. midpoint -- locate the new region's center as original region's midpoint
+                2. leftend -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
+                3. rightend -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
+                4. bothends -- locate the new region's center as original region's both ends
+                5. downstream -- rightend in positive strand and leftend in negative strand
+                6. upstream -- leftend in positive strand and rightend in negative strand
+
+            - left_length -- Define the length to extend on the left side
+            - right_length -- Define the length to extend on the right side
         """
         new_regions = GenomicRegionSet("relocated_"+self.name)
         for r in self.sequences:
@@ -1571,7 +1600,7 @@ class GenomicRegionSet:
         return new_regions
 
     def maximum_length(self):
-        """Return the length of the maximum region from the GenomicRegionSet. """
+        """Return the length of the maximum region from the GenomicRegionSet."""
         try:
             maxl = len(self.sequences[0])
             for s in self:
@@ -1582,7 +1611,12 @@ class GenomicRegionSet:
             return 0 
 
     def include(self, region):
-        """Check whether the given region has intersect with the original regionset """
+        """Check whether the given region has intersect with the original regionset.
+
+        *Key arguments:*
+
+            - region -- A GenomicRegion to be checked.
+        """
         for s in self:
             if s.overlap(region): return True
             else: continue
