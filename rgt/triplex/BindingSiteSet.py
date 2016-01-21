@@ -9,29 +9,25 @@ from rgt.Util import SequenceType
 ####################################################################################
 
 class BindingSite(GenomicRegion):
-    """Describes a binding region on DNA or RNA including the information regarding to this region.
-
-    Authors: Joseph Kuo
-    """
+    """Describes a binding region on DNA or RNA including the information regarding to this region."""
     __slots__ = ['name', 'score', 'errors_bp', 'motif', 'orientation', 'seq' ]
 
     def __init__(self, chrom, initial, final, name=None, score=None, errors_bp=None, motif=None, 
                  strand=None, orientation=None, guanine_rate=None, seq=None):
-        """Initialize
+        """*Keyword arguments:*
         
-        name             The name of this binding site (Default: None)
-        seq_type         DNA or RNA
-        chrm             Define the chromosome for DNA; for RNA its default is "RNA"
-        initial          Binding start position
-        final            Binding end position
-        score            Score of the binding pattern (Default: None)
-        errors_bp        Error base pair in this binding (Default: None)
-        motif            The motif for this binding (Default: None)
-        strand           The strand of DNA (+ or -) (Default: None)
-        orientation      Parallel or antiparallel (Default: None)
-        guanine_rate     (Default: None)
-        seq              Sequence of this region with ATCG as letters
-
+            - name -- The name of this binding site (Default: None)
+            - seq_type -- DNA or RNA
+            - chrm -- Define the chromosome for DNA; for RNA its default is "RNA"
+            - initial -- Binding start position
+            - final -- Binding end position
+            - score -- Score of the binding pattern (Default: None)
+            - errors_bp -- Error base pair in this binding (Default: None)
+            - motif -- The motif for this binding (Default: None)
+            - strand -- The strand of DNA (+ or -) (Default: None)
+            - orientation -- Parallel or antiparallel (Default: None)
+            - guanine_rate -- (Default: None)
+            - seq -- Sequence of this region with ATCG as letters
         """
         GenomicRegion.__init__(self, chrom=chrom, initial=initial, final=final)
         
@@ -46,19 +42,19 @@ class BindingSite(GenomicRegion):
             self.guanine_rate = "{0:.2f}".format(float(seq.seq.count("G"))/len(seq))
 
     def __str__(self):
-        """Give informal string representation"""
+        """Give informal string representation."""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
                   self.motif, self.orientation, self.seq ]
         return '-'.join( [str(x) for x in infos if x] )
         
     def __repr__(self):
-        """Return official representation of GenomicRegion"""
+        """Return official representation of GenomicRegion."""
         infos = [ self.name, self.chrom, self.initial, self.final, self.score, self.errors_bp, 
                   self.motif, self.orientation, self.seq ]
         return ','.join( [str(x) for x in infos if x] ) 
         
     def __len__(self):
-        """Return the length of the binding site """
+        """Return the length of the binding site."""
         return self.final - self.initial
 
     def __eq__(self, other):
@@ -81,22 +77,27 @@ class BindingSite(GenomicRegion):
 ####################################################################################
 
 class BindingSiteSet(GenomicRegionSet):
-    """Represent a collection of RNABinding with some functions
-
-    Authors: Joseph Kuo
-    """
+    """Represent a collection of RNABinding with some functions."""
 
     def __init__(self, name):
-        """Initialize"""
+        """*Keyword arguments:*
+
+            - name -- Define the name of this BindingSiteSet.
+        """
         GenomicRegionSet.__init__(self, name = name)
 
     def sort(self):
-        """Sort Elements by criteria defined by a GenomicRegion"""
+        """Sort Elements by criteria defined by a GenomicRegion."""
         self.sequences.sort(cmp = GenomicRegion.__cmp__)
         self.sorted = True
     
     def get_bs(self, orientation):
-        """Get the Binding Sites with the given orientation"""
+        """Get the Binding Sites with the given orientation.
+
+        *Keyword arguments:*
+
+            - orientation -- Define the orientation of the sequence.
+        """
         output = BindingSiteSet(self.name+":"+orientation)
         for bs in self.sequences:
             if bs.orientation == orientation:
