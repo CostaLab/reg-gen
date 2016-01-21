@@ -26,7 +26,7 @@ from __future__ import print_function
 import numpy as np
 import pysam
 import sys
-from HTSeq import FastaReader
+#from HTSeq import FastaReader
 
 class help_content():
     def __init__(self):

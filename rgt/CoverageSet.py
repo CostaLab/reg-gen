@@ -462,7 +462,7 @@ class CoverageSet:
             #    ds.append(sum(d)/len(d))
 
             #if gr.orientation == "-":
-            #    self.coverage.append( np.array(list(reversed(ds))) )
+            #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
             #else:
             self.coverage.append( np.array(ds) )
         #print(len(ds))
@@ -503,7 +503,10 @@ class CoverageSet:
                 chrom_sizes_dict[c] = e
         
         gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
-                
+        
+        import warnings #todo: ugly, why do warnings occur?
+        warnings.filterwarnings("ignore")
+        
         for i in range(len(self.coverage)):
             assert len(self.coverage[i]) == len(gc_cov[i])
             self.coverage[i] = np.array(self.coverage[i])
