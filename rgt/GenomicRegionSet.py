@@ -65,7 +65,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-            - percentage -- input value of left and right can be any positive value or negative value larger than -50 % (
+            - percentage -- input value of left and right can be any positive value or negative value larger than -50 %
         """
         if percentage:
             if percentage > -50:
@@ -217,7 +217,7 @@ class GenomicRegionSet:
             - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
             - show_dis -- Show distance to the closest genes in parentheses.
 
-        *Returns:*
+        *Return:*
 
             - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
                 
@@ -460,7 +460,7 @@ class GenomicRegionSet:
             - promoterLength -- Length of the promoter region. (default 1000)
             - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
 
-       *Returns:*
+       *Return:*
 
             - None -- Updates self in order to keep only the coordinates associated to genes which are in gene_set
             - all_genes = GeneSet that contains all genes associated with the coordinates
@@ -528,38 +528,38 @@ class GenomicRegionSet:
 
         return all_genes, mapped_genes, all_proxs, mapped_proxs
 
-    def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-        from rgt.motifanalysisold.util import bedFunctions, sort
-        from rgt.motifanalysisold.enrichment.geneAssociation import *
-        self.fileName=fileName
-        regionsToGenes={}
-        coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
-        coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
-        #print dictBed
-        genes=[]
-        totalPeaks=0
-        allgenes=[]
-        for chr in dictBed.keys():
-            for (v1,v2,name,orientation,data) in dictBed[chr]:
-                totalPeaks+=1
-                names=name.split(":")
-                keep=[n for n in names if "." not in n]
-                if len(keep) > 0:
-                    self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
-                genes = genes+keep
-                allgenes=allgenes+[n.strip(".") for n in names]
-                regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
-        #print "Total Peaks", total
-        mappedGenes=len(list(set(allgenes)))
-        self.sort()
-        self.genes=list(set(genes))
-        if geneSet == None:
-          le=0
-        else:
-          le=len(geneSet)
+    # def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
+    #     from rgt.motifanalysisold.util import bedFunctions, sort
+    #     from rgt.motifanalysisold.enrichment.geneAssociation import *
+    #     self.fileName=fileName
+    #     regionsToGenes={}
+    #     coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
+    #     coordDict = sort.sortBedDictionary(coordDict, field=0)
+    #     [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
+    #     #print dictBed
+    #     genes=[]
+    #     totalPeaks=0
+    #     allgenes=[]
+    #     for chr in dictBed.keys():
+    #         for (v1,v2,name,orientation,data) in dictBed[chr]:
+    #             totalPeaks+=1
+    #             names=name.split(":")
+    #             keep=[n for n in names if "." not in n]
+    #             if len(keep) > 0:
+    #                 self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
+    #             genes = genes+keep
+    #             allgenes=allgenes+[n.strip(".") for n in names]
+    #             regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
+    #     #print "Total Peaks", total
+    #     mappedGenes=len(list(set(allgenes)))
+    #     self.sort()
+    #     self.genes=list(set(genes))
+    #     if geneSet == None:
+    #       le=0
+    #     else:
+    #       le=len(geneSet)
 
-        return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
+    #     return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
@@ -1113,7 +1113,7 @@ class GenomicRegionSet:
 
             - the remaining regions of self after subtraction
         
-        Graphical explanation::
+        ::
 
             self     ----------              ------
             y               ----------
@@ -1212,7 +1212,7 @@ class GenomicRegionSet:
 
             - A GenomicRegionSet including clusters
         
-        Graphical explanation::
+        ::
 
             self           ----           ----            ----
                               ----             ----                 ----
@@ -1252,7 +1252,7 @@ class GenomicRegionSet:
 
             - z -- A GenomicRegionSet including all flanking intervals
         
-        Graphical explanation::
+        ::
 
             self        -----           --            ---
             Result -----     -----    --  --       ---   ---
@@ -1312,7 +1312,7 @@ class GenomicRegionSet:
         return similarity
     
     def within_overlap(self):
-        """Check whether there is overlapping within or not. """
+        """Check whether there is overlapping within or not."""
         refer_posi = GenomicRegion(name="reference",chrom="chr1",initial=0,final=0)
         if self.sorted == False: self.sort()
         
@@ -1323,7 +1323,7 @@ class GenomicRegionSet:
         return False
 
     def total_coverage(self):
-        """Return the sum of all lengths of regions. """
+        """Return the sum of all lengths of regions."""
         length = 0
         for s in self:
             try: length = length + len(s)
@@ -1483,10 +1483,10 @@ class GenomicRegionSet:
             - extra -- Return the extra statistics
             - background -- Use a GenomicRegionSet as the background
 
-        *Returns:*
+        *Return:*
 
-            - extra=True -- (possibility, ration, p-value)
-            - extra=False -- p-value
+            - if extra=True, returns (possibility, ration, p-value)
+            - if extra=False, returns p-value
         """
         chrom_map = GenomicRegionSet("Genome")
         chrom_map.get_genome_data(organism=organism)
@@ -1527,7 +1527,7 @@ class GenomicRegionSet:
             - len_min -- minimum length
             - len_max -- maximum length
 
-        *Returns:*
+        *Return:*
 
             - A list of regions which belongs to given chromosome.
         """
@@ -1623,25 +1623,53 @@ class GenomicRegionSet:
         return False
 
     def complement(self, organism, chrom_X=True, chrom_Y=False, chrom_M=False):
-        """Return the complement GenomicRegionSet for the given organism """
+        """Return the complement GenomicRegionSet for the given organism.
+
+        *Key arguments:*
+
+            - organism -- Define organism's genome to use. (hg19, mm9)
+            - chrom_X -- The result covers chromosome X or not. (True/False)
+            - chrom_Y -- The result covers chromosome Y or not. (True/False)
+            - chrom_M -- The result covers mitochondrial chromosome or not. (True/False)
+
+        *Return:*
+
+            - z -- A GenomicRegionSet which contains the complement regions
+        """
         g = GenomicRegionSet("complement_"+self.name)
         g.get_genome_data(organism, chrom_X, chrom_Y, chrom_M)
         g.subtract(self)
         return g
 
     def count_by_region(self, region):
-        """Return the number of intersection regions with the given GenomicRegion"""
+        """Return the number of intersection regions with the given GenomicRegion.
+        
+        *Key arguments:*
+
+            - region -- A GenomicRegion defining the interval for counting.
+        """
         query = GenomicRegionSet("query")
         query.add(region)
         return len(self.intersect(query))
 
     def count_by_regionset(self, regionset):
-        """Return the number of intersection regions with the given GenomicRegionSet"""
+        """Return the number of intersection regions with the given GenomicRegionSet.
+
+        *Key arguments:*
+
+            - regionset -- A GenomicRegionSet defining the interval for counting.
+        """
         return len(self.intersect(regionset))
 
     def counts_per_region(self, regionset):
-        """Return a list of counting numbers of the given GenomicRegionSet based on the self RegionSet
-        Note: The length of the result list is the same as self GenomicRegionSet"""
+        """Return a list of counting numbers of the given GenomicRegionSet based on the self.
+        
+        *Key arguments:*
+
+            - regionset -- A GenomicRegionSet defining the interval for counting.
+
+        .. note:: The length of the result list is the same as self GenomicRegionSet
+        """
         if len(self) == 0: return None
         if len(regionset) == 0: return [0]*len(self)
 
@@ -1705,13 +1733,28 @@ class GenomicRegionSet:
         return counts
         
     def covered_by_aregion(self, region):
-        """Return a GEnomicRegionSet which includes all the regions covered by a given region."""
+        """Return a GenomicRegionSet which includes all the regions covered by a given region.
+
+        *Key arguments:*
+
+            - region -- A GenomicRegion defining the interval.
+
+        *Return:*
+
+            - A GenomicRegionSet containing the regions within the defined interval.
+        """
         region_set = GenomicRegionSet("Query")
         region_set.add(region)
         return self.intersect(region_set, mode=OverlapType.ORIGINAL)
 
     def replace_region_name(self, regions, combine=False):
-        """Replace the region names by the given region set"""
+        """Replace the region names by the given GenomicRegionSet.
+        
+        *Key arguments:*
+
+            - regions -- A GenomicRegionSet as the source for the names.
+            - combine -- Combine the names from the old and new regions.
+        """
         if len(self) == 0 or len(regions) == 0: return
         
         else:
@@ -1750,6 +1793,12 @@ class GenomicRegionSet:
             return
 
     def change_name_by_dict(self, convert_dict):
+        """Change the names of each region by the given dictionary.
+
+        *Key arguments:*
+
+            - convert_dict -- A dictionary having original names as its keys and new names as its values.
+        """
         z = GenomicRegionSet(self.name)
         for s in self:
             try: name = convert_dict[s.name]
@@ -1758,16 +1807,29 @@ class GenomicRegionSet:
         return z
 
     def by_names(self, names):
-        """Subset the region set by the given list of names"""
+        """Subset the GenomicRegionSet by the given list of names.
+
+        *Key arguments:*
+
+            - names -- A list of names as targets.
+
+        *Return:*
+
+            - A GenomicRegionSet containing the regions with the target names.
+        """
         z = GenomicRegionSet(self.name)
         for gr in self:
             if gr.name in names:
                 z.add(gr)
-    
         return z
 
     def write_bed_blocks(self, filename):
-        """Write BED file with information of blocks e.g. exons """
+        """Write BED file with information of blocks e.g. exons.
+
+        *Key arguments:*
+
+            - filename -- Define the filename of the new BED file.
+        """
         f = open(filename, "w")
         # z = GenomicRegionSet(self.name)
         blocks = {}
@@ -1805,8 +1867,14 @@ class GenomicRegionSet:
         f.close()
 
     def coverage_per_region(self, regionset):
-        """Return a list of coverage of the given GenomicRegionSet based on the self RegionSet
-        Note: The length of the result list is the same as self GenomicRegionSet"""
+        """Return a list of coverage of the given GenomicRegionSet based on the self GenomicRegionSet.
+
+        *Key arguments:*
+
+            - regionset -- A GenomicRegionSet as the signal for calculate the coverage.
+
+        .. note:: The length of the result list is the same as self GenomicRegionSet.
+        """
         if len(self) == 0: return None
         if len(regionset) == 0: return [0]*len(self)
 
@@ -1870,6 +1938,7 @@ class GenomicRegionSet:
         return coverages
 
     def extract_blocks(self):
+        """Extract the exon information from self.data and add them into the self GenomicRegionSet."""
         regions = []
         for rg in self:
             try: 
@@ -1880,4 +1949,5 @@ class GenomicRegionSet:
         self.sequences = regions
 
     def sort_score(self):
+        """Sort the regions by their scores."""
         self.sort(key=lambda x: float(x.data.split("\t")[0]), reverse=True)
