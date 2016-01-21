@@ -5,7 +5,6 @@ MotifSet
 ===================
 Represents a transcription factor motif and the standardization of motif annotation.
 
-Authors: Eduardo G. Gusmao, Ivan G. Costa.
 """
 
 # Python
@@ -30,12 +29,12 @@ class Motif:
 
     *Keyword arguments:*
 
-    - tf_id -- Transcription factor ID.
-    - name -- Transcription factor name (symbol).
-    - database -- Database/repository in which this motif was obtained from.
-    - tf_class -- Class of transcription factor motif.
-    - genes -- Genes in which transcription factor binds to.
-    - genes_suffix -- Gene suffixes.
+      - tf_id -- Transcription factor ID.
+      - name -- Transcription factor name (symbol).
+      - database -- Database/repository in which this motif was obtained from.
+      - tf_class -- Class of transcription factor motif.
+      - genes -- Genes in which transcription factor binds to.
+      - genes_suffix -- Gene suffixes.
     """
 
     def __init__(self, tf_id, name, database, tf_class, genes, genes_suffix):
@@ -63,7 +62,7 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - new_motif -- New motif to be added.
+          - new_motif -- New motif to be added.
         """
 
         #new_motif=Motif(tf_id, name, database, tf_class, genes, genes_suffix)
@@ -90,11 +89,11 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - gene_name -- Gene name to perform the match.
+          - gene_name -- Gene name to perform the match.
 
         *Return:*
 
-        - res -- ID of mapped genes.
+          - res -- ID of mapped genes.
         """
 
         res=[]
@@ -109,11 +108,11 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - motifs -- Motifs in which to filter this set.
+          - motifs -- Motifs in which to filter this set.
 
         *Return:*
 
-        - motif_sets -- Filtered motif sets.
+          - motif_sets -- Filtered motif sets.
         """
 
         motif_sets=MotifSet()
@@ -127,20 +126,20 @@ class MotifSet:
 
     def filter_by_genes(self, genes, search="exact"):
         """This method returns motifs associated to genes. The search has three modes: 
-           1. 'exact' - exact match only
-           2. 'inexact' - genes with no exact match are searched for inexact matcth
-           3. 'all' - all genes are applied to an inexact match
+            1. 'exact' - exact match only
+            2. 'inexact' - genes with no exact match are searched for inexact matcth
+            3. 'all' - all genes are applied to an inexact match
 
         *Keyword arguments:*
 
-        - genes -- Gene set to perform the filtering.
-        - search -- Search mode (default = 'exact').
+          - genes -- Gene set to perform the filtering.
+          - search -- Search mode (default = 'exact').
 
         *Return:*
 
-        - motif_sets -- Filtered motif sets.
-        - genes_motifs -- Dictionary of genes to motifs.
-        - motifs_genes -- Dictionary of motifs to genes.
+          - motif_sets -- Filtered motif sets.
+          - genes_motifs -- Dictionary of genes to motifs.
+          - motifs_genes -- Dictionary of motifs to genes.
         """
         motif_sets=MotifSet()
         motifs_genes={}
@@ -190,7 +189,7 @@ class MotifSet:
         
         *Keyword arguments:*
 
-        - file_name_list -- A list with .mtf files.
+          - file_name_list -- A list with .mtf files.
         """
 
         # Iterating over the file name list
@@ -224,8 +223,8 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - enrichment_files -- Enrichment files to read.
-        - pvalue_threshold -- P-value threshold for motif acceptance.
+          - enrichment_files -- Enrichment files to read.
+          - pvalue_threshold -- P-value threshold for motif acceptance.
         """
         # reading networks
         for f in glob.glob(enrichment_files): 
@@ -262,9 +261,9 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - threshold -- P-value threshold for motif acceptance.
-        - out_file -- Output file name.
-        - motifs_map -- Mapping of motifs.
+          - threshold -- P-value threshold for motif acceptance.
+          - out_file -- Output file name.
+          - motifs_map -- Mapping of motifs.
         """
 
         f = open(out_file,"w")
@@ -321,11 +320,11 @@ class MotifSet:
 
         *Keyword arguments:*
 
-        - genes -- Gene set.
-        - gene_mapping_search -- Gene mapping.
-        - out_path -- Output path.
-        - targets -- Gene targets.
-        - threshold -- Threshold for motif acceptance.
+          - genes -- Gene set.
+          - gene_mapping_search -- Gene mapping.
+          - out_path -- Output path.
+          - targets -- Gene targets.
+          - threshold -- Threshold for motif acceptance.
         """
         #getting mapping of genes to motifs
         [motif_sets,genes_motifs,motifs_genes]=self.filter_by_genes(genes,gene_mapping_search)

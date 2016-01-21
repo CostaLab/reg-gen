@@ -23,20 +23,20 @@ class AnnotationSet:
 
     *Keyword arguments:*
 
-    - gene_source -- Gene source annotation. It will be used to create the gene_list element. It can be:
-        - A matrix (list of lists): An AnnotationSet will be created based on such matrix.
-        - A string representing a gtf file: An AnnotationSet will be created based on such gtf file.
-        - A string representing an organism: An AnnotationSet will be created based on the gtf file for that organism in data.config file.
+        - gene_source -- Gene source annotation. It will be used to create the gene_list element. It can be:
+            - A matrix (list of lists): An AnnotationSet will be created based on such matrix.
+            - A string representing a gtf file: An AnnotationSet will be created based on such gtf file.
+            - A string representing an organism: An AnnotationSet will be created based on the gtf file for that organism in data.config file.
 
-    - tf_source -- TF source annotation. After initialization, this object is mapped with gene_list. It can be:
-        - A matrix (list of lists): Represents a final tf_list element.
-        - A list of mtf files: The tf_list will be created based on all mtf files.
-        - A list of repositories: The tf_list will be created based on the mtf files associated with such repositories in data.config.
+        - tf_source -- TF source annotation. After initialization, this object is mapped with gene_list. It can be:
+            - A matrix (list of lists): Represents a final tf_list element.
+            - A list of mtf files: The tf_list will be created based on all mtf files.
+            - A list of repositories: The tf_list will be created based on the mtf files associated with such repositories in data.config.
 
-    - alias_source -- Alias dictionary source annotation. It can be:
-        - A dictionary: An alias dictionary will be created based on such dictionary.
-        - A string representing a alias (txt) file: An alias dictionary will be created based on such txt file.
-        - A string representing an organism: An alias dictionary will be created based on the txt file for that organism in data.config file.
+        - alias_source -- Alias dictionary source annotation. It can be:
+            - A dictionary: An alias dictionary will be created based on such dictionary.
+            - A string representing a alias (txt) file: An alias dictionary will be created based on such txt file.
+            - A string representing an organism: An alias dictionary will be created based on the txt file for that organism in data.config file.
     """
 
     class GeneField:
@@ -44,21 +44,21 @@ class AnnotationSet:
 
         *Constants:*
 
-        - GENOMIC_REGION.
-        - ANNOTATION_SOURCE.
-        - FEATURE_TYPE.
-        - GENOMIC_PHASE.
-        - GENE_ID.
-        - TRANSCRIPT_ID.
-        - GENE_TYPE.
-        - GENE_STATUS.
-        - GENE_NAMES.
-        - TRANSCRIPT_TYPE.
-        - TRANSCRIPT_STATUS.
-        - TRANSCRIPT_NAME.
-        - LEVEL.
-        - EXACT_GENE_MATCHES.
-        - INEXACT_GENE_MATCHES.
+            - GENOMIC_REGION.
+            - ANNOTATION_SOURCE.
+            - FEATURE_TYPE.
+            - GENOMIC_PHASE.
+            - GENE_ID.
+            - TRANSCRIPT_ID.
+            - GENE_TYPE.
+            - GENE_STATUS.
+            - GENE_NAMES.
+            - TRANSCRIPT_TYPE.
+            - TRANSCRIPT_STATUS.
+            - TRANSCRIPT_NAME.
+            - LEVEL.
+            - EXACT_GENE_MATCHES.
+            - INEXACT_GENE_MATCHES.
         """
 
         # Gff Fields 
@@ -87,13 +87,13 @@ class AnnotationSet:
 
         *Constants:*
 
-        - MATRIX_ID.
-        - SOURCE.
-        - VERSION.
-        - GENE_NAMES.
-        - GROUP.
-        - EXACT_GENE_MATCHES.
-        - INEXACT_GENE_MATCHES.
+            - MATRIX_ID.
+            - SOURCE.
+            - VERSION.
+            - GENE_NAMES.
+            - GROUP.
+            - EXACT_GENE_MATCHES.
+            - INEXACT_GENE_MATCHES.
         """
 
         # Mtf Fields
@@ -112,8 +112,8 @@ class AnnotationSet:
 
         *Constants:*
 
-        - GENE_LIST.
-        - TF_LIST.
+            - GENE_LIST.
+            - TF_LIST.
         """
         GENE_LIST = 0
         TF_LIST = 1
@@ -123,8 +123,8 @@ class AnnotationSet:
 
         *Constants:*
 
-        - ANNOTATION_SET.
-        - LIST.
+            - ANNOTATION_SET.
+            - LIST.
         """
         ANNOTATION_SET = 0
         LIST = 1
@@ -193,7 +193,7 @@ class AnnotationSet:
         
         *Keyword arguments:*
 
-        - file_name -- The gencode .gtf file name.
+            - file_name -- The gencode .gtf file name.
         """
 
         # Opening GTF file
@@ -266,7 +266,7 @@ class AnnotationSet:
         
         *Keyword arguments:*
 
-        - file_name -- Alias file name.
+            - file_name -- Alias file name.
         """
 
         # Opening alias file
@@ -292,7 +292,7 @@ class AnnotationSet:
         
         *Keyword arguments:*
 
-        - file_name_list -- A list with .mtf files.
+            - file_name_list -- A list with .mtf files.
         """
 
         # Iterating over the file name list
@@ -369,14 +369,14 @@ class AnnotationSet:
         
         *Keyword arguments:*
 
-        - gene_set -- A GeneSet object.
-        - output_dict -- Also output the mapping dictionary (default = False).
-        - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = False).
+            - gene_set -- A GeneSet object.
+            - output_dict -- Also output the mapping dictionary (default = False).
+            - mute_warn -- Do not print warnings regarding genes that mapped to multiple entries (default = False).
         
         *Return:*
 
-        - mapped_gene_list -- A list of ensembl IDs
-        - unmapped_gene_list -- A list of unmapped gene symbols/IDs
+            - mapped_gene_list -- A list of ensembl IDs
+            - unmapped_gene_list -- A list of unmapped gene symbols/IDs
         """
         
         # Creating resulting lists
@@ -420,17 +420,17 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - query -- A parameter that allows for subsets of self to be fetched. It can be:
-            - None: All fields/values are going to be returned.
-            - A dictionary: Subsets the desired list according to this structure. Each
-                  key must be a field (please refer to AnnotationSet.GeneField or AnnotationSet.TfField)
-                  that must point to a single value or a list of values.
-        - list_type -- Indicates which list should be subsetted/returned. Please refer to AnnotationSet.DataType.
-        - return_type -- Indicates what should be returned. Please refer to AnnotationSet.ReturnType.
+            - query -- A parameter that allows for subsets of self to be fetched. It can be:
+                - None: All fields/values are going to be returned.
+                - A dictionary: Subsets the desired list according to this structure. Each
+                      key must be a field (please refer to AnnotationSet.GeneField or AnnotationSet.TfField)
+                      that must point to a single value or a list of values.
+            - list_type -- Indicates which list should be subsetted/returned. Please refer to AnnotationSet.DataType.
+            - return_type -- Indicates what should be returned. Please refer to AnnotationSet.ReturnType.
 
         *Return:*
 
-        - result_list -- A <return_type> containing the requested <list_type> subsetted according to <query>.
+            - result_list -- A <return_type> containing the requested <list_type> subsetted according to <query>.
         """
 
         # Fetching local copies of the lists
@@ -493,12 +493,12 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        gene_source -- It can be a string (single gene name) or a GeneSet (multiple genes).
+            - gene_source -- It can be a string (single gene name) or a GeneSet (multiple genes).
 
         *Return:*
 
-        - if gene_source is string then returns the converted string gene name or None if gene name could not be converted.
-        - if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
+            - if gene_source is string then returns the converted string gene name or None if gene name could not be converted.
+            - if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
         """
 
         if(isinstance(gene_name_source,str)):
@@ -519,14 +519,14 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - promoterLength -- The length of the promoter region.
-        - gene_set -- A set of genes to narrow the search.
-        - unmaplist -- If True than also return the unmappable genes list (default = False).
+            - promoterLength -- The length of the promoter region.
+            - gene_set -- A set of genes to narrow the search.
+            - unmaplist -- If True than also return the unmappable genes list (default = False).
 
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing the promoters.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing the promoters.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -563,12 +563,12 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - gene_set -- A set of genes to narrow the search.
+            - gene_set -- A set of genes to narrow the search.
         
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing TSS.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing TSS.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -602,12 +602,12 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - gene_set -- A set of genes to narrow the search.
+            - gene_set -- A set of genes to narrow the search.
         
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing TTS.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing TTS.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -641,14 +641,14 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - start_site -- Whether to relocate the start sites.
-        - end_site -- Whether to relocate the end sites.
-        - gene_set -- A set of genes to narrow the search.
+            - start_site -- Whether to relocate the start sites.
+            - end_site -- Whether to relocate the end sites.
+            - gene_set -- A set of genes to narrow the search.
 
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing the exons.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing the exons.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -681,12 +681,12 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - gene_set -- A set of genes to narrow the search.
+            - gene_set -- A set of genes to narrow the search.
 
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing the genes.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing the genes.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         # Fetching gene names
@@ -714,14 +714,14 @@ class AnnotationSet:
 
         *Keyword arguments:*
 
-        - start_site -- Whether to relocate the start sites.
-        - end_site -- Whether to relocate the end sites.
-        - gene_set -- A set of genes to narrow the search.
+            - start_site -- Whether to relocate the start sites.
+            - end_site -- Whether to relocate the end sites.
+            - gene_set -- A set of genes to narrow the search.
 
         *Return:*
 
-        - result_grs -- A GenomicRegionSet containing the introns.
-        - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+            - result_grs -- A GenomicRegionSet containing the introns.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
         if(gene_set):

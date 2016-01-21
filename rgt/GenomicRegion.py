@@ -7,13 +7,13 @@ GenomicRegion describes a genomic region.
 class GenomicRegion:
     """*Keyword arguments:*
 
-        - chrom -- Chromosome.
-        - initial -- Start position
-        - final -- End position
-        - name -- Name of the region
-        - orientation -- Orientation of the region, "+" or "-"
-        - data -- Extra information
-        - proximity -- Close genes
+            - chrom -- Chromosome.
+            - initial -- Start position
+            - final -- End position
+            - name -- Name of the region
+            - orientation -- Orientation of the region, "+" or "-"
+            - data -- Extra information
+            - proximity -- Close genes
     """
     #__slots__ = ['chrom', 'initial', 'final', 'name', 'orientation', 'data', 'proximity']
 
@@ -33,7 +33,7 @@ class GenomicRegion:
 
         *Keyword arguments:*
         
-        - as_list -- Return a list instead of a string.
+            - as_list -- Return a list instead of a string.
         """
         if not as_list:
             return self.data
@@ -78,7 +78,7 @@ class GenomicRegion:
 
         *Keyword arguments:*
 
-        - space -- insert spaces between the values.
+            - space -- insert spaces between the values.
         """
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
@@ -90,8 +90,8 @@ class GenomicRegion:
 
         *Keyword arguments:*
         
-        - left -- Define the length to extend on left.
-        - right -- Define the length to extend on right.
+            - left -- Define the length to extend on left.
+            - right -- Define the length to extend on right.
         """
         self.initial -= left
         self.final += right 
@@ -107,7 +107,7 @@ class GenomicRegion:
 
         *Keyword arguments:*
 
-        - region -- Given GenomicRegion to compare.
+            - region -- Given GenomicRegion to compare.
         """
         if region.chrom == self.chrom:
             if self.initial <= region.initial:
@@ -129,7 +129,7 @@ class GenomicRegion:
 
         *Keyword arguments:*
 
-        - region -- Given GenomicRegion to compare.
+            - region -- Given GenomicRegion to compare.
         """
         if self.chrom < region.chrom:
             return -1
@@ -175,7 +175,7 @@ class GenomicRegion:
 
         *Keyword arguments:*
 
-        - y -- Given GenomicRegion to compare.
+            - y -- Given GenomicRegion to compare.
         """
         
         if self.chrom == y.chrom:

@@ -25,12 +25,12 @@ class ExperimentalMatrix:
 
     *Variables:*
 
-    - names -- The unique name of experiment (filename).
-    - types -- The type of data.
-    - files -- The path of the related file with its filename as keys.
-    - fields -- List types of informations including names, types, files and others.
-    - fieldsDict -- Its keys are just self.fields, and the values are extra informations.
-    - objectsDict -- Key is the names; value is GenomicRegionSet or GeneSet.
+        - names -- The unique name of experiment (filename).
+        - types -- The type of data.
+        - files -- The path of the related file with its filename as keys.
+        - fields -- List types of informations including names, types, files and others.
+        - fieldsDict -- Its keys are just self.fields, and the values are extra informations.
+        - objectsDict -- Key is the names; value is GenomicRegionSet or GeneSet.
     """
 
     def __init__(self):
@@ -46,16 +46,19 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - file_path -- Experimental matrix file path + name.
-        - is_bedgraph -- Whether regions are in bedgraph format (default = False).
-        - verbose -- Verbose output (default = False).
+            - file_path -- Experimental matrix file path + name.
+            - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+            - verbose -- Verbose output (default = False).
 
         *Example of experimental matrix file:*
 
-        name    type    file    further1
-        MPP_PU1    regions    fil21.bed    addidional_info1
-        CDP_PU1    regions    file2.bed    addidional_info2
-        [ ... ]
+            ======== ======== ========= ==================
+              name      type     file     further1
+            ======== ======== ========= ==================
+            MPP_PU1  regions  file1.bed  addidional_info1
+            CDP_PU1  regions  file2.bed  addidional_info2
+            [ ... ]
+            ======== ======== ========= ==================
         """
         f = open(file_path,'rU')
         
@@ -141,8 +144,8 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - is_bedgraph -- Whether regions are in bedgraph format (default = False).
-        - verbose -- Verbose output (default = False).
+            - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+            - verbose -- Verbose output (default = False).
         """
         for i, t in enumerate(self.types):
             if verbose: print("Loading file ", self.files[self.names[i]], file = sys.stderr)
@@ -169,8 +172,8 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - name -- Name to return.
-        - field -- Field to return.
+            - name -- Name to return.
+            - field -- Field to return.
         """
         for f in self.fieldsDict.keys():
             if f == field:
@@ -185,7 +188,7 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - name -- Name to return.
+            - name -- Name to return.
         """
         result = []
         for c in self.fieldsDict.keys():
@@ -199,7 +202,7 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - name -- Name to remove.
+            - name -- Name to remove.
         """
 
         i = self.name.index(name)
@@ -219,7 +222,7 @@ class ExperimentalMatrix:
 
         *Keyword arguments:*
 
-        - field -- Field to add extra entries.
+            - field -- Field to add extra entries.
         """
 
         # check regions or reads have empty tag

@@ -41,7 +41,7 @@ class GeneSet:
 
         *Keyword arguments:*
 
-        - geneListFile -- Path to the file which contains a list of genes.
+            - geneListFile -- Path to the file which contains a list of genes.
         """
         with open(geneListFile) as f:
             for line in f:            
@@ -56,9 +56,9 @@ class GeneSet:
 
         *Keyword arguments:*
         
-        - geneListFile -- Path to the file which contains genes and expression value.
-        - header -- Read first line as header.
-        - valuestr -- Keep the value as a string, otherwise convert to float number.
+            - geneListFile -- Path to the file which contains genes and expression value.
+            - header -- Read first line as header.
+            - valuestr -- Keep the value as a string, otherwise convert to float number.
         """
         with open(geneListFile) as f:
             if header:
@@ -90,7 +90,7 @@ class GeneSet:
         
         *Keyword arguments:*
         
-        - organism -- Define the organism.
+            - organism -- Define the organism.
         """
         genome = GenomeData(organism=organism)
         self.genes = []
@@ -108,6 +108,6 @@ class GeneSet:
         
         *Keyword arguments:*
 
-        - gene_set -- Another GeneSet for subtracting with.
+            - gene_set -- Another GeneSet for subtracting with.
         """
         self.genes = [gene for gene in self.genes if gene not in gene_set.genes]

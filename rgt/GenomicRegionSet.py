@@ -1543,7 +1543,7 @@ class GenomicRegionSet:
     def relocate_regions(self,center='midpoint',left_length=2000,right_length=2000):
         """Return a new GenomicRegionSet which relocates the regions by given center and extend length.
         
-        *Key arguments:*
+        *Keyword arguments:*
 
             - center -- Define the referring point of each region
 
@@ -1613,7 +1613,7 @@ class GenomicRegionSet:
     def include(self, region):
         """Check whether the given region has intersect with the original regionset.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - region -- A GenomicRegion to be checked.
         """
@@ -1625,7 +1625,7 @@ class GenomicRegionSet:
     def complement(self, organism, chrom_X=True, chrom_Y=False, chrom_M=False):
         """Return the complement GenomicRegionSet for the given organism.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - organism -- Define organism's genome to use. (hg19, mm9)
             - chrom_X -- The result covers chromosome X or not. (True/False)
@@ -1644,7 +1644,7 @@ class GenomicRegionSet:
     def count_by_region(self, region):
         """Return the number of intersection regions with the given GenomicRegion.
         
-        *Key arguments:*
+        *Keyword arguments:*
 
             - region -- A GenomicRegion defining the interval for counting.
         """
@@ -1655,7 +1655,7 @@ class GenomicRegionSet:
     def count_by_regionset(self, regionset):
         """Return the number of intersection regions with the given GenomicRegionSet.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - regionset -- A GenomicRegionSet defining the interval for counting.
         """
@@ -1664,7 +1664,7 @@ class GenomicRegionSet:
     def counts_per_region(self, regionset):
         """Return a list of counting numbers of the given GenomicRegionSet based on the self.
         
-        *Key arguments:*
+        *Keyword arguments:*
 
             - regionset -- A GenomicRegionSet defining the interval for counting.
 
@@ -1735,7 +1735,7 @@ class GenomicRegionSet:
     def covered_by_aregion(self, region):
         """Return a GenomicRegionSet which includes all the regions covered by a given region.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - region -- A GenomicRegion defining the interval.
 
@@ -1750,7 +1750,7 @@ class GenomicRegionSet:
     def replace_region_name(self, regions, combine=False):
         """Replace the region names by the given GenomicRegionSet.
         
-        *Key arguments:*
+        *Keyword arguments:*
 
             - regions -- A GenomicRegionSet as the source for the names.
             - combine -- Combine the names from the old and new regions.
@@ -1795,7 +1795,7 @@ class GenomicRegionSet:
     def change_name_by_dict(self, convert_dict):
         """Change the names of each region by the given dictionary.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - convert_dict -- A dictionary having original names as its keys and new names as its values.
         """
@@ -1809,7 +1809,7 @@ class GenomicRegionSet:
     def by_names(self, names):
         """Subset the GenomicRegionSet by the given list of names.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - names -- A list of names as targets.
 
@@ -1826,7 +1826,7 @@ class GenomicRegionSet:
     def write_bed_blocks(self, filename):
         """Write BED file with information of blocks e.g. exons.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - filename -- Define the filename of the new BED file.
         """
@@ -1869,7 +1869,7 @@ class GenomicRegionSet:
     def coverage_per_region(self, regionset):
         """Return a list of coverage of the given GenomicRegionSet based on the self GenomicRegionSet.
 
-        *Key arguments:*
+        *Keyword arguments:*
 
             - regionset -- A GenomicRegionSet as the signal for calculate the coverage.
 

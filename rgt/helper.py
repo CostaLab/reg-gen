@@ -16,8 +16,7 @@ def get_chrom_sizes_as_genomicregionset(chrom_size_path):
     return regionset
 
 class BigWigFile():
-    '''
-    Fast reader of BigWig format file.
+    """Fast reader of BigWig format file.
     Usage:
         Open file:
             fh=BigWigFile("test.bw")
@@ -35,9 +34,9 @@ class BigWigFile():
         chrom=None: return empty list.
         start=None: start at first position.
         stop=None:  stop at the end of chromosome.
-    '''
+    """
     def __init__(self,infile,chrom_size=None):
-        ''' Open BigWig file. '''
+        """Open BigWig file. """
         # Check if file exists
         self.closed = True
         if not os.path.exists(infile) and infile != 'stdin':
@@ -59,13 +58,12 @@ class BigWigFile():
         self.closed = False
 
     def chromSizes(self):
-        ''' Get chromosome sizes.'''
+        """Get chromosome sizes."""
         chroms,sizes=wWigIO.getChromSize(self.infile)
         return chroms,sizes
 
     def fetch(self, chrom,start=None,stop=None, strand="+", zerobased=True,**kwargs):
-        '''
-        Fetch intervals in a given region. 
+        """Fetch intervals in a given region. 
         Note: strand is useless here.
         Parameters:
             start: int or None
@@ -82,7 +80,7 @@ class BigWigFile():
         Generates:
             wig: tuple
                 (start, stop, value)
-        '''
+        """
         if chrom is None: raise ValueError("ERROR: chrom name is required.")
         if start is None: start = 0
         if not zerobased: start -= 1
@@ -106,9 +104,7 @@ class BigWigFile():
                 raise ValueError("ERROR: BigWig file cannot be opened.")
 
     def pileup(self,chrom,start=None,stop=None,strand="+",zerobased=True,**kwargs):
-        '''
-        Fetch depth for a genomic region.        
-        '''
+        """Fetch depth for a genomic region."""
         if chrom is None: raise ValueError("ERROR: chrom name is required.")
         if start is None: start = 0
         if not zerobased: start -= 1
@@ -121,7 +117,7 @@ class BigWigFile():
         return vals
 
     def fetchBed(self,tbed,byPos=False,forcestrand=True):
-        '''Fetch intervals for Bed.'''
+        """Fetch intervals for Bed."""
         wigs=wWigIO.getIntervals(self.infile,tbed.chrom,tbed.start,tbed.stop)
         if not byPos:
             return wigs
@@ -136,29 +132,29 @@ class BigWigFile():
         return vals
 
     def __enter__(self):
-        ''' Enter instance. '''
+        """Enter instance."""
         return self
 
     def __exit__(self, type, value, traceback):
-        ''' Exit instance. '''
+        """Exit instance."""
         self.close()
 
     def close(self):
-        ''' Close BigWig file. '''
+        """Close BigWig file."""
         if not self.closed:
             wWigIO.close(self.infile)
             self.closed = True
 
     def __del__(self): 
-        ''' Close BigWig file.  Avoid memory leaks.'''
+        """Close BigWig file. Avoid memory leaks."""
         self.close()
 
     def wigToBigWig(wigfile, sizefile, bwfile):
-        ''' Convert wiggle file to BigWig file. '''
+        """Convert wiggle file to BigWig file."""
         wWigIO.wigToBigWig(wigfile, sizefile, bwfile)
     wigToBigWig=staticmethod(wigToBigWig)
     
     def bigWigToWig(bwfile, wigfile):
-        ''' Convert BigWig file to Wiggle file. '''
+        """Convert BigWig file to Wiggle file."""
         wWigIO.bigWigToWig(bwfile, wigfile)
     bigWigToWig=staticmethod(bigWigToWig)

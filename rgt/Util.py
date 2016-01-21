@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Util
 ===================
 The Util classes contains many utilities needed by other classes such as the paths to input files.
 
-Author: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
 
 # Python
@@ -21,8 +18,8 @@ class ConfigurationFile:
 
     *Variables:*
 
-    - self.config -- Represents the configuration file.
-    - self.data_dir -- Represents the root path to data files.
+        - self.config -- Represents the configuration file.
+        - self.data_dir -- Represents the root path to data files.
 
     """
 
@@ -50,7 +47,7 @@ class GenomeData(ConfigurationFile):
 
         *Keyword arguments:*
 
-        - organism -- Organism alias.
+            - organism -- Organism alias.
         """
         ConfigurationFile.__init__(self)
         self.organism = organism
@@ -93,8 +90,7 @@ class GenomeData(ConfigurationFile):
 
 
 class MotifData(ConfigurationFile):
-    """
-    Represent motif (PWM) data. Inherits ConfigurationFile."""
+    """Represent motif (PWM) data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
@@ -126,7 +122,7 @@ class MotifData(ConfigurationFile):
 
         *Keyword arguments:*
 
-        - current_repository -- Motif repository.
+            - current_repository -- Motif repository.
         """
         return os.path.join(self.data_dir,self.config.get('MotifData','logo_dataset'),current_repository)
 
@@ -139,7 +135,7 @@ class MotifData(ConfigurationFile):
 
         *Keyword arguments:*
 
-        - current_repository -- Motif repository.
+            - current_repository -- Motif repository.
         """
         return os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".mtf")
 
@@ -248,9 +244,9 @@ class OverlapType:
 
     *Constants:*
 
-    - OVERLAP -- Return new GenomicRegionSet including only the overlapping regions.
-    - ORIGINAL -- Return the regions of original GenomicRegionSet which have any intersections.
-    - COMP_INCL -- Return region(s) of the GenomicRegionSet which are 'completely' included.
+        - OVERLAP -- Return new GenomicRegionSet including only the overlapping regions.
+        - ORIGINAL -- Return the regions of original GenomicRegionSet which have any intersections.
+        - COMP_INCL -- Return region(s) of the GenomicRegionSet which are 'completely' included.
     """
 
     OVERLAP = 0 
@@ -258,14 +254,12 @@ class OverlapType:
     COMP_INCL = 2
 
 class SequenceType:
-    """
-    Class of sequence type
-    Author: Joseph Kuo
+    """Class of sequence type
     
     *Constants:*
     
-    - DNA
-    - RNA
+        - DNA
+        - RNA
     """
     DNA = 0
     RNA = 1
@@ -277,8 +271,7 @@ class HelpfulOptionParser(OptionParser):
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
 class PassThroughOptionParser(HelpfulOptionParser):
-    """When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted. sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or bad argument types, etc.). Inherits HelpfulOptionParser.
-    """
+    """When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted. sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or bad argument types, etc.). Inherits HelpfulOptionParser."""
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
@@ -292,18 +285,20 @@ class ErrorHandler():
 
         *Error Dictionary Standard:*
 
-        Each entry consists of a key+list in the form X:[Y,Z,W] where:
-        - X -- The key representing the internal error name.
-        - Y -- Error number.
-        - Z -- Exit status.
-        - W -- Error message to be print.
+            Each entry consists of a key+list in the form X:[Y,Z,W] where:
+
+            - X -- The key representing the internal error name.
+            - Y -- Error number.
+            - Z -- Exit status.
+            - W -- Error message to be print.
 
         *Warning Dictionary Standard:*
 
-        Each entry consists of a key+list in the form X:[Y,Z] where:
-        - X -- The key representing the internal warning name.
-        - Y -- Warning number.
-        - Z -- Warning message to be print.
+            Each entry consists of a key+list in the form X:[Y,Z] where:
+
+            - X -- The key representing the internal warning name.
+            - Y -- Warning number.
+            - Z -- Warning message to be print.
     """
 
     def __init__(self):
@@ -366,8 +361,8 @@ class ErrorHandler():
 
         *Keyword arguments:*
 
-        - error_type -- Error type.
-        - add_msg -- Message to add to the error.
+            - error_type -- Error type.
+            - add_msg -- Message to add to the error.
         """
 
         # Fetching error type
@@ -395,8 +390,8 @@ class ErrorHandler():
 
         *Keyword arguments:*
 
-        - warning_type -- Warning type.
-        - add_msg -- Message to add to the error.
+            - warning_type -- Warning type.
+            - add_msg -- Message to add to the error.
         """
 
         # Fetching warning type
@@ -420,17 +415,16 @@ class Html:
 
     *Keyword arguments:*
 
-    - name -- Name of the HTML document.
-    - links_dict -- Dictionary with the upper links.
-    - fig_dir -- Figure directory (default = None).
-    - fig_rpath -- Relative figure path (default = '../fig').
-    - cluster_path_fix -- deprecated.
-    - RGT_header -- Whether to print RGT header (default = True).
-    - other_logo -- Other tool logos (default = None).
-    - homepage -- Homepage link (default = None).
+        - name -- Name of the HTML document.
+        - links_dict -- Dictionary with the upper links.
+        - fig_dir -- Figure directory (default = None).
+        - fig_rpath -- Relative figure path (default = '../fig').
+        - cluster_path_fix -- deprecated.
+        - RGT_header -- Whether to print RGT header (default = True).
+        - other_logo -- Other tool logos (default = None).
+        - homepage -- Homepage link (default = None).
 
     .. warning:: cluster_path_fix is going to be deprecated soon. Do not use it.
-
     """
 
     def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", 
@@ -459,7 +453,7 @@ class Html:
 
         *Keyword arguments:*
 
-        - target_dir -- Target directory to copy files.
+            - target_dir -- Target directory to copy files.
         """
 
         try:
@@ -483,9 +477,9 @@ class Html:
 
         *Keyword arguments:*
 
-        - relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it (default = None).
-        - RGT_name -- Whether to print RGT name (default = True).
-        - other_logo -- Other tool logos (default = None)
+            - relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it (default = None).
+            - RGT_name -- Whether to print RGT name (default = True).
+            - other_logo -- Other tool logos (default = None)
         """
 
         self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>') 
@@ -579,13 +573,13 @@ class Html:
         
         *Keyword arguments:*
 
-        - heading -- The heading title.
-        - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument (default = 50).
-        - color -- Color of the heading (default = "black").
-        - face -- Font of the heading (default = "Arial").
-        - size -- Size of the heading (HTML units [1,7]) (default = 5).
-        - bold -- Whether the heading is bold (default = True).
-        - idtag -- Add ID tag in the heading element (default = None).
+            - heading -- The heading title.
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument (default = 50).
+            - color -- Color of the heading (default = "black").
+            - face -- Font of the heading (default = "Arial").
+            - size -- Size of the heading (HTML units [1,7]) (default = 5).
+            - bold -- Whether the heading is bold (default = True).
+            - idtag -- Add ID tag in the heading element (default = None).
         """
 
         if idtag:
@@ -618,23 +612,23 @@ class Html:
 
         *Keyword arguments:*
 
-        - header_list -- A list with the table headers in correct order.
-        - col_size_list -- A list with the column sizes (integers).
-        - type_list -- A string in which each character represents the type of each row.
-              - s = string (regular word or number)
-              - i = image
-              - l = link 
-        - data_table -- A table containing the data to be input according to each data type defined.
-              - s = string
-              - i = tuple containing: ("file name", width) width = an integer
-              - l = tuple containing: ("Name","Link")
-        - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
-        - cell_align -- Alignment of each cell in the table (default = center).
-        - auto_width -- Adjust the column width by the content automatically regardless of defined col size (default = False).
-        - colorcode -- Color code (default = None)
-        - header_titles -- Given a list corresponding to the header_list, which defines all the explanation in hint windows (default = None).
-        - border_list -- Table borders (default = None).
-        - sortable -- Whether it is a sortable table (default = False).
+            - header_list -- A list with the table headers in correct order.
+            - col_size_list -- A list with the column sizes (integers).
+            - type_list -- A string in which each character represents the type of each row.
+                  - s = string (regular word or number)
+                  - i = image
+                  - l = link 
+            - data_table -- A table containing the data to be input according to each data type defined.
+                  - s = string
+                  - i = tuple containing: ("file name", width) width = an integer
+                  - l = tuple containing: ("Name","Link")
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
+            - cell_align -- Alignment of each cell in the table (default = center).
+            - auto_width -- Adjust the column width by the content automatically regardless of defined col size (default = False).
+            - colorcode -- Color code (default = None)
+            - header_titles -- Given a list corresponding to the header_list, which defines all the explanation in hint windows (default = None).
+            - border_list -- Table borders (default = None).
+            - sortable -- Whether it is a sortable table (default = False).
         """
         #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
         
@@ -787,15 +781,15 @@ class Html:
         
         *Keyword arguments:*
 
-        - figure_path -- The path to the figure.
-        - notes -- A list of strings for further explanation
-        - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
-        - color -- Color (default = 'black').
-        - face -- Font (default = 'Arial').
-        - size -- Size (default = 3).
-        - bold -- Whether it is bold (default = False).
-        - width -- Width (default = 800).
-        - more_images -- Add more images (default = None).
+            - figure_path -- The path to the figure.
+            - notes -- A list of strings for further explanation
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
+            - color -- Color (default = 'black').
+            - face -- Font (default = 'Arial').
+            - size -- Size (default = 3).
+            - bold -- Whether it is bold (default = False).
+            - width -- Width (default = 800).
+            - more_images -- Add more images (default = None).
         """        
         if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"
         elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"
@@ -829,7 +823,7 @@ class Html:
 
         *Keyword arguments:*
 
-        - content_list -- List of strings. Each string is interpreted as a line in the HTML document.
+            - content_list -- List of strings. Each string is interpreted as a line in the HTML document.
         """
         for e in content_list: self.document.append(e)
 
@@ -838,8 +832,8 @@ class Html:
 
         *Keyword arguments:*
 
-        - list_of_items -- List of items to add.
-        - ordered -- Whether the list is odered (default = False).
+            - list_of_items -- List of items to add.
+            - ordered -- Whether the list is odered (default = False).
         """
         codes = ""
 
@@ -859,7 +853,7 @@ class Html:
 
         *Keyword arguments:*
 
-        - file_name -- Complete file name to write this HTML document.
+            - file_name -- Complete file name to write this HTML document.
         """
 
         # Add footer - finalize document
@@ -880,7 +874,7 @@ class AuxiliaryFunctions:
 
         *Keyword arguments:*
 
-        - s -- String to verify.
+            - s -- String to verify.
         """
         try:
             int(s)
@@ -894,7 +888,7 @@ class AuxiliaryFunctions:
 
         *Keyword arguments:*
 
-        - s -- String to verify.
+            - s -- String to verify.
         """
         try:
             float(s)
@@ -908,7 +902,7 @@ class AuxiliaryFunctions:
 
         *Keyword arguments:*
 
-        - score -- Score.
+            - score -- Score.
         """
         return min(max(score,0),1000)
 
@@ -918,13 +912,13 @@ class AuxiliaryFunctions:
 
         *Keyword arguments:*
 
-        - t1 -- First tuple.
-        - t2 -- Second tuple.
+            - t1 -- First tuple.
+            - t2 -- Second tuple.
   
         *Return:*
-        - -1 -- if i1 is before i2.
-        - 1 -- if i1 is after i2.
-        - 0 -- if there is any overlap.
+            - -1 -- if i1 is before i2.
+            - 1 -- if i1 is after i2.
+            - 0 -- if there is any overlap.
         """
         if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
         if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
@@ -936,7 +930,7 @@ class AuxiliaryFunctions:
 
         *Keyword arguments:*
 
-        - s -- String.
+            - s -- String.
         """
         revDict = dict([("A","T"),("T","A"),("C","G"),("G","C"),("N","N")])
         return "".join([revDict[e] for e in s[::-1]])
