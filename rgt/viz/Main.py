@@ -127,7 +127,8 @@ def main():
     helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB.'
     helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable.'
     helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable.'
-    
+    helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+    helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
@@ -241,9 +242,9 @@ def main():
     parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_lineplot.add_argument('-g', metavar='  ', default='None', help=helpgroup + " (Default:None)")
-    parser_lineplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_lineplot.add_argument('-s', metavar='  ', default='reads', help=helpsort + " (Default:reads)")
+    parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
+    parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
+    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
     parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -274,9 +275,9 @@ def main():
                                 'Default is no sorting at all, the signals arrange in the order of their position; '+
                                 '"0" is sorting by the average ranking of all signals; '+
                                 '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
-    parser_heatmap.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
-    parser_heatmap.add_argument('-g', metavar='  ', default='regions', help=helpgroup + " (Default:regions)")
+    parser_heatmap.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
     parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
+    parser_heatmap.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
     parser_heatmap.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_heatmap.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_heatmap.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -593,10 +594,10 @@ def main():
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.g, args.c, args.s):
+            if "reads" not in (args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.g, args.c, args.s):
+            if "regions" not in (args.col, args.c, args.row):
                 print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
 
@@ -611,7 +612,7 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.g,args.s,args.c])
+                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c])
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -620,16 +621,16 @@ def main():
             
             if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
+            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.s, mp=args.mp)
+            lineplot.coverage(sortby=args.row, mp=args.mp)
             t2 = time.time()
             print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.g, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy, sx=args.sx)
+            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy, sx=args.sx)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()
@@ -647,10 +648,10 @@ def main():
             # Read experimental matrix
             t0 = time.time()
 
-            if "reads" not in (args.g, args.c, args.s):
+            if "reads" not in (args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.g, args.c, args.s):
+            if "regions" not in (args.col, args.c, args.row):
                 print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
             print2(parameter, "Parameters:\tExtend length:\t"+str(args.e))
@@ -661,7 +662,7 @@ def main():
 
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=False, fields=[args.g,args.s,args.c])
+                                bs=args.bs, ss=args.ss, df=False, fields=[args.col,args.row,args.c])
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -670,7 +671,7 @@ def main():
             
             if args.mp: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
+            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
             lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log, mp=args.mp)
             t2 = time.time()

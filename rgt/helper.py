@@ -1,3 +1,9 @@
+"""
+helper codes
+===================
+some other extra codes
+"""
+
 import os
 import numpy
 from GenomicRegionSet import GenomicRegionSet
@@ -17,7 +23,9 @@ def get_chrom_sizes_as_genomicregionset(chrom_size_path):
 
 class BigWigFile():
     """Fast reader of BigWig format file.
-    Usage:
+
+    *Usage:*
+    
         Open file:
             fh=BigWigFile("test.bw")
         Get chromosome sizes:
@@ -30,10 +38,13 @@ class BigWigFile():
         Close file:
             fh.close()
     
-    Parameters:
+    *Parameters:*
+
         chrom=None: return empty list.
         start=None: start at first position.
         stop=None:  stop at the end of chromosome.
+
+    (Source: ngslib source code https://pypi.python.org/pypi/ngslib/1.1.14 retrieved on, Jan 12, 2016.)
     """
     def __init__(self,infile,chrom_size=None):
         """Open BigWig file. """

@@ -2421,6 +2421,8 @@ class Lineplot:
             sortby = 'reads','regions','cell',or 'factor'
         """
         self.tag_type = [sortby, groupby, colorby]
+        if "None" in self.tag_type: self.tag_type.remove("None")
+        
         #print([sortby, groupby, colorby])
         if groupby == "None":
             self.group_tags = [""]
