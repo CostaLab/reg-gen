@@ -1,3 +1,4 @@
+- use 'sort -k1,1 -k2,2n' for temporary bed files (which are then converted the bw)
 - GPL v3 license
 - bw tools automatically in PATH
 

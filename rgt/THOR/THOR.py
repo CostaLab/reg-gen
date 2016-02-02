@@ -64,19 +64,19 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug, verbose=options.verbose, \
                                         outputdir = options.outputdir, report=options.report, poisson = options.poisson)
-#     exp_data.compute_putative_region_index()
-#     
-#     print('Compute HMM\'s training set', file=sys.stderr)
-#     training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange, options.threshold, options.size_ts, 3)
-#     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
-#     m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
-#     training_set_obs = exp_data.get_observation(training_set)
-#     
-#     print('Train HMM', file=sys.stderr)
-#     m.fit([training_set_obs], options.hmm_free_para)
-#     distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
-#         
-#     return m, exp_data, func_para, init_mu, init_alpha, distr
+    exp_data.compute_putative_region_index()
+     
+    print('Compute HMM\'s training set', file=sys.stderr)
+    training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange, options.threshold, options.size_ts, 3)
+    init_alpha, init_mu = get_init_parameters(s0, s1, s2)
+    m = NegBinRepHMM(alpha = init_alpha, mu = init_mu, dim_cond_1 = dims[0], dim_cond_2 = dims[1], func = func)
+    training_set_obs = exp_data.get_observation(training_set)
+     
+    print('Train HMM', file=sys.stderr)
+    m.fit([training_set_obs], options.hmm_free_para)
+    distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
+         
+    return m, exp_data, func_para, init_mu, init_alpha, distr
     return 0, 0, func_para, 0, 0, 0
 
 def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr):
@@ -126,7 +126,7 @@ def main():
     region_giver = RegionGiver(chrom_sizes, options.regions)
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker)
     
-    #run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
+    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
     
