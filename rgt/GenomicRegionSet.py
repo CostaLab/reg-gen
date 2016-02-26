@@ -528,38 +528,38 @@ class GenomicRegionSet:
 
         return all_genes, mapped_genes, all_proxs, mapped_proxs
 
-    # def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-    #     from rgt.motifanalysisold.util import bedFunctions, sort
-    #     from rgt.motifanalysisold.enrichment.geneAssociation import *
-    #     self.fileName=fileName
-    #     regionsToGenes={}
-    #     coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
-    #     coordDict = sort.sortBedDictionary(coordDict, field=0)
-    #     [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
-    #     #print dictBed
-    #     genes=[]
-    #     totalPeaks=0
-    #     allgenes=[]
-    #     for chr in dictBed.keys():
-    #         for (v1,v2,name,orientation,data) in dictBed[chr]:
-    #             totalPeaks+=1
-    #             names=name.split(":")
-    #             keep=[n for n in names if "." not in n]
-    #             if len(keep) > 0:
-    #                 self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
-    #             genes = genes+keep
-    #             allgenes=allgenes+[n.strip(".") for n in names]
-    #             regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
-    #     #print "Total Peaks", total
-    #     mappedGenes=len(list(set(allgenes)))
-    #     self.sort()
-    #     self.genes=list(set(genes))
-    #     if geneSet == None:
-    #       le=0
-    #     else:
-    #       le=len(geneSet)
+    def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
+        from rgt.motifanalysisold.util import bedFunctions, sort
+        from rgt.motifanalysisold.enrichment.geneAssociation import *
+        self.fileName=fileName
+        regionsToGenes={}
+        coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
+        coordDict = sort.sortBedDictionary(coordDict, field=0)
+        [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
+        #print dictBed
+        genes=[]
+        totalPeaks=0
+        allgenes=[]
+        for chr in dictBed.keys():
+            for (v1,v2,name,orientation,data) in dictBed[chr]:
+                totalPeaks+=1
+                names=name.split(":")
+                keep=[n for n in names if "." not in n]
+                if len(keep) > 0:
+                    self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
+                genes = genes+keep
+                allgenes=allgenes+[n.strip(".") for n in names]
+                regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
+        #print "Total Peaks", total
+        mappedGenes=len(list(set(allgenes)))
+        self.sort()
+        self.genes=list(set(genes))
+        if geneSet == None:
+          le=0
+        else:
+          le=len(geneSet)
 
-    #     return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
+        return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
