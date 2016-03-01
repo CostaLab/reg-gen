@@ -92,7 +92,7 @@ tools_dictionary = {
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-      ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5"],
+      ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
   []
 ),
 "TDF": (
