@@ -816,13 +816,14 @@ class GenomicRegionSet:
                 len_21 = allbed2 - len_inter
                 return len_12, len_21, len_inter
              
-    def closest(self,y, distance=False):
+    def closest(self,y, distance=False, return_list=False):
         """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. If there are intersection, return False.
         
         *Keyword arguments:*
 
             - y -- the GenomicRegionSet which to compare with
-            - distance -- show the distance in parentheses
+            - distance -- report the distance in region name
+            - return_list -- return a list of the distances
 
         *Return:*
 
@@ -845,13 +846,13 @@ class GenomicRegionSet:
         if len(self) == 0 or len(y) == 0:
             return GenomicRegionSet('Empty set') 
         #elif len(self.intersect(y)) != 0:
-        #    if distance:
+        #    if return_list:
         #        return 0
         #    else:
         #        return False
         else:
             #z_dict = {}  # For storing the distance and the regions
-            if distance: z = []
+            if return_list: z = []
             else: z = GenomicRegionSet("closest regions")
             #dict_r = {}
         
@@ -873,16 +874,21 @@ class GenomicRegionSet:
                 
                 d = s.distance(y[j])
                 #print(str(y[j])+"\t"+str(d)+"\t"+str(s))
+                
 
                 if d == 0:
                 # Overlap
-                    if distance: z.append(0)
+                    if return_list: z.append(0)
                     else: 
-                        try: gn = "close_to_"+s.name
-                        except: gn = "close_to_"+s.toString()
+                        if s.name:
+                            gn = "close_to_"+s.name
+                        else: 
+                            gn = y[j].name
+                        if distance: score=str(d)
+                        else: score = "."
                         g = GenomicRegion(chrom=y[j].chrom, initial=y[j].initial, 
                                           final=y[j].final, name=gn, 
-                                          orientation=y[j].orientation )
+                                          orientation=y[j].orientation, data=score )
                         z.add(g)
                     #dict_r[s.toString()] = j
                     last_j = j
@@ -891,13 +897,17 @@ class GenomicRegionSet:
                 elif not d:
                 # different chromosomes
                     if searching and mind != float("inf"):
-                        if distance: z.append(mind)
+                        if return_list: z.append(mind)
                         else: 
-                            try: gn = "close_to_"+s.name
-                            except: gn = "close_to_"+s.toString()
+                            if s.name:
+                                gn = "close_to_"+s.name
+                            else: 
+                                gn = y[j].name
+                            if distance: score=str(mind)
+                            else: score = "."
                             g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
                                               final=y[last_j].final, name=gn, 
-                                              orientation=y[last_j].orientation )
+                                              orientation=y[last_j].orientation, data=score )
                             z.add(g)
                         #dict_r[s.toString()] = lastj
                         searching = False
@@ -920,13 +930,17 @@ class GenomicRegionSet:
                     elif d > mind:
                         #print(mind)
                         
-                        if distance: z.append(mind)
+                        if return_list: z.append(mind)
                         else: 
-                            try: gn = "close_to_"+s.name
-                            except: gn = "close_to_"+s.toString()
+                            if s.name:
+                                gn = "close_to_"+s.name
+                            else: 
+                                gn = y[j].name
+                            if distance: score=str(mind)
+                            else: score = "."
                             g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
                                               final=y[last_j].final, name=gn, 
-                                              orientation=y[last_j].orientation )
+                                              orientation=y[last_j].orientation, data=score )
                             z.add(g)
                         #dict_r[s.toString()] = lastj
                         s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
