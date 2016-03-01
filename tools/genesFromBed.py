@@ -80,14 +80,14 @@ def mode_3(exp_matrix, thresh, type_file):
     for regions in exp_matrix.get_regionsets():
         for region in regions:
             if type_file=="ODIN":
-              aux=(region.data).split("\t")
-              aux=aux[-1].split(";")
-              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(region.data[-1])
-            if type_file=="THOR":
-              aux=(region.data).split(";")
-              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(aux[-1])
+                aux=(region.data).split("\t")
+                aux=aux[-1].split(",")
+                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(region.data[-1])
+            elif type_file=="THOR":
+                aux=(region.data).split(";")
+                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(aux[-1])
             else:
-               score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
+                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
     
     
     for i, region in enumerate(exp_matrix.get_regionsets()):
@@ -198,12 +198,16 @@ if __name__ == '__main__':
     path_exp_matrix = args[0]
     path_annotation = args[1]
     
-#     options.mode = 3
-#     options.distance = 50000
-#     options.type='THOR'
-#     options.metric = 'max'
-#     path_exp_matrix = '/home/manuel/workspace/cluster_p/hematology/exp/exp12_peak_gene_assignment/assign_peaks_mm.expmatrix'
-#     path_annotation = '/home/manuel/rgt-data/mm9/'
+    #options.mode = 3
+    #options.distance = 50000
+    #options.type='THOR'
+    #options.metric = 'max'
+    #path_exp_matrix = '/home/manuel/workspace/cluster_p/hematology/exp/exp12_peak_gene_assignment/assign_peaks_mm.expmatrix'
+    #path_annotation = '/home/manuel/rgtdata/mm9/'
+
+    #path_exp_matrix = '/home/manuel/workspace/cluster_p/luscher/ribosylation/exp/exp03_gene_association/assign_peaks_hg.expmatrix'
+    #path_annotation = '/home/manuel/rgtdata/hg19/'
+    #options.type='ODIN'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
