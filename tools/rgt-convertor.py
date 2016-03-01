@@ -100,7 +100,6 @@ if __name__ == "__main__":
     parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
                                   help="Define the threshold of distance (default:50000bp")
     
-
     ############### BED extend ###############################################
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
     parser_bedex.add_argument('-i', type=str, help="Input BED file")
@@ -126,6 +125,13 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output directory for FASTA files")
     parser_bed2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome sequence")
+
+    ############### BED filtered by gene name ################################
+    parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
+                       help="[BED] Filter by the given gene list")
+    parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bed2fasta.add_argument('-gene', type=str, help="Define file for the gene list")
 
     ############### WIG trim ends by chromosome #############################################
     parser_wig_trim = subparsers.add_parser('wig_trim_end', 
@@ -333,7 +339,7 @@ if __name__ == "__main__":
 
     ############### BED to FASTA #############################################
     elif args.mode == "bed_to_fasta":
-        print("input:\t" + args.i)
+        print("input:\t\t" + args.i)
         print("output directory:\t" + args.o)
         if not os.path.exists(args.o): os.makedirs(args.o)
         regions = GenomicRegionSet("regions")
@@ -370,9 +376,30 @@ if __name__ == "__main__":
                     for seq in ss:
                         print(seq, file=f)
 
+    ############### BED filter gene #############################################
+    elif args.mode == "bed_filter_gene":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        
+        if not args.gene:
+            print("Please define the file for gene list.")
+            sys.exit(1)
+
+        with open(args.gene) as f:
+            genes = f.read().splitlines()
+            genes = map(lambda x: x.upper(),genes)
+            print(str(len(genes))+" genes are loaded.")
+
+        with open(args.i) as fi, open(args.o, "w") as fo:
+            for line in fi:
+                line = line.strip().split()
+                if line[3].upper() in genes:
+                    print("\t".join(line), file=fo)
+                    
+        print("complete.")
 
 
-    ############### BED to FASTA #############################################
+    ############### WIG trim end #############################################
     elif args.mode == "wig_trim_end":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
