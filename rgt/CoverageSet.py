@@ -94,7 +94,13 @@ class CoverageSet:
 
     def normRPM(self):
         """Normalize to read per million (RPM)."""
+        if self.read == 0:
+            print("Error! The reads number is zero in "+self.name)
+            print("** Please try to reindex the file by \'samtools index\'.")
+            sys.exit(1)
+            
         factor=1000000/float(self.reads)
+
         self.coverage=np.array(self.coverage)*factor
 
     def write_bed(self, filename, zero=False):
@@ -277,9 +283,11 @@ class CoverageSet:
         self.stepsize = stepsize
         
         bam = pysam.Samfile(bam_file, "rb" )
+        
         for read in bam.fetch():
             read_size += read.rlen
             break
+
         self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
         self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
         #print("Loading reads of %s..." %self.name, file=sys.stderr)
