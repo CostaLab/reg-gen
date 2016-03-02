@@ -94,11 +94,11 @@ class CoverageSet:
 
     def normRPM(self):
         """Normalize to read per million (RPM)."""
-        if self.read == 0:
+        if self.reads == 0:
             print("Error! The reads number is zero in "+self.name)
             print("** Please try to reindex the file by \'samtools index\'.")
             sys.exit(1)
-            
+
         factor=1000000/float(self.reads)
 
         self.coverage=np.array(self.coverage)*factor
