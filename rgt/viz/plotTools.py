@@ -2567,7 +2567,7 @@ class Lineplot:
                                             else: data[s][g][c] = avearr # Store the array into data list
                                         bi += 1
                                         te = time.time()
-                                        print2(self.parameter, "\t("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                        print2(self.parameter, "\t("+str(bi)+"/"+str(totn)+") Computing  " + "{0:30}  --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
                                         #sys.stdout.flush()
         
         if mp: 
