@@ -19,7 +19,7 @@ from rgt.ODIN.gc_content import get_gc_context
 class CoverageSet:
     """*Keyword arguments:*
 
-        - name -- name.
+        - name -- names.
         - genomicRegions -- instance of GenomicRegionSet
     """
     
