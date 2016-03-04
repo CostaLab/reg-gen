@@ -139,11 +139,12 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         r.sort()
         cov = cov[:,r]
         
-        f = open(name + str(i) + '.data', 'w')
-        m = list(np.asarray(cov).reshape(-1))
-        for j in range(len(m)):
-            print(m[j], file=f)
-        f.close()
+        #f = open(name + str(i) + '.data', 'w')
+        #m = list(np.asarray(cov).reshape(-1))
+        #for j in range(len(m)):
+        #    print(m[j], file=f)
+        #f.close()
+        #sys.exit()
         
         m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
         n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
@@ -176,7 +177,11 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
                 m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
                 v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
                 
-                p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                if len(m) > 0 and len(v) > 0: 
+                    p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                else:
+                    p = np.array([0, 1])
+                
                 res.append(p)
                 plot_data.append((m, v, p))
                 if i == 1:
@@ -184,8 +189,6 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
             except RuntimeError:
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break #restart for loop
-    
-    sys.exit()
     
     if report:
         _plot_func(plot_data, outputdir)
