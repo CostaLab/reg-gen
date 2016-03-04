@@ -387,11 +387,11 @@ if __name__ == "__main__":
         for s in gene:
             if s.orientation == "+": 
                 s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
-                if args.r: s.orientation == "-"
+                if args.r: s.orientation = "-"
 
             elif s.orientation == "-": 
                 s.initial, s.final = s.final+args.d, s.initial+args.d+args.l
-                if args.r: s.orientation == "+"
+                if args.r: s.orientation = "+"
 
             target.add(s)
         
