@@ -262,8 +262,8 @@ if __name__ == "__main__":
                     line = line.split()
                     #print(line)
                     if line[2] == args.t:
-                        # print(line[9][1:-2])
-                        print("\t".join([line[0], line[3], line[4], line[9][1:-2], ".", line[6]]), file=g)
+                        # print(line[13][1:-2])
+                        print("\t".join([line[0], line[3], line[4], line[13][1:-2], ".", line[6]]), file=g)
 
         elif args.t == "exon":
             exons = GenomicRegionSet("exons")
@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     if line[2] == args.t:
                         #print(line[9].split('"')[1])
                         exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
-                                                name=line[9][1:-2], orientation=line[6]))         
+                                                name=line[13][1:-2], orientation=line[6]))         
             exons.write_bed_blocks(args.o)
         
 
