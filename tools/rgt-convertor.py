@@ -89,6 +89,11 @@ if __name__ == "__main__":
     parser_bedac.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', type=str, help="Define value to add")
 
+    ############### BED merge by name ############################################
+    parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
+    parser_bedmn.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedmn.add_argument('-o', '-output', type=str, help="Output BED file")
+
     ############### BED rename ###############################################
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
@@ -119,6 +124,16 @@ if __name__ == "__main__":
     parser_bedgp.add_argument('-l', type=int, default=1000, 
                               help="Define length of promoters (default:1000bp)")
     
+
+    ############### BED get upstream regions #################################
+    parser_bedupstream = subparsers.add_parser('bed_upstream', 
+                       help="[BED] Get regions upstream from the given BED file")
+    parser_bedupstream.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedupstream.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bedupstream.add_argument('-l', type=int, default=100, help="Define length (default:100bp)")
+    parser_bedupstream.add_argument('-d', type=int, default=100, help="Define distance (default:100bp)")
+    parser_bedupstream.add_argument('-r', action="store_true", default=False, help="Reverse the strand.")
+
     ############### BED to FASTA #############################################
     parser_bed2fasta = subparsers.add_parser('bed_to_fasta', 
                        help="[BED] Export the sequences in FASTA according to the given BED file")
@@ -132,6 +147,14 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bed2fasta.add_argument('-gene', type=str, help="Define file for the gene list")
+
+    ############### BED add columns ################################
+    parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
+                       help="[BED] Add extra columns to the BED file by gene name")
+    parser_bedaddcol.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedaddcol.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
+    parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
 
     ############### WIG trim ends by chromosome #############################################
     parser_wig_trim = subparsers.add_parser('wig_trim_end', 
@@ -273,6 +296,18 @@ if __name__ == "__main__":
                 line = line.strip() 
                 print(line+"\t"+args.v, file=g)
 
+
+    ############### BED merge by name ########################################
+    elif args.mode == "bed_merge_by_name":
+        print(tag+": [BED] Merge regions by name")
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+
+        bed1 = GenomicRegionSet("input")
+        bed1.read_bed(args.i)
+        bed1.merge(w_return=False, namedistinct=True)
+        bed1.write_bed(args.o)
+        
     ############### BED rename regions #######################################
     elif args.mode == "bed_rename":
         print(tag+": [BED] Rename regions by associated genes")
@@ -337,6 +372,33 @@ if __name__ == "__main__":
         promoter.write_bed(args.o)
 
 
+
+    ############### BED get promoters #########################################
+    elif args.mode == "bed_upstream":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+
+        gene = GenomicRegionSet("genes")
+        ### Input BED file
+        
+        gene.read_bed(args.i)
+        target = GenomicRegionSet("target")
+
+        for s in gene:
+            if s.orientation == "+": 
+                s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d)
+                if args.r: s.orientation == "-"
+
+            elif s.orientation == "-": 
+                s.initial, s.final = s.final+args.d, s.initial+args.d+args.l
+                if args.r: s.orientation == "+"
+
+            target.add(s)
+        
+        #print(len(promoter))
+        target.write_bed(args.o)
+
+
     ############### BED to FASTA #############################################
     elif args.mode == "bed_to_fasta":
         print("input:\t\t" + args.i)
@@ -398,6 +460,45 @@ if __name__ == "__main__":
                     
         print("complete.")
 
+
+
+    ############### BED add columns #############################################
+    elif args.mode == "bed_add_columns":
+        print("input:\t" + args.i)
+        print("reference:\t" + args.ref)
+        print("output:\t" + args.o)
+        
+        if not args.ref:
+            print("Please define the file for reference.")
+            sys.exit(1)
+
+        with open(args.ref) as f:
+            genes = {}
+            for line in f:
+                line = line.strip().split()
+                # print(line[args.f-1].upper())
+                # print(line[args.f:])
+                try:
+                    genes[line[args.f-1].upper()] = line[args.f:]
+                except:
+                    print("Error: indexing error. Please check -f argument.")
+                    sys.exit(1)
+        print(len(genes.keys()))
+
+        with open(args.i) as fi, open(args.o, "w") as fo:
+            c_add = 0
+            c_miss = 0
+            for line in fi:
+                line = line.strip().split()
+                try:
+                    print("\t".join(line+genes[line[3].upper()]), file=fo)
+                    c_add += 1
+                except:
+                    print("\t".join(line), file=fo)
+                    c_miss += 1
+        print("Modified genes:\t"+str(c_add))            
+        print("Missed genes:\t"+str(c_miss))
+        print("complete.")
 
     ############### WIG trim end #############################################
     elif args.mode == "wig_trim_end":
