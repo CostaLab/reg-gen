@@ -262,8 +262,8 @@ if __name__ == "__main__":
                     line = line.split()
                     #print(line)
                     if line[2] == args.t:
-                        #print(line[9].split('"')[1])
-                        print("\t".join([line[0], line[3], line[4], line[17][1:-2], ".", line[6]]), file=g)
+                        # print(line[9][1:-2])
+                        print("\t".join([line[0], line[3], line[4], line[9][1:-2], ".", line[6]]), file=g)
 
         elif args.t == "exon":
             exons = GenomicRegionSet("exons")
@@ -275,7 +275,7 @@ if __name__ == "__main__":
                     if line[2] == args.t:
                         #print(line[9].split('"')[1])
                         exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
-                                                name=line[17][1:-2], orientation=line[6]))         
+                                                name=line[9][1:-2], orientation=line[6]))         
             exons.write_bed_blocks(args.o)
         
 
@@ -307,7 +307,7 @@ if __name__ == "__main__":
         bed1.read_bed(args.i)
         bed1.merge(w_return=False, namedistinct=True)
         bed1.write_bed(args.o)
-        
+
     ############### BED rename regions #######################################
     elif args.mode == "bed_rename":
         print(tag+": [BED] Rename regions by associated genes")
