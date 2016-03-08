@@ -325,8 +325,8 @@ if __name__ == "__main__":
 
         bed1 = GenomicRegionSet("input")
         bed1.read_bed(args.i)
-        bed1.merge(w_return=False, namedistinct=True)
-        bed1.write_bed(args.o)
+        bed2 = bed1.mergebyname()
+        bed2.write_bed(args.o)
 
     ############### BED rename regions #######################################
     elif args.mode == "bed_rename":

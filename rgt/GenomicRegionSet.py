@@ -1141,7 +1141,29 @@ class GenomicRegionSet:
             z.add(y)
             result = self.subtract(z)
             return result
-    
+
+    def mergebyname(self):
+        """Merge the regions regardless the intersection by names"""
+        names = self.get_names()
+        dict_re = {}
+        for name in names:
+            dict_re[name] = []
+
+        for r in self:
+            if not dict_re[r.name]:
+                if dict_re[r.name].initial > r.initial:
+                    dict_re[r.name].initial = r.initial
+                if dict_re[r.name].final < r.final:
+                    dict_re[r.name].final = r.final
+            else:
+                dict_re[r.name] = r
+        z = GenomicRegionSet(self.name)
+        for r in dict_re.values():
+            z.add(r)
+
+        return z
+
+
     def merge(self, w_return=False, namedistinct=False):
         """Merge the regions within the GenomicRegionSet
 
