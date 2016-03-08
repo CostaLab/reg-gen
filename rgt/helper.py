@@ -8,7 +8,7 @@ import os
 import numpy
 from GenomicRegionSet import GenomicRegionSet
 from GenomicRegion import GenomicRegion
-import wWigIO
+# import wWigIO
 
 def get_chrom_sizes_as_genomicregionset(chrom_size_path):
     regionset = GenomicRegionSet('')
