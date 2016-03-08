@@ -70,6 +70,9 @@ if __name__ == "__main__":
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
     parser_gtf2bed.add_argument('-t', metavar='  ', type=str, help="Define the target Biotype\
                                                                  (e.g. gene or exon or transcript...)")
+    parser_gtf2bed.add_argument('-known_only', action="store_true", default=False,
+                                help="Get the known genes only.")
+
     parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
 
@@ -132,6 +135,8 @@ if __name__ == "__main__":
     parser_bedupstream.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedupstream.add_argument('-l', type=int, default=100, help="Define length (default:100bp)")
     parser_bedupstream.add_argument('-d', type=int, default=100, help="Define distance (default:100bp)")
+    parser_bedupstream.add_argument('-min', type=int, default=0, 
+                                    help="Define minimum length of gene to filter out the small genes (default:0)")
     parser_bedupstream.add_argument('-r', action="store_true", default=False, help="Reverse the strand.")
 
     ############### BED to FASTA #############################################
@@ -257,13 +262,28 @@ if __name__ == "__main__":
 
         if args.t == "gene" or args.t == "transcript":
             with open(args.i) as f, open(args.o, "w") as g:
+                find_ind = False
                 for line in f:
-                    if line[0] == "#": continue
+                    if line[0] == "#": 
+                        continue
+                    elif args.known_only:
+                        if "gene_status \"KNOWN\"" in line:
+                            pass
+                        else:
+                            continue
+
                     line = line.split()
                     #print(line)
+                    if not find_ind:
+                        for i, l in enumerate(line):
+                            if "gene_name" in l: 
+                                ind = i
+                                find_ind = True
+
                     if line[2] == args.t:
-                        # print(line[15][1:-2])
-                        print("\t".join([line[0], line[3], line[4], line[15][1:-2], ".", line[6]]), file=g)
+                        # print(line[ind+1][1:-2])
+
+                        print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
 
         elif args.t == "exon":
             exons = GenomicRegionSet("exons")
@@ -383,17 +403,21 @@ if __name__ == "__main__":
         
         gene.read_bed(args.i)
         target = GenomicRegionSet("target")
+        # if args.min == 0: cut = float("inf")
+        # elif args.min > 0: cut = args.min
 
         for s in gene:
-            if s.orientation == "+": 
+            if s.orientation == "+" and len(s) > args.min: 
                 s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
+                if s.initial > s.final: s.initial, s.final = s.final, s.initial
                 if args.r: s.orientation = "-"
+                target.add(s)
 
-            elif s.orientation == "-": 
-                s.initial, s.final = s.final+args.d, s.initial+args.d+args.l
+            elif s.orientation == "-" and len(s) > args.min: 
+                s.initial, s.final = s.final+args.d, s.final+args.d+args.l
+                if s.initial > s.final: s.initial, s.final = s.final, s.initial
                 if args.r: s.orientation = "+"
-
-            target.add(s)
+                target.add(s)
         
         #print(len(promoter))
         target.write_bed(args.o)

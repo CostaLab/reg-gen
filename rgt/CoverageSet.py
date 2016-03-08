@@ -101,7 +101,7 @@ class CoverageSet:
 
         factor=1000000/float(self.reads)
 
-        self.coverage=np.array(self.coverage)*factor
+        self.coverage = np.array(self.coverage)*factor
 
     def write_bed(self, filename, zero=False):
         """Output coverage in BED format. 

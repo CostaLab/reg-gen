@@ -1965,3 +1965,13 @@ class GenomicRegionSet:
     def sort_score(self):
         """Sort the regions by their scores."""
         self.sort(key=lambda x: float(x.data.split("\t")[0]), reverse=True)
+
+    def get_names(self):
+        """Return a list of all region names. If the name is None, it return the region string."""
+        names = []
+        for r in self:
+            if r.name:
+                names.append(r.name)
+            else:
+                names.append(r.toString())
+        return names
