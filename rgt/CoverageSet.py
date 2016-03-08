@@ -12,7 +12,7 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
-import wWigIO
+# import wWigIO
 from helper import BigWigFile
 from rgt.ODIN.gc_content import get_gc_context
 
