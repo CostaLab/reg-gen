@@ -1150,7 +1150,7 @@ class GenomicRegionSet:
             dict_re[name] = None
 
         for r in self:
-            if not dict_re[r.name]:
+            if dict_re[r.name]:
                 if dict_re[r.name].initial > r.initial:
                     dict_re[r.name].initial = r.initial
                 if dict_re[r.name].final < r.final:
