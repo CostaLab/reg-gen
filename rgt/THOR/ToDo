@@ -7,5 +7,8 @@ ToDo:
  - narrowPeak, Bed file p-value bug
  - give foldchange, standard error of foldchange 
 
+Done:
+- remove bug when variance is 0 for mean-variance function (use linear model then)
+
 THOR-0.1
  - no ngslib dependies any longer
