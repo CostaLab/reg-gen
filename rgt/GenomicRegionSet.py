@@ -1151,12 +1151,13 @@ class GenomicRegionSet:
 
         for r in self:
             if dict_re[r.name]:
-                if dict_re[r.name].initial > r.initial:
+                if dict_re[r.name].chrom == r.chrom and dict_re[r.name].initial > r.initial:
                     dict_re[r.name].initial = r.initial
-                if dict_re[r.name].final < r.final:
+                if dict_re[r.name].chrom == r.chrom and dict_re[r.name].final < r.final:
                     dict_re[r.name].final = r.final
             else:
                 dict_re[r.name] = r
+                
         z = GenomicRegionSet(self.name)
         for r in dict_re.values():
             z.add(r)
