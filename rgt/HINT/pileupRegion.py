@@ -30,7 +30,7 @@ class PileupRegion:
     It loads self.vector with such alignment based on self.ext.
     """
 
-    def __init__(self,start,end,ext):
+    def __init__(self,start,end,ext,left_ext=0,right_ext=0,f_shift=0,r_shift=0):
         """ 
         Initializes PileupRegion.
 
@@ -48,6 +48,10 @@ class PileupRegion:
         self.end = end
         self.length = end-start
         self.ext = ext
+        self.left_ext = left_ext
+        self.right_ext = right_ext
+        self.f_shift = f_shift
+        self.r_shift = r_shift
         self.vector = [0.0] * self.length
 
     def __call__(self, alignment):
@@ -70,5 +74,14 @@ class PileupRegion:
         else:
             for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend,self.end-1)):
                 self.vector[i-self.start] += 1.0 
+
+    def __call2__(self, alignment):
+        if(not alignment.is_reverse):
+            for i in range(max(alignment.pos-self.ext,self.start),min(alignment.pos+self.ext,self.end-1)):
+                self.vector[i-self.start] += 1.0 
+        else:
+            for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend+self.ext,self.end-1)):
+                self.vector[i-self.start] += 1.0
+
 
 

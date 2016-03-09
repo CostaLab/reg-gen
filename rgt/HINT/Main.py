@@ -7,6 +7,7 @@
 from os import remove, system, getcwd
 from sys import exit
 from copy import deepcopy
+from optparse import SUPPRESS_HELP
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -22,6 +23,7 @@ from biasTable import BiasTable
 # External
 from numpy import array
 from hmmlearn.hmm import GaussianHMM
+from hmmlearn import __version__ as hmm_ver
 
 """
 HINT - HMM-based Identification of TF Footprints.
@@ -35,7 +37,8 @@ Dependencies:
 - python >= 2.7
 - numpy >= 1.4.0
 - scipy >= 0.7.0
-- scikit <= 0.14
+- scikit >= 0.14
+- hmmlearn >= 0.1.1
 - pysam >= 0.7.5
 - ngslib >= 1.1.14
 - bedToBigBed script in $PATH (if the option is used)
@@ -111,6 +114,15 @@ def main():
                       help = ("Applies DNase-seq cleavage bias correction with default "
                               "k-mer bias estimates (FAST HINT-BC)."))
 
+    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "int", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "int", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int", metavar="INT", default = 1,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--ext-both-directions", dest = "ext_both_directions", action = "store_true", default = False,
+                      help = SUPPRESS_HELP)
+
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", 
                       default = getcwd(),
@@ -125,12 +137,16 @@ def main():
     # Fixed Parameters ################
     region_total_ext = 10000
     fp_limit_size = 50
+    fp_limit_size_ext = 10
+    fp_ext = 5
+    tc_ext = 50
     ###
     dnase_initial_clip = 1000
     dnase_sg_window_size = 9
-    dnase_norm_per = 98
-    dnase_slope_per = 98
-    dnase_frag_ext = 1
+    dnase_norm_per = options.dnase_norm_per
+    dnase_slope_per = options.dnase_slope_per
+    dnase_frag_ext = options.dnase_frag_ext
+    dnase_ext_both_directions = options.ext_both_directions
     ###
     histone_initial_clip = 1000
     histone_sg_window_size = 201
@@ -286,10 +302,18 @@ def main():
                 try:
                     hmm_scaffold = HMM()
                     hmm_scaffold.load_hmm(hmm_file_name)
-                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
-                                             transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                    scikit_hmm.means_ = array(hmm_scaffold.means)
-                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                    if(int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
+                                                 transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+                        scikit_hmm.means_ = array(hmm_scaffold.means)
+                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                    else:
+                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+                        scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+                        scikit_hmm.transmat_ = array(hmm_scaffold.A)
+                        scikit_hmm.means_ = array(hmm_scaffold.means)
+                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+
                 except Exception: error_handler.throw_error("FP_HMM_FILES")
                 hmm_list.append(scikit_hmm)
 
@@ -301,10 +325,19 @@ def main():
             try:
                 hmm_scaffold = HMM()
                 hmm_scaffold.load_hmm(group.hmm)
-                scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
-                                         transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                scikit_hmm.means_ = array(hmm_scaffold.means)
-                scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                if(int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full", 
+                                             transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+                    scikit_hmm.means_ = array(hmm_scaffold.means)
+                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                else:
+                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+                    scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+                    scikit_hmm.transmat_ = array(hmm_scaffold.A)
+                    scikit_hmm.means_ = array(hmm_scaffold.means)
+                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
+
+
             except Exception: error_handler.throw_error("FP_HMM_FILES")
             group.hmm = scikit_hmm
 
@@ -330,7 +363,8 @@ def main():
                 # Fetching DNase signal
                 try: dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
-                                               dnase_slope_per, group.bias_table, genome_data.get_genome())
+                                               dnase_slope_per, group.bias_table, genome_data.get_genome(),
+                                               dnase_ext_both_directions)
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -385,7 +419,8 @@ def main():
                     try:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                   dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
-                                                  dnase_slope_per, group.bias_table, genome_data.get_genome())
+                                                  dnase_slope_per, group.bias_table, genome_data.get_genome(),
+                                                  dnase_ext_both_directions)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -446,7 +481,7 @@ def main():
                         footprints.add(fp)
 
         ###################################################################################################
-        # Writing output
+        # Post-processing
         ###################################################################################################
 
         # Sorting and Merging
@@ -454,6 +489,34 @@ def main():
 
         # Overlapping results with original regions
         footprints = footprints.intersect(group.original_regions,mode=OverlapType.ORIGINAL)
+
+        # Extending footprints
+        for f in footprints.sequences:
+            if(f.final - f.initial < fp_limit_size_ext):
+                f.initial = max(0,f.initial-fp_ext)
+                f.final = f.final+fp_ext
+
+        # Evaluating TC
+        for f in footprints.sequences:
+            if(group.histone_only):
+                tcsignal = group.histone_file_list[0]
+                tcfragext = histone_frag_ext
+                tcinitialclip = histone_initial_clip
+                tcextboth = False
+            else:
+                tcsignal = group.dnase_file
+                tcfragext = dnase_frag_ext
+                tcinitialclip = dnase_initial_clip
+                tcextboth = dnase_ext_both_directions
+            mid = (f.initial+f.final)/2
+            p1 = mid - tc_ext
+            p2 = mid + tc_ext
+            tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcfragext, tcinitialclip, tcextboth)
+            f.data = str(int(tag_count))
+
+        ###################################################################################################
+        # Writing output
+        ###################################################################################################
 
         # Creating output file
         output_file_name = options.output_location+group.name+".bed"
