@@ -205,7 +205,17 @@ class CoverageSet:
         """
         
         bam = pysam.Samfile(bamFile, "rb" )
-        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+        
+        try:
+            if pysam.__version__ == '0.9.0':
+                print("H", file=sys.stderr)
+                a = pysam.idxstats(bamFile)
+                self.reads = reduce(lambda x, y: x+y, [int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+            else:
+                self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+        except:
+            self.reads = None
+        
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
             try:
@@ -288,9 +298,12 @@ class CoverageSet:
             read_size += read.rlen
             break
 
-        self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
-        self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
-        #print("Loading reads of %s..." %self.name, file=sys.stderr)
+        try:
+            self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
+            self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
+        except:
+            self.mapped_reads = None
+            self.reads = None
         
         #check whether one should mask
         next_it = True
