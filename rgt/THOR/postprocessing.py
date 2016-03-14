@@ -30,6 +30,7 @@ import re
 from scipy.stats.mstats import zscore
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import numpy as np
+from numpy import log10
 
 
 def merge_data(regions):
@@ -111,12 +112,17 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     return results
 
-def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction):
+def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name):
     """Filter DPs by strang lag and pvalue"""
     zscore_ratios = zscore(ratios)
     ratios_pass = np.where(np.bitwise_and(zscore_ratios>-2, zscore_ratios<2) == True, True, False)
     if not no_correction:
+        pv_pass = [True] * len(pvalues)
         pvalues = map(lambda x: 10**-x, pvalues)
+        
+        _output_BED(name + '-uncor', output, pvalues, pv_pass)
+        _output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
+        
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
         pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
@@ -129,6 +135,33 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction)
     
     return output, pvalues, filter_pass
 
+def _output_BED(name, output, pvalues, filter):
+    f = open(name + '-diffpeaks.bed', 'w')
+     
+    colors = {'+': '255,0,0', '-': '0,255,0'}
+    bedscore = 1000
+    
+    for i in range(len(pvalues)):
+        c, s, e, strand, counts = output[i]
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        counts = ';'.join(counts.split(';')[:2] + [str(p_tmp)])
+        
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
+    
+    f.close()
+
+def _output_narrowPeak(name, output, pvalues, filter):
+    """Output in narrowPeak format,
+    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
+    f = open(name + '-diffpeaks.narrowPeak', 'w')
+    for i in range(len(pvalues)):
+        c, s, e, strand, _ = output[i]
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), 0, strand, 0, p_tmp, 0, -1, sep='\t', file=f)
+    f.close()
+    
 def filter_deadzones(bed_deadzones, peak_regions):
     """Filter by peaklist by deadzones"""
     deadzones = GenomicRegionSet('deadzones')

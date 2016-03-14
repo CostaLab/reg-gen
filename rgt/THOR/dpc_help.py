@@ -352,29 +352,6 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     return ratios, pvalues, output
 
 
-def _output_BED(name, output, pvalues, filter):
-    f = open(name + '-diffpeaks.bed', 'w')
-     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
-    bedscore = 1000
-    
-    for i in range(len(pvalues)):
-        c, s, e, strand, counts = output[i]
-        if filter[i]:
-            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
-    
-    f.close()
-
-def _output_narrowPeak(name, output, pvalues, filter):
-    """Output in narrowPeak format,
-    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
-    f = open(name + '-diffpeaks.narrowPeak', 'w')
-    for i in range(len(pvalues)):
-        c, s, e, strand, _ = output[i]
-        if filter[i]:
-            print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
-    f.close()
-
 def _output_ext_data(ext_data_list, bamfiles):
     """Output textfile and png file of read size estimation"""
     names = [splitext(basename(bamfile))[0] for bamfile in bamfiles]
