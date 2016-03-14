@@ -77,6 +77,7 @@ def mode_2(exp_matrix,thresh):
 def mode_3(exp_matrix, thresh, type_file):
     #remember value of bedgraph, ugly way
     score = {}
+    
     for regions in exp_matrix.get_regionsets():
         for region in regions:
             if type_file=="ODIN":
