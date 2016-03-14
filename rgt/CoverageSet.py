@@ -5,6 +5,7 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 """
 
+
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnresolvedImport
