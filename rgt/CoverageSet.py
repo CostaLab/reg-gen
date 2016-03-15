@@ -185,7 +185,24 @@ class CoverageSet:
             #print(c)
             os.system(c)
             os.remove(tmp_path)
-
+    
+    def _init_read_number(self, bamFile):
+        """Compute number of reads and number of mapped reads for CoverageSet"""
+        # XXX ToDo add number of mapped reads in all cases
+        try:
+            if pysam.__version__ == '0.9.0':
+                a = pysam.idxstats(bamFile)
+                mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+                unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+                self.reads = mapped_reads + unmapped_read
+                self.mapped_reads = mapped_reads
+            else:
+                self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+                self.mapped_reads = None
+        except:
+            self.reads = None
+            self.mapped_reads = None
+    
     def coverage_from_genomicset(self, bamFile, readSize=200):
         """Compute coverage based on the class variable <genomicRegions>. 
         
@@ -206,16 +223,7 @@ class CoverageSet:
         """
         
         bam = pysam.Samfile(bamFile, "rb" )
-        
-        try:
-            if pysam.__version__ == '0.9.0':
-                print("H", file=sys.stderr)
-                a = pysam.idxstats(bamFile)
-                self.reads = reduce(lambda x, y: x+y, [int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
-            else:
-                self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
-        except:
-            self.reads = None
+        self._init_read_number(bamFile)
         
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
@@ -298,13 +306,8 @@ class CoverageSet:
         for read in bam.fetch():
             read_size += read.rlen
             break
-
-        try:
-            self.mapped_reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:3]) ) for l in pysam.idxstats(bam_file) ])
-            self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bam_file) ])
-        except:
-            self.mapped_reads = None
-            self.reads = None
+        
+        self._init_read_number(bam_file)
         
         #check whether one should mask
         next_it = True
@@ -552,15 +555,11 @@ class CoverageSet:
         """
         
         bam = pysam.Samfile(bamFile, "rb" )
-        #self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
+
         reads = []
         for i,region in enumerate(self.genomicRegions):
-            #print(bam.fetch(region.chrom,region.initial,region.final))
-            #try:
             for r in bam.fetch(region.chrom,region.initial,region.final):
                 reads.append(r.qname)
-            #except:
-            #    print("\tError: "+str(region))
 
         reads = list(set(reads))
         return len(reads)
