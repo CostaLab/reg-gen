@@ -178,7 +178,11 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
                 v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
                 
                 if len(m) > 0 and len(v) > 0: 
-                    p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                    try:
+                        p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                    except:
+                        print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
+                        break #restart for loop
                 else:
                     p = np.array([0, 1])
                 

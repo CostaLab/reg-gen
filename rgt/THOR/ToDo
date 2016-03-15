@@ -1,15 +1,18 @@
 ToDo:
 - use 'sort -k1,1 -k2,2n' for temporary bed files (which are then converted the bw)
-- bw tools automatically in PATH
-- remove ngslib from dependencies of website
 - give foldchange, standard error of foldchange 
 
-
 Done:
-- remove bug when variance is 0 for mean-variance function (use linear model then)
-- bugfix numpy version, works with newst numpy version 1.10.4
-- narrowPeak, Bed file p-value bug: bed file and narrowPeak give now same p-value
-- GPL v3 license
 
 THOR-0.1
- - no ngslib dependies any longer
+- no ngslib dependies any longer, remove ngslib from dependencies of website
+- bugfix: scipy works now with newest version 0.17.0 
+- hmmlearn 0.1.1 works only!
+- pysam 0.9.0 works now
+- newest version of sklearn works now
+- bugfix numpy version, works with newst numpy version 1.10.4
+- remove bug when variance is 0 for mean-variance function (use linear model then)
+- narrowPeak, Bed file p-value bug: bed file and narrowPeak give now same p-value
+- GPL v3 license
+- outputs uncorrected p-valued in separate file
+- bw tools automatically in PATH
