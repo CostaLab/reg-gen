@@ -1145,6 +1145,7 @@ class GenomicRegionSet:
     def mergebyname(self):
         """Merge the regions regardless the intersection by names"""
         names = self.get_names()
+        
         dict_re = {}
         for name in names:
             dict_re[name] = None
@@ -1157,7 +1158,7 @@ class GenomicRegionSet:
                     dict_re[r.name].final = r.final
             else:
                 dict_re[r.name] = r
-                
+
         z = GenomicRegionSet(self.name)
         for r in dict_re.values():
             z.add(r)

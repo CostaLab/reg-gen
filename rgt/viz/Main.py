@@ -242,9 +242,9 @@ def main():
     parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
+    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
     parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
     parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
-    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
     parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -253,6 +253,8 @@ def main():
     parser_lineplot.add_argument('-sx', action="store_true", help="Share x axis for convenience of comparison.")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -630,7 +632,8 @@ def main():
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy, sx=args.sx)
+            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, 
+                          sy=args.sy, sx=args.sx, w=args.pw, h=args.ph)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()

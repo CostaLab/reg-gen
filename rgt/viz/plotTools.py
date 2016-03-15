@@ -2608,16 +2608,19 @@ class Lineplot:
         for i, c in enumerate(self.color_tags):
             self.colors[c] = colors[i]
 
-    def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False):
+    def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False,  w=3, h=3):
         
         rot = 50
         ticklabelsize = 7
+        tw = len(self.data.values()[0].keys()) * w
+        th = len(self.data.keys()) * h
         
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300) #  figsize=(8.27, 11.69) 
-        if len(self.data.keys()) * len(self.data.values()[0]) <= 4: 
-            f.set_size_inches(4, 4)
-        elif 4 < len(self.data.keys()) * len(self.data.values()[0]) <= 8: 
-            f.set_size_inches(5, 5)
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300,
+                              figsize=(tw, th) ) 
+        # if len(self.data.keys()) * len(self.data.values()[0]) <= 4: 
+        #     f.set_size_inches(4, 4)
+        # elif 4 < len(self.data.keys()) * len(self.data.values()[0]) <= 8: 
+        #     f.set_size_inches(5, 5)
             
         #    axs=numpy.array([[axs,None],[None,None]])
         
@@ -2741,7 +2744,8 @@ class Lineplot:
                 axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
                            columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
                 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.tight_layout()
         self.fig = f
 
     def gen_html(self, directory, title, align=50):

@@ -393,7 +393,7 @@ if __name__ == "__main__":
 
 
 
-    ############### BED get promoters #########################################
+    ############### BED get upstream regions ####################################
     elif args.mode == "bed_upstream":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
