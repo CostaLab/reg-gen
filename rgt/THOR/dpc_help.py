@@ -644,8 +644,11 @@ def input(laptop):
     OUTPUTDIR = options.outputdir
     NAME = options.name
     
-    if not inputs or not genome:
-        print("Warning: Do not compute GC-content, as there is no input or no genome file", file=sys.stderr)
+    if not inputs:
+        print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)
+    
+    if not genome:
+        print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr) 
     
     if options.exts is None:
         options.exts = []

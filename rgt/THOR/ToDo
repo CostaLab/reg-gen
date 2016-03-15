@@ -5,6 +5,7 @@ ToDo:
 Done:
 
 THOR-0.1
+- separate warning message if no input-DNA and no genome specified
 - no ngslib dependies any longer, remove ngslib from dependencies of website
 - bugfix: scipy works now with newest version 0.17.0 
 - hmmlearn 0.1.1 works only!
