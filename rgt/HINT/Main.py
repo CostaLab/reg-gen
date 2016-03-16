@@ -123,6 +123,11 @@ def main():
     parser.add_option("--ext-both-directions", dest = "ext_both_directions", action = "store_true", default = False,
                       help = SUPPRESS_HELP)
 
+    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "int", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "int", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", 
                       default = getcwd(),
@@ -137,6 +142,7 @@ def main():
     # Fixed Parameters ################
     region_total_ext = 10000
     fp_limit_size = 50
+    fp_limit_size_histone = 1000
     fp_limit_size_ext = 10
     fp_ext = 5
     tc_ext = 50
@@ -150,8 +156,8 @@ def main():
     ###
     histone_initial_clip = 1000
     histone_sg_window_size = 201
-    histone_norm_per = 98
-    histone_slope_per = 98
+    histone_norm_per = options.histone_norm_per
+    histone_slope_per = options.histone_slope_per
     histone_frag_ext = 200
     ###################################
 
@@ -196,6 +202,9 @@ def main():
     file_dict = exp_matrix.files
     fields_dict = exp_matrix.fieldsDict
     objects_dict = exp_matrix.objectsDict
+
+    # Populating fields dict data
+    print fields_dict
 
     # Fetching files per group
     group_list = []
@@ -459,6 +468,9 @@ def main():
                         raise
                         error_handler.throw_warning("FP_HMM_APPLIC",add_msg="in region ("+",".join([r.chrom, str(r.initial), str(r.final)])+") and histone modification "+histone_file.file_name+". This iteration will be skipped.")
                         continue
+
+                    # Histone-only limit size
+                    if(group.histone_only): fp_limit_size = fp_limit_size_histone
 
             	    # Formatting results
                     start_pos = 0
