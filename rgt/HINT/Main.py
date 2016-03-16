@@ -142,10 +142,13 @@ def main():
     # Fixed Parameters ################
     region_total_ext = 10000
     fp_limit_size = 50
-    fp_limit_size_histone = 1000
+    fp_limit_size_histone = 2000
     fp_limit_size_ext = 10
+    fp_limit_size_ext_histone = 200
     fp_ext = 5
+    fp_ext_histone = 50
     tc_ext = 50
+    tc_ext_histone = 500
     ###
     dnase_initial_clip = 1000
     dnase_sg_window_size = 9
@@ -204,7 +207,9 @@ def main():
     objects_dict = exp_matrix.objectsDict
 
     # Populating fields dict data
-    print fields_dict
+    for e in ["HS", "DNASE", "HISTONE"]:
+        try: fields_dict["data"][e]
+        except Exception: fields_dict["data"][e] = []
 
     # Fetching files per group
     group_list = []
@@ -470,12 +475,14 @@ def main():
                         continue
 
                     # Histone-only limit size
-                    if(group.histone_only): fp_limit_size = fp_limit_size_histone
+                    if(group.histone_only):
+                        fp_limit_size = fp_limit_size_histone
+                        fp_state_nb = 4
+                    else: fp_state_nb = 7
 
             	    # Formatting results
                     start_pos = 0
                     flag_start = False
-                    fp_state_nb = 7
                     for k in range(r.initial, r.final):
                         curr_index = k - r.initial
                         if(flag_start):
@@ -496,6 +503,24 @@ def main():
         # Post-processing
         ###################################################################################################
 
+        # Parameters
+        if(group.histone_only):
+            fp_limit = fp_limit_size_ext_histone
+            fp_ext = fp_ext_histone
+            tc_ext = tc_ext_histone
+            tcsignal = group.histone_file_list[0]
+            tcfragext = histone_frag_ext
+            tcinitialclip = histone_initial_clip
+            tcextboth = False
+        else:
+            fp_limit = fp_limit_size_ext
+            fp_ext = fp_ext
+            tc_ext = tc_ext
+            tcsignal = group.dnase_file
+            tcfragext = dnase_frag_ext
+            tcinitialclip = dnase_initial_clip
+            tcextboth = dnase_ext_both_directions
+
         # Sorting and Merging
         footprints.merge()
 
@@ -504,22 +529,12 @@ def main():
 
         # Extending footprints
         for f in footprints.sequences:
-            if(f.final - f.initial < fp_limit_size_ext):
+            if(f.final - f.initial < fp_limit):
                 f.initial = max(0,f.initial-fp_ext)
                 f.final = f.final+fp_ext
 
         # Evaluating TC
         for f in footprints.sequences:
-            if(group.histone_only):
-                tcsignal = group.histone_file_list[0]
-                tcfragext = histone_frag_ext
-                tcinitialclip = histone_initial_clip
-                tcextboth = False
-            else:
-                tcsignal = group.dnase_file
-                tcfragext = dnase_frag_ext
-                tcinitialclip = dnase_initial_clip
-                tcextboth = dnase_ext_both_directions
             mid = (f.initial+f.final)/2
             p1 = mid - tc_ext
             p2 = mid + tc_ext
