@@ -87,8 +87,8 @@ UP00085	UP00085_2_Sfpi1_secondary	uniprobe_secondary	2	Sfpi1	.
 UP00086	UP00086_2_Irf3_secondary	uniprobe_secondary	2	Irf3	.
 UP00087	UP00087_2_Tcfap2c_secondary	uniprobe_secondary	2	Tcfap2c	.
 UP00088	UP00088_2_Plagl1_secondary	uniprobe_secondary	2	Plagl1	.
-UP00089	UP00089_3_Tcf1_2666.2	uniprobe_secondary	3	Tcf1	.
 UP00089	UP00089_2_Tcf1_secondary	uniprobe_secondary	2	Tcf1	.
+UP00089	UP00089_3_Tcf1_2666.2	uniprobe_secondary	3	Tcf1	.
 UP00091	UP00091_2_Sox5_secondary	uniprobe_secondary	2	Sox5	.
 UP00092	UP00092_2_Myb_secondary	uniprobe_secondary	2	Myb	.
 UP00093	UP00093_2_Klf7_secondary	uniprobe_secondary	2	Klf7	.
