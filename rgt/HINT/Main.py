@@ -26,7 +26,7 @@ from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
 
 """
-HINT - HMM-based Identification of TF Footprints. 
+HINT - HMM-based Identification of TF Footprints.
 Finds TF footprints given open chromatin data.
 
 Basic Input:
@@ -509,7 +509,7 @@ def main():
             fp_ext = fp_ext_histone
             tc_ext = tc_ext_histone
             tcsignal = group.histone_file_list[0]
-            tcfragext = histone_frag_ext
+            tcfragext = 1
             tcinitialclip = histone_initial_clip
             tcextboth = False
         else:
@@ -517,7 +517,7 @@ def main():
             fp_ext = fp_ext
             tc_ext = tc_ext
             tcsignal = group.dnase_file
-            tcfragext = dnase_frag_ext
+            tcfragext = 1
             tcinitialclip = dnase_initial_clip
             tcextboth = dnase_ext_both_directions
 
@@ -533,12 +533,22 @@ def main():
                 f.initial = max(0,f.initial-fp_ext)
                 f.final = f.final+fp_ext
 
+        # Fetching chromosome sizes
+        chrom_sizes_file_name = genome_data.get_chromosome_sizes()
+        chrom_sizes_file = open(chrom_sizes_file_name,"r")
+        chrom_sizes_dict = dict()
+        for chrom_sizes_entry_line in chrom_sizes_file:
+            chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
+            chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
+        chrom_sizes_file.close()
+
         # Evaluating TC
         for f in footprints.sequences:
             mid = (f.initial+f.final)/2
-            p1 = mid - tc_ext
-            p2 = mid + tc_ext
-            tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcfragext, tcinitialclip, tcextboth)
+            p1 = max(mid - tc_ext,0)
+            p2 = min(mid + tc_ext,chrom_sizes_dict[f.chrom])
+            try: tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcfragext, tcinitialclip, tcextboth)
+            except Exception: tag_count = 0
             f.data = str(int(tag_count))
 
         ###################################################################################################
