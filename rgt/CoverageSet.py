@@ -184,7 +184,7 @@ class CoverageSet:
             os.system(c)
             os.remove(tmp_path)
 
-    def coverage_from_genomicset(self, bamFile, readSize=200):
+    def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
         """Compute coverage based on the class variable <genomicRegions>. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet) and set coverage to the number of reads falling into the GenomicRegion.
@@ -193,6 +193,7 @@ class CoverageSet:
         
         - bamFile -- path to bam file
         - readSize -- used read size
+        - strand_specific -- calculate the coverage from the reads with the same orientation with the region
         
         *Output:*
         
@@ -208,10 +209,17 @@ class CoverageSet:
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
             try:
-                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                    cov[i] += 1
+                if not strand_specific:
+                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                        cov[i] += 1
+                else:
+                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                        if region.orientation == "+" and not read.is_reverse: cov[i] += 1
+                    elif region.orientation == "-" and read.is_reverse: cov[i] += 1
+                
             except:
                 print("\tError: "+str(region))
+
         self.coverage=cov 
         self.coverageOrig=cov
 
@@ -223,7 +231,8 @@ class CoverageSet:
         else:
             return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, get_strand_info = False):
+    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
+                          get_strand_info = False):
         """Compute coverage based on GenomicRegionSet. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet). The GenomicRegion is divided into consecutive bins with lenth <binsize>.

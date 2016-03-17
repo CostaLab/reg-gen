@@ -153,6 +153,13 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bed2fasta.add_argument('-gene', type=str, help="Define file for the gene list")
 
+    ############### BED remove if overlap ################################
+    parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
+                       help="[BED] Remove the regions if they overlap with the target regions")
+    parser_bedro.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedro.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bedro.add_argument('-t', '-target', type=str, help="Define BED file for target regions")
+
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
                        help="[BED] Add extra columns to the BED file by gene name")
@@ -197,7 +204,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:   
         args = parser.parse_args()
-
+        # print(args.o)
         if "/" in args.o:
             if not os.path.exists(args.o.rpartition("/")[0]):
                 os.makedirs(args.o.rpartition("/")[0])
@@ -485,7 +492,28 @@ if __name__ == "__main__":
         print("complete.")
 
 
+    ############### BED remove if overlap ########################################
+    elif args.mode == "bed_remove_if_overlap":
 
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        
+        if not args.t:
+            print("Please define the file for target regions.")
+            sys.exit(1)
+        else:
+            print("target:\t" + args.t)
+
+        # with open(args.target) as f:
+        t = GenomicRegionSet("targets")
+        t.read_bed(args.t)
+
+        # with open(args.i) as fi, open(args.o, "w") as fo:
+        input_regions = GenomicRegionSet("input")
+        input_regions.read_bed(args.i)
+        output_regions = input_regions.subtract(t,whole_region=True)
+        output_regions.write_bed(args.o)          
+        print("complete.")
     ############### BED add columns #############################################
     elif args.mode == "bed_add_columns":
         print("input:\t" + args.i)
