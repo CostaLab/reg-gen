@@ -57,8 +57,10 @@ def _get_pvalue_distr(mu, alpha, tracker):
 
 def get_init_parameters(s0, s1, s2, **info):
     """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
-    mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
-    var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+        var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
     
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 0.001

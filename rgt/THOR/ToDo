@@ -3,6 +3,7 @@ ToDo:
 - give foldchange, standard error of foldchange 
 
 Done:
+- add save input option
 
 THOR-0.1
 - separate warning message if no input-DNA and no genome specified
