@@ -214,10 +214,13 @@ class CoverageSet:
                         cov[i] += 1
                 else:
                     for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                        if region.orientation == "+" and not read.is_reverse: cov[i] += 1
-                    elif region.orientation == "-" and read.is_reverse: cov[i] += 1
+                        # print(region.orientation)
+                        # print(r.is_reverse)
+                        if region.orientation == "+" and not r.is_reverse: cov[i] += 1
+                        elif region.orientation == "-" and r.is_reverse: cov[i] += 1
                 
             except:
+                # pass
                 print("\tError: "+str(region))
 
         self.coverage=cov 
