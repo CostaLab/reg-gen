@@ -54,11 +54,17 @@ def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
     chrom_genome = set()
     chrom_chrom_sizes = set()
     #check bam files
-    chrom_bams_1 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile1)))
-    chrom_bams_2 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile2)))
+    try:
+        if pysam.__version__ == '0.9.0':
+            chrom_bams_1 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile1).split('\n')[:len(pysam.idxstats(bamfile1).split('\n'))-1]])
+            chrom_bams_2 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile2).split('\n')[:len(pysam.idxstats(bamfile2).split('\n'))-1]])
+        else:
+            chrom_bams_1 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile1)))
+            chrom_bams_2 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile2)))
+    except:
+        return True
+            
     chrom_bams = chrom_bams_1 & chrom_bams_2
-    
-    
     #check chrom_sizes
     with open(chrom_sizes) as f:
         for line in f:

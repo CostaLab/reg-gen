@@ -24,8 +24,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 import sys
-from dpc_help import get_peaks, input, _fit_mean_var_distr, initialize, _output_BED, _output_narrowPeak, merge_output
+from dpc_help import get_peaks, input, _fit_mean_var_distr, initialize, merge_output
 from tracker import Tracker
+from postprocessing import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
@@ -113,7 +114,7 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         pvalues += inst_pvalues
         ratios += inst_ratios
     
-    res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output, options.no_correction)
+    res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output, options.no_correction, options.name)
     
     _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
     _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)

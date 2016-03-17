@@ -74,13 +74,13 @@ tools_dictionary = {
 "ODIN": (
     "rgt-ODIN",
     "rgt.ODIN.ODIN:main",
-    ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
+    ["hmmlearn<0.2.0", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
     []
 ), 
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["hmmlearn", "scikit-learn", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5", "HTSeq", "mpmath"],
+    ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.17.0", "pysam>=0.9.0", "HTSeq", "mpmath"],
     ["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
 ),                 
 "filterVCF": (

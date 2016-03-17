@@ -178,7 +178,11 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
                 v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
                 
                 if len(m) > 0 and len(v) > 0: 
-                    p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                    try:
+                        p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                    except:
+                        print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
+                        break #restart for loop
                 else:
                     p = np.array([0, 1])
                 
@@ -351,29 +355,6 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
     
     return ratios, pvalues, output
 
-
-def _output_BED(name, output, pvalues, filter):
-    f = open(name + '-diffpeaks.bed', 'w')
-     
-    colors = {'+': '255,0,0', '-': '0,255,0'}
-    bedscore = 1000
-    
-    for i in range(len(pvalues)):
-        c, s, e, strand, counts = output[i]
-        if filter[i]:
-            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
-    
-    f.close()
-
-def _output_narrowPeak(name, output, pvalues, filter):
-    """Output in narrowPeak format,
-    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
-    f = open(name + '-diffpeaks.narrowPeak', 'w')
-    for i in range(len(pvalues)):
-        c, s, e, strand, _ = output[i]
-        if filter[i]:
-            print(c, s, e, 'Peak' + str(i), 0, strand, 0, pvalues[i], 0, -1, sep='\t', file=f)
-    f.close()
 
 def _output_ext_data(ext_data_list, bamfiles):
     """Output textfile and png file of read size estimation"""
@@ -573,7 +554,7 @@ def input(laptop):
     options.verbose = False
     options.hmm_free_para = False
     
-    version = "version \"0.1beta\""
+    version = "version \"0.1\""
     if options.version:
         print("")
         print(version)
@@ -663,8 +644,11 @@ def input(laptop):
     OUTPUTDIR = options.outputdir
     NAME = options.name
     
-    if not inputs or not genome:
-        print("Warning: Do not compute GC-content, as there is no input or no genome file", file=sys.stderr)
+    if not inputs:
+        print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)
+    
+    if not genome:
+        print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr) 
     
     if options.exts is None:
         options.exts = []

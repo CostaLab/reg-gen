@@ -295,8 +295,10 @@ class MultiCoverageSet(DualCoverageSet):
                 
                 data_rep = np.asarray(map(lambda x: x[0], tmp))
                 ref = np.asarray(map(lambda x: x[1], tmp))
-                data_rep = data_rep[data_rep > 0]
-                ref = ref[data_rep > 0]
+                assert len(data_rep) == len(ref)
+                m = data_rep > 0
+                data_rep = data_rep[m]
+                ref = ref[m]
                 
                 m_values = np.log(ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * ref)
@@ -305,7 +307,7 @@ class MultiCoverageSet(DualCoverageSet):
                     f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
                     scaling_factors_ip.append(f)
                 except:
-                    print('TMM not sucessfully', file=sys.stderr)
+                    print('TMM normalization not successfully performed, do not normalize data', file=sys.stderr)
                     scaling_factors_ip.append(1)
                 
         return scaling_factors_ip

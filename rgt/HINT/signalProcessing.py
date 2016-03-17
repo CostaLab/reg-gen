@@ -95,8 +95,50 @@ class GenomicSignal:
         """
         self.sg_coefs = self.savitzky_golay_coefficients(slope_window_size, 2, 1)
 
+    def get_tag_count(self, ref, start, end, ext, initial_clip = 1000, ext_both_directions=False):
+        """ 
+        Gets the tag count associated with self.bam based on start, end and ext.
+
+        Keyword arguments:
+        ref -- Chromosome name.
+        start -- Initial genomic coordinate of signal.
+        end -- Final genomic coordinate of signal.
+        ext -- Fragment extention. Eg. 1 for DNase and 200 for histone modifications.
+        initial_clip -- Signal will be initially clipped at this level to avoid outliers.
+        
+        Return:
+        tag_count -- Total signal.
+        """
+
+        # Fetch raw signal
+        pileup_region = PileupRegion(start,end,ext)
+        if(self.is_bam):
+            if(ps_version == "0.7.5"):
+                self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
+            else:
+                iter = self.bam.fetch(reference=ref, start=start, end=end)
+                if(not ext_both_directions):
+                    for alignment in iter: pileup_region.__call__(alignment)
+                else:
+                    for alignment in iter: pileup_region.__call2__(alignment)
+            raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
+        elif(self.is_bw):
+            signal = self.bw.pileup(ref, start, end)
+            raw_signal = array([min(e,initial_clip) for e in signal])
+
+        # Std-based clipping
+        mean = raw_signal.mean()
+        std = raw_signal.std()
+        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+
+        # Tag count
+        try: tag_count = sum(clip_signal)
+        except Exception: tag_count = 0
+
+        return tag_count
+
     def get_signal(self, ref, start, end, ext, initial_clip = 1000, per_norm = 98, per_slope = 98, 
-                   bias_table = None, genome_file_name = None):
+                   bias_table = None, genome_file_name = None, ext_both_directions=False):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -124,7 +166,10 @@ class GenomicSignal:
                 self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
             else:
                 iter = self.bam.fetch(reference=ref, start=start, end=end)
-                for alignment in iter: pileup_region.__call__(alignment)
+                if(not ext_both_directions):
+                    for alignment in iter: pileup_region.__call__(alignment)
+                else:
+                    for alignment in iter: pileup_region.__call2__(alignment)
             raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
         elif(self.is_bw):
             signal = self.bw.pileup(ref, start, end)
