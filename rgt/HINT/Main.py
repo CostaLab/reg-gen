@@ -26,7 +26,7 @@ from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
 
 """
-HINT - HMM-based Identification of TF Footprints.
+HINT - HMM-based Identification of TF Footprints. 
 Finds TF footprints given open chromatin data.
 
 Basic Input:
