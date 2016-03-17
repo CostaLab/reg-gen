@@ -13,7 +13,6 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
-# import wWigIO
 from helper import BigWigFile
 from rgt.ODIN.gc_content import get_gc_context
 
@@ -203,7 +202,8 @@ class CoverageSet:
             self.reads = None
             self.mapped_reads = None
     
-    def coverage_from_genomicset(self, bamFile, readSize=200):
+    def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
+
         """Compute coverage based on the class variable <genomicRegions>. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet) and set coverage to the number of reads falling into the GenomicRegion.
@@ -212,6 +212,7 @@ class CoverageSet:
         
         - bamFile -- path to bam file
         - readSize -- used read size
+        - strand_specific -- calculate the coverage from the reads with the same orientation with the region
         
         *Output:*
         
@@ -228,10 +229,20 @@ class CoverageSet:
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
             try:
-                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                    cov[i] += 1
+                if not strand_specific:
+                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                        cov[i] += 1
+                else:
+                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                        # print(region.orientation)
+                        # print(r.is_reverse)
+                        if region.orientation == "+" and not r.is_reverse: cov[i] += 1
+                        elif region.orientation == "-" and r.is_reverse: cov[i] += 1
+                
             except:
+                # pass
                 print("\tError: "+str(region))
+
         self.coverage=cov 
         self.coverageOrig=cov
 
@@ -243,7 +254,8 @@ class CoverageSet:
         else:
             return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, get_strand_info = False):
+    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
+                          get_strand_info = False):
         """Compute coverage based on GenomicRegionSet. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet). The GenomicRegion is divided into consecutive bins with lenth <binsize>.
@@ -563,8 +575,3 @@ class CoverageSet:
 
         reads = list(set(reads))
         return len(reads)
-    
-    
-    
-    
-    
