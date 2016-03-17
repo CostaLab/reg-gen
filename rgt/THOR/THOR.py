@@ -57,7 +57,7 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
                           verbose = options.verbose, no_gc_content=options.no_gc_content, factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes, \
                           tracker=tracker, norm_regions=options.norm_regions, scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig, \
                           housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report, chrom_sizes_dict=region_giver.get_chrom_dict(),\
-                          end=True, counter=0, output_bw=False)
+                          end=True, counter=0, output_bw=False, save_input=options.save_input)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
             tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
             tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")

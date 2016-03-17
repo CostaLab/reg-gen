@@ -416,7 +416,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
                test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True):
+               gc_hist=None, output_bw=True, save_input=False):
     """Initialize the MultiCoverageSet"""
     regionset = regions
     regionset.sequences.sort()
@@ -434,7 +434,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
                                   housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
-                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report)
+                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report, save_input=save_input)
     return multi_cov_set
 
 
@@ -505,6 +505,8 @@ def input(laptop):
                           If option is not chosen, estimate factors. [default: %default]")
         parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
                           help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for each BAM file in config file. If option is not chosen, follow normalization strategy (TMM or HK approach) [default: %default]")
+        parser.add_option("--save-input", dest="save_input", default=False, action="store_true", \
+                          help="Save input-DNA file if available. [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true",\
                            help="Show script's version.")
         

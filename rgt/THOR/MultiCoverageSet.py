@@ -91,14 +91,19 @@ class MultiCoverageSet(DualCoverageSet):
                 #    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
         
     
+    def _output_input_bw(self, name, chrom_sizes, save_wig):
+        for i in range(len(self.covs)):
+            rep = i if i < self.dim_1 else i-self.dim_1
+            sig = 1 if i < self.dim_1 else 2
+            if self.inputs:
+                self.inputs[i].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
     
-    def _output_bw(self, name, chrom_sizes, save_wig):
+    def _output_bw(self, name, chrom_sizes, save_wig, save_input):
         """Output bigwig files"""
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
-            #if self.inputs:
-            #    self.inputs[i].write_bigwig(name + '-s%s-rep%s-input.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
+            
             self.covs[i].write_bigwig(name + '-' + str(self.counter) + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
         
         #ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
@@ -170,7 +175,7 @@ class MultiCoverageSet(DualCoverageSet):
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
-                 folder_report=None, report=None):
+                 folder_report=None, report=None, save_input=False):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -189,7 +194,6 @@ class MultiCoverageSet(DualCoverageSet):
         self.counter = counter
         self.no_data = False
         self.FOLDER_REPORT = folder_report
-        
         global DEBUG, VERBOSE
         DEBUG = debug
         VERBOSE = verbose
@@ -200,13 +204,16 @@ class MultiCoverageSet(DualCoverageSet):
             self.no_data = True
             return None
         self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs)
-        
+        self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs, save_input)
+        if save_input:
+            self._output_input_bw(name, chrom_sizes, save_wig) 
+            
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
         self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report)
+        
         if output_bw:
-            self._output_bw(name, chrom_sizes, save_wig) 
+            self._output_bw(name, chrom_sizes, save_wig, save_input) 
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []
@@ -221,7 +228,7 @@ class MultiCoverageSet(DualCoverageSet):
             for i in range(self.overall_coverage[j].shape[1]):
                 print(self.overall_coverage[j][:,i].T, file=f)
     
-    def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs):
+    def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs, save_input):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         
         if VERBOSE:
@@ -246,6 +253,7 @@ class MultiCoverageSet(DualCoverageSet):
                     print("Normalize input of Signal %s, Rep %s with factor %s"\
                            %(sig, rep, round(n, ROUND_PRECISION)) , file=sys.stderr)
                     self.inputs[i].scale(n)
+                    
                     self.covs[i].subtract(self.inputs[i])
                     factors_inputs.append(n)
         
