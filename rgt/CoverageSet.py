@@ -184,10 +184,6 @@ class CoverageSet:
             #print(c)
             os.system(c)
             os.remove(tmp_path)
-<<<<<<< HEAD
-
-    def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
-=======
     
     def _init_read_number(self, bamFile):
         """Compute number of reads and number of mapped reads for CoverageSet"""
@@ -206,8 +202,8 @@ class CoverageSet:
             self.reads = None
             self.mapped_reads = None
     
-    def coverage_from_genomicset(self, bamFile, readSize=200):
->>>>>>> 0ce92331903a176d6d5048ad4c4825e95b975924
+    def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
+
         """Compute coverage based on the class variable <genomicRegions>. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet) and set coverage to the number of reads falling into the GenomicRegion.
@@ -579,8 +575,3 @@ class CoverageSet:
 
         reads = list(set(reads))
         return len(reads)
-    
-    
-    
-    
-    
