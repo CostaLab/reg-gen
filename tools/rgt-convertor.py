@@ -512,7 +512,7 @@ if __name__ == "__main__":
         input_regions = GenomicRegionSet("input")
         input_regions.read_bed(args.i)
         output_regions = input_regions.subtract(t,whole_region=True)
-        output_regions.write_bed(args.o)          
+        output_regions.write_bed(args.o)
         print("complete.")
     ############### BED add columns #############################################
     elif args.mode == "bed_add_columns":
