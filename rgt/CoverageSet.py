@@ -181,9 +181,9 @@ class CoverageSet:
             self.write_wig(tmp_path, end)
             t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
             c = " ".join(t)
-            #print(c)
+            #print(c, file=sys.stderr)
             os.system(c)
-            os.remove(tmp_path)
+            #os.remove(tmp_path)
     
     def _init_read_number(self, bamFile):
         """Compute number of reads and number of mapped reads for CoverageSet"""
