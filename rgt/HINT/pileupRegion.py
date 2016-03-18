@@ -66,22 +66,25 @@ class PileupRegion:
         None -- It updates self.vector only.
         """
 
-        # Forward strand update
-        if(not alignment.is_reverse):
-            for i in range(max(alignment.pos,self.start),min(alignment.pos+self.ext,self.end-1)):
-                self.vector[i-self.start] += 1.0 
-        # Reverse strand update
-        else:
-            for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend,self.end-1)):
-                self.vector[i-self.start] += 1.0 
+        try:
+            # Forward strand update
+            if(not alignment.is_reverse):
+                for i in range(max(alignment.pos,self.start),min(alignment.pos+self.ext,self.end-1)):
+                    self.vector[i-self.start] += 1.0 
+            # Reverse strand update
+            else:
+                for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend,self.end-1)):
+                    self.vector[i-self.start] += 1.0 
+        except Exception: pass
 
     def __call2__(self, alignment):
-        if(not alignment.is_reverse):
-            for i in range(max(alignment.pos-self.ext,self.start),min(alignment.pos+self.ext,self.end-1)):
-                self.vector[i-self.start] += 1.0 
-        else:
-            for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend+self.ext,self.end-1)):
-                self.vector[i-self.start] += 1.0
-
+        try:
+            if(not alignment.is_reverse):
+                for i in range(max(alignment.pos-self.ext,self.start),min(alignment.pos+self.ext,self.end-1)):
+                    self.vector[i-self.start] += 1.0 
+            else:
+                for i in range(max(alignment.aend-self.ext,self.start),min(alignment.aend+self.ext,self.end-1)):
+                    self.vector[i-self.start] += 1.0
+        except Exception: pass
 
 
