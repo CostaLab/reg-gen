@@ -52,9 +52,11 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
     
     # Saving 
     if not extra:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_inches='tight', dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_inches='tight', dpi=400)
     else:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_extra_artists=(extra), bbox_inches='tight',dpi=400)
     
     if pdf:
         try:
@@ -219,7 +221,7 @@ def main():
     parser_boxplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
     parser_boxplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
     parser_boxplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
-    parser_boxplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
+    parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
@@ -249,12 +251,13 @@ def main():
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-    parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
-    parser_lineplot.add_argument('-sx', action="store_true", help="Share x axis for convenience of comparison.")
+    parser_lineplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
+    parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows.")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
     parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing.")
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -574,7 +577,7 @@ def main():
             
             boxplot.group_data(directory = args.o, folder = args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
-            boxplot.plot(title=args.t, logT=args.nlog, sy=args.sy, ylim=args.ylim)
+            boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim)
             #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
             output(f=boxplot.fig, directory = args.o, folder = args.t, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
             # HTML
@@ -589,8 +592,8 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
-            if args.sy and args.sx:
-                print("** Err: -sy and -sx cannot be used simutaneously.")
+            if args.scol and args.srow:
+                print("** Err: -scol and -srow cannot be used simutaneously.")
                 sys.exit(1)
 
             print("\n################ Lineplot #################")
@@ -614,7 +617,8 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c])
+                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c],
+                                test=args.test)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -633,7 +637,7 @@ def main():
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
             lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, 
-                          sy=args.sy, sx=args.sx, w=args.pw, h=args.ph)
+                          scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()

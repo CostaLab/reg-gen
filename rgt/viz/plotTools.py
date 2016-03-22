@@ -30,6 +30,7 @@ from rgt.AnnotationSet import *
 from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
 from rgt.motifanalysis.Statistics import multiple_test_correction
+from rgt.helper import pretty
 
 # Local test
 dir = os.getcwd()
@@ -1913,7 +1914,7 @@ class Boxplot:
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
         for f in fields:
-            if f not in ["None", "reads", "regions", "factors"]:
+            if f not in ["None", "reads", "regions", "factor"]:
                 self.exps.match_ms_tags(f)
 
         self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
@@ -2097,11 +2098,11 @@ class Boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, sy, logT=False, ylim=False):
+    def plot(self, title, scol, logT=False, ylim=False):
         """ Return boxplot from the given tables.
         
         """
-        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = sy)
+        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
         self.xtickrotation, self.xtickalign = 0,"center"
 
         nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
@@ -2185,7 +2186,7 @@ class Boxplot:
                 axarr[i].spines[spine].set_visible(False)
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
             
-            if sy: 
+            if scol: 
                 #plt.setp(axarr[i].get_yticklabels(),visible=False)
                 axarr[i].minorticks_off()
                 
@@ -2368,16 +2369,24 @@ def annotation_dump(organism):
 
 
 class Lineplot:
-
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, fields):
+    
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, fields, test):
+        
+        
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(EMpath)
-        for f in fields:
-            if f not in ["None", "reads", "regions", "factors"]:
+        self.exps.read(EMpath, test=test)
+        # print(self.exps.fields)
+        # pretty(self.exps.fieldsDict)
+        for f in self.exps.fields:
+            if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f)
-
+        # print(self.exps.names)
+        # print(self.exps.trash)
+        self.exps.remove_name()
+        # pretty(self.exps.fieldsDict)
+        # sys.exit(0)
         if annotation:
             self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
@@ -2480,10 +2489,10 @@ class Lineplot:
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
-        totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
+        # totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
 
         
-        if self.df: totn = totn * 2
+        # if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
             data[s] = OrderedDict()
@@ -2567,7 +2576,7 @@ class Lineplot:
                                             else: data[s][g][c] = avearr # Store the array into data list
                                         bi += 1
                                         te = time.time()
-                                        print2(self.parameter, "\t("+str(bi)+"/"+str(totn)+") Computing  " + "{0:30}  --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                        print2(self.parameter, "\t"+str(bi)+"\t"+"{0:30}\t--{1:<5.1f}s".format(bed+"."+bam, ts-te))
                                         #sys.stdout.flush()
         
         if mp: 
@@ -2608,12 +2617,15 @@ class Lineplot:
         for i, c in enumerate(self.color_tags):
             self.colors[c] = colors[i]
 
-    def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False,  w=3, h=3):
+    def plot(self, groupby, colorby, output, printtable=False, scol=False, srow=False,  w=2, h=2):
         
         rot = 50
-        ticklabelsize = 7
+        if len(self.data.values()[0].keys()) <  2:
+            ticklabelsize = w*1.5
+        else:
+            ticklabelsize = w*3
         tw = len(self.data.values()[0].keys()) * w
-        th = len(self.data.keys()) * h
+        th = len(self.data.keys()) * (h*0.8)
         
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300,
                               figsize=(tw, th) ) 
@@ -2649,9 +2661,9 @@ class Lineplot:
                               
                 if it == 0:
                     if self.df:
-                        ax.set_title(g+"_df",fontsize=11)
+                        ax.set_title(g+"_df",fontsize=ticklabelsize+2)
                     else:
-                        ax.set_title(g,fontsize=11)
+                        ax.set_title(g,fontsize=ticklabelsize+2)
                     
                 # Processing for future output
                     
@@ -2675,7 +2687,7 @@ class Lineplot:
                     if printtable: pArr.append([g,s,c]+list(y))
 
                 
-                
+                ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
@@ -2691,17 +2703,17 @@ class Lineplot:
                 
         for it,ty in enumerate(self.data.keys()):
             try: 
-                axs[it,0].set_ylabel("{}".format(ty),fontsize=12)
+                axs[it,0].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
             except:
-                try: axs[it].set_ylabel("{}".format(ty),fontsize=12)
-                except: axs.set_ylabel("{}".format(ty),fontsize=12)
+                try: axs[it].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
+                except: axs.set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
                 #if len(self.data.keys()) == 1:
                 #    axs.set_ylabel("{}".format(ty),fontsize=12)
                     #axs.set_ylabel("{}".format(ty),fontsize=12)
                 #else:
                 #    axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
-            if sy:
+            if scol:
                 for i,g in enumerate(self.data[ty].keys()):
                     if self.df:
                         try: axs[it,i].set_ylim([yaxmin[i] - abs(yaxmin[i]*0.2), yaxmax[i] + abs(yaxmax[i]*0.2)])
@@ -2717,7 +2729,7 @@ class Lineplot:
                                 axs[i].set_ylim([0, yaxmax[i]*1.2])
                             else:
                                 axs[it].set_ylim([0, yaxmax[i]*1.2])
-            elif sx:
+            elif srow:
                 for i,g in enumerate(self.data[ty].keys()):
                     if self.df:
                         try: axs[it,i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
@@ -2735,17 +2747,17 @@ class Lineplot:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
         try: 
             axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                             columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                             columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
         except:
             try:
                 axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                               columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                               columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
             except:
                 axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                           columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                           columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
                 
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-        # f.tight_layout()
+        f.tight_layout()
         self.fig = f
 
     def gen_html(self, directory, title, align=50):
@@ -2759,7 +2771,7 @@ class Lineplot:
 
         html = Html(name=html_header, links_dict=link_d,
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
-        html.add_figure("lineplot.png", align="center")
+        html.add_figure("lineplot.png", align="center",width="80%")
         
         
         html.write(os.path.join(directory, title, "index.html"))

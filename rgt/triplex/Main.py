@@ -753,6 +753,7 @@ def main():
         randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
         randomtest.connect_rna(rna=args.r, temp=args.o)
+
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()

@@ -68,13 +68,16 @@ if __name__ == "__main__":
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-t', metavar='  ', type=str, help="Define the target Biotype\
-                                                                 (e.g. gene or exon or transcript...)")
-    parser_gtf2bed.add_argument('-known_only', action="store_true", default=False,
-                                help="Get the known genes only.")
-
+    parser_gtf2bed.add_argument('-s', '-source', type=str, default="ENSEMBL", help="Define the source {ENSEMBL,HAVANA}")
+    parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene", 
+                                help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine}")
+    parser_gtf2bed.add_argument('-t', '-type', type=str, default="protein_coding", 
+                                help="Define gene type e.g. 'protein_coding' more: http://www.gencodegenes.org/gencode_biotypes.html")
+    parser_gtf2bed.add_argument('-st', '-status', type=str, default="KNOWN", 
+                                help="Define gene status {KNOWN, NOVEL, PUTATIVE}")
     parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
+
 
     ############### GTF to FASTA #############################################
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
@@ -265,10 +268,80 @@ if __name__ == "__main__":
         print(tag+": [GTF] Convert GTF to BED")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
-        print("target:\t" +args.t)
+        print("source:\t\t" + args.s)
+        print("feature:\t" + args.f)
+        print("type:\t\t" + args.t)
+        print("status:\t\t" + args.st)
+        
+        if args.s == "ENSEMBL": tag_s = "ENSEMBL"
+        elif args.s == "HAVANA": tag_s = "HAVANA"
+        elif args.s == "All": tag_s = None
+        else: 
+            print("Please redefine the argument -s.")
+            sys.exit(1)
+
+        if args.f == "gene": tag_f = "gene"
+        elif args.f == "transcript": tag_f = "transcript"
+        elif args.f == "exon": tag_f = "exon"
+        elif args.f == "CDS": tag_f = "CDS"
+        elif args.f == "UTR": tag_f = "UTR"
+        elif args.f == "start_codon": tag_f = "start_codon"
+        elif args.f == "stop_codon": tag_f = "stop_codon"
+        elif args.f == "Selenocysteine": tag_f = "Selenocysteine"
+        elif args.f == "All": tag_f = None
+        else: 
+            print("Please redefine the argument -f.")
+            sys.exit(1)
+
+        if args.t == "protein_coding": tag_t = 'gene_type \"protein_coding\"'
+        elif args.t == "non_coding": tag_t = 'gene_type \"non_coding\"'
+        elif args.t == "known_ncrna": tag_t = 'gene_type \"known_ncrna\"'
+        elif args.t == "pseudogene": tag_t = 'gene_type \"pseudogene\"'
+        elif args.t == "All": tag_t = None
+        else: 
+            print("Please redefine the argument -t.")
+            sys.exit(1)
+
+        if args.st == "KNOWN": tag_st = 'gene_status \"KNOWN\"'
+        elif args.st == "NOVEL": tag_st = 'gene_status \"NOVEL\"'
+        elif args.st == "PUTATIVE": tag_st = 'gene_status \"PUTATIVE\"'
+        elif args.st == "All": tag_st = None
+        else: 
+            print("Please redefine the argument -st.")
+            sys.exit(1)
+
+        ### Indexing
+        with open(args.i) as f,open(args.o, "w") as g:
+            for line in f:
+                if line[0] == "#": continue
+                line = line.strip().split("\t")
+                
+                if tag_s and tag_s != line[1]: continue
+                if tag_f and tag_f != line[2]: continue
+                if tag_t and tag_t in line[8]: pass
+                elif not tag_t: pass
+                else: continue                
+                if tag_st and tag_st in line[8]: pass
+                elif not tag_st: pass
+                else: continue
+                # print(line)
+                # print(line[8].split("; "))
+                info = line[8].split("; ")
+                
+                gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+
+                # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
+                if int(line[3]) < int(line[4]):
+                    print("\t".join([line[0], line[3], line[4], gn, ".", line[6]]), file=g)
+                else:
+                    print("\t".join([line[0], line[4], line[3], gn, ".", line[6]]), file=g)
+        sys.exit(1)
+
+
+
 
         if args.t == "gene" or args.t == "transcript":
-            with open(args.i) as f, open(args.o, "w") as g:
+            with open(args.i) as f,open(args.o, "w") as g:
                 find_ind = False
                 for line in f:
                     if line[0] == "#": 

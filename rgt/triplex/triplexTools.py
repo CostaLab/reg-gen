@@ -2179,7 +2179,7 @@ class RandomTest:
     def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
-
+        
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region, 
                            temp=temp, organism=self.organism, remove_temp=remove_temp, 
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=self.genome_path,
