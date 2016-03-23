@@ -138,7 +138,7 @@ class GenomicSignal:
         return tag_count
 
     def get_signal(self, ref, start, end, ext, initial_clip = 1000, per_norm = 98, per_slope = 98, 
-                   bias_table = None, genome_file_name = None, ext_both_directions=False):
+                   bias_table = None, genome_file_name = None, ext_both_directions=False, print_wig = None):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -199,6 +199,18 @@ class GenomicSignal:
         perc = scoreatpercentile(abs_seq, per_slope)
         std = abs_seq.std()
         slopehon_signal = self.hon_norm(slope_signal, perc, std)
+
+        # Writing signal
+        if(print_wig):
+            signal_file = open(print_wig+"signal.wig","a")
+            norm_file = open(print_wig+"norm.wig","a")
+            slope_file = open(print_wig+"slope.wig","a")
+            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in clip_signal])+"\n")
+            norm_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in hon_signal])+"\n")
+            slope_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in slopehon_signal])+"\n")
+            signal_file.close()
+            norm_file.close()
+            slope_file.close()
 
         # Returning normalized and slope sequences
         return hon_signal, slopehon_signal

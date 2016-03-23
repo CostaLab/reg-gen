@@ -114,18 +114,18 @@ def main():
                       help = ("Applies DNase-seq cleavage bias correction with default "
                               "k-mer bias estimates (FAST HINT-BC)."))
 
-    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "int", metavar="INT", default = 98,
+    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "float", metavar="INT", default = 98,
                       help = SUPPRESS_HELP)
-    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "int", metavar="INT", default = 98,
+    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float", metavar="INT", default = 98,
                       help = SUPPRESS_HELP)
     parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int", metavar="INT", default = 1,
                       help = SUPPRESS_HELP)
     parser.add_option("--ext-both-directions", dest = "ext_both_directions", action = "store_true", default = False,
                       help = SUPPRESS_HELP)
 
-    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "int", metavar="INT", default = 98,
+    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "float", metavar="INT", default = 98,
                       help = SUPPRESS_HELP)
-    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "int", metavar="INT", default = 98,
+    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float", metavar="INT", default = 98,
                       help = SUPPRESS_HELP)
 
     # Output Options
@@ -134,6 +134,9 @@ def main():
                       help = ("Path where the output files will be written."))
     parser.add_option("--print-bb", dest = "print_bb", action = "store_true", default = False,
                       help = ("If used, the output will be a bigbed (.bb) file."))
+
+    parser.add_option("--print-wig", dest = "print_wig", type = "string", metavar="PATH", default = None,
+                      help = SUPPRESS_HELP)
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -163,6 +166,12 @@ def main():
     histone_slope_per = options.histone_slope_per
     histone_frag_ext = 200
     ###################################
+
+    # Output wig signal
+    if(options.print_wig):
+        system("touch "+options.print_wig+"signal.wig | echo -n "" > "+options.print_wig+"signal.wig")
+        system("touch "+options.print_wig+"norm.wig | echo -n "" > "+options.print_wig+"norm.wig")
+        system("touch "+options.print_wig+"slope.wig | echo -n "" > "+options.print_wig+"slope.wig")
 
     # Global class initialization
     genome_data = GenomeData(options.organism)
@@ -378,7 +387,7 @@ def main():
                 try: dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
                                                dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                               dnase_ext_both_directions)
+                                               dnase_ext_both_directions, options.print_wig)
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -434,7 +443,7 @@ def main():
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                   dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
                                                   dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                                  dnase_ext_both_directions)
+                                                  dnase_ext_both_directions, options.print_wig)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -449,7 +458,7 @@ def main():
                         histone_file = group.histone_file_list[i]
                         histone_norm, histone_slope = histone_file.get_signal(r.chrom, r.initial, r.final, 
                                                       histone_frag_ext, histone_initial_clip, histone_norm_per,
-                                                      histone_slope_per)
+                                                      histone_slope_per, options.print_wig)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_HISTONE_PROC",add_msg="for region ("+",".join([r.chrom, 
