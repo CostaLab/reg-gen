@@ -266,7 +266,7 @@ def main():
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    choice_center = ['midpoint','leftend','rightend','bothends', 'upstream', 'downstream'] 
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_heatmap.add_argument('input', help=helpinput)

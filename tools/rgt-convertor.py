@@ -3,6 +3,8 @@ from __future__ import print_function
 import sys
 import argparse
 import os
+from os.path import expanduser
+home = expanduser("~")
 
 # Local Libraries
 from rgt.GeneSet import GeneSet
@@ -68,13 +70,15 @@ if __name__ == "__main__":
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-s', '-source', type=str, default="ENSEMBL", help="Define the source {ENSEMBL,HAVANA}")
+    parser_gtf2bed.add_argument('-s', '-source', type=str, default="ENSEMBL", help="Define the source {ENSEMBL,HAVANA,All}")
     parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene", 
                                 help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine}")
     parser_gtf2bed.add_argument('-t', '-type', type=str, default="protein_coding", 
                                 help="Define gene type e.g. 'protein_coding' more: http://www.gencodegenes.org/gencode_biotypes.html")
     parser_gtf2bed.add_argument('-st', '-status', type=str, default="KNOWN", 
                                 help="Define gene status {KNOWN, NOVEL, PUTATIVE}")
+    parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None, 
+                                help="Define the gene list for filtering, default is None.")
     parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
 
@@ -130,7 +134,6 @@ if __name__ == "__main__":
     parser_bedgp.add_argument('-l', type=int, default=1000, 
                               help="Define length of promoters (default:1000bp)")
     
-
     ############### BED get upstream regions #################################
     parser_bedupstream = subparsers.add_parser('bed_upstream', 
                        help="[BED] Get regions upstream from the given BED file")
@@ -207,10 +210,17 @@ if __name__ == "__main__":
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        # print(args.o)
         if "/" in args.o:
             if not os.path.exists(args.o.rpartition("/")[0]):
                 os.makedirs(args.o.rpartition("/")[0])
+
+        
+        try:
+            if "~" in args.i: args.i = args.i.replace("~", home)
+            if "~" in args.o: args.o = args.o.replace("~", home)
+            if "~" in args.genome: args.genome = args.genome.replace("~", home)
+        except:
+            pass
     ##########################################################################
 
 
@@ -272,6 +282,8 @@ if __name__ == "__main__":
         print("feature:\t" + args.f)
         print("type:\t\t" + args.t)
         print("status:\t\t" + args.st)
+        if args.g:
+            print("gene list:\t" + args.g)
         
         if args.s == "ENSEMBL": tag_s = "ENSEMBL"
         elif args.s == "HAVANA": tag_s = "HAVANA"
@@ -310,8 +322,12 @@ if __name__ == "__main__":
             print("Please redefine the argument -st.")
             sys.exit(1)
 
+        if args.g:
+            select_genes = GeneSet("genes")
+            select_genes.read(args.g)
+
         ### Indexing
-        with open(args.i) as f,open(args.o, "w") as g:
+        with open(args.i, "r") as f,open(args.o, "w") as g:
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
@@ -332,51 +348,72 @@ if __name__ == "__main__":
 
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
-                    print("\t".join([line[0], line[3], line[4], gn, ".", line[6]]), file=g)
+                    seq = "\t".join([line[0], line[3], line[4], gn, ".", line[6]])
                 else:
-                    print("\t".join([line[0], line[4], line[3], gn, ".", line[6]]), file=g)
-        sys.exit(1)
+                    seq = "\t".join([line[0], line[4], line[3], gn, ".", line[6]])
 
+                if not args.g:
+                    print(seq, file=g)
+                elif select_genes.check(gn):
+                    print(seq, file=g)
+                else:
+                    continue
 
-
-
-        if args.t == "gene" or args.t == "transcript":
-            with open(args.i) as f,open(args.o, "w") as g:
-                find_ind = False
-                for line in f:
-                    if line[0] == "#": 
-                        continue
-                    elif args.known_only:
-                        if "gene_status \"KNOWN\"" in line:
-                            pass
-                        else:
-                            continue
-
-                    line = line.split()
-                    #print(line)
-                    if not find_ind:
-                        for i, l in enumerate(line):
-                            if "gene_name" in l: 
-                                ind = i
-                                find_ind = True
-
-                    if line[2] == args.t:
-                        # print(line[ind+1][1:-2])
-
-                        print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
-
-        elif args.t == "exon":
-            exons = GenomicRegionSet("exons")
-            with open(args.i) as f:
-                for line in f:
-                    if line[0] == "#": continue
-                    line = line.split()
-                    #print(line)
-                    if line[2] == args.t:
-                        #print(line[9].split('"')[1])
-                        exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
-                                                name=line[15][1:-2], orientation=line[6]))         
+        if args.b:
+            exons = GenomicRegionSet("output")
+            exons.read_bed(args.o)
             exons.write_bed_blocks(args.o)
+
+        # sys.exit(1)
+
+        # if args.g:
+        #     select_genes = GeneSet("genes")
+        #     select_genes.read(args.g)
+
+        # # if args.t == "gene" or args.t == "transcript":
+        # with open(args.i, "r") as f,open(args.o, "w") as g:
+        #     find_ind = False
+        #     for line in f:
+        #         if line[0] == "#": 
+        #             continue
+        #         elif args.known_only:
+        #             if "gene_status \"KNOWN\"" in line:
+        #                 pass
+        #             else:
+        #                 continue
+
+        #         line = line.split()
+        #         #print(line)
+        #         if not find_ind:
+        #             for i, l in enumerate(line):
+        #                 if "gene_name" in l: 
+        #                     ind = i
+        #                     find_ind = True
+
+        #         if line[2] == args.t:
+                    
+        #             if not args.g:
+        #                 print(line[ind+1][1:-2])
+        #                 print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
+        #             elif select_genes.check(line[ind+1][1:-2]):
+        #                 print(line[ind+1][1:-2])
+        #                 print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
+        #             else:
+        #                 continue
+
+
+        # elif args.t == "exon":
+        #     exons = GenomicRegionSet("exons")
+        #     with open(args.i) as f:
+        #         for line in f:
+        #             if line[0] == "#": continue
+        #             line = line.split()
+        #             #print(line)
+        #             if line[2] == args.t:
+        #                 #print(line[9].split('"')[1])
+        #                 exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
+        #                                         name=line[15][1:-2], orientation=line[6]))         
+        #     exons.write_bed_blocks(args.o)
         
 
     ############### GTF to FASTA #############################################

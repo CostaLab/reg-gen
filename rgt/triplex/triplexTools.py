@@ -484,7 +484,7 @@ def rank_array(a):
     sa = numpy.searchsorted(numpy.sort(a), a)
     return sa
 
-def dbd_regions(exons, sig_region, rna_name, output):
+def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
     """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
     if len(sig_region) == 0:
         return
@@ -613,15 +613,25 @@ def dbd_regions(exons, sig_region, rna_name, output):
                         cf += l
                         
                     loop = False
-            
-    dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
+    if not out_file:        
+        dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
+    else:
+        print(dbd)
+        # print(dbd.sequences[0])
+        dbd.write_bed(filename=output+".bed")
     # FASTA
     
-    seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
+    
     
     #print(dbdmap)
+    if not out_file:
+        seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
+        fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
+    else:
+        seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
+        fasta_f = output+".fa"
 
-    with open(os.path.join(output, "DBD_"+rna_name+".fa"), 'w') as fasta:
+    with open(fasta_f, 'w') as fasta:
         
         for rbs in sig_region:
             try: info = dbdmap[str(rbs)]
@@ -647,8 +657,72 @@ def connect_rna(rna, temp, rna_name):
         for s in [seq[i:i + 80] for i in range(0, len(seq), 80)]:
             print(s, file=r)
 
+def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
+    regions = GenomicRegionSet("Target")
+    regions.read_bed(input_BED)
+    regions.gene_association(organism=organism)
 
+    connect_rna(rna_fasta, temp=temp, rna_name="RNA")
+    rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
+    rnas.read_fasta(os.path.join(temp,"rna_temp.fa"))
+    rna_regions = get_rna_region_str(os.path.join(temp,rna_fasta))
+    print(rna_regions)
+    genome = GenomeData(organism)
+    genome_path = genome.get_genome()
+    txp = find_triplex(rna_fasta=rna_fasta, dna_region=regions, 
+                       temp=temp, organism=organism, remove_temp=True, 
+                       l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=genome_path,
+                       prefix="targeted_region", dna_fine_posi=True)
 
+    print("Total binding events:\t",str(len(txp)))
+    txp.write_bed(output_BED)
+    rbss = txp.get_rbs()
+    dbd_regions(exons=rna_regions, sig_region=rbss, rna_name="rna", output=output_rbss, 
+                out_file=True, temp=temp)
+    # print(rbss.sequences)
+    # print(len(rbss))
+    # rbss.write_bed(output_rbss)
+
+def get_rna_region_str(rna):
+    """Getting the rna region from the information header with the pattern:
+            REGION_chr3_51978050_51983935_-_
+        or  chr3:51978050-51983935 -    """
+    rna_regions = []
+    with open(rna) as f:
+        for line in f:
+            if line[0] == ">":
+                line = line.strip()
+                if "REGION" in line:
+                    line = line.split()
+                    for i, e in enumerate(line):
+                        if "REGION" in e:
+                            e = e.split("_")
+                            #print(e)
+                            try:
+                                rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
+                            except:
+                                rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
+                
+                elif "chr" in line:
+                    line = line.partition("chr")[2]
+                    chrom = "chr" + line.partition(":")[0]
+                    start = int(line.partition(":")[2].partition("-")[0])
+                    end = int(line.partition(":")[2].partition("-")[2].split()[0])
+                    sign = line.partition(":")[2].partition("-")[2].split()[1]
+                    if sign == "+" or sign == "-" or sign == ".":
+                        rna_regions.append([chrom, start, end, sign])
+
+                    else:
+                        print(line)
+
+                else:
+                    rna_regions = None
+                    break
+    if rna_regions:
+        rna_regions.sort(key=lambda x: x[1])
+        if rna_regions[0][3] == "-":
+            rna_regions = rna_regions[::-1]
+    return rna_regions
 ####################################################################################
 ####################################################################################
 
@@ -836,41 +910,42 @@ class PromoterTest:
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
-        self.rna_regions = []
-        with open(rna) as f:
-            for line in f:
-                if line[0] == ">":
-                    line = line.strip()
-                    if "REGION" in line:
-                        line = line.split()
-                        for i, e in enumerate(line):
-                            if "REGION" in e:
-                                e = e.split("_")
-                                #print(e)
-                                try:
-                                    self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
-                                except:
-                                    self.rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
+        self.rna_regions = get_rna_region_str(rna)
+        # self.rna_regions = []
+        # with open(rna) as f:
+        #     for line in f:
+        #         if line[0] == ">":
+        #             line = line.strip()
+        #             if "REGION" in line:
+        #                 line = line.split()
+        #                 for i, e in enumerate(line):
+        #                     if "REGION" in e:
+        #                         e = e.split("_")
+        #                         #print(e)
+        #                         try:
+        #                             self.rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
+        #                         except:
+        #                             self.rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
                     
-                    elif "chr" in line:
-                        line = line.partition("chr")[2]
-                        chrom = "chr" + line.partition(":")[0]
-                        start = int(line.partition(":")[2].partition("-")[0])
-                        end = int(line.partition(":")[2].partition("-")[2].split()[0])
-                        sign = line.partition(":")[2].partition("-")[2].split()[1]
-                        if sign == "+" or sign == "-" or sign == ".":
-                            self.rna_regions.append([chrom, start, end, sign])
+        #             elif "chr" in line:
+        #                 line = line.partition("chr")[2]
+        #                 chrom = "chr" + line.partition(":")[0]
+        #                 start = int(line.partition(":")[2].partition("-")[0])
+        #                 end = int(line.partition(":")[2].partition("-")[2].split()[0])
+        #                 sign = line.partition(":")[2].partition("-")[2].split()[1]
+        #                 if sign == "+" or sign == "-" or sign == ".":
+        #                     self.rna_regions.append([chrom, start, end, sign])
 
-                        else:
-                            print(line)
+        #                 else:
+        #                     print(line)
 
-                    else:
-                        self.rna_regions = None
-                        break
-        if self.rna_regions:
-            self.rna_regions.sort(key=lambda x: x[1])
-            if self.rna_regions[0][3] == "-":
-                self.rna_regions = self.rna_regions[::-1]
+        #             else:
+        #                 self.rna_regions = None
+        #                 break
+        # if self.rna_regions:
+        #     self.rna_regions.sort(key=lambda x: x[1])
+        #     if self.rna_regions[0][3] == "-":
+        #         self.rna_regions = self.rna_regions[::-1]
 
     def connect_rna(self, rna, temp):
         connect_rna(rna, temp, self.rna_name)
@@ -2737,4 +2812,3 @@ class RandomTest:
             for lines in newlines:
                 print("\t".join(lines), file=f)
 
-  

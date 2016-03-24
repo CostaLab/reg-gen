@@ -22,7 +22,7 @@ class GeneSet:
 
         - name -- Name of the GeneSet
     """
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
         self.genes = [] #list of genes to consider
         self.values = {} #keys: gene, value: expression data as a list
@@ -111,3 +111,14 @@ class GeneSet:
             - gene_set -- Another GeneSet for subtracting with.
         """
         self.genes = [gene for gene in self.genes if gene not in gene_set.genes]
+
+    def check(self, a_gene):
+        """Check a gene is in the list or not
+
+        *Keyword arguments:*
+
+            - a_gene -- A gene symbol.
+        """
+        g = a_gene.upper()
+        
+        return (g in self.genes)

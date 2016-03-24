@@ -2414,12 +2414,18 @@ class Lineplot:
         
         for bed in self.beds:
             if self.center == 'bothends':
-                newbed = bed.relocate_regions(center='leftend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
+                newbed = bed.relocate_regions(center='leftend', 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
                 self.processed_beds.append(newbed)
-                newbedF = bed.relocate_regions(center='rightend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
+                newbedF = bed.relocate_regions(center='rightend', 
+                                               left_length=self.extend+int(0.5*self.bs),
+                                               right_length=self.extend+int(0.5*self.bs))
                 self.processed_bedsF.append(newbedF)
             else:
-                newbed = bed.relocate_regions(center=self.center, left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
+                newbed = bed.relocate_regions(center=self.center, 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
                 self.processed_beds.append(newbed)
         
     def group_tags(self, groupby, sortby, colorby):
@@ -2670,15 +2676,13 @@ class Lineplot:
                 for j, c in enumerate(self.data[s][g].keys()):
                     
                     y = self.data[s][g][c]
-                    #try: 
+                    
                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                     sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
                     if self.df: 
                         yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                        sx_ymin[j] = min(numpy.amin(y), sx_ymin[j])
-
-                    #except: 
-                    #    continue
+                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                    
                     x = numpy.linspace(-self.extend, self.extend, len(y))
                     ax.plot(x,y, color=self.colors[c], lw=1)
                     if it < nit - 1:
@@ -2686,7 +2690,6 @@ class Lineplot:
                     # Processing for future output
                     if printtable: pArr.append([g,s,c]+list(y))
 
-                
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)

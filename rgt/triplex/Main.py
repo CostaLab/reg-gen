@@ -22,7 +22,7 @@ import scipy.cluster.hierarchy as sch
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from triplexTools import PromoterTest, RandomTest, value2str,\
-                         split_gene_name, rna_associated_gene
+                         split_gene_name, rna_associated_gene, get_dbss
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 from rgt.motifanalysis.Statistics import multiple_test_correction
@@ -331,7 +331,8 @@ def main():
     parser_promotertest.add_argument('-de', default=False, metavar='  ', help="Input file for target gene list (gene symbols or Ensembl ID)")
     parser_promotertest.add_argument('-bed', default=False, metavar='  ', help="Input BED file of the promoter regions of target genes")
     parser_promotertest.add_argument('-bg', default=False, metavar='  ', help="Input BED file of the promoter regions of background genes")
-    parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
+    parser_promotertest.add_argument('-o', metavar='  ', help="Output directory name for all the results")
+    parser_promotertest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. Default is -rn.")
     
     parser_promotertest.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
     parser_promotertest.add_argument('-gtf', metavar='  ', default=None, help='Define the GTF file for annotation (optional)')
@@ -403,6 +404,22 @@ def main():
     ##########################################################################
     parser_triplexator = subparsers.add_parser('triplexator', help="Setting Triplexator.")
     parser_triplexator.add_argument('-path',type=str, metavar='  ', help='Define the path of Triplexator.')
+    ##########################################################################
+    parser_bed2bed = subparsers.add_parser('get_dbss', help="Get DBSs in BED format from the single BED file")
+    parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
+    parser_bed2bed.add_argument('-dbs',type=str, metavar='  ', help='Output BED file of the DBSs')
+    parser_bed2bed.add_argument('-rbs',type=str, metavar='  ', help='Output BED file of the RBSs')
+    parser_bed2bed.add_argument('-r',type=str, metavar='  ', help='Input FASTA file of the RNA')
+    parser_bed2bed.add_argument('-organism', metavar='  ', help='Define the organism (hg19 or mm9)')
+    parser_bed2bed.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
+    parser_bed2bed.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
+    parser_bed2bed.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
+    parser_bed2bed.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexator] Activates the filtering of low complexity regions and repeats in the sequence data (Default: off)")
+    parser_bed2bed.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexator] Method to quickly discard non-hits (Default 0).'0' = greedy approach; '1' = q-gram filtering.")
+    parser_bed2bed.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
+    parser_bed2bed.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
+    parser_bed2bed.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
+    
     ##########################################################################
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
@@ -490,6 +507,15 @@ def main():
             print(err)
             sys.exit(1)
         
+        ####################################################################################
+        ######### get_dbss
+        if args.mode == "get_dbss":
+            get_dbss(input_BED=args.i,output_BED=args.dbs,rna_fasta=args.r,output_rbss=args.rbs,
+                     organism=args.organism,l=args.l,e=args.e,c=args.c,
+                     fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=dir)
+            sys.exit(0)
+
+
         #######################################################################
         #### Checking arguments
         if not args.o: 
@@ -543,7 +569,10 @@ def main():
 
         t0 = time.time()
         # Normalised output path
-        args.o = os.path.normpath(os.path.join(dir,args.o))
+        if not args.t: title = args.rn
+        else: title = args.t
+        
+        args.o = os.path.normpath(os.path.join(dir,args.o,title))
         check_dir(os.path.dirname(os.path.dirname(args.o)))
         check_dir(os.path.dirname(args.o))
         check_dir(args.o)
