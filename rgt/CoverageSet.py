@@ -230,10 +230,10 @@ class CoverageSet:
         for i,region in enumerate(self.genomicRegions):
             # try:
             if not strand_specific:
-                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize,check_sq=False):
+                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
                     cov[i] += 1
             else:
-                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize,check_sq=False):
+                for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
                     # print(region.orientation)
                     # print(r.is_reverse)
                     if region.orientation == "+" and not r.is_reverse: cov[i] += 1
