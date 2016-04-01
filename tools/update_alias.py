@@ -41,6 +41,8 @@ for line in table.split("\n"):
         extra = extra.replace(", ", "&")
         alias.append("\t".join([l[-1],l[1],extra]))
        
+
+       
 with open(ALIAS_hg19,"w") as f:
     for line in alias:
         print(line, file=f)
