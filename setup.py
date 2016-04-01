@@ -238,7 +238,6 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
-"hg38": ["association_file.bed","chrom.sizes","alias.txt"],
 "hg19": ["association_file.bed","chrom.sizes","alias.txt"],
 "hg38": ["association_file.bed","chrom.sizes","alias.txt"],
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
