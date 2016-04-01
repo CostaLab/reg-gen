@@ -1,6 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
+ODIN detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
+
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 Estimate extension size of reads for an ChIP-seq experiment.
 
 Author: Manuel Allhoff
@@ -16,6 +34,8 @@ Methods:
 
 get_extension_size(bamfile)
 Return shift/extension size of reads descriebed by BAM file.
+
+@author: Manuel Allhoff
 
 """
 
@@ -41,7 +61,7 @@ def get_read_size(filename):
         if not read.is_unmapped:
             s.append(read.rlen)
     
-    print('read length is %s' %str(sum(s)/len(s)))        
+    #print('read length is %s' %str(sum(s)/len(s)))        
     
     return sum(s)/len(s)
 
@@ -86,7 +106,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     
     r = map(lambda x: (x[0], x[1]),r)
     
-    print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
+    #print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
     
     return max(r[read_length/stepsize*2:])[1], r
 

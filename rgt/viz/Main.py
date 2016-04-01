@@ -16,7 +16,7 @@ from shutil import copyfile
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.Util import GenomeData, OverlapType, Html
-from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot
+from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot, Venn
 
 dir = os.getcwd()
 """
@@ -52,9 +52,11 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
     
     # Saving 
     if not extra:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_inches='tight', dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_inches='tight', dpi=400)
     else:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', bbox_extra_artists=(extra), bbox_inches='tight',dpi=300)
+        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
+                  bbox_extra_artists=(extra), bbox_inches='tight',dpi=400)
     
     if pdf:
         try:
@@ -127,7 +129,8 @@ def main():
     helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB.'
     helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable.'
     helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable.'
-    
+    helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+    helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
@@ -163,7 +166,7 @@ def main():
                                   'count' outputs the number of overlapped regions.\
                                   'bp' outputs the coverage(basepair) of intersection.")
     parser_intersect.add_argument('-tc', metavar='  ', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
+    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in bp) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20 bp in order to include proximal queries.")
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -174,10 +177,10 @@ def main():
     parser_jaccard = subparsers.add_parser('jaccard',help='Jaccard test evaluates the association level by comparing with jaccard index from repeating randomization.')
     
     parser_jaccard.add_argument('-o', help=helpoutput) 
-    parser_jaccard.add_argument('-r', '--reference',help=helpreference)
-    parser_jaccard.add_argument('-q', '--query', help=helpquery)
-    parser_jaccard.add_argument('-t','--title', default='jaccard_test', help=helptitle)
-    parser_jaccard.add_argument('-rt','--runtime', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
+    parser_jaccard.add_argument('-r', metavar='  ',help=helpreference)
+    parser_jaccard.add_argument('-q', metavar='  ', help=helpquery)
+    parser_jaccard.add_argument('-t', metavar='  ', default='jaccard_test', help=helptitle)
+    parser_jaccard.add_argument('-rt',metavar='  ', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
     parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
@@ -190,9 +193,9 @@ def main():
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
     
     parser_combinatorial.add_argument('-o', help=helpoutput)
-    parser_combinatorial.add_argument('-r', '--reference',help=helpreference)
-    parser_combinatorial.add_argument('-q', '--query', help=helpquery)
-    parser_combinatorial.add_argument('-t','--title', default='combinatorial_test', help=helptitle)
+    parser_combinatorial.add_argument('-r', metavar='  ', help=helpreference)
+    parser_combinatorial.add_argument('-q', metavar='  ', help=helpquery)
+    parser_combinatorial.add_argument('-t', metavar='  ', default='combinatorial_test', help=helptitle)
     parser_combinatorial.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
     parser_combinatorial.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
     parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
@@ -205,6 +208,7 @@ def main():
     parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
     parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
     
@@ -217,9 +221,11 @@ def main():
     parser_boxplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
     parser_boxplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
     parser_boxplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
-    parser_boxplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
+    parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_boxplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_boxplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
     parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_boxplot.add_argument('-ylim', metavar='  ', type=int, default=None, help="Define the limit of y axis.")
@@ -230,7 +236,7 @@ def main():
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    choice_center = ['midpoint','leftend','rightend','bothends','upstream','downstream'] 
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_lineplot.add_argument('input', help=helpinput)
@@ -240,17 +246,20 @@ def main():
     parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
                                  '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_lineplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
-    parser_lineplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_lineplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
+    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
+    parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
+    parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
     parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-    parser_lineplot.add_argument('-sy', action="store_true", help="Share y axis for convenience of comparison.")
-    parser_lineplot.add_argument('-sx', action="store_true", help="Share x axis for convenience of comparison.")
+    parser_lineplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
+    parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows.")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing.")
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
@@ -259,7 +268,7 @@ def main():
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends'] 
+    choice_center = ['midpoint','leftend','rightend','bothends', 'upstream', 'downstream'] 
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_heatmap.add_argument('input', help=helpinput)
@@ -273,9 +282,9 @@ def main():
                                 'Default is no sorting at all, the signals arrange in the order of their position; '+
                                 '"0" is sorting by the average ranking of all signals; '+
                                 '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
-    parser_heatmap.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
-    parser_heatmap.add_argument('-g', metavar='  ', default='regions', help=helpgroup + " (Default:regions)")
+    parser_heatmap.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
     parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
+    parser_heatmap.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
     parser_heatmap.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
     parser_heatmap.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_heatmap.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
@@ -287,6 +296,21 @@ def main():
     parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
+    ################### Venn Diagram ########################################
+    parser_venn = subparsers.add_parser('venn', help='Generate Venn Diagram with peaks of gene list.')
+    
+    parser_venn.add_argument('-s1', metavar='  ', default=None, help="Define the file for gene set 1 (BED or gene list)")
+    parser_venn.add_argument('-s2', metavar='  ', default=None, help="Define the file for gene set 2 (BED or gene list)")
+    parser_venn.add_argument('-s3', metavar='  ', default=None, help="Define the file for gene set 3 (BED or gene list)")
+    parser_venn.add_argument('-s4', metavar='  ', default=None, help="Define the file for gene set 3 (BED or gene list)")
+    parser_venn.add_argument('-l1', metavar='  ', default=None, help="Define label on venn diagram for set 1")
+    parser_venn.add_argument('-l2', metavar='  ', default=None, help="Define label on venn diagram for set 2")
+    parser_venn.add_argument('-l3', metavar='  ', default=None, help="Define label on venn diagram for set 3")
+    parser_venn.add_argument('-l4', metavar='  ', default=None, help="Define label on venn diagram for set 4")
+    parser_venn.add_argument('-o', metavar='  ', help=helpoutput)
+    parser_venn.add_argument('-t', metavar='  ', default='venn_diagram', help=helptitle)
+    parser_venn.add_argument('-organism', metavar='  ', help='Define the organism. ')
+
     ################### Integration ##########################################
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
     parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
@@ -368,7 +392,8 @@ def main():
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="reference_experimental_matrix.txt")
             copy_em(em=args.q, directory=args.o, folder=args.t, filename="query_experimental_matrix.txt")
             list_all_index(path=args.o)
-            
+
+        ###########################################################################
         ################### Intersect Test ##########################################
         if args.mode == 'intersect':
             print2(parameter, "\n############ Intersection Test ############")
@@ -376,6 +401,8 @@ def main():
             print2(parameter, "\tQuery:            "+args.q)
             print2(parameter, "\tOutput directory: "+os.path.basename(args.o))
             print2(parameter, "\tExperiment title: "+args.t)
+            
+            
             # Fetching reference and query EM
             inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
             # Setting background
@@ -391,9 +418,12 @@ def main():
                 sys.exit(1)
             
             inter.colors(args.c, args.color)
+            print("\tProcessing data.", end="")
+            sys.stdout.flush()
             inter.count_intersect(threshold=args.tc)
             
             # generate pdf
+            print("\tGenerate graphics...")
             inter.barplot(logt=args.log)
             output(f=inter.bar, directory = args.o, folder = args.t, filename="intersection_bar",
                    extra=plt.gci(), pdf=True,show=args.show)
@@ -405,10 +435,11 @@ def main():
                    extra=plt.gci(), pdf=True,show=args.show)
             
             if args.stest > 0:
+                print("\tStatistical testing by randomizing the regions...")
                 inter.stest(repeat=args.stest,threshold=args.tc)
             
             # generate html
-            inter.gen_html(args.o, args.t, align=50, args=args)
+            inter.gen_html(directory=args.o, title=args.t, align=50, args=args)
             
             t1 = time.time()
             print2(parameter, "\nAll related files are saved in:  "+ os.path.join(os.path.basename(args.o),args.t))
@@ -417,7 +448,9 @@ def main():
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="reference_experimental_matrix.txt")
             copy_em(em=args.q, directory=args.o, folder=args.t, filename="query_experimental_matrix.txt")
             list_all_index(path=args.o)
-            ################### Jaccard test ##########################################
+
+        ###########################################################################
+        ################### Jaccard test ##########################################
         if args.mode == "jaccard":
             """Return the jaccard test of every possible comparisons between two ExperimentalMatrix. 
             
@@ -453,11 +486,13 @@ def main():
             copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
             list_all_index(path=args.o)
 
+        ###########################################################################
         ################### Combinatorial Test ##########################################
         if args.mode == 'combinatorial':
             print("\n############ Combinatorial Test ############")
             # Fetching reference and query EM
-            comb = Combinatorial(args.reference,args.query, mode_count=args.m, organism=args.organism)
+            #comb = Combinatorial(args.r,args.q, mode_count=args.m, organism=args.organism)
+            inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
             # Setting background
             inter.background(args.bg)
             # Grouping
@@ -481,28 +516,34 @@ def main():
             #if args.stackedbar:
             #inter.colors(args.c, args.color,ref_que = "ref")
             inter.comb_stacked_plot()
-            output(f=inter.sbar, directory = args.o, folder = args.title, filename="intersection_stackedbar",extra=plt.gci(),pdf=True,show=args.show)
+            
+
+            output(f=inter.sbar, directory = args.o, folder = args.t, filename="intersection_stackedbar",
+                   extra=plt.gci(), pdf=True, show=args.show)
+            if args.venn:
+                inter.comb_venn(directory = os.path.join(args.o, args.t))
+                
             #if args.lineplot:
             #    inter.comb_lineplot()
             if args.stest > 0:
                 inter.stest(repeat=args.stest,threshold=args.tc)
             # generate html
-            inter.gen_html_comb(args.o, args.title, align=50)
+            inter.gen_html_comb(directory=args.o, title=args.t, align=50, args=args)
             
-            parameter = parameter + inter.parameter
+            #parameter = parameter + inter.parameter
             t1 = time.time()
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
+            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            output_parameters(parameter, directory = args.o, folder = args.title, filename="parameters.txt")
-            copy_em(em=args.reference, directory=args.o, folder=args.title, filename="Reference_experimental_matrix.txt")
-            copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
-            list_all_index(path=args.o)
+            output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
+            copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
+            copy_em(em=args.q, directory=args.o, folder=args.t, filename="Query_experimental_matrix.txt")
+            #list_all_index(path=args.o)
 
-
+        ###########################################################################
         ################### Boxplot ##########################################
         if args.mode == 'boxplot':
             print("\n################# Boxplot #################")
-            boxplot = Boxplot(args.input, title=args.t, df=args.df)
+            boxplot = Boxplot(args.input, fields=[args.g, args.s, args.c], title=args.t, df=args.df)
             
             print2(parameter,"\nStep 1/5: Combining all regions")
             boxplot.combine_allregions()
@@ -538,7 +579,7 @@ def main():
             
             boxplot.group_data(directory = args.o, folder = args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
-            boxplot.plot(title=args.t, logT=args.nlog, sy=args.sy, ylim=args.ylim)
+            boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim, pw=args.pw, ph=args.ph)
             #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
             output(f=boxplot.fig, directory = args.o, folder = args.t, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
             # HTML
@@ -553,18 +594,22 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
-            if args.sy and args.sx:
-                print("** Err: -sy and -sx cannot be used simutaneously.")
+            if args.scol and args.srow:
+                print("** Err: -scol and -srow cannot be used simutaneously.")
                 sys.exit(1)
 
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.g, args.c, args.s):
+            if "reads" not in (args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.g, args.c, args.s):
+            if "regions" not in (args.col, args.c, args.row):
                 print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+                sys.exit(1)
+
+            if not os.path.isfile(args.input):
+                print("Please check the input experimental matrix again. The given path is wrong.")
                 sys.exit(1)
             print2(parameter, "Parameters:\tExtend length:\t"+str(args.e))
             print2(parameter, "\t\tRead size:\t"+str(args.rs))
@@ -574,29 +619,31 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df)
+                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c],
+                                test=args.test)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
             t1 = time.time()
-            print2(parameter, "    --- finished in {0} secs".format(str(round(t1-t0))))
+            print2(parameter, "\t--- finished in {0} secs".format(str(round(t1-t0))))
             
             if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
+            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.s, mp=args.mp)
+            lineplot.coverage(sortby=args.row, mp=args.mp)
             t2 = time.time()
-            print2(parameter, "    --- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
+            print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.g, colorby=args.c, output=args.o, printtable=args.table, sy=args.sy, sx=args.sx)
+            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, 
+                          scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()
-            print2(parameter, "    --- finished in {0} secs".format(str(round(t3-t2))))
+            print2(parameter, "\t--- finished in {0} secs".format(str(round(t3-t2))))
             print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t3-t0))) + "(H:M:S)\n")
             print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
@@ -609,10 +656,11 @@ def main():
             # Most part of heat map are the same as lineplot, so it share the same class as lineplot
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.g, args.c, args.s):
+
+            if "reads" not in (args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.g, args.c, args.s):
+            if "regions" not in (args.col, args.c, args.row):
                 print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
             print2(parameter, "Parameters:\tExtend length:\t"+str(args.e))
@@ -620,10 +668,10 @@ def main():
             print2(parameter, "\t\tBin size:\t"+str(args.bs))
             print2(parameter, "\t\tStep size:\t"+str(args.ss))
             print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
-        
+
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=False)
+                                bs=args.bs, ss=args.ss, df=False, fields=[args.col,args.row,args.c])
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -632,7 +680,7 @@ def main():
             
             if args.mp: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/4: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.g, sortby=args.s, colorby=args.c)
+            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
             lineplot.coverage(sortby=args.s, heatmap=True, logt=args.log, mp=args.mp)
             t2 = time.time()
@@ -658,3 +706,14 @@ def main():
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)
+
+        
+        ################### Venn Diagram ##########################################
+        if args.mode=='venn':
+            print("\n################# Venn Diagram ###############")
+            if not os.path.exists(os.path.join(args.o, args.t)):
+                os.makedirs(os.path.join(args.o, args.t))
+            sets = [s for s in [args.s1, args.s2, args.s3, args.s4] if s ]
+            venn = Venn(sets=sets, organism=args.organism)
+            f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
+            output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)

@@ -1,3 +1,11 @@
+"""
+Util
+===================
+The Util classes contains many utilities needed by other classes such as the paths to input files.
+
+"""
+
+# Python
 from __future__ import print_function
 import os
 import sys
@@ -5,38 +13,17 @@ import ConfigParser
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
 
-"""
-The Util classes contains many utilities needed by other classes
-such as the paths to input files.
-
-Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
-
-"""
-
 class ConfigurationFile:
-    """
-    Represent the data path configuration file (data.config).
+    """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
 
-    Authors: Eduardo G. Gusmao.
+    *Variables:*
 
-    It serves as a superclass to classes that will contain
-    default variables (such as paths, parameters to tools, etc.)
-    for a certain purpose (genomic data, motif data, etc.).
-
-    Variables:
-
-    * self.config: Represents the configuration file.
-    * self.data_dir: Represents the root path to data files.
+        - self.config -- Represents the configuration file.
+        - self.data_dir -- Represents the root path to data files.
 
     """
 
     def __init__(self):
-        """
-        Initializes ConfigurationFile:
-        1. Reads the auxiliary data.config.path file that contains the path to the rgt data folder.
-        2. Creates the ConfigParser self.config.
-        3. Creates the str self.data_dir.
-        """
         
         # Reading config file directory
         root_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,32 +40,14 @@ class ConfigurationFile:
         self.data_dir = os.path.split(data_config_file_name)[0]
 
 class GenomeData(ConfigurationFile):
-    """
-    Represent genomic data.
-
-    Authors: Eduardo G. Gusmao.
-
-    Inherits ConfigurationFile.
-
-    Methods:
-
-    get_organism():
-    Returns the current organism.
-
-    get_genome():
-    Returns the current path to the genome fasta file.
-
-    get_chromosome_sizes():
-    Returns the current path to the chromosome sizes text file.
-
-    get_association_file():
-    Returns the current path to the gene association text file.
-
-    """
+    """Represent genomic data. Inherits ConfigurationFile."""
 
     def __init__(self,organism):
-        """
-        Initializes GenomeData.
+        """Initializes GenomeData.
+
+        *Keyword arguments:*
+
+            - organism -- Organism alias.
         """
         ConfigurationFile.__init__(self)
         self.organism = organism
@@ -90,27 +59,19 @@ class GenomeData(ConfigurationFile):
         self.gene_alias = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gene_alias'))
 
     def get_organism(self):
-        """
-        Returns the current organism.
-        """
+        """Returns the current organism."""
         return self.organism
 
     def get_genome(self):
-        """
-        Returns the current path to the genome fasta file.
-        """
+        """Returns the current path to the genome fasta file."""
         return self.genome
 
     def get_chromosome_sizes(self):
-        """
-        Returns the current path to the chromosome sizes text file.
-        """
-        return self.chromosome_sizes
-
+        """Returns the current path to the chromosome sizes text file."""
+        return self.chromosome_sizes   
+    
     def get_association_file(self):
-        """
-        Returns the current path to the gene association text file.
-        """
+        """Returns the current path to the gene association text file."""
         return self.association_file
 
     def get_gencode_annotation(self):
@@ -120,52 +81,18 @@ class GenomeData(ConfigurationFile):
         return self.gencode_annotation
 
     def get_annotation_dump_dir(self):
-        """
-        Returns the current path to the gencode annotation gtf file.
-        """
+        """Returns the current path to the gencode annotation gtf file."""
         return self.annotation_dump_dir
 
     def get_gene_alias(self):
-        """
-        Returns the current path to the gene alias txt file.
-        """
+        """Returns the current path to the gene alias txt file."""
         return self.gene_alias
 
 
 class MotifData(ConfigurationFile):
-    """
-    Represent motif (PWM) data.
-
-    Authors: Eduardo G. Gusmao.
-
-    Inherits ConfigurationFile.
-
-    Methods:
-
-    get_repositories_list():
-    Returns the current repository list.
-
-    get_pwm_list():
-    Returns the list of current paths to the PWM repositories.
-
-    get_logo_list():
-    Returns the list of current paths to the logo images of PWMs
-    in the given repositories.
-
-    get_mtf_list():
-    Returns the list of current paths to the mtf (motif annotation) files
-    in the given repositories.
-
-    get_fpr_list():
-    Returns the list of current paths to the fpr (motif thresholds) files
-    in the given repositories.
-
-    """
+    """Represent motif (PWM) data. Inherits ConfigurationFile."""
 
     def __init__(self):
-        """
-        Initializes MotifData.
-        """
         ConfigurationFile.__init__(self)
         self.repositories_list = self.config.get('MotifData','repositories').split(",")
         self.pwm_list = []
@@ -179,106 +106,92 @@ class MotifData(ConfigurationFile):
             self.fpr_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".fpr"))
 
     def get_repositories_list(self):
-        """
-        Returns the current repository list.
-        """
+        """Returns the current repository list."""
         return self.repositories_list
 
     def get_pwm_path(self, current_repository):
-        """
-        Returns the path to a specific motif repository.
-        """
+        """Returns the path to a specific motif repository."""
         return os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository)
 
     def get_pwm_list(self):
-        """
-        Returns the list of current paths to the PWM repositories.
-        """
+        """Returns the list of current paths to the PWM repositories."""
         return self.pwm_list
 
     def get_logo_file(self, current_repository):
-        """
-        Returns the path to a specific logo repository.
+        """Returns the path to a specific logo repository.
+
+        *Keyword arguments:*
+
+            - current_repository -- Motif repository.
         """
         return os.path.join(self.data_dir,self.config.get('MotifData','logo_dataset'),current_repository)
 
     def get_logo_list(self):
-        """
-        Returns the list of current paths to the logo images of PWMs
-        in the given repositories.
-        """
+        """Returns the list of current paths to the logo images of PWMs in the given repositories."""
         return self.logo_list
 
     def get_mtf_path(self, current_repository):
-        """
-        Returns the path to a specific mtf file.
+        """Returns the path to a specific mtf file.
+
+        *Keyword arguments:*
+
+            - current_repository -- Motif repository.
         """
         return os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".mtf")
 
     def get_mtf_list(self):
-        """
-        Returns the list of current paths to the mtf files.
-        """
+        """Returns the list of current paths to the mtf files."""
         return self.mtf_list
 
     def get_fpr_list(self):
-        """
-        Returns the list of current paths to the fpr files.
-        """
+        """Returns the list of current paths to the fpr files."""
         return self.fpr_list
 
 class HmmData(ConfigurationFile):
-    """
-    Represent HMM data.
-
-    Authors: Eduardo G. Gusmao.
-
-    Inherits Co7nfigurationFile.
-
-    Methods:
-
-    get_default_hmm():
-    Returns the current repository list.
-
-    """
+    """Represent HMM data. Inherits Co7nfigurationFile."""
 
     def __init__(self):
-        """
-        Initializes HmmData.
-        """
         ConfigurationFile.__init__(self)
-        self.default_hmm = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm'))
+        self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
+        self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
+        self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
+        self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
+        self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
+        self.default_bias_table_F = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F'))
+        self.default_bias_table_R = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R'))
 
-    def get_default_hmm(self):
-        """
-        Returns the current default hmm.
-        """
-        return self.default_hmm
+    def get_default_hmm_dnase(self):
+        """Returns the current default DNase only hmm."""
+        return self.default_hmm_dnase
+
+    def get_default_hmm_dnase_bc(self):
+        """Returns the current default DNase only hmm."""
+        return self.default_hmm_dnase_bc
+
+    def get_default_hmm_histone(self):
+        """Returns the current default Histone only hmm."""
+        return self.default_hmm_histone
+
+    def get_default_hmm_dnase_histone(self):
+        """Returns the current default DNase+histone hmm."""
+        return self.default_hmm_dnase_histone
+
+    def get_default_hmm_dnase_histone_bc(self):
+        """Returns the current default DNase+histone hmm."""
+        return self.default_hmm_dnase_histone_bc
+
+    def get_default_bias_table_F(self):
+        """Returns the current default bias table for the forward strand."""
+        return self.default_bias_table_F
+
+    def get_default_bias_table_R(self):
+        """Returns the current default bias table for the reverse strand."""
+        return self.default_bias_table_R
 
 class ImageData(ConfigurationFile):
-    """
-    Represent image data.
-
-    Authors: Eduardo G. Gusmao.
-
-    Inherits ConfigurationFile.
-
-    Methods:
-
-    get_rgt_logo():
-    Returns the rgt logo image file location.
-
-    get_css_file():
-    Returns the css file location.
-
-    get_default_motif_logo():
-    Returns the default motif logo file location.
-    """
+    """Represent image data. Inherits ConfigurationFile."""
 
     def __init__(self):
-        """
-        Initializes ImageData.
-        """
         ConfigurationFile.__init__(self)
         self.rgt_logo = os.path.join(self.data_dir,"fig","rgt_logo.gif")
         self.css_file = os.path.join(self.data_dir,"fig","style.css")
@@ -291,74 +204,49 @@ class ImageData(ConfigurationFile):
 
 
     def get_rgt_logo(self):
-        """
-        Returns the rgt logo image file location.
-        """
+        """Returns the rgt logo image file location."""
         return self.rgt_logo
 
     def get_css_file(self):
-        """
-        Returns the css file location.
-        """
+        """Returns the css file location."""
         return self.css_file
 
     def get_default_motif_logo(self):
-        """
-        Returns the default motif logo file location.
-        """
+        """Returns the default motif logo file location."""
         return self.default_motif_logo
     
     def get_sorttable_file(self):
-        """
-        Returns the default sorttable code location.
-        """
+        """Returns the default sorttable code location."""
         return self.default_motif_logo
     
     def get_jquery(self):
-        """
-        Returns the default sorttable code location.
-        """
+        """Returns the jquery code location."""
         return self.jquery
 
     def get_tablesorter(self):
-        """
-        Returns the default sorttable code location.
-        """
+        """Returns the table sorter code location."""
         return self.tablesorter
     
     def get_jquery_metadata(self):
-        """
-        Returns the default sorttable code location.
-        """
+        """Returns the jquery metadata location."""
         return self.jquery_metadata
         
     def get_tdf_logo(self):
-        """
-        Returns the default TDF logo.
-        """
+        """Returns the default TDF logo."""
         return self.tdf_logo
 
     def get_viz_logo(self):
-        """
-        Returns the default TDF logo.
-        """
+        """Returns the default RGT viz logo."""
         return self.viz_logo
     
 class OverlapType:
-    """
-    Class of overlap type constants.
+    """Class of overlap type constants.
 
-    Authors: Joseph Kuo.
+    *Constants:*
 
-    Constants:
-
-    OVERLAP:
-        Return new GenomicRegionSet including only the overlapping regions.
-    ORIGINAL: 
-        Return the regions of original GenomicRegionSet which have any intersections.
-    COMP_INCL: 
-        Return region(s) of the GenomicRegionSet which are 'completely' included.
-
+        - OVERLAP -- Return new GenomicRegionSet including only the overlapping regions.
+        - ORIGINAL -- Return the regions of original GenomicRegionSet which have any intersections.
+        - COMP_INCL -- Return region(s) of the GenomicRegionSet which are 'completely' included.
     """
 
     OVERLAP = 0 
@@ -366,31 +254,24 @@ class OverlapType:
     COMP_INCL = 2
 
 class SequenceType:
-    """
-    Class of sequence type
-    Author: Joseph Kuo
+    """Class of sequence type
     
-    Constants:
+    *Constants:*
     
-    DNA, RNA
+        - DNA
+        - RNA
     """
     DNA = 0
     RNA = 1
 
 class HelpfulOptionParser(OptionParser):
-    """An OptionParser that prints full help on errors."""
+    """An OptionParser that prints full help on errors. Inherits OptionParser."""
     def error(self, msg):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
 class PassThroughOptionParser(HelpfulOptionParser):
-    """
-    An unknown option pass-through implementation of OptionParser.
-    When unknown arguments are encountered, bundle with largs and try again,
-    until rargs is depleted.
-    sys.exit(status) will still be called if a known argument is passed
-    incorrectly (e.g. missing arguments or bad argument types, etc.)
-    """
+    """When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted. sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or bad argument types, etc.). Inherits HelpfulOptionParser."""
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
@@ -400,25 +281,30 @@ class PassThroughOptionParser(HelpfulOptionParser):
                 #largs.append(e.opt_str)
 
 class ErrorHandler():
-    """
-    Handles errors in a standardized way.
+    """Handles errors in a standardized way.
+
+        *Error Dictionary Standard:*
+
+            Each entry consists of a key+list in the form X:[Y,Z,W] where:
+
+            - X -- The key representing the internal error name.
+            - Y -- Error number.
+            - Z -- Exit status.
+            - W -- Error message to be print.
+
+        *Warning Dictionary Standard:*
+
+            Each entry consists of a key+list in the form X:[Y,Z] where:
+
+            - X -- The key representing the internal warning name.
+            - Y -- Warning number.
+            - Z -- Warning message to be print.
     """
 
     def __init__(self):
-        """
-        Initializes ErrorHandler.
-        """
 
         self.program_name = os.path.basename(sys.argv[0])
 
-        """
-        Error Dictionary Standard:
-        Each entry consists of a key+list in the form X:[Y,Z,W] where:
-        * X: The key representing the internal error name.
-        * Y: Error number.
-        * Z: Exit status.
-        * W: Error message to be print.
-        """
         self.error_dictionary = {
             "DEFAULT_ERROR": [0,0,"Undefined error. Program terminated with exit status 0."],
             "MOTIF_ANALYSIS_OPTION_ERROR": [1,0,"You must define one specific analysis. Run '"+self.program_name+" -h' for help."],
@@ -452,13 +338,6 @@ class ErrorHandler():
         self.exit_status = 1
         self.error_message = 2
 
-        """
-        Warning Dictionary Standard:
-        Each entry consists of a key+list in the form X:[Y,Z] where:
-        * X: The key representing the internal warning name.
-        * Y: Warning number.
-        * Z: Warning message to be print.
-        """
         self.warning_dictionary = {
             "DEFAULT_WARNING": [0,"Undefined warning."],
             "FP_ONE_REGION": [1,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
@@ -478,9 +357,12 @@ class ErrorHandler():
         self.warning_message = 1
 
     def throw_error(self, error_type, add_msg = ""):
-        """
-        Throws the specified error type. If the error type does not
-        exist, throws a default error message and exits.
+        """Throws the specified error type. If the error type does not exist, throws a default error message and exits.
+
+        *Keyword arguments:*
+
+            - error_type -- Error type.
+            - add_msg -- Message to add to the error.
         """
 
         # Fetching error type
@@ -504,9 +386,12 @@ class ErrorHandler():
         sys.exit(exit_status)
 
     def throw_warning(self, warning_type, add_msg = ""):
-        """
-        Throws the specified warning type. If the warning type does not
-        exist, throws a default warning message and exits.
+        """Throws the specified warning type. If the warning type does not exist, throws a default warning message and exits.
+
+        *Keyword arguments:*
+
+            - warning_type -- Warning type.
+            - add_msg -- Message to add to the error.
         """
 
         # Fetching warning type
@@ -526,23 +411,24 @@ class ErrorHandler():
         print(complete_warning_message, file=sys.stderr)
 
 class Html:
-    """
-    Represent an HTML file.
+    """Represent an HTML file.
 
-    Authors: Eduardo G. Gusmao.
+    *Keyword arguments:*
+
+        - name -- Name of the HTML document.
+        - links_dict -- Dictionary with the upper links.
+        - fig_dir -- Figure directory (default = None).
+        - fig_rpath -- Relative figure path (default = '../fig').
+        - cluster_path_fix -- deprecated.
+        - RGT_header -- Whether to print RGT header (default = True).
+        - other_logo -- Other tool logos (default = None).
+        - homepage -- Homepage link (default = None).
+
+    .. warning:: cluster_path_fix is going to be deprecated soon. Do not use it.
     """
 
     def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", 
                  RGT_header=True, other_logo=None, homepage=None):
-        """ 
-        Initializes Html.
-        IMPORTANT = cluster_path_fix is going to be deprecated soon. Do not use it.
-
-        Variables:
-        xxxxx -- Position Frequency Matrix.
-        relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it. Default is None.
-        
-        """
 
         # Variable initializations
         self.name = name
@@ -561,9 +447,15 @@ class Html:
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         
         self.add_links()
-        
-        
+
     def copy_relevent_files(self, target_dir):
+        """Copies relevant files to relative paths.
+
+        *Keyword arguments:*
+
+            - target_dir -- Target directory to copy files.
+        """
+
         try:
             os.stat(target_dir)
         except:
@@ -579,17 +471,17 @@ class Html:
                 shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(), dst=os.path.join(target_dir,"tdf_logo.png"))
             if self.other_logo == "viz":
                 shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(), dst=os.path.join(target_dir,"viz_logo.png"))
-            
-        
-        
-        
+          
     def create_header(self, relative_dir=None, RGT_name=True, other_logo=None):
-        """ 
-        Creates default document header.
-        
-        Return:
-        None -- Appends content to the document.
+        """Creates default document header.
+
+        *Keyword arguments:*
+
+            - relative_dir -- Define the directory to store CSS file and RGT logo so that the html code can read from it (default = None).
+            - RGT_name -- Whether to print RGT name (default = True).
+            - other_logo -- Other tool logos (default = None)
         """
+
         self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>') 
             
         if relative_dir:
@@ -600,7 +492,6 @@ class Html:
             #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
             #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
-        
         
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
@@ -622,7 +513,6 @@ class Html:
         self.document.append("  <tr>")
 
         # Logo
-        
         if relative_dir:            
             self.document.append("    <td width=\"5%\">")
             if self.homepage: self.document.append("<a href=\""+self.homepage+"\">")
@@ -646,21 +536,18 @@ class Html:
         else:
             self.document.append("    <td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
         
-        
         self.document.append("  </tr>")
         self.document.append("</table>")
         self.document.append("</h3>")
 
     def add_links(self):
-        """ 
-        Adds all the links.
-        
-        Return:
-        None -- Appends links to the document.
-        """
+        """Adds all the links."""
         for k in self.links_dict.keys():
 
-            self.document.append("<a class=\"pure-button\" href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>")
+            self.document.append("<a class=\"pure-button\" href=\""+\
+                                 os.path.join(self.cluster_path_fix,self.links_dict[k])+\
+                                 "\">"+\
+                                 "<font size='1'>"+k+"</font>"+"</a>")
 
         #self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         #self.document.append("  <tr>")
@@ -670,15 +557,9 @@ class Html:
         #self.document.append("    </b></font></td>")
         #self.document.append("  </tr>")
         #self.document.append("</table>")
-            
-    
+
     def create_footer(self):
-        """ 
-        Adds footer.
-        
-        Return:
-        None -- Appends footer to the document.
-        """
+        """Adds footer."""
         self.document.append("<br><br>")
         self.document.append("<p align=\"center\"><font face=\"Arial\" color=\"#000000\" size=\"2\">")
         self.document.append("For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
@@ -688,21 +569,17 @@ class Html:
         self.document.append("</html>")
 
     def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True, idtag=None):
-        """ 
-        Creates a heading.
+        """Creates a heading.
         
-        Keyword arguments:
-        heading -- The heading title.
-        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
-                 or string (interpreted as HTML positional argument). (default 50)
-        color -- Color of the heading. (default "black")
-        face -- Font of the heading. (default "Arial")
-        size -- Size of the heading (HTML units [1,7]). (default 5)
-        bold -- Whether the heading is bold. (default True)
-        id -- Add ID tag in the heading element
+        *Keyword arguments:*
 
-        Return:
-        None -- Appends heading to the document.
+            - heading -- The heading title.
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument (default = 50).
+            - color -- Color of the heading (default = "black").
+            - face -- Font of the heading (default = "Arial").
+            - size -- Size of the heading (HTML units [1,7]) (default = 5).
+            - bold -- Whether the heading is bold (default = True).
+            - idtag -- Add ID tag in the heading element (default = None).
         """
 
         if idtag:
@@ -731,29 +608,27 @@ class Html:
     def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
                         cell_align = 'center', auto_width=False, colorcode=None, header_titles=None,
                         border_list=None, sortable=False):
-        """ 
-        Creates a zebra table.
+        """Creates a zebra table.
 
-        Keyword arguments:
-        header_list -- A list with the table headers in correct order.
-        col_size_list -- A list with the column sizes (integers).
-        type_list -- A string in which each character represents the type of each row.
-                     s = string (regular word or number)
-                     i = image
-                     l = link 
-        data_table -- A table containing the data to be input according to each data type defined.
-                      s = string
-                      i = tuple containing: ("file name", width) width = an integer
-                      l = tuple containing: ("Name","Link")
-        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
-                 or string (interpreted as HTML positional argument). (default 50)
-        cell_align -- Alignment of each cell in the table (default center)
-        auto_width -- Adjust the column width by the content automatically regardless of defined col size
-        colorcode --
-        header_titles -- Given a list corresponding to the header_list, which defines all the explanation in hint windows
-        border_list -- 
-        Return:
-        None -- Appends table to the document.
+        *Keyword arguments:*
+
+            - header_list -- A list with the table headers in correct order.
+            - col_size_list -- A list with the column sizes (integers).
+            - type_list -- A string in which each character represents the type of each row.
+                  - s = string (regular word or number)
+                  - i = image
+                  - l = link 
+            - data_table -- A table containing the data to be input according to each data type defined.
+                  - s = string
+                  - i = tuple containing: ("file name", width) width = an integer
+                  - l = tuple containing: ("Name","Link")
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
+            - cell_align -- Alignment of each cell in the table (default = center).
+            - auto_width -- Adjust the column width by the content automatically regardless of defined col size (default = False).
+            - colorcode -- Color code (default = None)
+            - header_titles -- Given a list corresponding to the header_list, which defines all the explanation in hint windows (default = None).
+            - border_list -- Table borders (default = None).
+            - sortable -- Whether it is a sortable table (default = False).
         """
         #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
         
@@ -902,17 +777,19 @@ class Html:
 
     def add_figure(self, figure_path, notes=None, align=50, color="black", face="Arial", size=3, 
                    bold=False, width="800", more_images=None):
-        """ 
-        Add a figure with notes underneath.
+        """Add a figure with notes underneath.
         
-        Keyword arguments:
-        figure_path -- The path to the figure.
-        notes -- A list of strings for further explanation
-        align -- Alignment of the heading. Can be either an integer (interpreted as left margin) 
-                 or string (interpreted as HTML positional argument). (default 50)
-        
-        Return:
-        None -- Appends the figure to the document.
+        *Keyword arguments:*
+
+            - figure_path -- The path to the figure.
+            - notes -- A list of strings for further explanation
+            - align -- Alignment of the heading. Can be either an integer (interpreted as left margin) or string (interpreted as HTML positional argument) (default = 50).
+            - color -- Color (default = 'black').
+            - face -- Font (default = 'Arial').
+            - size -- Size (default = 3).
+            - bold -- Whether it is bold (default = False).
+            - width -- Width (default = 800).
+            - more_images -- Add more images (default = None).
         """        
         if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"
         elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"
@@ -942,20 +819,21 @@ class Html:
             self.document.append(note_str)
 
     def add_free_content(self, content_list):
-        """ 
-        Adds free HTML to the document.
+        """Adds free HTML to the document.
 
-        Keyword arguments:
-        content_list -- List of strings. Each string is interpreted as a line in the HTML document.
-        
-        Return:
-        None -- Appends content to the document.
+        *Keyword arguments:*
+
+            - content_list -- List of strings. Each string is interpreted as a line in the HTML document.
         """
         for e in content_list: self.document.append(e)
 
     def add_list(self, list_of_items, ordered=False):
-        """
-        Add a list to the document
+        """Add a list to the document
+
+        *Keyword arguments:*
+
+            - list_of_items -- List of items to add.
+            - ordered -- Whether the list is odered (default = False).
         """
         codes = ""
 
@@ -971,14 +849,11 @@ class Html:
         self.document.append(codes)
         
     def write(self, file_name):
-        """ 
-        Write HTML document to file name.
+        """Write HTML document to file name.
 
-        Keyword arguments:
-        file_name -- Complete file name to write this HTML document.
-        
-        Return:
-        None -- Creates file with this HTML document.
+        *Keyword arguments:*
+
+            - file_name -- Complete file name to write this HTML document.
         """
 
         # Add footer - finalize document
@@ -986,23 +861,21 @@ class Html:
 
         # Writing document to file
         f = open(file_name,"w")
-        for e in self.document: f.write(e+"\n")
+        for e in self.document:
+            if e: f.write(e+"\n")
         f.close()
 
 class AuxiliaryFunctions:
-    """
-    Class of auxiliary functions.
-
-    Authors: Eduardo G. Gusmao.
-
-    Methods:
-
-    #TODO
-    """
+    """Class of auxiliary static functions."""
 
     @staticmethod
     def string_is_int(s):
-        """ Verifies if a string is a numeric integer """
+        """Verifies if a string is a numeric integer.
+
+        *Keyword arguments:*
+
+            - s -- String to verify.
+        """
         try:
             int(s)
             return True
@@ -1011,7 +884,12 @@ class AuxiliaryFunctions:
 
     @staticmethod
     def string_is_float(s):
-        """ Verifies if a string is a numeric float """
+        """Verifies if a string is a numeric float.
+
+        *Keyword arguments:*
+
+            - s -- String to verify.
+        """
         try:
             float(s)
             return True
@@ -1020,21 +898,41 @@ class AuxiliaryFunctions:
 
     @staticmethod
     def correct_standard_bed_score(score):
-        """ Makes score between 0 and 1000 """
+        """Standardize scores between 0 and 1000.
+
+        *Keyword arguments:*
+
+            - score -- Score.
+        """
         return min(max(score,0),1000)
 
     @staticmethod
     def overlap(t1, t2):
         """Checks if one interval contains any overlap with another interval.
 
-        Keyword arguments:
-        t1 -- First tuple.
-        t2 -- Second tuple.
+        *Keyword arguments:*
+
+            - t1 -- First tuple.
+            - t2 -- Second tuple.
   
-        Returns:
-        Returns -1 if i1 is before i2; 1 if i1 is after i2; and 0 if there is any overlap.
+        *Return:*
+            - -1 -- if i1 is before i2.
+            - 1 -- if i1 is after i2.
+            - 0 -- if there is any overlap.
         """
         if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
         if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
         return 0 # interval1 overlaps interval2
+
+    @staticmethod
+    def revcomp(s):
+        """Revert complement string.
+
+        *Keyword arguments:*
+
+            - s -- String.
+        """
+        revDict = dict([("A","T"),("T","A"),("C","G"),("G","C"),("N","N")])
+        return "".join([revDict[e] for e in s[::-1]])
+
         

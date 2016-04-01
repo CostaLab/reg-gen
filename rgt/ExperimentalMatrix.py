@@ -1,35 +1,68 @@
+"""
+ExperimentalMatrix
+===================
+ExperimentalMatrix describes an experiment.
+
+"""
+
+# Python
 from __future__ import print_function
-from rgt.GenomicRegionSet import *
-from rgt.GeneSet import *
-import numpy
+import os
 import sys
 from collections import *
 
-"""
-Describe an experiment.
+# Internal
+from rgt.GenomicRegionSet import *
+from rgt.GeneSet import *
+from rgt.helper import pretty
 
-Authors: Ivan G. Costa, Manuel Allhoff
-
-"""
+# External
+import numpy
 
 possible_types=["genes","regions","reads"]
 
 class ExperimentalMatrix:
+    """ Describes an experimental matrix.
+
+    *Variables:*
+
+        - names -- The unique name of experiment (filename).
+        - types -- The type of data.
+        - files -- The path of the related file with its filename as keys.
+        - fields -- List types of informations including names, types, files and others.
+        - fieldsDict -- Its keys are just self.fields, and the values are extra informations.
+        - objectsDict -- Key is the names; value is GenomicRegionSet or GeneSet.
+        - trash -- List of names being deleted
+    """
 
     def __init__(self):
-        self.names = [] # the name of experiment (filename)
-        self.types = [] # the type of data
-        self.files = {} # the path of the related file with its filename as keys
-        self.fields = [] # list types of informations including names, types, files and others
-        self.fieldsDict = {} # its keys are just self.fields, and the values are extra informations        
-        self.objectsDict = {} # key is the names; value is GenomicRegionSet or GeneSet
+        self.names = []
+        self.types = []
+        self.files = {}
+        self.fields = []
+        self.fieldsDict = {}
+        self.objectsDict = {}
+        self.trash = []
         
-    def read(self, file_path, is_bedgraph=False, verbose=False):
-        """Read Experimental matrix file, which looks like:
-        name    type    file    further1
-        MPP_PU1    regions    fil21.bed    addidional_info1
-        CDP_PU1    regions    file2.bed    addidional_info2
-        [ ... ]
+    def read(self, file_path, is_bedgraph=False, verbose=False, test=False):
+        """Read Experimental matrix file.
+
+        *Keyword arguments:*
+
+            - file_path -- Experimental matrix file path + name.
+            - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+            - verbose -- Verbose output (default = False).
+            - test -- Fetch only 10 regions form each BED files for test.
+
+        *Example of experimental matrix file:*
+
+            ======== ======== ========= ==================
+              name      type     file     further1
+            ======== ======== ========= ==================
+            MPP_PU1  regions  file1.bed  addidional_info1
+            CDP_PU1  regions  file2.bed  addidional_info2
+            [ ... ]
+            ======== ======== ========= ==================
         """
         f = open(file_path,'rU')
         
@@ -43,16 +76,16 @@ class ExperimentalMatrix:
         #assert(header[2] == "file")
         #self.fields = header
         
-        
-        
         for line in f:
             # Neglect comment lines
-            if line[0] == "#": continue
+            line = line.strip()
+            if not line: continue
+            elif line[0] == "#": continue
             
             # Read header
             elif line[:4] == "name":
-                header = line.strip("\n")
-                header = line.strip(" ")
+                # header = line.strip("\n")
+                # header = line.strip(" ")
                 header = line.split()
                 
                 assert(header[0] == "name")
@@ -66,8 +99,8 @@ class ExperimentalMatrix:
                 
             # Read further information    
             else:
-                line = line.strip("\n")
-                line = line.strip(" ")
+                # line = line.strip("\n")
+                # line = line.strip(" ")
                 line = line.split()
                 
                 if len(line) < 3:  # Skip the row which has insufficient information
@@ -81,36 +114,56 @@ class ExperimentalMatrix:
                 
                 for fi in range(3, len(self.fields)): #read further information
                     d = self.fieldsDict[ self.fields[fi] ]
-                    try:
-                        d[line[fi]].append(line[0])
-                    except:
+                    if "," in line[fi]:
+                        for t in line[fi].split(","):
+                            try:
+                                d[t].append(line[0])
+                            except:
+                                try:
+                                    d[t] = [line[0]]
+                                except:
+                                    continue
+                    else:
                         try:
-                            d[line[fi]] = [line[0]]
+                            d[line[fi]].append(line[0])
                         except:
-                            continue
-        self.types = numpy.array(self.types)
-        self.names = numpy.array(self.names)
-        self.load_objects(is_bedgraph, verbose=verbose)
+                            try:
+                                d[line[fi]] = [line[0]]
+                            except:
+                                continue
+        # self.types = numpy.array(self.types)
+        # self.names = numpy.array(self.names)
+        self.load_objects(is_bedgraph, verbose=verbose, test=test)
         
     def get_genesets(self):
-        """Return GeneSets"""
-        return [self.objectsDict[i] for i in self.names[self.types=="genes"]]
+        """Returns the GeneSets."""
+        return [self.objectsDict[n] for i,n in enumerate(self.names) if self.types[i] =="genes"]
 
     def get_regionsets(self):
-        """Return RegionSets"""
-        return [self.objectsDict[i] for i in self.names[self.types=="regions"]]
+        """Returns the RegionSets."""
+        return [self.objectsDict[n] for i,n in enumerate(self.names) if self.types[i] =="regions"]
     
     def get_regionsnames(self):
-        return [i for i in self.names[self.types=="regions"]]
+        """Returns the region names."""
+        return [n for i,n in enumerate(self.names) if self.types[i] =="regions"]
     
     def get_readsfiles(self):
-        return [self.files[i] for i in self.names[self.types=="reads"]]
+        """Returns the 'read' type files."""
+        return [self.files[n] for i,n in enumerate(self.names) if self.types[i]=="reads"]
 
     def get_readsnames(self):
-        return [i for i in self.names[self.types=="reads"]]
+        """Returns the 'read' type names."""
+        return [n for i,n in enumerate(self.names) if self.types[i]=="reads"]
 
-    def load_objects(self, is_bedgraph, verbose=False):
-        """Load files and initialize object"""
+    def load_objects(self, is_bedgraph, verbose=False, test=False):
+        """Load files and initialize object.
+
+        *Keyword arguments:*
+
+            - is_bedgraph -- Whether regions are in bedgraph format (default = False).
+            - verbose -- Verbose output (default = False).
+            - test -- Fetch only 10 regions form each BED files for test.
+        """
         for i, t in enumerate(self.types):
             if verbose: print("Loading file ", self.files[self.names[i]], file = sys.stderr)
             
@@ -123,7 +176,12 @@ class ExperimentalMatrix:
                     regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
                     
                 else:
-                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
+                    if test:
+                        g = GenomicRegionSet(self.names[i])
+                        g.read_bed(os.path.abspath(self.files[self.names[i]]))
+                        regions.sequences = g.sequences[0:11]
+                    else:
+                        regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
                 self.objectsDict[self.names[i]] = regions
             
             elif t == "genes":
@@ -132,18 +190,94 @@ class ExperimentalMatrix:
                 self.objectsDict[self.names[i]] = genes
             
     def get_type(self,name,field):
-        """ Return the type according to the given name and field. """
-        for f in self.fieldsDict.keys():
-            if f == field:
-                for t in self.fieldsDict[f].keys(): 
-                    if name in self.fieldsDict[f][t]:
-                        return t
-                    
-    def get_types(self,name):
-        """ Fetch all extra informations as a list according to the given name """
+        """Return the type according to the given name and field.
+
+        *Keyword arguments:*
+
+            - name -- Name to return.
+            - field -- Field to return.
+        """
+        
+        for t in self.fieldsDict[field].keys():
+            if name in self.fieldsDict[field][t]:
+                return t
+        
+    def get_types(self,name,skip_all=False):
+        """Fetch all extra informations as a list according to the given name.
+
+        *Keyword arguments:*
+
+            - name -- Name to return.
+        """
         result = []
-        for c in self.fieldsDict.keys():
-            for t in self.fieldsDict[c].keys():
-                if name in self.fieldsDict[c][t]:
+        for f in self.fieldsDict.keys():
+            for t in self.fieldsDict[f].keys():
+                if skip_all and t == "ALL": continue
+                elif name in self.fieldsDict[f][t]:
                     result.append(t)
         return result
+
+    def remove_name(self):
+        """Removes experiments by name.
+
+        *Keyword arguments:*
+
+            - name -- Name to remove.
+        """
+        self.trash = list(set(self.trash))
+        # for i, name in enumerate(self.names):
+        for name in self.trash:
+            # print("88888888888888   "+name )
+            i = self.names.index(name)
+            del self.types[i]
+            del self.names[i]
+            self.files.pop(name, None)
+
+            for f in self.fieldsDict.keys():
+                for t in self.fieldsDict[f].keys(): 
+                    # try:
+                    if name in self.fieldsDict[f][t]:
+                        self.fieldsDict[f][t].remove(name)
+                    if not self.fieldsDict[f][t]:
+                        self.fieldsDict[f].pop(t, None)
+            try: self.objectsDict.pop(name, None)
+            except: pass
+        self.trash = []
+
+    def match_ms_tags(self,field):
+        """Add more entries to match the missing tags of the given field. For example, there are tags for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. Then the regions are repeated for each tags from reads to match all reads.
+
+        *Keyword arguments:*
+
+            - field -- Field to add extra entries.
+        """
+        
+        # print(field)
+        # print(self.fieldsDict)
+        # check regions or reads have empty tag
+        altypes = self.fieldsDict[field].keys()
+        if "ALL" in altypes:
+            altypes.remove("ALL")
+            for name in self.fieldsDict[field]["ALL"]:
+                # print(name)
+                i = self.names.index(name)
+                for t in altypes:
+                    # print("\t"+t)
+                    n = name+"_"+t
+                    # print("\t\t"+n)
+                    self.names.append(n)
+                    self.types.append(self.types[i])
+                    self.files[n] = self.files[name]
+                    types = self.get_types(name,skip_all=True)
+                    # print("************")
+                    # print(types)
+                    self.fieldsDict[field][t].append(n)
+                    for f in self.fieldsDict.keys():
+                        for ty in types:
+                            try: self.fieldsDict[f][ty].append(n)
+                            except: pass
+                    if self.types[i] == "regions":
+                        g = GenomicRegionSet(n)
+                        g.read_bed(self.files[name])
+                        self.objectsDict[n] = g
+                    self.trash.append(name)

@@ -1,3 +1,25 @@
+"""
+ODIN detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
+
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Manuel Allhoff
+"""
+
 from __future__ import print_function
 from rgt.CoverageSet import CoverageSet
 import numpy as np
@@ -285,13 +307,13 @@ class DualCoverageSet():
                 chrom, start, end = self._index2coordinates(i)
                 print(chrom, start, end, file=f)
             
-    def get_training_set(self, exp_data, x, verbose, name, debug, constraint_chrom):
+    def get_training_set(self, exp_data, x, verbose, name, debug, constraint_chrom, min_fc=2.0):
         """Return linked genomic positions (at least <x> positions) to train HMM.
         Grep randomly a position within a putative region, and take then the entire region."""
         training_set = set()
         ts1 = set()
         ts2 = set()
-        threshold = 2.0
+        threshold = min_fc
         diff_cov = 10
         
         if constraint_chrom is not None:

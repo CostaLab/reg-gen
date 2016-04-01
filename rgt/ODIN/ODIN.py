@@ -1,5 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+ODIN detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
+
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Author: Manuel Allhoff
+"""
+
 from __future__ import print_function
 import numpy as np
 import sys
@@ -9,8 +31,8 @@ from dpc_help import dump_posteriors_and_viterbi
 from dpc_help import get_peaks
 from dpc_help import input
 import numpy as np
-from rgt.THOR.tracker import Tracker
-from dpc_help import get_bibtex_entry
+from rgt.ODIN.tracker import Tracker
+from dpc_help import get_bibtex_entry, verify_chrom_in_paths
 
 from random import sample
 
@@ -61,12 +83,15 @@ def _get_training_sets(indices_of_interest, first_overall_coverage, second_overa
 
 
 def main():
-    test = True
+    test = False
     if test:
         print("---------- TEST MODE ----------", file=sys.stderr)
     
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-    
+    if not verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes):
+        print("error: bam, genome and chromosome files do not contain the same chromosome names!", file=sys.stderr)
+        sys.exit()
+
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
     
@@ -88,7 +113,7 @@ def main():
     if options.debug:
         exp_data.write_putative_regions(options.name + '-putative-peaks.bed')
     print('Compute training set...',file=sys.stderr)
-    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom)
+    training_set = exp_data.get_training_set(exp_data, min(len(exp_data.indices_of_interest) / 3, 600000), options.verbose, options.name, options.debug, options.constchrom, min_fc=options.foldchange)
     training_set_obs = exp_data.get_observation(training_set)
     
     _, s1, s2 = _get_training_sets(exp_data.indices_of_interest, exp_data.first_overall_coverage, exp_data.second_overall_coverage, options.name, options.debug)

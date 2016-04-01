@@ -12,10 +12,14 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
+import matplotlib.ticker as mtick
 from matplotlib import cm
 import itertools
 import pickle
 import multiprocessing
+from matplotlib_venn import venn2, venn3
+import urllib2
+import re
 
 # Local Libraries
 # Distal Libraries
@@ -26,6 +30,7 @@ from rgt.AnnotationSet import *
 from rgt.Util import GenomeData, OverlapType, Html
 from rgt.CoverageSet import *
 from rgt.motifanalysis.Statistics import multiple_test_correction
+from rgt.helper import pretty
 
 # Local test
 dir = os.getcwd()
@@ -41,7 +46,12 @@ def print2(parameter, string):
 def unique(a):
     seen = set()
     return [seen.add(x) or x for x in a if x not in seen]
-        
+
+def purge(dir, pattern):
+    for f in os.listdir(dir):
+        if re.search(pattern, f):
+            os.remove(os.path.join(dir, f))
+
 def gen_tags(exps, tag):
     """Generate the unique tags from the EM according to the given tag. """
     if tag == "reads":
@@ -63,12 +73,13 @@ def gen_tags(exps, tag):
 
 def tag_from_r(exps, tag_type, name):
     tags = []
-    for type in tag_type:
-        if type == "reads" or type == "regions": type = "factor" 
+    for t in tag_type:
+        if t == "reads" or t == "regions": t = "factor" 
         try:
-            tags.append(exps.get_type(name,type))
+            tags.append(exps.get_type(name,t))
         except: pass
-    return tags
+
+    return [x for x in tags if x is not None]
         
 def colormap(exps, colorby, definedinEM, annotation=None):
     """Generate the self.colors in the format which compatible with matplotlib"""
@@ -107,7 +118,21 @@ def colormap(exps, colorby, definedinEM, annotation=None):
         else:
             #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
+            if colorby == "reads":
+                ks = []
+                for gr in exps.get_readsnames():
+                    ks.append( exps.get_type(name=gr,field="factor") )
+                n = len(set(ks))
+            elif colorby == "regions":
+                ks = []
+                for gr in exps.get_regionsnames():
+                    ks.append( exps.get_type(name=gr,field="factor") )
+                n = len(set(ks))
+            else:
+                n = len(exps.fieldsDict[colorby].keys())
+            #print(n)
+            #colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+            colors = plt.cm.Dark2(numpy.linspace(0, 1, n)).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -126,12 +151,18 @@ def colormaps(exps, colorby, definedinEM):
         else:
             colors = [exps.get_type(i,"color") for i in exps.fieldsDict[colorby]]
     else:
-        
-        if len(exps.get_regionsnames()) < 20:
-            colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
-                      'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        if colorby == "reads" or colorby == "regions":
+            n = len(exps.fieldsDict["factor"].keys())
         else:
-            colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+            n = len(exps.fieldsDict[colorby].keys())
+        colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+
+        #if len(exps.get_regionsnames()) < 20:
+        #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
+        #              'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
+        #else:
+            #colors = plt.cm.Set2(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
+        #    colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(exps.get_regionsnames()))).tolist()
     return colors
 
 def color_groupded_region(EM, grouped_region, colorby, definedinEM):
@@ -154,12 +185,16 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                 for q in grouped_region[ty]:            
                     qs.append(q.name)
             qs = list(set(qs))
+            # Accent Spectral hsv Set1
             colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(qs))).tolist()
+            
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
+            
             colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(types))).tolist()
+            
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]: 
                     i = types.index(EM.get_type(q.name, colorby))
@@ -188,23 +223,28 @@ def remove_duplicates(grouped_dict):
         for r in grouped_dict[ty]:
             r.remove_duplicates()
 
-def group_refque(rEM, qEM, groupby):
+def group_refque(rEM,  qEM, groupby, rRegion=None, qRegion=None):
     """ Group regionsets of rEM and qEM according to groupby """
     groupedreference = OrderedDict()  # Store all bed names according to their types
     groupedquery = OrderedDict()  # Store all bed names according to their types
+    if rRegion: rregs = rRegion
+    else: rregs = rEM.get_regionsets()
+    if qRegion: qregs = qRegion
+    else: qregs = qEM.get_regionsets()
+
     if groupby:
-        for r in rEM.get_regionsets():
+        for r in rregs:
             ty = rEM.get_type(r.name,groupby)
             try: groupedreference[ty].append(r)
             except: groupedreference[ty] =[r]
         
-        for q in qEM.get_regionsets():
+        for q in qregs:
             ty = qEM.get_type(q.name,groupby)
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference["All region sets without grouping"] = rEM.get_regionsets()
-        groupedquery["All region sets without grouping"] = qEM.get_regionsets()
+        groupedreference[""] = rEM.get_regionsets()
+        groupedquery[""] = qEM.get_regionsets()
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -219,17 +259,18 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
                 print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
                 sys.exit(1)
             if 50 >= threshold > 0:
-                bed1.extend(-threshold,-threshold,percentage=True)
+                bed1.extend(-threshold,-threshold, percentage=True)
             elif threshold > 50 or threshold < 0:
                 print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
                 sys.exit(1)
         ##if bed1.total_coverage() == 0: bed1.extend(0,1)
         #if bed2.total_coverage() == 0: bed2.extend(0,1)
-        intersect_r = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
-        #intersect_r.remove_duplicates()
+        intersect_r = bed1.intersect(bed2, mode=OverlapType.OVERLAP)
         c_inter = len(intersect_r)
-        c_12 = len(bed1) - c_inter
-        c_21 = len(bed2) - c_inter
+        intersect_1 = bed1.intersect(intersect_r, mode=OverlapType.ORIGINAL)
+        c_12 = len(bed1) - len(intersect_1)
+        intersect_2 = bed2.intersect(intersect_r, mode=OverlapType.ORIGINAL)
+        c_21 = len(bed2) - len(intersect_2)
         #print(c_12, c_21, c_inter)
         return c_12, c_21, c_inter
         
@@ -242,20 +283,6 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
         len_21 = allbed2 - len_inter
         return len_12, len_21, len_inter
 
-def count_intersect3(bedA, bedB, bedC, m="OVERLAP"):
-    mode = eval("OverlapType."+m)
-    #ABC
-    AB = bedA.intersect(bedB, mode)
-    BC = bedB.intersect(bedC, mode)
-    AC = bedA.intersect(bedC, mode)
-    ABC = AB.intersect(BC, mode)
-    Abc = bedA.subtract(AB.combine(AC))
-    aBc = bedB.subtract(AB.combine(BC))
-    ABc = AB.subtract(ABC)
-    abC = bedC.subtract(AC.combine(BC))
-    AbC = AC.subtract(ABC)
-    aBC = BC.subtract(ABC)
-    return len(Abc), len(aBc), len(ABc), len(abC), len(AbC), len(aBC), len(ABC)
 
 def value2str(value):
     if (isinstance(value,str)): return value
@@ -306,8 +333,19 @@ def compute_coverage(input):
     
     ts = time.time()
     cov = CoverageSet(input[0].name+".", input[0])
-    cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
-    cov.normRPM()
+
+
+    if "Conservation" in input[1]:
+        cov.phastCons46way_score(stepsize=input[4])
+    elif ".bigWig" in input[1] or ".bw" in input[1]:
+        cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
+    else:
+        cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+        cov.normRPM()
+
+
+    #cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+    #cov.normRPM()
     # When bothends, consider the fliping end
     if input[5] == 'bothends':
         flap = CoverageSet("for flap", input[0])
@@ -340,6 +378,63 @@ def compute_coverage(input):
     te = time.time()
     print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
+
+def mp_count_intersets(inps):
+    # [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+    random_r,random_q = inps[0].random_split(size=inps[1])                           
+    d = random_r.intersect_count(random_q, mode_count=inps[2], threshold=inps[3])
+    return d
+
+def mp_count_intersect(inputs):
+    # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
+    q = inputs[0]
+    nalist = inputs[1]
+    mode_count = inputs[2]
+    #qlen_dict = inputs[3]
+    threshold = inputs[4]
+    #counts = inputs[5]
+    frequency = inputs[6]
+    #self_frequency = inputs[7]
+    ty = inputs[8]
+    r = inputs[9]
+
+    output = [q.name]
+
+    if q.total_coverage() == 0 and len(q)>0:
+        output.append(q.name)
+
+    else:
+        output.append(None)
+
+        if mode_count == "bp": qlen = q.total_coverage()
+        elif mode_count == "count": qlen = len(q)
+        
+        output.append(qlen)
+        # Define different mode of intersection and count here
+        print(".", end="")
+        sys.stdout.flush()
+        c = r.intersect_count(q, mode_count=mode_count, threshold=threshold)
+        #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+        output.append(c)
+        #counts[ty][r.name][q.name] = c
+        if frequency: 
+            output.append(c[2])
+            #try: self_frequency[ty][q.name].append(c[2])
+            #except: 
+            #    self_frequency[ty][q.name] = [c[2]]
+    
+    # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
+    return output
+
+def get_url(url, filename):
+    #file_name = url.split('/')[-1]
+    u = urllib2.urlopen(url)
+    print("** Loading "+url, end="")
+    f = open(filename, 'wb')
+    print(u.read(), file=f)
+    f.close()
+    print("\t... Done")
+
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -1030,6 +1125,7 @@ class Combinatorial:
                     pr = self.posi2region(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
+
 ###########################################################################################
 #                    Inersection test
 ###########################################################################################
@@ -1048,18 +1144,32 @@ class Intersect:
         self.sbar = None
         self.pbar = None
         self.test_d = None
+        #self.background = None
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
         bgbed = GenomicRegionSet(name="Background")
         if path:
             bgbed.read_bed(path)
+            nq = []
+            print("\tTrimming the queries by the given background: "+path)
+            
+            for q in self.query:
+                qq = q.intersect(bgbed, mode=OverlapType.ORIGINAL)
+                nq.append( qq )
+            self.query = nq
+
         else:
             bgbed.get_genome_data(organism=self.organism)
-        self.backgroung = bgbed
+
+        #self.background = bgbed
+
 
     def group_refque(self, groupby):
-        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
+        self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, 
+                                                                groupby, 
+                                                                self.references, 
+                                                                self.query)
         remove_duplicates(self.groupedreference)
         remove_duplicates(self.groupedquery)
         
@@ -1067,48 +1177,51 @@ class Intersect:
         """color_list is a Dict [query] : color """
         if ref_que == "que":
             self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All region sets without grouping":
-                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            if self.groupedquery.keys()[0] == "":
+                self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
         elif ref_que == "ref":
             self.color_list = color_groupded_region(self.rEM, self.groupedreference, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "All region sets without grouping":
-                self.color_tags = [n.name for n in self.groupedquery["All region sets without grouping"]]
+            if self.groupedquery.keys()[0] == "":
+                self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)
             
     def colors_comb(self):
         """color_list is a list : color """
         
-        if self.groupedquery.keys()[0] == "All region sets without grouping":
+        if self.groupedquery.keys()[0] == "":
             self.color_tags = self.referencenames
         else:
             tags = []
-            for t in [n.name for n in self.groupedreference.values()[0]]:
+            for t in [ n.name for n in self.groupedreference.values()[0] ]:
                 nt = t.replace(self.groupedreference.keys()[0],"")
                 nt = nt.replace("_","")
                 tags.append(nt)
             self.color_tags = tags
         self.color_list = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.color_tags))).tolist()
     
-    def extend_ref(self,percentage):
+    def extend_ref(self, percentage):
         """percentage must be positive value"""
         for ty in self.groupedreference:
             for r in self.groupedreference[ty]:
-                r.extend(left=percentage,right=percentage,percentage=True)
-        
+                r.extend(left=percentage,right=percentage,percentage=False)
+                r.merge()
+
     def count_intersect(self, threshold, frequency=False):
+
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
         self.nalist = []
+
         if frequency: self.frequency = OrderedDict()
         
         #if self.mode_count == "bp":
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
         #elif self.mode_count == "count":
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","sequence_number", "Query", "sequence_number", "Number of Intersection"))
-        
+
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
@@ -1124,25 +1237,36 @@ class Intersect:
                     elif self.mode_count == "count": rlen = len(r)
                     self.rlen[ty][r.name] = rlen
                     
-                    
+                    mp_input = []
                     for q in self.groupedquery[ty]:
-                        if q.total_coverage() == 0 and len(q)>0:
-                            self.nalist.append(q.name)
-                            continue
+                        mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
+                                          self.counts, frequency, self.frequency, ty, r ])
+                    # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
+                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                    mp_output = pool.map(mp_count_intersect, mp_input)
+                    pool.close()
+                    pool.join()
+                    
+                    # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
+                    for output in mp_output:
+                        if output[1]: self.nalist.append(output[1])
                         else:
-                            if self.mode_count == "bp": qlen = q.total_coverage()
-                            elif self.mode_count == "count": qlen = len(q)
-                            self.qlen[ty][q.name] = qlen
-                            # Define different mode of intersection and count here
-                            c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
-                            self.counts[ty][r.name][q.name] = c
-                            if frequency: 
-                                try: self.frequency[ty][q.name].append(c[2])
-                                except: 
-                                    self.frequency[ty][q.name] = [c[2]]
-                            
+                            self.qlen[ty][output[0]] = output[2]
+                            self.counts[ty][r.name][output[0]] = output[3]
+                            #print(r.name)
+                            #print(output[0])
+                            #print(output[3])
+                            try: self.frequency[ty][output[0]][r.name] = output[3][2]
+                            except: 
+                                self.frequency[ty][output[0]] = {}
+                                self.frequency[ty][output[0]][r.name] = output[3][2]
                             #print2(self.parameter, "{0}\t{1}\t{2}\t{3}\t{4}".format(r.name,rlen, q.name, qlen, c[2]))
-            
+        #print(self.nalist)
+        #print(self.qlen)
+        #print(self.counts)
+        #print(self.frequency)
+        #sys.stdout.flush()
+
     def barplot(self, logt=False, percentage=False):
         f, axs = plt.subplots(len(self.counts.keys()),1)
         f.subplots_adjust(left=0.3)
@@ -1176,7 +1300,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     if percentage:
-                        y = (self.counts.values()[ai][r][q][2] + plus)/lr
+                        y = 100 * (self.counts.values()[ai][r][q][2] + plus)/lr
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number
                     
@@ -1196,6 +1320,10 @@ class Intersect:
             f.text(-0.025, 0.5, "Intersected regions (bp)", rotation="vertical", va="center")
         elif self.mode_count == "count":
             if percentage:
+                fmt = '%.0f%%' # Format you want the ticks, e.g. '40%'
+                yticks = mtick.FormatStrFormatter(fmt)
+                ax.yaxis.set_major_formatter(yticks)
+
                 f.text(-0.025, 0.5, "Intersected percantage", rotation="vertical", va="center")
             else:
                 f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
@@ -1214,7 +1342,8 @@ class Intersect:
             ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.locator_params(axis = 'y', nbins = 2)
             ax.set_title(self.counts.keys()[ai], y=1)
-            r_label = []   
+            r_label = []
+
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 if len(axs) == 1: r_label.append(r)
                 else: 
@@ -1222,10 +1351,14 @@ class Intersect:
                     except: r_label.append(r)
                 width = 0.6
                 bottom = 0
-                for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
+                reverse_q = self.counts.values()[ai][r].keys()[::-1]
+                #ql = len(reverse_q) - 1
+                rc = self.color_tags[::-1]
+                for ind_q, q in enumerate(reverse_q):
                     x = ind_r
                     y = self.counts.values()[ai][r][q][2] # intersect number
-                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
+                    ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], 
+                           edgecolor="none", align='center', label=rc[ind_q])
                     bottom = bottom + y
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(r_label)))
@@ -1233,7 +1366,14 @@ class Intersect:
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
             
-            ax.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+            #handles, labels = ax.get_legend_handles_labels()
+            #nhandles = []
+            #for t in self.color_tags:
+            #    nhandles.append( handles[labels.index(t)] )
+            #print(self.color_tags)
+            handles, labels = ax.get_legend_handles_labels()
+            by_label = OrderedDict(reversed(zip(labels, handles)))
+            ax.legend(by_label.values(), by_label.keys(), loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax.spines[spine].set_visible(False)
@@ -1279,17 +1419,25 @@ class Intersect:
                 else:
                     for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                         x = ind_r
-                        y = int(self.counts.values()[ai][r][q][2])/sumlength # percentage
-                        ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[q], edgecolor="none", align='center')
+                        y = 100 * float(self.counts.values()[ai][r][q][2])/sumlength # percentage
+                        ax.bar(x, y, width=width, bottom=bottom, 
+                               color=self.color_list[q], edgecolor="none", align='center')
                         bottom = bottom + y
                         self.percentage[ai][r][q] = y
-                ax.bar(x,1-bottom,width=width, bottom=bottom, color=self.color_list["No intersection"], align='center')
+                
+                ax.bar(x,100-bottom,width=width, bottom=bottom, 
+                       color=self.color_list["No intersection"], align='center')
+            
             ax.yaxis.tick_left()
+
             ax.set_xticks(range(len(r_label)))
             ax.set_xticklabels(r_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax.set_xlim([-0.5, ind_r+0.5])
-            ax.set_ylim([0,1])
+            ax.set_ylim([0,100])
+
+            
+
             legend_labels = self.color_tags + ["No intersection"]
             ax.legend(legend_labels, loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
@@ -1305,7 +1453,7 @@ class Intersect:
         #link_d = {title:"intersection.html"}
         dir_name = os.path.basename(directory)
         #check_dir(directory)
-        html_header = "Intersection Test: "+dir_name
+        html_header = "Intersection Test: "+dir_name + "/"+title
         link_d = OrderedDict()
         link_d["Intersection test"] = "index.html"
         link_d["Parameters"] = "parameters.html"
@@ -1314,10 +1462,12 @@ class Intersect:
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         
         html.add_figure("intersection_bar.png", align="center")
-        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         html.add_figure("intersection_barp.png", align="center")
+        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        header_list = ["Reference<br>name",
+        
+        header_list = ["#",
+                       "Reference<br>name",
                        "Query<br>name", 
                        "Reference<br>number", 
                        "Query<br>number", 
@@ -1335,9 +1485,11 @@ class Intersect:
         for ind_ty, ty in enumerate(self.counts.keys()):
             html.add_heading(ty, size = 4, bold = False)
             data_table = []
+            c = 0
             for ind_r,r in enumerate(self.counts[ty]):
                 for ind_q, q in enumerate(self.counts[ty][r]):
                     if r == q: continue
+                    c += 1
                     pt = self.counts[ty][r][q][2]/self.rlen[ty][r]
                     intern = self.counts[ty][r][q][2]
                     if self.test_d:
@@ -1345,31 +1497,31 @@ class Intersect:
                         chisqua = value2str(self.test_d[ty][r][q][1])
                         pv = self.test_d[ty][r][q][2]
                         if isinstance(pv, str):
-                            data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                            data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                               str(intern), "{:.2f}%".format(100*pt),
                                               aveinter, chisqua, pv,"-"])
                         else: 
                             npv = 1 - pv
                             if pv < 0.05:
                                 if intern > aveinter:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
                                 else:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
                             elif self.test_d[ty][r][q][2] >= 0.05:
                                 if intern > aveinter:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
                                 else:
-                                    data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                                    data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
-                        data_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
+                        data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
@@ -1407,17 +1559,23 @@ class Intersect:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, title,"parameters.html"))
     
-    def gen_html_comb(self, outputname, title, align):
-        fp = os.path.join(dir,outputname,title)
-        link_d = {title:"combinatorial.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"))
+    def gen_html_comb(self, directory, title, align, args):
+        dir_name = os.path.basename(directory)
+        #check_dir(directory)
+        html_header = "Combinatorial Test: "+dir_name + "/"+title
+        link_d = OrderedDict()
+        link_d["Combinatorial test"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+        
+        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+
         #html.create_header()
         #html.add_heading(title)
         
         if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
         
-        html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+
-                               '** </p>'])
+        #html.add_free_content(['<p style=\"margin-left: '+str(align+150)+'">'+ '** </p>'])
         
         for ind_ty, ty in enumerate(self.groupedreference.keys()):
             html.add_heading(ty, size = 4, bold = False)
@@ -1426,25 +1584,40 @@ class Intersect:
             header_list = ["Query<br>name", "Query<br>number", "Frequencies"]
             type_list = 'sssss'
             col_size_list = [10,10,30,10] 
-        
+            #print(self.frequency[ty].keys())
+            sys.stdout.flush()
+
             for ind_q, q in enumerate(self.frequency[ty].keys()):
-                data_table.append([q,  str(self.qlen[ty][q]), ",".join(["%05d" % v for v in self.frequency[ty][q]])])
+                html.add_figure("venn_"+ty+"_"+q+".png", align="center",  width="600")
+                data_table.append([q,  str(self.qlen[ty][q]), 
+                                   ",".join([ str(v).rjust(7, " ") for v in self.frequency[ty][q].values()])])
                 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
             
             header_list = ["Query 1", "Query 2", "Chi square", "p value"]
-            data_table = []  
-            for ind_q1, q1 in enumerate(self.frequency[ty].keys()[:-1]):
-                for ind_q2, q2 in enumerate(self.frequency[ty].keys()[ind_q1+1:]):
-                    if q1 == q2: continue
-                    else:
-                        chisq, p, dof, expected = stats.chi2_contingency([self.frequency[ty][q1],self.frequency[ty][q2]])
-                        if p < 0.05:
-                            data_table.append([q1,q2,value2str(chisq), "<font color=\"red\">"+value2str(p)+"</font>"])
-                        else:
-                            data_table.append([q1,q2,value2str(chisq), value2str(p)])
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
-            
+            data_table = []
+            n = len(self.frequency[ty].keys())
+            for q in itertools.combinations(range(n),2):
+                #print(q)
+                q1 = self.frequency[ty].keys()[q[0]]
+                q2 = self.frequency[ty].keys()[q[1]]
+                
+                sumqf = [x + y for x, y in zip(self.frequency[ty][q1].values(), self.frequency[ty][q2].values())]
+                nonzero = [i for i, e in enumerate(sumqf) if e != 0]
+                qf1 = [self.frequency[ty][q1].values()[i] for i in nonzero ]
+                qf2 = [self.frequency[ty][q2].values()[i] for i in nonzero ]
+                
+                
+                chisq, p, dof, expected = stats.chi2_contingency([qf1,qf2])
+                if p < 0.05:
+                    data_table.append([q1,q2,value2str(chisq), "<font color=\"red\">"+value2str(p)+"</font>"])
+                else:
+                    data_table.append([q1,q2,value2str(chisq), value2str(p)])
+
+            if len(data_table):
+                html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
+            else:
+                html.add_free_content(["No overlapping regions found."])
         """
         header_list = ["Order"] + self.orig_refs 
         type_list = 'sssss' * len(self.referencenames)
@@ -1457,26 +1630,42 @@ class Intersect:
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align)
         """
         
-        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
+        html.write(os.path.join(dir_name, title,"index.html"))
+    
+        # Parameters
+        html = Html(name=html_header, links_dict=link_d,
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+        header_list = ["Description", "Argument", "Value"]
+        data_table = [["Reference", "-r", args.r ],
+                      ["Query", "-q", args.q],
+                      ["Output directory", "-o", os.path.basename(args.o)],
+                      ["Experiment title", "-t", args.t],
+                      #["Grouping tag", "-g", args.g],
+                      #["Coloring tag", "-c", args.c],
+                      #["Background", "-bg", args.bg],
+                      ["Organism", "-organism", args.organism]]
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
-        html.write(os.path.join(fp,"combinatorial.html"))
-    
+        html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
+        html.write(os.path.join(directory, title,"parameters.html"))
+
     def posi2region(self, regions, p):
-        all = range(len(regions))
+        #all = range(len(regions))
         new_r = GenomicRegionSet(name="")
         for r in p:
             new_r.combine(regions[r])
         return new_r
     
     def posi2set(self,regions, p):
-        all = range(len(regions))
+        alln = range(len(regions))
         inter_r = copy.deepcopy(regions[p[0]])
 
-        for i in all:
+        for i in alln:
             #print("inter_r: "+inter_r.name)
             if i in p[1:]:
-                inter_r = inter_r.intersect(regions[i],mode=OverlapType.OVERLAP)
+                inter_r = inter_r.intersect(regions[i], mode=OverlapType.OVERLAP)
             elif i == p[0]: pass
             else:
                 inter_r = inter_r.subtract(regions[i], whole_region=False)
@@ -1503,6 +1692,7 @@ class Intersect:
             for i in range(1,n):
                 new_refsp[ty].append(itertools.combinations(range(n),i))
             for posi in new_refsp[ty]:
+                #print(posi)
                 posi = [list(i) for i in posi]
                 
                 for p in posi:
@@ -1546,7 +1736,7 @@ class Intersect:
             for posi in new_refsp[ty]:
                 posi = [list(i) for i in posi]
                 for p in posi:
-                    print("   " + str(p))
+                    #print("   " + str(p))
                     pr = self.posi2region(self.groupedreference[ty],p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
@@ -1577,10 +1767,12 @@ class Intersect:
                     except: q_label.append(q)
                 width = 0.6
                 bottom = 0
-                summ = sum(self.frequency[ty][q])
-                for ind_r, rc in enumerate(self.frequency[ty][q]):
+                summ = sum(self.frequency[ty][q].values())
+                for ind_r,r in enumerate(self.referencenames):
+                #for ind_r, rc in enumerate(self.frequency[ty][q]):
+                    rc = self.frequency[ty][q][r]
                     if ind_q == 0: 
-                        r = self.groupedreference[ty][ind_r].name
+                        #r = self.groupedreference[ty][ind_r].name
                         r_label.append(r)
                     x = ind_q
                     y = rc/summ # intersect number
@@ -1591,7 +1783,8 @@ class Intersect:
             ax.set_xticks(range(len(q_label)))
             ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
             ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-            ax.set_xlim([-0.5, ind_q+0.5])
+            ax.set_xlim([-0.5, len(q_label)+0.5])
+            ax.set_ylim([0, 1])
             
             legends.reverse()
             r_label.reverse()
@@ -1610,9 +1803,33 @@ class Intersect:
         f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
         self.sbar = f
         
+    def comb_venn(self, directory):
+        if len(self.references) == 2:
+            print(2)
+        elif len(self.references) == 3:
+            for ind_ty, ty in enumerate(self.groupedreference.keys()):
+                for q in self.query:
+                    plt.figure(figsize=(6,4))
+                    plt.title("Venn Diagram: "+q.name)
+                    freq = []
+                    for r in self.groupedreference[ty]:
+                        freq.append(self.frequency[ty][q.name][r.name])
+
+                    
+                    #print([r.name for r in self.groupedreference[ty]])
+                    self.venn = venn3(subsets = [ freq[i] for i in [0,1,3,2,4,5,6] ], 
+                                      set_labels =[ n.name for n in self.references ] )
+                    plt.annotate(str(len(q) - sum(freq)), xy=(0.1, 0.1), xytext=(-120, -120),
+                                 ha='left', textcoords='offset points', 
+                                 bbox=dict(boxstyle='round,pad=0.5', fc='gray', alpha=0.1))
+                    plt.savefig(os.path.join(directory, "venn_"+ty+"_"+q.name+".png"))
+                    plt.savefig(os.path.join(directory, "venn_"+ty+"_"+q.name+".pdf"), format='pdf')
+        else:
+            print("*** For plotting Venn diagram, the number of references must be 2 or 3.")
         
     def stest(self,repeat,threshold):
-        print("\nIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
+
+        print("\n\tIntersection random subsampling test:\n    Repeat "+str(repeat)+" times\n")
         self.test_time = repeat
         self.test_d = {}
         plist = OrderedDict()
@@ -1622,29 +1839,50 @@ class Intersect:
             plist[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
                 if r.name in self.nalist: continue
+                print("\t"+r.name)
                 self.test_d[ty][r.name] = {}
                 plist[ty][r.name] = OrderedDict()
+                print("\t.", end="")
+                sys.stdout.flush()
                 for q in self.groupedquery[ty]:
+                    print(".", end="")
+                    sys.stdout.flush()
                     if q.name in self.nalist: continue
                     # True intersection
                     obs = self.counts[ty][r.name][q.name]
                     qn = q.name
                     if obs[2] == 0:
-                        aveinter, chisq, p = "NA", "NA", "NA"
+                        aveinter, chisq, p = "NA", "NA", "1"
                     else:
                         com = q.combine(r, change_name=False, output=True)
                         # Randomization
                         d = []
-                        for i in range(repeat):
-                            random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
-                            d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
-                        da = numpy.array(d)
+                        
+                        inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+                        mp_input = [ inp for i in range(repeat) ]
+
+                        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                        mp_output = pool.map(mp_count_intersets, mp_input)
+                        pool.close()
+                        pool.join()
+
+
+
+                        #for i in range(repeat):
+                        #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                        #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
+                            #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
+                        da = numpy.array(mp_output)
                         
                         exp_m = numpy.mean(da, axis=0)
+                        #print(exp_m)
+                        #print(obs)
                         chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                         aveinter = exp_m[2]
+
                     plist[ty][r.name][qn] = p
                     self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
+                print()
                     
             multiple_correction(plist)
             
@@ -1670,11 +1908,15 @@ class Boxplot:
         parameters: list of records
         figs: a list of figure(s)
     """
-    def __init__(self,EMpath, title="boxplot", df=False):
+    def __init__(self, EMpath, fields, title="boxplot", df=False):
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
+        for f in fields:
+            if f not in ["None", "reads", "regions", "factor"]:
+                self.exps.match_ms_tags(f)
+
         self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
         self.bednames = self.exps.get_regionsnames()
         self.reads = self.exps.get_readsfiles()
@@ -1697,7 +1939,7 @@ class Boxplot:
         """
         c=[]
         for rp in self.reads:
-            print("    processing: "+rp)
+            print("    processing: ..."+rp[-45:])
             r = os.path.abspath(rp)   # Here change the relative path into absolute path
             cov = CoverageSet(r,self.all_bed)
             cov.coverage_from_genomicset(r)
@@ -1779,15 +2021,15 @@ class Boxplot:
         self.tag_type = [groupby, sortby, colorby]
         
         if groupby == "None":
-            self.group_tags = ["All region sets without grouping"]
+            self.group_tags = [""]
         else:
             self.group_tags = gen_tags(self.exps, groupby)
         if sortby == "None":
-            self.sort_tags = ["All region sets without grouping"]
+            self.sort_tags = [""]
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
         if colorby == "None":
-            self.color_tags = ["All region sets without grouping"]
+            self.color_tags = [""]
         else:
             self.color_tags = gen_tags(self.exps, colorby)
     
@@ -1856,12 +2098,22 @@ class Boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, sy, logT=False, ylim=False):
+    def plot(self, title, scol, logT=False, ylim=False, pw=3, ph=4):
         """ Return boxplot from the given tables.
         
         """
-        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = sy)
         self.xtickrotation, self.xtickalign = 0,"center"
+        if len(self.group_tags) <  2:
+            ticklabelsize = pw*1.5
+        else:
+            ticklabelsize = pw*3
+        tw = len(self.group_tags) * pw
+        th = ph
+        
+        f, axarr = plt.subplots(1,len(self.group_tags), dpi=300, sharey = scol,
+                              figsize=(tw, th) ) 
+        # f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
+        
 
         nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
         if nm > 30:
@@ -1884,8 +2136,8 @@ class Boxplot:
             
             
         for i, g in enumerate(self.sortDict.keys()):
-            if self.df: axarr[i].set_title(g+"_df", y=1.02)
-            else: axarr[i].set_title(g, y=1.02)
+            if self.df: axarr[i].set_title(g+"_df", y=1.02,fontsize=ticklabelsize+2)
+            else: axarr[i].set_title(g, y=1.02,fontsize=ticklabelsize+2)
             
             
             if logT and not self.df: 
@@ -1902,6 +2154,10 @@ class Boxplot:
             color_t = []  # Store tag for coloring boxes
             x_ticklabels = []  # Store ticklabels
             for j, a in enumerate(self.sortDict[g].keys()):
+                if len(a)>10: 
+                    #print(a)
+                    self.xtickrotation = 70
+                    self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
                     if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
                         continue
@@ -1912,11 +2168,12 @@ class Boxplot:
                             d.append([x+1 for x in self.sortDict[g][a][c]])
                         color_t.append(self.colors[k])
                         x_ticklabels.append(a)  #  + "." + c
+
             # Fine tuning boxplot
             #print(d)
             bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, 
                                   widths=None, patch_artist=True, bootstrap=None)
-            z = 10 # zorder for bosplot
+            z = 10 # zorder for boxplot
             plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
             plt.setp(bp['fliers'], markerfacecolor='gray',color='white',alpha=0.3,markersize=1.8,zorder=z)
             plt.setp(bp['caps'],color='white',zorder=z)
@@ -1931,14 +2188,15 @@ class Boxplot:
             # Fine tuning subplot
             axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sortDict[g].keys())])
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sortDict[g].keys(), self.xtickrotation, ha=self.xtickalign, fontsize=10)
+            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=self.xtickrotation, ha=self.xtickalign, fontsize=10)
+            #axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=70, ha=self.xtickalign, fontsize=10)
             
             #axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
                 axarr[i].spines[spine].set_visible(False)
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
             
-            if sy: 
+            if scol: 
                 #plt.setp(axarr[i].get_yticklabels(),visible=False)
                 axarr[i].minorticks_off()
                 
@@ -1952,7 +2210,8 @@ class Boxplot:
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
                  handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
                  bbox_to_anchor=(1.05, 0.5))
-        f.tight_layout(pad=2, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=2, h_pad=None, w_pad=None)
+        # f.tight_layout()
         self.fig = f
     
     def gen_html(self, directory, title, align=50):
@@ -2121,11 +2380,24 @@ def annotation_dump(organism):
 
 
 class Lineplot:
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df):
+    
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, fields, test):
+        
+        
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(EMpath)
+        self.exps.read(EMpath, test=test)
+        # print(self.exps.fields)
+        # pretty(self.exps.fieldsDict)
+        for f in self.exps.fields:
+            if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
+                self.exps.match_ms_tags(f)
+        # print(self.exps.names)
+        # print(self.exps.trash)
+        self.exps.remove_name()
+        # pretty(self.exps.fieldsDict)
+        # sys.exit(0)
         if annotation:
             self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
@@ -2133,6 +2405,8 @@ class Lineplot:
             self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
             self.bednames = self.exps.get_regionsnames()
             self.annotation = None
+            
+
         self.reads = self.exps.get_readsfiles()
         self.readsnames = self.exps.get_readsnames()
         self.fieldsDict = self.exps.fieldsDict
@@ -2143,22 +2417,35 @@ class Lineplot:
         self.bs = bs
         self.ss = ss
         self.df = df
+
     
     def relocate_bed(self):
-        processed_beds = []
-        processed_bedsF = [] # Processed beds to be flapped
+        self.processed_beds = []
+        self.processed_bedsF = [] # Processed beds to be flapped
         
         for bed in self.beds:
             if self.center == 'bothends':
-                newbed = bed.relocate_regions(center='leftend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_beds.append(newbed)
-                newbedF = bed.relocate_regions(center='rightend', left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_bedsF.append(newbedF)
+                newbed = bed.relocate_regions(center='leftend', 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
+                self.processed_beds.append(newbed)
+                newbedF = bed.relocate_regions(center='rightend', 
+                                               left_length=self.extend+int(0.5*self.bs),
+                                               right_length=self.extend+int(0.5*self.bs))
+                self.processed_bedsF.append(newbedF)
+            elif self.center == 'upstream' or self.center == 'downstream':
+                allbed = bed.relocate_regions(center=self.center, 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
+                newbed = allbed.filter_strand(strand="+")
+                self.processed_beds.append(newbed)
+                newbedF = allbed.filter_strand(strand="-")
+                self.processed_bedsF.append(newbedF)
             else:
-                newbed = bed.relocate_regions(center=self.center, left_length=self.extend+int(0.5*self.bs), right_length=self.extend+int(0.5*self.bs))
-                processed_beds.append(newbed)
-        self.processed_beds = processed_beds
-        self.processed_bedsF = processed_bedsF
+                newbed = bed.relocate_regions(center=self.center, 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
+                self.processed_beds.append(newbed)
         
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -2168,27 +2455,34 @@ class Lineplot:
             sortby = 'reads','regions','cell',or 'factor'
         """
         self.tag_type = [sortby, groupby, colorby]
+        if "None" in self.tag_type: self.tag_type.remove("None")
+        
+        #print([sortby, groupby, colorby])
         if groupby == "None":
-            self.group_tags = ["All region sets without grouping"]
+            self.group_tags = [""]
         elif groupby == "regions" and self.annotation:
             self.group_tags = self.bednames
         else:
             self.group_tags = gen_tags(self.exps, groupby)
             
         if sortby == "None":
-            self.sort_tags = ["All region sets without grouping"]
+            self.sort_tags = [""]
         elif sortby == "regions" and self.annotation:
             self.sort_tags = self.bednames
         else:
             self.sort_tags = gen_tags(self.exps, sortby)
             
         if colorby == "None":
-            self.color_tags = ["All region sets without grouping"]
+            self.color_tags = [""]
         elif colorby == "regions" and self.annotation:
             self.color_tags = self.bednames
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
+        print("\tGroup labels:\t"+",".join(self.group_tags))
+        print("\tSort labels:\t"+",".join(self.sort_tags))
+        print("\tColor labels:\t"+",".join(self.color_tags))
+
     def gen_cues(self):
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
@@ -2203,11 +2497,12 @@ class Lineplot:
                 self.cuebed[bed] = set([bed])
         else:
             for bed in self.bednames:
-                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type,bed))
+                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
+                try: self.cuebed[bed].remove("None")
+                except: pass
         for bam in self.readsnames:
-            self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type,bam))
-        
-        
+            self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
+
     def coverage(self, sortby, heatmap=False, logt=False, mp=False):
         
         def annot_ind(bednames, tags):
@@ -2219,8 +2514,10 @@ class Lineplot:
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
-        totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
-        if self.df: totn = totn * 2
+        # totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
+
+        
+        # if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
             data[s] = OrderedDict()
@@ -2229,8 +2526,12 @@ class Lineplot:
                 for c in self.color_tags:
                     #if self.df: data[s][g][c] = []
                     for bed in self.cuebed.keys():
+                        #print(self.cuebed[bed])
+                        #print(set([s,g,c]))
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
+                                #print(self.cuebam[bam])
+                                #print(set([s,g,c]))
                                 if self.cuebam[bam] <= set([s,g,c]):
                                     if mp: 
                                         if self.annotation:
@@ -2251,22 +2552,44 @@ class Lineplot:
                                         j = self.readsnames.index(bam)
                                         
                                         cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
-                                        cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                        cov.normRPM()
+                                        
+                                        if "Conservation" in bam:
+                                            cov.phastCons46way_score(stepsize=self.ss)
+                                        elif ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                            if self.reads[j].startswith("http://"):
+                                                
+                                                tab = self.reads[j].split('/')[-1]
+                                                temp = os.path.join(os.getcwd(),"temp_bigwig_"+tab)
+                                                get_url(url=self.reads[j], filename=temp)
+                                                cov.coverage_from_bigwig(bigwig_file=temp, stepsize=self.ss)
+                                                #os.remove(temp)
+                                            else:
+                                                cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+
+                                        else:
+                                            cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                            cov.normRPM()
+
                                         # When bothends, consider the fliping end
-                                        if self.center == 'bothends':
-                                            flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                            flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                            ffcoverage = numpy.fliplr(flap.coverage)
-                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                        if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
+                                            if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                                ffcoverage = numpy.fliplr(flap.coverage)
+                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                            else:
+                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                flap.normRPM()
+                                                ffcoverage = numpy.fliplr(flap.coverage)
+                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                         # Averaging the coverage of all regions of each bed file
                                         if heatmap:
                                             if logt:
-                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage)) # Store the array into data list
+                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
                                             else:
                                                 data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
                                         else:
-                                            #print(cov.coverage)
                                             for i, car in enumerate(cov.coverage):
                                                 car = numpy.delete(car, [0,1])
                                                 if i == 0:
@@ -2276,16 +2599,17 @@ class Lineplot:
                                                     avearr = numpy.vstack((avearr, car))
                                                 else:
                                                     pass
-                                            
+
                                             avearr = numpy.average(avearr, axis=0)
-                                            
                                             if self.df: 
                                                 try: data[s][g][c].append(avearr)
                                                 except: data[s][g][c] = [avearr]
                                             else: data[s][g][c] = avearr # Store the array into data list
                                         bi += 1
                                         te = time.time()
-                                        print2(self.parameter, "     ("+str(bi)+"/"+str(totn)+") Computing\t" + "{0:30}   --{1:<6.1f}secs".format(bed+"."+bam, ts-te))
+                                        print2(self.parameter, "\t"+str(bi)+"\t"+"{0:30}\t--{1:<5.1f}s".format(bed+"."+bam, ts-te))
+                                        #sys.stdout.flush()
+        
         if mp: 
             pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
@@ -2313,19 +2637,34 @@ class Lineplot:
                             d = numpy.subtract(data[s][g][c][0],data[s][g][c][1])
                             data[s][g][c] = d
                         except: pass
-
+      
         self.data = data
         
-    def colormap(self, colorby, definedinEM):
-        self.colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
+        purge(os.getcwd(),"temp_bigwig_")
         
-    def plot(self, groupby, colorby, output, printtable=False, sy=False, sx=False):
+    def colormap(self, colorby, definedinEM):
+        colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
+        self.colors = {}
+        for i, c in enumerate(self.color_tags):
+            self.colors[c] = colors[i]
+
+    def plot(self, groupby, colorby, output, printtable=False, scol=False, srow=False,  w=2, h=2):
         
         rot = 50
-        ticklabelsize = 7
+        if len(self.data.values()[0].keys()) <  2:
+            ticklabelsize = w*1.5
+        else:
+            ticklabelsize = w*3
+        tw = len(self.data.values()[0].keys()) * w
+        th = len(self.data.keys()) * (h*0.8)
         
-        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), figsize=(8.27, 11.69), dpi=300) # 
-        #if len(self.data.keys()) == 1 and len(self.data.values()[0]) == 1: 
+        f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300,
+                              figsize=(tw, th) ) 
+        # if len(self.data.keys()) * len(self.data.values()[0]) <= 4: 
+        #     f.set_size_inches(4, 4)
+        # elif 4 < len(self.data.keys()) * len(self.data.values()[0]) <= 8: 
+        #     f.set_size_inches(5, 5)
+            
         #    axs=numpy.array([[axs,None],[None,None]])
         
         yaxmax = [0]*len(self.data.values()[0])
@@ -2333,8 +2672,13 @@ class Lineplot:
         if self.df: 
             yaxmin = [0]*len(self.data.values()[0])
             sx_ymin = [0]*len(self.data.keys())
-
+        
+        if printtable: 
+            bott = self.extend-int(0.5*self.ss)
+            pArr = [["Group_tag","Sort_tag","Color_tag"]+[str(x) for x in range(-bott, bott, self.ss)] ] # Header
+        nit = len(self.data.keys())
         for it, s in enumerate(self.data.keys()):
+            
             for i,g in enumerate(self.data[s].keys()):
                 
                 try: ax = axs[it,i]
@@ -2348,58 +2692,56 @@ class Lineplot:
                               
                 if it == 0:
                     if self.df:
-                        ax.set_title(g+"_df",fontsize=11)
+                        ax.set_title(g+"_df",fontsize=ticklabelsize+2)
                     else:
-                        ax.set_title(g,fontsize=11)
+                        ax.set_title(g,fontsize=ticklabelsize+2)
                     
                 # Processing for future output
-                if printtable:
-                    pArr = numpy.array(["Name","X","Y"]) # Header
                     
                 for j, c in enumerate(self.data[s][g].keys()):
+                    
                     y = self.data[s][g][c]
                     
-                    try: 
-                        yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                        sx_ymax[i] = max(numpy.amax(y), sx_ymax[i])
-                        if self.df: 
-                            yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                            sx_ymin[i] = min(numpy.amin(y), sx_ymin[i])
-
-                    except: continue
+                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                    if self.df: 
+                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                    
                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                    ax.plot(x,y, color=self.colors[j], lw=1)
+                    ax.plot(x,y, color=self.colors[c], lw=1)
+                    if it < nit - 1:
+                        ax.set_xticklabels([])
                     # Processing for future output
-                    if printtable:
-                        [bed] = [bed for bed in self.bednames if [g,c,s] in self.cuebed[bed]]
-                        name = numpy.array(*len(x))
-                        xvalue = numpy.array(x)
-                        yvalue = numpy.array(y)
-                        conArr = numpy.vstack([name,xvalue,yvalue])
-                        conArr = numpy.transpose(conArr)
-                        pArr = numpy.vstack([pArr, conArr])
-                if printtable:
-                    [bam] = [bam for bam in self.readsnames if [g,c,s] in self.cuebam[bam]]
-                    output_array(pArr, directory = output, folder ="lineplot_tables",filename=s+"_"+bam)
-                
+                    if printtable: pArr.append([g,s,c]+list(y))
+
+                ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
-                ax.locator_params(axis = 'x', nbins = 4)
-                ax.locator_params(axis = 'y', nbins = 4)
-                try: axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
-                except: axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
+                try:
+                    ax.locator_params(axis = 'x', nbins = 4)
+                    ax.locator_params(axis = 'y', nbins = 4)
+                except:
+                    pass
+        if printtable:
+            output_array(pArr, directory = output, folder =self.title,filename="plot_table.txt")
+        
+
                 
         for it,ty in enumerate(self.data.keys()):
             try: 
-                axs[it,0].set_ylabel("{}".format(ty),fontsize=12)
+                axs[it,0].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
             except:
-                if len(self.data.keys()) == 1:
-                    axs[0].set_ylabel("{}".format(ty),fontsize=12)
-                else:
-                    axs[it].set_ylabel("{}".format(ty),fontsize=12)
+                try: axs[it].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
+                except: axs.set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
+                #if len(self.data.keys()) == 1:
+                #    axs.set_ylabel("{}".format(ty),fontsize=12)
+                    #axs.set_ylabel("{}".format(ty),fontsize=12)
+                #else:
+                #    axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
-            if sy:
+            if scol:
                 for i,g in enumerate(self.data[ty].keys()):
                     if self.df:
                         try: axs[it,i].set_ylim([yaxmin[i] - abs(yaxmin[i]*0.2), yaxmax[i] + abs(yaxmax[i]*0.2)])
@@ -2415,7 +2757,7 @@ class Lineplot:
                                 axs[i].set_ylim([0, yaxmax[i]*1.2])
                             else:
                                 axs[it].set_ylim([0, yaxmax[i]*1.2])
-            elif sx:
+            elif srow:
                 for i,g in enumerate(self.data[ty].keys()):
                     if self.df:
                         try: axs[it,i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
@@ -2431,15 +2773,25 @@ class Lineplot:
                                 axs[i].set_ylim([0, sx_ymax[it]*1.2])
                             else:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
-
+        try: 
+            axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                             columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+        except:
+            try:
+                axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                               columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+            except:
+                axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                           columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
                 
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout()
         self.fig = f
 
     def gen_html(self, directory, title, align=50):
         dir_name = os.path.basename(directory)
         #check_dir(directory)
-        html_header = title
+        html_header = dir_name+" / "+title
         link_d = OrderedDict()
         link_d["Lineplot"] = "index.html"
         link_d["Parameters"] = "parameters.html"
@@ -2447,7 +2799,7 @@ class Lineplot:
 
         html = Html(name=html_header, links_dict=link_d,
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
-        html.add_figure("lineplot.png", align="center")
+        html.add_figure("lineplot.png", align="center",width="80%")
         
         
         html.write(os.path.join(directory, title, "index.html"))
@@ -2458,10 +2810,17 @@ class Lineplot:
         type_list = 'ssssssssss'
         col_size_list = [20,20,20,20,20,20,20,20,20]
         header_list=["Assumptions and hypothesis"]
-        data_table = [[]]
+        data_table = []
         if self.annotation:
-            data_table.append("Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site.")
-            
+            data_table.append(["Genomic annotation: TSS - Transcription Start Site; TTS - Transcription Termination Site."])
+        data_table.append(["Directory:      "+ directory.rpartition("/")[2] ])
+        data_table.append(["Title:          "+ title])
+        data_table.append(["Extend length:  "+str(self.extend)])
+        data_table.append(["Read size:      "+str(self.rs)])
+        data_table.append(["Bin size:       "+str(self.bs)])
+        data_table.append(["Step size:      "+str(self.ss)])
+        data_table.append(["Center mode:    "+self.center])
+
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, 
                              cell_align="left")
         
@@ -2508,8 +2867,9 @@ class Lineplot:
                     #print(data[t][bed].values()[0])
  
     def hmcmlist(self, colorby, definedinEM):
-        self.colors = colormaps(self.exps, colorby, definedinEM)
-    
+        #self.colors = colormaps(self.exps, colorby, definedinEM)
+        self.colors = ["Reds", "Blues", "Oranges", "Greens", "Purples"]
+
     def heatmap(self, logt):
         tickfontsize = 6
         ratio = 10
@@ -2535,11 +2895,17 @@ class Lineplot:
                     axs[bi, bj] = plt.subplot2grid(shape=(rows*ratio+1, columns), loc=(bi*ratio, bj), rowspan=ratio)
                     if bi == 0: axs[bi, bj].set_title(c, fontsize=7)
                     #print(self.data[t][g][c])
-                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
-                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
+                    #print(self.colors)
+                    #print(bj)
+                    #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                    #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=self.colors[bj])
                     
-            for bi, g in enumerate(self.data[t].keys()):
-                for bj, c in enumerate(self.data[t][g].keys()):
+                    im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
+                                            vmin=0, vmax=max_value, interpolation='nearest', cmap=plt.get_cmap("Blues"))
+            
+
+            #for bi, g in enumerate(self.data[t].keys()):
+            #    for bj, c in enumerate(self.data[t][g].keys()):
                     
                     
                     #im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto', 
@@ -2583,28 +2949,30 @@ class Lineplot:
                         #axs[rows,bj].set_ticks_position('none')
                         #axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
                         #axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-                        if logt:
-                            cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
-                            cbar.set_label('log10', fontsize=tickfontsize)
-                        else:
-                            #cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
-                            pass
+                        
+                        
                         #cbar.set_label('Amplitute of signal')
                         max_value = int(max_value)
                         #width = 0.4/rows
                         #cbar_ax = fig.add_axes([0.01 + bj/columns, 0, width, 0.01])
                         cbar = plt.colorbar(im, cax=cbar_ax, ticks=[0, max_value], orientation='horizontal')
                         cbar.ax.set_xticklabels([0, int(max_value)])
-                        cbar.outline.set_linewidth(0.1)
+                        if logt:
+                            cbar.ax.set_xticklabels(['0', '{:1.1f}'.format(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                            cbar.set_label('log10', fontsize=tickfontsize)
+                        #else:
+                        #cbar.ax.set_xticklabels(['0', int(max_value)], fontsize=tickfontsize)# horizontal colorbar
+                        #pass
+                        #cbar.outline.set_linewidth(0.1)
                         
-            fig.tight_layout()
+            #fig.tight_layout()
             #fig.tight_layout(pad=1.08, h_pad=None, w_pad=None)
             #fig.tight_layout(pad=1, h_pad=1, w_pad=1)
             self.figs.append(fig)
             self.hmfiles.append("heatmap"+ "_" + t)
 
     def gen_htmlhm(self, outputname, title, align=50):
-        dir_name = os.path.basename(directory)
+        dir_name = os.path.basename(outputname)
         #check_dir(directory)
         html_header = title
         link_d = OrderedDict()
@@ -2618,7 +2986,7 @@ class Lineplot:
         # Each row is a plot with its data
         for name in self.hmfiles:
             html.add_figure(name+".png", align="center")
-        html.write(os.path.join(directory, title, "index.html"))
+        html.write(os.path.join(outputname, title, "index.html"))
 
         ## Parameters
         html = Html(name=html_header, links_dict=link_d,
@@ -2626,9 +2994,91 @@ class Lineplot:
         
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
-        html.write(os.path.join(directory, title, "parameters.html"))
+        html.write(os.path.join(outputname, title, "parameters.html"))
 
 
 
 
+###########################################################################################
+#                    Venn Diagram
+###########################################################################################
 
+class Venn:
+    def __init__(self, sets, organism):
+        self.sets = sets
+        self.num = len(sets)
+        self.organism = organism
+        self.process_genesets()
+
+    def process_genesets(self):
+        self.gene_sets = []
+        for gs in self.sets:
+            if gs.endswith(".bed"):
+                gregions = GenomicRegionSet(gs)
+                gregions.read_bed(gs)
+                associated_gr = gregions.gene_association(organism=self.organism, 
+                    promoterLength=1000, threshDist=0, show_dis=False)
+                genes = []
+                for r in associated_gr: 
+                    if ":" in r.name:
+                        rgg = r.name.upper().split(":")
+                        genes += rgg
+                    else: genes.append(r.name.upper())
+                self.gene_sets.append(set(genes))
+                
+            elif gs.endswith(".txt"):
+                genes = []
+                with open(gs) as f:
+                    for line in f:
+                        g = line.strip().split()
+                        genes.append(g[0].upper())
+                self.gene_sets.append(set(genes))
+
+    def venn_diagram(self, directory, title, labels):
+        
+        if len(self.sets) == 2: 
+            from matplotlib_venn import venn2
+
+            f = plt.figure(figsize=(10,10))
+            inter = len(self.gene_sets[0].intersection(self.gene_sets[1]))
+            fig_venn = venn2(subsets = (len(self.gene_sets[0]) - inter, inter, len(self.gene_sets[1]) - inter),
+                             set_labels = (self.sets[0].partition("/")[2].partition(".")[0], 
+                                           self.sets[1].partition("/")[2].partition(".")[0]))
+            plt.title("Sample Venn diagram")
+            return f
+
+        elif len(self.sets) == 3:
+            from matplotlib_venn import venn3
+            def write_genes(filename, geneset):
+                with open(filename, "w") as g:
+                    for gene in geneset: print(gene, file=g)
+
+            f = plt.figure(figsize=(10,10))
+
+            s100 = self.gene_sets[0] - self.gene_sets[1] - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+".txt"),
+                        geneset=s100)
+            s010 = self.gene_sets[1] - self.gene_sets[0] - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[1]+".txt"),
+                        geneset=s010)
+            s001 = self.gene_sets[2] - self.gene_sets[0] - self.gene_sets[1]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[2]+".txt"),
+                        geneset=s001)
+            s111 = self.gene_sets[0].intersection(self.gene_sets[1].intersection(self.gene_sets[2]))
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[1]+"_"+labels[2]+".txt"),
+                        geneset=s111)
+            s110 = self.gene_sets[0].intersection(self.gene_sets[1]) - self.gene_sets[2]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[1]+".txt"),
+                        geneset=s110)
+            s011 = self.gene_sets[1].intersection(self.gene_sets[2]) - self.gene_sets[0]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[1]+"_"+labels[2]+".txt"),
+                        geneset=s011)
+            s101 = self.gene_sets[0].intersection(self.gene_sets[2]) - self.gene_sets[1]
+            write_genes(filename=os.path.join(directory, title,"list_"+labels[0]+"_"+labels[2]+".txt"),
+                        geneset=s101)
+            
+            fig_venn = venn3(subsets = (len(s100),len(s010),len(s110),len(s001),len(s101),len(s011),len(s111)),
+                             set_labels = labels)
+            return f
+
+#    def venn_table(self, directory, title, labels):

@@ -1,13 +1,26 @@
 ToDo:
-get rid of option --region
-to not throw out uncorrected p-values
-solve the following question automativally:
+- input scaling factor fails sometimes... make it to 1 (?) if this is the case
+- strand lag for ODIN?
+- TMM for ODIN?
+
+done
+-
+
+ODIN-0.4.1
+- wigToBigWig tools automatically in bin PATH
+- can be run with newest numpy, scipy, pysam and sklearn version 
+- GPL v3 licence
+- foldchange option is now available, was deprecated for some reasons
+- bugfix when no-correction is on: filter by threshold that is given by option and do not output everything
+
+ODIN-0.4
+- solve the following question automativally:
 	Does your chromosome size file contain the same chromosome information like your BAM file and your genome file, that is, do all these files contain e.g. chr1, chr2, ... or 1, 2, ...?
-
-
-done:
 - fix bug with missing 'chr' prefix in BAM files
 - bugfix for --region option
+- extension size estimation
+- change description of the option --region
+- to not throw out uncorrected p-values
 
 * ODIN-0.3.2
 - mac support

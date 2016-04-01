@@ -1,9 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@author: Manuel Allhoff
+THOR detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
 
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Manuel Allhoff
 """
+
 from __future__ import print_function
 import sys
 
@@ -32,7 +50,7 @@ def input_parser(filepath):
     
     bamfiles_1 = get_data_block(filepath, "rep1")
     bamfiles_2 = get_data_block(filepath, "rep2")
-    regions = get_data_block(filepath, "regions")
+    #regions = get_data_block(filepath, "regions")
     genome = get_data_block(filepath, "genome")
     chrom_sizes = get_data_block(filepath, "chrom_sizes")
     inputs1 = get_data_block(filepath, "inputs1")
@@ -44,12 +62,14 @@ def input_parser(filepath):
         inputs = None
     else:
         inputs = inputs1 + inputs2
-    if not regions:
-        regions = None
+    if not genome:
+        genome = None
+    #if not regions:
+    #    regions = None
     
-    return bamfiles_1 + bamfiles_2, regions, genome, chrom_sizes, inputs, dims
+    return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
 
 if __name__ == '__main__':
-    print(input_parser('/home/manuel/workspace/eclipse/office_share/blueprint/playground/blueprint.h3k4me1.cluster.config'))
+    print(input_parser('/home/manuel/blueprint.h3k4me1.cluster.config')[1])
 
 

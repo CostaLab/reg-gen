@@ -1,0 +1,16 @@
+CONTENTS AND COPYRIGHT
+
+This directory is modified from the source file from Jim Kent and the directory contains the lib and inc directories. Users interested in these two directories should contact kent@soe.ucsc.edu for details. All other files are copyrighted, but license is hereby granted for personal, academic and non-profit use. Commercial users for directories except inc and lib should contact Yunfei.Wang1@utdallas.edu.
+
+GENERAL INSTALL INSTRUCTIONS
+
+1. This package is only tested on linux 64bit machines. Other platforms may not work well.
+2. Python version 2.6 and 2.7 are tested.
+3. Set the environment variable PY to the python.h directory.
+   For example:
+     export PY=/usr/include/python2.6
+
+MAJOR MODULES
+
+-zSeqIO: python module for retrieve fasta sequence from 2bit file.
+-zWigIO: python module for retrieve Wiggle region from BigWig file.

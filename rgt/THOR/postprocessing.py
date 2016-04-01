@@ -1,15 +1,37 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Created on Mar 6, 2013
+"""
+THOR detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
 
-@author: manuel
-'''
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Manuel Allhoff
+"""
+
 from __future__ import print_function
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
 import re
+from scipy.stats.mstats import zscore
+from rgt.motifanalysis.Statistics import multiple_test_correction
+import numpy as np
+from numpy import log10
+
 
 def merge_data(regions):
     for el in regions:
@@ -52,9 +74,9 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     last_orientation = ""
     
     for i, t in enumerate(peak_list):
-        chrom, start, end, c1, c2, strand = t[0], t[1], t[2], t[3], t[4], t[5] 
+        chrom, start, end, c1, c2, strand, ratio = t[0], t[1], t[2], t[3], t[4], t[5], t[6]
         r = GenomicRegion(chrom = chrom, initial = start, final = end, name = '', \
-                          orientation = strand, data = str((c1, c2, pvalue_list[i])))
+                          orientation = strand, data = str((c1, c2, pvalue_list[i], ratio)))
         if end - start > ext_size:
             if strand == '+':
                 if last_orientation == '+':
@@ -90,6 +112,64 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
     
     return results
 
+def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name):
+    """Filter DPs by strang lag and pvalue"""
+    zscore_ratios = zscore(ratios)
+    ratios_pass = np.where(np.bitwise_and(zscore_ratios>-2, zscore_ratios<2) == True, True, False)
+    if not no_correction:
+        pv_pass = [True] * len(pvalues)
+        pvalues = map(lambda x: 10**-x, pvalues)
+        
+        _output_BED(name + '-uncor', output, pvalues, pv_pass)
+        _output_narrowPeak(name + '-uncor', output, pvalues, pv_pass)
+        
+        pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
+    else:
+        pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
+    
+    filter_pass = np.bitwise_and(ratios_pass, pv_pass)
+    
+    assert len(pv_pass) == len(ratios_pass)
+    assert len(output) == len(pvalues)
+    assert len(filter_pass) == len(pvalues)
+    
+    return output, pvalues, filter_pass
+
+def _output_BED(name, output, pvalues, filter):
+    f = open(name + '-diffpeaks.bed', 'w')
+     
+    colors = {'+': '255,0,0', '-': '0,255,0'}
+    bedscore = 1000
+    
+    for i in range(len(pvalues)):
+        c, s, e, strand, counts = output[i]
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        counts = ';'.join(counts.split(';')[:2] + [str(p_tmp)])
+        
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), bedscore, strand, s, e, colors[strand], 0, counts, sep='\t', file=f)
+    
+    f.close()
+
+def _output_narrowPeak(name, output, pvalues, filter):
+    """Output in narrowPeak format,
+    see http://genome.ucsc.edu/FAQ/FAQformat.html#format12"""
+    f = open(name + '-diffpeaks.narrowPeak', 'w')
+    for i in range(len(pvalues)):
+        c, s, e, strand, _ = output[i]
+        p_tmp = -log10(pvalues[i]) if pvalues[i] > 0 else sys.maxint
+        if filter[i]:
+            print(c, s, e, 'Peak' + str(i), 0, strand, 0, p_tmp, 0, -1, sep='\t', file=f)
+    f.close()
+    
+def filter_deadzones(bed_deadzones, peak_regions):
+    """Filter by peaklist by deadzones"""
+    deadzones = GenomicRegionSet('deadzones')
+    deadzones.read_bed(bed_deadzones)
+    peak_regions = peak_regions.subtract(deadzones, whole_region=True)
+    
+    return peak_regions
+    
 if __name__ == '__main__':
     ext_size1 = int(sys.argv[1]) #100
     ext_size2 = int(sys.argv[2]) #100

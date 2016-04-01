@@ -1,10 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-'''
-Created on Mar 6, 2013
+"""
+THOR detects differential peaks in multiple ChIP-seq profiles associated
+with two distinct biological conditions.
 
-@author: manuel
-'''
+Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@author: Manuel Allhoff
+"""
+
 from __future__ import print_function
 from scipy.stats import binom
 from hmmlearn.hmm import _BaseHMM
@@ -84,7 +101,6 @@ class BinomialHMM(_BaseHMM):
                 output.append( binom.rvs(self.n[i], self.p[i][state]) )
         
         return np.asarray(output)
-        
             
     def _initialize_sufficient_statistics(self):
         stats = super(BinomialHMM, self)._initialize_sufficient_statistics()
@@ -101,7 +117,7 @@ class BinomialHMM(_BaseHMM):
                     stats['post_emission'][j] += posteriors[t] * symbol[i]
             
         stats['posterior'] = np.copy(posteriors)
-         
+        
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
                                       posteriors, fwdlattice, bwdlattice,
                                       params):
@@ -121,23 +137,11 @@ class BinomialHMM(_BaseHMM):
     def _do_mstep(self, stats, params):
         super(BinomialHMM, self)._do_mstep(stats, params)
         self._help_do_mstep(stats)
-        self._merge_distr(stats['posterior'])
-        
+
+        self.p[0,0] = self.p[1,0]
+        self.p[0,1] = self.p[1,2]
+        self.p[1,1] = self.p[0,2]
     
-    def _merge_distr(self, posterior):
-        count_s1, count_s2 = _count(posterior)
-        f = count_s2 / float(count_s1 + count_s2)
-        
-        high = min(self.p[0,1], self.p[1,2]) + f * fabs(self.p[0,1] - self.p[1,2])
-        low = min(self.p[1,1], self.p[0,2]) + f * fabs(self.p[1,1] - self.p[0,2])
-        #med = np.mean([el[0,0], el[1,0]])
-        
-        self.p[0,1], self.p[1,2] = high, high
-        self.p[1,1], self.p[0,2] = low, low
-        self.p[0,0], self.p[1,0] = low, low #min(med, low)
-        
-
-
 if __name__ == '__main__':
     p_ = np.array([[0.01, 0.8, 0.1], [0.01, 0.1, 0.8]])
     n_ = np.array([100, 100])

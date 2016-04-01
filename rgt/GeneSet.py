@@ -1,37 +1,69 @@
+"""
+GeneSet
+===================
+GeneSet describes genes and their expression.
+
+"""
+
+###############################################################################
+# Libraries
+###############################################################################
+# Python
+# Internal
 from Util import GenomeData
-"""
-Describe genes and their expression.
+# External
 
-Authors: Ivan G. Costa, Manuel Allhoff
-
-"""
+###############################################################################
+# Class
+###############################################################################
 
 class GeneSet:
-    
-    def __init__(self,name):
+    """*Keyword arguments:*
+
+        - name -- Name of the GeneSet
+    """
+    def __init__(self, name):
         self.name = name
         self.genes = [] #list of genes to consider
         self.values = {} #keys: gene, value: expression data as a list
         self.cond = []
 
     def __len__(self):
+        """Return the number of genes."""
         return len(self.genes)
     
     def __iter__(self):
+        """Iterate this GeneSet."""
         return iter(self.genes)
 
     def read(self, geneListFile):
-        """Read genes"""
+        """Read genes from the file.
+
+        *Keyword arguments:*
+
+            - geneListFile -- Path to the file which contains a list of genes.
+        """
         with open(geneListFile) as f:
             for line in f:            
                 line = line.strip()
-                l = line.split()
-                if l[0] != "":
-                    self.genes.append(l[0])
+                if line:
+                    l = line.split()
+                    if l[0] != "":
+                        if "." in l[0]:
+                            # print(l[0].partition(".")[0].upper())
+                            self.genes.append(l[0].partition(".")[0].upper())
+                        else:
+                            self.genes.append(l[0].upper())
             
     def read_expression(self, geneListFile, header=False, valuestr=False):
-        """Read gene expression data"""
+        """Read gene expression data.
+
+        *Keyword arguments:*
         
+            - geneListFile -- Path to the file which contains genes and expression value.
+            - header -- Read first line as header.
+            - valuestr -- Keep the value as a string, otherwise convert to float number.
+        """
         with open(geneListFile) as f:
             if header:
                 l = f.readline()
@@ -58,7 +90,12 @@ class GeneSet:
                         print("*** error in loading gene: "+line)
 
     def get_all_genes(self, organism):
-        """Get all gene names for a given organism"""
+        """Get all gene names for a given organism.
+        
+        *Keyword arguments:*
+        
+            - organism -- Define the organism.
+        """
         genome = GenomeData(organism=organism)
         self.genes = []
         f = open(genome.get_association_file())
@@ -71,6 +108,21 @@ class GeneSet:
         self.genes = list(set(self.genes))
 
     def subtract(self, gene_set):
-        """Subtract another GeneSet"""
+        """Subtract another GeneSet.
+        
+        *Keyword arguments:*
+
+            - gene_set -- Another GeneSet for subtracting with.
+        """
         self.genes = [gene for gene in self.genes if gene not in gene_set.genes]
 
+    def check(self, a_gene):
+        """Check a gene is in the list or not
+
+        *Keyword arguments:*
+
+            - a_gene -- A gene symbol.
+        """
+        g = a_gene.upper()
+        
+        return (g in self.genes)

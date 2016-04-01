@@ -3,10 +3,14 @@
 """
 %prog <BAM> <BAM> <FASTA> <CHROM SIZES>
 
-Find differential peaks between two <BAM> files in <FASTA> genome.
+ODIN detects differential peaks in two ChIP-seq profiles associated
+with two distinct biological conditions.
 
-Author: Manuel Allhoff (allhoff@aices.rwth-aachen.de)
+Copyright (C) 2014-2016  Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
+This program comes with ABSOLUTELY NO WARRANTY. This is free 
+software, and you are welcome to redistribute it under certain 
+conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function
@@ -25,6 +29,8 @@ from postprocessing import merge_delete
 from math import log10
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import os
+import pysam
+import numpy as np
 
 SIGNAL_CUTOFF = 30000
 
@@ -41,6 +47,43 @@ def get_bibtex_entry():
     print("    doi = {10.1093/bioinformatics/btu722}, ", file=sys.stderr)
     print("    URL = {http://bioinformatics.oxfordjournals.org/content/30/24/3467}", file=sys.stderr)
     print("}", file=sys.stderr)
+
+def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
+    """Check whether the chromsome info overlap in bamfiles, genome path and chrom size path"""
+    chrom_bams = set()
+    chrom_genome = set()
+    chrom_chrom_sizes = set()
+    #check bam files
+    try:
+        if pysam.__version__ == '0.9.0':
+            chrom_bams_1 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile1).split('\n')[:len(pysam.idxstats(bamfile1).split('\n'))-1]])
+            chrom_bams_2 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile2).split('\n')[:len(pysam.idxstats(bamfile2).split('\n'))-1]])
+        else:
+            chrom_bams_1 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile1)))
+            chrom_bams_2 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile2)))
+    except:
+        return True
+            
+    chrom_bams = chrom_bams_1 & chrom_bams_2
+    #check chrom_sizes
+    with open(chrom_sizes) as f:
+        for line in f:
+            line = line.split('\t')
+            if line[0] not in chrom_chrom_sizes:
+                chrom_chrom_sizes.add(line[0])
+    
+    tmp = chrom_bams & chrom_chrom_sizes
+    if len(tmp) == 0:
+        return False
+    
+    #check genome
+    for s in FastaReader(genome_path):
+        if s.name not in chrom_genome:
+            chrom_genome.add(s.name)
+	    if s.name in tmp: #one overlap is sufficient
+		return True
+    
+    return len(chrom_bams & chrom_genome & chrom_chrom_sizes) >= 1
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
@@ -165,11 +208,17 @@ def get_peaks(name, DCS, states, ext_size, merge, distr, pcutoff, no_correction)
     
     #peaks = [(c, s, e, s1, s2, strand)]
     if not no_correction:
+        #first output uncorrected p-values
+        pv_pass = [True] * len(pvalues)
+        _output_BED(name + '-uncor', pvalues, peaks, pv_pass)
+        _output_narrowPeak(name + '-uncor', pvalues, peaks, pv_pass)
+        
+        #then correct p-values and output
         pvalues = map(lambda x: 10**-x, pvalues)
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
         pvalues = map(_get_log10pvalue, pvalues)
     else:
-        pv_pass = [True] * len(pvalues)
+        pv_pass = list(np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False))
     
     _output_BED(name, pvalues, peaks, pv_pass)
     _output_narrowPeak(name, pvalues, peaks, pv_pass)
@@ -326,7 +375,7 @@ def input(test):
         options.input_2 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.input_1 = None #'/home/manuel/data/project_chipseq_norm/data/PU1_Input_10k.bam'
         options.confidence_threshold=0.7
-        options.foldchange=1.05
+        options.foldchange=2
         options.pcutoff = 0.1
         options.name='ODINtest'
         options.distr='binom'
@@ -390,7 +439,9 @@ def input(test):
                           help="All files are stored in output directory which is created if necessary.")
         
         group = OptionGroup(parser, "Advanced options")
-        group.add_option("--regions", dest="regions", default=None, help="regions (BED) where to search for DPs [default: entire genome]")
+        group.add_option("--regions", dest="regions", default=None,\
+                          help="regions (BED) to restrict the analysis (that is, where to train the HMM and search for DPs;\
+                           it is faster, but inaccurate) [default: entire genome]")
         group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
         group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
                           help="turn of GC-content calculation (faster, but less accurate) [default: %default]")
@@ -402,7 +453,7 @@ def input(test):
                           help="Normalization factor for second input. If option is not chosen, estimate factor. [default: %default]")
         group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
                           help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
-        group.add_option("-f", "--foldchange", default=1.05, dest="foldchange", type="float",\
+        group.add_option("-f", "--foldchange", default=2.0, dest="foldchange", type="float",\
                           help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
         group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
                           help="Size of underlying bins for creating the signal [default: %default]")
@@ -423,7 +474,7 @@ def input(test):
             options.verbose = True
         
         if options.version:
-            version = "version \"0.1alpha\""
+            version = "version \"0.4.1\""
             print("")
             print(version)
             sys.exit()
