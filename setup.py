@@ -239,6 +239,7 @@ Copy Files Dictionary:
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
 "hg19": ["association_file.bed","chrom.sizes","alias.txt"],
+"hg38": ["association_file.bed","chrom.sizes","alias.txt"],
 "mm9": ["association_file.bed","chrom.sizes","alias.txt"],
 "zv9": ["association_file.bed","chrom.sizes","alias.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
