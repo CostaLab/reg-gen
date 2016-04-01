@@ -1657,7 +1657,7 @@ class GenomicRegionSet:
         else:
             return [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max] 
         
-    def relocate_regions(self,center='midpoint',left_length=2000,right_length=2000):
+    def relocate_regions(self, center='midpoint',left_length=2000,right_length=2000):
         """Return a new GenomicRegionSet which relocates the regions by given center and extend length.
         
         *Keyword arguments:*
@@ -2078,3 +2078,11 @@ class GenomicRegionSet:
             else:
                 names.append(r.toString())
         return names
+
+    def filter_strand(self, strand="+"):
+        """Return the defined strands"""
+        z = GenomicRegionSet(self.name)
+        for region in self:
+            if region.orientation == strand:
+                z.add(region)
+        return z

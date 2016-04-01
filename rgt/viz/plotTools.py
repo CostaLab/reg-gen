@@ -2098,12 +2098,22 @@ class Boxplot:
         #print(table)
         output_array(table, directory, folder, filename="output_table.txt")  
                     
-    def plot(self, title, scol, logT=False, ylim=False):
+    def plot(self, title, scol, logT=False, ylim=False, pw=3, ph=4):
         """ Return boxplot from the given tables.
         
         """
-        f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
         self.xtickrotation, self.xtickalign = 0,"center"
+        if len(self.group_tags) <  2:
+            ticklabelsize = pw*1.5
+        else:
+            ticklabelsize = pw*3
+        tw = len(self.group_tags) * pw
+        th = ph
+        
+        f, axarr = plt.subplots(1,len(self.group_tags), dpi=300, sharey = scol,
+                              figsize=(tw, th) ) 
+        # f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
+        
 
         nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
         if nm > 30:
@@ -2126,8 +2136,8 @@ class Boxplot:
             
             
         for i, g in enumerate(self.sortDict.keys()):
-            if self.df: axarr[i].set_title(g+"_df", y=1.02)
-            else: axarr[i].set_title(g, y=1.02)
+            if self.df: axarr[i].set_title(g+"_df", y=1.02,fontsize=ticklabelsize+2)
+            else: axarr[i].set_title(g, y=1.02,fontsize=ticklabelsize+2)
             
             
             if logT and not self.df: 
@@ -2163,7 +2173,7 @@ class Boxplot:
             #print(d)
             bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, 
                                   widths=None, patch_artist=True, bootstrap=None)
-            z = 10 # zorder for bosplot
+            z = 10 # zorder for boxplot
             plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
             plt.setp(bp['fliers'], markerfacecolor='gray',color='white',alpha=0.3,markersize=1.8,zorder=z)
             plt.setp(bp['caps'],color='white',zorder=z)
@@ -2200,7 +2210,8 @@ class Boxplot:
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
                  handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
                  bbox_to_anchor=(1.05, 0.5))
-        f.tight_layout(pad=2, h_pad=None, w_pad=None)
+        # f.tight_layout(pad=2, h_pad=None, w_pad=None)
+        # f.tight_layout()
         self.fig = f
     
     def gen_html(self, directory, title, align=50):
@@ -2422,6 +2433,14 @@ class Lineplot:
                                                left_length=self.extend+int(0.5*self.bs),
                                                right_length=self.extend+int(0.5*self.bs))
                 self.processed_bedsF.append(newbedF)
+            elif self.center == 'upstream' or self.center == 'downstream':
+                allbed = bed.relocate_regions(center=self.center, 
+                                              left_length=self.extend+int(0.5*self.bs), 
+                                              right_length=self.extend+int(0.5*self.bs))
+                newbed = allbed.filter_strand(strand="+")
+                self.processed_beds.append(newbed)
+                newbedF = allbed.filter_strand(strand="-")
+                self.processed_bedsF.append(newbedF)
             else:
                 newbed = bed.relocate_regions(center=self.center, 
                                               left_length=self.extend+int(0.5*self.bs), 
@@ -2545,7 +2564,6 @@ class Lineplot:
                                                 cov.coverage_from_bigwig(bigwig_file=temp, stepsize=self.ss)
                                                 #os.remove(temp)
                                             else:
-                                                
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
 
                                         else:
@@ -2553,11 +2571,18 @@ class Lineplot:
                                             cov.normRPM()
 
                                         # When bothends, consider the fliping end
-                                        if self.center == 'bothends':
-                                            flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                            flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                            ffcoverage = numpy.fliplr(flap.coverage)
-                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                        if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
+                                            if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                                ffcoverage = numpy.fliplr(flap.coverage)
+                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                            else:
+                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                flap.normRPM()
+                                                ffcoverage = numpy.fliplr(flap.coverage)
+                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                         # Averaging the coverage of all regions of each bed file
                                         if heatmap:
                                             if logt:

@@ -224,6 +224,8 @@ def main():
     parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
     parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_boxplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_boxplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
     parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
     parser_boxplot.add_argument('-ylim', metavar='  ', type=int, default=None, help="Define the limit of y axis.")
@@ -577,7 +579,7 @@ def main():
             
             boxplot.group_data(directory = args.o, folder = args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
-            boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim)
+            boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim, pw=args.pw, ph=args.ph)
             #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
             output(f=boxplot.fig, directory = args.o, folder = args.t, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
             # HTML

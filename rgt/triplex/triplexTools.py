@@ -616,7 +616,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
     if not out_file:        
         dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
     else:
-        print(dbd)
+        # print(dbd)
         # print(dbd.sequences[0])
         dbd.write_bed(filename=output+".bed")
     # FASTA
@@ -666,7 +666,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
     rnas.read_fasta(os.path.join(temp,"rna_temp.fa"))
     rna_regions = get_rna_region_str(os.path.join(temp,rna_fasta))
-    print(rna_regions)
+    # print(rna_regions)
     genome = GenomeData(organism)
     genome_path = genome.get_genome()
     txp = find_triplex(rna_fasta=rna_fasta, dna_region=regions, 
@@ -832,6 +832,7 @@ class PromoterTest:
                 de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength, 
                                                                 gene_set=self.de_gene,
                                                                 unmaplist=True)
+                # print(len(unmapped_gene_list))
                 print2(summary, "   \t"+str(len(de_prom))+"\tmapped promoters")
                 if len(unmapped_gene_list) > 0:
                     print2(summary, "   \t"+str(len(unmapped_gene_list))+"\tunmapped promoters: "+ ",".join(unmapped_gene_list))
@@ -1075,7 +1076,7 @@ class PromoterTest:
         
         len_de = len(self.de_regions)
         len_nde = len(self.nde_regions)
-        print([len_de, len_nde])
+        # print([len_de, len_nde])
 
         self.frequency = {}
         self.frequency["promoters"] = { "de": OrderedDict(), "nde": OrderedDict() }
@@ -1252,7 +1253,7 @@ class PromoterTest:
         self.sig_region_promoter = []
         for rbs in self.frequency["promoters"]["de"]:
             table = numpy.array([self.frequency["promoters"]["de"][rbs], self.frequency["promoters"]["nde"][rbs]])
-            print(table)
+            # print(table)
             self.oddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
             pvalues.append(p)
 
@@ -1940,8 +1941,8 @@ class PromoterTest:
                                            promoter.toString(space=True), '</a>'])
                 else: region_link = promoter.toString(space=True)
 
-            try: gn = self.ensembl2symbol[promoter.name]
-            except: gn = promoter.name
+            gn = self.ensembl2symbol[promoter.name]
+            if not gn: gn = promoter.name
 
             self.ranktable[gn] = str(int(rank_sum[i]))
             self.dbstable[gn] = str(int(self.promoter["de"]["dbs"][promoter.toString()]))
@@ -2119,6 +2120,7 @@ class PromoterTest:
         
         print("\t".join(header), file=g)
         for l in rank_table:
+            # print(l)
             print("\t".join(l), file=g)
         g.close()
 
@@ -2144,8 +2146,8 @@ class PromoterTest:
 
         f.close()
         data = numpy.array(data)
-        print(type(data))
-        print(data.shape)
+        # print(type(data))
+        # print(data.shape)
    
         # Compute and plot first dendrogram.
         fig = plt.figure(figsize=( max(20, 4 + int(data.shape[1]*1.6)), 

@@ -49,7 +49,11 @@ class GeneSet:
                 if line:
                     l = line.split()
                     if l[0] != "":
-                        self.genes.append(l[0].upper())
+                        if "." in l[0]:
+                            # print(l[0].partition(".")[0].upper())
+                            self.genes.append(l[0].partition(".")[0].upper())
+                        else:
+                            self.genes.append(l[0].upper())
             
     def read_expression(self, geneListFile, header=False, valuestr=False):
         """Read gene expression data.

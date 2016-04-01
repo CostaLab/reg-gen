@@ -533,15 +533,20 @@ class AnnotationSet:
         mapped_gene_list = None
         unmapped_gene_list = None
         if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
-
+        # print(mapped_gene_list[0:5])
+        # print(len(mapped_gene_list))
+        # sys.exit(0)
         # Fetching genes
-        #if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
-        #else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
+        # if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
+        # else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
         
         query_annset = self.get(query_dictionary)
-
+        # print(self.gene_list[0:5])
+        # print(query_annset.gene_list[0:5])
+        # print(len(query_annset.gene_list))
+        # sys.exit(0)
         # Creating GenomicRegionSet
         result_grs = GenomicRegionSet("promoters")
         for e in query_annset.gene_list:

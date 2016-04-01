@@ -174,6 +174,22 @@ if __name__ == "__main__":
     parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
     parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
 
+    ############### GENOME get sequence ####################################################
+    parser_getseq = subparsers.add_parser('getseq', 
+                       help="[FASTA] Get sequence from genome FASTA")
+    parser_getseq.add_argument('-o', type=str, help="Output FASTA file")
+    parser_getseq.add_argument('-d', '-dna', type=str, help="DNA sequence in FASTA format")
+    parser_getseq.add_argument('-b', '-bed', type=str, help="Input BED file")
+    parser_getseq.add_argument('-p', '-pos', type=str, help="position")
+    parser_getseq.add_argument('-s', '-strand', type=str, default="+", help="strand (+ or -)")
+    parser_getseq.add_argument('-ch', '-chr', type=str, help="chromosome")
+    parser_getseq.add_argument('-ss', '-start', type=int, help="start site")
+    parser_getseq.add_argument('-es', '-end', type=int, help="end site")
+    parser_getseq.add_argument('-ex', '-extention', default=0, type=int, help="extention")
+    parser_getseq.add_argument('-re', '-reverse', action="store_true", help="Reverse the sequence")
+    parser_getseq.add_argument('-c', '-complement', action="store_true", help="Get the complement of the sequence")
+    parser_getseq.add_argument('-r', '-rna', default=False, action="store_true", help="Convert T to U")
+
     ############### WIG trim ends by chromosome #############################################
     parser_wig_trim = subparsers.add_parser('wig_trim_end', 
                        help="[WIG] Trim the WIG file according to the given chromosome size")
@@ -421,7 +437,7 @@ if __name__ == "__main__":
         print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
-        
+
 
     ############### BED add score ############################################
     elif args.mode == "bed_add_score":
@@ -542,6 +558,7 @@ if __name__ == "__main__":
 
     ############### BED to FASTA #############################################
     elif args.mode == "bed_to_fasta":
+        print(tag+": [BED] BED to FASTA")
         print("input:\t\t" + args.i)
         print("output directory:\t" + args.o)
         if not os.path.exists(args.o): os.makedirs(args.o)
@@ -624,6 +641,7 @@ if __name__ == "__main__":
         output_regions = input_regions.subtract(t,whole_region=True)
         output_regions.write_bed(args.o)
         print("complete.")
+
     ############### BED add columns #############################################
     elif args.mode == "bed_add_columns":
         print("input:\t" + args.i)
@@ -662,6 +680,37 @@ if __name__ == "__main__":
         print("Missed genes:\t"+str(c_miss))
         print("complete.")
 
+    ############### BED add columns #############################################
+    elif args.mode == "getseq":
+        #print("input:\t" + args.i)
+        #print("output:\t" + args.o)
+        
+        if args.b:
+            regions = GenomicRegionSet("regions")
+            regions.read_bed(args.b)
+            for r in regions:
+                print(r.name)
+                s = get_sequence(ch=r.chrom, ss=r.initial, es=r.final, strand=r.orientation, 
+                                 rna=args.r, ex=args.ex)
+                print(s[:20])
+                ss = [s[i:i+70] for i in range(0, len(s), 70)]
+
+                with open(r.name + ".fa", "w") as f:
+                    print("> "+ r.name + " "+r.toString()+ " "+r.orientation, file=f)
+                    for seq in ss:
+                        print(seq, file=f)
+
+        else:
+            if args.p:
+                print(args.p)
+                args.ch = args.p.partition(":")[0]
+                args.ss = int(args.p.partition(":")[2].partition("-")[0])
+                args.es = int(args.p.partition(":")[2].partition("-")[2])
+            seq = get_sequence(ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
+                               reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+            print(seq)
+            
+        print()
     ############### WIG trim end #############################################
     elif args.mode == "wig_trim_end":
         print("input:\t" + args.i)
@@ -693,7 +742,6 @@ if __name__ == "__main__":
                             print(line, file=g)
                         else:
                             pass
-
 
     ############### STAR junction to BED #######################################
     elif args.mode == "circRNA":
