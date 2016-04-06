@@ -1211,7 +1211,7 @@ class Intersect:
                 r.extend(left=percentage,right=percentage,percentage=False)
                 r.merge()
 
-    def count_intersect(self, threshold, frequency=False):
+    def count_intersect(self, threshold, frequency=True):
 
         self.counts = OrderedDict()
         self.rlen, self.qlen = {}, {}
