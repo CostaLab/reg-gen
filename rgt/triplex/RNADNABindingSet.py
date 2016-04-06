@@ -126,10 +126,12 @@ class RNADNABindingSet:
         for rd in self.sequences:
             if dbd_tag:
                 dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final,
-                                    name=rd.rna.str_rna(), orientation=rd.dna.orientation)
+                                    name=rd.rna.str_rna(), orientation=rd.dna.orientation, 
+                                    data=rd.score)
             else:
                 dbs = GenomicRegion(chrom=rd.dna.chrom, initial=rd.dna.initial, final=rd.dna.final,
-                                    name=rd.dna.name, orientation=rd.dna.orientation)
+                                    name=rd.dna.name, orientation=rd.dna.orientation, 
+                                    data=rd.score)
 
             if not orientation:
                 dna_set.add(dbs)
@@ -552,7 +554,7 @@ class RNADNABindingSet:
             for rd in self:
                 print(str(rd), file=f) 
 
-    def write_bed(self, filename, remove_duplicates=False, convert_dict=None):
+    def write_bed(self, filename, remove_duplicates=False, convert_dict=None, associated=False):
         """Write BED file for all the DNA Binding sites
         filename: define the output filename
         remove_duplicates: remove all exact duplicates
@@ -563,6 +565,8 @@ class RNADNABindingSet:
             dbss.remove_duplicates()
         if convert_dict:
             dbss = dbss.change_name_by_dict(convert_dict=convert_dict)
+        if associated:
+            dbss.add_associated_gene_data(organism=associated)
         dbss.write_bed(filename)
 
 

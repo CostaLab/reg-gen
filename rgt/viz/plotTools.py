@@ -69,6 +69,8 @@ def gen_tags(exps, tag):
         except: 
             print('Cannot find the column "' + tag +'"')
             sys.exit(1)
+    try: l.remove("ALL")
+    except: pass
     return unique(l)
 
 def tag_from_r(exps, tag_type, name):
@@ -1916,7 +1918,7 @@ class Boxplot:
         for f in fields:
             if f not in ["None", "reads", "regions", "factor"]:
                 self.exps.match_ms_tags(f)
-
+        self.exps.remove_name()
         self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
         self.bednames = self.exps.get_regionsnames()
         self.reads = self.exps.get_readsfiles()
@@ -2106,7 +2108,7 @@ class Boxplot:
         if len(self.group_tags) <  2:
             ticklabelsize = pw*1.5
         else:
-            ticklabelsize = pw*3
+            ticklabelsize = pw*6
         tw = len(self.group_tags) * pw
         th = ph
         
@@ -2115,11 +2117,11 @@ class Boxplot:
         # f, axarr = plt.subplots(1, len(self.group_tags), dpi=300, sharey = scol)
         
 
-        nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
-        if nm > 30:
-            f.set_size_inches(nm * 0.25 ,nm * 0.15)
+        # nm = len(self.group_tags) * len(self.color_tags) * len(self.sort_tags)
+        # if nm > 30:
+            # f.set_size_inches(nm * 0.25 ,nm * 0.15)
             #legend_x = 1.2
-            self.xtickrotation, self.xtickalign = 70,"right"
+            # self.xtickrotation, self.xtickalign = 70,"right"
         
         canvas = FigureCanvas(f)
         canvas.set_window_title(title)
@@ -2127,12 +2129,13 @@ class Boxplot:
         except: axarr = [axarr]
         #plt.subplots_adjust(bottom=0.3)
         if logT:
-            if self.df: axarr[0].set_ylabel("Count number difference (log)")
-            else: axarr[0].set_ylabel("Count number (log)")
+            if self.df: axarr[0].set_ylabel("Count number difference (log)",
+                                            fontsize=ticklabelsize+1)
+            else: axarr[0].set_ylabel("Count number (log)",fontsize=ticklabelsize+1)
         else:
             
-            if self.df: axarr[0].set_ylabel("Count number difference")
-            else: axarr[0].set_ylabel("Count number")
+            if self.df: axarr[0].set_ylabel("Count number difference",fontsize=ticklabelsize+1)
+            else: axarr[0].set_ylabel("Count number",fontsize=ticklabelsize+1)
             
             
         for i, g in enumerate(self.sortDict.keys()):
@@ -2188,14 +2191,15 @@ class Boxplot:
             # Fine tuning subplot
             axarr[i].set_xticks([len(self.color_tags)*n + 1 + (len(self.color_tags)-1)/2 for n,s in enumerate(self.sortDict[g].keys())])
             #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
-            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=self.xtickrotation, ha=self.xtickalign, fontsize=10)
+            axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=self.xtickrotation, 
+                                     ha=self.xtickalign)
             #axarr[i].set_xticklabels(self.sortDict[g].keys(), rotation=70, ha=self.xtickalign, fontsize=10)
             
             #axarr[i].set_ylim(bottom=0.95)
             for spine in ['top', 'right', 'left', 'bottom']:
                 axarr[i].spines[spine].set_visible(False)
             axarr[i].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='on')
-            
+            axarr[i].tick_params(labelsize=ticklabelsize+1)
             if scol: 
                 #plt.setp(axarr[i].get_yticklabels(),visible=False)
                 axarr[i].minorticks_off()
@@ -2208,7 +2212,7 @@ class Boxplot:
                 
                 
         axarr[-1].legend(legends[0:len(self.color_tags)], self.color_tags, loc='center left', handlelength=1, 
-                 handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
+                 handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize+1},
                  bbox_to_anchor=(1.05, 0.5))
         # f.tight_layout(pad=2, h_pad=None, w_pad=None)
         # f.tight_layout()

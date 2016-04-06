@@ -2086,3 +2086,9 @@ class GenomicRegionSet:
             if region.orientation == strand:
                 z.add(region)
         return z
+
+    def add_associated_gene_data(self, organism):
+        """Add the associated gene symbol to data"""
+        a = self.gene_association(organism=organism)
+        for i,r in enumerate(self):
+            r.data = r.data + "\t"+a[i].name

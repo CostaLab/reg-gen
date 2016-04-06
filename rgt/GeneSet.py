@@ -80,12 +80,16 @@ class GeneSet:
                 l = line.split("\t")
                 if l[0] != "":
                     try:
-                        self.genes.append(l[0].upper())
+                        if "." in l[0]:
+                            na = l[0].partition(".")[0].upper()
+                        else:
+                            na = l[0].upper()
+                        self.genes.append(na)
                         #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
                         if not valuestr:
-                            self.values[l[0].upper()] = float(l[1])
+                            self.values[na] = float(l[1])
                         else:
-                            self.values[l[0].upper()] = l[1]
+                            self.values[na] = l[1]
                     except:
                         print("*** error in loading gene: "+line)
 

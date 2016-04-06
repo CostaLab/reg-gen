@@ -114,7 +114,8 @@ class ExperimentalMatrix:
                 
                 for fi in range(3, len(self.fields)): #read further information
                     d = self.fieldsDict[ self.fields[fi] ]
-                    if "," in line[fi]:
+                    # print(line[fi])
+                    if "," in line[fi] and "(" not in line[fi]:
                         for t in line[fi].split(","):
                             try:
                                 d[t].append(line[0])

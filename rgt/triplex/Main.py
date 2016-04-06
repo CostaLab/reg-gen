@@ -15,6 +15,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+from matplotlib import colors
 import scipy.cluster.hierarchy as sch
 
 # Local Libraries
@@ -64,7 +65,34 @@ def check_dir(path):
         try: os.mkdir(path)
         except: pass
 
+def try_int(s):
+    "Convert to integer if possible."
+    try: return int(s)
+    except: return s
 
+def natsort_key(s):
+    "Used internally to get a tuple by which s is sorted."
+    import re
+    return map(try_int, re.findall(r'(\d+|\D+)', s))
+
+def natcmp(a, b):
+    "Natural string comparison, case sensitive."
+    return cmp(natsort_key(a), natsort_key(b))
+
+def natcasecmp(a, b):
+    "Natural string comparison, ignores case."
+    return natcmp(a.lower(), b.lower())
+
+def natsort(seq, cmp=natcmp):
+    "In-place natural string sort."
+    seq.sort(cmp)
+    
+def natsorted(seq, cmp=natcmp):
+    "Returns a copy of seq, sorted by natural string sort."
+    import copy
+    temp = copy.copy(seq)
+    natsort(temp, cmp)
+    return temp
 
 def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     """Creat an 'index.html' in the defined directory """
@@ -181,11 +209,19 @@ def revise_index(root, show_RNA_ass_gene=False):
 
 def gen_heatmap(path):
     """Generate the heatmap to show the sig RNA in among conditions"""
+    def fmt(x, pos):
+        # a, b = '{:.0e}'.format(x).split('e')
+        # b = int(b)
+        # return r'${} \times 10^{{{}}}$'.format(a, b)
+        a = -numpy.log10(x)
+        return '{:.0f}'.format(a)
+
+
     matrix = OrderedDict()
     rnas = []
     for item in os.listdir(path):
-        print(item)
-        print(os.path.isdir(os.path.join(path,item)))
+        # print(item)
+        # print(os.path.isdir(os.path.join(path,item)))
         if not os.path.isdir(os.path.join(path,item)): continue
         if item == "style": continue
         #if item == "index.html": continue
@@ -199,9 +235,13 @@ def gen_heatmap(path):
                 matrix[item][line[0]] = float(line[7])
                 rnas.append(line[0])
     rnas = list(set(rnas))
+    # rnas.sort()
+
     # Convert into array
     ar = []
-    for exp in matrix.keys():
+    exps = natsorted(matrix.keys())
+    # print(exps)
+    for exp in exps:
         row = []
         for rna in rnas:
             try: row.append(matrix[exp][rna])
@@ -209,52 +249,61 @@ def gen_heatmap(path):
         ar.append(row)
     ar = numpy.array(ar)
     ar = numpy.transpose(ar)
-    print(ar.shape)
+    # print(ar.shape)
     data = ar[~numpy.all(ar == 1, axis=1)]
-    print(data.shape)
+    # print(data.shape)
 
 
-    fig = plt.figure(figsize=(5,50))
-
-    ax1 = fig.add_axes([0.09,0.05,0.2,0.9])
-    Y = sch.linkage(data, method='single')
-    Z1 = sch.dendrogram(Y, orientation='right')
-    ax1.set_xticks([])
-    ax1.set_yticks([])
+    fig = plt.figure(figsize=(len(matrix.keys())*1.5,len(rnas)*2.5))
+    # fig = plt.figure()
+    # ax1 = fig.add_axes([0.09,0.2,0.2,0.6])
+    # Y = sch.linkage(data, method='single')
+    # Z1 = sch.dendrogram(Y, orientation='right')
+    # ax1.set_xticks([])
+    # ax1.set_yticks([])
 
     # Compute and plot second dendrogram.
-    ax2 = fig.add_axes([0.3, 1.1, 0.55,0.04])
-    #tdata = numpy.transpose(data)
-    Y = sch.linkage(data.T, method='single')
-    Z2 = sch.dendrogram(Y)
-    ax2.set_xticks([])
-    ax2.set_yticks([])
+    # ax2 = fig.add_axes([0.3, 1.1, 0.55,0.04])
+    # Y = sch.linkage(data.T, method='single')
+    # Z2 = sch.dendrogram(Y)
+    # ax2.set_xticks([])
+    # ax2.set_yticks([])
+    bounds = []
+    for n in range(-8,0):
+        # print(10**n)
+        bounds.append(10**n)
+    norm = colors.BoundaryNorm(bounds, plt.cm.YlOrRd_r.N)
 
     # Plot distance matrix.
-    axmatrix = fig.add_axes([0.3,0.05,0.55,0.9])
+    axmatrix = fig.add_axes([0.1,0.2,0.8,0.6])
     #axmatrix = fig.add_axes()
-    idx1 = Z1['leaves']
+    # idx1 = Z1['leaves']
     #idx2 = Z2['leaves']
-    data = data[idx1,:]
+    # data = data[idx1,:]
     #data = data[:,idx2]
-    im = axmatrix.matshow(data, aspect='auto', origin='lower', cmap=plt.cm.YlGnBu_r)
+    im = axmatrix.matshow(data, aspect='auto', origin='lower', cmap=plt.cm.YlOrRd_r, norm=norm)
 
     axmatrix.set_xticks(range(data.shape[1]))
-    axmatrix.set_xticklabels( matrix.keys(), minor=False, ha="left")
+    axmatrix.set_xticklabels( exps, minor=False, ha="left")
     axmatrix.xaxis.set_label_position('top')
     axmatrix.xaxis.tick_top()
-    plt.xticks(rotation=70, fontsize=12)
+    plt.xticks(rotation=40, fontsize=10)
 
     axmatrix.set_yticks(range(data.shape[0]))
-    axmatrix.set_yticklabels( [ rnas[i] for i in idx1 ], minor=False)
+    axmatrix.set_yticklabels( rnas, minor=False)
+    # axmatrix.set_yticklabels( [ rnas[i] for i in idx1 ], minor=False)
     axmatrix.yaxis.set_label_position('right')
     axmatrix.yaxis.tick_right()
-    plt.yticks(rotation=0, fontsize=12)
+    plt.yticks(rotation=0, fontsize=10)
+    # axmatrix.tight_layout()
 
     # Plot colorbar.
-    axcolor = fig.add_axes([0.1,0.02,0.8,0.01])
-    plt.colorbar(im, cax=axcolor, orientation='horizontal')
-    axcolor.set_xlabel('p value')
+    axcolor = fig.add_axes([0.1,0.1,0.8,0.02])
+
+    plt.colorbar(im, cax=axcolor, orientation='horizontal', norm=norm, 
+                 boundaries=bounds, ticks=bounds, format=matplotlib.ticker.FuncFormatter(fmt))
+    axcolor.set_xlabel('p value (-log10)')
+    
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.png'))
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.pdf'), format="pdf")
 
@@ -340,7 +389,7 @@ def main():
     parser_promotertest.add_argument('-pl', type=int, default=1000, metavar='  ', help="Define the promotor length (Default: 1000)")
     
     parser_promotertest.add_argument('-showdbs', action="store_true", help="Show the plots and statistics of DBS (DNA Binding sites)")
-    parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list of BED file for analysis.")
+    parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
     parser_promotertest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for promoter counts (Default: 40)")
@@ -389,7 +438,7 @@ def main():
     parser_randomtest.add_argument('-f', type=str, default=False, metavar='  ', help="Input BED file as mask in randomization")
     parser_randomtest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")
     parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
-    parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
+    parser_randomtest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     
     parser_randomtest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
@@ -451,18 +500,22 @@ def main():
             condition_list = [] # name, link, no. tests, no. sig.
             for item in os.listdir(args.path):
                 if item == "style": continue
-                if item == "index.html": continue
-                h = os.path.join(item, "index.html")
-                pro = os.path.join(args.path, item, "profile.txt")
-                nt = 0
-                ns = 0
-                with open(pro) as f:
-                    for line in f:
-                        line = line.strip().split("\t")
-                        if line[0] == "Experiment": continue
-                        nt += 1
-                        if float(line[7]) < 0.05: ns += 1
-                condition_list.append( [item, h, str(nt), str(ns)] )
+                if os.path.isfile(os.path.join(args.path,item)): continue
+                elif os.path.isdir(os.path.join(args.path,item)):
+                    h = os.path.join(item, "index.html")
+                    pro = os.path.join(args.path, item, "profile.txt")
+                    if os.path.isfile(pro):
+                        nt = 0
+                        ns = 0
+                        with open(pro) as f:
+                            for line in f:
+                                line = line.strip().split("\t")
+                                if line[0] == "Experiment": continue
+                                nt += 1
+                                if float(line[7]) < 0.05: ns += 1
+                        # print([item, h, str(nt), str(ns)])
+                        condition_list.append( [item, h, str(nt), str(ns)] )
+            # print(condition_list)
             link_d = {"List":"index.html"}
             fp = condition_list[0][0] + "/style"
             html = Html(name="Directory: "+args.path, links_dict=link_d, 
