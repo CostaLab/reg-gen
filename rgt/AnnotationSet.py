@@ -130,7 +130,7 @@ class AnnotationSet:
         LIST = 1
 
     def __init__(self, gene_source, tf_source=None, alias_source=None, 
-                 filter_havana=True, protein_coding=False, known_only=True):
+                 filter_havana=False, protein_coding=False, known_only=False):
 
         # Class Objects
         self.gene_list = [] # Represents gene annotation.
@@ -394,8 +394,9 @@ class AnnotationSet:
             except Exception: flag_ensembl = False
             if(flag_ensembl): 
                 mapped_gene_list.append(gene_name)
-                if output_dict:
-                    maping_dict[gene_name] = self.get_official_symbol(gene_name)
+                sym = self.get_official_symbol(gene_name)
+                if output_dict and sym and gene_name:
+                    maping_dict[gene_name] = sym
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
@@ -404,7 +405,7 @@ class AnnotationSet:
                             print("Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used.")
                     for e in alias_list: 
                         mapped_gene_list.append(e)
-                        if output_dict: 
+                        if output_dict and e and gene_name: 
                             maping_dict[e] = gene_name
 
                 except Exception: unmapped_gene_list.append(gene_name)
@@ -412,8 +413,6 @@ class AnnotationSet:
             return mapped_gene_list, unmapped_gene_list, maping_dict
         else:
             return mapped_gene_list, unmapped_gene_list
-
-
 
     def get(self, query=None, list_type=DataType.GENE_LIST, return_type=ReturnType.ANNOTATION_SET):
         """Gets subsets of either self objects and returns different types.

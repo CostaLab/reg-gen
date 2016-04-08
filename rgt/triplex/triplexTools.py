@@ -671,7 +671,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     genome = GenomeData(organism)
     genome_path = genome.get_genome()
     txp = find_triplex(rna_fasta=rna_fasta, dna_region=regions, 
-                       temp=temp, organism=organism, remove_temp=True, 
+                       temp=temp, organism=organism, remove_temp=False, 
                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=genome_path,
                        prefix="targeted_region", dna_fine_posi=True)
 
@@ -770,8 +770,10 @@ class PromoterTest:
         # Input DE gene list
         else:
             if gtf:
+                g = os.path.basename(gtf)
                 dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
-                                     gtf.rpartition("/")[-1].rpartition(".")[0]])
+                                     g.rpartition(".")[0],
+                                     filter_havana + protein_coding + known_only])
             else:
                 dumpname = "_".join(["dump", gene_list_file.rpartition("/")[-1].rpartition(".")[0],
                                      filter_havana + protein_coding + known_only])
@@ -782,7 +784,7 @@ class PromoterTest:
                 self.nde_gene = data[2]
                 self.de_regions = data[3]
                 self.nde_regions = data[4]
-                if score: self.scores = data[5] 
+                if score: self.scores = data[5]
 
             except:
 
@@ -839,13 +841,15 @@ class PromoterTest:
                     print2(summary, "   \t"+str(len(unmapped_gene_list))+"\tunmapped promoters: "+ ",".join(unmapped_gene_list))
                 
                 if score: self.scores = []
-                de_prom.merge(namedistinct=True)
+                
+                de_prom.merge(namedistinct=True, strand_specific=True)
                 print2(summary, "   \t"+str(len(de_prom))+"\tmerged promoters ")
 
                 print2(summary, "   \t"+str(len(de_prom))+"\tunique target promoters are loaded")
                 for promoter in de_prom:
                     #if self.ensembl2symbol:
-                    gene_sym = self.ensembl2symbol[promoter.name]
+                    try: gene_sym = self.ensembl2symbol[promoter.name]
+                    except: gene_sym = promoter.name
                     #else:
                     #    gene_sym = ann.get_official_symbol(promoter.name)
                     #    promoter.name = gene_sym
@@ -861,8 +865,9 @@ class PromoterTest:
                             except: print("Warning: "+gene_sym+"\tcannot be mapped to get its score.")
                             s = "0"
                         self.scores.append(s)
-                    
+                
                 self.de_regions = de_prom
+                
 
                 ######################################################
                 # NonDE gene regions
@@ -1082,7 +1087,7 @@ class PromoterTest:
 
         self.frequency = {}
         self.frequency["promoters"] = { "de": OrderedDict(), "nde": OrderedDict() }
-        
+
         ########################################################
         # Count the number of targeted promoters on each merged DNA Binding Domain
         print("\tCounting frequency of promoters on DBD...")
@@ -1093,6 +1098,7 @@ class PromoterTest:
         #txp_de.remove_duplicates()
         self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, 
                               region_set=self.de_regions, name_replace=self.de_regions)
+
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
             # DE
@@ -1116,7 +1122,6 @@ class PromoterTest:
                         self.frequency["promoters"]["nde"][rbs].combine(nde.merged_dict[rbs])
                     except:
                         self.frequency["promoters"]["nde"][rbs] = nde.merged_dict[rbs]
-                        
                         
             for rbs in self.rbss:
                 #print(len(self.frequency["promoters"]["nde"][rbs]))
@@ -1164,14 +1169,13 @@ class PromoterTest:
         #self.promoter["de"]["merged_dbs"] = {}
         self.promoter["de"]["dbs"] = {}
         self.promoter["de"]["dbs_coverage"] = {}
-        
+
         for promoter in self.de_regions:
             dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
             #m_dbs = dbs.merge(w_return=True)
             self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
             #self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
             self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
-
 
         ######################
         # nDE
@@ -1225,9 +1229,7 @@ class PromoterTest:
                 # non-DE
                 l2 = len(self.txp_ndef.merged_dict[rbs])
                 self.frequency["hits"]["nde"][rbs] = [ l2 , numdbs_ndef - l2 ]
-        
 
-        
         os.remove(os.path.join(temp,"de.txp"))
         if self.split_rna:
              for i in self.cf:
@@ -1235,15 +1237,15 @@ class PromoterTest:
         else: os.remove(os.path.join(temp,"nde.txp"))
 
         if obedp:
-            try: 
-                output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
-                output.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
-                self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
-                                      remove_duplicates=False, convert_dict=self.ensembl2symbol)
-            except: 
-                self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
-                                      remove_duplicates=False)
+            # try:
+            output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
+            output.write_bed(filename=os.path.join(temp,obedp+"_target_promoters.bed"))
             
+            self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
+                                  remove_duplicates=False, convert_dict=self.ensembl2symbol)
+            # except: 
+            #     self.txp_de.write_bed(filename=os.path.join(temp,obedp+"_target_promoters_dbs.bed"), 
+            #                           remove_duplicates=False)
             self.txp_def.write_bed(filename=os.path.join(temp,obedp+"_dbss.bed"), 
                 remove_duplicates=False, associated=self.organism)
 
@@ -1945,8 +1947,10 @@ class PromoterTest:
                                            promoter.toString(space=True), '</a>'])
                 else: region_link = promoter.toString(space=True)
 
-            gn = self.ensembl2symbol[promoter.name]
-            if not gn: gn = promoter.name
+            try: 
+                gn = self.ensembl2symbol[promoter.name]
+                if not gn: gn = promoter.name
+            except: gn = promoter.name
 
             self.ranktable[gn] = str(int(rank_sum[i]))
             self.dbstable[gn] = str(int(self.promoter["de"]["dbs"][promoter.toString()]))
@@ -2153,8 +2157,10 @@ class PromoterTest:
                                                promoter.toString(space=True), '</a>'])
                     else: region_link = promoter.toString(space=True)
 
-                gn = self.ensembl2symbol[promoter.name]
-                if not gn: gn = promoter.name
+                try: 
+                    gn = self.ensembl2symbol[promoter.name]
+                    if not gn: gn = promoter.name
+                except: gn = promoter.name
 
                 self.ranktable[gn] = str(int(rank_sum[i]))
                 self.dbstable[gn] = str(sig_promoter_count[promoter])

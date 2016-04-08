@@ -607,21 +607,20 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-        a = self
-        b = y
+        # a = self
+        # b = y
 
-        z = GenomicRegionSet(a.name + " + " + b.name)
+        z = GenomicRegionSet(self.name + " + " + y.name)
         # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
-        if len(a) == 0 or len(b) == 0: return z
+        if len(self) == 0 or len(y) == 0: return z
 
         else:
             # If there is overlap within self or y, they should be merged first.
+            a = copy.deepcopy(self)
+            b = copy.deepcopy(y)
             if not a.sorted: a.sort()
             if not b.sorted: b.sort()
-
             if mode == OverlapType.OVERLAP:
-                a = copy.deepcopy(self)
-                b = copy.deepcopy(y)
                 a.merge()
                 b.merge()
 
@@ -1245,7 +1244,7 @@ class GenomicRegionSet:
         return z
 
 
-    def merge(self, w_return=False, namedistinct=False):
+    def merge(self, w_return=False, namedistinct=False, strand_specific=False):
         """Merge the regions within the GenomicRegionSet
 
         *Keyword arguments:*
@@ -1261,26 +1260,20 @@ class GenomicRegionSet:
             else:
                 pass
         else:
-            if not namedistinct:
-                z = GenomicRegionSet(name = self.name)
-                prev_region = self.sequences[0]
+            z = GenomicRegionSet(name=self.name)
+            prev_region = self.sequences[0]
+
+            if not namedistinct and not strand_specific:
                 for cur_region in self.sequences[1:]:
                     if prev_region.overlap(cur_region):
-                        
                         prev_region.initial = min(prev_region.initial, cur_region.initial)
                         prev_region.final = max(prev_region.final, cur_region.final)
                     else:
                         z.add(prev_region)
                         prev_region = cur_region
                 z.add(prev_region)
-                if w_return:
-                    return z
-                else:
-                    self.sequences = z.sequences
-
-            else:
-                z = GenomicRegionSet(name = self.name)
-                prev_region = self.sequences[0]
+                
+            elif namedistinct and not strand_specific:
                 for cur_region in self.sequences[1:]:
                     if prev_region.overlap(cur_region) and prev_region.name == cur_region.name:
                         prev_region.initial = min(prev_region.initial, cur_region.initial)
@@ -1289,10 +1282,29 @@ class GenomicRegionSet:
                         z.add(prev_region)
                         prev_region = cur_region
                 z.add(prev_region)
-                if w_return:
-                    return z
-                else:
-                    self.sequences = z.sequences     
+
+            elif not namedistinct and strand_specific:
+                for cur_region in self.sequences[1:]:
+                    if prev_region.overlap(cur_region) and prev_region.orientation == cur_region.orientation:
+                        prev_region.initial = min(prev_region.initial, cur_region.initial)
+                        prev_region.final = max(prev_region.final, cur_region.final)
+                    else:
+                        z.add(prev_region)
+                        prev_region = cur_region
+                z.add(prev_region)
+
+            elif namedistinct and strand_specific:
+                for cur_region in self.sequences[1:]:
+                    if prev_region.overlap(cur_region) and prev_region.name == cur_region.name and prev_region.orientation == cur_region.orientation:
+                        prev_region.initial = min(prev_region.initial, cur_region.initial)
+                        prev_region.final = max(prev_region.final, cur_region.final)
+                    else:
+                        z.add(prev_region)
+                        prev_region = cur_region
+                z.add(prev_region)
+
+            if w_return: return z
+            else: self.sequences = z.sequences
                 
     def combine(self, region_set, change_name=True, output=False):
         """Adding another GenomicRegionSet without merging the overlapping regions.
@@ -1875,13 +1887,14 @@ class GenomicRegionSet:
         if len(self) == 0 or len(regions) == 0: return
         
         else:
+            res = copy.deepcopy(regions)
             # If there is overlap within self or y, they should be merged first. 
             if not self.sorted: self.sort()
-            if not regions.sorted: regions.sort()
+            if not res.sorted: res.sort()
             
             iter_a = iter(self)
             s = iter_a.next()
-            last_j = len(regions)-1
+            last_j = len(res)-1
             j = 0
             cont_loop = True
             pre_inter = 0
@@ -1889,19 +1902,19 @@ class GenomicRegionSet:
             
             while cont_loop:
                 #print(str(s),"\t",str(b[j]))
-                # When the regions overlap
-                if s.overlap(regions[j]):
+                # When the res overlap
+                if s.overlap(res[j]):
                     if combine:
-                        s.name = s.name+"_"+regions[j].name
+                        s.name = s.name+"_"+res[j].name
                     else:
-                        s.name = regions[j].name
+                        s.name = res[j].name
                     try: s = iter_a.next()
                     except: cont_loop = False
                     
-                elif s < regions[j]:
+                elif s < res[j]:
                     try: s = iter_a.next()
                     except: cont_loop = False
-                elif s > regions[j]:
+                elif s > res[j]:
                     if j == last_j: cont_loop = False
                     else: j = j + 1
                 else:
@@ -1918,9 +1931,11 @@ class GenomicRegionSet:
         """
         z = GenomicRegionSet(self.name)
         for s in self:
-            try: name = convert_dict[s.name]
-            except: name = s.name
-            z.add(GenomicRegion(s.chrom, s.initial, s.final, name, s.orientation, s.data, s.proximity))
+            try: 
+                n = convert_dict[s.name]
+                if not n: n = s.name
+            except: n = s.name
+            z.add(GenomicRegion(s.chrom, s.initial, s.final, n, s.orientation, s.data, s.proximity))
         return z
 
     def by_names(self, names):

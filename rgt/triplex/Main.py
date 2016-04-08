@@ -249,10 +249,11 @@ def gen_heatmap(path):
         ar.append(row)
     ar = numpy.array(ar)
     ar = numpy.transpose(ar)
+
     # print(ar.shape)
     data = ar[~numpy.all(ar == 1, axis=1)]
     # print(data.shape)
-
+    
 
     fig = plt.figure(figsize=(len(matrix.keys())*1.5,len(rnas)*2.5))
     # fig = plt.figure()
@@ -304,6 +305,7 @@ def gen_heatmap(path):
                  boundaries=bounds, ticks=bounds, format=matplotlib.ticker.FuncFormatter(fmt))
     axcolor.set_xlabel('p value (-log10)')
     
+    numpy.savetxt(os.path.join(path,'matrix_p.txt'), ar, delimiter='\t')
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.png'))
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.pdf'), format="pdf")
 
@@ -350,8 +352,7 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
                     newline.append("n.a.")
             print("\t".join(newline), file=t)
 
-                
-    exit(0)
+    
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p), 
                        link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
@@ -400,9 +401,9 @@ def main():
     parser_promotertest.add_argument('-obed', action="store_true", default=False, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
-    parser_promotertest.add_argument('-filter_havana', type=str, default="T", metavar='  ', help="Apply filtering to remove HAVANA entries.")
+    parser_promotertest.add_argument('-filter_havana', type=str, default="F", metavar='  ', help="Apply filtering to remove HAVANA entries.")
     parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
-    parser_promotertest.add_argument('-known_only', type=str, default="T", metavar='  ', help="Apply filtering to get only known genes.")
+    parser_promotertest.add_argument('-known_only', type=str, default="F", metavar='  ', help="Apply filtering to get only known genes.")
     
 
     parser_promotertest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
@@ -746,6 +747,7 @@ def main():
                             sig_region=promoter.sig_region_promoter,
                             ylabel="Number of DBSs", 
                             linelabel="No. DBSs", filename="plot_promoter.png")
+
         promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_region_promoter)
         #if args.showdbs:
         #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 

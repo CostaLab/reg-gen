@@ -262,7 +262,6 @@ class RNADNABindingSet:
         """Sort RNADNA binding information by a given GenomicRegionSet"""
         """Sort the DBS by given GenomicRegionSet"""
 
-
         result = OrderedDict()
 
         #txp_copy = copy.deepcopy(self)
@@ -380,7 +379,8 @@ class RNADNABindingSet:
         """
         # A dict: RBS as key, and GenomicRegionSet as its value
         self.merged_dict = OrderedDict()
-        #print("merge_rbs")
+        reg = copy.deepcopy(region_set)
+        res = copy.deepcopy(name_replace)
 
         if not rbss:
             # Merge RBS
@@ -392,12 +392,10 @@ class RNADNABindingSet:
         for r in rna_merged:
             self.merged_dict[r] = GenomicRegionSet(r.toString())
 
-
         rbsm = iter(rna_merged)
         try: r = rbsm.next()
         except: return
                 
-        
         if self.sorted_rna: pass
         else: self.sort_rbs()
 
@@ -429,8 +427,6 @@ class RNADNABindingSet:
                         con_loop = False
             elif rd.rna > r:
                 #if rm_duplicate: self.merged_dict[r].remove_duplicates()
-                
-                
                     #print(self.merged_dict[r].sequences[0].name)
                 try:
                     r = rbsm.next()
@@ -438,14 +434,12 @@ class RNADNABindingSet:
                 except: 
                     try: rd = con.next()
                     except: con_loop = False
-
-        if region_set:
+        if reg:
             for r in self.merged_dict.keys():
-                self.merged_dict[r] = region_set.intersect(self.merged_dict[r], 
-                                                           mode=OverlapType.ORIGINAL, 
-                                                           rm_duplicates=rm_duplicate)
-
-        if not region_set and rm_duplicate:
+                self.merged_dict[r] = reg.intersect(self.merged_dict[r], 
+                                                    mode=OverlapType.ORIGINAL, 
+                                                    rm_duplicates=rm_duplicate)
+        if not reg and rm_duplicate:
             for r in self.merged_dict.keys():
                 self.merged_dict[r].remove_duplicates()
 
@@ -453,16 +447,14 @@ class RNADNABindingSet:
             for r in self.merged_dict.keys():
                 if len(self.merged_dict[r]) < cutoff:
                     n = self.merged_dict.pop(r, None)
-        if asgene_organism:
+        if res:
+            for r in self.merged_dict.keys():
+                self.merged_dict[r].replace_region_name(regions=res)
+        #self.merged_dict = new_dict
+        if asgene_organism and not res:
             for r in self.merged_dict.keys():
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass
-
-        if name_replace: 
-            for r in self.merged_dict.keys():
-                self.merged_dict[r].replace_region_name(regions=name_replace)
-        #self.merged_dict = new_dict
-
 
     def read_txp(self, filename, dna_fine_posi=False, shift=None):
         """Read txp file to load all interactions. """

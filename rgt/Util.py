@@ -794,12 +794,12 @@ class Html:
         if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"
         elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"
         else: pass # TODO ERROR
-
-        img_str += '<img src="'+ figure_path +'" width='+width+'>'
+        
+        img_str += '<a href="'+figure_path+'"><img src="'+ figure_path +'" width='+width+'></a>'
         
         if more_images:
             for im in more_images:
-                img_str += '<img src="'+ im +'" width='+width+'>'
+                img_str += '<a href="'+im+'"><img src="'+ im +'" width='+width+'></a>'
         
         img_str += '</p>'
 
