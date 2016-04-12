@@ -97,7 +97,10 @@ def _write_emp_func_data(data, name):
 
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
-
+    
+    import warnings
+    warnings.filterwarnings("ignore", category=DeprecationWarning)
+    
     maxs = [] #max for x (mean), max for y (var)
     for i in range(2): 
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
