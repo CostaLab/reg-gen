@@ -226,12 +226,13 @@ if __name__ == "__main__":
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        if "/" in args.o:
-            if not os.path.exists(args.o.rpartition("/")[0]):
-                os.makedirs(args.o.rpartition("/")[0])
+        
 
         
         try:
+
+            if not os.path.exists(args.o.rpartition("/")[0]):
+                os.makedirs(args.o.rpartition("/")[0])
             if "~" in args.i: args.i = args.i.replace("~", home)
             if "~" in args.o: args.o = args.o.replace("~", home)
             if "~" in args.genome: args.genome = args.genome.replace("~", home)
@@ -706,8 +707,9 @@ if __name__ == "__main__":
                 args.ch = args.p.partition(":")[0]
                 args.ss = int(args.p.partition(":")[2].partition("-")[0])
                 args.es = int(args.p.partition(":")[2].partition("-")[2])
-            seq = get_sequence(ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
+            seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
                                reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+
             print(seq)
             
         print()

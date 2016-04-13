@@ -609,7 +609,8 @@ class Projection:
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         html.add_figure("projection_test.png", align="center")
         
-        header_list = ["Reference<br>name",
+        header_list = ["No.",
+                       "Reference<br>name",
                        "Query<br>name", 
                        "Reference<br>number",
                        "Query<br>number", 
@@ -618,8 +619,8 @@ class Projection:
                        "Positive<br>association<br>p-value",
                        "Negative<br>association<br>p-value"]
         
-        type_list = 'sssssssssss'
-        col_size_list = [10,10,10,10,10,10,15,15]
+        type_list = 'ssssssssssssssss'
+        col_size_list = [5, 10,10,10,10,10,10,15,15]
         
         nalist = []
         for ind_ty, ty in enumerate(self.plist.keys()):
@@ -640,13 +641,13 @@ class Projection:
                     
                         if self.plist[ty][r][q] < 0.05:
                             if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
-                                data_table.append([r,q,rlen,qlen,propor,backv,
+                                data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
                             else:
-                                data_table.append([r,q,rlen,qlen,propor,backv,
+                                data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
                         else:
-                            data_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
+                            data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
 
