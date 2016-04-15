@@ -195,10 +195,12 @@ class AnnotationSet:
 
             - file_name -- The gencode .gtf file name.
         """
-
         # Opening GTF file
         try: gtf_file = open(file_name,"r")
-        except Exception: pass # TODO
+        except Exception: 
+            print("Error: Cannot find the annotation file: "+file_name)
+            print("Please check the path in ~/rgtdata/data.config")
+            sys.exit(1)
         
         # Reading GTF file
         for line in gtf_file:

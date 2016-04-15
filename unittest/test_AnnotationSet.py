@@ -1,5 +1,5 @@
 from rgt.AnnotationSet import *
-from Util import GenomeData
+from rgt.Util import GenomeData
 
 annot = AnnotationSet("hg19")
 

@@ -243,7 +243,7 @@ class GenomicRegionSet:
 
         # Reading assocDict
         gene_regions = GenomicRegionSet("gene_regions")
-        gene_regions.read_bed(genome_data.get_association_file())
+        gene_regions.read_bed(genome_data.get_gene_regions())
         assocDict = dict()
         geneFlagDict = dict()
         for gr in gene_regions:
