@@ -485,7 +485,7 @@ def rank_array(a):
     sa = numpy.searchsorted(numpy.sort(a), a)
     return sa
 
-def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
+def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, fasta=True):
     """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
     if len(sig_region) == 0:
         return
@@ -499,13 +499,6 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
             print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
         for rbs in sig_region:
             loop = True
-            #print(exons)
-            #print(rbs)
-            #print(rbs.initial)
-            #print(rbs.final)
-            #print(rbs.orientation)
-            #print()
-            #print(exons[0][3])
 
             if exons[0][3] == "-":
               
@@ -621,29 +614,27 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
         # print(dbd.sequences[0])
         dbd.write_bed(filename=output+".bed")
     # FASTA
-    
-    
-    
-    #print(dbdmap)
-    if not out_file:
-        seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
-        fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
-    else:
-        seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
-        fasta_f = output+".fa"
+    if fasta:
+        #print(dbdmap)
+        if not out_file:
+            seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
+            fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
+        else:
+            seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
+            fasta_f = output+".fa"
 
-    with open(fasta_f, 'w') as fasta:
-        
-        for rbs in sig_region:
-            try: info = dbdmap[str(rbs)]
-            except: 
-                continue
-            fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
-            #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
-            if dbdmap[str(rbs)][-1] == "-":
-                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
-            else: 
-                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
+        with open(fasta_f, 'w') as fasta:
+            
+            for rbs in sig_region:
+                try: info = dbdmap[str(rbs)]
+                except: 
+                    continue
+                fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
+                #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
+                if dbdmap[str(rbs)][-1] == "-":
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
+                else: 
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
 
 def connect_rna(rna, temp, rna_name):
     seq = ""
@@ -679,7 +670,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     txp.write_bed(output_BED)
     rbss = txp.get_rbs()
     dbd_regions(exons=rna_regions, sig_region=rbss, rna_name="rna", output=output_rbss, 
-                out_file=True, temp=temp)
+                out_file=True, temp=temp, fasta=False)
     # print(rbss.sequences)
     # print(len(rbss))
     # rbss.write_bed(output_rbss)

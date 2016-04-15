@@ -5,10 +5,12 @@ some other extra codes
 """
 
 import os
+import sys
 import numpy
 from GenomicRegionSet import GenomicRegionSet
 from GenomicRegion import GenomicRegion
-import wWigIO
+if sys.platform.startswith("linux"):
+    import wWigIO
 
 def get_chrom_sizes_as_genomicregionset(chrom_size_path):
     regionset = GenomicRegionSet('')
@@ -57,24 +59,28 @@ class BigWigFile():
     def __init__(self,infile,chrom_size=None):
         """Open BigWig file. """
         # Check if file exists
-        self.closed = True
-        if not os.path.exists(infile) and infile != 'stdin':
-            raise IOError("ERROR: input file '{0}' dose not exist.".format(infile))
-        if infile.endswith('.wig'):
-            bwfile = os.path.splitext(infile)[0]+".bw"
-            if os.path.exists(bwfile):
-                self.infile = bwfile
+        if sys.platform.startswith("linux"):
+            self.closed = True
+            if not os.path.exists(infile) and infile != 'stdin':
+                raise IOError("ERROR: input file '{0}' dose not exist.".format(infile))
+            if infile.endswith('.wig'):
+                bwfile = os.path.splitext(infile)[0]+".bw"
+                if os.path.exists(bwfile):
+                    self.infile = bwfile
+                else:
+                    if chrom_size is None:
+                        raise IOError("ERROR: 'chrom_size' file is required for wig -> bigwig conversion.")
+                    BigWigFile.wigToBigWig(infile,chrom_size,bwfile)
+                self.infile=bwfile
             else:
-                if chrom_size is None:
-                    raise IOError("ERROR: 'chrom_size' file is required for wig -> bigwig conversion.")
-                BigWigFile.wigToBigWig(infile,chrom_size,bwfile)
-            self.infile=bwfile
+                self.infile=infile
+            wWigIO.open(self.infile)
+            self.closed = False
+            self.chroms, self.sizes = self.chromSizes()
+            self.closed = False
         else:
-            self.infile=infile
-        wWigIO.open(self.infile)
-        self.closed = False
-        self.chroms, self.sizes = self.chromSizes()
-        self.closed = False
+            print("Error: RGT doesn't support reading BigWig file on Mac or windows.")
+            sys.eixt(0)
 
     def chromSizes(self):
         """Get chromosome sizes."""

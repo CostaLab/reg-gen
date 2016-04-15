@@ -1695,34 +1695,36 @@ class GenomicRegionSet:
                                    orientation = r.orientation, data = r.data, proximity = r.proximity)
 
             elif center == 'leftend':
-                nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
-                                   orientation = r.orientation, data = r.data, proximity = r.proximity)
+                nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name=r.name, 
+                                   orientation=r.orientation, data=r.data, proximity=r.proximity)
             elif center == 'rightend':
-                nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
-                                   orientation = r.orientation, data = r.data, proximity = r.proximity)
+                nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name=r.name, 
+                                   orientation=r.orientation, data=r.data, proximity=r.proximity)
             elif center == 'downstream':
                 if r.orientation == "-":
-                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
-                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name=r.name, 
+                                       orientation=r.orientation, data=r.data, proximity=r.proximity)
                 else:
-                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
-                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name=r.name, 
+                                       orientation=r.orientation, data=r.data, proximity=r.proximity)
             elif center == 'upstream':
                 if r.orientation == "-":
-                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
-                                       orientation = r.orientation, data = r.data, proximity = r.proximity)                    
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name=r.name, 
+                                       orientation=r.orientation, data=r.data, proximity=r.proximity)                    
                 else:
-                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
-                                       orientation = r.orientation, data = r.data, proximity = r.proximity)
+                    nr = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name=r.name, 
+                                       orientation=r.orientation, data=r.data, proximity=r.proximity)
             elif center == 'bothends':
-                nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name = r.name, 
-                                   orientation = r.orientation, data = r.data, proximity = r.proximity) # newbed on left end
-                nrR = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name = r.name, 
-                                   orientation = r.orientation, data = r.data, proximity = r.proximity) # newbed on right end
-            try:new_regions.add(nr)
-            except: 
+                nrL = GenomicRegion(chrom=r.chrom, initial=r.initial, final=r.initial, name=r.name, 
+                                   orientation=r.orientation, data=r.data, proximity=r.proximity) # newbed on left end
+                nrR = GenomicRegion(chrom=r.chrom, initial=r.final, final=r.final, name=r.name, 
+                                   orientation=r.orientation, data=r.data, proximity=r.proximity) # newbed on right end
+            
+            if center == 'bothends':
                 new_regions.add(nrL)
                 new_regions.add(nrR)
+            else:
+                new_regions.add(nr)
                 
         # Extend the region
         new_regions.extend(left_length, right_length)
