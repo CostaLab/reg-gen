@@ -206,35 +206,51 @@ if os.path.isfile(data_config_file_name):
     genome = "mm9"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     data_config_file.write("["+genome+"]\n")
-    data_config_file.write("genome: "+path.join(genome_dir,"genome.fa\n"))
-    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes\n"))
-    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"annotation.gtf\n"))
-    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias.txt\n\n"))
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_mm9.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm9\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_mm9.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM1.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
     genome = "hg19"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     data_config_file.write("["+genome+"]\n")
-    data_config_file.write("genome: "+path.join(genome_dir,"genome.fa\n"))
-    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes\n"))
-    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"annotation.gtf\n"))
-    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias.txt\n\n"))
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_hg19.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg19\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg19.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v19.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
     genome = "hg38"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     data_config_file.write("["+genome+"]\n")
-    data_config_file.write("genome: "+path.join(genome_dir,"genome.fa\n"))
-    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes\n"))
-    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"annotation.gtf\n"))
-    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias.txt\n\n"))
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_hg38.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg38\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg38.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v24.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
     genome = "zv9"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     data_config_file.write("["+genome+"]\n")
-    data_config_file.write("genome: "+path.join(genome_dir,"genome.fa\n"))
-    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes\n"))
-    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"annotation.gtf\n"))
-    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias.txt\n\n"))
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv9_ensembl_release_79.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv9\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv9.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv9.79.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+    genome = "zv10"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv10\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv10..gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+    genome = "self_defined"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: undefined\n")
+    data_config_file.write("chromosome_sizes: undefined\n")
+    data_config_file.write("gene_regions: undefined\n")
+    data_config_file.write("annotation: undefined\n")
+    data_config_file.write("gene_alias: undefined\n\n")
     # data_config_file.write("[GenomeData]\n")
     # data_config_file.write("genome: genome.fa\n")
     # data_config_file.write("chromosome_sizes: chrom.sizes\n")
@@ -273,10 +289,10 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
-"hg19": ["association_file.bed","chrom.sizes","alias.txt"],
-"hg38": ["association_file.bed","chrom.sizes","alias.txt"],
-"mm9": ["association_file.bed","chrom.sizes","alias.txt"],
-"zv9": ["association_file.bed","chrom.sizes","alias.txt"],
+"hg19": ["genes_hg19.bed","chrom.sizes.hg19","alias_human.txt"],
+"hg38": ["genes_hg38.bed","chrom.sizes.hg38","alias_human.txt"],
+"mm9": ["genes_mm9.bed","chrom.sizes.mm9","alias_mouse.txt"],
+"zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
