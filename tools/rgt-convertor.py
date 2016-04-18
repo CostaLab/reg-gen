@@ -362,12 +362,27 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-
+                print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
-                    seq = "\t".join([line[0], line[3], line[4], gn, ".", line[6]])
+                    if line[0].isdigit():
+                        ch = "chr" + line[0]
+                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
+                    elif line[0].startswith("chr"):
+                        ch = line[0]
+                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
+                    else:
+                        continue
+                    
                 else:
-                    seq = "\t".join([line[0], line[4], line[3], gn, ".", line[6]])
+                    if line[0].isdigit():
+                        ch = "chr" + line[0]
+                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
+                    elif line[0].startswith("chr"):
+                        ch = line[0]
+                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
+                    else:
+                        continue
 
                 if not args.g:
                     print(seq, file=g)
