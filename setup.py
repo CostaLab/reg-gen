@@ -201,7 +201,7 @@ if not path.exists(options.param_rgt_data_location):
 
 # Creating data.config
 data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
-if os.path.isfile(data_config_file_name):
+if not os.path.isfile(data_config_file_name):
     data_config_file = open(data_config_file_name,"w")
     genome = "mm9"
     genome_dir = path.join(options.param_rgt_data_location, genome)
