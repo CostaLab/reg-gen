@@ -366,7 +366,7 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-                print(gn)
+                
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
                     if line[0].isdigit():
@@ -464,11 +464,11 @@ if __name__ == "__main__":
         print("input:\t" + args.i)
         with open("temp.gtf", "w") as f:
             with open(args.i) as g:
-            for line in g:
-                if line.startswith("#"):
-                    print(line, file=f)
-                else:
-                    print("chr"+line, file=f)
+                for line in g:
+                    if line.startswith("#"):
+                        print(line, file=f)
+                    else:
+                        print("chr"+line, file=f)
         # rewrite gtf file
         #os.move("temp.gtf")
         
