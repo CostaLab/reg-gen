@@ -153,7 +153,7 @@ class AnnotationSet:
                                     known_only=known_only)
             else: # The string may represent an organism which points to a gtf file within data.config.
                 genome_data = GenomeData(gene_source)
-                self.load_gene_list(genome_data.get_gencode_annotation(), 
+                self.load_gene_list(genome_data.get_annotation(), 
                                     filter_havana=filter_havana, 
                                     protein_coding=protein_coding,
                                     known_only=known_only)
