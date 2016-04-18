@@ -78,7 +78,7 @@ if(options.hg19):
     if(not path.exists(output_location)): mkdir(output_location)
 
     # Fetching genome
-    output_genome_file_name = path.join(output_location,"genome.fa")
+    output_genome_file_name = path.join(output_location,"genome_hg19.fa")
     if(options.hg19_genome_path):
         print "Creating symbolic link to HG19 genome"
         system("ln -s "+options.hg19_genome_path+" "+output_genome_file_name)
@@ -100,7 +100,7 @@ if(options.hg19):
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location,"gencode_annotation.gtf")
+    gtf_output_file_name = path.join(output_location,"gencode.v19.annotation.gtf")
     if(options.hg19_gtf_path):
         print "Creating symbolic link to HG19 GTF"
         system("ln -s "+options.hg19_gtf_path+" "+gtf_output_file_name)
@@ -109,7 +109,7 @@ if(options.hg19):
         gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_19/gencode.v19.annotation.gtf.gz"
         gtf_output_file_name_gz = path.join(output_location,"gencode.v19.annotation.gtf.gz")
         if(path.isfile(gtf_output_file_name_gz)): remove(gtf_output_file_name_gz)
-        print "Downloading hg19 GTF (gene annotation)"
+        print "Downloading hg19 GTF (gene annotation) from genode"
         system("wget "+gtf_url+" -P "+output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name,"w")
@@ -129,7 +129,7 @@ if(options.mm9):
     if(not path.exists(output_location)): mkdir(output_location)
 
     # Fetching genome
-    output_genome_file_name = path.join(output_location,"genome.fa")
+    output_genome_file_name = path.join(output_location,"genome_mm9.fa")
     if(options.mm9_genome_path):
         print "Creating symbolic link to MM9 genome"
         system("ln -s "+options.mm9_genome_path+" "+output_genome_file_name)
@@ -151,7 +151,7 @@ if(options.mm9):
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location,"gencode_annotation.gtf")
+    gtf_output_file_name = path.join(output_location,"gencode.vM1.annotation.gtf")
     if(options.mm9_gtf_path):
         print "Creating symbolic link to MM9 GTF"
         system("ln -s "+options.mm9_gtf_path+" "+gtf_output_file_name)
@@ -181,7 +181,7 @@ if(options.zv9):
     if(not path.exists(output_location)): mkdir(output_location)
 
     # Fetching genome
-    output_genome_file_name = path.join(output_location,"genome.fa")
+    output_genome_file_name = path.join(output_location,"genome_zv9_ensembl_release_79.fa")
     if(options.zv9_genome_path):
         print "Creating symbolic link to ZV9 genome"
         system("ln -s "+options.mm9_genome_path+" "+output_genome_file_name)
@@ -204,7 +204,7 @@ if(options.zv9):
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location,"gencode_annotation.gtf")
+    gtf_output_file_name = path.join(output_location,"Danio_rerio.Zv9.79.gtf")
     if(options.zv9_gtf_path):
         print "Creating symbolic link to ZV9 GTF"
         system("ln -s "+options.zv9_gtf_path+" "+gtf_output_file_name)
@@ -222,4 +222,5 @@ if(options.zv9):
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
+        ## TODO add chr in each entry
         print "OK"

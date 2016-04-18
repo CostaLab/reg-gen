@@ -51,12 +51,19 @@ class GenomeData(ConfigurationFile):
         """
         ConfigurationFile.__init__(self)
         self.organism = organism
-        self.genome = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','genome'))
-        self.chromosome_sizes = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','chromosome_sizes'))
-        self.association_file = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','association_file'))
-        self.gencode_annotation = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gencode_annotation'))
-        self.annotation_dump_dir = os.path.join(self.data_dir,self.organism)
-        self.gene_alias = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gene_alias'))
+        self.genome = self.config.get(organism,'genome')
+        self.chromosome_sizes = self.config.get(organism,'chromosome_sizes')
+        self.gene_regions = self.config.get(organism,'gene_regions')
+        self.annotation = self.config.get(organism,'annotation')
+        self.annotation_dump_dir = os.path.dirname(self.annotation)
+        self.gene_alias = self.config.get(organism,'gene_alias')
+
+        # self.genome = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','genome'))
+        # self.chromosome_sizes = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','chromosome_sizes'))
+        # self.gene_regions = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','association_file'))
+        # self.annotation = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gencode_annotation'))
+        # self.annotation_dump_dir = os.path.join(self.data_dir,self.organism)
+        # self.gene_alias = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gene_alias'))
 
     def get_organism(self):
         """Returns the current organism."""
@@ -70,15 +77,15 @@ class GenomeData(ConfigurationFile):
         """Returns the current path to the chromosome sizes text file."""
         return self.chromosome_sizes   
     
-    def get_association_file(self):
-        """Returns the current path to the gene association text file."""
-        return self.association_file
+    def get_gene_regions(self):
+        """Returns the current path to the gene_regions BED file."""
+        return self.gene_regions
 
-    def get_gencode_annotation(self):
+    def get_annotation(self):
         """
         Returns the current path to the gencode annotation gtf file.
         """
-        return self.gencode_annotation
+        return self.annotation
 
     def get_annotation_dump_dir(self):
         """Returns the current path to the gencode annotation gtf file."""
@@ -87,6 +94,7 @@ class GenomeData(ConfigurationFile):
     def get_gene_alias(self):
         """Returns the current path to the gene alias txt file."""
         return self.gene_alias
+
 
 
 class MotifData(ConfigurationFile):

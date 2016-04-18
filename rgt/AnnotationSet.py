@@ -153,7 +153,7 @@ class AnnotationSet:
                                     known_only=known_only)
             else: # The string may represent an organism which points to a gtf file within data.config.
                 genome_data = GenomeData(gene_source)
-                self.load_gene_list(genome_data.get_gencode_annotation(), 
+                self.load_gene_list(genome_data.get_annotation(), 
                                     filter_havana=filter_havana, 
                                     protein_coding=protein_coding,
                                     known_only=known_only)
@@ -195,10 +195,12 @@ class AnnotationSet:
 
             - file_name -- The gencode .gtf file name.
         """
-
         # Opening GTF file
         try: gtf_file = open(file_name,"r")
-        except Exception: pass # TODO
+        except Exception: 
+            print("Error: Cannot find the annotation file: "+file_name)
+            print("Please check the path in ~/rgtdata/data.config")
+            sys.exit(1)
         
         # Reading GTF file
         for line in gtf_file:
