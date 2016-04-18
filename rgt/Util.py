@@ -81,7 +81,7 @@ class GenomeData(ConfigurationFile):
         """Returns the current path to the gene_regions BED file."""
         return self.gene_regions
 
-    def get_gencode_annotation(self):
+    def get_annotation(self):
         """
         Returns the current path to the gencode annotation gtf file.
         """
