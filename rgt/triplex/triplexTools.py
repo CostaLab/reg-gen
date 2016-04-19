@@ -1009,7 +1009,7 @@ class PromoterTest:
                         print(line, file=de)
                         continue
                     elif line.startswith("    "):
-                        line = line.replace("    ", "       ")
+                        line = "   " + line
                         print(line, file=de)
                         continue
                     elif line.startswith("#"): 

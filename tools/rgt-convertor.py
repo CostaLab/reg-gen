@@ -70,7 +70,7 @@ if __name__ == "__main__":
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-s', '-source', type=str, default="ENSEMBL", help="Define the source {ENSEMBL,HAVANA,All}")
+    parser_gtf2bed.add_argument('-s', '-source', type=str, default="All", help="Define the source {ENSEMBL,HAVANA,All}")
     parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene", 
                                 help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine}")
     parser_gtf2bed.add_argument('-t', '-type', type=str, default="All", 

@@ -3,6 +3,7 @@ import os
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
+from distutils import dir_util
 from shutil import copy, copytree
 import distutils.dir_util
 from errno import ENOTDIR
@@ -247,10 +248,10 @@ if not os.path.isfile(data_config_file_name):
     genome = "zv10"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     data_config_file.write("["+genome+"]\n")
-    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_.fa\n"))
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_84.fa\n"))
     data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv10\n"))
     data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv10.84.gtf\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
     data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
     genome = "self_defined"
     genome_dir = path.join(options.param_rgt_data_location, genome)
@@ -312,13 +313,18 @@ for copy_folder in copy_files_dictionary.keys():
     for copy_file in copy_files_dictionary[copy_folder]:
         copy_source_file = path.join(script_dir,"data",copy_folder,copy_file)
         copy_dest_file = path.join(copy_dest_path,copy_file)
-        if not path.exists(copy_dest_file): 
-            try: copytree(copy_source_file, copy_dest_file)
-            except OSError as exc:
-                if exc.errno == ENOTDIR: 
-                    copy(copy_source_file, copy_dest_file)
-                else:
-                    raise
+        if os.path.isfile(copy_source_file):
+            copy(copy_source_file, copy_dest_file)
+        else:
+            dir_util.copy_tree(copy_source_file, copy_dest_file)
+        
+        # if not path.exists(copy_dest_file): 
+        # try: dir_util.copy_tree(copy_source_file, copy_dest_file)
+        # except OSError as exc:
+        #     if exc.errno == ENOTDIR: 
+        #         copy(copy_source_file, copy_dest_file)
+        #     else:
+        #         raise
     
 ###################################################################################################
 # Setup Function
