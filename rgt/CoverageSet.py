@@ -13,7 +13,8 @@ import numpy as np
 import numpy.ma
 import os
 import tempfile
-from helper import BigWigFile
+import subprocess
+# from helper import BigWigFile
 from rgt.ODIN.gc_content import get_gc_context
 
 class CoverageSet:
@@ -482,28 +483,38 @@ class CoverageSet:
         Class variable <coverage>: a list where the elements correspond to the GenomicRegion. The list elements give
         the number of reads falling into the GenomicRegion.
         
-        .. warning:: Function not tested. Please do not use it!
-        
         """
-        
         self.coverage = []
-        bwf = BigWigFile(bigwig_file)
-        #ds = []
-        for gr in self.genomicRegions:
-            #print(".", end="")
-            depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-            #ds = []
-            ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-            #for i in range(0, gr.final-gr.initial):
-            #    d = [ depth[j] for j in range(i,i+stepsize) ]
-            #    ds.append(sum(d)/len(d))
 
-            #if gr.orientation == "-":
-            #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
-            #else:
+        for gr in self.genomicRegions:
+            cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
+            try:
+                output = subprocess.check_output(" ".join(cmd), shell=True)
+                ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
+            except:
+                ds = [0] * stepsize
             self.coverage.append( np.array(ds) )
-        #print(len(ds))
-        bwf.close()
+
+        ##################
+
+        # self.coverage = []
+        # bwf = BigWigFile(bigwig_file)
+        # #ds = []
+        # for gr in self.genomicRegions:
+        #     #print(".", end="")
+        #     depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
+        #     #ds = []
+        #     ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
+        #     #for i in range(0, gr.final-gr.initial):
+        #     #    d = [ depth[j] for j in range(i,i+stepsize) ]
+        #     #    ds.append(sum(d)/len(d))
+
+        #     #if gr.orientation == "-":
+        #     #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
+        #     #else:
+        #     self.coverage.append( np.array(ds) )
+        # #print(len(ds))
+        # bwf.close()
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.

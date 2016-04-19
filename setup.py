@@ -52,18 +52,25 @@ Tools Dictionary Standard:
   * All programs should start with "rgt-" followed by the program name.
   * The main function called within the script must be termed "main".
 """
+if platform.startswith("darwin"):
+    bin_dir = "mac"
+else:
+    bin_dir = "linux"
+
 tools_dictionary = {
 "core": (
     None,
     None,
     ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
-    ["data/bin/bedToBigBed","data/bin/bigBedToBed","data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
+    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
+     "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
+     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
     ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
-    ["data/bin/bedToBigBed","data/bin/bigBedToBed"]
+    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed"]
 ), 
 "hint": (
     "rgt-hint",
@@ -75,13 +82,14 @@ tools_dictionary = {
     "rgt-ODIN",
     "rgt.ODIN.ODIN:main",
     ["hmmlearn<0.2.0", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/wigToBigWig"]
+    ["data/bin/"+bin_dir+"/wigToBigWig"]
 ), 
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
     ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
+    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
+    "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),                 
 "filterVCF": (
     "rgt-filterVCF",
@@ -92,8 +100,8 @@ tools_dictionary = {
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-      ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
-  []
+    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
+    []
 ),
 "TDF": (
     "rgt-TDF",
@@ -102,6 +110,7 @@ tools_dictionary = {
     []
 )
 }
+
 
 ###################################################################################################
 # Auxiliary Functions/Classes
@@ -241,7 +250,7 @@ if not os.path.isfile(data_config_file_name):
     data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_.fa\n"))
     data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv10\n"))
     data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
-    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv10..gtf\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv10.84.gtf\n"))
     data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
     genome = "self_defined"
     genome_dir = path.join(options.param_rgt_data_location, genome)
