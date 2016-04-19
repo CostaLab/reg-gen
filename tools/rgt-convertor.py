@@ -66,6 +66,7 @@ if __name__ == "__main__":
     parser_gtfat.add_argument('-o', metavar='  ', type=str, help="Output GTF file")
 
     ############### GTF to BED ###############################################
+    # python rgt-convertor.py gtf_to_bed -i -o
     parser_gtf2bed = subparsers.add_parser('gtf_to_bed', 
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
