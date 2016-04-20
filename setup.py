@@ -357,40 +357,20 @@ readme_file.close()
 # Setup Function
 
 
-if "viz" in options.param_rgt_tool:
-    module_wig = Extension('wWigIO',['external/KentLib/wWigIO/wWigIO.c'],
-                           extra_link_args=['-DMACHTYPE_x86_64','-lz','-lm','external/KentLib/lib/jkweb.a'],
-                           extra_compile_args='-w -shared -fPIC -p -Iexternal/KentLib/inc'.split(' '))
-    setup(name = "RGT",
-          version = current_version,
-          description = short_description,
-          long_description = long_description,
-          classifiers = classifiers_list,
-          keywords = ", ".join(keywords_list),
-          author = ", ".join(author_list),
-          author_email = corresponding_mail,
-          license = license_type,
-          packages = find_packages(),
-          package_data = package_data_dictionary,
-          entry_points = current_entry_points,
-          install_requires = current_install_requires,
-          scripts = external_scripts,
-          ext_modules=[module_wig] )
-else:
-    setup(name = "RGT",
-          version = current_version,
-          description = short_description,
-          long_description = long_description,
-          classifiers = classifiers_list,
-          keywords = ", ".join(keywords_list),
-          author = ", ".join(author_list),
-          author_email = corresponding_mail,
-          license = license_type,
-          packages = find_packages(),
-          package_data = package_data_dictionary,
-          entry_points = current_entry_points,
-          install_requires = current_install_requires,
-          scripts = external_scripts )
+setup(name = "RGT",
+      version = current_version,
+      description = short_description,
+      long_description = long_description,
+      classifiers = classifiers_list,
+      keywords = ", ".join(keywords_list),
+      author = ", ".join(author_list),
+      author_email = corresponding_mail,
+      license = license_type,
+      packages = find_packages(),
+      package_data = package_data_dictionary,
+      entry_points = current_entry_points,
+      install_requires = current_install_requires,
+      scripts = external_scripts )
 ###################################################################################################
 # Termination
 ###################################################################################################
