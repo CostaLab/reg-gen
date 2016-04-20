@@ -14,8 +14,17 @@ import numpy.ma
 import os
 import tempfile
 import subprocess
-# from helper import BigWigFile
+import multiprocessing
 from rgt.ODIN.gc_content import get_gc_context
+
+def mp_bigwigsummary(inarg):
+    cmd = ["bigWigSummary",inarg[0],inarg[1],inarg[2],inarg[3],inarg[4]]
+    try:
+        output = subprocess.check_output(" ".join(cmd), shell=False)
+        ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
+    except:
+        ds = [0] * int(inarg[4])
+    return(ds)
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -484,37 +493,30 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
+        
         self.coverage = []
-
+        mp_input = []
         for gr in self.genomicRegions:
-            cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
-            try:
-                output = subprocess.check_output(" ".join(cmd), shell=False)
-                ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
-            except:
-                ds = [0] * stepsize
+            mp_input.append([bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)])
+        # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        mp_output = pool.map(mp_bigwigsummary, mp_input)
+        pool.close()
+        pool.join()
+
+        for ds in mp_output:
             self.coverage.append( np.array(ds) )
 
-        ##################
 
-        # self.coverage = []
-        # bwf = BigWigFile(bigwig_file)
-        # #ds = []
         # for gr in self.genomicRegions:
-        #     #print(".", end="")
-        #     depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-        #     #ds = []
-        #     ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-        #     #for i in range(0, gr.final-gr.initial):
-        #     #    d = [ depth[j] for j in range(i,i+stepsize) ]
-        #     #    ds.append(sum(d)/len(d))
-
-        #     #if gr.orientation == "-":
-        #     #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
-        #     #else:
+        #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
+        #     try:
+        #         output = subprocess.check_output(" ".join(cmd), shell=False)
+        #         ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
+        #     except:
+        #         ds = [0] * stepsize
         #     self.coverage.append( np.array(ds) )
-        # #print(len(ds))
-        # bwf.close()
+
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.
