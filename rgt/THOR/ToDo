@@ -4,6 +4,7 @@ ToDo:
 
 Done:
 - add save input option
+- ignore warning message that occurs with --report
 
 THOR-0.1
 - separate warning message if no input-DNA and no genome specified
