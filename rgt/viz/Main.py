@@ -461,18 +461,19 @@ def main():
             
             """
             print("\n############## Jaccard Test ###############")
-            jaccard = Jaccard(args.reference,args.query)
+            jaccard = Jaccard(args.r,args.q)
             jaccard.group_refque(args.g)
             jaccard.colors(args.c, args.color)
             
             # jaccard test
-            jaccard.jaccard_test(args.runtime, args.organism)
+            jaccard.jaccard_test(args.rt, args.organism)
             parameter = parameter + jaccard.parameter
             t1 = time.time()
             # ploting and generate pdf
             jaccard.plot(logT=args.nlog)
             for i,f in enumerate(jaccard.fig):
-                output(f=f, directory = args.o, folder = args.title, filename="jaccard_test"+str(i+1),extra=plt.gci(),pdf=True,show=args.show)
+                output(f=f, directory = args.o, folder = args.t, filename="jaccard_test"+str(i+1),
+                       extra=plt.gci(),pdf=True,show=args.show)
             # generate html
             jaccard.gen_html(args.o, args.title)
             
@@ -481,9 +482,9 @@ def main():
             
             print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
             print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
-            output_parameters(parameter, directory = args.o, folder = args.title, filename="parameters.txt")
-            copy_em(em=args.reference, directory=args.o, folder=args.title, filename="Reference_experimental_matrix.txt")
-            copy_em(em=args.query, directory=args.o, folder=args.title, filename="Query_experimental_matrix.txt")
+            output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
+            copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
+            copy_em(em=args.q, directory=args.o, folder=args.t, filename="Query_experimental_matrix.txt")
             list_all_index(path=args.o)
 
         ###########################################################################

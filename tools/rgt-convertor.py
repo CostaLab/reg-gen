@@ -66,17 +66,18 @@ if __name__ == "__main__":
     parser_gtfat.add_argument('-o', metavar='  ', type=str, help="Output GTF file")
 
     ############### GTF to BED ###############################################
+    # python rgt-convertor.py gtf_to_bed -i -o
     parser_gtf2bed = subparsers.add_parser('gtf_to_bed', 
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-s', '-source', type=str, default="ENSEMBL", help="Define the source {ENSEMBL,HAVANA,All}")
+    parser_gtf2bed.add_argument('-s', '-source', type=str, default="All", help="Define the source {ENSEMBL,HAVANA,All}")
     parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene", 
                                 help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine}")
-    parser_gtf2bed.add_argument('-t', '-type', type=str, default="protein_coding", 
+    parser_gtf2bed.add_argument('-t', '-type', type=str, default="All", 
                                 help="Define gene type e.g. 'protein_coding' more: http://www.gencodegenes.org/gencode_biotypes.html")
-    parser_gtf2bed.add_argument('-st', '-status', type=str, default="KNOWN", 
-                                help="Define gene status {KNOWN, NOVEL, PUTATIVE}")
+    parser_gtf2bed.add_argument('-st', '-status', type=str, default="All", 
+                                help="Define gene status {KNOWN, NOVEL, PUTATIVE,All}")
     parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None, 
                                 help="Define the gene list for filtering, default is None.")
     parser_gtf2bed.add_argument('-b', action="store_true", 
@@ -92,6 +93,10 @@ if __name__ == "__main__":
     parser_gtf2fasta.add_argument('-g', metavar='  ', type=str, help="Define the target gene")
     parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
     
+    ############### GTF add chr on each entry #################################
+    parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
+                                             help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
+    parser_gtfachr.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     
     ############### BED add score ############################################
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
@@ -226,12 +231,13 @@ if __name__ == "__main__":
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        if "/" in args.o:
-            if not os.path.exists(args.o.rpartition("/")[0]):
-                os.makedirs(args.o.rpartition("/")[0])
+        
 
         
         try:
+
+            if not os.path.exists(args.o.rpartition("/")[0]):
+                os.makedirs(args.o.rpartition("/")[0])
             if "~" in args.i: args.i = args.i.replace("~", home)
             if "~" in args.o: args.o = args.o.replace("~", home)
             if "~" in args.genome: args.genome = args.genome.replace("~", home)
@@ -361,12 +367,27 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-
+                
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
-                    seq = "\t".join([line[0], line[3], line[4], gn, ".", line[6]])
+                    if line[0].isdigit():
+                        ch = "chr" + line[0]
+                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
+                    elif line[0].startswith("chr"):
+                        ch = line[0]
+                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
+                    else:
+                        continue
+                    
                 else:
-                    seq = "\t".join([line[0], line[4], line[3], gn, ".", line[6]])
+                    if line[0].isdigit():
+                        ch = "chr" + line[0]
+                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
+                    elif line[0].startswith("chr"):
+                        ch = line[0]
+                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
+                    else:
+                        continue
 
                 if not args.g:
                     print(seq, file=g)
@@ -438,6 +459,20 @@ if __name__ == "__main__":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
 
+    ############### GTF add chr ##############################################
+    elif args.mode == "gtf_add_chr":
+        print(tag+": [GTF] Add 'chr' to each entry")
+        print("input:\t" + args.i)
+        with open("temp.gtf", "w") as f:
+            with open(args.i) as g:
+                for line in g:
+                    if line.startswith("#"):
+                        print(line, file=f)
+                    else:
+                        print("chr"+line, file=f)
+        # rewrite gtf file
+        #os.move("temp.gtf")
+        
 
     ############### BED add score ############################################
     elif args.mode == "bed_add_score":
@@ -706,8 +741,9 @@ if __name__ == "__main__":
                 args.ch = args.p.partition(":")[0]
                 args.ss = int(args.p.partition(":")[2].partition("-")[0])
                 args.es = int(args.p.partition(":")[2].partition("-")[2])
-            seq = get_sequence(ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
+            seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
                                reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+
             print(seq)
             
         print()

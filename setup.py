@@ -3,6 +3,7 @@ import os
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from sys import platform, exit
 from pwd import getpwnam
+from distutils import dir_util
 from shutil import copy, copytree
 import distutils.dir_util
 from errno import ENOTDIR
@@ -52,18 +53,25 @@ Tools Dictionary Standard:
   * All programs should start with "rgt-" followed by the program name.
   * The main function called within the script must be termed "main".
 """
+if platform.startswith("darwin"):
+    bin_dir = "mac"
+else:
+    bin_dir = "linux"
+
 tools_dictionary = {
 "core": (
     None,
     None,
     ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
-    ["data/bin/bedToBigBed","data/bin/bigBedToBed","data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
+    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
+     "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
+     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
     ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
-    ["data/bin/bedToBigBed","data/bin/bigBedToBed"]
+    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed"]
 ), 
 "hint": (
     "rgt-hint",
@@ -75,13 +83,14 @@ tools_dictionary = {
     "rgt-ODIN",
     "rgt.ODIN.ODIN:main",
     ["hmmlearn<0.2.0", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/wigToBigWig"]
+    ["data/bin/"+bin_dir+"/wigToBigWig"]
 ), 
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
     ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/wigToBigWig","data/bin/bigWigMerge", "data/bin/bedGraphToBigWig"]
+    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
+    "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),                 
 "filterVCF": (
     "rgt-filterVCF",
@@ -92,8 +101,8 @@ tools_dictionary = {
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-      ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
-  []
+    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
+    ["data/bin/"+bin_dir+"/bigWigSummary"]
 ),
 "TDF": (
     "rgt-TDF",
@@ -102,6 +111,7 @@ tools_dictionary = {
     []
 )
 }
+
 
 ###################################################################################################
 # Auxiliary Functions/Classes
@@ -201,26 +211,77 @@ if not path.exists(options.param_rgt_data_location):
 
 # Creating data.config
 data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
-data_config_file = open(data_config_file_name,"w")
-data_config_file.write("[GenomeData]\n")
-data_config_file.write("genome: genome.fa\n")
-data_config_file.write("chromosome_sizes: chrom.sizes\n")
-data_config_file.write("association_file: association_file.bed\n")
-data_config_file.write("gencode_annotation: gencode_annotation.gtf\n")
-data_config_file.write("gene_alias: alias.txt\n\n")
-data_config_file.write("[MotifData]\n")
-data_config_file.write("pwm_dataset: motifs\n")
-data_config_file.write("logo_dataset: logos\n")
-data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
-data_config_file.write("[HmmData]\n")
-data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
-data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
-data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
-data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
-data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
-data_config_file.write("default_bias_table_F: fp_hmms/single_hit_bias_table_F.txt\n")
-data_config_file.write("default_bias_table_R: fp_hmms/single_hit_bias_table_R.txt\n\n")
-data_config_file.close()
+if not os.path.isfile(data_config_file_name):
+    data_config_file = open(data_config_file_name,"w")
+    genome = "mm9"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_mm9.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm9\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_mm9.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM1.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
+    genome = "hg19"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_hg19.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg19\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg19.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v19.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+    genome = "hg38"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_hg38.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg38\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg38.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v24.annotation.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+    genome = "zv9"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv9_ensembl_release_79.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv9\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv9.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv9.79.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+    genome = "zv10"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_84.fa\n"))
+    data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv10\n"))
+    data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
+    data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
+    data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+    genome = "self_defined"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    data_config_file.write("["+genome+"]\n")
+    data_config_file.write("genome: undefined\n")
+    data_config_file.write("chromosome_sizes: undefined\n")
+    data_config_file.write("gene_regions: undefined\n")
+    data_config_file.write("annotation: undefined\n")
+    data_config_file.write("gene_alias: undefined\n\n")
+    # data_config_file.write("[GenomeData]\n")
+    # data_config_file.write("genome: genome.fa\n")
+    # data_config_file.write("chromosome_sizes: chrom.sizes\n")
+    # data_config_file.write("association_file: association_file.bed\n")
+    # data_config_file.write("gencode_annotation: gencode_annotation.gtf\n")
+    # data_config_file.write("gene_alias: alias.txt\n\n")
+    data_config_file.write("[MotifData]\n")
+    data_config_file.write("pwm_dataset: motifs\n")
+    data_config_file.write("logo_dataset: logos\n")
+    data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
+    data_config_file.write("[HmmData]\n")
+    data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
+    data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
+    data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
+    data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
+    data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
+    data_config_file.write("default_bias_table_F: fp_hmms/single_hit_bias_table_F.txt\n")
+    data_config_file.write("default_bias_table_R: fp_hmms/single_hit_bias_table_R.txt\n\n")
+    
+    data_config_file.close()
+
 
 # Creating data.config.path
 script_dir = path.dirname(path.abspath(__file__))
@@ -238,10 +299,11 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
-"hg19": ["association_file.bed","chrom.sizes","alias.txt"],
-"hg38": ["association_file.bed","chrom.sizes","alias.txt"],
-"mm9": ["association_file.bed","chrom.sizes","alias.txt"],
-"zv9": ["association_file.bed","chrom.sizes","alias.txt"],
+"hg19": ["genes_hg19.bed","chrom.sizes.hg19","alias_human.txt"],
+"hg38": ["genes_hg38.bed","chrom.sizes.hg38","alias_human.txt"],
+"mm9": ["genes_mm9.bed","chrom.sizes.mm9","alias_mouse.txt"],
+"zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
+"zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
@@ -252,13 +314,18 @@ for copy_folder in copy_files_dictionary.keys():
     for copy_file in copy_files_dictionary[copy_folder]:
         copy_source_file = path.join(script_dir,"data",copy_folder,copy_file)
         copy_dest_file = path.join(copy_dest_path,copy_file)
-        if not path.exists(copy_dest_file): 
-            try: copytree(copy_source_file, copy_dest_file)
-            except OSError as exc:
-                if exc.errno == ENOTDIR: 
-                    copy(copy_source_file, copy_dest_file)
-                else:
-                    raise
+        if os.path.isfile(copy_source_file):
+            copy(copy_source_file, copy_dest_file)
+        else:
+            dir_util.copy_tree(copy_source_file, copy_dest_file)
+        
+        # if not path.exists(copy_dest_file): 
+        # try: dir_util.copy_tree(copy_source_file, copy_dest_file)
+        # except OSError as exc:
+        #     if exc.errno == ENOTDIR: 
+        #         copy(copy_source_file, copy_dest_file)
+        #     else:
+        #         raise
     
 ###################################################################################################
 # Setup Function

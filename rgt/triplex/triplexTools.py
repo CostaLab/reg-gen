@@ -128,12 +128,12 @@ def get_sequence(dir, filename, regions, genome_path):
     with open(os.path.join(dir, filename), 'w') as output:
         for region in regions:
             print(">"+ region.toString(), file=output)
-            if region.orientation == "-":
-                seq = Seq(genome.fetch(region.chrom, max(0, region.initial), region.final), IUPAC.unambiguous_dna)
-                seq = seq.reverse_complement()
-                print(seq, file=output)
-            else:
-                print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
+            # if region.orientation == "-":
+            #     seq = Seq(genome.fetch(region.chrom, max(0, region.initial), region.final), IUPAC.unambiguous_dna)
+            #     seq = seq.reverse_complement()
+            #     print(seq, file=output)
+            # else:
+            print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=True, 
@@ -161,7 +161,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
-
+    # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
     arguments = " "
     if ss: arguments += "-ss "+ss+" "
     if ds: arguments += "-ds "+ds+" "
@@ -485,7 +485,7 @@ def rank_array(a):
     sa = numpy.searchsorted(numpy.sort(a), a)
     return sa
 
-def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
+def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, fasta=True):
     """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
     if len(sig_region) == 0:
         return
@@ -499,13 +499,6 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
             print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
         for rbs in sig_region:
             loop = True
-            #print(exons)
-            #print(rbs)
-            #print(rbs.initial)
-            #print(rbs.final)
-            #print(rbs.orientation)
-            #print()
-            #print(exons[0][3])
 
             if exons[0][3] == "-":
               
@@ -621,29 +614,27 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None):
         # print(dbd.sequences[0])
         dbd.write_bed(filename=output+".bed")
     # FASTA
-    
-    
-    
-    #print(dbdmap)
-    if not out_file:
-        seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
-        fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
-    else:
-        seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
-        fasta_f = output+".fa"
+    if fasta:
+        #print(dbdmap)
+        if not out_file:
+            seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
+            fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
+        else:
+            seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
+            fasta_f = output+".fa"
 
-    with open(fasta_f, 'w') as fasta:
-        
-        for rbs in sig_region:
-            try: info = dbdmap[str(rbs)]
-            except: 
-                continue
-            fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
-            #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
-            if dbdmap[str(rbs)][-1] == "-":
-                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
-            else: 
-                fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
+        with open(fasta_f, 'w') as fasta:
+            
+            for rbs in sig_region:
+                try: info = dbdmap[str(rbs)]
+                except: 
+                    continue
+                fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
+                #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
+                if dbdmap[str(rbs)][-1] == "-":
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
+                else: 
+                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
 
 def connect_rna(rna, temp, rna_name):
     seq = ""
@@ -679,7 +670,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     txp.write_bed(output_BED)
     rbss = txp.get_rbs()
     dbd_regions(exons=rna_regions, sig_region=rbss, rna_name="rna", output=output_rbss, 
-                out_file=True, temp=temp)
+                out_file=True, temp=temp, fasta=False)
     # print(rbss.sequences)
     # print(len(rbss))
     # rbss.write_bed(output_rbss)
@@ -974,12 +965,6 @@ class PromoterTest:
                 if line[0] == ">": 
                     header = line
                     seq = ""
-                #elif len(line) < threshold:
-                #    nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
-                #    nfa.write(header)
-                #    nfa.write(line)
-                #    nfa.close()
-                #    cf += 1
                 else:
                     line = line.strip()
                     seq += line
@@ -1012,20 +997,40 @@ class PromoterTest:
             for i in self.cf:
                 diff = max(0,(i-1)*self.threshold - l)
 
-
                 f_de = open(os.path.join(temp, "de"+str(i)+".txp"))
-                for line in f_de: 
-                    if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): 
+                for line in f_de:
+                    line = line.strip("\n")
+                    if line.startswith("TFO:"):
+                        line = line.replace("TFO:", "lncRNA:")
+                        print(line, file=de)
+                        continue
+                    elif line.startswith("TTS:"):
+                        line = line.replace("TTS:", "Genome:")
+                        print(line, file=de)
+                        continue
+                    elif line.startswith("    "):
+                        line = "   " + line
+                        print(line, file=de)
+                        continue
+                    elif line.startswith("#"): 
+                        print(line, file=de)
                         continue
                     else:
                         try:
-                            line = line.split()
-                            line[1] = str(int(line[1])+ diff ) 
-                            line[2] = str(int(line[2])+ diff ) 
-                            print("\t".join(line), file=de)
+                            linel = line.split()
+                            linel[1] = str(int(linel[1])+ diff ) 
+                            linel[2] = str(int(linel[2])+ diff ) 
+                            print("\t".join(linel), file=de)
+                            print("# RBS: "+linel[0]+" "+linel[1]+"-"+linel[2]+"-"+linel[11], file=de)
+                            chro = linel[3].partition(":")[0]
+                            base = int(linel[3].partition(":")[2].split("-")[0])
+                            print("# DBS: "+chro+":"+str(base+ int(linel[4]))+"-"+str(base+ int(linel[5])), file=de)
+                            print("# Score: "+linel[6], file=de)
+
+                            
                             #de.write("\t".join(line))   
                         except:
-                            print("\t".join(line), file=de)
+                            print(line, file=de)
                             #de.write("\t".join(line))
                 f_de.close()
                 
@@ -1039,18 +1044,18 @@ class PromoterTest:
                             continue
                         else:
                             try:
-                                line = line.split()
-                                line[1] = str(int(line[1])+ diff ) 
-                                line[2] = str(int(line[2])+ diff )
-                                print("\t".join(line), file=nde)
+                                l = line.split()
+                                l[1] = str(int(l[1])+ diff ) 
+                                l[2] = str(int(l[2])+ diff )
+                                print("\t".join(l), file=nde)
                                 #nde.write("\t".join(line)+"\n")
                             except:
                                 print("\t".join(line), file=nde)
                                 #nde.write("\t".join(line)+"\n")
                             
                     f_nde.close()
-                if remove_temp:
-                    os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                # if remove_temp:
+                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
                 #os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
                 os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
@@ -1230,7 +1235,8 @@ class PromoterTest:
                 l2 = len(self.txp_ndef.merged_dict[rbs])
                 self.frequency["hits"]["nde"][rbs] = [ l2 , numdbs_ndef - l2 ]
 
-        os.remove(os.path.join(temp,"de.txp"))
+        if remove_temp:
+            os.remove(os.path.join(temp,"de.txp"))
         if self.split_rna:
              for i in self.cf:
                 os.remove(os.path.join(temp, "nde"+str(i)+".txp"))

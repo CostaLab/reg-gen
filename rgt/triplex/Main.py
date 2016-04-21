@@ -424,6 +424,7 @@ def main():
     parser_randomtest.add_argument('-rn', type=str, default=False, metavar='  ', help="Define the RNA name")
     parser_randomtest.add_argument('-bed', metavar='  ', help="Input BED file for interested regions on DNA")
     parser_randomtest.add_argument('-o', metavar='  ', help="Output directory name for all the results and temporary files")
+    parser_randomtest.add_argument('-t', metavar='  ', default=False, help="Define the title name for the results under the Output name. Default is -rn.")
     
     parser_randomtest.add_argument('-n', type=int, default=10000, metavar='  ', 
                                    help="Number of times for randomization (Default: 10000)")
@@ -776,6 +777,10 @@ def main():
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
         #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
         revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
+        try: os.remove(os.path.join(args.o, "de.fa"))
+        except OSError: pass
+        try: os.remove(os.path.join(args.o, "nde.fa"))
+        except OSError: pass
 
 
     ################################################################################
