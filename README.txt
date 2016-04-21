@@ -19,7 +19,8 @@ git checkout https://github.com/ManuelAllh/reg-gen.git
 cd reg-gen
 sudo python setup.py install
 
-Detailled installation instructions are found in: http://www.regulatory-genomics.org/rgt/download-installation/.
+Detailled installation instructions are found in: 
+http://www.regulatory-genomics.org/rgt/download-installation/.
 
 *************************************************
 * Download                                      *
