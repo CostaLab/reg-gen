@@ -251,7 +251,7 @@ class CoverageSet:
                 
             except:
                 # pass
-                print("\tSkip: "+region.toString()+" "+region.name)
+                print("\tSkip: "+region.toString())
 
         self.coverage=cov 
         self.coverageOrig=cov
