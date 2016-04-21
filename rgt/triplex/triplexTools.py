@@ -2101,7 +2101,11 @@ class PromoterTest:
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
-                    sscores.append(self.de_gene.values[p.name])
+                    try:
+                        sscores.append(self.de_gene.values[p.name])
+                    except:
+                        print(self.de_gene.values.keys()[:5])
+                        print(p.name)
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
                         def ranking(scores):
