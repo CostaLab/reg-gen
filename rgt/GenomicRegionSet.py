@@ -634,6 +634,7 @@ class GenomicRegionSet:
             ########################### OverlapType.OVERLAP ###################################
             if mode == OverlapType.OVERLAP:
                 while cont_loop:
+                    print(str(s)+"\t"+str(j))
                     # When the regions overlap
                     if s.overlap(b[j]):
                         c = GenomicRegion(chrom=s.chrom,
@@ -645,17 +646,19 @@ class GenomicRegionSet:
                                           proximity=s.proximity)
                         z.add(c)
 
-                        if cont_overlap == False: pre_inter = j
+                        if cont_overlap == False: 
+                            pre_inter = j
                         if j == last_j:
                             try: s = iter_a.next()
                             except: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                         cont_overlap = True
 
                     elif s < b[j]:
                         try:
                             s = iter_a.next()
-                            j = pre_inter
+                            if s.chrom == b[j].chrom and pre_inter > 0:
+                                j = pre_inter
                             cont_overlap = False
                         except: cont_loop = False
 
@@ -663,7 +666,8 @@ class GenomicRegionSet:
                         if j == last_j:
                             cont_loop = False
                         else:
-                            j = j + 1
+                            
+                            j += 1
                             cont_overlap = False
 
             ########################### OverlapType.ORIGINAL ###################################
@@ -682,7 +686,7 @@ class GenomicRegionSet:
                         except: cont_loop = False
                     elif s > b[j]:
                         if j == last_j: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                     else:
                         try: s = iter_a.next()
                         except: cont_loop = False
@@ -698,7 +702,7 @@ class GenomicRegionSet:
                         if j == last_j:
                             try: s = iter_a.next()
                             except: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                         cont_overlap = True
 
                     elif s < b[j]:
@@ -712,7 +716,7 @@ class GenomicRegionSet:
                         if j == last_j:
                             cont_loop = False
                         else:
-                            j = j + 1
+                            j += 1
                             cont_overlap = False
 
             if rm_duplicates: z.remove_duplicates()
