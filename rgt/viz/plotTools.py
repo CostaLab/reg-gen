@@ -2484,8 +2484,8 @@ class Lineplot:
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
-        print("\tGroup labels:\t"+",".join(self.group_tags))
-        print("\tSort labels:\t"+",".join(self.sort_tags))
+        print("\tColumn labels:\t"+",".join(self.group_tags))
+        print("\tRow labels:\t"+",".join(self.sort_tags))
         print("\tColor labels:\t"+",".join(self.color_tags))
 
     def gen_cues(self):
@@ -2535,8 +2535,8 @@ class Lineplot:
                         #print(set([s,g,c]))
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
-                                #print(self.cuebam[bam])
-                                #print(set([s,g,c]))
+                                # print(self.cuebam[bam])
+                                # print(set([s,g,c]))
                                 if self.cuebam[bam] <= set([s,g,c]):
                                     if mp: 
                                         if self.annotation:

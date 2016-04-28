@@ -1103,6 +1103,8 @@ class PromoterTest:
         #txp_de.remove_duplicates()
         self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, 
                               region_set=self.de_regions, name_replace=self.de_regions)
+        print(self.txp_de.merged_dict.keys())
+        sys.exit(0)
 
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
