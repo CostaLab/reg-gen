@@ -150,6 +150,8 @@ def main():
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    parser_projection.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_projection.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -171,6 +173,8 @@ def main():
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', metavar='  ', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    parser_intersect.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_intersect.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     
     ################### Jaccard test ##########################################
     
@@ -188,7 +192,9 @@ def main():
     parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-
+    parser_jaccard.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_jaccard.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    
     ################### Combinatorial Test ##########################################
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
     
@@ -211,6 +217,8 @@ def main():
     parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    parser_combinatorial.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_combinatorial.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     
     ################### Boxplot ##########################################
     
@@ -375,7 +383,7 @@ def main():
                 projection.projection_test(organism = args.organism)
             
             # generate pdf
-            projection.plot(args.log)
+            projection.plot(args.log, args.pw, args.ph)
             output(f=projection.fig, directory = args.o, folder = args.t, filename="projection_test",
                    extra=plt.gci(),pdf=True,show=args.show)
             
@@ -475,12 +483,12 @@ def main():
                 output(f=f, directory = args.o, folder = args.t, filename="jaccard_test"+str(i+1),
                        extra=plt.gci(),pdf=True,show=args.show)
             # generate html
-            jaccard.gen_html(args.o, args.title)
+            jaccard.gen_html(args.o, args.t)
             
             if args.table:
-                jaccard.table(directory = args.o, folder = args.title)
+                jaccard.table(directory = args.o, folder = args.t)
             
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
+            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")

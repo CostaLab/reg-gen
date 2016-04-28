@@ -319,6 +319,9 @@ class CoverageSet:
          the length of the <overall_cov> equals 54515813, as we take the entire genome into account, but use a the default stepsize of 50 for segmentation. 
         
         """
+
+        if len(self.genomicRegions) == 0:
+            return
         
         self.binsize = binsize
         self.stepsize = stepsize

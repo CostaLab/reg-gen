@@ -412,25 +412,25 @@ class RNADNABindingSet:
                 except: 
                     try:
                         r = rbsm.next()
-                        #self.merged_dict[r] = GenomicRegionSet(r.toString())
+                        # self.merged_dict[r] = GenomicRegionSet(r.toString())
                     except:
-                        #if rm_duplicate: self.merged_dict[r].remove_duplicates()
+                        if rm_duplicate: self.merged_dict[r].remove_duplicates()
                         con_loop = False
             elif rd.rna < r:
                 try: rd = con.next()
                 except: 
                     try:
                         r = rbsm.next()
-                        #self.merged_dict[r] = GenomicRegionSet(r.toString())
+                        # self.merged_dict[r] = GenomicRegionSet(r.toString())
                     except: 
-                        #if rm_duplicate: self.merged_dict[r].remove_duplicates()
+                        if rm_duplicate: self.merged_dict[r].remove_duplicates()
                         con_loop = False
             elif rd.rna > r:
-                #if rm_duplicate: self.merged_dict[r].remove_duplicates()
+                if rm_duplicate: self.merged_dict[r].remove_duplicates()
                     #print(self.merged_dict[r].sequences[0].name)
                 try:
                     r = rbsm.next()
-                    #self.merged_dict[r] = GenomicRegionSet(r.toString())
+                    # self.merged_dict[r] = GenomicRegionSet(r.toString())
                 except: 
                     try: rd = con.next()
                     except: con_loop = False

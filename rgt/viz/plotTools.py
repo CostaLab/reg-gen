@@ -188,14 +188,14 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                     qs.append(q.name)
             qs = list(set(qs))
             # Accent Spectral hsv Set1
-            colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(qs))).tolist()
+            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(qs))).tolist()
             
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
             
-            colormap = plt.cm.Spectral(numpy.linspace(0, 1, len(types))).tolist()
+            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(types))).tolist()
             
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]: 
@@ -536,13 +536,19 @@ class Projection:
                     
                     self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
 
-    def plot(self, logt=None):
-        f, ax = plt.subplots(len(self.qlist.keys()),1)
+    def plot(self, logt=None, pw=3,ph=3):
+        
+        tw = pw
+        th = len(self.qlist.keys()) * ph
+        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300,
+                              figsize=(tw, th) ) 
+
+        # f, ax = plt.subplots(len(self.qlist.keys()),1)
         try: ax = ax.reshape(-1)
         except: ax = [ax]
-        nm = len(self.groupedreference.keys()) * len(self.groupedreference.values()[0]) * len(self.groupedquery.values()[0])
-        if nm > 40:
-            f.set_size_inches(nm * 0.2 +1 ,7)
+        # nm = len(self.groupedreference.keys()) * len(self.groupedreference.values()[0]) * len(self.groupedquery.values()[0])
+        # if nm > 40:
+        #     f.set_size_inches(nm * 0.2 +1 ,7)
             
         g_label = []
         for ind_ty, ty in enumerate(self.qlist.keys()):
@@ -566,15 +572,16 @@ class Projection:
             #ax[ind_ty].set_ylabel("Percentage of intersected regions",fontsize=12)
             ax[ind_ty].set_title(ty)
             ax[ind_ty].yaxis.tick_left()
-            ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            ax[ind_ty].set_xticklabels(r_label,rotation=40, ha="right")
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+            ax[ind_ty].set_ylabel('Percentage of intersected regions',fontsize=8)
+            # ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
+            # ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right")
+            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='off')
             ax[ind_ty].legend(self.qlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax[ind_ty].spines[spine].set_visible(False)
-        f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
-        f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        # f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
+        # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         self.fig = f
 
     def heatmap(self):
@@ -778,7 +785,8 @@ class Projection:
     def gen_html_distribution(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
         link_d = {title:"distribution.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"), other_logo="viz")
+        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"), 
+                    other_logo="viz", homepage="../index.html")
         for i, f in enumerate(self.fig):
             html.add_figure("distribution_test_"+str(i)+".png", align="center")
         
@@ -870,34 +878,45 @@ class Jaccard:
                             print2(self.parameter, r.name +"\t"+ q.name +"\tx"+str(runtime)+"\t"+ 
                                    value2str(self.realj[ty][r.name][q.name]) +"\t"+ value2str(p) +"\t"+ 
                                    str(datetime.timedelta(seconds=round(te-ts))))    
-    def plot(self, logT=False):
+    def plot(self, logT=False, pw=3, ph=3):
         """ Return boxplot from the given tables.
         
         """
         self.fig = []
         self.xtickrotation, self.xtickalign = 0,"center"
         
+        tw = pw
+        # th = len(self.jlist.keys()) * ph
+        # f, ax = plt.subplots(len(self.jlist[t].keys()), 1, dpi=300,
+        #                       figsize=(tw, th) ) 
+        legend_x = 1.05
         for it, t in enumerate(self.jlist.keys()):
-            f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey=True)
-            legend_x = 1.05
-            nm = len(self.jlist.keys()) * len(self.jlist.values()[0]) * len(self.jlist.values()[0])
-            if nm > 30:
-                f.set_size_inches(nm * 0.1 +1 ,nm * 0.1 +1)
-                legend_x = 1.2
-                self.xtickrotation, self.xtickalign = 70,"right"
+            # f, axarr = plt.subplots(1, len(self.jlist[t].keys()), dpi=300, sharey=True)
+            # legend_x = 1.05
+            # nm = len(self.jlist.keys()) * len(self.jlist.values()[0]) * len(self.jlist.values()[0])
+            # if nm > 30:
+            #     f.set_size_inches(nm * 0.1 +1 ,nm * 0.1 +1)
+            #     legend_x = 1.2
+            #     self.xtickrotation, self.xtickalign = 70,"right"
+            th = len(self.jlist[t].keys()) * ph
+            f, axarr = plt.subplots(len(self.jlist[t].keys()), 1, dpi=300,
+                                  figsize=(tw, th) ) 
             try: axarr = axarr.reshape(-1)
             except: axarr = [axarr]
             plt.subplots_adjust(bottom=0.3)
             if logT:
-                axarr[0].set_ylabel("Jaccard index (log)")
+                axarr[0].set_ylabel("Jaccard index (log)", fontsize=8)
             else:
-                axarr[0].set_ylabel("Jaccard index (Intersect/Union)")
+                axarr[0].set_ylabel("Jaccard index (Intersect/Union)", fontsize=8)
             
             for i, r in enumerate(self.jlist[t].keys()):
                 #axarr[i].set_title(r, y=0.94)
                 if logT:
                     axarr[i].set_yscale('log')
+                else:
+                    axarr[i].locator_params(axis = 'y', nbins = 4)
                 axarr[i].tick_params(axis='y', direction='out')
+                
                 axarr[i].yaxis.tick_left()
                 axarr[i].yaxis.grid(True, linestyle='-', which='major', color='lightgrey', alpha=0.7, zorder=1)
                 d = []  # Store data within group
@@ -906,26 +925,29 @@ class Jaccard:
                 axarr[i].set_xlabel(r, rotation=self.xtickrotation, ha=self.xtickalign)
                 
                 
-                
                 for j,q in enumerate(self.jlist[t][r].keys()):
                     d.append(self.jlist[t][r][q])
                     color_t.append(self.color_list[q])
                     #x_ticklabels.append(q)
                 # Fine tuning boxplot
-                axarr[i].scatter(x=range(len(self.jlist[t][r].keys())), y=[y for y in self.realj[t][r].values()], s=2, c="red", edgecolors='none')
+                
+                
                 bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None, 
                                       patch_artist=True, bootstrap=None)
                 z = 10 # zorder for bosplot
                 plt.setp(bp['whiskers'], color='black',linestyle='-',linewidth=0.8,zorder=z)
                 plt.setp(bp['fliers'], markerfacecolor='gray',color='white', alpha=0.3,markersize=1.8,zorder=z)
                 plt.setp(bp['caps'],color='white', zorder=z)
-                plt.setp(bp['medians'], color='black', linewidth=1.5,zorder=z+1)
+                plt.setp(bp['medians'], color='black', linewidth=0.5,zorder=z+1)
                 legends = []
                 for patch, color in zip(bp['boxes'], color_t):
                     patch.set_facecolor(color) # When missing the data, the color patch will exceeds
+                    patch.set_edgecolor("none") 
                     patch.set_zorder(z)
                     legends.append(patch)
-                
+                axarr[i].scatter(x=range(1,1+len(self.jlist[t][r].keys())), 
+                                 y=[y for y in self.realj[t][r].values()], 
+                                 s=10, c="red", edgecolors='none', zorder=2)
                 # Fine tuning subplot
                 #axarr[i].set_xticks(range(len(self.jlist[t][r].keys())))
                 #plt.xticks(xlocations, sort_tags, rotation=90, fontsize=10)
@@ -946,13 +968,15 @@ class Jaccard:
             axarr[-1].legend(legends[0:len(self.jlist[t][r].keys())], self.jlist[t][r].keys(), loc='center left', handlelength=1, 
                      handletextpad=1, columnspacing=2, borderaxespad=0., prop={'size':10},
                      bbox_to_anchor=(legend_x, 0.5))
-            f.tight_layout(pad=2, h_pad=None, w_pad=None)
+            # f.tight_layout(pad=2, h_pad=None, w_pad=None)
             self.fig.append(f)
   
     def gen_html(self, outputname, title, align=50):
         fp = os.path.join(dir,outputname,title)
-        link_d = {title:"jaccard.html"}
-        html = Html(name="Viz", links_dict=link_d, fig_dir=os.path.join(dir,outputname,"fig"), other_logo="viz")
+        link_d = {title:"index.html"}
+        html = Html(name="Viz", links_dict=link_d, 
+                    fig_dir=os.path.join(dir,outputname,"fig"), other_logo="viz",
+                    homepage="../index.html")
         for i in range(len(self.fig)):
             html.add_figure("jaccard_test"+str(i+1)+".png", align="center")
         
@@ -970,7 +994,7 @@ class Jaccard:
         data_table = []
         
         for ind_ty, ty in enumerate(self.jlist.keys()):
-            html.add_heading(ty, size = 4, bold = False)
+            # html.add_heading(ty, size = 4, bold = False)
             for ind_r,r in enumerate(self.jlist[ty].keys()):
                 for ind_q, q in enumerate(self.jlist[ty][r].keys()):
                     rej = self.realj[ty][r][q]
@@ -1009,7 +1033,7 @@ class Jaccard:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
-        html.write(os.path.join(fp,"jaccard.html"))
+        html.write(os.path.join(fp,"index.html"))
         
     def table(self, directory, folder):
         arr = numpy.array([["#reference", "query", "true_jaccard", "random_jaccard", "p-value"]])
@@ -2484,8 +2508,8 @@ class Lineplot:
         else:
             self.color_tags = gen_tags(self.exps, colorby)
         
-        print("\tGroup labels:\t"+",".join(self.group_tags))
-        print("\tSort labels:\t"+",".join(self.sort_tags))
+        print("\tColumn labels:\t"+",".join(self.group_tags))
+        print("\tRow labels:\t"+",".join(self.sort_tags))
         print("\tColor labels:\t"+",".join(self.color_tags))
 
     def gen_cues(self):
@@ -2535,8 +2559,8 @@ class Lineplot:
                         #print(set([s,g,c]))
                         if self.cuebed[bed] <= set([s,g,c]):
                             for bam in self.cuebam.keys():
-                                #print(self.cuebam[bam])
-                                #print(set([s,g,c]))
+                                # print(self.cuebam[bam])
+                                # print(set([s,g,c]))
                                 if self.cuebam[bam] <= set([s,g,c]):
                                     if mp: 
                                         if self.annotation:

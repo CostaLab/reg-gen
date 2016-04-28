@@ -118,10 +118,22 @@ class ExperimentalMatrix:
                     if "," in line[fi] and "(" not in line[fi]:
                         for t in line[fi].split(","):
                             try:
-                                d[t].append(line[0])
+                                # d[t].append(line[0])
+                                d[t].append(line[0]+t)
+                                self.names.append(line[0]+t)
+                                self.files[line[0]+t] = line[2]
+                                self.types.append(line[1])
+                                if line[0] not in self.trash: 
+                                    self.trash.append(line[0])
                             except:
                                 try:
-                                    d[t] = [line[0]]
+                                    # d[t] = [line[0]]
+                                    d[t] = [line[0]+t]
+                                    self.names.append(line[0]+t)
+                                    self.files[line[0]+t] = line[2]
+                                    self.types.append(line[1])
+                                    if line[0] not in self.trash: 
+                                        self.trash.append(line[0])
                                 except:
                                     continue
                     else:
@@ -134,6 +146,7 @@ class ExperimentalMatrix:
                                 continue
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
+        self.remove_name()
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
         
     def get_genesets(self):
