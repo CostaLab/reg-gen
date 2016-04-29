@@ -5,7 +5,6 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 """
 
-
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnresolvedImport
@@ -16,14 +15,17 @@ import tempfile
 import subprocess
 import multiprocessing
 from rgt.ODIN.gc_content import get_gc_context
+import sys
 
 def mp_bigwigsummary(inarg):
     cmd = ["bigWigSummary",inarg[0],inarg[1],inarg[2],inarg[3],inarg[4]]
     try:
-        output = subprocess.check_output(" ".join(cmd), shell=False)
-        ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
-    except:
-        ds = [0] * int(inarg[4])
+        output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+        ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+        # print(len(ds))
+    except subprocess.CalledProcessError as e:
+        ds = [0]*int(inarg[4])
+        
     return(ds)
 
 class CoverageSet:
@@ -251,8 +253,8 @@ class CoverageSet:
                 # pass
                 print("\tSkip: "+region.toString())
 
-        self.coverage=cov 
-        self.coverageOrig=cov
+        self.coverage = cov 
+        self.coverageOrig = cov
 
     def _get_bedinfo(self, l):
         if len(l) > 1:
@@ -323,6 +325,7 @@ class CoverageSet:
         
         self.binsize = binsize
         self.stepsize = stepsize
+        self.coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
         
@@ -499,13 +502,17 @@ class CoverageSet:
         mp_input = []
         for gr in self.genomicRegions:
             mp_input.append([bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)])
-        # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
         mp_output = pool.map(mp_bigwigsummary, mp_input)
         pool.close()
         pool.join()
 
+        # mp_output = []
+        # for ing in mp_input:
+        #     mp_output.append(mp_bigwigsummary(ing))
+
         for ds in mp_output:
+            # print(sum(ds), end="\t")
             self.coverage.append( np.array(ds) )
 
 

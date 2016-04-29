@@ -65,7 +65,7 @@ tools_dictionary = {
     ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
      "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
-     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
+     "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
@@ -336,7 +336,7 @@ short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatic",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 keywords_list = ["ChIP-seq","DNase-seq","Peak Calling","Motif Discovery","Motif Enrichment","HMM"]
-author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Joseph Kuo","Ivan G. Costa"]
+author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Chao-Chung Kuo","Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
