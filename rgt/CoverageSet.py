@@ -229,8 +229,6 @@ class CoverageSet:
         Class variable <coverage>: a list where the elements correspond to the GenomicRegion. The list elements give
         the number of reads falling into the GenomicRegion.
         
-        .. warning:: Function not tested. Please do not use it!
-        
         """
         
         bam = pysam.Samfile(bamFile, "rb" )

@@ -634,7 +634,6 @@ class GenomicRegionSet:
             ########################### OverlapType.OVERLAP ###################################
             if mode == OverlapType.OVERLAP:
                 while cont_loop:
-                    print(str(s)+"\t"+str(j))
                     # When the regions overlap
                     if s.overlap(b[j]):
                         c = GenomicRegion(chrom=s.chrom,
@@ -698,6 +697,7 @@ class GenomicRegionSet:
                         if s.initial >= b[j].initial and s.final <= b[j].final:
                             z.add(s)
 
+
                         if cont_overlap == False: pre_inter = j
                         if j == last_j:
                             try: s = iter_a.next()
@@ -708,7 +708,8 @@ class GenomicRegionSet:
                     elif s < b[j]:
                         try:
                             s = iter_a.next()
-                            j = pre_inter
+                            if s.chrom == b[j].chrom and pre_inter > 0:
+                                j = pre_inter
                             cont_overlap = False
                         except: cont_loop = False
 
@@ -1651,7 +1652,7 @@ class GenomicRegionSet:
         else:
             return p
 
-    def any_chrom(self,chrom,len_min=False, len_max=False):
+    def any_chrom(self,chrom,len_min=False, len_max=False, return_list=True):
         """Return a list of regions which belongs to given chromosome.
 
         *Keyword arguments:*
@@ -1665,13 +1666,25 @@ class GenomicRegionSet:
             - A list of regions which belongs to given chromosome.
         """
         if len_min == False and len_max == False:
-            return [s for s in self if s.chrom == chrom] 
+            if return_list:
+                return [s for s in self if s.chrom == chrom]
+            else:
+                self.sequences = [s for s in self if s.chrom == chrom]
         elif len_min > 0 and len_max == False:
-            return [s for s in self if s.chrom == chrom and len(s) >= len_min] 
+            if return_list:
+                return [s for s in self if s.chrom == chrom and len(s) >= len_min]
+            else:
+                self.sequences = [s for s in self if s.chrom == chrom and len(s) >= len_min]
         elif len_max > 0 and len_min == False:
-            return [s for s in self if s.chrom == chrom and len(s) <= len_max] 
+            if return_list:
+                return [s for s in self if s.chrom == chrom and len(s) <= len_max]
+            else:
+                self.sequences = [s for s in self if s.chrom == chrom and len(s) <= len_max]
         else:
-            return [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max] 
+            if return_list:
+                return [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max]
+            else:
+                self.sequences =  [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max]
         
     def relocate_regions(self, center='midpoint',left_length=2000,right_length=2000):
         """Return a new GenomicRegionSet which relocates the regions by given center and extend length.
@@ -1949,16 +1962,19 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-            - names -- A list of names as targets.
+            - names -- A list of names as targets or a GeneSet.
 
         *Return:*
 
             - A GenomicRegionSet containing the regions with the target names.
         """
         z = GenomicRegionSet(self.name)
+        if isinstance(names, list): targets = names
+        elif isinstance(names.genes, list): targets = names.genes
         for gr in self:
-            if gr.name in names:
+            if gr.name in targets:
                 z.add(gr)
+
         return z
 
     def write_bed_blocks(self, filename):
