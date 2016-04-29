@@ -25,7 +25,7 @@ def mp_bigwigsummary(inarg):
         # print(len(ds))
     except subprocess.CalledProcessError as e:
         ds = [0]*int(inarg[4])
-        
+
     return(ds)
 
 class CoverageSet:
@@ -501,7 +501,8 @@ class CoverageSet:
         self.coverage = []
         mp_input = []
         for gr in self.genomicRegions:
-            mp_input.append([bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)])
+            steps = int(abs(gr.final-gr.initial)/stepsize)
+            mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
         pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
         mp_output = pool.map(mp_bigwigsummary, mp_input)
         pool.close()
