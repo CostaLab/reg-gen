@@ -87,8 +87,8 @@ def random_each(input):
     str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
     number, rna,            region,          temp, organism,      rbss,      number of mark
 
-    7  8  9  10  11  12  13  14  15
-    l, e, c, fr, fm, of, mf, rm, filter_bed 
+    7  8  9  10  11  12  13  14  15          16
+    l, e, c, fr, fm, of, mf, rm, filter_bed, tp
     """
     # Filter BED file
     if input[15]:
@@ -104,7 +104,7 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True,
                        l=int(input[7]), e=int(input[8]), c=input[9], fr=input[10],
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
-                       dna_fine_posi=False)
+                       dna_fine_posi=False, tp=input[16])
 
     txp.merge_rbs(rbss=input[5], rm_duplicate=True)
 
@@ -112,7 +112,7 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
-                       dna_fine_posi=True)
+                       dna_fine_posi=True, tp=input[16])
 
     txpf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
@@ -137,7 +137,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=True, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, tp=False):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -146,7 +146,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     # Triplexator
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
                     output=os.path.join(temp, "dna_"+prefix+".txp"), 
-                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, tp=tp)
     # Read txp
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
@@ -158,7 +158,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 
     return txp
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, tp=False):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
@@ -177,7 +177,10 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
     #os.system(triplexator_path+arguments)
-    os.system("triplexator"+arguments)
+    if isinstance(tp,str):
+        os.system(tp+arguments)
+    else:
+        os.system("triplexator"+arguments)
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
@@ -649,7 +652,7 @@ def connect_rna(rna, temp, rna_name):
         for s in [seq[i:i + 80] for i in range(0, len(seq), 80)]:
             print(s, file=r)
 
-def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
+def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp,tp):
     regions = GenomicRegionSet("Target")
     regions.read_bed(input_BED)
     regions.gene_association(organism=organism)
@@ -662,7 +665,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     genome = GenomeData(organism)
     genome_path = genome.get_genome()
     txp = find_triplex(rna_fasta=rna_fasta, dna_region=regions, 
-                       temp=temp, organism=organism, remove_temp=False, 
+                       temp=temp, organism=organism, remove_temp=False, tp=tp,
                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=genome_path,
                        prefix="targeted_region", dna_fine_posi=True)
 
@@ -949,7 +952,7 @@ class PromoterTest:
     def connect_rna(self, rna, temp):
         connect_rna(rna, temp, self.rna_name)
         
-    def search_triplex(self, temp, l, e, c, fr, fm, of, mf, remove_temp=False):
+    def search_triplex(self, temp, l, e, c, fr, fm, of, mf, remove_temp=False, tp=False):
         print("    \tRunning Triplexator...")
         rna = os.path.join(temp,"rna_temp.fa")
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
@@ -986,10 +989,10 @@ class PromoterTest:
             for i in self.cf:
                 run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"de.fa"), 
                                 output=os.path.join(temp, "de"+str(i)+".txp"), 
-                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, tp=tp)
                 run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"nde.fa"), 
                                 output=os.path.join(temp, "nde"+str(i)+".txp"), 
-                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, tp=tp)
             
             de = open(os.path.join(temp, "de.txp"),"w")
             #nde = open(os.path.join(temp, "nde.txp"),"w")
@@ -1069,14 +1072,14 @@ class PromoterTest:
                          genome_path=self.genome_path)
             run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
                             output=os.path.join(temp, "de.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, tp=tp)
             
             # non-DE
             get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
                          genome_path=self.genome_path)
             run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
                             output=os.path.join(temp, "nde.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, tp=tp)
         
         #os.remove(os.path.join(args.o,"rna_temp.fa"))
         if remove_temp:
@@ -2447,12 +2450,12 @@ class RandomTest:
         if not self.rna_name: self.rna_name = rnas[0].name
         self.rna_len = rnas.total_len()
 
-    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, obed=False):
+    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, tp, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
         
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region, 
-                           temp=temp, organism=self.organism, remove_temp=remove_temp, 
+                           temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=self.genome_path,
                            prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=True, region_set=self.dna_region, asgene_organism=self.organism, cutoff=cutoff)
@@ -2464,7 +2467,7 @@ class RandomTest:
             sys.exit(1)
 
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region, 
-                            temp=temp, organism=self.organism, remove_temp=remove_temp, 
+                            temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=self.genome_path,
                             prefix="dbs", dna_fine_posi=True)
         txpf.remove_duplicates()
@@ -2497,7 +2500,7 @@ class RandomTest:
             dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, obed+"_dbss.bed"))
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, filter_bed, alpha):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, tp, filter_bed, alpha):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats-1, num=41)).tolist()
@@ -2508,7 +2511,7 @@ class RandomTest:
             mp_input.append([ str(i), os.path.join(temp, "rna_temp.fa"), self.dna_region,
                               temp, self.organism, self.rbss, str(marks.count(i)),
                               str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm),
-                              filter_bed, self.genome_path ])
+                              filter_bed, self.genome_path, tp ])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
