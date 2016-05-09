@@ -128,32 +128,18 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         line = line.strip()
         line = line.split("\t")
         profile[line[0]] = line[1:]
-    #profile = pickle.load(profile_f)
-    
-    #for root, dirnames, filenames in os.walk(path):
-        #roots = root.split('/')
-        #for filename in fnmatch.filter(filenames, '*.html'):
-        #    if filename == 'index.html' and root.split('/')[-1] != dirname:
-    #    for i, dirname in enumerate(dirnames):
-            
-            #if dirname in profile.keys():
+   
     for i, exp in enumerate(profile.keys()):
         #print(exp)
         c += 1
-        #exp = root.split('/')[-1]
-        #exp = dirn
-        #if profile[exp][5] == "-":
-        #    new_line = [ str(c), exp, profile[exp][0] ]
-        #else:
+        
         try:
             if profile[exp][5] == "-":
-                new_line = [ str(c), exp,
-                             profile[exp][0] ]
+                new_line = [ str(c), exp, profile[exp][0] ]
             else:
                 new_line = [ str(c), 
                              '<a href="'+os.path.join(exp, "index.html")+\
-                             '">'+exp+"</a>",
-                             profile[exp][0] ]
+                             '">'+exp+"</a>", profile[exp][0] ]
 
             if show_RNA_ass_gene: 
                 new_line.append( 
@@ -184,9 +170,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
                           align=10, cell_align="left", sortable=True)
-    #if os.path.isfile(os.path.join(path,"lncRNA_target_dendrogram.png")):
-    #    html.add_figure("lncRNA_target_dendrogram.png", align="center", width="90%")
-
+    
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
 

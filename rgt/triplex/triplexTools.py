@@ -1103,9 +1103,7 @@ class PromoterTest:
         #txp_de.remove_duplicates()
         self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, 
                               region_set=self.de_regions, name_replace=self.de_regions)
-        # print(self.txp_de.merged_dict.keys())
-        # sys.exit(0)
-
+        
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
             # DE
@@ -2103,11 +2101,10 @@ class PromoterTest:
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
-                    try:
-                        sscores.append(self.de_gene.values[p.name])
-                    except:
-                        print(self.de_gene.values.keys()[:5])
-                        print(p.name)
+                    try: gene_sym = self.ensembl2symbol[p.name]
+                    except: gene_sym = p.name
+                    sscores.append(self.de_gene.values[gene_sym])
+
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
                         def ranking(scores):
