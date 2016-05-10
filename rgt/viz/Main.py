@@ -87,7 +87,7 @@ def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
     parentdir = os.path.basename(os.path.dirname(path))
-<<<<<<< HEAD
+
     # link_d = {"List":"index.html"}
     link_d = {}
     ####
@@ -98,7 +98,7 @@ def list_all_index(path):
     link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
 
     ###
-=======
+
     link_d = {}
     for root, dirnames, filenames in os.walk(os.path.dirname(path)):
         #roots = root.split('/')
