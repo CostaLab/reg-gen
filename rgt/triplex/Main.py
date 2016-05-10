@@ -534,7 +534,10 @@ def main():
 
         #######################################################################################
         ######## Test triplexator
-        process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if args.tp:
+            process = subprocess.Popen([args.tp, "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # wait for the process to terminate
         out, err = process.communicate()
         errcode = process.returncode
