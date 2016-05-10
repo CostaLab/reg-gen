@@ -99,17 +99,6 @@ def list_all_index(path):
 
     ###
 
-    link_d = {}
-    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
-        #roots = root.split('/')
-        for filename in fnmatch.filter(filenames, 'index.html'):
-            if root.split('/')[-2] == parentdir:
-                link_d[root.split('/')[-1]] = "../"+root.split('/')[-1]+"/index.html"
-    link_d = OrderedDict(sorted(link_d.iteritems()))
-
-
-
->>>>>>> feature/viz
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
     header_list = ["No.", "Experiments"]
