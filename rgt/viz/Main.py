@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
+from collections import OrderedDict
 import argparse
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
@@ -85,8 +86,17 @@ def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    
-    link_d = {"List":"index.html"}
+    parentdir = os.path.basename(os.path.dirname(path))
+    link_d = {}
+    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+        #roots = root.split('/')
+        for filename in fnmatch.filter(filenames, 'index.html'):
+            if root.split('/')[-2] == parentdir:
+                link_d[root.split('/')[-1]] = "../"+root.split('/')[-1]+"/index.html"
+    link_d = OrderedDict(sorted(link_d.iteritems()))
+
+
+
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
     header_list = ["No.", "Experiments"]
