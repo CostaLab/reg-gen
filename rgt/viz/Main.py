@@ -10,7 +10,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 import numpy
 import time, datetime, getpass, fnmatch
 from shutil import copyfile
-
+from collections import OrderedDict
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -85,8 +85,17 @@ def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    
-    link_d = {"List":"index.html"}
+    parentdir = os.path.basename(os.path.dirname(path))
+    # link_d = {"List":"index.html"}
+    link_d = {}
+    ####
+    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+        for filename in fnmatch.filter(filenames, 'index.html'):
+            if root.split('/')[-2] == parentdir:
+                link_d[root.split('/')[-1]] = "../"+root.split('/')[-1]+"/index.html"
+    link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
+
+    ###
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
     header_list = ["No.", "Experiments"]
@@ -323,7 +332,7 @@ def main():
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
     parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
     parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
-    parser_integration.add_argument('-o', help='Define the folder of the output file.') 
+    parser_integration.add_argument('-p', help='Define the folder of the output file.') 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -726,3 +735,9 @@ def main():
             venn = Venn(sets=sets, organism=args.organism)
             f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
             output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)
+
+        ################### Integration ##########################################
+        if args.mode=='integration':
+            print("\n################# Integration ###############")
+            if args.ihtml:
+                list_all_index(path=args.o)

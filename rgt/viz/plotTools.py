@@ -8,6 +8,7 @@ from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
 from collections import *
 import copy
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -116,7 +117,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             
     else:
         if annotation:
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(annotation))).tolist()
+            colors = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
         else:
             #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
@@ -134,7 +135,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(exps.fieldsDict[colorby].keys())
             #print(n)
             #colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
-            colors = plt.cm.Dark2(numpy.linspace(0, 1, n)).tolist()
+            colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -157,8 +158,9 @@ def colormaps(exps, colorby, definedinEM):
             n = len(exps.fieldsDict["factor"].keys())
         else:
             n = len(exps.fieldsDict[colorby].keys())
-        colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+        colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
 
+        
         #if len(exps.get_regionsnames()) < 20:
         #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
         #              'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
@@ -1228,7 +1230,7 @@ class Intersect:
                 tags.append(nt)
             self.color_tags = tags
         self.color_list = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.color_tags))).tolist()
-    
+
     def extend_ref(self, percentage):
         """percentage must be positive value"""
         for ty in self.groupedreference:
@@ -2802,16 +2804,36 @@ class Lineplot:
                                 axs[i].set_ylim([0, sx_ymax[it]*1.2])
                             else:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
-        try: 
-            axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                             columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-        except:
+        # legend_list = []
+        # for co in self.color_tags:
+        #     print(co)
+        #     # l = 
+        #     # print(matplotlib.patches.Rectangle(color=self.colors[co], label=co))
+        #     legend_list.append(matplotlib.patches.Rectangle([0, 0], 0.05, 0.1, ec="none",
+        #                                                      color=self.colors[co], label=co))
+
             try:
-                axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                               columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                # axs[0,-1].legend(handles=legend_list, loc='center left', handlelength=1, handletextpad=1, 
+                #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                                 columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
             except:
-                axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                           columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                try:
+                    # axs[-1].legend(handles=legend_list, loc='center left', handlelength=1, handletextpad=1, 
+                    #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                    axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                                   columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                except:
+                    # axs.legend(handles=legend_list, loc='center left', handlelength=1, handletextpad=1, 
+                    #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+                    axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+                               columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+        # plt.legend(handles=legend_list, label=self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+        #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+        
+        
+        # plt.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
+        #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
                 
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.tight_layout()
