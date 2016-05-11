@@ -1355,7 +1355,8 @@ class Intersect:
             else:
                 f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
             
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.bar = f
 
     def stackedbar(self):
@@ -1409,7 +1410,8 @@ class Intersect:
         elif self.mode_count == "count":
             f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.sbar = f
 
     def percentagebar(self):
@@ -1472,7 +1474,8 @@ class Intersect:
                 ax.spines[spine].set_visible(False)
         f.text(-0.025, 0.5, "Proportion of intersected regions (%)", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.pbar = f
 
     def gen_html(self, directory, title, align, args):
