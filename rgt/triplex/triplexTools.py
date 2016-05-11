@@ -1468,8 +1468,6 @@ class PromoterTest:
             pwm_file.close()
 
 
-        # non-DE DBS
-
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
         dir_name = os.path.basename(directory)
         #check_dir(directory)
