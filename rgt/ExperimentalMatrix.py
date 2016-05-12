@@ -295,3 +295,11 @@ class ExperimentalMatrix:
                         g.read_bed(self.files[name])
                         self.objectsDict[n] = g
                     self.trash.append(name)
+
+    def remove_empty_regionset(self):
+        """Remove the entry with zero regions."""
+        for r in self.get_regionsnames():
+            if len(self.objectsDict[r]) == 0:
+                self.trash.append(r)
+                print("***Warning: "+r+" has zero regions and is ignored.")
+        self.remove_name()

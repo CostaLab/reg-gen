@@ -1616,10 +1616,11 @@ class GenomicRegionSet:
             - organism -- Define the organism
             - extra -- Return the extra statistics
             - background -- Use a GenomicRegionSet as the background
+            - return_intersected_query -- Return a GenomicRegionSet containing the intersected regions of query
 
         *Return:*
 
-            - if extra=True, returns (possibility, ration, p-value)
+            - if extra=True, returns (possibility, ration, p-value, intersected_query)
             - if extra=False, returns p-value
         """
         chrom_map = GenomicRegionSet("Genome")
@@ -1641,14 +1642,16 @@ class GenomicRegionSet:
 
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
         intersect_regions = nquery.intersect(self,mode=OverlapType.ORIGINAL)
-        #intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
+        if extra:
+            intersect_q = query.intersect(self,mode=OverlapType.ORIGINAL)
         n = len(nquery)
         k = len(intersect_regions)
+        try: r = k/n
+        except: r = 0
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
         if extra:
-            try: return possibility, k/n, p  # for the case n = 0
-            except: return possibility, 0, p
+            return possibility, r, p, intersect_q
         else:
             return p
 

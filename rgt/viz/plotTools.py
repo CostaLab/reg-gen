@@ -3,23 +3,23 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
-import numpy
-from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
 from collections import *
 import copy
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
-import matplotlib.ticker as mtick
-from matplotlib import cm
 import itertools
 import pickle
 import multiprocessing
-from matplotlib_venn import venn2, venn3
 import urllib2
 import re
+import numpy
+from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+from matplotlib import cm
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib_venn import venn2, venn3
+
 
 # Local Libraries
 # Distal Libraries
@@ -446,11 +446,13 @@ class Projection:
         # Reference
         self.rEM = ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         # Query
         self.qEM = ExperimentalMatrix()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
@@ -486,6 +488,7 @@ class Projection:
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
+        self.interq_list = OrderedDict()
         self.lenlist = {}
         #print2(self.parameter, "\nProjection test")
         #print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
@@ -495,6 +498,7 @@ class Projection:
             self.bglist[ty] = OrderedDict()
             self.qlist[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
+            self.interq_list[ty] = OrderedDict()
             try:
                 if self.background: bgset = self.background[ty]
             except: bgset = None
@@ -503,16 +507,20 @@ class Projection:
                 self.bglist[ty][r.name] = OrderedDict()
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
+                self.interq_list[ty][r.name] = OrderedDict()
                 self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
                     #print(r.name, q.name, sep="\t")
-                    bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
-                    self.bglist[ty][r.name][q.name] = bg
-                    self.qlist[ty][r.name][q.name] = ratio
-                    self.plist[ty][r.name][q.name] = p
-                    self.lenlist[q.name] = len(q)
-                    #if r in self.backgrounds.keys(): pass
-                    #else: self.backgrounds[r] = bg
+                    if r.name == q.name: continue
+                    else:
+                        bg, ratio, p, interq = r.projection_test(q, organism, extra=True, background=bgset)
+                        self.bglist[ty][r.name][q.name] = bg
+                        self.qlist[ty][r.name][q.name] = ratio
+                        self.plist[ty][r.name][q.name] = p
+                        self.interq_list[ty][r.name][q.name] = interq
+                        self.lenlist[q.name] = len(q)
+                        #if r in self.backgrounds.keys(): pass
+                        #else: self.backgrounds[r] = bg
          
         # multiple test correction       
         multiple_correction(self.plist)
@@ -520,21 +528,29 @@ class Projection:
         for ty in self.groupedquery.keys():
             for i, r in enumerate(self.groupedreference[ty]):
                 for j, q in enumerate(self.groupedquery[ty]):
-                    bg = self.bglist[ty][r.name][q.name]
-                    ratio = self.qlist[ty][r.name][q.name]
-                    p = self.plist[ty][r.name][q.name]
-                    #print(p)
-                    #if len(q) == 0:
-                    #    note = "Empty query!"
-                    #elif p < 0.05 and bg > ratio: 
-                    #    note = "Negatively unassociated!"
-                    #elif p < 0.05 and bg < ratio:
-                    #    note = "Positively associated!"
-                    #else:
-                    #    note = ""
-                    #print2(self.parameter, r.name+"\t"+value2str(bg)+"\t"+q.name+"\t"+value2str(ratio)+"\t"+value2str(p)+"\t"+note)
-                    
-                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+                    if r.name == q.name: continue
+                    else:
+                        bg = self.bglist[ty][r.name][q.name]
+                        ratio = self.qlist[ty][r.name][q.name]
+                        p = self.plist[ty][r.name][q.name]
+                        self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+
+    def output_interq(self, directory):
+        """Output the intersected query to the reference in BED format"""
+        try:
+            os.stat(os.path.dirname(directory))
+        except:
+            os.mkdir(os.path.dirname(directory))
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)
+        for ty in self.interq_list.keys():
+            if ty: g = ty+"_"
+            else: g = ""
+            for r in self.interq_list[ty].keys():
+                for q in self.interq_list[ty][r].keys():
+                    self.interq_list[ty][r][q].write_bed(os.path.join(directory, g+q+"_intersected_"+r+".bed"))
 
     def plot(self, logt=None, pw=3,ph=3):
         
@@ -573,15 +589,16 @@ class Projection:
             ax[ind_ty].set_title(ty)
             ax[ind_ty].yaxis.tick_left()
             ax[ind_ty].set_ylabel('Percentage of intersected regions',fontsize=8)
-            # ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            # ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right")
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='off')
+            ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
+            ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right",fontsize=8)
+            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax[ind_ty].legend(self.qlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax[ind_ty].spines[spine].set_visible(False)
         # f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout()
         self.fig = f
 
     def heatmap(self):
@@ -643,6 +660,8 @@ class Projection:
                     if pv == "na": 
                         nalist.append(r)
                         continue
+                    elif self.qlist[ty][r][q] < args.cfp:
+                        continue
                     else:
                         pvn = 1-pv
                     
@@ -686,7 +705,8 @@ class Projection:
                       #["Grouping tag", "-g", args.g],
                       #["Coloring tag", "-c", args.c],
                       #["Background", "-bg", args.bg],
-                      ["Organism", "-organism", args.organism]]
+                      ["Organism", "-organism", args.organism],
+                      ["Cutoff of proportion", "-cfp", str(args.cfp)]]
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
@@ -768,7 +788,7 @@ class Projection:
                 ax.barh(ind + width*ind_r, self.disperDict[ty][r], width, color=colors[ind_r])
             
             plt.xlabel('Percentage')
-            ax.xaxis.set_major_formatter(FuncFormatter(to_percentage)) 
+            ax.xaxis.set_major_formatter(mtick.FuncFormatter(to_percentage)) 
             
             ax.minorticks_off()
             ax.set_yticks([ x + 0.5 for x in range(len(self.chrom_list))])
@@ -1161,9 +1181,11 @@ class Intersect:
     def __init__(self, reference_path, query_path, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.mode_count = mode_count
@@ -1266,8 +1288,10 @@ class Intersect:
                     
                     mp_input = []
                     for q in self.groupedquery[ty]:
-                        mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
-                                          self.counts, frequency, self.frequency, ty, r ])
+                        if r.name == q.name: continue
+                        else:
+                            mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
+                                              self.counts, frequency, self.frequency, ty, r ])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
                     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
                     mp_output = pool.map(mp_count_intersect, mp_input)
@@ -1311,11 +1335,13 @@ class Intersect:
                 plus = 0
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.set_title(self.counts.keys()[ai], y=1)
+
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 for l in self.references:
-                    if l.name == r: lr = len(l)
-                    
+                    if l.name == r: 
+                        lr = len(l)
+                        
                 if len(axs) == 1: 
                     r_label.append(r)
                 else: 
@@ -1327,6 +1353,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     if percentage:
+                        # print(lr)
                         y = 100 * (self.counts.values()[ai][r][q][2] + plus)/lr
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number

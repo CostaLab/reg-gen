@@ -4,12 +4,13 @@ from __future__ import division
 import sys
 import os
 import argparse
+import time, datetime, getpass, fnmatch
+from shutil import copyfile
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
-import numpy
-import time, datetime, getpass, fnmatch
-from shutil import copyfile
+
 
 # Local Libraries
 # Distal Libraries
@@ -150,8 +151,10 @@ def main():
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    parser_projection.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_projection.add_argument('-bed', action="store_true", default=False, help='Output BED files for the regions of query which overlap the reference.')
+    parser_projection.add_argument('-pw', metavar='  ', type=int, default=5, help='Define the width of single panel.(Default:3)')
     parser_projection.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01, help='Define the cutoff of the proportion.(Default:0.01)')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -386,7 +389,9 @@ def main():
             projection.plot(args.log, args.pw, args.ph)
             output(f=projection.fig, directory = args.o, folder = args.t, filename="projection_test",
                    extra=plt.gci(),pdf=True,show=args.show)
-            
+            if args.bed:
+                print2(parameter, "\tOutput BED files: "+"/".join(os.path.join(args.o, args.t, "bed").split("/")[-3:]))
+                projection.output_interq(directory=os.path.join(args.o, args.t, "bed"))
             # generate html 
             projection.gen_html(args.o, args.t, args=args)
             
@@ -431,7 +436,7 @@ def main():
             inter.count_intersect(threshold=args.tc)
             
             # generate pdf
-            print("\tGenerate graphics...")
+            print("\n\tGenerate graphics...")
             inter.barplot(logt=args.log)
             output(f=inter.bar, directory = args.o, folder = args.t, filename="intersection_bar",
                    extra=plt.gci(), pdf=True,show=args.show)
