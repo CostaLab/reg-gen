@@ -1605,7 +1605,10 @@ class GenomicRegionSet:
                 choices[chrom_list.index(new_region.chrom)][1] -= len(new_region)
         return z
 
-        
+    def trim_by(self, background):
+        """Trim a GenomicRegionSet by a given background, another GenomicRegionSet."""
+        s = self.intersect(background,mode = OverlapType.ORIGINAL)
+        self = s
     
     def projection_test(self, query, organism, extra=None, background=None):
         """"Return the p value of binomial test.

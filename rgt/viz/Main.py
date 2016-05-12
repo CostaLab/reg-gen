@@ -144,7 +144,7 @@ def main():
     parser_projection.add_argument('-t', metavar='  ', default='projection_test', help=helptitle)
     parser_projection.add_argument('-g', metavar='  ', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_projection.add_argument('-bg', metavar='  ', default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    parser_projection.add_argument('-bg', metavar='  ', type=str, default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
     parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test.')
     parser_projection.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
@@ -377,11 +377,15 @@ def main():
             projection = Projection( args.r, args.q )
             projection.group_refque(args.g)
             projection.colors( args.c, args.color )
-            if args.bg: projection.background(args.bg)
-            if args.union: 
+            
+            if args.bg:
+                print(args.bg)
+                print(projection)
+                projection.background(args.bg)
+            elif args.union: 
                 projection.ref_union()
                 projection.projection_test(organism = args.organism)
-                print2(parameter, "\tTaking intersect of references as the background. ")
+                print2(parameter, "\tTaking union of references as the background. ")
             else:
                 projection.projection_test(organism = args.organism)
             
