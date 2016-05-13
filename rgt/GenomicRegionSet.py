@@ -610,7 +610,8 @@ class GenomicRegionSet:
         # a = self
         # b = y
 
-        z = GenomicRegionSet(self.name + " + " + y.name)
+        # z = GenomicRegionSet(self.name + " + " + y.name)
+        z = GenomicRegionSet(self.name)
         # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
         if len(self) == 0 or len(y) == 0: return z
 
@@ -1607,8 +1608,9 @@ class GenomicRegionSet:
 
     def trim_by(self, background):
         """Trim a GenomicRegionSet by a given background, another GenomicRegionSet."""
-        s = self.intersect(background,mode = OverlapType.ORIGINAL)
-        self = s
+        return self.intersect(background, mode = OverlapType.ORIGINAL)
+        # self = self.intersect(background, mode = OverlapType.OVERLAP)
+        # self = s
     
     def projection_test(self, query, organism, extra=None, background=None):
         """"Return the p value of binomial test.

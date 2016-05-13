@@ -245,8 +245,8 @@ def group_refque(rEM,  qEM, groupby, rRegion=None, qRegion=None):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference[""] = rEM.get_regionsets()
-        groupedquery[""] = qEM.get_regionsets()
+        groupedreference[""] = rregs
+        groupedquery[""] = qregs
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -477,17 +477,22 @@ class Projection:
                 self.background[ty].combine(r)
             self.background[ty].merge()
 
+        for ty in self.groupedreference.keys():
+            rlist = [ r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
 
-    def background(self, bed_path):
+    def set_background(self, bed_path):
         bg = GenomicRegionSet("background")
         bg.read_bed(bed_path)
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
-            for r in self.groupedreference[ty]:
-                r.trim_by(background = bg)
-            for q in self.groupedquery[ty]:
-                q.trim_by(background = bg)
+            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
 
 
     def projection_test(self, organism):
@@ -1211,17 +1216,14 @@ class Intersect:
         bgbed = GenomicRegionSet(name="Background")
         if path:
             bgbed.read_bed(path)
-            nq = []
+            # nq = []
             print("\tTrimming the queries by the given background: "+path)
             
-            for q in self.query:
-                qq = q.intersect(bgbed, mode=OverlapType.ORIGINAL)
-                nq.append( qq )
-            self.query = nq
-
-        # else:
-            # bgbed.get_genome_data(organism=self.organism)
-
+            rlist = [ r.trim_by(background=bgbed) for r in self.references]
+            self.references = rlist
+            qlist = [ q.trim_by(background=bgbed) for q in self.query]
+            self.query = qlist
+            
         self.background = bgbed
 
 

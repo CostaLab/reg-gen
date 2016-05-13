@@ -379,15 +379,14 @@ def main():
             projection.colors( args.c, args.color )
             
             if args.bg:
-                print(args.bg)
-                print(projection)
-                projection.background(args.bg)
-            elif args.union: 
+                print2(parameter, "\tBackground: "+args.bg)
+                projection.set_background(bed_path=args.bg)
+            if args.union: 
                 projection.ref_union()
-                projection.projection_test(organism = args.organism)
+                projection.projection_test(organism=args.organism)
                 print2(parameter, "\tTaking union of references as the background. ")
             else:
-                projection.projection_test(organism = args.organism)
+                projection.projection_test(organism=args.organism)
             
             # generate pdf
             projection.plot(args.log, args.pw, args.ph)
