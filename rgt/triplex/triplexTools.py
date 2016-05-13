@@ -5,28 +5,27 @@ import os
 import sys
 import multiprocessing
 import time, datetime
+import pylab
+import pysam
+import pickle
+import shutil
+
 # Local Libraries
 from scipy import stats
+import scipy.cluster.hierarchy as sch
 import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
-
 import matplotlib
-
-from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.cm as cm
 from matplotlib.ticker import MaxNLocator, FuncFormatter
+from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import colors
-
-import pylab
-import scipy.cluster.hierarchy as sch
-import pysam
-import pickle
-import shutil
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 #from Bio import motifs
+
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet

@@ -3,11 +3,10 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
-import numpy
-from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
 from collections import *
 import copy
+<<<<<<< HEAD
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
@@ -15,12 +14,22 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
 import matplotlib.ticker as mtick
 from matplotlib import cm
+=======
+>>>>>>> feature/viz
 import itertools
 import pickle
 import multiprocessing
-from matplotlib_venn import venn2, venn3
 import urllib2
 import re
+import numpy
+from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+from matplotlib import cm
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib_venn import venn2, venn3
+
 
 # Local Libraries
 # Distal Libraries
@@ -247,8 +256,8 @@ def group_refque(rEM,  qEM, groupby, rRegion=None, qRegion=None):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference[""] = rEM.get_regionsets()
-        groupedquery[""] = qEM.get_regionsets()
+        groupedreference[""] = rregs
+        groupedquery[""] = qregs
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -296,7 +305,8 @@ def value2str(value):
         if value >= 1000: r = "{}".format(int(value))
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
-        elif 1 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 0.9999 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 1 > value > 0.9999: r = str(int(value))
         else: r = "{:.1e}".format(value)
         return r
 
@@ -448,14 +458,17 @@ class Projection:
         # Reference
         self.rEM = ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         # Query
         self.qEM = ExperimentalMatrix()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
+        self.background = None
         
     def group_refque(self, groupby=False):
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
@@ -475,19 +488,30 @@ class Projection:
             for r in self.groupedreference[ty]:
                 self.background[ty].combine(r)
             self.background[ty].merge()
-            
-    def background(self, bed_path):
+
+        for ty in self.groupedreference.keys():
+            rlist = [ r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
+
+    def set_background(self, bed_path):
         bg = GenomicRegionSet("background")
         bg.read_bed(bed_path)
-
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
-        
+            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
+
+
     def projection_test(self, organism):
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
+        self.interq_list = OrderedDict()
         self.lenlist = {}
         #print2(self.parameter, "\nProjection test")
         #print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
@@ -497,24 +521,28 @@ class Projection:
             self.bglist[ty] = OrderedDict()
             self.qlist[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
-            try:
-                if self.background: bgset = self.background[ty]
-            except: bgset = None
+            self.interq_list[ty] = OrderedDict()
+            if self.background: bgset = self.background[ty]
+            else: bgset = None
             
             for i, r in enumerate(self.groupedreference[ty]):
                 self.bglist[ty][r.name] = OrderedDict()
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
+                self.interq_list[ty][r.name] = OrderedDict()
                 self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
                     #print(r.name, q.name, sep="\t")
-                    bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
-                    self.bglist[ty][r.name][q.name] = bg
-                    self.qlist[ty][r.name][q.name] = ratio
-                    self.plist[ty][r.name][q.name] = p
-                    self.lenlist[q.name] = len(q)
-                    #if r in self.backgrounds.keys(): pass
-                    #else: self.backgrounds[r] = bg
+                    if r.name == q.name: continue
+                    else:
+                        bg, ratio, p, interq = r.projection_test(q, organism, extra=True, background=bgset)
+                        self.bglist[ty][r.name][q.name] = bg
+                        self.qlist[ty][r.name][q.name] = ratio
+                        self.plist[ty][r.name][q.name] = p
+                        self.interq_list[ty][r.name][q.name] = interq
+                        self.lenlist[q.name] = len(q)
+                        #if r in self.backgrounds.keys(): pass
+                        #else: self.backgrounds[r] = bg
          
         # multiple test correction       
         multiple_correction(self.plist)
@@ -522,21 +550,29 @@ class Projection:
         for ty in self.groupedquery.keys():
             for i, r in enumerate(self.groupedreference[ty]):
                 for j, q in enumerate(self.groupedquery[ty]):
-                    bg = self.bglist[ty][r.name][q.name]
-                    ratio = self.qlist[ty][r.name][q.name]
-                    p = self.plist[ty][r.name][q.name]
-                    #print(p)
-                    #if len(q) == 0:
-                    #    note = "Empty query!"
-                    #elif p < 0.05 and bg > ratio: 
-                    #    note = "Negatively unassociated!"
-                    #elif p < 0.05 and bg < ratio:
-                    #    note = "Positively associated!"
-                    #else:
-                    #    note = ""
-                    #print2(self.parameter, r.name+"\t"+value2str(bg)+"\t"+q.name+"\t"+value2str(ratio)+"\t"+value2str(p)+"\t"+note)
-                    
-                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+                    if r.name == q.name: continue
+                    else:
+                        bg = self.bglist[ty][r.name][q.name]
+                        ratio = self.qlist[ty][r.name][q.name]
+                        p = self.plist[ty][r.name][q.name]
+                        self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+
+    def output_interq(self, directory):
+        """Output the intersected query to the reference in BED format"""
+        try:
+            os.stat(os.path.dirname(directory))
+        except:
+            os.mkdir(os.path.dirname(directory))
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)
+        for ty in self.interq_list.keys():
+            if ty: g = ty+"_"
+            else: g = ""
+            for r in self.interq_list[ty].keys():
+                for q in self.interq_list[ty][r].keys():
+                    self.interq_list[ty][r][q].write_bed(os.path.join(directory, g+q+"_intersected_"+r+".bed"))
 
     def plot(self, logt=None, pw=3,ph=3):
         
@@ -575,15 +611,16 @@ class Projection:
             ax[ind_ty].set_title(ty)
             ax[ind_ty].yaxis.tick_left()
             ax[ind_ty].set_ylabel('Percentage of intersected regions',fontsize=8)
-            # ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            # ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right")
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='off')
+            ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
+            ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right",fontsize=8)
+            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
             ax[ind_ty].legend(self.qlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax[ind_ty].spines[spine].set_visible(False)
         # f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout()
         self.fig = f
 
     def heatmap(self):
@@ -608,6 +645,7 @@ class Projection:
 
     def gen_html(self, directory, title, args, align=50):
         dir_name = os.path.basename(directory)
+        statistic_table = []
         #check_dir(directory)
         html_header = "Projection Test: "+dir_name
         link_d = OrderedDict()
@@ -618,7 +656,7 @@ class Projection:
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         html.add_figure("projection_test.png", align="center")
         
-        header_list = ["No.",
+        header_list = ["No.", 
                        "Reference<br>name",
                        "Query<br>name", 
                        "Reference<br>number",
@@ -627,7 +665,9 @@ class Projection:
                        "Background<br>proportion",
                        "Positive<br>association<br>p-value",
                        "Negative<br>association<br>p-value"]
-        
+        statistic_table.append(["Reference_name", "Query_name","Reference_number",
+                       "Query_number", "Proportion", "Background_proportion",
+                       "Positive_association_p-value","Negative_association_p-value"])
         type_list = 'ssssssssssssssss'
         col_size_list = [5, 10,10,10,10,10,10,15,15]
         
@@ -645,6 +685,8 @@ class Projection:
                     if pv == "na": 
                         nalist.append(r)
                         continue
+                    elif self.qlist[ty][r][q] < args.cfp:
+                        continue
                     else:
                         pvn = 1-pv
                     
@@ -652,14 +694,17 @@ class Projection:
                             if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
                                 data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
+                                statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pv), value2str(pvn)])
                             else:
                                 data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pvn),value2str(pv)])
                         else:
                             data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
+                            statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
-
+            output_array(statistic_table, directory=directory, folder=title, filename="statistics"+ty+".txt")
         
         header_list=["Assumptions and hypothesis"]
         data_table = [['If the background proportion is too small, it may cause bias in p value.'],
@@ -688,7 +733,8 @@ class Projection:
                       #["Grouping tag", "-g", args.g],
                       #["Coloring tag", "-c", args.c],
                       #["Background", "-bg", args.bg],
-                      ["Organism", "-organism", args.organism]]
+                      ["Organism", "-organism", args.organism],
+                      ["Cutoff of proportion", "-cfp", str(args.cfp)]]
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
@@ -770,7 +816,7 @@ class Projection:
                 ax.barh(ind + width*ind_r, self.disperDict[ty][r], width, color=colors[ind_r])
             
             plt.xlabel('Percentage')
-            ax.xaxis.set_major_formatter(FuncFormatter(to_percentage)) 
+            ax.xaxis.set_major_formatter(mtick.FuncFormatter(to_percentage)) 
             
             ax.minorticks_off()
             ax.set_yticks([ x + 0.5 for x in range(len(self.chrom_list))])
@@ -1163,9 +1209,11 @@ class Intersect:
     def __init__(self, reference_path, query_path, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.mode_count = mode_count
@@ -1180,18 +1228,15 @@ class Intersect:
         bgbed = GenomicRegionSet(name="Background")
         if path:
             bgbed.read_bed(path)
-            nq = []
+            # nq = []
             print("\tTrimming the queries by the given background: "+path)
             
-            for q in self.query:
-                qq = q.intersect(bgbed, mode=OverlapType.ORIGINAL)
-                nq.append( qq )
-            self.query = nq
-
-        else:
-            bgbed.get_genome_data(organism=self.organism)
-
-        #self.background = bgbed
+            rlist = [ r.trim_by(background=bgbed) for r in self.references]
+            self.references = rlist
+            qlist = [ q.trim_by(background=bgbed) for q in self.query]
+            self.query = qlist
+            
+        self.background = bgbed
 
 
     def group_refque(self, groupby):
@@ -1268,8 +1313,10 @@ class Intersect:
                     
                     mp_input = []
                     for q in self.groupedquery[ty]:
-                        mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
-                                          self.counts, frequency, self.frequency, ty, r ])
+                        if r.name == q.name: continue
+                        else:
+                            mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
+                                              self.counts, frequency, self.frequency, ty, r ])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
                     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
                     mp_output = pool.map(mp_count_intersect, mp_input)
@@ -1313,11 +1360,13 @@ class Intersect:
                 plus = 0
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.set_title(self.counts.keys()[ai], y=1)
+
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 for l in self.references:
-                    if l.name == r: lr = len(l)
-                    
+                    if l.name == r: 
+                        lr = len(l)
+                        
                 if len(axs) == 1: 
                     r_label.append(r)
                 else: 
@@ -1329,6 +1378,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     if percentage:
+                        # print(lr)
                         y = 100 * (self.counts.values()[ai][r][q][2] + plus)/lr
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number
@@ -1357,7 +1407,8 @@ class Intersect:
             else:
                 f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
             
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.bar = f
 
     def stackedbar(self):
@@ -1411,7 +1462,8 @@ class Intersect:
         elif self.mode_count == "count":
             f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.sbar = f
 
     def percentagebar(self):
@@ -1474,7 +1526,8 @@ class Intersect:
                 ax.spines[spine].set_visible(False)
         f.text(-0.025, 0.5, "Proportion of intersected regions (%)", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.pbar = f
 
     def gen_html(self, directory, title, align, args):
@@ -1501,11 +1554,14 @@ class Intersect:
                        "Reference<br>number", 
                        "Query<br>number", 
                        "Intersect.",
-                       "Proportion <br>of Reference"]
-       
+                       "Proportion<br>of Reference"]
+        statistic_table = [["Reference_name","Query_name","Reference_number","Query_number", 
+                            "Intersect.","Proportion_of_Reference"]]
         if self.test_d: 
             header_list += ["Average<br>intersect.", "Chi-square<br>statistic", 
                             "Positive<br>Association<br>p-value", "Negative<br>Association<br>p-value"]
+            statistic_table[0] += ["Average_intersect.", "Chi-square_statistic", 
+                                   "Positive_Association_p-value", "Negative_Association_p-value"]
         else: pass
         
         type_list = 'ssssssssssssssss'
@@ -1536,25 +1592,35 @@ class Intersect:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                             elif self.test_d[ty][r][q][2] >= 0.05:
                                 if intern > aveinter:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
                         data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
+                        statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt)])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
-        
+            output_array(statistic_table, directory=directory, folder=title, filename="statistics"+ty+".txt")
+
         html.add_heading("Assumptions and hypothesis")
         list_ex = ['Positive association is defined by: True intersection number > Averaged random intersection.',
                    'Negative association is defined by: True intersection number < Averaged random intersection.']
@@ -1874,43 +1940,45 @@ class Intersect:
                 print("\t.", end="")
                 sys.stdout.flush()
                 for q in self.groupedquery[ty]:
-                    print(".", end="")
-                    sys.stdout.flush()
-                    if q.name in self.nalist: continue
-                    # True intersection
-                    obs = self.counts[ty][r.name][q.name]
-                    qn = q.name
-                    if obs[2] == 0:
-                        aveinter, chisq, p = "NA", "NA", "1"
+                    if r.name == q.name: continue
                     else:
-                        com = q.combine(r, change_name=False, output=True)
-                        # Randomization
-                        d = []
-                        
-                        inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
-                        mp_input = [ inp for i in range(repeat) ]
+                        print(".", end="")
+                        sys.stdout.flush()
+                        if q.name in self.nalist: continue
+                        # True intersection
+                        obs = self.counts[ty][r.name][q.name]
+                        qn = q.name
+                        if obs[2] == 0:
+                            aveinter, chisq, p = "NA", "NA", "1"
+                        else:
+                            com = q.combine(r, change_name=False, output=True)
+                            # Randomization
+                            d = []
+                            
+                            inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+                            mp_input = [ inp for i in range(repeat) ]
 
-                        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-                        mp_output = pool.map(mp_count_intersets, mp_input)
-                        pool.close()
-                        pool.join()
+                            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                            mp_output = pool.map(mp_count_intersets, mp_input)
+                            pool.close()
+                            pool.join()
 
 
 
-                        #for i in range(repeat):
-                        #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
-                        #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
-                            #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
-                        da = numpy.array(mp_output)
-                        
-                        exp_m = numpy.mean(da, axis=0)
-                        #print(exp_m)
-                        #print(obs)
-                        chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
-                        aveinter = exp_m[2]
+                            #for i in range(repeat):
+                            #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                            #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
+                                #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
+                            da = numpy.array(mp_output)
+                            
+                            exp_m = numpy.mean(da, axis=0)
+                            #print(exp_m)
+                            #print(obs)
+                            chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
+                            aveinter = exp_m[2]
 
-                    plist[ty][r.name][qn] = p
-                    self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
+                        plist[ty][r.name][qn] = p
+                        self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
                 print()
                     
             multiple_correction(plist)
