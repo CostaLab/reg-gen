@@ -294,7 +294,8 @@ def value2str(value):
         if value >= 1000: r = "{}".format(int(value))
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
-        elif 1 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 0.9999 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 1 > value > 0.9999: r = str(int(value))
         else: r = "{:.1e}".format(value)
         return r
 
@@ -1542,11 +1543,14 @@ class Intersect:
                        "Reference<br>number", 
                        "Query<br>number", 
                        "Intersect.",
-                       "Proportion <br>of Reference"]
-       
+                       "Proportion<br>of Reference"]
+        statistic_table = [["Reference_name","Query_name","Reference_number","Query_number", 
+                            "Intersect.","Proportion_of_Reference"]]
         if self.test_d: 
             header_list += ["Average<br>intersect.", "Chi-square<br>statistic", 
                             "Positive<br>Association<br>p-value", "Negative<br>Association<br>p-value"]
+            statistic_table[0] += ["Average_intersect.", "Chi-square_statistic", 
+                                   "Positive_Association_p-value", "Negative_Association_p-value"]
         else: pass
         
         type_list = 'ssssssssssssssss'
@@ -1577,25 +1581,35 @@ class Intersect:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                             elif self.test_d[ty][r][q][2] >= 0.05:
                                 if intern > aveinter:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
                         data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
+                        statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt)])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
-        
+            output_array(statistic_table, directory=directory, folder=title, filename="statistics"+ty+".txt")
+
         html.add_heading("Assumptions and hypothesis")
         list_ex = ['Positive association is defined by: True intersection number > Averaged random intersection.',
                    'Negative association is defined by: True intersection number < Averaged random intersection.']
