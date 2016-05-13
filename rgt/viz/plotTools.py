@@ -6,16 +6,6 @@ import os
 import time, datetime, argparse
 from collections import *
 import copy
-<<<<<<< HEAD
-import matplotlib
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
-import matplotlib.ticker as mtick
-from matplotlib import cm
-=======
->>>>>>> feature/viz
 import itertools
 import pickle
 import multiprocessing
@@ -29,7 +19,6 @@ from matplotlib import cm
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib_venn import venn2, venn3
-
 
 # Local Libraries
 # Distal Libraries

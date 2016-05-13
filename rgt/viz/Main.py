@@ -11,15 +11,7 @@ import numpy
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
-<<<<<<< HEAD
-import numpy
-import time, datetime, getpass, fnmatch
-from shutil import copyfile
-from collections import OrderedDict
-=======
 
-
->>>>>>> feature/viz
 # Local Libraries
 # Distal Libraries
 from rgt.GenomicRegionSet import GenomicRegionSet
