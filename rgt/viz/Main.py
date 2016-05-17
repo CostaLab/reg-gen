@@ -111,8 +111,9 @@ def list_all_index(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
+                print(root)
                 c += 1
-                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size="4">'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()

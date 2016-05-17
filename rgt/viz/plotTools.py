@@ -2687,8 +2687,9 @@ class Lineplot:
                                                     avearr = numpy.vstack((avearr, car))
                                                 else:
                                                     pass
-
+                                            
                                             avearr = numpy.average(avearr, axis=0)
+                                            
                                             if self.df: 
                                                 try: data[s][g][c].append(avearr)
                                                 except: data[s][g][c] = [avearr]
