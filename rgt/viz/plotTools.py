@@ -492,10 +492,10 @@ class Projection:
             self.background[ty] = bg
             rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
             self.groupedreference[ty] = rlist
+            
             qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
             self.groupedquery[ty] = qlist
-
-
+        
     def projection_test(self, organism):
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
