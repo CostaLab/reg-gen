@@ -295,7 +295,7 @@ def value2str(value):
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
         elif 0.9999 > value > 0.0001: r = "{:.4f}".format(value)
-        elif 1 > value > 0.9999: r = str(int(value))
+        elif 1 > value > 0.9999: r = "1"
         else: r = "{:.1e}".format(value)
         return r
 
@@ -417,7 +417,7 @@ def mp_count_intersect(inputs):
         print(".", end="")
         sys.stdout.flush()
         c = r.intersect_count(q, mode_count=mode_count, threshold=threshold)
-        #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+        
         output.append(c)
         #counts[ty][r.name][q.name] = c
         if frequency: 
@@ -1214,18 +1214,28 @@ class Intersect:
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
-        bgbed = GenomicRegionSet(name="Background")
-        if path:
-            bgbed.read_bed(path)
-            # nq = []
-            print("\tTrimming the queries by the given background: "+path)
+        # bgbed = GenomicRegionSet(name="Background")
+        # if path:
+        #     bgbed.read_bed(path)
+        #     # nq = []
+        #     print("\tTrimming the queries by the given background: "+path)
             
-            rlist = [ r.trim_by(background=bgbed) for r in self.references]
-            self.references = rlist
-            qlist = [ q.trim_by(background=bgbed) for q in self.query]
-            self.query = qlist
+        #     rlist = [ r.trim_by(background=bgbed) for r in self.references]
+        #     self.references = rlist
+        #     qlist = [ q.trim_by(background=bgbed) for q in self.query]
+        #     self.query = qlist
             
-        self.background = bgbed
+        # self.background = bgbed
+
+        bg = GenomicRegionSet("background")
+        bg.read_bed(path)
+        self.background = bg
+        for ty in self.groupedreference.keys():
+            # self.background[ty] = bg
+            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
 
 
     def group_refque(self, groupby):
@@ -1961,8 +1971,8 @@ class Intersect:
                             da = numpy.array(mp_output)
                             
                             exp_m = numpy.mean(da, axis=0)
-                            #print(exp_m)
-                            #print(obs)
+                            # print(exp_m)
+                            # print(obs)
                             chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
                             aveinter = exp_m[2]
 

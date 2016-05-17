@@ -742,70 +742,17 @@ class GenomicRegionSet:
             return len(self), 0, 0
 
         else:
-            a = copy.deepcopy(self)
-            b = copy.deepcopy(regionset)
-            # If there is overlap within self or y, they should be merged first. 
-            if not a.sorted: a.sort()
-            if not b.sorted: b.sort()
-            
+            a = deepcopy(self)
+            b = deepcopy(regionset)
             a.merge()
             b.merge()
-
             if mode_count=="count":
-                if threshold:
-                    if a.total_coverage() == 0:
-                        print("\n ** Warning : "+ bed1.name +" has no length (only points) for finding intersection with given threshold.")
-                        sys.exit(1)
-                    if b.total_coverage() == 0:
-                        print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
-                        sys.exit(1)
-                    if 50 >= threshold > 0:
-                        a.extend(-threshold,-threshold, percentage=True)
-                    elif threshold > 50 or threshold < 0:
-                        print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
-                        sys.exit(1)
-                
-                iter_a = iter(a)
-                s = iter_a.next()
-                last_j = len(b)-1
-                j = 0
-                cont_loop = True
-                pre_inter = 0
-                cont_overlap = False
-                
-                c_a = len(a)
-                c_b = len(b)
-                c_ab = 0
 
-                while cont_loop:
-                    # When the regions overlap
-                    if s.overlap(b[j]):
-                        c_ab += 1
-                        
-                        if cont_overlap == False: pre_inter = j
-                        if j == last_j: 
-                            try: 
-                                s = iter_a.next()
-                                c_a -= 1
-                            except: cont_loop = False 
-                        else: 
-                            j = j + 1
-                            c_b -= 1
-                        cont_overlap = True
-                    
-                    elif s < b[j]:
-                        try: 
-                            s = iter_a.next()
-                            j = pre_inter
-                            cont_overlap = False
-                        except: cont_loop = False 
-                    
-                    elif s > b[j]:
-                        if j == last_j:
-                            cont_loop = False
-                        else:
-                            j = j + 1
-                            cont_overlap = False
+                inter = a.intersect(b, mode=OverlapType.ORIGINAL)
+                inter2 = b.intersect(a, mode=OverlapType.ORIGINAL)
+                c_a = len(a) - len(inter)
+                c_b = len(b) - len(inter2)
+                c_ab = len(inter)    
                 return c_a, c_b, c_ab
 
             elif mode_count=="bp":

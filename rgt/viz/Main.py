@@ -433,10 +433,11 @@ def main():
             
             # Fetching reference and query EM
             inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
-            # Setting background
-            inter.background(args.bg)
+            
             # Grouping
             inter.group_refque(args.g)
+            # Setting background
+            inter.background(args.bg)
             
             # Extension
             if args.ex == 0: pass
