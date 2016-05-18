@@ -111,7 +111,7 @@ def list_all_index(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
-                print(root)
+                # print(root)
                 c += 1
                 data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size="4">'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
@@ -631,12 +631,12 @@ def main():
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.col, args.c, args.row):
-                print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
-            if "regions" not in (args.col, args.c, args.row):
-                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
+            # if "reads" not in (args.col, args.c, args.row):
+            #     print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
+            # if "regions" not in (args.col, args.c, args.row):
+            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
 
             if not os.path.isfile(args.input):
                 print("Please check the input experimental matrix again. The given path is wrong.")

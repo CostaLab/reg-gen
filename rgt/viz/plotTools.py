@@ -64,6 +64,7 @@ def gen_tags(exps, tag):
             print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     else:
+        l = exps.fieldsDict[tag]
         try: l = exps.fieldsDict[tag]
         except: 
             print('Cannot find the column "' + tag +'"')
@@ -2612,10 +2613,7 @@ class Lineplot:
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
-        # totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
-
         
-        # if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
             data[s] = OrderedDict()
@@ -2631,38 +2629,27 @@ class Lineplot:
                                 # print(self.cuebam[bam])
                                 # print(set([s,g,c]))
                                 if self.cuebam[bam] <= set([s,g,c]):
-                                    if mp: 
-                                        if self.annotation:
-                                            i = annot_ind(self.bednames, [s,g,c])
-                                        else: i = self.bednames.index(bed)
-                                        j = self.readsnames.index(bam)
+                                    i = self.bednames.index(bed)
+                                    j = self.readsnames.index(bam)
+                                    if len(self.processed_beds[i]) == 0:
+                                        data[s][g][c] = numpy.empty(1, dtype=object)
+                                        continue
+
+                                    if mp:
+                                        # Multiple processing
                                         mp_input.append([ self.processed_beds[i], self.reads[j], 
                                                           self.rs, self.bs, self.ss, self.center, heatmap, logt,
                                                           s, g, c])
                                         if self.df: data[s][g][c] = []
                                         else: data[s][g][c] = 0
+                                    
                                     else:
-                                        
+                                        # Single thread
                                         ts = time.time()
-                                        if self.annotation:
-                                            i = annot_ind(self.bednames, [s,g,c])
-                                        else: i = self.bednames.index(bed)
-                                        j = self.readsnames.index(bam)
-                                        
                                         cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                         
-                                        if "Conservation" in bam:
-                                            cov.phastCons46way_score(stepsize=self.ss)
-                                        elif ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
-                                            if self.reads[j].startswith("http://"):
-                                                
-                                                tab = self.reads[j].split('/')[-1]
-                                                temp = os.path.join(os.getcwd(),"temp_bigwig_"+tab)
-                                                get_url(url=self.reads[j], filename=temp)
-                                                cov.coverage_from_bigwig(bigwig_file=temp, stepsize=self.ss)
-                                                #os.remove(temp)
-                                            else:
-                                                cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                        if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                            cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
 
                                         else:
                                             cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
@@ -2796,23 +2783,24 @@ class Lineplot:
                         ax.set_title(g,fontsize=ticklabelsize+2)
                     
                 # Processing for future output
-                    
                 for j, c in enumerate(self.data[s][g].keys()):
                     
                     y = self.data[s][g][c]
-                    
                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                     sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
                     if self.df: 
                         yaxmin[i] = min(numpy.amin(y), yaxmin[i])
                         sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
-                    
-                    x = numpy.linspace(-self.extend, self.extend, len(y))
-                    ax.plot(x,y, color=self.colors[c], lw=1)
-                    if it < nit - 1:
-                        ax.set_xticklabels([])
-                    # Processing for future output
-                    if printtable: pArr.append([g,s,c]+list(y))
+
+                    if not y.all():
+                        pass
+                    else:
+                        x = numpy.linspace(-self.extend, self.extend, len(y))
+                        ax.plot(x,y, color=self.colors[c], lw=1)
+                        if it < nit - 1:
+                            ax.set_xticklabels([])
+                        # Processing for future output
+                        if printtable: pArr.append([g,s,c]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
@@ -2826,8 +2814,6 @@ class Lineplot:
         if printtable:
             output_array(pArr, directory = output, folder =self.title,filename="plot_table.txt")
         
-
-                
         for it,ty in enumerate(self.data.keys()):
             try: 
                 axs[it,0].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
