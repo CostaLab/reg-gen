@@ -9,6 +9,7 @@ import copy
 import itertools
 import pickle
 import multiprocessing
+import multiprocessing.pool
 import urllib2
 import re
 import numpy
@@ -332,24 +333,15 @@ def multiple_correction(dic):
 
 def compute_coverage(input):
     """
-    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c
+    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c, d
     """
-    
     ts = time.time()
     cov = CoverageSet(input[0].name+".", input[0])
-
-
-    if "Conservation" in input[1]:
-        cov.phastCons46way_score(stepsize=input[4])
-    elif ".bigWig" in input[1] or ".bw" in input[1]:
+    if ".bigWig" in input[1] or ".bw" in input[1]:
         cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
     else:
         cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
         cov.normRPM()
-
-
-    #cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
-    #cov.normRPM()
     # When bothends, consider the fliping end
     if input[5] == 'bothends':
         flap = CoverageSet("for flap", input[0])
@@ -378,7 +370,7 @@ def compute_coverage(input):
         #print(avearr.shape)
         avearr = numpy.average(avearr, axis=0)
         #numpy.transpose(avearr)
-        result = [input[8], input[9], input[10], avearr] # Store the array into data list
+        result = [input[8], input[9], input[10], input[11], avearr] # Store the array into data list
     te = time.time()
     print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
@@ -439,6 +431,18 @@ def get_url(url, filename):
     f.close()
     print("\t... Done")
 
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -2624,17 +2628,15 @@ class Lineplot:
                     #if self.df: data[s][g][c] = []
                     data[s][g][c] = OrderedDict()
                     if not self.dft:
-                        dfts = [c]
+                        dfs = [c]
                     else:
-                        # print(self.exps.fieldsDict[self.dft].keys())
                         dfs = self.exps.fieldsDict[self.dft].keys()
-                        # sys.exit(1)
                     for d in dfs:
-
                         for bed in self.cuebed.keys():
                             # print(self.cuebed[bed])
                             # print(set([s,g,c,d]))
-                            if len(self.cuebed[bed].intersection(set([s,g,c,d])))>2:
+                            # print(self.cuebed[bed].issubset(set([s,g,c,d])))
+                            if len(self.cuebed[bed].intersection(set([s,g,c,d])))>2 or self.cuebed[bed].issubset(set([s,g,c,d])):
                             # if self.cuebed[bed] <= set([s,g,c]):
                                 for bam in self.cuebam.keys():
                                     # print(self.cuebam[bam])
@@ -2643,18 +2645,16 @@ class Lineplot:
                                         i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
                                         if len(self.processed_beds[i]) == 0:
-                                            try: data[s][g][c].append(numpy.empty(1, dtype=object))
-                                            except: data[s][g][c] = [ numpy.empty(1, dtype=object) ]
+                                            try: data[s][g][c][d].append(numpy.empty(1, dtype=object))
+                                            except: data[s][g][c][d] = [ numpy.empty(1, dtype=object) ]
                                             continue
-
                                         if mp:
                                             # Multiple processing
                                             mp_input.append([ self.processed_beds[i], self.reads[j], 
                                                               self.rs, self.bs, self.ss, self.center, heatmap, logt,
-                                                              s, g, c])
-                                            if self.df: data[s][g][c] = []
-                                            else: data[s][g][c] = 0
-                                        
+                                                              s, g, c, d ])
+                                            data[s][g][c][d] = None
+                                            
                                         else:
                                             # Single thread
                                             ts = time.time()
@@ -2662,11 +2662,9 @@ class Lineplot:
                                             
                                             if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
-
                                             else:
                                                 cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                                 cov.normRPM()
-
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
                                                 if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
@@ -2683,9 +2681,9 @@ class Lineplot:
                                             # Averaging the coverage of all regions of each bed file
                                             if heatmap:
                                                 if logt:
-                                                    data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
+                                                    data[s][g][c][d] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
                                                 else:
-                                                    data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
+                                                    data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
                                             else:
                                                 for i, car in enumerate(cov.coverage):
                                                     car = numpy.delete(car, [0,1])
@@ -2705,27 +2703,29 @@ class Lineplot:
                                                 else:
                                                     try: data[s][g][c][d].append(avearr)
                                                     except: data[s][g][c][d] = [avearr]
-                                                # else: data[s][g][c] = avearr # Store the array into data list
+                                                
                                             bi += 1
                                             te = time.time()
                                             print2(self.parameter, "\t"+str(bi)+"\t"+"{0:30}\t--{1:<5.1f}s".format(bed+"."+bam, ts-te))
-                                            #sys.stdout.flush()
-        
+
         if mp: 
-            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            pool = MyPool(multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
             pool.close()
             pool.join()
-        
             for s in data.keys():
                 for g in data[s].keys():
                     for c in data[s][g].keys():
-                        for out in mp_output:
-                            if out[0] == s and out[1] == g and out[2] == c:
-                                if self.df:
-                                    data[s][g][c].append(out[3])
-                                else:
-                                    data[s][g][c] = out[3]     
+                        for d in data[s][g][c].keys():
+                            for out in mp_output:
+                                if out[0] == s and out[1] == g and out[2] == c and out[3] == d:
+                                    if self.df:
+                                        try: data[s][g][c][d][-1].append(out[4])
+                                        except: data[s][g][c][d] = [[out[4]]]
+                                    else:
+                                        try: data[s][g][c][d].append(out[4])
+                                        except: data[s][g][c][d] = [out[4]]  
             te = time.time()
             
         if self.df:
@@ -2737,13 +2737,9 @@ class Lineplot:
                         for d in data[s][g][c].keys():
                             for i, e in enumerate(data[s][g][c][d]):
                                 diff = numpy.subtract(e[0],e[1])
-                                try:
-                                    data[s][g][c][d][i] = diff
-                                except: pass
-      
+                                data[s][g][c][d][i] = diff
         self.data = data
         
-        # purge(os.getcwd(),"temp_bigwig_")
         
     def colormap(self, colorby, definedinEM):
         colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
@@ -2798,7 +2794,6 @@ class Lineplot:
                     
                     for k, d in enumerate(self.data[s][g][c].keys()):
                         for l, y in enumerate(self.data[s][g][c][d]):
-                   
                             yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                             sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
                             if self.df: 
@@ -2809,11 +2804,12 @@ class Lineplot:
                                 pass
                             else:
                                 x = numpy.linspace(-self.extend, self.extend, len(y))
+
                                 ax.plot(x,y, color=self.colors[c], lw=1, label=c)
                                 if it < nit - 1:
                                     ax.set_xticklabels([])
                                 # Processing for future output
-                                if printtable: pArr.append([g,s,c,c]+list(y))
+                                if printtable: pArr.append([g,s,c,d]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
@@ -2833,11 +2829,6 @@ class Lineplot:
             except:
                 try: axs[it].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
                 except: axs.set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
-                #if len(self.data.keys()) == 1:
-                #    axs.set_ylabel("{}".format(ty),fontsize=12)
-                    #axs.set_ylabel("{}".format(ty),fontsize=12)
-                #else:
-                #    axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
             if scol:
                 for i,g in enumerate(self.data[ty].keys()):
@@ -2874,26 +2865,6 @@ class Lineplot:
                                 axs[i].set_ylim([0, sx_ymax[it]*1.2])
                             else:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
-        # legend_list = []
-        # for co in self.color_tags:
-        #     print(co)
-        #     # l = 
-        #     # print(matplotlib.patches.Rectangle(color=self.colors[co], label=co))
-        #     legend_list.append(matplotlib.patches.Rectangle([0, 0], 0.05, 0.1, ec="none",
-        #                                                      color=self.colors[co], label=co))
-
-            # try:
-            #     axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-            #                      columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-            # except:
-            #     try:
-            #         axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-            #                        columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-            #     except:
-            #         axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-            #                    columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-        # plt.legend(handles=legend_list, label=self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-        #            columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
         
         handles, labels = ax.get_legend_handles_labels()
         uniq_labels = unique(labels)
@@ -2901,7 +2872,6 @@ class Lineplot:
         plt.legend([handles[labels.index(l)] for l in uniq_labels ], uniq_labels, loc='center left', handlelength=1, handletextpad=1, 
                    columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
                 
-        # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.tight_layout()
         self.fig = f
 
