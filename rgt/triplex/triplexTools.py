@@ -2103,7 +2103,7 @@ class PromoterTest:
                 for p in spromoters:
                     try: gene_sym = self.ensembl2symbol[p.name].upper()
                     except: gene_sym = p.name.upper()
-                    sscores.append(self.de_gene.values[gene_sym])
+                    sscores.append(self.de_gene.values[gene_sym.upper()])
 
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
