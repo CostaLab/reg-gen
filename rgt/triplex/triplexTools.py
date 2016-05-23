@@ -2101,8 +2101,8 @@ class PromoterTest:
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
-                    try: gene_sym = self.ensembl2symbol[p.name]
-                    except: gene_sym = p.name
+                    try: gene_sym = self.ensembl2symbol[p.name].upper()
+                    except: gene_sym = p.name.upper()
                     sscores.append(self.de_gene.values[gene_sym])
 
                 if isinstance(sscores[0], str):
