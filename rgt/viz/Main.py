@@ -285,6 +285,7 @@ def main():
     parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing.")
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
+    parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -438,7 +439,7 @@ def main():
             inter.group_refque(args.g)
             # Setting background
             inter.background(args.bg)
-            
+
             # Extension
             if args.ex == 0: pass
             elif args.ex > 0: inter.extend_ref(args.ex)
@@ -649,7 +650,7 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c],
+                                bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
                                 test=args.test)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
