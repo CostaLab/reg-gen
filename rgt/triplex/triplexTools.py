@@ -2101,9 +2101,11 @@ class PromoterTest:
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
+
                     try: gene_sym = self.ensembl2symbol[p.name].upper()
                     except: gene_sym = p.name.upper()
-                    sscores.append(self.de_gene.values[gene_sym.upper()])
+                    try: sscores.append(self.de_gene.values[gene_sym.upper()])
+                    except: sscores.append(0)
 
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
@@ -2136,6 +2138,7 @@ class PromoterTest:
                                 new_scores.append(float("inf"))
                             elif s == "-Inf" or s == "-inf":
                                 new_scores.append(-float("inf"))
+                            elif isinstance(s, str): new_scores.append(s)
                             else: new_scores.append(abs(float(s)))
                             
                         scores = new_scores  
