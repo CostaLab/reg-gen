@@ -2,7 +2,7 @@
 #
 #  RGT - Regulatory Genomics Toolbox
 #
-#  Authors: Eduardo G Gusmao does not like GIT
+#  Authors: Eduardo G Gusmao
 #           Manuel Allhoff 
 #           Joseph Kuo
 #           Ivan G Costa 
