@@ -59,7 +59,7 @@ parser.add_option("--hg19-gtf-path", type = "string", metavar="STRING",
                   dest = "hg19_gtf_path", default = None)
 parser.add_option("--hg38-gtf-path", type = "string", metavar="STRING",
                   help = "Path to an already existing hg38 GTF file.",
-                  dest = "hg19_gtf_path", default = None)
+                  dest = "hg38_gtf_path", default = None)
 parser.add_option("--mm9-gtf-path", type = "string", metavar="STRING",
                   help = "Path to an already existing mm9 GTF file.",
                   dest = "mm9_gtf_path", default = None)

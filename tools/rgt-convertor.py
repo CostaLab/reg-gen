@@ -85,6 +85,7 @@ if __name__ == "__main__":
 
 
     ############### GTF to FASTA #############################################
+    # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
                                              help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
     parser_gtf2fasta.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
@@ -94,22 +95,26 @@ if __name__ == "__main__":
     parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
     
     ############### GTF add chr on each entry #################################
+    # python rgt-convertor.py
     parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
                                              help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
     parser_gtfachr.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     
     ############### BED add score ############################################
+    # python rgt-convertor.py
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
     parser_bedac.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedac.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', type=str, help="Define value to add")
 
     ############### BED merge by name ############################################
+    # python rgt-convertor.py
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
     parser_bedmn.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedmn.add_argument('-o', '-output', type=str, help="Output BED file")
 
     ############### BED rename ###############################################
+    # python rgt-convertor.py
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
     parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
@@ -121,6 +126,7 @@ if __name__ == "__main__":
                                   help="Define the threshold of distance (default:50000bp")
     
     ############### BED extend ###############################################
+    # python rgt-convertor.py
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
     parser_bedex.add_argument('-i', type=str, help="Input BED file")
     parser_bedex.add_argument('-o', type=str, help="Output BED name.")
@@ -131,6 +137,7 @@ if __name__ == "__main__":
                               help="Extend from the both ends.")
 
     ############### BED get promoters ########################################
+    # python rgt-convertor.py bed_get_promoters -i -o -organism
     parser_bedgp = subparsers.add_parser('bed_get_promoters', 
                        help="[BED] Get promoters from the given genes")
     parser_bedgp.add_argument('-i', '-input', type=str, help="Input file (BED or gene list)")
@@ -545,6 +552,7 @@ if __name__ == "__main__":
     elif args.mode == "bed_get_promoters":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
         gene = GenomicRegionSet("genes")
         ### Input BED file
         if args.i.endswith(".bed"):
@@ -565,6 +573,7 @@ if __name__ == "__main__":
                                 filter_havana=False, protein_coding=False, known_only=False)
             de_gene = GeneSet("de genes")
             de_gene.read(args.i)
+            print(len(de_gene))
             promoter = ann.get_promoters(promoterLength=args.l, gene_set=de_gene, unmaplist=False)
             #print(len(de_prom))
 
@@ -655,7 +664,7 @@ if __name__ == "__main__":
 
         with open(args.gene) as f:
             genes = f.read().splitlines()
-            genes = map(lambda x: x.upper(),genes)
+            genes = map(lambda x: x.split("\t")[0].upper(), genes)
             print(str(len(genes))+" genes are loaded.")
 
         with open(args.i) as fi, open(args.o, "w") as fo:

@@ -61,23 +61,37 @@ class GenomicRegionSet:
     def __getitem__(self, key):
         return self.sequences[key]
 
-    def extend(self, left, right, percentage=False):
+    def extend(self, left, right, percentage=False, w_return=False):
         """Perform extend step for every element.
 
         *Keyword arguments:*
 
             - percentage -- input value of left and right can be any positive value or negative value larger than -50 %
         """
-        if percentage:
-            if percentage > -50:
-                for s in self.sequences:
-                    s.extend(int(len(s)*left/100), int(len(s)*right/100))
+        if not w_return:
+            if percentage:
+                if percentage > -50:
+                    for s in self.sequences:
+                        s.extend(int(len(s)*left/100), int(len(s)*right/100))
+                else:
+                    print("*** Error: Percentage for extension must be larger than 50%%.")
+                    sys.exit(0)
             else:
-                print("*** Error: Percentage for extension must be larger than 50%%.")
-                sys.exit(0)
+                for s in self.sequences:
+                    s.extend(left, right)
         else:
-            for s in self.sequences:
-                s.extend(left, right)
+            a = copy.deepcopy(self)
+            if percentage:
+                if percentage > -50:
+                    for s in a.sequences:
+                        s.extend(int(len(s)*left/100), int(len(s)*right/100))
+                else:
+                    print("*** Error: Percentage for extension must be larger than 50%%.")
+                    sys.exit(0)
+            else:
+                for s in a.sequences:
+                    s.extend(left, right)
+            return a
 
     def sort(self, key=None, reverse=False):
         """Sort Elements by criteria defined by a GenomicRegion.
@@ -1956,3 +1970,82 @@ class GenomicRegionSet:
         a = self.gene_association(organism=organism)
         for i,r in enumerate(self):
             r.data = r.data + "\t"+a[i].name
+
+    def longest_region(self, return_set=False):
+        """Return the longest region(s)"""
+        length_list = [ len(region) for region in self ]
+        max_len = max(length_list)
+        longest_ind = [i for i, j in enumerate(length_list) if j == max_len]
+        if not return_set:
+            return self[longest_ind[0]]
+        else:
+            z = GenomicRegionSet("longest regions")
+            for i in longest_ind:
+                z.add(self[i])
+        
+    def sample_close_region(self, background, min_dis=200, len_each=100):
+        """Return a GenomicRegionSet which includes the regions close to the self and within the backgourd under the limit of distance."""
+        
+        def random_choose(col_regionset):
+            options = []
+            for i, region in enumerate(col_regionset):
+                if len(region) > len_each:
+                    options.append(i)
+            if options:
+                ind = random.sample(options, 1)[0]
+                ssite = random.sample(range(col_regionset[ind].initial, col_regionset[ind].final-len_each), 1)[0]
+                res = GenomicRegion(chrom=col_regionset[ind].chrom,
+                                    initial=ssite,
+                                    final=ssite + len_each,
+                                    orientation=col_regionset[ind].orientation)
+            else:
+                print("Find no available space in "+col_regionset[0].chrom+
+                      ":"+str(col_regionset[0].initial)+"-"+str(col_regionset[-1].final))
+                longest = col_regionset.longest_region()
+                mid = int(0.5*(longest.final + longest.initial))
+                res = GenomicRegion(chrom=longest.chrom,
+                                    initial=mid - int(0.5*len_each),
+                                    final=mid + int(0.5*len_each),
+                                    orientation=longest.orientation)
+            return res
+        # print(len(background))
+        a = background.intersect(self, mode = OverlapType.ORIGINAL)
+        # print(len(a))
+        b = self.extend(left=min_dis, right=min_dis,w_return=True)
+        b.merge()
+        c = a.subtract(b)
+        # Iteration
+        iter_a = iter(a)
+        sa = iter_a.next()
+        iter_c = iter(c)
+        sc = iter_c.next()
+        # Loop
+        z = GenomicRegionSet("sample")
+        q_coll = GenomicRegionSet(sa.toString())
+        cont_loop = True
+        while cont_loop:
+            # print("\t".join([sa.toString(), sc.toString()]))
+            if sa.overlap(sc):
+                q_coll.add(sc)
+                try: sc = iter_c.next()
+                except: 
+                    if len(q_coll):
+                        z.add(random_choose(col_regionset=q_coll))
+                    try: sa = iter_a.next()
+                    except: cont_loop = False
+            elif sa < sc:
+                if len(q_coll):
+                    z.add(random_choose(col_regionset=q_coll))
+                q_coll = GenomicRegionSet(sa.toString())
+                try: sa = iter_a.next()
+                except: cont_loop = False
+
+            else:
+                if len(q_coll):
+                    z.add(random_choose(col_regionset=q_coll))
+                q_coll = GenomicRegionSet(sa.toString())
+                try: sc = iter_c.next()
+                except: cont_loop = False
+
+        return z
+
