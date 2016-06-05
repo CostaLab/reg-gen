@@ -1,0 +1,11 @@
+Time: 2016-06-05 18:59:00
+User: laneskij
+
+Command:
+	$ /home/laneskij/reg-gen/rgt/viz/Main.py jaccard -r /home/laneskij/practices/3_rgt_viz/Matrix_H3K4me3.txt -q /home/laneskij/practices/3_rgt_viz/Matrix_PU1.txt -o viz_results -t jaccard -g cell -organism mm9 -rt 10
+
+Jaccard Test
+Reference	Query	Repeats	True_Jaccard_index	p-value	Time
+cDC_H3K4me3_peaks	cDC_PU1_peaks	x10	0.0098	0	0:01:38
+
+Total running time is : 0:01:38

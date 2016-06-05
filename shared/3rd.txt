@@ -1,0 +1,10 @@
+FASTA, FASTQ:
+Sequences -> FASTA: Without quality, FASTQ with
+
+SAM, BAM: Alignment, B = Binary
+
+BED, BIGBED:
+Genomic regions
+
+WIG, BIGWIG:
+

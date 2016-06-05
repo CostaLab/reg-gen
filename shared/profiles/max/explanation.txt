@@ -1,0 +1,5 @@
+Command-Line:
+python2.7 -m cProfile -s cumtime /home/max/builds/reg-gen/rgt/viz/Main.py jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t jaccard -g cell -organism test -rt 25
+
+0000.profile	initial
+0001.profile	commented out unnecessary deepcopy in the beginning of GenomicRegionSet.py:jaccard

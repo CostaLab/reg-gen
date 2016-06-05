@@ -1,0 +1,5 @@
+python2.7 -m cProfile -s time ../../reg-gen/rgt/viz/Main.py jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t jaccard -g cell -organism test -rt 10
+
+Problem:
+Once profiling, the script does not do the expected.
+

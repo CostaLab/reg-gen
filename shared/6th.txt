@@ -1,0 +1,30 @@
+profiling: 3 people
+one testing
+one adding seeds
+
+add seeds to every call of random
+main problem: deep copy
+-> refactor deep copies where possible / safe
+rewrite parts in C
+parallelisation
+
+
+# Profile
+python2.7 -m cProfile -s cumtime /home/max/builds/reg-gen/rgt/viz/Main.py jaccard -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t jaccard -g cell -organism test -rt 25 > profile.txt
+
+# Update installation
+sudo python2 setup.py install --rgt-data-path=/home/max/rgtdata
+
+# Get changes from remote-master branch into local algo branch
+# Save local changes
+git stash
+# Switch to master branch
+git checkout master
+# Get remote updates for master
+git pull
+# Switch to branch algo
+git checkout algo
+# Integrate changes from master into algo
+git rebase master
+# Re-apply local changes
+git stash apply

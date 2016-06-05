@@ -1,0 +1,22 @@
+=========== Part 1 ===========
+bigwig -> coverageSet (one file) multiCoverageSet
+parallel I/O, improving read speed, reading from web!
+
+bigbed -> GenomicRegionSet (currently only bed can be read not bigbed)
+bigbed have different variants
+
+profiling
+
+Files: CoverageSet
+
+=========== Part 2 ===========
+GenomicRegionSet
+Jaccard-Test, Intersection Test, Motif Analysis -> all slow
+start profiling
+Jaccard: One vs. many random
+compare with bedtools
+cython
+gprofiler to profile python for time
+use example from last week for Jaccard test
+
+Files: GenomicRegionSet

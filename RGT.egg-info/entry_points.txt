@@ -1,0 +1,4 @@
+[console_scripts]
+rgt-motifanalysis = rgt.motifanalysis.Main:main
+rgt-viz = rgt.viz.Main:main
+

@@ -1,0 +1,2 @@
+In the  plotTools.py in the function count_intersect(bla bla) we have bed1 and bed2 but there is no operation that can do any significant changes on them. There are only some comparing operation. 
+ 
