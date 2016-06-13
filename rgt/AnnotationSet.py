@@ -512,7 +512,7 @@ class AnnotationSet:
             unmapped_list = []
             for e in curr_list:
                 try: mapped_list.append(self.symbol_dict[e])
-                except Exception: unmapped_list.append(self.symbol_dict[e])
+                except Exception: unmapped_list.append(e)
             return mapped_list, unmapped_list
 
     def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False):

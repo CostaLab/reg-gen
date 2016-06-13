@@ -456,6 +456,7 @@ def main():
     parser_bed2bed.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
     
     ##########################################################################
+    # rgt-TDF integrate -path 
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     ##########################################################################
