@@ -50,8 +50,10 @@ class GeneSet:
                     l = line.split()
                     if l[0] != "":
                         if "." in l[0]:
-                            # print(l[0].partition(".")[0].upper())
-                            self.genes.append(l[0].partition(".")[0].upper())
+                            self.genes.append(l[0].upper())
+                            # self.genes.append(l[0].partition(".")[0].upper())
+                        elif "," in l[0]:
+                            self.genes.append(l[0].partition(",")[0].upper())
                         else:
                             self.genes.append(l[0].upper())
             
@@ -80,10 +82,10 @@ class GeneSet:
                 l = line.split("\t")
                 if l[0] != "":
                     try:
-                        if "." in l[0]:
-                            na = l[0].partition(".")[0].upper()
-                        else:
-                            na = l[0].upper()
+                        # if "." in l[0]:
+                        #     na = l[0].partition(".")[0].upper()
+                        # else:
+                        na = l[0].upper()
                         self.genes.append(na)
                         #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
                         if not valuestr:
@@ -127,6 +129,7 @@ class GeneSet:
 
             - a_gene -- A gene symbol.
         """
+        # g = a_gene.partition(".")[0].upper()
         g = a_gene.upper()
-        
+
         return (g in self.genes)

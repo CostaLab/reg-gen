@@ -65,7 +65,7 @@ tools_dictionary = {
     ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
      "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
-     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
+     "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
@@ -336,7 +336,7 @@ short_description = "Toolkit to perform regulatory genomics data analysis"
 classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatic",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 keywords_list = ["ChIP-seq","DNase-seq","Peak Calling","Motif Discovery","Motif Enrichment","HMM"]
-author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Joseph Kuo","Ivan G. Costa"]
+author_list = ["Eduardo G. Gusmao","Manuel Allhoff","Chao-Chung Kuo","Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
@@ -357,40 +357,20 @@ readme_file.close()
 # Setup Function
 
 
-if "viz" in options.param_rgt_tool:
-    module_wig = Extension('wWigIO',['external/KentLib/wWigIO/wWigIO.c'],
-                           extra_link_args=['-DMACHTYPE_x86_64','-lz','-lm','external/KentLib/lib/jkweb.a'],
-                           extra_compile_args='-w -shared -fPIC -p -Iexternal/KentLib/inc'.split(' '))
-    setup(name = "RGT",
-          version = current_version,
-          description = short_description,
-          long_description = long_description,
-          classifiers = classifiers_list,
-          keywords = ", ".join(keywords_list),
-          author = ", ".join(author_list),
-          author_email = corresponding_mail,
-          license = license_type,
-          packages = find_packages(),
-          package_data = package_data_dictionary,
-          entry_points = current_entry_points,
-          install_requires = current_install_requires,
-          scripts = external_scripts,
-          ext_modules=[module_wig] )
-else:
-    setup(name = "RGT",
-          version = current_version,
-          description = short_description,
-          long_description = long_description,
-          classifiers = classifiers_list,
-          keywords = ", ".join(keywords_list),
-          author = ", ".join(author_list),
-          author_email = corresponding_mail,
-          license = license_type,
-          packages = find_packages(),
-          package_data = package_data_dictionary,
-          entry_points = current_entry_points,
-          install_requires = current_install_requires,
-          scripts = external_scripts )
+setup(name = "RGT",
+      version = current_version,
+      description = short_description,
+      long_description = long_description,
+      classifiers = classifiers_list,
+      keywords = ", ".join(keywords_list),
+      author = ", ".join(author_list),
+      author_email = corresponding_mail,
+      license = license_type,
+      packages = find_packages(),
+      package_data = package_data_dictionary,
+      entry_points = current_entry_points,
+      install_requires = current_install_requires,
+      scripts = external_scripts )
 ###################################################################################################
 # Termination
 ###################################################################################################

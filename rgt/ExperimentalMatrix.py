@@ -112,28 +112,37 @@ class ExperimentalMatrix:
                 self.files[line[0]] = line[2] #dict: filename -> filepath
                 self.types.append(line[1])
                 
+                curr_id = None
                 for fi in range(3, len(self.fields)): #read further information
                     d = self.fieldsDict[ self.fields[fi] ]
                     # print(line[fi])
                     if "," in line[fi] and "(" not in line[fi]:
                         for t in line[fi].split(","):
-                            try:
-                                d[t].append(line[0])
-                            except:
-                                try:
-                                    d[t] = [line[0]]
-                                except:
-                                    continue
+                            try: d[t].append(line[0]+t)
+                            except: d[t] = [line[0]+t]
+                            self.names.append(line[0]+t)
+                            self.files[line[0]+t] = line[2]
+                            self.types.append(line[1])
+                            for f in range(3, len(self.fields)):
+                                if f != fi:
+                                    try: self.fieldsDict[ self.fields[f] ][line[f]].append(line[0]+t)
+                                    except: self.fieldsDict[ self.fields[f] ][line[f]] = [line[0]+t]
+
+                            if line[0] not in self.trash: 
+                                self.trash.append(line[0])
+                            
                     else:
-                        try:
-                            d[line[fi]].append(line[0])
-                        except:
-                            try:
-                                d[line[fi]] = [line[0]]
-                            except:
-                                continue
+                        
+                        if curr_id:
+                            try: d[line[fi]] += curr_id
+                            except: d[line[fi]] = curr_id
+                        else:
+                            try: d[line[fi]].append(line[0])
+                            except: d[line[fi]] = [line[0]]
+                            
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
+        self.remove_name()
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
         
     def get_genesets(self):
@@ -269,16 +278,33 @@ class ExperimentalMatrix:
                     self.names.append(n)
                     self.types.append(self.types[i])
                     self.files[n] = self.files[name]
-                    types = self.get_types(name,skip_all=True)
+                    # types = self.get_types(name,skip_all=True)
                     # print("************")
                     # print(types)
-                    self.fieldsDict[field][t].append(n)
-                    for f in self.fieldsDict.keys():
-                        for ty in types:
-                            try: self.fieldsDict[f][ty].append(n)
-                            except: pass
+
+                    for f in self.fields[3:]:
+                        if f == field: 
+                            try: self.fieldsDict[f][t].append(n)
+                            except: self.fieldsDict[f][t] = [n]
+                        else:
+                            try: self.fieldsDict[f][self.get_type(name=name,field=f)].append(n)
+                            except: self.fieldsDict[f][self.get_type(name=name,field=f)] = [n]
+                    # for f in self.fieldsDict.keys():
+                    #     for ty in types:
+                    #         try: self.fieldsDict[f][ty].append(n)
+                    #         except: pass
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
                         g.read_bed(self.files[name])
                         self.objectsDict[n] = g
                     self.trash.append(name)
+
+    def remove_empty_regionset(self):
+        """Remove the entry with zero regions."""
+        for r in self.get_regionsnames():
+            if len(self.objectsDict[r]) == 0:
+                self.trash.append(r)
+                print("***Warning: "+r+" has zero regions and is ignored.")
+        self.remove_name()
+
+

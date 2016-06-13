@@ -5,7 +5,6 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 """
 
-
 from __future__ import print_function
 from rgt.GenomicRegionSet import *
 import pysam, sys  # @UnresolvedImport
@@ -14,8 +13,20 @@ import numpy.ma
 import os
 import tempfile
 import subprocess
-# from helper import BigWigFile
+import multiprocessing
 from rgt.ODIN.gc_content import get_gc_context
+import sys
+
+def mp_bigwigsummary(inarg):
+    cmd = ["bigWigSummary",inarg[0],inarg[1],inarg[2],inarg[3],inarg[4]]
+    try:
+        output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+        ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+        # print(len(ds))
+    except subprocess.CalledProcessError as e:
+        ds = [0]*int(inarg[4])
+
+    return(ds)
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -220,8 +231,6 @@ class CoverageSet:
         Class variable <coverage>: a list where the elements correspond to the GenomicRegion. The list elements give
         the number of reads falling into the GenomicRegion.
         
-        .. warning:: Function not tested. Please do not use it!
-        
         """
         
         bam = pysam.Samfile(bamFile, "rb" )
@@ -242,10 +251,10 @@ class CoverageSet:
                 
             except:
                 # pass
-                print("\tSkip: "+region.toString()+" "+region.name)
+                print("\tSkip: "+region.toString())
 
-        self.coverage=cov 
-        self.coverageOrig=cov
+        self.coverage = cov 
+        self.coverageOrig = cov
 
     def _get_bedinfo(self, l):
         if len(l) > 1:
@@ -310,9 +319,13 @@ class CoverageSet:
          the length of the <overall_cov> equals 54515813, as we take the entire genome into account, but use a the default stepsize of 50 for segmentation. 
         
         """
+
+        if len(self.genomicRegions) == 0:
+            return
         
         self.binsize = binsize
         self.stepsize = stepsize
+        self.coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
         
@@ -484,37 +497,35 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
+        
         self.coverage = []
-
+        mp_input = []
         for gr in self.genomicRegions:
-            cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
-            try:
-                output = subprocess.check_output(" ".join(cmd), shell=False)
-                ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
-            except:
-                ds = [0] * stepsize
+            steps = int(abs(gr.final-gr.initial)/stepsize)
+            mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
+        mp_output = pool.map(mp_bigwigsummary, mp_input)
+        pool.close()
+        pool.join()
+
+        # mp_output = []
+        # for ing in mp_input:
+        #     mp_output.append(mp_bigwigsummary(ing))
+
+        for ds in mp_output:
+            # print(sum(ds), end="\t")
             self.coverage.append( np.array(ds) )
 
-        ##################
 
-        # self.coverage = []
-        # bwf = BigWigFile(bigwig_file)
-        # #ds = []
         # for gr in self.genomicRegions:
-        #     #print(".", end="")
-        #     depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-        #     #ds = []
-        #     ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-        #     #for i in range(0, gr.final-gr.initial):
-        #     #    d = [ depth[j] for j in range(i,i+stepsize) ]
-        #     #    ds.append(sum(d)/len(d))
-
-        #     #if gr.orientation == "-":
-        #     #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
-        #     #else:
+        #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
+        #     try:
+        #         output = subprocess.check_output(" ".join(cmd), shell=False)
+        #         ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
+        #     except:
+        #         ds = [0] * stepsize
         #     self.coverage.append( np.array(ds) )
-        # #print(len(ds))
-        # bwf.close()
+
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.

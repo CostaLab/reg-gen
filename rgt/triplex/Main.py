@@ -128,32 +128,18 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         line = line.strip()
         line = line.split("\t")
         profile[line[0]] = line[1:]
-    #profile = pickle.load(profile_f)
-    
-    #for root, dirnames, filenames in os.walk(path):
-        #roots = root.split('/')
-        #for filename in fnmatch.filter(filenames, '*.html'):
-        #    if filename == 'index.html' and root.split('/')[-1] != dirname:
-    #    for i, dirname in enumerate(dirnames):
-            
-            #if dirname in profile.keys():
+   
     for i, exp in enumerate(profile.keys()):
         #print(exp)
         c += 1
-        #exp = root.split('/')[-1]
-        #exp = dirn
-        #if profile[exp][5] == "-":
-        #    new_line = [ str(c), exp, profile[exp][0] ]
-        #else:
+        
         try:
             if profile[exp][5] == "-":
-                new_line = [ str(c), exp,
-                             profile[exp][0] ]
+                new_line = [ str(c), exp, profile[exp][0] ]
             else:
                 new_line = [ str(c), 
                              '<a href="'+os.path.join(exp, "index.html")+\
-                             '">'+exp+"</a>",
-                             profile[exp][0] ]
+                             '">'+exp+"</a>", profile[exp][0] ]
 
             if show_RNA_ass_gene: 
                 new_line.append( 
@@ -184,9 +170,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
 
     html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
                           align=10, cell_align="left", sortable=True)
-    #if os.path.isfile(os.path.join(path,"lncRNA_target_dendrogram.png")):
-    #    html.add_figure("lncRNA_target_dendrogram.png", align="center", width="90%")
-
+    
     html.add_fixed_rank_sortable()
     html.write(os.path.join(path,"index.html"))
 
@@ -414,6 +398,7 @@ def main():
     parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_promotertest.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
+    parser_promotertest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
     
     
     ################### Genomic Region Test ##########################################
@@ -451,10 +436,8 @@ def main():
     parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_randomtest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Set the multiprocessing")
-    
-    ##########################################################################
-    parser_triplexator = subparsers.add_parser('triplexator', help="Setting Triplexator.")
-    parser_triplexator.add_argument('-path',type=str, metavar='  ', help='Define the path of Triplexator.')
+    parser_randomtest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
+        
     ##########################################################################
     parser_bed2bed = subparsers.add_parser('get_dbss', help="Get DBSs in BED format from the single BED file")
     parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
@@ -551,7 +534,10 @@ def main():
 
         #######################################################################################
         ######## Test triplexator
-        process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if args.tp:
+            process = subprocess.Popen([args.tp, "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        else:
+            process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         # wait for the process to terminate
         out, err = process.communicate()
         errcode = process.returncode
@@ -718,7 +704,7 @@ def main():
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf)
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, tp=args.tp)
         
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -843,7 +829,7 @@ def main():
         obed = os.path.basename(args.o)
         randomtest.connect_rna(rna=args.r, temp=args.o)
 
-        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed, tp=args.tp,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -851,7 +837,7 @@ def main():
         print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm,
-                               filter_bed=args.f, alpha=args.a)
+                               filter_bed=args.f, alpha=args.a, tp=args.tp)
         
         if len(randomtest.rbss) == 0: 
             no_binding_code()

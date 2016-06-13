@@ -3,13 +3,14 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
+from collections import OrderedDict
 import argparse
+import time, datetime, getpass, fnmatch
+from shutil import copyfile
+import numpy
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
-import numpy
-import time, datetime, getpass, fnmatch
-from shutil import copyfile
 
 # Local Libraries
 # Distal Libraries
@@ -85,8 +86,19 @@ def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
 def list_all_index(path):
     """Creat an 'index.html' in the defined directory """
     dirname = os.path.basename(path)
-    
-    link_d = {"List":"index.html"}
+    parentdir = os.path.basename(os.path.dirname(path))
+
+    # link_d = {"List":"index.html"}
+    link_d = {}
+    ####
+    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+        for filename in fnmatch.filter(filenames, 'index.html'):
+            if root.split('/')[-2] == parentdir:
+                link_d[root.split('/')[-1]] = "../"+root.split('/')[-1]+"/index.html"
+    link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
+
+    ###
+
     html = Html(name="Directory: "+dirname, links_dict=link_d, 
                 fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
     header_list = ["No.", "Experiments"]
@@ -99,8 +111,9 @@ def list_all_index(path):
         #roots = root.split('/')
         for filename in fnmatch.filter(filenames, '*.html'):
             if filename == 'index.html' and root.split('/')[-1] != dirname:
+                # print(root)
                 c += 1
-                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size='+'"4"'+'>'+root.split('/')[-1]+"</a>"])
+                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size="4">'+root.split('/')[-1]+"</a>"])
                 #print(link_d[roots[-1]])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
     html.add_fixed_rank_sortable()
@@ -143,13 +156,17 @@ def main():
     parser_projection.add_argument('-t', metavar='  ', default='projection_test', help=helptitle)
     parser_projection.add_argument('-g', metavar='  ', default=None, help=helpgroupbb +" (Default:None)")
     parser_projection.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_projection.add_argument('-bg', metavar='  ', default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    parser_projection.add_argument('-bg', metavar='  ', type=str, default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
     parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test.')
     parser_projection.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
     parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    parser_projection.add_argument('-bed', action="store_true", default=False, help='Output BED files for the regions of query which overlap the reference.')
+    parser_projection.add_argument('-pw', metavar='  ', type=int, default=5, help='Define the width of single panel.(Default:3)')
+    parser_projection.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01, help='Define the cutoff of the proportion.(Default:0.01)')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -171,6 +188,8 @@ def main():
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_intersect.add_argument('-stest', metavar='  ', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    parser_intersect.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_intersect.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     
     ################### Jaccard test ##########################################
     
@@ -188,7 +207,9 @@ def main():
     parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
     parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-
+    parser_jaccard.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_jaccard.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    
     ################### Combinatorial Test ##########################################
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
     
@@ -211,6 +232,8 @@ def main():
     parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references.')
     parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
+    parser_combinatorial.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
+    parser_combinatorial.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
     
     ################### Boxplot ##########################################
     
@@ -262,6 +285,7 @@ def main():
     parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing.")
     parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
     parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
+    parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
     
@@ -315,7 +339,7 @@ def main():
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
     parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
     parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
-    parser_integration.add_argument('-o', help='Define the folder of the output file.') 
+    parser_integration.add_argument('-p', help='Define the folder of the output file.') 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -366,19 +390,24 @@ def main():
             projection = Projection( args.r, args.q )
             projection.group_refque(args.g)
             projection.colors( args.c, args.color )
-            if args.bg: projection.background(args.bg)
+            
+            if args.bg:
+                print2(parameter, "\tBackground: "+args.bg)
+                projection.set_background(bed_path=args.bg)
             if args.union: 
                 projection.ref_union()
-                projection.projection_test(organism = args.organism)
-                print2(parameter, "\tTaking intersect of references as the background. ")
+                projection.projection_test(organism=args.organism)
+                print2(parameter, "\tTaking union of references as the background. ")
             else:
-                projection.projection_test(organism = args.organism)
+                projection.projection_test(organism=args.organism)
             
             # generate pdf
-            projection.plot(args.log)
+            projection.plot(args.log, args.pw, args.ph)
             output(f=projection.fig, directory = args.o, folder = args.t, filename="projection_test",
                    extra=plt.gci(),pdf=True,show=args.show)
-            
+            if args.bed:
+                print2(parameter, "\tOutput BED files: "+"/".join(os.path.join(args.o, args.t, "bed").split("/")[-3:]))
+                projection.output_interq(directory=os.path.join(args.o, args.t, "bed"))
             # generate html 
             projection.gen_html(args.o, args.t, args=args)
             
@@ -405,11 +434,12 @@ def main():
             
             # Fetching reference and query EM
             inter = Intersect(args.r,args.q, mode_count=args.m, organism=args.organism)
-            # Setting background
-            inter.background(args.bg)
+            
             # Grouping
             inter.group_refque(args.g)
-            
+            # Setting background
+            inter.background(args.bg)
+
             # Extension
             if args.ex == 0: pass
             elif args.ex > 0: inter.extend_ref(args.ex)
@@ -423,7 +453,7 @@ def main():
             inter.count_intersect(threshold=args.tc)
             
             # generate pdf
-            print("\tGenerate graphics...")
+            print("\n\tGenerate graphics...")
             inter.barplot(logt=args.log)
             output(f=inter.bar, directory = args.o, folder = args.t, filename="intersection_bar",
                    extra=plt.gci(), pdf=True,show=args.show)
@@ -475,12 +505,12 @@ def main():
                 output(f=f, directory = args.o, folder = args.t, filename="jaccard_test"+str(i+1),
                        extra=plt.gci(),pdf=True,show=args.show)
             # generate html
-            jaccard.gen_html(args.o, args.title)
+            jaccard.gen_html(args.o, args.t)
             
             if args.table:
-                jaccard.table(directory = args.o, folder = args.title)
+                jaccard.table(directory = args.o, folder = args.t)
             
-            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.title))
+            print("\nAll related files are saved in:  "+ os.path.join(dir,args.o,args.t))
             print2(parameter,"\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1-t0))))
             output_parameters(parameter, directory = args.o, folder = args.t, filename="parameters.txt")
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
@@ -602,12 +632,12 @@ def main():
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            if "reads" not in (args.col, args.c, args.row):
-                print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
-            if "regions" not in (args.col, args.c, args.row):
-                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
+            # if "reads" not in (args.col, args.c, args.row):
+            #     print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
+            # if "regions" not in (args.col, args.c, args.row):
+            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
 
             if not os.path.isfile(args.input):
                 print("Please check the input experimental matrix again. The given path is wrong.")
@@ -620,7 +650,7 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df, fields=[args.col,args.row,args.c],
+                                bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
                                 test=args.test)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
@@ -718,3 +748,9 @@ def main():
             venn = Venn(sets=sets, organism=args.organism)
             f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
             output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)
+
+        ################### Integration ##########################################
+        if args.mode=='integration':
+            print("\n################# Integration ###############")
+            if args.ihtml:
+                list_all_index(path=args.o)

@@ -367,7 +367,8 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-                
+                gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
+                # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
                     if line[0].isdigit():
@@ -388,10 +389,12 @@ if __name__ == "__main__":
                         seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
                     else:
                         continue
+                # print(seq)
 
                 if not args.g:
                     print(seq, file=g)
-                elif select_genes.check(gn):
+                elif select_genes.check(gn) or select_genes.check(gi):
+                    
                     print(seq, file=g)
                 else:
                     continue
@@ -458,6 +461,16 @@ if __name__ == "__main__":
         print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
+        print("genome:\t" + args.genome)
+        print("gene list:\t" + args.g)
+
+        ann = AnnotationSet(gene_source=genome,filter_havana=False, protein_coding=False, known_only=False)
+        geneset = GeneSet("target")
+        geneset.read(args.g)
+
+        genes = ann.get_genes(gene_set = geneset)
+        
+
 
     ############### GTF add chr ##############################################
     elif args.mode == "gtf_add_chr":
