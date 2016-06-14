@@ -489,7 +489,7 @@ class CoverageSet:
         for gr in self.genomicRegions:
             cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
             try:
-                output = subprocess.check_output(" ".join(cmd), shell=False)
+                output = subprocess.check_output(cmd, shell=False)
                 ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
             except:
                 ds = [0] * stepsize
