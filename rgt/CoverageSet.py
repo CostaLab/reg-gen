@@ -16,6 +16,7 @@ import subprocess
 import multiprocessing
 from rgt.ODIN.gc_content import get_gc_context
 import sys
+from sys import platform
 
 
 def mp_bigwigsummary(inarg):
@@ -498,46 +499,36 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        from ngslib import BigWigFile
-        self.coverage = []
-        bwf = BigWigFile(bigwig_file)
+        ### Mac platform
+        if platform == "darwin":
+            print("\tUsing program from Kent Informatics on Darwin system...")
+            self.coverage = []
+            mp_input = []
+            for gr in self.genomicRegions:
+                steps = int(abs(gr.final-gr.initial)/stepsize)
+                mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
+            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
+            mp_output = pool.map(mp_bigwigsummary, mp_input)
+            pool.close()
+            pool.join()
 
-        for gr in self.genomicRegions:
-            depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
-                                         max(1,int(gr.final+stepsize/2)))
-            ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-            
-            self.coverage.append( np.array(ds) )
-        bwf.close()
+            for ds in mp_output:
+                self.coverage.append( np.array(ds) )
+        
+        ### Linux platform
+        else:
+            print("\tUsing ngslib on linux system...")
+            from ngslib import BigWigFile
+            self.coverage = []
+            bwf = BigWigFile(bigwig_file)
 
-        # self.coverage = []
-        # mp_input = []
-        # for gr in self.genomicRegions:
-        #     steps = int(abs(gr.final-gr.initial)/stepsize)
-        #     mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
-        # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
-        # mp_output = pool.map(mp_bigwigsummary, mp_input)
-        # pool.close()
-        # pool.join()
-
-        # # mp_output = []
-        # # for ing in mp_input:
-        # #     mp_output.append(mp_bigwigsummary(ing))
-
-        # for ds in mp_output:
-        #     # print(sum(ds), end="\t")
-        #     self.coverage.append( np.array(ds) )
-
-
-        # for gr in self.genomicRegions:
-        #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
-        #     try:
-        #         output = subprocess.check_output(" ".join(cmd), shell=False)
-        #         ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
-        #     except:
-        #         ds = [0] * stepsize
-        #     self.coverage.append( np.array(ds) )
-
+            for gr in self.genomicRegions:
+                depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
+                                             max(1,int(gr.final+stepsize/2)))
+                ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
+                
+                self.coverage.append( np.array(ds) )
+            bwf.close()
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.
