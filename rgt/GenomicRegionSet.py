@@ -2000,7 +2000,7 @@ class GenomicRegionSet:
                                     orientation=col_regionset[ind].orientation)
             else:
                 print("Find not enough space in "+col_regionset[0].chrom+
-                      ":"+str(col_regionset[0].initial)+"-"+str(col_regionset[-1].final))
+                      ":"+str(col_regionset[0].initial)+"-"+str(col_regionset[-1].final) + "\tSample from the largest region.")
                 longest = col_regionset.longest_region()
                 mid = int(0.5*(longest.final + longest.initial))
                 res = GenomicRegion(chrom=longest.chrom,
