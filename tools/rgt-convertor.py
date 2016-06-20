@@ -147,6 +147,7 @@ if __name__ == "__main__":
                               help="Define length of promoters (default:1000bp)")
     
     ############### BED get upstream regions #################################
+    # python rgt-convertor.py bed_upstream -i -o
     parser_bedupstream = subparsers.add_parser('bed_upstream', 
                        help="[BED] Get regions upstream from the given BED file")
     parser_bedupstream.add_argument('-i', '-input', type=str, help="Input BED file")
@@ -209,6 +210,12 @@ if __name__ == "__main__":
     parser_wig_trim.add_argument('-o', '-output', type=str, help="Output WIG file")
     parser_wig_trim.add_argument('-chrosize', type=str, help="Define path to the chromosome size file")
 
+    ############### GENE list convertion #############################################
+    parser_ensembl2symbol = subparsers.add_parser('ensembl2symbol', 
+                       help="[GENE] Convert the gene list from ensembl ID to gene symbol")
+    parser_ensembl2symbol.add_argument('-i', '-input', type=str, help="Input gene list")
+    parser_ensembl2symbol.add_argument('-o', '-output', type=str, help="Output gene list")
+    parser_ensembl2symbol.add_argument('-organism', type=str, help="Define the organism")
 
     ############### STAR junction to BED #############################################
     parser_circRNA = subparsers.add_parser('circRNA', 
@@ -800,6 +807,24 @@ if __name__ == "__main__":
                             print(line, file=g)
                         else:
                             pass
+
+
+    ############### GENE  ensembl2symbol #############################################
+    elif args.mode == "ensembl2symbol":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
+        g = GeneSet("ensembl_id")
+        g.read(args.i)
+
+        ann = AnnotationSet(gene_source=args.organism, tf_source=None, alias_source=args.organism, 
+                            filter_havana=False, protein_coding=False, known_only=False)
+        mapped_list, unmapped_list = ann.get_official_symbol(gene_name_source=g.genes)
+        print("\t"+str(len(g.genes))+"\tgenes are loaded.")
+        print("\t"+str(len(mapped_list))+"\tgenes are mapped.")
+        print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
+        g.genes = mapped_list
+        g.save(args.o)
 
     ############### STAR junction to BED #######################################
     elif args.mode == "circRNA":

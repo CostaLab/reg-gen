@@ -17,6 +17,7 @@ import multiprocessing
 from rgt.ODIN.gc_content import get_gc_context
 import sys
 
+
 def mp_bigwigsummary(inarg):
     cmd = ["bigWigSummary",inarg[0],inarg[1],inarg[2],inarg[3],inarg[4]]
     try:
@@ -497,24 +498,35 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        
+        from ngslib import BigWigFile
         self.coverage = []
-        mp_input = []
+        bwf = BigWigFile(bigwig_file)
+
         for gr in self.genomicRegions:
-            steps = int(abs(gr.final-gr.initial)/stepsize)
-            mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
-        mp_output = pool.map(mp_bigwigsummary, mp_input)
-        pool.close()
-        pool.join()
-
-        # mp_output = []
-        # for ing in mp_input:
-        #     mp_output.append(mp_bigwigsummary(ing))
-
-        for ds in mp_output:
-            # print(sum(ds), end="\t")
+            depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
+                                         max(1,int(gr.final+stepsize/2)))
+            ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
+            
             self.coverage.append( np.array(ds) )
+        bwf.close()
+
+        # self.coverage = []
+        # mp_input = []
+        # for gr in self.genomicRegions:
+        #     steps = int(abs(gr.final-gr.initial)/stepsize)
+        #     mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
+        # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
+        # mp_output = pool.map(mp_bigwigsummary, mp_input)
+        # pool.close()
+        # pool.join()
+
+        # # mp_output = []
+        # # for ing in mp_input:
+        # #     mp_output.append(mp_bigwigsummary(ing))
+
+        # for ds in mp_output:
+        #     # print(sum(ds), end="\t")
+        #     self.coverage.append( np.array(ds) )
 
 
         # for gr in self.genomicRegions:
