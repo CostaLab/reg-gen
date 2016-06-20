@@ -501,7 +501,7 @@ class CoverageSet:
         """
         ### Mac platform
         if platform == "darwin":
-            print("\tUsing program from Kent Informatics on Darwin system...")
+            # print("\tUsing program from Kent Informatics on Darwin system...")
             self.coverage = []
             mp_input = []
             for gr in self.genomicRegions:
@@ -517,7 +517,7 @@ class CoverageSet:
         
         ### Linux platform
         else:
-            print("\tUsing ngslib on linux system...")
+            # print("\tUsing ngslib on linux system...")
             from ngslib import BigWigFile
             self.coverage = []
             bwf = BigWigFile(bigwig_file)
