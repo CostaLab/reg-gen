@@ -1,0 +1,3 @@
+[console_scripts]
+rgt-hint = rgt.HINT.Main:main
+
