@@ -510,9 +510,13 @@ class CoverageSet:
         for gr in self.genomicRegions:
             steps = int(abs(gr.final-gr.initial)/stepsize)
             cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
-            output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
-            ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
-            self.coverage.append( np.array(ds) )
+            # print(" ".join(cmd))
+            try:
+                output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+                ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+                self.coverage.append( np.array(ds) )
+            except:
+                continue
                 # mp_input.append([bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)])
             # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()) #
             # mp_output = pool.map(mp_bigwigsummary, mp_input)
