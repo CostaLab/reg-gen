@@ -848,10 +848,15 @@ class PromoterTest:
                     #    promoter.name = gene_sym
                     if score:
                         try:
-                            if "ENSG" in promoter.name:
+                            # if "ENSG" in promoter.name:
+                            try:
+                                # print(promoter.name)
                                 s = self.de_gene.values[promoter.name]
-                            else:
+                            # else:
+                            except:
+                                # print(gene_sym.upper())
                                 s = self.de_gene.values[gene_sym.upper()]
+                            # print(self.de_gene.values.keys())
                         except:
                             #print(promoter.name)
                             try: print("Warning: "+promoter.name+"\tcannot be mapped to get its score.")
