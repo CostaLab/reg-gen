@@ -225,6 +225,15 @@ if __name__ == "__main__":
     parser_circRNA.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_circRNA.add_argument('-c', '-circ', type=str, help="Output BED file of circular RNA")
 
+    ############### FASTA slicing #############################################
+    # python rgt-convertor.py sliceFASTA -i -o -l -p
+    parser_sliceFASTA = subparsers.add_parser('sliceFASTA', 
+                       help="[FASTA] Slice the sequence by given position and length")
+    parser_sliceFASTA.add_argument('-i', '-input', type=str, help="Input FASTA file")
+    parser_sliceFASTA.add_argument('-l', type=int, help="Length of the slice sequence")
+    parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
+    parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
+
     ##########################################################################
     ##########################################################################
     ##########################################################################
@@ -883,3 +892,14 @@ if __name__ == "__main__":
 # chr1  39449029    +   chr1    39448068    +   0   0   0
 #                     9                          10          11      12            13   
 # 97ZZTR1:411:C4VC3ACXX:5:1102:16097:34171    39448994    35M15S  39448069    35S15M868p50M
+
+    ############### FASTA slicing #######################################
+    elif args.mode == "sliceFASTA":
+        print(os.path.basename(args.i) + " -start "+str(args.p)+" -end "+str(args.p+args.l))
+        from rgt.SequenceSet import SequenceSet
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
+        start = int(args.p)
+        end = int(start + args.l)
+        print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
+
