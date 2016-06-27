@@ -1,0 +1,11 @@
+# IDE configuration files
+.idea
+*.iml
+# Compiled files
+*.pyc
+*.so
+*.o
+# Build directories
+build
+dist
+RGT.egg-info/
