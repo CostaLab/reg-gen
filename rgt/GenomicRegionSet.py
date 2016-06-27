@@ -917,10 +917,11 @@ class GenomicRegionSet:
         z = GenomicRegionSet(self.name + ' - ' + y.name)
         if len(self) == 0 or len(y) == 0: return self
         
-        # If there is overlap within self or y, they should be merged first. 
+        # If there is overlap within self or y, they should be merged first.
         if self.sorted == False: 
             self.sort()
-        b = y.merge(w_return=True)
+        b = deepcopy(y)
+        b.merge()
         
         iter_a = iter(self)
         s = iter_a.next()
