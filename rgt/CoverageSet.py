@@ -244,21 +244,7 @@ class CoverageSet:
                         elif region.orientation == "-" and r.is_reverse: cov[i] += 1
                 
             except:
-                try: 
-                    int(region.chrom)
-                    region.chrom = "chr" + region.chrom
-                except:
-                    pass
-                if not strand_specific:
-                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                        cov[i] += 1
-                else:
-                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
-                        # print(region.orientation)
-                        # print(r.is_reverse)
-                        if region.orientation == "+" and not r.is_reverse: cov[i] += 1
-                        elif region.orientation == "-" and r.is_reverse: cov[i] += 1
-                # print("\tSkip: "+region.toString())
+                print("\tSkip: "+region.toString())
 
         self.coverage = cov 
         self.coverageOrig = cov
