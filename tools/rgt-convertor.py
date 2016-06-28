@@ -376,7 +376,7 @@ if __name__ == "__main__":
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
-                
+                if len(line) < 5: continue
                 if tag_s and tag_s != line[1]: continue
                 if tag_f and tag_f != line[2]: continue
                 if tag_t and tag_t in line[8]: pass
