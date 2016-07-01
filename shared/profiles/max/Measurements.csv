@@ -1,0 +1,42 @@
+Branch,Reference,Query,Repeats,True_Jaccard_index,p-value,Time,Organism
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0578,0,0,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0578,0,1,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0578,0,1,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0578,0,2,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0578,0,5,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0578,0,10,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0578,0,2,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0578,0,4,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0578,0,8,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0578,0,17,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0578,0,39,Test
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0578,0,72,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0578,0,2,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0578,0,6,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0578,0,14,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0578,0,24,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0578,0,64,Test
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0578,0,122,Test
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0023,0,1,mm9
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0023,0,2,mm9
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0023,0,4,mm9
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0023,0,9,mm9
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0023,0,21,mm9
+c,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0023,0,40,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0023,0,44,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0023,0,105,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0023,0,208,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0023,0,432,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0023,0,1164,mm9
+deepcopy,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0023,0,2377,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x10,0.0023,0,59,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x25,0.0023,0,155,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x50,0.0023,0,271,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x100,0.0023,0,555,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x250,0.0023,0,1377,mm9
+master,cDC_H3K4me3_peaks,cDC_PU1_peaks,x500,0.0023,0,2772,mm9
+,,,,,,,
+,,,,,,,
+mm9,cDC_H3K4me3_peaks,cDC_H3K4me3_peaks,regions,./data/H3K4me3/cDC_WT_peaks.bed,H3K4me3 cDC,,
+test,cDC_H3K4me3_peaks,cDC_H3K4me3_peaks,regions,./data/H3K4me3/test.bed,H3K4me3 cDC,,
+both,cDC_PU1_peaks,cDC_PU1_peaks,regions,./data/cDC_PU1_peaks.bed,PU1 cDC,,
