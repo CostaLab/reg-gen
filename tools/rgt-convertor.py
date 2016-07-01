@@ -350,10 +350,10 @@ if __name__ == "__main__":
             print("Please redefine the argument -f.")
             sys.exit(1)
 
-        if args.t == "protein_coding": tag_t = 'gene_type \"protein_coding\"'
-        elif args.t == "non_coding": tag_t = 'gene_type \"non_coding\"'
-        elif args.t == "known_ncrna": tag_t = 'gene_type \"known_ncrna\"'
-        elif args.t == "pseudogene": tag_t = 'gene_type \"pseudogene\"'
+        if args.t == "protein_coding": tag_t = ' \"protein_coding\"'
+        elif args.t == "non_coding": tag_t = ' \"non_coding\"'
+        elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
+        elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
         elif args.t == "All": tag_t = None
         else: 
             print("Please redefine the argument -t.")
@@ -376,12 +376,13 @@ if __name__ == "__main__":
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
+
                 if len(line) < 5: continue
                 if tag_s and tag_s != line[1]: continue
                 if tag_f and tag_f != line[2]: continue
                 if tag_t and tag_t in line[8]: pass
                 elif not tag_t: pass
-                else: continue                
+                else: continue              
                 if tag_st and tag_st in line[8]: pass
                 elif not tag_st: pass
                 else: continue
@@ -390,6 +391,7 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+                gn = gn.partition(" (")[0]
                 gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
                 # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
