@@ -506,7 +506,6 @@ class CoverageSet:
                     ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
                     self.coverage.append( np.array(ds) )
                 except:
-                    # print("** Warning: Cannot open " + bigwig_file)
                     continue
         
         ### Linux platform

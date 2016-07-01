@@ -2697,7 +2697,7 @@ class Lineplot:
                                                 # print(cov.coverage)
                                                 if not cov.coverage: 
                                                     data[s][g][c][d] = None
-                                                    print("** Warning: Cannot open " + self.reads[j])
+                                                    print("** Warning: Cannot open " + self.reads[j] )
                                                     continue
                                                 else:
                                                     for i, car in enumerate(cov.coverage):
