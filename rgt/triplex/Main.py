@@ -27,6 +27,7 @@ from triplexTools import PromoterTest, RandomTest, value2str,\
 from rgt.SequenceSet import Sequence, SequenceSet
 from rgt.Util import SequenceType, Html, ConfigurationFile
 from rgt.motifanalysis.Statistics import multiple_test_correction
+from rgt.viz.plotTools import output_array
 
 dir = os.getcwd()
 
@@ -289,8 +290,13 @@ def gen_heatmap(path):
     plt.colorbar(im, cax=axcolor, orientation='horizontal', norm=norm, 
                  boundaries=bounds, ticks=bounds, format=matplotlib.ticker.FuncFormatter(fmt))
     axcolor.set_xlabel('p value (-log10)')
-    
-    numpy.savetxt(os.path.join(path,'matrix_p.txt'), ar, delimiter='\t')
+    lmats = ar.tolist()
+    for i,r in enumerate(rnas):
+        lmats[i] = [r] + [str(x) for x in lmats[i]]
+    lmats = [["p-value"] + exps] + lmats
+
+    output_array(array=lmats, directory=path, folder="", filename='matrix_p.txt')
+        # os.path.join(path,'matrix_p.txt'), lmats, delimiter='\t')
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.png'))
     fig.savefig(os.path.join(path,'condition_lncRNA_dendrogram.pdf'), format="pdf")
 
