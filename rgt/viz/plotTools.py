@@ -54,15 +54,17 @@ def purge(dir, pattern):
 
 def gen_tags(exps, tag):
     """Generate the unique tags from the EM according to the given tag. """
+    if "factor" not in exps.fields:
+        exps.add_factor_col()
     if tag == "reads":
         try: l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     elif tag == "regions":
         try: l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     else:
         l = exps.fieldsDict[tag]
@@ -546,12 +548,12 @@ class Projection:
         for ty in self.groupedquery.keys():
             for i, r in enumerate(self.groupedreference[ty]):
                 for j, q in enumerate(self.groupedquery[ty]):
-                    if r.name == q.name: continue
-                    else:
-                        bg = self.bglist[ty][r.name][q.name]
-                        ratio = self.qlist[ty][r.name][q.name]
-                        p = self.plist[ty][r.name][q.name]
-                        self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+                    # if r.name == q.name: continue
+                    # else:
+                        # bg = self.bglist[ty][r.name][q.name]
+                        # ratio = self.qlist[ty][r.name][q.name]
+                        # p = self.plist[ty][r.name][q.name]
+                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name].values()[0]
 
     def output_interq(self, directory):
         """Output the intersected query to the reference in BED format"""
@@ -597,7 +599,7 @@ class Projection:
                     if y == 0 and logt: y = 0.000001
                     #print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
                     ax[ind_ty].bar(x, y, width=width, color=self.color_list[q], edgecolor="none", 
-                                   align='edge', log=logt)
+                                   align='edge', log=logt, label=q)
             if logt:
                 ax[ind_ty].set_yscale('log')
             else:
@@ -610,7 +612,13 @@ class Projection:
             ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
             ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right",fontsize=8)
             ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
-            ax[ind_ty].legend(self.qlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
+
+            handles, labels = ax[ind_ty].get_legend_handles_labels()
+            # uniq_labels = unique(labels)
+            uniq_labels = [ q.name for q in self.groupedquery[ty] ] + ["Background"]
+
+            ax[ind_ty].legend([handles[labels.index(l)] for l in uniq_labels ], uniq_labels, 
+                      loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax[ind_ty].spines[spine].set_visible(False)
@@ -1234,15 +1242,16 @@ class Intersect:
             
         # self.background = bgbed
 
-        bg = GenomicRegionSet("background")
-        bg.read_bed(path)
-        self.background = bg
-        for ty in self.groupedreference.keys():
-            # self.background[ty] = bg
-            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
-            self.groupedreference[ty] = rlist
-            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
-            self.groupedquery[ty] = qlist
+        if path:
+            bg = GenomicRegionSet("background")
+            bg.read_bed(path)
+            self.background = bg
+            for ty in self.groupedreference.keys():
+                # self.background[ty] = bg
+                rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+                self.groupedreference[ty] = rlist
+                qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+                self.groupedquery[ty] = qlist
 
 
     def group_refque(self, groupby):
@@ -2662,14 +2671,14 @@ class Lineplot:
                                             ts = time.time()
                                             cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                             
-                                            if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                            if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
                                                 cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                                 cov.normRPM()
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                                if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                     flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                                     ffcoverage = numpy.fliplr(flap.coverage)
@@ -2687,24 +2696,32 @@ class Lineplot:
                                                 else:
                                                     data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
                                             else:
-                                                for i, car in enumerate(cov.coverage):
-                                                    car = numpy.delete(car, [0,1])
-                                                    if i == 0:
-                                                        avearr = np.array(car)
-                                                        lenr = car.shape[0]
-                                                    elif car.shape[0] == lenr:
-                                                        avearr = numpy.vstack((avearr, car))
-                                                    else:
-                                                        pass
-                                                
-                                                avearr = numpy.average(avearr, axis=0)
-                                                
-                                                if self.df:
-                                                    try: data[s][g][c][d][-1].append(avearr)
-                                                    except: data[s][g][c][d] = [[avearr]]
+                                                # print(cov.coverage)
+                                                if not cov.coverage: 
+                                                    data[s][g][c][d] = None
+                                                    print("** Warning: Cannot open " + self.reads[j] )
+                                                    continue
                                                 else:
-                                                    try: data[s][g][c][d].append(avearr)
-                                                    except: data[s][g][c][d] = [avearr]
+                                                    for i, car in enumerate(cov.coverage):
+                                                        car = numpy.delete(car, [0,1])
+                                                        # print(car)
+                                                        if i == 0:
+                                                            avearr = np.array(car)
+                                                            lenr = car.shape[0]
+                                                        elif car.shape[0] == lenr:
+                                                            avearr = numpy.vstack((avearr, car))
+                                                        else:
+                                                            pass
+                                                    
+                                                    avearr = numpy.average(avearr, axis=0)
+                                                    
+                                                    if self.df:
+                                                        try: data[s][g][c][d][-1].append(avearr)
+                                                        except: data[s][g][c][d] = [[avearr]]
+                                                    else:
+                                                        try: data[s][g][c][d].append(avearr)
+                                                        except: data[s][g][c][d] = [avearr]
+                                                    # else: continue
                                                 
                                             bi += 1
                                             te = time.time()
@@ -2795,23 +2812,25 @@ class Lineplot:
                 for j, c in enumerate(self.data[s][g].keys()):
                     
                     for k, d in enumerate(self.data[s][g][c].keys()):
-                        for l, y in enumerate(self.data[s][g][c][d]):
-                            yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                            sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                            if self.df: 
-                                yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                        if not self.data[s][g][c][d]: continue
+                        else:
+                            for l, y in enumerate(self.data[s][g][c][d]):
+                                yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                if self.df: 
+                                    yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                    sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
-                            if not y.all():
-                                pass
-                            else:
-                                x = numpy.linspace(-self.extend, self.extend, len(y))
+                                if not y.all():
+                                    pass
+                                else:
+                                    x = numpy.linspace(-self.extend, self.extend, len(y))
 
-                                ax.plot(x,y, color=self.colors[c], lw=1, label=c)
-                                if it < nit - 1:
-                                    ax.set_xticklabels([])
-                                # Processing for future output
-                                if printtable: pArr.append([g,s,c,d]+list(y))
+                                    ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                    if it < nit - 1:
+                                        ax.set_xticklabels([])
+                                    # Processing for future output
+                                    if printtable: pArr.append([g,s,c,d]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])

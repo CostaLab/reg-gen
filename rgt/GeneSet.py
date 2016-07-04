@@ -9,6 +9,7 @@ GeneSet describes genes and their expression.
 # Libraries
 ###############################################################################
 # Python
+from __future__ import print_function
 # Internal
 from Util import GenomeData
 # External
@@ -27,6 +28,7 @@ class GeneSet:
         self.genes = [] #list of genes to consider
         self.values = {} #keys: gene, value: expression data as a list
         self.cond = []
+        self.symbol_dict = {}
 
     def __len__(self):
         """Return the number of genes."""
@@ -133,3 +135,49 @@ class GeneSet:
         g = a_gene.upper()
 
         return (g in self.genes)
+
+    def save(self, filename):
+        """Save gene list into the given filename."""
+        if self.values:
+            with open(filename, "w") as f:
+                for g in self.genes:
+                    print("\t".join([g, str(self.values[g])]), file=f)
+        else:
+            with open(filename, "w") as f:
+                for g in self.genes:
+                    print(g, file=f)
+
+
+    # def load_alias(self, organism):
+    #     """Load alias file for gene names"""
+        
+    #     genome_data = GenomeData(organism)
+    #     # Opening alias file
+    #     alias_file = open(genome_data.get_gene_alias(),"r")
+    #     # Iterating over alias file entries
+    #     for line in alias_file:
+    #         ll = line.strip().split("\t")
+    #         ensembl_id = ll[0]
+    #         official_name = ll[1]
+    #         alias_vec = ll[2].split("&")
+    #         self.symbol_dict[ensembl_id] = official_name
+    #         for e in alias_vec:
+    #             try: self.alias_dict[e].append(ensembl_id)
+    #             except Exception: self.alias_dict[e] = [ensembl_id]
+    #     # Termination
+    #     alias_file.close()
+
+    # def ensembl2symbol(self, organism):
+    #     """Convert ensembl ID to gene symbol"""
+    #     if not self.symbol_dict:
+    #         self.load_alias()
+    #     curr_list = self.genes
+    #     mapped_list = []
+    #     unmapped_list = []
+    #     for e in curr_list:
+    #         try: mapped_list.append(self.symbol_dict[e])
+    #         except Exception: unmapped_list.append(self.symbol_dict[e])
+
+    #     self.genes = mapped_list
+        
+        

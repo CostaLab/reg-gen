@@ -224,6 +224,7 @@ def gen_heatmap(path):
     # Convert into array
     ar = []
     exps = natsorted(matrix.keys())
+    rnas = natsorted(rnas)
     # print(exps)
     for exp in exps:
         row = []
@@ -388,6 +389,7 @@ def main():
     parser_promotertest.add_argument('-filter_havana', type=str, default="F", metavar='  ', help="Apply filtering to remove HAVANA entries.")
     parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
     parser_promotertest.add_argument('-known_only', type=str, default="F", metavar='  ', help="Apply filtering to get only known genes.")
+    parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the experimental file and leave the program.")
     
 
     parser_promotertest.add_argument('-l', type=int, default=15, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
@@ -455,6 +457,7 @@ def main():
     parser_bed2bed.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
     
     ##########################################################################
+    # rgt-TDF integrate -path 
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
     ##########################################################################
@@ -701,6 +704,7 @@ def main():
                                 temp=dir, output=args.o, showdbs=args.showdbs, score=args.score, 
                                 scoreh=args.scoreh, filter_havana=args.filter_havana, 
                                 protein_coding=args.protein_coding, known_only=args.known_only)
+        if args.dump: sys.exit(0)
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 

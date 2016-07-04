@@ -13,7 +13,7 @@ from rgt.Util import GenomeData
 
 genome = "hg38"
 print("Checking " + genome)
-annot = AnnotationSet(genome,filter_havana=False,protein_coding=False,known_only=False)
+annot = AnnotationSet(genome,filter_havana=False,protein_coding=True,known_only=False)
 # annot = AnnotationSet(genome,filter_havana=True,protein_coding=True,known_only=True)
 print("\tloading AnnotationSet... succeeds")
 promoters = annot.get_promoters()

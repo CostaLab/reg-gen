@@ -85,6 +85,7 @@ if __name__ == "__main__":
 
 
     ############### GTF to FASTA #############################################
+    # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
                                              help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
     parser_gtf2fasta.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
@@ -94,22 +95,26 @@ if __name__ == "__main__":
     parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
     
     ############### GTF add chr on each entry #################################
+    # python rgt-convertor.py
     parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
                                              help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
     parser_gtfachr.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     
     ############### BED add score ############################################
+    # python rgt-convertor.py
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
     parser_bedac.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedac.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', type=str, help="Define value to add")
 
     ############### BED merge by name ############################################
+    # python rgt-convertor.py
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
     parser_bedmn.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedmn.add_argument('-o', '-output', type=str, help="Output BED file")
 
     ############### BED rename ###############################################
+    # python rgt-convertor.py
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
     parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
@@ -121,6 +126,7 @@ if __name__ == "__main__":
                                   help="Define the threshold of distance (default:50000bp")
     
     ############### BED extend ###############################################
+    # python rgt-convertor.py
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
     parser_bedex.add_argument('-i', type=str, help="Input BED file")
     parser_bedex.add_argument('-o', type=str, help="Output BED name.")
@@ -131,6 +137,7 @@ if __name__ == "__main__":
                               help="Extend from the both ends.")
 
     ############### BED get promoters ########################################
+    # python rgt-convertor.py bed_get_promoters -i -o -organism
     parser_bedgp = subparsers.add_parser('bed_get_promoters', 
                        help="[BED] Get promoters from the given genes")
     parser_bedgp.add_argument('-i', '-input', type=str, help="Input file (BED or gene list)")
@@ -140,6 +147,7 @@ if __name__ == "__main__":
                               help="Define length of promoters (default:1000bp)")
     
     ############### BED get upstream regions #################################
+    # python rgt-convertor.py bed_upstream -i -o
     parser_bedupstream = subparsers.add_parser('bed_upstream', 
                        help="[BED] Get regions upstream from the given BED file")
     parser_bedupstream.add_argument('-i', '-input', type=str, help="Input BED file")
@@ -202,6 +210,12 @@ if __name__ == "__main__":
     parser_wig_trim.add_argument('-o', '-output', type=str, help="Output WIG file")
     parser_wig_trim.add_argument('-chrosize', type=str, help="Define path to the chromosome size file")
 
+    ############### GENE list convertion #############################################
+    parser_ensembl2symbol = subparsers.add_parser('ensembl2symbol', 
+                       help="[GENE] Convert the gene list from ensembl ID to gene symbol")
+    parser_ensembl2symbol.add_argument('-i', '-input', type=str, help="Input gene list")
+    parser_ensembl2symbol.add_argument('-o', '-output', type=str, help="Output gene list")
+    parser_ensembl2symbol.add_argument('-organism', type=str, help="Define the organism")
 
     ############### STAR junction to BED #############################################
     parser_circRNA = subparsers.add_parser('circRNA', 
@@ -210,6 +224,15 @@ if __name__ == "__main__":
     parser_circRNA.add_argument('-t', '-tcons', type=str, help="Input BED file of tcons")
     parser_circRNA.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_circRNA.add_argument('-c', '-circ', type=str, help="Output BED file of circular RNA")
+
+    ############### FASTA slicing #############################################
+    # python rgt-convertor.py sliceFASTA -i -o -l -p
+    parser_sliceFASTA = subparsers.add_parser('sliceFASTA', 
+                       help="[FASTA] Slice the sequence by given position and length")
+    parser_sliceFASTA.add_argument('-i', '-input', type=str, help="Input FASTA file")
+    parser_sliceFASTA.add_argument('-l', type=int, help="Length of the slice sequence")
+    parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
+    parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
 
     ##########################################################################
     ##########################################################################
@@ -327,10 +350,10 @@ if __name__ == "__main__":
             print("Please redefine the argument -f.")
             sys.exit(1)
 
-        if args.t == "protein_coding": tag_t = 'gene_type \"protein_coding\"'
-        elif args.t == "non_coding": tag_t = 'gene_type \"non_coding\"'
-        elif args.t == "known_ncrna": tag_t = 'gene_type \"known_ncrna\"'
-        elif args.t == "pseudogene": tag_t = 'gene_type \"pseudogene\"'
+        if args.t == "protein_coding": tag_t = ' \"protein_coding\"'
+        elif args.t == "non_coding": tag_t = ' \"non_coding\"'
+        elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
+        elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
         elif args.t == "All": tag_t = None
         else: 
             print("Please redefine the argument -t.")
@@ -353,12 +376,13 @@ if __name__ == "__main__":
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
-                
+
+                if len(line) < 5: continue
                 if tag_s and tag_s != line[1]: continue
                 if tag_f and tag_f != line[2]: continue
                 if tag_t and tag_t in line[8]: pass
                 elif not tag_t: pass
-                else: continue                
+                else: continue              
                 if tag_st and tag_st in line[8]: pass
                 elif not tag_st: pass
                 else: continue
@@ -367,6 +391,7 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+                gn = gn.partition(" (")[0]
                 gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
                 # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
@@ -545,6 +570,7 @@ if __name__ == "__main__":
     elif args.mode == "bed_get_promoters":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
         gene = GenomicRegionSet("genes")
         ### Input BED file
         if args.i.endswith(".bed"):
@@ -565,6 +591,7 @@ if __name__ == "__main__":
                                 filter_havana=False, protein_coding=False, known_only=False)
             de_gene = GeneSet("de genes")
             de_gene.read(args.i)
+            print(len(de_gene))
             promoter = ann.get_promoters(promoterLength=args.l, gene_set=de_gene, unmaplist=False)
             #print(len(de_prom))
 
@@ -655,7 +682,7 @@ if __name__ == "__main__":
 
         with open(args.gene) as f:
             genes = f.read().splitlines()
-            genes = map(lambda x: x.upper(),genes)
+            genes = map(lambda x: x.split("\t")[0].upper(), genes)
             print(str(len(genes))+" genes are loaded.")
 
         with open(args.i) as fi, open(args.o, "w") as fo:
@@ -792,6 +819,24 @@ if __name__ == "__main__":
                         else:
                             pass
 
+
+    ############### GENE  ensembl2symbol #############################################
+    elif args.mode == "ensembl2symbol":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
+        g = GeneSet("ensembl_id")
+        g.read(args.i)
+
+        ann = AnnotationSet(gene_source=args.organism, tf_source=None, alias_source=args.organism, 
+                            filter_havana=False, protein_coding=False, known_only=False)
+        mapped_list, unmapped_list = ann.get_official_symbol(gene_name_source=g.genes)
+        print("\t"+str(len(g.genes))+"\tgenes are loaded.")
+        print("\t"+str(len(mapped_list))+"\tgenes are mapped.")
+        print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
+        g.genes = mapped_list
+        g.save(args.o)
+
     ############### STAR junction to BED #######################################
     elif args.mode == "circRNA":
         print("input:\t" + args.i)
@@ -849,3 +894,14 @@ if __name__ == "__main__":
 # chr1  39449029    +   chr1    39448068    +   0   0   0
 #                     9                          10          11      12            13   
 # 97ZZTR1:411:C4VC3ACXX:5:1102:16097:34171    39448994    35M15S  39448069    35S15M868p50M
+
+    ############### FASTA slicing #######################################
+    elif args.mode == "sliceFASTA":
+        print(os.path.basename(args.i) + " -start "+str(args.p)+" -end "+str(args.p+args.l))
+        from rgt.SequenceSet import SequenceSet
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
+        start = int(args.p)
+        end = int(start + args.l)
+        print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
+
