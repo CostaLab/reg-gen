@@ -28,7 +28,7 @@ class BiasTable:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self,regions=None,dnase_file_name=None,genome_file_name=None,table_file_F=None,table_file_R=None,k_nb=6):
+    def __init__(self,regions=None,dnase_file_name=None,genome_file_name=None,table_file_F=None,table_file_R=None,k_nb=6,shift=0):
         """ 
         Initializes BiasTable.
         """
@@ -40,7 +40,7 @@ class BiasTable:
         self.table_file_R = table_file_R
 
         if(self.table_file_F): self.table = self.load_table(self.table_file_F,self.table_file_R)
-        else: self.table = self.estimate_table(self.regions,self.dnase_file_name,self.genome_file_name,k_nb)
+        else: self.table = self.estimate_table(self.regions,self.dnase_file_name,self.genome_file_name,k_nb,shift)
         
     def load_table(self, table_file_name_F, table_file_name_R):
         """ 
@@ -76,7 +76,7 @@ class BiasTable:
             f.write(t+"\t"+str(self.table[1][t])+"\n")
         f.close()        
 
-    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb):
+    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, shift):
         """ 
         Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
 
@@ -119,8 +119,8 @@ class BiasTable:
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
 
                 # Calculating positions
-                if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1
-                else: p1 = r.aend - (k_nb/2) + 1
+                if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
+                else: p1 = r.aend - (k_nb/2) + 1 - shift
                 p2 = p1 + k_nb
 
                 # Verifying PCR artifacts
@@ -200,14 +200,16 @@ if __name__ == "__main__":
   bam_file=sys.argv[1]
   fasta_file=sys.argv[2]
   bed_file=sys.argv[3]
-  out=sys.argv[4]
+  kmer=int(sys.argv[4])
+  shift=int(sys.argv[5])
+  out=sys.argv[6]
 
 
   regions=GenomicRegionSet("regions")
   regions.read_bed(bed_file)
 
 
-  table=BiasTable(regions=regions,dnase_file_name=bam_file,genome_file_name=fasta_file)
+  table=BiasTable(regions=regions,dnase_file_name=bam_file,genome_file_name=fasta_file,k_nb=kmer,shift=shift)
   table.write_tables(out)
 
 
