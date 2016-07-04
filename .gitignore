@@ -9,3 +9,5 @@
 build
 dist
 RGT.egg-info/
+# Visualisation output
+rgt/viz/viz_results
