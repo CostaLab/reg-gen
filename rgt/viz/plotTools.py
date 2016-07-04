@@ -54,15 +54,17 @@ def purge(dir, pattern):
 
 def gen_tags(exps, tag):
     """Generate the unique tags from the EM according to the given tag. """
+    if "factor" not in exps.fields:
+        exps.add_factor_col()
     if tag == "reads":
         try: l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     elif tag == "regions":
         try: l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     else:
         l = exps.fieldsDict[tag]
@@ -2667,14 +2669,14 @@ class Lineplot:
                                             ts = time.time()
                                             cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                             
-                                            if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                            if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
                                                 cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                                 cov.normRPM()
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
+                                                if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                     flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                                     ffcoverage = numpy.fliplr(flap.coverage)
@@ -2692,24 +2694,32 @@ class Lineplot:
                                                 else:
                                                     data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
                                             else:
-                                                for i, car in enumerate(cov.coverage):
-                                                    car = numpy.delete(car, [0,1])
-                                                    if i == 0:
-                                                        avearr = np.array(car)
-                                                        lenr = car.shape[0]
-                                                    elif car.shape[0] == lenr:
-                                                        avearr = numpy.vstack((avearr, car))
-                                                    else:
-                                                        pass
-                                                
-                                                avearr = numpy.average(avearr, axis=0)
-                                                
-                                                if self.df:
-                                                    try: data[s][g][c][d][-1].append(avearr)
-                                                    except: data[s][g][c][d] = [[avearr]]
+                                                # print(cov.coverage)
+                                                if not cov.coverage: 
+                                                    data[s][g][c][d] = None
+                                                    print("** Warning: Cannot open " + self.reads[j] )
+                                                    continue
                                                 else:
-                                                    try: data[s][g][c][d].append(avearr)
-                                                    except: data[s][g][c][d] = [avearr]
+                                                    for i, car in enumerate(cov.coverage):
+                                                        car = numpy.delete(car, [0,1])
+                                                        # print(car)
+                                                        if i == 0:
+                                                            avearr = np.array(car)
+                                                            lenr = car.shape[0]
+                                                        elif car.shape[0] == lenr:
+                                                            avearr = numpy.vstack((avearr, car))
+                                                        else:
+                                                            pass
+                                                    
+                                                    avearr = numpy.average(avearr, axis=0)
+                                                    
+                                                    if self.df:
+                                                        try: data[s][g][c][d][-1].append(avearr)
+                                                        except: data[s][g][c][d] = [[avearr]]
+                                                    else:
+                                                        try: data[s][g][c][d].append(avearr)
+                                                        except: data[s][g][c][d] = [avearr]
+                                                    # else: continue
                                                 
                                             bi += 1
                                             te = time.time()
@@ -2800,23 +2810,25 @@ class Lineplot:
                 for j, c in enumerate(self.data[s][g].keys()):
                     
                     for k, d in enumerate(self.data[s][g][c].keys()):
-                        for l, y in enumerate(self.data[s][g][c][d]):
-                            yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                            sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                            if self.df: 
-                                yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                        if not self.data[s][g][c][d]: continue
+                        else:
+                            for l, y in enumerate(self.data[s][g][c][d]):
+                                yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                if self.df: 
+                                    yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                    sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
-                            if not y.all():
-                                pass
-                            else:
-                                x = numpy.linspace(-self.extend, self.extend, len(y))
+                                if not y.all():
+                                    pass
+                                else:
+                                    x = numpy.linspace(-self.extend, self.extend, len(y))
 
-                                ax.plot(x,y, color=self.colors[c], lw=1, label=c)
-                                if it < nit - 1:
-                                    ax.set_xticklabels([])
-                                # Processing for future output
-                                if printtable: pArr.append([g,s,c,d]+list(y))
+                                    ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                    if it < nit - 1:
+                                        ax.set_xticklabels([])
+                                    # Processing for future output
+                                    if printtable: pArr.append([g,s,c,d]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])

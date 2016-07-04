@@ -225,6 +225,15 @@ if __name__ == "__main__":
     parser_circRNA.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_circRNA.add_argument('-c', '-circ', type=str, help="Output BED file of circular RNA")
 
+    ############### FASTA slicing #############################################
+    # python rgt-convertor.py sliceFASTA -i -o -l -p
+    parser_sliceFASTA = subparsers.add_parser('sliceFASTA', 
+                       help="[FASTA] Slice the sequence by given position and length")
+    parser_sliceFASTA.add_argument('-i', '-input', type=str, help="Input FASTA file")
+    parser_sliceFASTA.add_argument('-l', type=int, help="Length of the slice sequence")
+    parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
+    parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
+
     ##########################################################################
     ##########################################################################
     ##########################################################################
@@ -341,10 +350,10 @@ if __name__ == "__main__":
             print("Please redefine the argument -f.")
             sys.exit(1)
 
-        if args.t == "protein_coding": tag_t = 'gene_type \"protein_coding\"'
-        elif args.t == "non_coding": tag_t = 'gene_type \"non_coding\"'
-        elif args.t == "known_ncrna": tag_t = 'gene_type \"known_ncrna\"'
-        elif args.t == "pseudogene": tag_t = 'gene_type \"pseudogene\"'
+        if args.t == "protein_coding": tag_t = ' \"protein_coding\"'
+        elif args.t == "non_coding": tag_t = ' \"non_coding\"'
+        elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
+        elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
         elif args.t == "All": tag_t = None
         else: 
             print("Please redefine the argument -t.")
@@ -367,12 +376,13 @@ if __name__ == "__main__":
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
-                
+
+                if len(line) < 5: continue
                 if tag_s and tag_s != line[1]: continue
                 if tag_f and tag_f != line[2]: continue
                 if tag_t and tag_t in line[8]: pass
                 elif not tag_t: pass
-                else: continue                
+                else: continue              
                 if tag_st and tag_st in line[8]: pass
                 elif not tag_st: pass
                 else: continue
@@ -381,6 +391,7 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
                 
                 gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+                gn = gn.partition(" (")[0]
                 gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
                 # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
@@ -883,3 +894,14 @@ if __name__ == "__main__":
 # chr1  39449029    +   chr1    39448068    +   0   0   0
 #                     9                          10          11      12            13   
 # 97ZZTR1:411:C4VC3ACXX:5:1102:16097:34171    39448994    35M15S  39448069    35S15M868p50M
+
+    ############### FASTA slicing #######################################
+    elif args.mode == "sliceFASTA":
+        print(os.path.basename(args.i) + " -start "+str(args.p)+" -end "+str(args.p+args.l))
+        from rgt.SequenceSet import SequenceSet
+        seq = SequenceSet(name=args.i, seq_type="RNA")
+        seq.read_fasta(fasta_file=args.i)
+        start = int(args.p)
+        end = int(start + args.l)
+        print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
+

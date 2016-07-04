@@ -224,6 +224,7 @@ def gen_heatmap(path):
     # Convert into array
     ar = []
     exps = natsorted(matrix.keys())
+    rnas = natsorted(rnas)
     # print(exps)
     for exp in exps:
         row = []

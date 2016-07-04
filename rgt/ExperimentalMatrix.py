@@ -143,6 +143,7 @@ class ExperimentalMatrix:
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
         self.remove_name()
+        self.load_bed_url(".")
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
         
     def get_genesets(self):
@@ -308,3 +309,34 @@ class ExperimentalMatrix:
         self.remove_name()
 
 
+    def load_bed_url(self, temp_dir):
+        """Load the BED files which contains url as file path to temporary directory."""
+        import urllib
+        for key, value in self.files.iteritems():
+            if self.types[self.names.index(key)] == "regions" and "http" in value:
+                tmpfile = os.path.join(temp_dir, value.split('/')[-1])
+                dest_name = tmpfile.partition(".gz")[0]
+                if not os.path.isfile(dest_name):
+                    if not os.path.isfile(tmpfile):
+                        urllib.urlretrieve(value, tmpfile)
+                    if value.endswith(".gz"):
+                        import gzip
+                        with gzip.open(tmpfile, 'rb') as infile:
+                            with open(dest_name, 'w') as outfile:
+                                for line in infile:
+                                    outfile.write(line)
+                        os.remove(tmpfile)
+                    else:
+                        dest_name = tmpfile
+
+                self.files[key] = dest_name
+
+    def add_factor_col(self):
+        """Add factor column by the entry name"""
+        self.fields.append("factor")
+        self.fieldsDict["factor"] = {}
+        for n in self.names:
+            try:
+                self.fieldsDict["factor"][n].append(n)
+            except:
+                self.fieldsDict["factor"][n] = [n]

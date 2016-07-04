@@ -405,5 +405,6 @@ if(options.zv10):
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
+        # system("sed -i -e 's/^/chr/' "+gtf_output_file_name)
         ## TODO add chr in each entry
         print "OK"
