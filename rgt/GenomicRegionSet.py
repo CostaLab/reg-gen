@@ -920,8 +920,8 @@ class GenomicRegionSet:
         # If there is overlap within self or y, they should be merged first.
         if self.sorted == False: 
             self.sort()
-        b = deepcopy(y)
-        b.merge()
+        b = y.merge(w_return=True)
+
         
         iter_a = iter(self)
         s = iter_a.next()
@@ -1650,10 +1650,10 @@ class GenomicRegionSet:
         if len(self) == 0: return None
         if len(regionset) == 0: return [0]*len(self)
 
-        a = copy.deepcopy(self)
-        b = copy.deepcopy(regionset)
-        if not a.sorted: a.sort()
-        if not b.sorted: b.sort()
+        #a = copy.deepcopy(self)
+        #b = copy.deepcopy(regionset)
+        #if not a.sorted: a.sort()
+        #if not b.sorted: b.sort()
         counts = []
         
         iter_a = iter(self)
