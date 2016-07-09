@@ -726,3 +726,5 @@ def main():
             venn = Venn(sets=sets, organism=args.organism)
             f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
             output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)
+if __name__ == "__main__":
+    main()
