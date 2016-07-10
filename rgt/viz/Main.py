@@ -754,3 +754,6 @@ def main():
             print("\n################# Integration ###############")
             if args.ihtml:
                 list_all_index(path=args.o)
+
+if __name__ == "__main__":
+    main()
