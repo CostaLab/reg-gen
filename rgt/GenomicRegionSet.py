@@ -61,37 +61,25 @@ class GenomicRegionSet:
     def __getitem__(self, key):
         return self.sequences[key]
 
-    def extend(self, left, right, percentage=False, w_return=False):
+    def extend(self, left, right, percentage=False):
         """Perform extend step for every element.
 
         *Keyword arguments:*
 
             - percentage -- input value of left and right can be any positive value or negative value larger than -50 %
         """
-        if not w_return:
-            if percentage:
-                if percentage > -50:
-                    for s in self.sequences:
-                        s.extend(int(len(s)*left/100), int(len(s)*right/100))
-                else:
-                    print("*** Error: Percentage for extension must be larger than 50%%.")
-                    sys.exit(0)
-            else:
+
+        if percentage:
+            if percentage > -50:
                 for s in self.sequences:
-                    s.extend(left, right)
-        else:
-            a = copy.deepcopy(self)
-            if percentage:
-                if percentage > -50:
-                    for s in a.sequences:
-                        s.extend(int(len(s)*left/100), int(len(s)*right/100))
-                else:
-                    print("*** Error: Percentage for extension must be larger than 50%%.")
-                    sys.exit(0)
+                    s.extend(int(len(s)*left/100), int(len(s)*right/100))
             else:
-                for s in a.sequences:
-                    s.extend(left, right)
-            return a
+                print("*** Error: Percentage for extension must be larger than 50%%.")
+                sys.exit(0)
+        else:
+            for s in self.sequences:
+                s.extend(left, right)
+
 
     def sort(self, key=None, reverse=False):
         """Sort Elements by criteria defined by a GenomicRegion.
