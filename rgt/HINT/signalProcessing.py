@@ -137,7 +137,7 @@ class GenomicSignal:
 
         return tag_count
 
-    def get_signal(self, ref, start, end, ext, initial_clip = 1000, per_norm = 98, per_slope = 98, 
+    def get_signal(self, ref, start, end, ext, initial_clip = 1000, per_norm = 99.5, per_slope = 98, 
                    bias_table = None, genome_file_name = None, ext_both_directions=False, print_wig = None):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.

@@ -5,28 +5,27 @@ import os
 import sys
 import multiprocessing
 import time, datetime
+import pylab
+import pysam
+import pickle
+import shutil
+
 # Local Libraries
 from scipy import stats
+import scipy.cluster.hierarchy as sch
 import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
-
 import matplotlib
-
-from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import matplotlib.cm as cm
 from matplotlib.ticker import MaxNLocator, FuncFormatter
+from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import colors
-
-import pylab
-import scipy.cluster.hierarchy as sch
-import pysam
-import pickle
-import shutil
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
 #from Bio import motifs
+
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
@@ -849,10 +848,15 @@ class PromoterTest:
                     #    promoter.name = gene_sym
                     if score:
                         try:
-                            if "ENSG" in promoter.name:
+                            # if "ENSG" in promoter.name:
+                            try:
+                                # print(promoter.name)
                                 s = self.de_gene.values[promoter.name]
-                            else:
+                            # else:
+                            except:
+                                # print(gene_sym.upper())
                                 s = self.de_gene.values[gene_sym.upper()]
+                            # print(self.de_gene.values.keys())
                         except:
                             #print(promoter.name)
                             try: print("Warning: "+promoter.name+"\tcannot be mapped to get its score.")
@@ -1467,8 +1471,6 @@ class PromoterTest:
             pwm.weblogo(logo_file_name, format="SVG", stack_width = "medium", color_scheme = "color_classic")
             pwm_file.close()
 
-
-        # non-DE DBS
 
     def gen_html(self, directory, parameters, ccf, align=50, alpha = 0.05):
         dir_name = os.path.basename(directory)
@@ -2104,9 +2106,11 @@ class PromoterTest:
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
-                    try: gene_sym = self.ensembl2symbol[p.name]
-                    except: gene_sym = p.name
-                    sscores.append(self.de_gene.values[gene_sym])
+
+                    try: gene_sym = self.ensembl2symbol[p.name].upper()
+                    except: gene_sym = p.name.upper()
+                    try: sscores.append(self.de_gene.values[gene_sym.upper()])
+                    except: sscores.append(0)
 
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
@@ -2139,6 +2143,7 @@ class PromoterTest:
                                 new_scores.append(float("inf"))
                             elif s == "-Inf" or s == "-inf":
                                 new_scores.append(-float("inf"))
+                            elif isinstance(s, str): new_scores.append(s)
                             else: new_scores.append(abs(float(s)))
                             
                         scores = new_scores  

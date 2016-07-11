@@ -3,23 +3,23 @@ from __future__ import print_function
 from __future__ import division
 import sys
 import os
-import numpy
-from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
 import time, datetime, argparse
 from collections import *
 import copy
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib.ticker import MultipleLocator, FormatStrFormatter, FuncFormatter 
-import matplotlib.ticker as mtick
-from matplotlib import cm
 import itertools
 import pickle
 import multiprocessing
-from matplotlib_venn import venn2, venn3
+import multiprocessing.pool
 import urllib2
 import re
+import numpy
+from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mtick
+from matplotlib import cm
+from matplotlib.backends.backend_pdf import PdfPages
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from matplotlib_venn import venn2, venn3
 
 # Local Libraries
 # Distal Libraries
@@ -54,17 +54,20 @@ def purge(dir, pattern):
 
 def gen_tags(exps, tag):
     """Generate the unique tags from the EM according to the given tag. """
+    if "factor" not in exps.fields:
+        exps.add_factor_col()
     if tag == "reads":
         try: l = [exps.get_type(i,"factor") for i in exps.get_readsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     elif tag == "regions":
         try: l = [exps.get_type(i,"factor") for i in exps.get_regionsnames()]
         except: 
-            print("You must define 'factor' column in experimental matrix for grouping.")
+            # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     else:
+        l = exps.fieldsDict[tag]
         try: l = exps.fieldsDict[tag]
         except: 
             print('Cannot find the column "' + tag +'"')
@@ -116,7 +119,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             
     else:
         if annotation:
-            colors = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(annotation))).tolist()
+            colors = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
         else:
             #colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             #colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
@@ -134,7 +137,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(exps.fieldsDict[colorby].keys())
             #print(n)
             #colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
-            colors = plt.cm.Dark2(numpy.linspace(0, 1, n)).tolist()
+            colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
     return colors
 
 def colormaps(exps, colorby, definedinEM):
@@ -157,8 +160,9 @@ def colormaps(exps, colorby, definedinEM):
             n = len(exps.fieldsDict["factor"].keys())
         else:
             n = len(exps.fieldsDict[colorby].keys())
-        colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+        colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
 
+        
         #if len(exps.get_regionsnames()) < 20:
         #    colors = ['Blues', 'Oranges', 'Greens', 'Reds',  'Purples', 'Greys', 'YlGnBu', 'gist_yarg', 'GnBu', 
         #              'OrRd', 'PuBu', 'PuRd', 'RdPu', 'YlGn', 'BuGn', 'YlOrBr', 'BuPu','YlOrRd','PuBuGn','binary']
@@ -245,8 +249,8 @@ def group_refque(rEM,  qEM, groupby, rRegion=None, qRegion=None):
             try: groupedquery[ty].append(q)
             except: groupedquery[ty] =[q]
     else:
-        groupedreference[""] = rEM.get_regionsets()
-        groupedquery[""] = qEM.get_regionsets()
+        groupedreference[""] = rregs
+        groupedquery[""] = qregs
     return groupedreference, groupedquery
 
 def count_intersect(reference, query, mode_count="count", threshold=False):
@@ -294,7 +298,8 @@ def value2str(value):
         if value >= 1000: r = "{}".format(int(value))
         elif 1000 > value > 10: r = "{:.1f}".format(value)
         elif 10 > value >= 1: r = "{:.2f}".format(value)
-        elif 1 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 0.9999 > value > 0.0001: r = "{:.4f}".format(value)
+        elif 1 > value > 0.9999: r = "1"
         else: r = "{:.1e}".format(value)
         return r
 
@@ -330,24 +335,15 @@ def multiple_correction(dic):
 
 def compute_coverage(input):
     """
-    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c
+    bed, bam, rs, bs, ss, center, heatmap, logt, s, g, c, d
     """
-    
     ts = time.time()
     cov = CoverageSet(input[0].name+".", input[0])
-
-
-    if "Conservation" in input[1]:
-        cov.phastCons46way_score(stepsize=input[4])
-    elif ".bigWig" in input[1] or ".bw" in input[1]:
+    if ".bigWig" in input[1] or ".bw" in input[1]:
         cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
     else:
         cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
         cov.normRPM()
-
-
-    #cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
-    #cov.normRPM()
     # When bothends, consider the fliping end
     if input[5] == 'bothends':
         flap = CoverageSet("for flap", input[0])
@@ -376,7 +372,7 @@ def compute_coverage(input):
         #print(avearr.shape)
         avearr = numpy.average(avearr, axis=0)
         #numpy.transpose(avearr)
-        result = [input[8], input[9], input[10], avearr] # Store the array into data list
+        result = [input[8], input[9], input[10], input[11], avearr] # Store the array into data list
     te = time.time()
     print("\tComputing "+os.path.basename(input[1])+" . "+input[0].name + "\t\t"+str(datetime.timedelta(seconds=round(te-ts))))
     return result    
@@ -416,7 +412,7 @@ def mp_count_intersect(inputs):
         print(".", end="")
         sys.stdout.flush()
         c = r.intersect_count(q, mode_count=mode_count, threshold=threshold)
-        #c = count_intersect(r,q, mode_count=self.mode_count, threshold=threshold)
+        
         output.append(c)
         #counts[ty][r.name][q.name] = c
         if frequency: 
@@ -437,6 +433,18 @@ def get_url(url, filename):
     f.close()
     print("\t... Done")
 
+class NoDaemonProcess(multiprocessing.Process):
+    # make 'daemon' attribute always return False
+    def _get_daemon(self):
+        return False
+    def _set_daemon(self, value):
+        pass
+    daemon = property(_get_daemon, _set_daemon)
+
+# We sub-class multiprocessing.pool.Pool instead of multiprocessing.Pool
+# because the latter is only a wrapper function, not a proper class.
+class MyPool(multiprocessing.pool.Pool):
+    Process = NoDaemonProcess
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -446,14 +454,17 @@ class Projection:
         # Reference
         self.rEM = ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         # Query
         self.qEM = ExperimentalMatrix()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.parameter = []
+        self.background = None
         
     def group_refque(self, groupby=False):
         self.groupedreference, self.groupedquery = group_refque(self.rEM, self.qEM, groupby)
@@ -473,19 +484,30 @@ class Projection:
             for r in self.groupedreference[ty]:
                 self.background[ty].combine(r)
             self.background[ty].merge()
-            
-    def background(self, bed_path):
+
+        for ty in self.groupedreference.keys():
+            rlist = [ r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            qlist = [ q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
+
+    def set_background(self, bed_path):
         bg = GenomicRegionSet("background")
         bg.read_bed(bed_path)
-
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
+            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            self.groupedreference[ty] = rlist
+            
+            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            self.groupedquery[ty] = qlist
         
     def projection_test(self, organism):
         self.bglist = OrderedDict()
         self.qlist = OrderedDict()
         self.plist = OrderedDict()
+        self.interq_list = OrderedDict()
         self.lenlist = {}
         #print2(self.parameter, "\nProjection test")
         #print2(self.parameter, "{0:s}\t{1:s}\t{2:s}\t{3:s}\t{4:s}".format("Reference","Background", "Query", "Proportion", "p value"))
@@ -495,24 +517,28 @@ class Projection:
             self.bglist[ty] = OrderedDict()
             self.qlist[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
-            try:
-                if self.background: bgset = self.background[ty]
-            except: bgset = None
+            self.interq_list[ty] = OrderedDict()
+            if self.background: bgset = self.background[ty]
+            else: bgset = None
             
             for i, r in enumerate(self.groupedreference[ty]):
                 self.bglist[ty][r.name] = OrderedDict()
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
+                self.interq_list[ty][r.name] = OrderedDict()
                 self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
                     #print(r.name, q.name, sep="\t")
-                    bg, ratio, p = r.projection_test(q, organism, extra=True, background=bgset)
-                    self.bglist[ty][r.name][q.name] = bg
-                    self.qlist[ty][r.name][q.name] = ratio
-                    self.plist[ty][r.name][q.name] = p
-                    self.lenlist[q.name] = len(q)
-                    #if r in self.backgrounds.keys(): pass
-                    #else: self.backgrounds[r] = bg
+                    if r.name == q.name: continue
+                    else:
+                        bg, ratio, p, interq = r.projection_test(q, organism, extra=True, background=bgset)
+                        self.bglist[ty][r.name][q.name] = bg
+                        self.qlist[ty][r.name][q.name] = ratio
+                        self.plist[ty][r.name][q.name] = p
+                        self.interq_list[ty][r.name][q.name] = interq
+                        self.lenlist[q.name] = len(q)
+                        #if r in self.backgrounds.keys(): pass
+                        #else: self.backgrounds[r] = bg
          
         # multiple test correction       
         multiple_correction(self.plist)
@@ -520,21 +546,29 @@ class Projection:
         for ty in self.groupedquery.keys():
             for i, r in enumerate(self.groupedreference[ty]):
                 for j, q in enumerate(self.groupedquery[ty]):
-                    bg = self.bglist[ty][r.name][q.name]
-                    ratio = self.qlist[ty][r.name][q.name]
-                    p = self.plist[ty][r.name][q.name]
-                    #print(p)
-                    #if len(q) == 0:
-                    #    note = "Empty query!"
-                    #elif p < 0.05 and bg > ratio: 
-                    #    note = "Negatively unassociated!"
-                    #elif p < 0.05 and bg < ratio:
-                    #    note = "Positively associated!"
-                    #else:
-                    #    note = ""
-                    #print2(self.parameter, r.name+"\t"+value2str(bg)+"\t"+q.name+"\t"+value2str(ratio)+"\t"+value2str(p)+"\t"+note)
-                    
-                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name][q.name]
+                    # if r.name == q.name: continue
+                    # else:
+                        # bg = self.bglist[ty][r.name][q.name]
+                        # ratio = self.qlist[ty][r.name][q.name]
+                        # p = self.plist[ty][r.name][q.name]
+                    self.qlist[ty][r.name]['Background'] = self.bglist[ty][r.name].values()[0]
+
+    def output_interq(self, directory):
+        """Output the intersected query to the reference in BED format"""
+        try:
+            os.stat(os.path.dirname(directory))
+        except:
+            os.mkdir(os.path.dirname(directory))
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)
+        for ty in self.interq_list.keys():
+            if ty: g = ty+"_"
+            else: g = ""
+            for r in self.interq_list[ty].keys():
+                for q in self.interq_list[ty][r].keys():
+                    self.interq_list[ty][r][q].write_bed(os.path.join(directory, g+q+"_intersected_"+r+".bed"))
 
     def plot(self, logt=None, pw=3,ph=3):
         
@@ -563,7 +597,7 @@ class Projection:
                     if y == 0 and logt: y = 0.000001
                     #print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
                     ax[ind_ty].bar(x, y, width=width, color=self.color_list[q], edgecolor="none", 
-                                   align='edge', log=logt)
+                                   align='edge', log=logt, label=q)
             if logt:
                 ax[ind_ty].set_yscale('log')
             else:
@@ -573,15 +607,22 @@ class Projection:
             ax[ind_ty].set_title(ty)
             ax[ind_ty].yaxis.tick_left()
             ax[ind_ty].set_ylabel('Percentage of intersected regions',fontsize=8)
-            # ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
-            # ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right")
-            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='off')
-            ax[ind_ty].legend(self.qlist[ty][r].keys(), loc='center left', handlelength=1, handletextpad=1, 
+            ax[ind_ty].set_xticks([i + 0.5 - 0.5*width for i in range(len(r_label))])
+            ax[ind_ty].set_xticklabels(r_label,rotation=30, ha="right",fontsize=8)
+            ax[ind_ty].tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+
+            handles, labels = ax[ind_ty].get_legend_handles_labels()
+            # uniq_labels = unique(labels)
+            uniq_labels = [ q.name for q in self.groupedquery[ty] ] + ["Background"]
+
+            ax[ind_ty].legend([handles[labels.index(l)] for l in uniq_labels ], uniq_labels, 
+                      loc='center left', handlelength=1, handletextpad=1, 
                       columnspacing=2, borderaxespad=0., prop={'size':10}, bbox_to_anchor=(1.05, 0.5))
             for spine in ['top', 'right']:  # 'left', 'bottom'
                 ax[ind_ty].spines[spine].set_visible(False)
         # f.text(-0.025, 0.5, "Percentage of intersected regions",fontsize=12, rotation="vertical", va="center")
         # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
+        f.tight_layout()
         self.fig = f
 
     def heatmap(self):
@@ -606,6 +647,7 @@ class Projection:
 
     def gen_html(self, directory, title, args, align=50):
         dir_name = os.path.basename(directory)
+        statistic_table = []
         #check_dir(directory)
         html_header = "Projection Test: "+dir_name
         link_d = OrderedDict()
@@ -616,7 +658,7 @@ class Projection:
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
         html.add_figure("projection_test.png", align="center")
         
-        header_list = ["No.",
+        header_list = ["No.", 
                        "Reference<br>name",
                        "Query<br>name", 
                        "Reference<br>number",
@@ -625,7 +667,9 @@ class Projection:
                        "Background<br>proportion",
                        "Positive<br>association<br>p-value",
                        "Negative<br>association<br>p-value"]
-        
+        statistic_table.append(["Reference_name", "Query_name","Reference_number",
+                       "Query_number", "Proportion", "Background_proportion",
+                       "Positive_association_p-value","Negative_association_p-value"])
         type_list = 'ssssssssssssssss'
         col_size_list = [5, 10,10,10,10,10,10,15,15]
         
@@ -643,6 +687,8 @@ class Projection:
                     if pv == "na": 
                         nalist.append(r)
                         continue
+                    elif self.qlist[ty][r][q] < args.cfp:
+                        continue
                     else:
                         pvn = 1-pv
                     
@@ -650,14 +696,17 @@ class Projection:
                             if self.qlist[ty][r]['Background'] <  self.qlist[ty][r][q]:
                                 data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    "<font color=\"red\">"+value2str(pv)+"</font>", value2str(pvn)])
+                                statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pv), value2str(pvn)])
                             else:
                                 data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,
                                                    value2str(pvn), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pvn),value2str(pv)])
                         else:
                             data_table.append([str(ind_ty),r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
+                            statistic_table.append([r,q,rlen,qlen,propor,backv,value2str(pv),value2str(pvn)])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
-
+            output_array(statistic_table, directory=directory, folder=title, filename="statistics"+ty+".txt")
         
         header_list=["Assumptions and hypothesis"]
         data_table = [['If the background proportion is too small, it may cause bias in p value.'],
@@ -686,7 +735,8 @@ class Projection:
                       #["Grouping tag", "-g", args.g],
                       #["Coloring tag", "-c", args.c],
                       #["Background", "-bg", args.bg],
-                      ["Organism", "-organism", args.organism]]
+                      ["Organism", "-organism", args.organism],
+                      ["Cutoff of proportion", "-cfp", str(args.cfp)]]
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, cell_align="left")
         html.add_free_content(['<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
@@ -768,7 +818,7 @@ class Projection:
                 ax.barh(ind + width*ind_r, self.disperDict[ty][r], width, color=colors[ind_r])
             
             plt.xlabel('Percentage')
-            ax.xaxis.set_major_formatter(FuncFormatter(to_percentage)) 
+            ax.xaxis.set_major_formatter(mtick.FuncFormatter(to_percentage)) 
             
             ax.minorticks_off()
             ax.set_yticks([ x + 0.5 for x in range(len(self.chrom_list))])
@@ -1161,9 +1211,11 @@ class Intersect:
     def __init__(self, reference_path, query_path, mode_count, organism):
         self.rEM, self.qEM = ExperimentalMatrix(), ExperimentalMatrix()
         self.rEM.read(reference_path)
+        self.rEM.remove_empty_regionset()
         self.references = self.rEM.get_regionsets()
         self.referencenames = self.rEM.get_regionsnames()
         self.qEM.read(query_path)
+        self.qEM.remove_empty_regionset()
         self.query = self.qEM.get_regionsets()
         self.querynames = self.qEM.get_regionsnames()
         self.mode_count = mode_count
@@ -1175,21 +1227,29 @@ class Intersect:
 
     def background(self,path=None):
         """Given a bed file as the background for analysis"""
-        bgbed = GenomicRegionSet(name="Background")
-        if path:
-            bgbed.read_bed(path)
-            nq = []
-            print("\tTrimming the queries by the given background: "+path)
+        # bgbed = GenomicRegionSet(name="Background")
+        # if path:
+        #     bgbed.read_bed(path)
+        #     # nq = []
+        #     print("\tTrimming the queries by the given background: "+path)
             
-            for q in self.query:
-                qq = q.intersect(bgbed, mode=OverlapType.ORIGINAL)
-                nq.append( qq )
-            self.query = nq
+        #     rlist = [ r.trim_by(background=bgbed) for r in self.references]
+        #     self.references = rlist
+        #     qlist = [ q.trim_by(background=bgbed) for q in self.query]
+        #     self.query = qlist
+            
+        # self.background = bgbed
 
-        else:
-            bgbed.get_genome_data(organism=self.organism)
-
-        #self.background = bgbed
+        if path:
+            bg = GenomicRegionSet("background")
+            bg.read_bed(path)
+            self.background = bg
+            for ty in self.groupedreference.keys():
+                # self.background[ty] = bg
+                rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+                self.groupedreference[ty] = rlist
+                qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+                self.groupedquery[ty] = qlist
 
 
     def group_refque(self, groupby):
@@ -1228,7 +1288,7 @@ class Intersect:
                 tags.append(nt)
             self.color_tags = tags
         self.color_list = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(self.color_tags))).tolist()
-    
+
     def extend_ref(self, percentage):
         """percentage must be positive value"""
         for ty in self.groupedreference:
@@ -1266,8 +1326,10 @@ class Intersect:
                     
                     mp_input = []
                     for q in self.groupedquery[ty]:
-                        mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
-                                          self.counts, frequency, self.frequency, ty, r ])
+                        if r.name == q.name: continue
+                        else:
+                            mp_input.append([ q, self.nalist, self.mode_count, self.qlen, threshold,
+                                              self.counts, frequency, self.frequency, ty, r ])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
                     pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
                     mp_output = pool.map(mp_count_intersect, mp_input)
@@ -1311,11 +1373,13 @@ class Intersect:
                 plus = 0
                 ax.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
             ax.set_title(self.counts.keys()[ai], y=1)
+
             r_label = []   
             for ind_r,r in enumerate(self.counts.values()[ai].keys()):
                 for l in self.references:
-                    if l.name == r: lr = len(l)
-                    
+                    if l.name == r: 
+                        lr = len(l)
+                        
                 if len(axs) == 1: 
                     r_label.append(r)
                 else: 
@@ -1327,6 +1391,7 @@ class Intersect:
                 for ind_q, q in enumerate(self.counts.values()[ai][r].keys()):
                     x = ind_r + ind_q*width + 0.1
                     if percentage:
+                        # print(lr)
                         y = 100 * (self.counts.values()[ai][r][q][2] + plus)/lr
                     else:
                         y = self.counts.values()[ai][r][q][2] + plus # intersect number
@@ -1355,7 +1420,8 @@ class Intersect:
             else:
                 f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
             
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.bar = f
 
     def stackedbar(self):
@@ -1409,7 +1475,8 @@ class Intersect:
         elif self.mode_count == "count":
             f.text(-0.025, 0.5, "Intersected regions number", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.sbar = f
 
     def percentagebar(self):
@@ -1472,7 +1539,8 @@ class Intersect:
                 ax.spines[spine].set_visible(False)
         f.text(-0.025, 0.5, "Proportion of intersected regions (%)", rotation="vertical", va="center")
     
-        f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        # f.tight_layout(pad=0.5, h_pad=None, w_pad=0.5)
+        f.tight_layout()
         self.pbar = f
 
     def gen_html(self, directory, title, align, args):
@@ -1499,11 +1567,14 @@ class Intersect:
                        "Reference<br>number", 
                        "Query<br>number", 
                        "Intersect.",
-                       "Proportion <br>of Reference"]
-       
+                       "Proportion<br>of Reference"]
+        statistic_table = [["Reference_name","Query_name","Reference_number","Query_number", 
+                            "Intersect.","Proportion_of_Reference"]]
         if self.test_d: 
             header_list += ["Average<br>intersect.", "Chi-square<br>statistic", 
                             "Positive<br>Association<br>p-value", "Negative<br>Association<br>p-value"]
+            statistic_table[0] += ["Average_intersect.", "Chi-square_statistic", 
+                                   "Positive_Association_p-value", "Negative_Association_p-value"]
         else: pass
         
         type_list = 'ssssssssssssssss'
@@ -1534,25 +1605,35 @@ class Intersect:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, "<font color=\"red\">"+value2str(pv)+"</font>", value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv), "<font color=\"red\">"+value2str(pv)+"</font>"])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                             elif self.test_d[ty][r][q][2] >= 0.05:
                                 if intern > aveinter:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(pv),value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                                        str(intern), "{:.2f}%".format(100*pt),
                                                        value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
+                                    statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt),
+                                                            value2str(aveinter), chisqua, value2str(npv),value2str(pv)])
                     else:
                         data_table.append([str(c), r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]), 
                                            str(intern), "{:.2f}%".format(100*pt)])
+                        statistic_table.append([r, q,str(self.rlen[ty][r]), str(self.qlen[ty][q]),str(intern), "{:.2f}%".format(100*pt)])
         
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align = align, sortable=True)
-        
+            output_array(statistic_table, directory=directory, folder=title, filename="statistics"+ty+".txt")
+
         html.add_heading("Assumptions and hypothesis")
         list_ex = ['Positive association is defined by: True intersection number > Averaged random intersection.',
                    'Negative association is defined by: True intersection number < Averaged random intersection.']
@@ -1872,43 +1953,45 @@ class Intersect:
                 print("\t.", end="")
                 sys.stdout.flush()
                 for q in self.groupedquery[ty]:
-                    print(".", end="")
-                    sys.stdout.flush()
-                    if q.name in self.nalist: continue
-                    # True intersection
-                    obs = self.counts[ty][r.name][q.name]
-                    qn = q.name
-                    if obs[2] == 0:
-                        aveinter, chisq, p = "NA", "NA", "1"
+                    if r.name == q.name: continue
                     else:
-                        com = q.combine(r, change_name=False, output=True)
-                        # Randomization
-                        d = []
-                        
-                        inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
-                        mp_input = [ inp for i in range(repeat) ]
+                        print(".", end="")
+                        sys.stdout.flush()
+                        if q.name in self.nalist: continue
+                        # True intersection
+                        obs = self.counts[ty][r.name][q.name]
+                        qn = q.name
+                        if obs[2] == 0:
+                            aveinter, chisq, p = "NA", "NA", "1"
+                        else:
+                            com = q.combine(r, change_name=False, output=True)
+                            # Randomization
+                            d = []
+                            
+                            inp = [ com, self.rlen[ty][r.name], self.mode_count, threshold ]
+                            mp_input = [ inp for i in range(repeat) ]
 
-                        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-                        mp_output = pool.map(mp_count_intersets, mp_input)
-                        pool.close()
-                        pool.join()
+                            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                            mp_output = pool.map(mp_count_intersets, mp_input)
+                            pool.close()
+                            pool.join()
 
 
 
-                        #for i in range(repeat):
-                        #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
-                        #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
-                            #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
-                        da = numpy.array(mp_output)
-                        
-                        exp_m = numpy.mean(da, axis=0)
-                        #print(exp_m)
-                        #print(obs)
-                        chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
-                        aveinter = exp_m[2]
+                            #for i in range(repeat):
+                            #    random_r,random_q = com.random_split(size=self.rlen[ty][r.name])                           
+                            #    d.append(random_r.intersect_count(random_q, mode_count=self.mode_count, threshold=threshold))
+                                #d.append(count_intersect(random_r, random_q, mode_count=self.mode_count, threshold=threshold))
+                            da = numpy.array(mp_output)
+                            
+                            exp_m = numpy.mean(da, axis=0)
+                            # print(exp_m)
+                            # print(obs)
+                            chisq, p, dof, expected = stats.chi2_contingency([exp_m,obs])
+                            aveinter = exp_m[2]
 
-                    plist[ty][r.name][qn] = p
-                    self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
+                        plist[ty][r.name][qn] = p
+                        self.test_d[ty][r.name][qn] = [aveinter, chisq, p]
                 print()
                     
             multiple_correction(plist)
@@ -2410,7 +2493,7 @@ def annotation_dump(organism):
 
 class Lineplot:
     
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, fields, test):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, dft, fields, test):
         
         
         # Read the Experimental Matrix
@@ -2422,20 +2505,20 @@ class Lineplot:
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f)
+                self.exps.remove_name()
         # print(self.exps.names)
         # print(self.exps.trash)
-        self.exps.remove_name()
+        # self.exps.remove_name()
         # pretty(self.exps.fieldsDict)
         # sys.exit(0)
-        if annotation:
-            self.beds, self.bednames, self.annotation = annotation_dump(organism)
+        # if annotation:
+        #     self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
-        else:
-            self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
-            self.bednames = self.exps.get_regionsnames()
-            self.annotation = None
-            
-
+        # else:
+        self.beds = self.exps.get_regionsets() # A list of GenomicRegionSets
+        self.bednames = self.exps.get_regionsnames()
+        self.annotation = None
+      
         self.reads = self.exps.get_readsfiles()
         self.readsnames = self.exps.get_readsnames()
         self.fieldsDict = self.exps.fieldsDict
@@ -2446,6 +2529,7 @@ class Lineplot:
         self.bs = bs
         self.ss = ss
         self.df = df
+        self.dft = dft
 
     
     def relocate_bed(self):
@@ -2483,7 +2567,7 @@ class Lineplot:
             colorby = 'reads','regions','cell',or 'factor'
             sortby = 'reads','regions','cell',or 'factor'
         """
-        self.tag_type = [sortby, groupby, colorby]
+        self.tag_type = [sortby, groupby, colorby, self.dft]
         if "None" in self.tag_type: self.tag_type.remove("None")
         
         #print([sortby, groupby, colorby])
@@ -2516,19 +2600,19 @@ class Lineplot:
         self.cuebed = OrderedDict()
         self.cuebam = OrderedDict()
         
-        if self.annotation:
-            #all_tags = []
-            #for dictt in self.exps.fieldsDict.values():
-            #    for tag in dictt.keys():
-            #        all_tags.append(tag) 
-            for bed in self.bednames:
-            #    self.cuebed[bed] = set([bed]+all_tags)
-                self.cuebed[bed] = set([bed])
-        else:
-            for bed in self.bednames:
-                self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
-                try: self.cuebed[bed].remove("None")
-                except: pass
+        # if self.annotation:
+        #     #all_tags = []
+        #     #for dictt in self.exps.fieldsDict.values():
+        #     #    for tag in dictt.keys():
+        #     #        all_tags.append(tag) 
+        #     for bed in self.bednames:
+        #     #    self.cuebed[bed] = set([bed]+all_tags)
+        #         self.cuebed[bed] = set([bed])
+        # else:
+        for bed in self.bednames:
+            self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
+            try: self.cuebed[bed].remove("None")
+            except: pass
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
 
@@ -2543,10 +2627,7 @@ class Lineplot:
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
-        # totn = len(self.sort_tags) * len(self.group_tags) * len(self.color_tags)
-
         
-        # if self.df: totn = totn * 2
         bi = 0
         for s in self.sort_tags:
             data[s] = OrderedDict()
@@ -2554,106 +2635,114 @@ class Lineplot:
                 data[s][g] = OrderedDict()
                 for c in self.color_tags:
                     #if self.df: data[s][g][c] = []
-                    for bed in self.cuebed.keys():
-                        #print(self.cuebed[bed])
-                        #print(set([s,g,c]))
-                        if self.cuebed[bed] <= set([s,g,c]):
-                            for bam in self.cuebam.keys():
-                                # print(self.cuebam[bam])
-                                # print(set([s,g,c]))
-                                if self.cuebam[bam] <= set([s,g,c]):
-                                    if mp: 
-                                        if self.annotation:
-                                            i = annot_ind(self.bednames, [s,g,c])
-                                        else: i = self.bednames.index(bed)
+                    data[s][g][c] = OrderedDict()
+                    if not self.dft:
+                        dfs = [c]
+                    else:
+                        dfs = self.exps.fieldsDict[self.dft].keys()
+                    for d in dfs:
+                        for bed in self.cuebed.keys():
+                            # print(self.cuebed[bed])
+                            # print(set([s,g,c,d]))
+                            # print(self.cuebed[bed].issubset(set([s,g,c,d])))
+                            if len(self.cuebed[bed].intersection(set([s,g,c,d])))>2 or self.cuebed[bed].issubset(set([s,g,c,d])):
+                            # if self.cuebed[bed] <= set([s,g,c]):
+                                for bam in self.cuebam.keys():
+                                    # print(self.cuebam[bam])
+                                    # print(set([s,g,c]))
+                                    if self.cuebam[bam] <= set([s,g,c,d]):
+                                        i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
-                                        mp_input.append([ self.processed_beds[i], self.reads[j], 
-                                                          self.rs, self.bs, self.ss, self.center, heatmap, logt,
-                                                          s, g, c])
-                                        if self.df: data[s][g][c] = []
-                                        else: data[s][g][c] = 0
-                                    else:
-                                        
-                                        ts = time.time()
-                                        if self.annotation:
-                                            i = annot_ind(self.bednames, [s,g,c])
-                                        else: i = self.bednames.index(bed)
-                                        j = self.readsnames.index(bam)
-                                        
-                                        cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
-                                        
-                                        if "Conservation" in bam:
-                                            cov.phastCons46way_score(stepsize=self.ss)
-                                        elif ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
-                                            if self.reads[j].startswith("http://"):
-                                                
-                                                tab = self.reads[j].split('/')[-1]
-                                                temp = os.path.join(os.getcwd(),"temp_bigwig_"+tab)
-                                                get_url(url=self.reads[j], filename=temp)
-                                                cov.coverage_from_bigwig(bigwig_file=temp, stepsize=self.ss)
-                                                #os.remove(temp)
-                                            else:
+                                        if len(self.processed_beds[i]) == 0:
+                                            try: data[s][g][c][d].append(numpy.empty(1, dtype=object))
+                                            except: data[s][g][c][d] = [ numpy.empty(1, dtype=object) ]
+                                            continue
+                                        if mp:
+                                            # Multiple processing
+                                            mp_input.append([ self.processed_beds[i], self.reads[j], 
+                                                              self.rs, self.bs, self.ss, self.center, heatmap, logt,
+                                                              s, g, c, d ])
+                                            data[s][g][c][d] = None
+                                            
+                                        else:
+                                            # Single thread
+                                            ts = time.time()
+                                            cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
+                                            
+                                            if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
-
-                                        else:
-                                            cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                            cov.normRPM()
-
-                                        # When bothends, consider the fliping end
-                                        if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                            if ".bigWig" in self.reads[j] or ".bw" in self.reads[j]:
-                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
-                                                ffcoverage = numpy.fliplr(flap.coverage)
-                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                             else:
-                                                flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                                flap.normRPM()
-                                                ffcoverage = numpy.fliplr(flap.coverage)
-                                                cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                        # Averaging the coverage of all regions of each bed file
-                                        if heatmap:
-                                            if logt:
-                                                data[s][g][c] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
-                                            else:
-                                                data[s][g][c] = numpy.vstack(cov.coverage) # Store the array into data list
-                                        else:
-                                            for i, car in enumerate(cov.coverage):
-                                                car = numpy.delete(car, [0,1])
-                                                if i == 0:
-                                                    avearr = np.array(car)
-                                                    lenr = car.shape[0]
-                                                elif car.shape[0] == lenr:
-                                                    avearr = numpy.vstack((avearr, car))
+                                                cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                cov.normRPM()
+                                            # When bothends, consider the fliping end
+                                            if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
+                                                if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
+                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                    flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                                    ffcoverage = numpy.fliplr(flap.coverage)
+                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                                 else:
-                                                    pass
+                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                    flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                    flap.normRPM()
+                                                    ffcoverage = numpy.fliplr(flap.coverage)
+                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                            # Averaging the coverage of all regions of each bed file
+                                            if heatmap:
+                                                if logt:
+                                                    data[s][g][c][d] = numpy.log10(numpy.vstack(cov.coverage) + 1) # Store the array into data list
+                                                else:
+                                                    data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
+                                            else:
+                                                # print(cov.coverage)
+                                                if not cov.coverage: 
+                                                    data[s][g][c][d] = None
+                                                    print("** Warning: Cannot open " + self.reads[j] )
+                                                    continue
+                                                else:
+                                                    for i, car in enumerate(cov.coverage):
+                                                        car = numpy.delete(car, [0,1])
+                                                        # print(car)
+                                                        if i == 0:
+                                                            avearr = np.array(car)
+                                                            lenr = car.shape[0]
+                                                        elif car.shape[0] == lenr:
+                                                            avearr = numpy.vstack((avearr, car))
+                                                        else:
+                                                            pass
+                                                    
+                                                    avearr = numpy.average(avearr, axis=0)
+                                                    
+                                                    if self.df:
+                                                        try: data[s][g][c][d][-1].append(avearr)
+                                                        except: data[s][g][c][d] = [[avearr]]
+                                                    else:
+                                                        try: data[s][g][c][d].append(avearr)
+                                                        except: data[s][g][c][d] = [avearr]
+                                                    # else: continue
+                                                
+                                            bi += 1
+                                            te = time.time()
+                                            print2(self.parameter, "\t"+str(bi)+"\t"+"{0:30}\t--{1:<5.1f}s".format(bed+"."+bam, ts-te))
 
-                                            avearr = numpy.average(avearr, axis=0)
-                                            if self.df: 
-                                                try: data[s][g][c].append(avearr)
-                                                except: data[s][g][c] = [avearr]
-                                            else: data[s][g][c] = avearr # Store the array into data list
-                                        bi += 1
-                                        te = time.time()
-                                        print2(self.parameter, "\t"+str(bi)+"\t"+"{0:30}\t--{1:<5.1f}s".format(bed+"."+bam, ts-te))
-                                        #sys.stdout.flush()
-        
         if mp: 
-            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+            pool = MyPool(multiprocessing.cpu_count())
             mp_output = pool.map(compute_coverage, mp_input)
             pool.close()
             pool.join()
-        
             for s in data.keys():
                 for g in data[s].keys():
                     for c in data[s][g].keys():
-                        for out in mp_output:
-                            if out[0] == s and out[1] == g and out[2] == c:
-                                if self.df:
-                                    data[s][g][c].append(out[3])
-                                else:
-                                    data[s][g][c] = out[3]     
+                        for d in data[s][g][c].keys():
+                            for out in mp_output:
+                                if out[0] == s and out[1] == g and out[2] == c and out[3] == d:
+                                    if self.df:
+                                        try: data[s][g][c][d][-1].append(out[4])
+                                        except: data[s][g][c][d] = [[out[4]]]
+                                    else:
+                                        try: data[s][g][c][d].append(out[4])
+                                        except: data[s][g][c][d] = [out[4]]  
             te = time.time()
             
         if self.df:
@@ -2662,14 +2751,12 @@ class Lineplot:
                     for c in data[s][g].keys():
                         #print(s+"  "+ g+"  "+ c)
                         #print(len(data[s][g][c]))
-                        try: 
-                            d = numpy.subtract(data[s][g][c][0],data[s][g][c][1])
-                            data[s][g][c] = d
-                        except: pass
-      
+                        for d in data[s][g][c].keys():
+                            for i, e in enumerate(data[s][g][c][d]):
+                                diff = numpy.subtract(e[0],e[1])
+                                data[s][g][c][d][i] = diff
         self.data = data
         
-        purge(os.getcwd(),"temp_bigwig_")
         
     def colormap(self, colorby, definedinEM):
         colors = colormap(self.exps, colorby, definedinEM, annotation=self.annotation)
@@ -2689,12 +2776,6 @@ class Lineplot:
         
         f, axs = plt.subplots(len(self.data.keys()),len(self.data.values()[0].keys()), dpi=300,
                               figsize=(tw, th) ) 
-        # if len(self.data.keys()) * len(self.data.values()[0]) <= 4: 
-        #     f.set_size_inches(4, 4)
-        # elif 4 < len(self.data.keys()) * len(self.data.values()[0]) <= 8: 
-        #     f.set_size_inches(5, 5)
-            
-        #    axs=numpy.array([[axs,None],[None,None]])
         
         yaxmax = [0]*len(self.data.values()[0])
         sx_ymax = [0]*len(self.data.keys())
@@ -2726,23 +2807,28 @@ class Lineplot:
                         ax.set_title(g,fontsize=ticklabelsize+2)
                     
                 # Processing for future output
-                    
                 for j, c in enumerate(self.data[s][g].keys()):
                     
-                    y = self.data[s][g][c]
-                    
-                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                    if self.df: 
-                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
-                    
-                    x = numpy.linspace(-self.extend, self.extend, len(y))
-                    ax.plot(x,y, color=self.colors[c], lw=1)
-                    if it < nit - 1:
-                        ax.set_xticklabels([])
-                    # Processing for future output
-                    if printtable: pArr.append([g,s,c]+list(y))
+                    for k, d in enumerate(self.data[s][g][c].keys()):
+                        if not self.data[s][g][c][d]: continue
+                        else:
+                            for l, y in enumerate(self.data[s][g][c][d]):
+                                yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                if self.df: 
+                                    yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                    sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+
+                                if not y.all():
+                                    pass
+                                else:
+                                    x = numpy.linspace(-self.extend, self.extend, len(y))
+
+                                    ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                    if it < nit - 1:
+                                        ax.set_xticklabels([])
+                                    # Processing for future output
+                                    if printtable: pArr.append([g,s,c,d]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])
@@ -2756,19 +2842,12 @@ class Lineplot:
         if printtable:
             output_array(pArr, directory = output, folder =self.title,filename="plot_table.txt")
         
-
-                
         for it,ty in enumerate(self.data.keys()):
             try: 
                 axs[it,0].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
             except:
                 try: axs[it].set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
                 except: axs.set_ylabel("{}".format(ty),fontsize=ticklabelsize+1)
-                #if len(self.data.keys()) == 1:
-                #    axs.set_ylabel("{}".format(ty),fontsize=12)
-                    #axs.set_ylabel("{}".format(ty),fontsize=12)
-                #else:
-                #    axs[it].set_ylabel("{}".format(ty),fontsize=12)
                     
             if scol:
                 for i,g in enumerate(self.data[ty].keys()):
@@ -2791,10 +2870,13 @@ class Lineplot:
                     if self.df:
                         try: axs[it,i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
                         except:
-                            if len(self.data.keys()) == 1:
+                            # if len(self.data.keys()) == 1:
+                            try:
                                 axs[i].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
-                            else:
-                                axs[it].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
+                            # else:
+                            except:
+                                # axs[it].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
+                                axs.set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
                     else:
                         try: axs[it,i].set_ylim([0, sx_ymax[it]*1.2])
                         except:
@@ -2802,18 +2884,13 @@ class Lineplot:
                                 axs[i].set_ylim([0, sx_ymax[it]*1.2])
                             else:
                                 axs[it].set_ylim([0, sx_ymax[it]*1.2])
-        try: 
-            axs[0,-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                             columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-        except:
-            try:
-                axs[-1].legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                               columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
-            except:
-                axs.legend(self.color_tags, loc='center left', handlelength=1, handletextpad=1, 
-                           columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
+        
+        handles, labels = ax.get_legend_handles_labels()
+        uniq_labels = unique(labels)
+
+        plt.legend([handles[labels.index(l)] for l in uniq_labels ], uniq_labels, loc='center left', handlelength=1, handletextpad=1, 
+                   columnspacing=2, borderaxespad=0., prop={'size':ticklabelsize}, bbox_to_anchor=(1.05, 0.5))
                 
-        # f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
         f.tight_layout()
         self.fig = f
 
