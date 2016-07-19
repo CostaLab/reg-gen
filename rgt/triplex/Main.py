@@ -320,7 +320,6 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
                         data[item][line[0]] = float(line[7])
                         rnas.append(line[0])
                         
-    
     exp_list = sorted(data.keys())
     rnas = sorted(list(set(rnas)))
     
@@ -328,7 +327,10 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
     for rna in rnas:
         for exp in exp_list:
             if data[exp][rna]: pvs.append(data[exp][rna])
-    reject, pvals_corrected = multiple_test_correction(pvs, alpha=0.05, method='indep')
+    if multi_corr:
+        reject, pvals_corrected = multiple_test_correction(pvs, alpha=0.05, method='indep')
+    else:
+        pvals_corrected = pvs
 
     with open(os.path.join(root, "table_exp_rna_pv.txt"), "w") as t:
         print("\t".join(["RNA_ID"] + exp_list), file=t)
@@ -347,6 +349,7 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p), 
                        link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
+
 
 def main():
     ##########################################################################
@@ -532,6 +535,7 @@ def main():
             html.write(os.path.join(args.path,"index.html"))
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
+            generate_rna_exp_pv_table(path=args.path, multi_corr=False)
             sys.exit(0)
         ####################################################################################
         ######### updatehtml

@@ -172,7 +172,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if of: arguments += "-of "+str(of)+" "
     if mf: arguments += "-mf "
     if rm: arguments += "-rm "+str(rm)+" "
-    
+    # arguments += "-bp "
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
     #os.system(triplexator_path+arguments)
@@ -2405,7 +2405,7 @@ class PromoterTest:
 
 class RandomTest:
     def __init__(self, rna_fasta, rna_name, dna_region, organism, showdbs=False):
-    	self.organism = organism
+        self.organism = organism
         genome = GenomeData(organism)
         self.genome_path = genome.get_genome()
         # RNA: Path to the FASTA file
