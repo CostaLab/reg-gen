@@ -209,6 +209,9 @@ class ExperimentalMatrix:
             - field -- Field to return.
         """
         
+        if field == "regions" or field == "reads":
+            field = "factor"
+        
         for t in self.fieldsDict[field].keys():
             if name in self.fieldsDict[field][t]:
                 return t
