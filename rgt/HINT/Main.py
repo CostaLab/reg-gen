@@ -31,7 +31,7 @@ Finds TF footprints given open chromatin data.
 
 Basic Input:
 - Regions (bed) in which to find footprints (i.e. enriched regions or hypersensitivity regions).
-- Reads (bam) containing the open chromatin signal for DNase and 1 <= N <= 3 histone modifications.
+- Reads (bam) containing the open chromatin signal for DNase and 0 <= N <= 3 histone modifications.
 
 Dependencies:
 - python >= 2.7
@@ -41,9 +41,9 @@ Dependencies:
 - hmmlearn >= 0.1.1
 - pysam >= 0.7.5
 - ngslib >= 1.1.14
-- bedToBigBed script in $PATH (if the option is used)
+- bedToBigBed, bigBedToBed, wigToBigWig and bigWigToWig script in a location in $PATH
 
-Authors: Eduardo G. Gusmao.
+Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
 
 def main():
@@ -68,14 +68,20 @@ def main():
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
                      "In order to use this tools, please type: \n\n"
                      "%prog [options] <experiment_matrix>\n\n"
-                     "The <experiment matrix> should contain:\n"
+                     "The minimal <experiment matrix> should contain:\n"
                      "- One region file representing the regions in which the HMM\n"
                      "  will be applied. It should contain 'regions' in the type field\n"
-                     "- One DNase aligned reads file (bam) file with 'DNASE' in the name field.\n"
-                     "- One to Three histone modification aligned reads file (bam).\n\n"
+                     "  and 'HS' in the data field\n"
+                     "- One DNase-seq or ATAC-seq aligned reads file (bam) file with.\n"
+                     "  'reads' in the type field and 'DNASE' or 'ATAC' in the data field.\n"
+                     "- Zero to Three histone modification aligned reads file (bam).\n"
+                     "  with 'reads' in the type field and 'HISTONE' in the data field.\n\n"
 
                      "For more information, please refer to:\n"
-                     "http://www.regulatory-genomics.org/dnasefootprints/\n"
+                     "http://www.regulatory-genomics.org/hint/introduction/\n\n"
+
+                     "For further questions or comments please refer to our group:\n"
+                     "https://groups.google.com/forum/#!forum/rgtusers\n"
                      "--------------------------------------------------")
     version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: "+str(current_version)
 
@@ -85,58 +91,99 @@ def main():
     # Optional Input Options
     parser.add_option("--hmm-file", dest = "hmm_file", type = "string", 
                       metavar="FILE_1_1[[,...,FILE_N_1];...;FILE_1_M[,...,FILE_N_M]]", default = None,
-                      help = ("List of HMM files separated by comma. If one file only, then this HMM will be "
-                              "applied for all histone signals, otherwise, the list must have the same number "
-                              "of histone files given. The order of the list should be the order of the "
-                              "histones in the input_matrix file. If the argument is not given, then a default HMM "
-                              "will be used. In case multiple input groups are used, then "
-                              "other lists can be passed using semicolon. The number of group of lists should "
-                              "equals the number of input groups."))
+                      help = ("List of HMM files separated by comma. Rules: "
+                              "- If DNase/ATAC-only analysis, provide only one HMM file per group. "
+                              "- If also using histone modifications: "
+                              "  * If only one file is provided it will be applied for all histone data, "
+                              "  * Otherwise, the list must have the same number of input histone data. "
+                              "    The order of the list should be the order of the histones in the "
+                              "    input_matrix file. "
+                              "- In case multiple input groups are used, then multiple file lists can "
+                              "  be passed using semicolon. The number of groups of lists should "
+                              "  equals the number of input groups. "
+                              "- If the argument is not given, then a default HMM will be used."))
     parser.add_option("--bias-table", dest = "bias_table", type = "string",
                       metavar="FILE1_F,FILE1_R[;...;FILEM_F,FILEM_R]", default = None,
                       help = ("List of files (for each input group; separated by semicolon) with all "
                               "possible k-mers (for any k) and their bias estimates. Each input group"
-                              "should have two files: one for the forward and one for the negative strand."
+                              "should have two files: one for the forward and one for the reverse strand. "
                               "Each line should contain a kmer and the bias estimate separated by tab. "
-                              "Leave an empty set for histone-only groups. Eg. FILE1;;FILE3."))
+                              "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
 
     # Parameters Options
     parser.add_option("--organism", dest = "organism", type = "string", metavar="STRING", default = "hg19",
                       help = ("Organism considered on the analysis. Check our full documentation for all available "
                               "options. All default files such as genomes will be based on the chosen organism "
-                              "and the data.config file. This option is used only if a bigbed output is asked."))
+                              "and the data.config file."))
     parser.add_option("--estimate-bias-correction", dest = "estimate_bias_correction",
                       action = "store_true", default = False,
-                      help = ("Applies DNase-seq cleavage bias correction with k-mer bias estimated "
+                      help = ("Applies DNase-seq sequence cleavage bias correction with k-mer bias estimated "
                               "from the given DNase-seq data (SLOW HINT-BC)."))
     parser.add_option("--default-bias-correction", dest = "default_bias_correction",
                       action = "store_true", default = False,
-                      help = ("Applies DNase-seq cleavage bias correction with default "
-                              "k-mer bias estimates (FAST HINT-BC)."))
-
-    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int", metavar="INT", default = 1,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--ext-both-directions", dest = "ext_both_directions", action = "store_true", default = False,
-                      help = SUPPRESS_HELP)
-
-    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
+                      help = ("Applies DNase-seq cleavage bias correction with default k-mer bias "
+                              "estimates (FAST HINT-BC). Please set the correct --default-bias-type "
+                              "option that matches your experimental settings."))
+    parser.add_option("--default-bias-type", dest = "default_bias_type", type = "string",
+                      metavar="STRING", default = "SH",
+                      help = ("Type of protocol used to generate the DNase-seq or ATAC-seq data. "
+                              "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
+                              "(DNase-seq double-hit protocol) and 'ATAC' (ATAC-seq data)."))
 
     # Output Options
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", 
                       default = getcwd(),
                       help = ("Path where the output files will be written."))
     parser.add_option("--print-bb", dest = "print_bb", action = "store_true", default = False,
-                      help = ("If used, the output will be a bigbed (.bb) file."))
+                      help = ("If used, the footprints will be output as a bigbed file."))
+    parser.add_option("--print-raw-signal", dest = "print_raw_signal", type = "string", metavar="STRING", 
+                      default = None,
+                      help = ("If used, it will print the base overlap (raw) signals from all data. "
+                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+    parser.add_option("--print-bias-signal", dest = "print_bias_signal", type = "string", metavar="STRING", 
+                      default = None,
+                      help = ("If used, it will print the DNase-seq or ATAC-seq bias signal. "
+                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+    parser.add_option("--print-bc-signal", dest = "print_bc_signal", type = "string", metavar="STRING", 
+                      default = None,
+                      help = ("If used, it will print the DNase-seq or ATAC-seq bias-corrected signal. "
+                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+    parser.add_option("--print-norm-signal", dest = "print_norm_signal", type = "string", metavar="STRING", 
+                      default = None,
+                      help = ("If used, it will print the normalized signals from all data. "
+                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+    parser.add_option("--print-slope-signal", dest = "print_raw_signal", type = "string", metavar="STRING", 
+                      default = None,
+                      help = ("If used, it will print the slope signals from all data. "
+                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
 
-    parser.add_option("--print-wig", dest = "print_wig", type = "string", metavar="PATH", default = None,
+    # GENERAL Hidden Options
+    
+    # TODO Keep doing
+
+
+    # DNASE Hidden Options
+    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "float", metavar="INT", default = 98,
                       help = SUPPRESS_HELP)
+    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int", metavar="INT", default = 1,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--dnase-ext-both-directions", dest = "dnase_ext_both_directions", action = "store_true",
+                      default = False, help = SUPPRESS_HELP)
+
+    # ATAC Hidden Options
+
+
+    # HISTONE Hidden Options
+    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "float", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float", metavar="INT", default = 98,
+                      help = SUPPRESS_HELP)
+
+
+
+
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -158,7 +205,7 @@ def main():
     dnase_norm_per = options.dnase_norm_per
     dnase_slope_per = options.dnase_slope_per
     dnase_frag_ext = options.dnase_frag_ext
-    dnase_ext_both_directions = options.ext_both_directions
+    dnase_ext_both_directions = options.dnase_ext_both_directions
     ###
     histone_initial_clip = 1000
     histone_sg_window_size = 201
