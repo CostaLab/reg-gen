@@ -346,9 +346,9 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
             print("\t".join(newline), file=t)
 
     
-    for d, p in plist.iteritems():
-        list_all_index(path=os.path.dirname(p), 
-                       link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
+    # for d, p in plist.iteritems():
+    #     list_all_index(path=os.path.dirname(p), 
+    #                    link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
 
 
 def main():
@@ -535,7 +535,7 @@ def main():
             html.write(os.path.join(args.path,"index.html"))
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
-            generate_rna_exp_pv_table(path=args.path, multi_corr=False)
+            generate_rna_exp_pv_table(root=args.path, multi_corr=False)
             sys.exit(0)
         ####################################################################################
         ######### updatehtml
