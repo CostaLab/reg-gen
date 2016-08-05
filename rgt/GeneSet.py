@@ -84,10 +84,11 @@ class GeneSet:
                 l = line.split("\t")
                 if l[0] != "":
                     try:
-                        # if "." in l[0]:
-                        #     na = l[0].partition(".")[0].upper()
-                        # else:
-                        na = l[0].upper()
+                        # print(l[0])
+                        if "." in l[0] and l[0][0:2] == "EN":
+                            na = l[0].partition(".")[0].upper()
+                        else:
+                            na = l[0].upper()
                         self.genes.append(na)
                         #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
                         if not valuestr:

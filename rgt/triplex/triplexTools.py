@@ -86,8 +86,8 @@ def random_each(input):
     str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
     number, rna,            region,          temp, organism,      rbss,      number of mark
 
-    7  8  9  10  11  12  13  14  15          16
-    l, e, c, fr, fm, of, mf, rm, filter_bed, tp
+    7  8  9  10  11  12  13  14  15          16                17
+    l, e, c, fr, fm, of, mf, rm, filter_bed, self.genome_path, tp
     """
     # Filter BED file
     if input[15]:
@@ -98,12 +98,12 @@ def random_each(input):
         random = input[2].random_regions(organism=input[4], multiply_factor=1,
                                          overlap_result=True, overlap_input=True,
                                          chrom_X=True, chrom_M=False)
-
+    
     txp = find_triplex(rna_fasta=input[1], dna_region=random, temp=input[3],
                        organism=input[4], prefix=str(input[0]), remove_temp=True,
                        l=int(input[7]), e=int(input[8]), c=input[9], fr=input[10],
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
-                       dna_fine_posi=False, tp=input[16])
+                       dna_fine_posi=False, tp=input[17])
 
     txp.merge_rbs(rbss=input[5], rm_duplicate=True)
 
@@ -111,7 +111,7 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], genome_path=input[16],
-                       dna_fine_posi=True, tp=input[16])
+                       dna_fine_posi=True, tp=input[17])
 
     txpf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
@@ -172,7 +172,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     if of: arguments += "-of "+str(of)+" "
     if mf: arguments += "-mf "
     if rm: arguments += "-rm "+str(rm)+" "
-    # arguments += "-bp "
+    # arguments += "--bit-parallel "
     if output: arguments += "> "+output
     arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
     #os.system(triplexator_path+arguments)
@@ -737,7 +737,6 @@ class PromoterTest:
         self.scoreh = scoreh
         self.motif = OrderedDict()
         
-        
 
         # Input BED files
         if bed and bg:
@@ -804,7 +803,6 @@ class PromoterTest:
                 
                 if score:
                     self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
-
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
