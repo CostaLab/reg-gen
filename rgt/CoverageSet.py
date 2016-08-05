@@ -491,8 +491,7 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        
-        if platform == "darwin" or "http" in bigwig_file:
+        if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
             self.coverage = []
             # mp_input = []
             for gr in self.genomicRegions:
