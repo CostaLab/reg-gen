@@ -4,6 +4,7 @@ import sys
 import argparse
 import os
 from os.path import expanduser
+import math
 home = expanduser("~")
 
 # Local Libraries
@@ -187,6 +188,20 @@ if __name__ == "__main__":
     parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
     parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
 
+    ############### THOR calculate FC ################################
+    parser_thorfc = subparsers.add_parser('thor_fc', 
+                       help="[THOR] Calculate the fold change from the differential peaks from rgt-THOR")
+    parser_thorfc.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_thorfc.add_argument('-o', '-output', default=None, type=str, help="Output BED file. (Default is to modify the input file.)")
+
+    ############### THOR split and filter ################################
+    parser_thorsf = subparsers.add_parser('thor_split', 
+                       help="[THOR] Split and filter the differential peaks from rgt-THOR")
+    parser_thorsf.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_thorsf.add_argument('-o', '-output', default=None, type=str, help="Output directory.")
+    parser_thorsf.add_argument('-p', '-p--value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
+    
+
     ############### GENOME get sequence ####################################################
     parser_getseq = subparsers.add_parser('getseq', 
                        help="[FASTA] Get sequence from genome FASTA")
@@ -233,6 +248,9 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-l', type=int, help="Length of the slice sequence")
     parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
     parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
+    parser_sliceFASTA.add_argument('-r', default=False, action="store_true", help="Reverse the sequence")
+    
+
 
     ##########################################################################
     ##########################################################################
@@ -350,14 +368,17 @@ if __name__ == "__main__":
             print("Please redefine the argument -f.")
             sys.exit(1)
 
-        if args.t == "protein_coding": tag_t = ' \"protein_coding\"'
-        elif args.t == "non_coding": tag_t = ' \"non_coding\"'
-        elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
-        elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
-        elif args.t == "All": tag_t = None
-        else: 
-            print("Please redefine the argument -t.")
-            sys.exit(1)
+        if args.t == "All": tag_t = None
+        else: tag_t = ' \"'+args.t+'\"'
+
+        # args.t == "protein_coding": tag_t = ' \"protein_coding\"'
+        # elif args.t == "non_coding": tag_t = ' \"non_coding\"'
+        # elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
+        # elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
+        # elif args.t == "All": tag_t = None
+        # else: 
+        #     print("Please redefine the argument -t.")
+        #     sys.exit(1)
 
         if args.st == "KNOWN": tag_st = 'gene_status \"KNOWN\"'
         elif args.st == "NOVEL": tag_st = 'gene_status \"NOVEL\"'
@@ -755,7 +776,52 @@ if __name__ == "__main__":
         print("Missed genes:\t"+str(c_miss))
         print("complete.")
 
-    ############### BED add columns #############################################
+
+    ############### THOR FC #############################################
+    elif args.mode == "thor_fc":
+        print("input:\t" + args.i)
+        if not args.o:
+            args.o = args.i
+        print("output:\t" + args.o)
+
+        bed = GenomicRegionSet("input")
+        bed.read_bed(args.i)
+        for region in bed:
+            # print(region.data)
+            data = region.data.split()
+            stat = data[5].split(";")
+            s1 = [float(x)+1 for x in stat[0].split(":")]
+            s2 = [float(x)+1 for x in stat[1].split(":")]
+
+            fc = math.log((sum(s2)/len(s2)) / (sum(s1)/len(s1)),2)
+            region.data = "\t".join([str(fc)]+data[1:])
+        bed.write_bed(args.o)
+        # print(bed[0])
+
+
+    ############### THOR split #############################################
+    elif args.mode == "thor_split":
+        print("input:\t" + args.i)
+        if not args.o:
+            args.o = os.path.dirname(args.i)
+        print("output:\t" + args.o)
+        name = os.path.basename(args.i).split(".")[0]
+        gain_f = open(os.path.join(args.o,name+"_gain.bed"), "w")
+        lose_f = open(os.path.join(args.o,name+"_lose.bed"), "w")
+        with open(args.i) as f:
+            for line in f:
+                line = line.strip()
+                l = line.split("\t")
+                if float(l[10].split(";")[2]) > args.p:
+                    if l[5] == "-":
+                        print(line, file=gain_f)
+                    else:
+                        print(line, file=lose_f)
+        gain_f.close()
+        lose_f.close()
+        
+        
+    ############### getseq #############################################
     elif args.mode == "getseq":
         #print("input:\t" + args.i)
         #print("output:\t" + args.o)
@@ -903,5 +969,8 @@ if __name__ == "__main__":
         seq.read_fasta(fasta_file=args.i)
         start = int(args.p)
         end = int(start + args.l)
-        print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
+        if args.r:
+            print("3' - "+ seq.sequences[0].seq[end:start:-1]+ " - 5'")
+        else:
+            print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
 
