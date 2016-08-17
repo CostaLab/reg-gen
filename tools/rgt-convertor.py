@@ -3,6 +3,7 @@ from __future__ import print_function
 import sys
 import argparse
 import os
+import re
 from os.path import expanduser
 import math
 home = expanduser("~")
@@ -369,7 +370,8 @@ if __name__ == "__main__":
             sys.exit(1)
 
         if args.t == "All": tag_t = None
-        else: tag_t = ' \"'+args.t+'\"'
+        # else: tag_t = ' \"'+args.t+'\"'
+        else: tag_t = r'\"*'+args.t+'\"'
 
         # args.t == "protein_coding": tag_t = ' \"protein_coding\"'
         # elif args.t == "non_coding": tag_t = ' \"non_coding\"'
@@ -401,7 +403,8 @@ if __name__ == "__main__":
                 if len(line) < 5: continue
                 if tag_s and tag_s != line[1]: continue
                 if tag_f and tag_f != line[2]: continue
-                if tag_t and tag_t in line[8]: pass
+                # if tag_t and tag_t in line[8]: pass
+                if tag_t and re.search(tag_t, line[8]): pass
                 elif not tag_t: pass
                 else: continue              
                 if tag_st and tag_st in line[8]: pass
