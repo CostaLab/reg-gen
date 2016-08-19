@@ -114,7 +114,7 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
 
 def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction, name):
     """Filter DPs by strang lag and pvalue"""
-    single_strand = False
+    single_strand = True
     if not single_strand:
         zscore_ratios = zscore(ratios)
         ratios_pass = np.where(np.bitwise_and(zscore_ratios>-2, zscore_ratios<2) == True, True, False)
