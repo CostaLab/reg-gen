@@ -338,16 +338,38 @@ class CoverageSet:
         # Calculate the coverage
         for region in self.genomicRegions:
             steps_num = math.ceil(len(region) / stepsize)
-            print(region)
-            print(steps_num)
-            sys.exit()
+            
+            
+            for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
+                if read.is_reverse and read.reference_end < region.initial:
+                    continue
+                elif not read.is_reverse and read.reference_start > region.final:
+                    continue
+                elif not read.is_unmapped:
+                    if no_gaps:
+                        blocks = read.get_blocks()
+                        if len(blocks) > 1:
+                            print(blocks)
+                            for b_ind in range(len(blocks) - 1):
+                                print([read.pos, blocks[b_ind][1], blocks[b_ind+1][0]])
+                                if read.pos > blocks[b_ind][1] and read.pos < blocks[b_ind+1][0]:
+                                    print("gaaaaaaaaaaaaaaap")
+                                    continue # this read locates within gap and be ignored
+                    else:
+                        positions.append(pos)
+
+
+
+
+
+        sys.exit()
             # cov = [0] * (len(region) / stepsize)
             
             # if get_strand_info:
             #     cov_strand = [[0,0]] * (len(region) / stepsize)
             #     strand_info = {}
             
-
+        if None:
             positions = []
             # j = 0
             read_length = -1
