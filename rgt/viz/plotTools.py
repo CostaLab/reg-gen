@@ -342,12 +342,12 @@ def compute_coverage(input):
     if ".bigWig" in input[1] or ".bw" in input[1]:
         cov.coverage_from_bigwig(bigwig_file=input[1], stepsize=input[4])
     else:
-        cov.coverage_from_bam(bam_file=input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+        cov.coverage_from_bam(bam_file=input[1], extension_size = input[2], binsize = input[3], stepsize = input[4])
         cov.normRPM()
     # When bothends, consider the fliping end
     if input[5] == 'bothends':
         flap = CoverageSet("for flap", input[0])
-        flap.coverage_from_bam(input[1], read_size = input[2], binsize = input[3], stepsize = input[4])
+        flap.coverage_from_bam(input[1], extension_size = input[2], binsize = input[3], stepsize = input[4])
         ffcoverage = numpy.fliplr(flap.coverage)
         cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
     # Averaging the coverage of all regions of each bed file
@@ -2672,7 +2672,7 @@ class Lineplot:
                                             if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
-                                                cov.coverage_from_bam(bam_file=self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                cov.coverage_from_bam(bam_file=self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                                 cov.normRPM()
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
@@ -2683,7 +2683,7 @@ class Lineplot:
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                                 else:
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                    flap.coverage_from_bam(self.reads[j], read_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                    flap.coverage_from_bam(self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
                                                     flap.normRPM()
                                                     ffcoverage = numpy.fliplr(flap.coverage)
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)

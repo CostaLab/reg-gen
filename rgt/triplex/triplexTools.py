@@ -1060,9 +1060,8 @@ class PromoterTest:
                             
                     f_nde.close()
                 # if remove_temp:
-                os.remove(os.path.join(temp, "de"+str(i)+".txp"))
-                #os.remove(os.path.join(temp, "nde"+str(i)+".txp"))
-                os.remove(os.path.join(temp,"rna_"+str(i)))
+                # os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+                # os.remove(os.path.join(temp,"rna_"+str(i)))
             de.close()
             #nde.close()
 
