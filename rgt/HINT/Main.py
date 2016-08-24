@@ -303,6 +303,7 @@ def main():
             self.hmm = []
             self.flag_multiple_hmms = False
             self.bias_table = None
+            self.is_atac = False
 
     # Initialization
     name_list = exp_matrix.names
@@ -312,7 +313,7 @@ def main():
     objects_dict = exp_matrix.objectsDict
 
     # Populating fields dict data
-    for e in ["HS", "DNASE", "HISTONE"]:
+    for e in ["HS", "DNASE", "ATAC", "HISTONE"]:
         try: fields_dict["data"][e]
         except Exception: fields_dict["data"][e] = []
 
@@ -330,10 +331,15 @@ def main():
             elif(name_list[i] in fields_dict["data"]["DNASE"]):
                 group.dnase_file = GenomicSignal(file_dict[name_list[i]])
                 group.dnase_file.load_sg_coefs(dnase_sg_window_size)
+                group.is_atac = False
+            elif(name_list[i] in fields_dict["data"]["ATAC"]):
+                group.dnase_file = GenomicSignal(file_dict[name_list[i]])
+                group.dnase_file.load_sg_coefs(atac_sg_window_size)
+                group.is_atac = True
             elif(name_list[i] in fields_dict["data"]["HISTONE"]):
                 group.histone_file_list.append(GenomicSignal(file_dict[name_list[i]]))
                 group.histone_file_list[-1].load_sg_coefs(histone_sg_window_size)
-            else: pass # TODO Error (Category of data outside "HS, DNASE, HISTONE")
+            else: pass # TODO Error (Category of data outside "HS, DNASE, ATAC, HISTONE")
         if(group.dnase_file): group.histone_only = False
         if(group.histone_file_list): group.dnase_only = False
         if(group.histone_only and group.dnase_only): pass # TODO ERROR (There is no DNase or histone data)
@@ -360,16 +366,28 @@ def main():
 
         for group in group_list:
             if(group.histone_only): continue
+            if(group.is_atac): my_k_nb = atac_bias_correction_k
+            else: my_k_nb = dnase_bias_correction_k
             group.bias_table = BiasTable(regions=group.original_regions,dnase_file_name=group.dnase_file.file_name,
-                                         genome_file_name=genome_data.get_genome())
+                                         genome_file_name=genome_data.get_genome(), k_nb=my_k_nb)
         bias_correction = True
 
     elif(options.default_bias_correction):
 
         for group in group_list:
             if(group.histone_only): continue
-            group.bias_table = BiasTable(table_file_F=hmm_data.get_default_bias_table_F(),
-                                         table_file_R=hmm_data.get_default_bias_table_R())
+
+            if(options.default_bias_type == "SH"):
+                my_table_file_F = hmm_data.get_default_bias_table_F_SH()
+                my_table_file_R = hmm_data.get_default_bias_table_R_SH()
+            elif(options.default_bias_type == "DH"):
+                my_table_file_F = hmm_data.get_default_bias_table_F_DH()
+                my_table_file_R = hmm_data.get_default_bias_table_R_DH()
+            else:
+                my_table_file_F = hmm_data.get_default_bias_table_F_ATAC()
+                my_table_file_R = hmm_data.get_default_bias_table_R_ATAC()
+
+            group.bias_table = BiasTable(table_file_F=my_table_file_F, table_file_R=my_table_file_R)
         bias_correction = True
 
     ###################################################################################################
@@ -402,13 +420,21 @@ def main():
 
             group.flag_multiple_hmms = False
             if(group.dnase_only):
-                if(bias_correction): group.hmm = hmm_data.get_default_hmm_dnase_bc()
-                else: group.hmm = hmm_data.get_default_hmm_dnase()
+                if(bias_correction):
+                    if(group.is_atac): group.hmm = hmm_data.get_default_hmm_atac_bc()
+                    else: group.hmm = hmm_data.get_default_hmm_dnase_bc()
+                else:
+                    if(group.is_atac): group.hmm = hmm_data.get_default_hmm_atac()
+                    else: group.hmm = hmm_data.get_default_hmm_dnase()
             elif(group.histone_only):
                 group.hmm = hmm_data.get_default_hmm_histone()
             else: 
-                if(bias_correction): group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
-                else: group.hmm = hmm_data.get_default_hmm_dnase_histone()
+                if(bias_correction): 
+                    if(group.is_atac): group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
+                    else: group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
+                else: 
+                    if(group.is_atac): group.hmm = hmm_data.get_default_hmm_atac_histone()
+                    else: group.hmm = hmm_data.get_default_hmm_dnase_histone()
 
     # Creating scikit HMM list
     for group in group_list:
@@ -463,6 +489,9 @@ def main():
     ###################################################################################################
     # Main Pipeline
     ###################################################################################################
+
+    # TODO - I'm here
+
 
     # Iterating over groups
     for group in group_list:

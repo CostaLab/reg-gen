@@ -76,7 +76,7 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.1.1","pysam>=0.7.5","ngslib>1.1.14"],
+    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.1.1","pysam>=0.7.5"], #"ngslib>1.1.14"
     []
 ), 
 "ODIN": (
@@ -274,11 +274,19 @@ if not os.path.isfile(data_config_file_name):
     data_config_file.write("[HmmData]\n")
     data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
     data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
+    data_config_file.write("default_hmm_atac: fp_hmms/atac.hmm\n")
+    data_config_file.write("default_hmm_atac_bc: fp_hmms/atac_bc.hmm\n")
     data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
     data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
     data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
-    data_config_file.write("default_bias_table_F: fp_hmms/single_hit_bias_table_F.txt\n")
-    data_config_file.write("default_bias_table_R: fp_hmms/single_hit_bias_table_R.txt\n\n")
+    data_config_file.write("default_hmm_atac_histone: fp_hmms/atac_histone.hmm\n")
+    data_config_file.write("default_hmm_atac_histone_bc: fp_hmms/atac_histone_bc.hmm\n")
+    data_config_file.write("default_bias_table_F_SH: fp_hmms/single_hit_bias_table_F.txt\n")
+    data_config_file.write("default_bias_table_R_SH: fp_hmms/single_hit_bias_table_R.txt\n")
+    data_config_file.write("default_bias_table_F_DH: fp_hmms/double_hit_bias_table_F.txt\n")
+    data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R.txt\n")
+    data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
+    data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
     
     data_config_file.close()
 

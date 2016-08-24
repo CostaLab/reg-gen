@@ -156,17 +156,25 @@ class MotifData(ConfigurationFile):
         return self.fpr_list
 
 class HmmData(ConfigurationFile):
-    """Represent HMM data. Inherits Co7nfigurationFile."""
+    """Represent HMM data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
         self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
         self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
+        self.default_hmm_atac = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac'))
+        self.default_hmm_atac_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_bc'))
         self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
         self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
         self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
-        self.default_bias_table_F = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F'))
-        self.default_bias_table_R = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R'))
+        self.default_hmm_atac_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone'))
+        self.default_hmm_atac_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone_bc'))
+        self.default_bias_table_F_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_SH'))
+        self.default_bias_table_R_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_SH'))
+        self.default_bias_table_F_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_DH'))
+        self.default_bias_table_R_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_DH'))
+        self.default_bias_table_F_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_ATAC'))
+        self.default_bias_table_R_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_ATAC'))
 
     def get_default_hmm_dnase(self):
         """Returns the current default DNase only hmm."""
@@ -175,6 +183,14 @@ class HmmData(ConfigurationFile):
     def get_default_hmm_dnase_bc(self):
         """Returns the current default DNase only hmm."""
         return self.default_hmm_dnase_bc
+
+    def get_default_hmm_atac(self):
+        """Returns the current default atac only hmm."""
+        return self.default_hmm_atac
+
+    def get_default_hmm_atac_bc(self):
+        """Returns the current default atac only hmm."""
+        return self.default_hmm_atac_bc
 
     def get_default_hmm_histone(self):
         """Returns the current default Histone only hmm."""
@@ -188,13 +204,37 @@ class HmmData(ConfigurationFile):
         """Returns the current default DNase+histone hmm."""
         return self.default_hmm_dnase_histone_bc
 
-    def get_default_bias_table_F(self):
-        """Returns the current default bias table for the forward strand."""
-        return self.default_bias_table_F
+    def get_default_hmm_atac_histone(self):
+        """Returns the current default atac+histone hmm."""
+        return self.default_hmm_atac_histone
 
-    def get_default_bias_table_R(self):
-        """Returns the current default bias table for the reverse strand."""
-        return self.default_bias_table_R
+    def get_default_hmm_atac_histone_bc(self):
+        """Returns the current default atac+histone hmm."""
+        return self.default_hmm_atac_histone_bc
+
+    def get_default_bias_table_F_SH(self):
+        """Returns the DNase-seq single hit default bias table for the forward strand."""
+        return self.default_bias_table_F_SH
+
+    def get_default_bias_table_R_SH(self):
+        """Returns the DNase-seq single hit default bias table for the reverse strand."""
+        return self.default_bias_table_R_SH
+
+    def get_default_bias_table_F_DH(self):
+        """Returns the DNase-seq double hit default bias table for the forward strand."""
+        return self.default_bias_table_F_DH
+
+    def get_default_bias_table_R_DH(self):
+        """Returns the DNase-seq double hit default bias table for the reverse strand."""
+        return self.default_bias_table_R_DH
+
+    def get_default_bias_table_F_ATAC(self):
+        """Returns the ATAC-seq default bias table for the forward strand."""
+        return self.default_bias_table_F_ATAC
+
+    def get_default_bias_table_R_ATAC(self):
+        """Returns the ATAC-seq default bias table for the reverse strand."""
+        return self.default_bias_table_R_ATAC
 
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""
