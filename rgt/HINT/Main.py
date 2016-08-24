@@ -27,11 +27,11 @@ from hmmlearn import __version__ as hmm_ver
 
 """
 HINT - HMM-based Identification of TF Footprints.
-Finds TF footprints given open chromatin data.
+Finds transcription factor footprints given open chromatin data.
 
 Basic Input:
 - Regions (bed) in which to find footprints (i.e. enriched regions or hypersensitivity regions).
-- Reads (bam) containing the open chromatin signal for DNase and 0 <= N <= 3 histone modifications.
+- Reads (bam) containing the open chromatin signal for DNase/ATAC and 0 <= N <= 3 histone modifications.
 
 Dependencies:
 - python >= 2.7
@@ -40,8 +40,7 @@ Dependencies:
 - scikit >= 0.14
 - hmmlearn >= 0.1.1
 - pysam >= 0.7.5
-- ngslib >= 1.1.14
-- bedToBigBed, bigBedToBed, wigToBigWig and bigWigToWig script in a location in $PATH
+- ngslib >= 1.1.14 (optional - only if you want to INPUT a bigwig file)
 
 Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
@@ -72,9 +71,9 @@ def main():
                      "- One region file representing the regions in which the HMM\n"
                      "  will be applied. It should contain 'regions' in the type field\n"
                      "  and 'HS' in the data field\n"
-                     "- One DNase-seq or ATAC-seq aligned reads file (bam) file with.\n"
+                     "- One DNase-seq or ATAC-seq aligned reads file (bam) file with\n"
                      "  'reads' in the type field and 'DNASE' or 'ATAC' in the data field.\n"
-                     "- Zero to Three histone modification aligned reads file (bam).\n"
+                     "- Zero to Three histone modification aligned reads file (bam)\n"
                      "  with 'reads' in the type field and 'HISTONE' in the data field.\n\n"
 
                      "For more information, please refer to:\n"
@@ -134,91 +133,141 @@ def main():
     parser.add_option("--output-location", dest = "output_location", type = "string", metavar="PATH", 
                       default = getcwd(),
                       help = ("Path where the output files will be written."))
-    parser.add_option("--print-bb", dest = "print_bb", action = "store_true", default = False,
-                      help = ("If used, the footprints will be output as a bigbed file."))
     parser.add_option("--print-raw-signal", dest = "print_raw_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the base overlap (raw) signals from all data. "
-                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+                              "The option should equal the file name. The extension must be (.wig)."))
     parser.add_option("--print-bias-signal", dest = "print_bias_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the DNase-seq or ATAC-seq bias signal. "
-                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+                              "The option should equal the file name. The extension must be (.wig)."))
     parser.add_option("--print-bc-signal", dest = "print_bc_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the DNase-seq or ATAC-seq bias-corrected signal. "
-                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+                              "The option should equal the file name. The extension must be (.wig)."))
     parser.add_option("--print-norm-signal", dest = "print_norm_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the normalized signals from all data. "
-                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
-    parser.add_option("--print-slope-signal", dest = "print_raw_signal", type = "string", metavar="STRING", 
+                              "The option should equal the file name. The extension must be (.wig)."))
+    parser.add_option("--print-slope-signal", dest = "print_slope_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the slope signals from all data. "
-                              "Use 'wig' to print the signal as a wig or 'bw' to print as a bigwig."))
+                              "The option should equal the file name. The extension must be (.wig)."))
 
     # GENERAL Hidden Options
-    
-    # TODO Keep doing
-
+    parser.add_option("--region-total-ext", dest = "region_total_ext", type = "int", metavar="INT", default = 10000,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest = "fp_limit_size", type = "int", metavar="INT", default = 50,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size-histone", dest = "fp_limit_size_histone", type = "int", 
+                      metavar="INT", default = 2000, help = SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size-ext", dest = "fp_limit_size_ext", type = "int", metavar="INT", default = 10,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size-ext-histone", dest = "fp_limit_size_ext_histone", 
+                      type = "int", metavar="INT", default = 200, help = SUPPRESS_HELP)
+    parser.add_option("--fp-ext", dest = "fp_ext", type = "int", metavar="INT", default = 5,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--fp-ext-histone", dest = "fp_ext_histone", type = "int", metavar="INT", default = 50,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--tc-ext", dest = "tc_ext", type = "int", metavar="INT", default = 50,
+                      help = SUPPRESS_HELP)
+    parser.add_option("--tc-ext-histone", dest = "tc_ext_histone", type = "int", metavar="INT", default = 500,
+                      help = SUPPRESS_HELP)
 
     # DNASE Hidden Options
-    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int", metavar="INT", default = 1,
-                      help = SUPPRESS_HELP)
+    parser.add_option("--dnase-initial-clip", dest = "dnase_initial_clip", type = "int",
+                      metavar="INT", default = 1000, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-sg-window-size", dest = "dnase_sg_window_size", type = "int",
+                      metavar="INT", default = 9, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-norm-per", dest = "dnase_norm_per", type = "float",
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float",
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int",
+                      metavar="INT", default = 1, help = SUPPRESS_HELP)
     parser.add_option("--dnase-ext-both-directions", dest = "dnase_ext_both_directions", action = "store_true",
                       default = False, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-bias-correction-k", dest = "dnase_bias_correction_k",  type = "int",
+                      metavar="INT", default = 6, help = SUPPRESS_HELP)
 
     # ATAC Hidden Options
-
+    parser.add_option("--atac-initial-clip", dest = "atac_initial_clip", type = "int",
+                      metavar="INT", default = 1000, help = SUPPRESS_HELP)
+    parser.add_option("--atac-sg-window-size", dest = "atac_sg_window_size", type = "int",
+                      metavar="INT", default = 9, help = SUPPRESS_HELP)
+    parser.add_option("--atac-norm-per", dest = "atac_norm_per", type = "float",
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--atac-slope-per", dest = "atac_slope_per", type = "float",
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--atac-frag-ext", dest = "atac_frag_ext", type = "int",
+                      metavar="INT", default = 1, help = SUPPRESS_HELP)
+    parser.add_option("--atac-ext-both-directions", dest = "atac_ext_both_directions", action = "store_true",
+                      default = False, help = SUPPRESS_HELP)
+    parser.add_option("--atac-bias-correction-k", dest = "atac_bias_correction_k",  type = "int",
+                      metavar="INT", default = 6, help = SUPPRESS_HELP)
 
     # HISTONE Hidden Options
-    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
-    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float", metavar="INT", default = 98,
-                      help = SUPPRESS_HELP)
 
-
-
-
+    parser.add_option("--histone-initial-clip", dest = "histone_initial_clip", type = "int", 
+                      metavar="INT", default = 1000, help = SUPPRESS_HELP)
+    parser.add_option("--histone-sg-window-size", dest = "histone_sg_window_size", type = "int",
+                      metavar="INT", default = 201, help = SUPPRESS_HELP)
+    parser.add_option("--histone-norm-per", dest = "histone_norm_per", type = "float", 
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float",
+                      metavar="INT", default = 98, help = SUPPRESS_HELP)
+    parser.add_option("--histone-frag-ext", dest = "histone_frag_ext", type = "int", 
+                      metavar="INT", default = 200, help = SUPPRESS_HELP)
 
     # Processing Options
     options, arguments = parser.parse_args()
-    if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
+    #if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
-    # Fixed Parameters ################
-    region_total_ext = 10000
-    fp_limit_size = 50
-    fp_limit_size_histone = 2000
-    fp_limit_size_ext = 10
-    fp_limit_size_ext_histone = 200
-    fp_ext = 5
-    fp_ext_histone = 50
-    tc_ext = 50
-    tc_ext_histone = 500
-    ###
-    dnase_initial_clip = 1000
-    dnase_sg_window_size = 9
+    # General hidden options ###############################################################
+    region_total_ext = options.region_total_ext
+    fp_limit_size = options.fp_limit_size
+    fp_limit_size_histone = options.fp_limit_size_histone
+    fp_limit_size_ext = options.fp_limit_size_ext
+    fp_limit_size_ext_histone = options.fp_limit_size_ext_histone
+    fp_ext = options.fp_ext
+    fp_ext_histone = options.fp_ext_histone
+    tc_ext = options.tc_ext
+    tc_ext_histone = options.tc_ext_histone
+    # DNASE Hidden Options
+    dnase_initial_clip = options.dnase_initial_clip
+    dnase_sg_window_size = options.dnase_sg_window_size
     dnase_norm_per = options.dnase_norm_per
     dnase_slope_per = options.dnase_slope_per
     dnase_frag_ext = options.dnase_frag_ext
     dnase_ext_both_directions = options.dnase_ext_both_directions
-    ###
-    histone_initial_clip = 1000
-    histone_sg_window_size = 201
+    dnase_bias_correction_k = options.dnase_bias_correction_k
+    # ATAC Hidden Options
+    atac_initial_clip = options.atac_initial_clip
+    atac_sg_window_size = options.atac_sg_window_size
+    atac_norm_per = options.atac_norm_per
+    atac_slope_per = options.atac_slope_per
+    atac_frag_ext = options.atac_frag_ext
+    atac_ext_both_directions = options.atac_ext_both_directions
+    atac_bias_correction_k = options.atac_bias_correction_k
+    # HISTONE Hidden Options
+    histone_initial_clip = options.histone_initial_clip
+    histone_sg_window_size = options.histone_initial_clip
     histone_norm_per = options.histone_norm_per
     histone_slope_per = options.histone_slope_per
-    histone_frag_ext = 200
-    ###################################
+    histone_frag_ext = options.histone_frag_ext
+    ########################################################################################
 
     # Output wig signal
-    if(options.print_wig):
-        system("touch "+options.print_wig+"signal.wig | echo -n "" > "+options.print_wig+"signal.wig")
-        system("touch "+options.print_wig+"norm.wig | echo -n "" > "+options.print_wig+"norm.wig")
-        system("touch "+options.print_wig+"slope.wig | echo -n "" > "+options.print_wig+"slope.wig")
+    if(options.print_raw_signal):
+        system("touch "+options.print_raw_signal+" | echo -n "" > "+options.print_raw_signal)
+    if(options.print_bias_signal):
+        system("touch "+options.print_bias_signal+" | echo -n "" > "+options.print_bias_signal)
+    if(options.print_bc_signal):
+        system("touch "+options.print_bc_signal+" | echo -n "" > "+options.print_bc_signal)
+    if(options.print_norm_signal):
+        system("touch "+options.print_norm_signal+" | echo -n "" > "+options.print_norm_signal)
+    if(options.print_slope_signal):
+        system("touch "+options.print_raw_signal+" | echo -n "" > "+options.print_slope_signal)
 
     # Global class initialization
     genome_data = GenomeData(options.organism)
