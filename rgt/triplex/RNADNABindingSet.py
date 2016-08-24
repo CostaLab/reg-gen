@@ -504,6 +504,7 @@ class RNADNABindingSet:
                 rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6], 
                                   errors_bp=line[8], motif=line[9], orientation=line[11], 
                                   guanine_rate=line[12])
+                input("binding site")
                 # DNA binding site
                 rg = line[3].split(":")[1].split("-")
                 try: rg.remove("")
