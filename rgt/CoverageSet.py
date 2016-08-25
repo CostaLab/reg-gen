@@ -343,7 +343,7 @@ class CoverageSet:
             cov = [0] * steps_num
             if get_strand_info:
                 cov_strand = [[0,0]] * steps_num
-                strand_info = {}
+                # strand_info = {}
             positions = []
 
             for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
