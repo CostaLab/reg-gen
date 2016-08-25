@@ -258,7 +258,7 @@ class CoverageSet:
         else:
             return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
+    def coverage_from_bam2(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
                           get_strand_info = False, no_gaps=False):
         """Compute coverage based on GenomicRegionSet. 
         
@@ -397,7 +397,7 @@ class CoverageSet:
 
 
     
-    def coverage_from_bam1(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
+    def coverage_from_bam(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
                           get_strand_info = False, no_gaps=False):
         """Compute coverage based on GenomicRegionSet. 
         
@@ -494,7 +494,7 @@ class CoverageSet:
             read_length = -1
             try:
                 for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
-                    
+                    if len(read.get_blocks()) > 1: continue
                     j += 1
                     read_length = read.rlen 
                     if not read.is_unmapped:
