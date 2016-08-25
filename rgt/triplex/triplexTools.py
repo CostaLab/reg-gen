@@ -2718,20 +2718,20 @@ class RandomTest:
                             " style=\"border-right:1pt solid gray\"",
                             " style=\"border-right:1pt solid gray\"" ]
         else:
-            header_list = [ ["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics" ],
-                            ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value" ] ]
+            header_list = [ ["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", None ],
+                            ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value", "z-score" ] ]
             header_titles = [ ["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
-                               "Regions from randomization", None, "Statistics based on target regions"],
+                               "Regions from randomization", None, "Statistics based on target regions", None],
                                ["", "", 
                                 "Number of target regions with DBS binding",
                                 "Number of target regions without DBS binding",
                                 "Average number of regions from randomization with DBS binding",
-                                "Standard deviation", "P value"]]
+                                "Standard deviation", "P value", "Z-score"]]
             border_list = [ " style=\"border-right:1pt solid gray\"",
                             " style=\"border-right:1pt solid gray\"", "",
                             " style=\"border-right:1pt solid gray\"", "",
                             " style=\"border-right:1pt solid gray\"",
-                            " style=\"border-right:1pt solid gray\"" ]
+                            " style=\"border-right:1pt solid gray\"", "" ]
             
         type_list = 'ssssssssssssssss'
         col_size_list = [50,50,50,50,50,50,50,50,50,50,50,50,50,50,50]
@@ -2743,7 +2743,7 @@ class RandomTest:
 
             else:
                 p_region = value2str(self.data["region"]["p"][i])
-            
+            zs = (self.counts_tr[rbs][0] - self.data["region"]["ave"][i])/self.data["region"]["sd"][i]
             new_line = [str(i+1),
                         rbs.str_rna(pa=False),
                         '<a href="dbd_region.html#'+rbs.str_rna()+
@@ -2751,7 +2751,8 @@ class RandomTest:
                         str(self.counts_tr[rbs][1]),
                         value2str(self.data["region"]["ave"][i]), 
                         value2str(self.data["region"]["sd"][i]), 
-                        p_region ]
+                        p_region,
+                        value2str(zs) ]
             if self.showdbs:
                 if self.data["dbs"]["p"][i] < alpha:
                     p_dbs = "<font color=\"red\">"+value2str(self.data["dbs"]["p"][i])+"</font>"
