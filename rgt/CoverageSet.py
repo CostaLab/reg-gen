@@ -320,7 +320,7 @@ class CoverageSet:
         self.binsize = binsize
         self.stepsize = stepsize
         self.coverage = []
-        
+        bin_half = int(0.5 * binsize)
         bam = pysam.Samfile(bam_file, "rb" )
         
         for read in bam.fetch():
@@ -334,113 +334,68 @@ class CoverageSet:
             mask = GenomicRegionSet(mask_file)
             mask.read_bed(mask_file)
             self.genomicRegions = self.genomicRegions.subtract(mask)
-        
+
+        if get_strand_info:
+            self.cov_strand_all = []
         # Calculate the coverage
         for region in self.genomicRegions:
-            steps_num = math.ceil(len(region) / stepsize)
-            print(region)
-            print(steps_num)
-            sys.exit()
-            # cov = [0] * (len(region) / stepsize)
-            
-            # if get_strand_info:
-            #     cov_strand = [[0,0]] * (len(region) / stepsize)
-            #     strand_info = {}
-            
-
+            steps_num = int(math.ceil(len(region) / stepsize))
+            cov = [0] * steps_num
+            if get_strand_info:
+                cov_strand = [[0,0]] * steps_num
+                # strand_info = {}
             positions = []
-            # j = 0
-            read_length = -1
-            try:
-                for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
-                    if read.is_reverse and read.reference_end < region.initial:
-                        continue
-                    elif not read.is_reverse and read.reference_start > region.final:
-                        continue
-                    else:
-                        # j += 1
-                        read_length = read.rlen 
-                        if not read.is_unmapped:
-                            # pos = read.pos - fragment_size if read.is_reverse else read.pos
-                            # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
-                            if no_gaps:
-                                within_gap = False
-                                blocks = read.get_blocks()
-                                if len(blocks) > 1:
-                                    for b_ind in range(len(blocks) - 1):
-                                        if read.pos > blocks[b_ind][1] and read.pos < blocks[b_ind+1][0]:
-                                            within_gap = True
 
-
-                            pos = read.pos
-                            pos_help = read.pos
-                            #if position in mask region, then ignore
-                            if mask:
-                                while next_it and c_help not in chrom_regions: #do not consider this deadzone
-                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                                if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
-                                    while next_it and c_help != region.chrom: #get right chromosome
-                                        c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                                while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
-                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                                if next_it and s_help <= pos_help and c_help == region.chrom:
-                                    continue #pos in mask region
-                            
-                            positions.append(pos)
-                            
-                            if get_strand_info:
-                                if pos not in strand_info:
-                                    strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
-                        
-            except ValueError:
-                pass
-            if rmdup:
-                positions = list(set(positions))
-                
-            positions.sort()
-            positions.reverse()
-            
-            i = 0
-            while positions:
-                win_s = max(0, i * stepsize - binsize*0.5) + region.initial
-                win_e = i * stepsize + binsize*0.5 + region.initial 
-                c = 0
-                if get_strand_info:
-                    sum_strand_info = [0,0]
-                
-                taken = []
-                while True:
-                    s = positions.pop()
+            for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
+                # print(read.query_alignment_start < read.query_alignment_end)
+                if read.is_reverse and read.reference_end < region.initial:
+                    continue
+                elif not read.is_reverse and read.reference_start > region.final:
+                    continue
+                elif not read.is_unmapped:
                     
-                    taken.append(s)
-                    if s < win_e: #read within window
-                        c += 1
-                        if get_strand_info:
-                            sum_strand_info[0] += strand_info[s][0]
-                            sum_strand_info[1] += strand_info[s][1]
-                        
-                    if s >= win_e or not positions:
-                        taken.reverse()
-                        for s in taken:
-                            if s + fragment_size + read_length >= win_s: #consider read in next iteration
-                                positions.append(s)
-                            else:
-                                break #as taken decreases monotonously
-                        taken = []
-                        break
-                
-                if i < len(cov):
-                    cov[i] = c
-                    if get_strand_info:
-                        cov_strand[i] = sum_strand_info
-                i += 1
+                    if no_gaps:
+                        positions += read.get_blocks()
+
+                    else:
+                        if not read.is_reverse:
+                            positions += [[read.reference_start, read.reference_end + extension_size]]
+                        else:
+                            positions += [[read.reference_start - extension_size, read.reference_end]]
+            
+            positions.sort(lambda x,y: cmp(x[0], y[0]))
+            # print(positions)
+
+            # if not read.is_reverse:
+            i = 0
+            j = 0
+            pre_j = 0
+            while i < steps_num and j < len(positions):
+            # for i in range(steps_num):
+                l_bin = 0 - bin_half + i*stepsize + region.initial
+                r_bin = 0 + bin_half + i*stepsize + region.initial
+
+                if positions[j][1] <= l_bin: # frag < bin
+                    j += 1
+                    pre_j = j
+                elif positions[j][0] <= l_bin and positions[j][1] > l_bin:
+                    cov[i] += 1
+                    j += 1
+                elif l_bin < positions[j][0] and positions[j][1] < r_bin:
+                    cov[i] += 1
+                    j += 1
+                elif positions[j][1] >= r_bin and positions[j][0] < r_bin:
+                    cov[i] += 1
+                    j += 1
+                elif positions[j][0] >= r_bin:
+                    j = pre_j
+                    i += 1
+                else:
+                    print("eeeeeeeeeeelllllllllllsssssssseeeeeeeee")
 
             self.coverage.append(np.array(cov))
-            if get_strand_info:
-                self.cov_strand_all.append(np.array(cov_strand))
-        if mask: f.close()
-        self.coverageorig = self.coverage[:]
-        self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
+
+
     
     def coverage_from_bam(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
                           get_strand_info = False, no_gaps=False):
@@ -497,18 +452,18 @@ class CoverageSet:
          the length of the <overall_cov> equals 54515813, as we take the entire genome into account, but use a the default stepsize of 50 for segmentation. 
         
         """
-        
 
         if len(self.genomicRegions) == 0:
             return
-
+        
         self.binsize = binsize
         self.stepsize = stepsize
+        self.coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
         
         for read in bam.fetch():
-            extension_size += read.rlen
+            fragment_size = read.rlen + extension_size
             break
         
         self._init_read_number(bam_file)
@@ -538,22 +493,30 @@ class CoverageSet:
             j = 0
             read_length = -1
             try:
-                for read in bam.fetch(region.chrom, max(0, region.initial-extension_size), region.final+extension_size):
+                for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
                     
                     j += 1
                     read_length = read.rlen 
                     if not read.is_unmapped:
+                        # pos = read.pos - extension_size if read.is_reverse else read.pos
+                        # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
                         pos = read.pos - extension_size if read.is_reverse else read.pos
                         pos_help = read.pos - read.qlen if read.is_reverse else read.pos
                         
+                        within_gap = False
                         if no_gaps:
-                            # within_gap = False
                             blocks = read.get_blocks()
                             if len(blocks) > 1:
+                                # print(read.is_reverse)
+                                # print(read.pos)
+                                # print(blocks)
                                 for b_ind in range(len(blocks) - 1):
-                                    if pos > blocks[b_ind][1] and pos < blocks[b_ind+1][0]:
-                                        # within_gap = True
-                                        continue
+                                    # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
+                                    if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
+                                        within_gap = True
+
+                            
+                            
                         #if position in mask region, then ignore
                         if mask:
                             while next_it and c_help not in chrom_regions: #do not consider this deadzone
@@ -565,8 +528,8 @@ class CoverageSet:
                                 c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
                             if next_it and s_help <= pos_help and c_help == region.chrom:
                                 continue #pos in mask region
-                        
-                        positions.append(pos)
+                        if within_gap: continue
+                        else: positions.append(pos)
                         
                         if get_strand_info:
                             if pos not in strand_info:
@@ -576,11 +539,10 @@ class CoverageSet:
                 pass
             if rmdup:
                 positions = list(set(positions))
-            # print(len(positions))
+                
             positions.sort()
             positions.reverse()
-            # print(len(set(positions)))
-            
+            # print(positions[0:10])
             i = 0
             while positions:
                 win_s = max(0, i * stepsize - binsize*0.5) + region.initial
