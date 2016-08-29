@@ -408,7 +408,8 @@ def main():
     parser_promotertest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexator] Method to quickly discard non-hits (Default 0).'0' = greedy approach; '1' = q-gram filtering.")
     parser_promotertest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
-    parser_promotertest.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
+    parser_promotertest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
+    parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
     parser_promotertest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
     
     
@@ -446,7 +447,8 @@ def main():
     parser_randomtest.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexator] Method to quickly discard non-hits (Default 0).'0' = greedy approach; '1' = q-gram filtering.")
     parser_randomtest.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
-    parser_randomtest.add_argument('-rm', action="store_true", default=False, help="[Triplexator] Set the multiprocessing")
+    parser_randomtest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
+    parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
     parser_randomtest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
         
     ##########################################################################
@@ -463,7 +465,7 @@ def main():
     parser_bed2bed.add_argument('-fm', type=int, default=0, metavar='  ', help="[Triplexator] Method to quickly discard non-hits (Default 0).'0' = greedy approach; '1' = q-gram filtering.")
     parser_bed2bed.add_argument('-of', type=int, default=1, metavar='  ', help="[Triplexator] Define output formats of Triplexator (Default: 1)")
     parser_bed2bed.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
-    parser_bed2bed.add_argument('-rm', action="store_true", default=True, help="[Triplexator] Set the multiprocessing")
+    parser_bed2bed.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
     
     ##########################################################################
     # rgt-TDF integrate -path 
@@ -607,7 +609,7 @@ def main():
                     if args.protein_coding == 'T': command += ["-protein_coding", 'T']
                     if args.known_only == 'F': command += ["-known_only", 'F']
                     
-                    if args.rm: command += ["-rm" ]
+                    if args.rm > 0: command += ["-rm", args.rm ]
                     if args.fr != 'off': command += ["-fr", args.fr ]
                     if args.c != 2: command += ["-c", args.c ]
                     if args.e != 20: command += ["-e", args.e ]
@@ -718,7 +720,7 @@ def main():
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, tp=args.tp)
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, tp=args.tp)
         
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -833,7 +835,7 @@ def main():
         print2(summary, "*** Input regions in BED: "+os.path.basename(args.bed))
         print2(summary, "*** Number of randomization: "+str(args.n))
         print2(summary, "*** Output directoey: "+os.path.basename(args.o))
-        
+
         args.r = os.path.normpath(os.path.join(dir,args.r))
         
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
@@ -844,13 +846,14 @@ def main():
         randomtest.connect_rna(rna=args.r, temp=args.o)
 
         randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed, tp=args.tp,
-                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, cutoff=args.ccf )
+                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
-
+        # print(args.par)
         print2(summary, "Step 2: Randomization and counting number of binding sites")
+
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
-                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, rm=args.rm,
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
                                filter_bed=args.f, alpha=args.a, tp=args.tp)
         
         if len(randomtest.rbss) == 0: 

@@ -397,8 +397,8 @@ class CoverageSet:
 
 
     
-    def coverage_from_bam(self, bam_file, extension_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
-                          get_strand_info = False, no_gaps=False):
+    def coverage_from_bam(self, bam_file, extension_size=200, binsize=100, stepsize=50, rmdup=False, maxdup=None, mask_file=None, 
+                          get_strand_info=False, no_gaps=False):
         """Compute coverage based on GenomicRegionSet. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet). The GenomicRegion is divided into consecutive bins with lenth <binsize>.
@@ -411,6 +411,7 @@ class CoverageSet:
         - binsize -- size of bins
         - stepsize -- stepsize for the window-based approach to generat the signal
         - rmdup -- remove dupliacted reads (reads with same starting coordinate)
+        - maxdup -- define the maximum count for the dupliacted reads (0: remove all;-1:no limit)
         - mask_file -- ignore region described in <mask_file> (tab-separated: chrom, start, end)
         - get_strand_info -- compute strand information for each bin
         
@@ -537,6 +538,11 @@ class CoverageSet:
                         
             except ValueError:
                 pass
+
+            # if maxdup == -1: # No limit
+            # elif maxdup == 0: # Remove all duplicates
+            # else: # 
+
             if rmdup:
                 positions = list(set(positions))
                 
