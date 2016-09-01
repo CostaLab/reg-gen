@@ -180,6 +180,7 @@ if __name__ == "__main__":
     parser_bedro.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bedro.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedro.add_argument('-t', '-target', type=str, help="Define BED file for target regions")
+    parser_bedro.add_argument('-k', action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
 
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
@@ -188,6 +189,18 @@ if __name__ == "__main__":
     parser_bedaddcol.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
     parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
+
+    ############### Divide regions in BED by expression #######################
+    # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
+    parser_divideBED = subparsers.add_parser('bed_divide', 
+                       help="[BED] Divide the BEd files by the expression.")
+    parser_divideBED.add_argument('-bed', type=str, help="Input BED file")
+    parser_divideBED.add_argument('-t','-table', type=str, help="Input expression table (Gene name should match the region name.")
+    parser_divideBED.add_argument('-o1', '-output1', type=str, help="Output first BED file")
+    parser_divideBED.add_argument('-o2', '-output2', type=str, help="Output second BED file")
+    parser_divideBED.add_argument('-c', '-cutoff', type=int, help="Define the cutoff")
+    parser_divideBED.add_argument('-m', type=str, help="Define the mode, such as mean, max, or min.")
+    
 
     ############### THOR calculate FC ################################
     parser_thorfc = subparsers.add_parser('thor_fc', 
@@ -250,7 +263,8 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
     parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
     parser_sliceFASTA.add_argument('-r', default=False, action="store_true", help="Reverse the sequence")
-    
+
+
 
 
     ##########################################################################
@@ -737,7 +751,10 @@ if __name__ == "__main__":
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
         input_regions.read_bed(args.i)
-        output_regions = input_regions.subtract(t,whole_region=True)
+        if args.k:
+            output_regions = input_regions.intersect(t,mode=OverlapType.ORIGINAL)
+        else:
+            output_regions = input_regions.subtract(t,whole_region=True)
         output_regions.write_bed(args.o)
         print("complete.")
 
@@ -778,6 +795,45 @@ if __name__ == "__main__":
         print("Modified genes:\t"+str(c_add))            
         print("Missed genes:\t"+str(c_miss))
         print("complete.")
+
+
+    ############### BED divide by erxpression ###########################
+    elif args.mode == "bed_divide":
+        print("input:\t" + args.bed)
+        print("table:\t" + args.t)
+        
+        gene1 = []
+        gene2 = []
+        
+
+        with open(args.t) as t:
+            for line in t:
+                l = line.strip().split()
+                g = l[0]
+                try:
+                    exp = [ float(x) for x in l[1:] ]
+                except:
+                    continue
+                if args.m == "max":
+                    if max(exp) > args.c: gene1.append(g)
+                    else: gene2.append(g)
+                elif args.m == "min":
+                    if min(exp) > args.c: gene1.append(g)
+                    else: gene2.append(g)
+                elif args.m == "mean":
+                    mean = sum(exp)/len(exp)
+                    if mean > args.c: gene1.append(g)
+                    else: gene2.append(g)
+
+        bed = GenomicRegionSet(args.bed)
+        bed.read_bed(args.bed)
+        o1 = GenomicRegionSet(args.o1)
+        o2 = GenomicRegionSet(args.o2)
+        for r in bed:
+            if r.name in gene1: o1.add(r)
+            elif r.name in gene2: o2.add(r)
+        o1.write_bed(args.o1)
+        o2.write_bed(args.o2)
 
 
     ############### THOR FC #############################################

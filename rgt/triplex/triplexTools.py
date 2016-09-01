@@ -137,7 +137,7 @@ def get_sequence(dir, filename, regions, genome_path):
             print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
 
 
-def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=True, 
+def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
                  c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", tp=False):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
@@ -2475,7 +2475,7 @@ class RandomTest:
             btr = btr.gene_association(organism=self.organism)
             btr.write_bed(os.path.join(temp, obed+"_target_region_dbs.bed"))
             dbss = txpf.get_dbs()
-            dbss = dbss.gene_association(organism=self.organism)
+            # dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, obed+"_dbss.bed"))
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, tp, filter_bed, alpha):
