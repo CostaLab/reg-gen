@@ -2493,7 +2493,7 @@ def annotation_dump(organism):
 
 class Lineplot:
     
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, dft, fields, test):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, dft, fields, test, strand):
         
         
         # Read the Experimental Matrix
@@ -2530,6 +2530,7 @@ class Lineplot:
         self.ss = ss
         self.df = df
         self.dft = dft
+        self.strand = strand
 
     
     def relocate_bed(self):
@@ -2657,23 +2658,28 @@ class Lineplot:
                                             try: data[s][g][c][d].append(numpy.empty(1, dtype=object))
                                             except: data[s][g][c][d] = [ numpy.empty(1, dtype=object) ]
                                             continue
-                                        if mp:
-                                            # Multiple processing
+                                        #########################################################################
+                                        if mp: # Multiple processing
                                             mp_input.append([ self.processed_beds[i], self.reads[j], 
                                                               self.rs, self.bs, self.ss, self.center, heatmap, logt,
                                                               s, g, c, d ])
                                             data[s][g][c][d] = None
-                                            
-                                        else:
-                                            # Single thread
+                                    
+                                        #########################################################################
+                                        else: # Single thread
                                             ts = time.time()
                                             cov = CoverageSet(bed+"."+bam, self.processed_beds[i])
                                             
                                             if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
-                                                cov.coverage_from_bam(bam_file=self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                                cov.normRPM()
+                                                if not self.strand:
+                                                    cov.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss)
+                                                    cov.normRPM()
+                                                else: # Strand specific
+                                                    cov.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss,get_strand_info=True)
+                                                    cov.normRPM()
+
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
                                                 if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
@@ -2683,8 +2689,12 @@ class Lineplot:
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                                 else:
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
-                                                    flap.coverage_from_bam(self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                                    flap.normRPM()
+                                                    if not self.strand:
+                                                        flap.coverage_from_bam(self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
+                                                        flap.normRPM()
+                                                    else: # Strand specific
+                                                        flap.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss,get_strand_info=True)
+                                                        flap.normRPM()
                                                     ffcoverage = numpy.fliplr(flap.coverage)
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                             # Averaging the coverage of all regions of each bed file
@@ -2694,32 +2704,87 @@ class Lineplot:
                                                 else:
                                                     data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
                                             else:
-                                                # print(cov.coverage)
-                                                if not cov.coverage: 
+                                                # print(not cov.coverage)
+                                                if not cov.coverage.any(): 
                                                     data[s][g][c][d] = None
                                                     print("** Warning: Cannot open " + self.reads[j] )
                                                     continue
                                                 else:
-                                                    for i, car in enumerate(cov.coverage):
-                                                        car = numpy.delete(car, [0,1])
-                                                        # print(car)
-                                                        if i == 0:
-                                                            avearr = np.array(car)
-                                                            lenr = car.shape[0]
-                                                        elif car.shape[0] == lenr:
-                                                            avearr = numpy.vstack((avearr, car))
+                                                    if not self.strand:
+                                                        for i, car in enumerate(cov.coverage):
+                                                            car = numpy.delete(car, [0,1])
+                                                            car = car[:-2]
+                                                            if i == 0:
+                                                                avearr = np.array(car)
+                                                                lenr = car.shape[0]
+                                                            elif car.shape[0] == lenr:
+                                                                avearr = numpy.vstack((avearr, car))
+                                                            else:
+                                                                pass
+                                                        
+                                                        avearr = numpy.average(avearr, axis=0)
+                                                        
+                                                        if self.df:
+                                                            try: data[s][g][c][d][-1].append(avearr)
+                                                            except: data[s][g][c][d] = [[avearr]]
                                                         else:
-                                                            pass
-                                                    
-                                                    avearr = numpy.average(avearr, axis=0)
-                                                    
-                                                    if self.df:
-                                                        try: data[s][g][c][d][-1].append(avearr)
-                                                        except: data[s][g][c][d] = [[avearr]]
+                                                            try: data[s][g][c][d].append(avearr)
+                                                            except: data[s][g][c][d] = [avearr]
+                                                        # else: continue
                                                     else:
-                                                        try: data[s][g][c][d].append(avearr)
-                                                        except: data[s][g][c][d] = [avearr]
-                                                    # else: continue
+                                                        # print(len(cov.cov_strand_all))
+                                                        for i, car in enumerate(cov.cov_strand_all):
+                                                            # print(car)
+                                                            # car_s1 = numpy.delete(car[0], [0,1])
+                                                            car_s1 = []
+                                                            car_s2 = []
+                                                            for ca in car:
+                                                                car_s1.append(ca[0])
+                                                                car_s2.append(ca[1])
+                                                            
+                                                            # print(len(car_s1))
+                                                            # print(len(car_s2))
+                                                            # car_s2 = numpy.delete(car[1], [0,1])
+                                                            # print(len(car_s1))
+                                                            if i == 0:
+                                                                avearr_s1 = np.array(car_s1)
+                                                                lenr_s1 = len(car_s1)
+                                                                # print(avearr_s1)
+                                                                # sys.exit()
+                                                                avearr_s2 = np.array(car_s2)
+                                                                lenr_s2 = len(car_s2)
+                                                            else:
+                                                                if len(car_s1) == lenr_s1:
+                                                                    # print(1)
+                                                                    avearr_s1 = numpy.vstack((avearr_s1, car_s1))
+                                                                if len(car_s2) == lenr_s2:
+                                                                    # print(2)
+                                                                    avearr_s2 = numpy.vstack((avearr_s2, car_s2))
+                                                            
+                                                        # print(len(avearr_s1))
+                                                        # print(len(avearr_s2))
+                                                        avearr1 = numpy.average(avearr_s1, axis=0)
+                                                        avearr2 = numpy.average(avearr_s2, axis=0)
+                                                        # print(len(avearr1))
+                                                        # print(len(avearr2))
+
+                                                        if self.df:
+                                                            try: 
+                                                                data[s][g][c][d]["+"][-1].append(avearr1)
+                                                                data[s][g][c][d]["-"][-1].append(avearr2)
+                                                            except: 
+                                                                data[s][g][c][d] = {}
+                                                                data[s][g][c][d]["+"] = [[avearr1]]
+                                                                data[s][g][c][d]["-"] = [[avearr2]]
+                                                        else:
+                                                            try: 
+                                                                data[s][g][c][d]["+"].append(avearr1)
+                                                                data[s][g][c][d]["-"].append(avearr2)
+                                                            except:
+                                                                data[s][g][c][d] = {}
+                                                                data[s][g][c][d]["+"] = [avearr1]
+                                                                data[s][g][c][d]["-"] = [avearr2]
+                                                        # else: continue
                                                 
                                             bi += 1
                                             te = time.time()
@@ -2812,23 +2877,85 @@ class Lineplot:
                     for k, d in enumerate(self.data[s][g][c].keys()):
                         if not self.data[s][g][c][d]: continue
                         else:
-                            for l, y in enumerate(self.data[s][g][c][d]):
-                                yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                                sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                                if self.df: 
-                                    yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                    sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                            if not self.strand:
+                                for l, y in enumerate(self.data[s][g][c][d]):
+                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                    if self.df: 
+                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
-                                if not y.all():
-                                    pass
-                                else:
-                                    x = numpy.linspace(-self.extend, self.extend, len(y))
+                                    if not y.all():
+                                        pass
+                                    else:
+                                        x = numpy.linspace(-self.extend, self.extend, len(y))
 
-                                    ax.plot(x,y, color=self.colors[c], lw=1, label=c)
-                                    if it < nit - 1:
-                                        ax.set_xticklabels([])
-                                    # Processing for future output
-                                    if printtable: pArr.append([g,s,c,d]+list(y))
+                                        ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                        if it < nit - 1:
+                                            ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable: pArr.append([g,s,c,d]+list(y))
+                            else:
+                                for l, y in enumerate(self.data[s][g][c][d]["+"]):
+                                    print("+")
+                                    # print(y)
+                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                    if self.df: 
+                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+
+                                    if not y.all():
+                                        pass
+                                    else:
+                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                        ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                        if it < nit - 1:
+                                            ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable: pArr.append([g,s,c,d,"+"]+list(y))
+
+                                for l, y in enumerate(self.data[s][g][c][d]["-"]):
+                                    print("-")
+                                    # print(y)
+                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
+                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
+                                    if self.df: 
+                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
+                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+
+                                    if not y.all():
+                                        pass
+                                    else:
+                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                        ax.plot(x,y, color=self.colors[c], lw=1, label=c)
+                                        if it < nit - 1:
+                                            ax.set_xticklabels([])
+                                        # Processing for future output
+                                        if printtable: pArr.append([g,s,c,d,"-"]+list(y))
+
+                                # for l, y in enumerate(self.data[s][g][c][d]):
+                                #     yaxmax[i] = max(numpy.amax(y["+"]), yaxmax[i])
+                                #     yaxmax[i] = max(numpy.amax(y["-"]), yaxmax[i])
+                                #     sx_ymax[it] = max(numpy.amax(y["+"]), sx_ymax[it])
+                                #     sx_ymax[it] = max(numpy.amax(y["-"]), sx_ymax[it])
+                                #     if self.df: 
+                                #         yaxmin[i] = max(numpy.amin(y["+"]), yaxmin[i])
+                                #         yaxmin[i] = max(numpy.amin(y["-"]), yaxmin[i])
+                                #         sx_ymin[it] = max(numpy.amin(y["+"]), sx_ymin[it])
+                                #         sx_ymin[it] = max(numpy.amin(y["-"]), sx_ymin[it])
+
+                                #     if not y["+"].all() or not y["-"].all():
+                                #         pass
+                                #     else:
+                                #         x = numpy.linspace(-self.extend, self.extend, len(y["+"]))
+
+                                #         ax.plot(x,y["+"], color=self.colors[c], lw=1, label=c)
+                                #         ax.plot(x,y["-"], color=self.colors[c], lw=1, label=c)
+                                #         if it < nit - 1:
+                                #             ax.set_xticklabels([])
+                                #         # Processing for future output
+                                #         if printtable: pArr.append([g,s,c,d]+list(y))
 
                 ax.get_yaxis().set_label_coords(-0.1,0.5)
                 ax.set_xlim([-self.extend, self.extend])

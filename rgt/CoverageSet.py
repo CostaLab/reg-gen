@@ -194,19 +194,19 @@ class CoverageSet:
     def _init_read_number(self, bamFile):
         """Compute number of reads and number of mapped reads for CoverageSet"""
         # XXX ToDo add number of mapped reads in all cases
-        try:
-            if pysam.__version__ == '0.9.0':
-                a = pysam.idxstats(bamFile)
-                mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
-                unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
-                self.reads = mapped_reads + unmapped_read
-                self.mapped_reads = mapped_reads
-            else:
-                self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
-                self.mapped_reads = None
-        except:
-            self.reads = None
+        # try:
+        if '0.9.0' in pysam.__version__ or '0.9.1' in pysam.__version__:
+            a = pysam.idxstats(bamFile)
+            mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+            unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+            self.reads = mapped_reads + unmapped_read
+            self.mapped_reads = mapped_reads
+        else:
+            self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
             self.mapped_reads = None
+        # except:
+        #     self.reads = None
+        #     self.mapped_reads = None
     
     def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
 
@@ -466,7 +466,7 @@ class CoverageSet:
         for read in bam.fetch():
             fragment_size = read.rlen + extension_size
             break
-        
+
         self._init_read_number(bam_file)
         
         #check whether one should mask
@@ -583,8 +583,9 @@ class CoverageSet:
                     if get_strand_info:
                         cov_strand[i] = sum_strand_info
                 i += 1
-
             self.coverage.append(np.array(cov))
+            # cov = [x + 1 for x in cov]
+            # self.coverage.append(np.log(np.array(cov)))
             if get_strand_info:
                 self.cov_strand_all.append(np.array(cov_strand))
             

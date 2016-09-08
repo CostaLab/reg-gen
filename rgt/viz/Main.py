@@ -288,6 +288,7 @@ def main():
     parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    parser_lineplot.add_argument('-strand', action="store_true", help='Set the plot strand-specific.')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -651,7 +652,7 @@ def main():
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
-                                test=args.test)
+                                test=args.test, strand=args.strand)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
