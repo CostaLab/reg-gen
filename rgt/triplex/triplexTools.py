@@ -169,7 +169,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     triplex_lib_path = triclass.get_path()
     triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
 
-    arguments = " "
+    arguments = ""
     if ss: arguments += "-ss "+ss+" "
     if ds: arguments += "-ds "+ds+" "
     if l: arguments += "-l "+str(l)+" "
@@ -186,14 +186,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         par = "-" + par
         arguments += par+" "
     
-    # print(arguments)
-    if output: arguments += "> "+output
-    arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
-    #os.system(triplexator_path+arguments)
-    # if isinstance(tp,str):
-    #     os.system(tp+arguments)
-    # else:
-    #     os.system("triplexator"+arguments)
+    arguments += "-o "+ os.path.basename(output) + " -od " + os.path.dirname(output)
 
     arg_strings  = arguments.split(' ')
     arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
@@ -201,8 +194,9 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
         arg_ptr[i + 1] = s
-
+    
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
+
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
