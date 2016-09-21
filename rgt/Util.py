@@ -246,7 +246,18 @@ class ImageData(ConfigurationFile):
     def get_viz_logo(self):
         """Returns the default RGT viz logo."""
         return self.viz_logo
-    
+
+class Triplexator(ConfigurationFile):
+    """Represent the path to triplexator. Inherits ConfigurationFile."""
+
+    def __init__(self):
+        ConfigurationFile.__init__(self)
+        self.path = self.config.get("Triplexator",'path')
+
+    def get_path(self):
+        return self.path
+
+
 class OverlapType:
     """Class of overlap type constants.
 

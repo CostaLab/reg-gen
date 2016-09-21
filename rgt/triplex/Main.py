@@ -549,19 +549,19 @@ def main():
 
         #######################################################################################
         ######## Test triplexator
-        if args.tp:
-            process = subprocess.Popen([args.tp, "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        else:
-            process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # wait for the process to terminate
-        out, err = process.communicate()
-        errcode = process.returncode
-        if errcode == 0:
-            print("** Triplexator: OK")
-        else:
-            print("** Error: Triplexator cannot be found. Please export Triplexator path into $PATH")
-            print(err)
-            sys.exit(1)
+        # if args.tp:
+        #     process = subprocess.Popen([args.tp, "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # else:
+        #     process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # # wait for the process to terminate
+        # out, err = process.communicate()
+        # errcode = process.returncode
+        # if errcode == 0:
+        #     print("** Triplexator: OK")
+        # else:
+        #     print("** Error: Triplexator cannot be found. Please export Triplexator path into $PATH")
+        #     print(err)
+        #     sys.exit(1)
         
         ####################################################################################
         ######### get_dbss

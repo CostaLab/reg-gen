@@ -9,6 +9,7 @@ import pylab
 import pysam
 import pickle
 import shutil
+from ctypes import *
 
 # Local Libraries
 from scipy import stats
@@ -24,6 +25,7 @@ from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib import colors
 from Bio.Seq import Seq
 from Bio.Alphabet import IUPAC
+
 #from Bio import motifs
 
 
@@ -34,7 +36,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from BindingSiteSet import BindingSite, BindingSiteSet
 from rgt.SequenceSet import Sequence, SequenceSet
 from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile, GenomeData
+from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile, GenomeData, Triplexator
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.AnnotationSet import AnnotationSet
 
@@ -163,7 +165,11 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
-    arguments = " "
+    triclass = Triplexator()
+    triplex_lib_path = triclass.get_path()
+    triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
+
+    arguments = ""
     if ss: arguments += "-ss "+ss+" "
     if ds: arguments += "-ds "+ds+" "
     if l: arguments += "-l "+str(l)+" "
@@ -180,14 +186,17 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         par = "-" + par
         arguments += par+" "
     
-    # print(arguments)
-    if output: arguments += "> "+output
-    arguments += " 2>> "+os.path.join(os.path.dirname(output),"triplexator_errors.txt")
-    #os.system(triplexator_path+arguments)
-    if isinstance(tp,str):
-        os.system(tp+arguments)
-    else:
-        os.system("triplexator"+arguments)
+    arguments += "-o "+ os.path.basename(output) + " -od " + os.path.dirname(output)
+
+    arg_strings  = arguments.split(' ')
+    arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
+
+    arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
+    for i, s in enumerate(arg_strings):
+        arg_ptr[i + 1] = s
+    
+    triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
+
 
 def read_ac(path, cut_off, rnalen):
     """Read the RNA accessibility file and output its positions and values
