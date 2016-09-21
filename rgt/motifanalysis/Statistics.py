@@ -113,7 +113,7 @@ def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,outp
     # Performing intersections
     a_file_name = mpbs_file_name+motif_name+"_A.bed"
     b_file_name = mpbs_file_name+motif_name+"_B.bed"
-    n_lines_grep = int(check_output(["wc", "-l", grep_file_name]).split()[0])
+    n_lines_grep = int(check_output(['wc', '-l', grep_file_name]).split()[0])
     if(n_lines_grep > 0):
         p2 = Popen("intersectBed -a "+quote(region_file_name)+" -b "+quote(grep_file_name)+" -wa -u > "+quote(a_file_name), shell=True)
         waitpid(p2.pid, 0)
