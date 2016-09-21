@@ -648,6 +648,7 @@ if __name__ == "__main__":
         ### Input BED file
         
         gene.read_bed(args.i)
+        print(len(gene))
         target = GenomicRegionSet("target")
         # if args.min == 0: cut = float("inf")
         # elif args.min > 0: cut = args.min
@@ -665,7 +666,7 @@ if __name__ == "__main__":
                 if args.r: s.orientation = "+"
                 target.add(s)
         
-        #print(len(promoter))
+        print(len(target))
         target.write_bed(args.o)
 
 
@@ -865,8 +866,8 @@ if __name__ == "__main__":
             args.o = os.path.dirname(args.i)
         print("output:\t" + args.o)
         name = os.path.basename(args.i).split(".")[0]
-        gain_f = open(os.path.join(args.o,name+"_gain.bed"), "w")
-        lose_f = open(os.path.join(args.o,name+"_lose.bed"), "w")
+        gain_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_gain.bed"), "w")
+        lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
         with open(args.i) as f:
             for line in f:
                 line = line.strip()

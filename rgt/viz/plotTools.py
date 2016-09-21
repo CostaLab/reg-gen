@@ -2625,6 +2625,7 @@ class Lineplot:
                 if a in tags: return ind
 
         if mp: ts = time.time()
+        normRPM = True
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
@@ -2675,26 +2676,28 @@ class Lineplot:
                                             else:
                                                 if not self.strand:
                                                     cov.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss)
-                                                    cov.normRPM()
+                                                    if normRPM: cov.normRPM()
                                                 else: # Strand specific
                                                     cov.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss,get_strand_info=True)
-                                                    cov.normRPM()
+                                                    if normRPM: cov.normRPM()
 
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
                                                 if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                     flap.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                                    print("ss")
+                                                    print(flap.coverage)
                                                     ffcoverage = numpy.fliplr(flap.coverage)
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                                 else:
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                     if not self.strand:
                                                         flap.coverage_from_bam(self.reads[j], extension_size = self.rs, binsize = self.bs, stepsize = self.ss)
-                                                        flap.normRPM()
+                                                        if normRPM: flap.normRPM()
                                                     else: # Strand specific
                                                         flap.coverage_from_bam(bam_file=self.reads[j], extension_size=self.rs, binsize=self.bs, stepsize=self.ss,get_strand_info=True)
-                                                        flap.normRPM()
+                                                        if normRPM: flap.normRPM()
                                                     ffcoverage = numpy.fliplr(flap.coverage)
                                                     cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
                                             # Averaging the coverage of all regions of each bed file
@@ -2705,7 +2708,7 @@ class Lineplot:
                                                     data[s][g][c][d] = numpy.vstack(cov.coverage) # Store the array into data list
                                             else:
                                                 # print(not cov.coverage)
-                                                if not cov.coverage.any(): 
+                                                if len(cov.coverage) == 0: 
                                                     data[s][g][c][d] = None
                                                     print("** Warning: Cannot open " + self.reads[j] )
                                                     continue

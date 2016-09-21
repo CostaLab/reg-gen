@@ -76,4 +76,4 @@ echo "********* TDF test completed ****************"
 # cd ../TERC_hg19/
 # rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -o genomic_region_test/TERC -n 100
 
-echo "********* TDF test completed ****************"
+echo "********* viz test completed ****************"

@@ -456,7 +456,7 @@ class CoverageSet:
 
         if len(self.genomicRegions) == 0:
             return
-        
+        log_aver = False
         self.binsize = binsize
         self.stepsize = stepsize
         self.coverage = []
@@ -583,9 +583,13 @@ class CoverageSet:
                     if get_strand_info:
                         cov_strand[i] = sum_strand_info
                 i += 1
-            self.coverage.append(np.array(cov))
-            # cov = [x + 1 for x in cov]
-            # self.coverage.append(np.log(np.array(cov)))
+
+            if not log_aver:
+                self.coverage.append(np.array(cov))
+            else:
+                ov = [x + 1 for x in cov]
+                self.coverage.append(np.log(np.array(cov)))
+
             if get_strand_info:
                 self.cov_strand_all.append(np.array(cov_strand))
             
@@ -682,7 +686,6 @@ class CoverageSet:
                 depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
                                              max(1,int(gr.final+stepsize/2)))
                 ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-                
                 self.coverage.append( np.array(ds) )
             bwf.close()
 
