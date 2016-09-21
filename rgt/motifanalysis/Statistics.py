@@ -7,6 +7,7 @@
 from os import waitpid
 from os.path import basename, join, dirname
 from subprocess import Popen, check_output
+from pipes import quote
 
 # Internal
 from .. GeneSet import GeneSet
@@ -106,7 +107,7 @@ def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,outp
 
     # Fetching motif
     grep_file_name = mpbs_file_name+motif_name+"_grep.bed"; to_remove.append(grep_file_name)
-    p1 = Popen("grep \"\t\""+motif_name+"\"\t\" "+mpbs_file_name+" > "+grep_file_name, shell=True)
+    p1 = Popen("grep \"\t\""+quote(motif_name)+"\"\t\" "+quote(mpbs_file_name)+" > "+quote(grep_file_name), shell=True)
     waitpid(p1.pid, 0)
 
     # Performing intersections
@@ -114,9 +115,9 @@ def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,outp
     b_file_name = mpbs_file_name+motif_name+"_B.bed"
     n_lines_grep = int(check_output(['wc', '-l', grep_file_name]).split()[0])
     if(n_lines_grep > 0):
-        p2 = Popen("intersectBed -a "+region_file_name+" -b "+grep_file_name+" -wa -u > "+a_file_name, shell=True)
+        p2 = Popen("intersectBed -a "+quote(region_file_name)+" -b "+quote(grep_file_name)+" -wa -u > "+quote(a_file_name), shell=True)
         waitpid(p2.pid, 0)
-        p3 = Popen("intersectBed -a "+region_file_name+" -b "+grep_file_name+" -wa -v > "+b_file_name, shell=True)
+        p3 = Popen("intersectBed -a "+quote(region_file_name)+" -b "+quote(grep_file_name)+" -wa -v > "+quote(b_file_name), shell=True)
         waitpid(p3.pid, 0)
         to_remove.append(a_file_name); to_remove.append(b_file_name)
 
@@ -142,7 +143,7 @@ def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,outp
         if(output_mpbs_file):
             mpbs_list = []
             mpbs_temp_file_name = mpbs_file_name+motif_name+"_mpbstemp.bed"; to_remove.append(mpbs_temp_file_name)
-            p4 = Popen("intersectBed -a "+grep_file_name+" -b "+region_file_name+" -wa -u > "+mpbs_temp_file_name, shell=True)
+            p4 = Popen("intersectBed -a "+quote(grep_file_name)+" -b "+quote(region_file_name)+" -wa -u > "+quote(mpbs_temp_file_name), shell=True)
             waitpid(p4.pid, 0)
             mpbs_temp_file = open(mpbs_temp_file_name,"r")
             for line in mpbs_temp_file: mpbs_list.append(line.strip().split("\t"))
@@ -159,7 +160,7 @@ def fisher_table((motif_name,region_file_name,mpbs_file_name,return_geneset,outp
 
     # Remove all files
     for e in to_remove:
-        p5 = Popen("rm "+e, shell=True)
+        p5 = Popen("rm "+quote(e), shell=True)
         waitpid(p5.pid, 0)
 
     # Return

@@ -156,7 +156,7 @@ class MotifData(ConfigurationFile):
         return self.fpr_list
 
 class HmmData(ConfigurationFile):
-    """Represent HMM data. Inherits Co7nfigurationFile."""
+    """Represent HMM data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
