@@ -4,7 +4,7 @@
 #
 #  Authors: Eduardo G Gusmao
 #           Manuel Allhoff 
-#           Joseph Kuo
+#           Joseph C.C. Kuo
 #           Ivan G Costa 
 #
 ###################################################################################################

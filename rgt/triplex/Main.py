@@ -35,7 +35,7 @@ dir = os.getcwd()
 Triplex Domain Finder (TDF) provides statistical tests and plotting tools for 
 triplex binding site analysis
 
-Author: Joseph Kuo
+Author: Joseph C.C. Kuo
 """
 
 ##########################################################################
