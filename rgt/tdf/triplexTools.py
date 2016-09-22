@@ -1,44 +1,44 @@
 # Python Libraries
 from __future__ import print_function
-from collections import *
 import os
 import sys
-import multiprocessing
-import time, datetime
-import pylab
+# import pylab
 import pysam
 import pickle
 import shutil
 from ctypes import *
+import time, datetime
+import multiprocessing
+from collections import *
 
 # Local Libraries
-from scipy import stats
-import scipy.cluster.hierarchy as sch
 import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
 import matplotlib
+# from Bio.Seq import Seq
+from scipy import stats
+# import matplotlib.cm as cm
+# from matplotlib import colors
+# from Bio.Alphabet import IUPAC
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-import matplotlib.cm as cm
-from matplotlib.ticker import MaxNLocator, FuncFormatter
+import scipy.cluster.hierarchy as sch
 from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib import colors
-from Bio.Seq import Seq
-from Bio.Alphabet import IUPAC
+from matplotlib.ticker import MaxNLocator, FuncFormatter
 
 #from Bio import motifs
 
 
 # Distal Libraries
 from rgt.GeneSet import GeneSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
-from BindingSiteSet import BindingSite, BindingSiteSet
-from rgt.SequenceSet import Sequence, SequenceSet
-from RNADNABindingSet import RNADNABinding, RNADNABindingSet
-from rgt.Util import SequenceType, Html, OverlapType, ConfigurationFile, GenomeData, Triplexator
-from rgt.motifanalysis.Statistics import multiple_test_correction
+# from BindingSiteSet import BindingSite, BindingSiteSet
+from rgt.SequenceSet import SequenceSet
 from rgt.AnnotationSet import AnnotationSet
+from rgt.GenomicRegion import GenomicRegion
+from RNADNABindingSet import RNADNABindingSet
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.motifanalysis.Statistics import multiple_test_correction
+from rgt.Util import SequenceType, Html, ConfigurationFile, GenomeData, Triplexator
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -47,18 +47,23 @@ sig_color = "powderblue"
 
 ####################################################################################
 ####################################################################################
+
+
 def print2(summary, string):
     """ Show the message on the console and also save in summary. """
     print(string)
     summary.append(string)
 
+
 def mp_find_rbs(s, motif, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_rbs(s, motif, min_len, max_len)
 
+
 def mp_find_dbs(s, min_len, max_len):
     triplex = TriplexSearch()
     return triplex.find_dbs(s, min_len, max_len)
+
 
 def value2str(value):
     if (isinstance(value,str)): return value
@@ -75,10 +80,12 @@ def value2str(value):
         else: r = "{:.1e}".format(value)
         return r
 
+
 def uniq(seq):
     seen = set()
     seen_add = seen.add
     return [ x for x in seq if not (x in seen or seen_add(x))]
+
 
 def random_each(input):
     """Return the counts of DNA Binding sites with randomization
@@ -122,6 +129,7 @@ def random_each(input):
     print("".join(["="]*int(input[6])), end="")
 
     return [ [len(tr) for tr in txp.merged_dict.values() ], [len(dbss) for dbss in txpf.merged_dict.values()] ]
+
 
 def get_sequence(dir, filename, regions, genome_path):
     """
@@ -945,125 +953,125 @@ class PromoterTest:
         self.threshold = 1000
         statinfo = os.stat(rna)
         
-        if statinfo.st_size > self.threshold:
-            print("\tSpliting RNA sequence for triplexator...")
-            self.split_rna = True
-            fa = open(rna)
-            for line in fa:
-                if line[0] == ">": 
-                    header = line
-                    seq = ""
-                else:
-                    line = line.strip()
-                    seq += line
-            cf = 1
-            for i in range(int(len(seq)/self.threshold)+1):
-                nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
-                nfa.write(header)
-                nfa.write(seq[max(0,(i)*self.threshold-l):(i+1)*self.threshold+l])
-                nfa.close()
-                cf += 1
-            fa.close()
+        # if statinfo.st_size > self.threshold:
+        #     print("\tSpliting RNA sequence for triplexator...")
+        #     self.split_rna = True
+        #     fa = open(rna)
+        #     for line in fa:
+        #         if line[0] == ">":
+        #             header = line
+        #             seq = ""
+        #         else:
+        #             line = line.strip()
+        #             seq += line
+        #     cf = 1
+        #     for i in range(int(len(seq)/self.threshold)+1):
+        #         nfa = open(os.path.join(temp,"rna_"+str(cf)), "w")
+        #         nfa.write(header)
+        #         nfa.write(seq[max(0,(i)*self.threshold-l):(i+1)*self.threshold+l])
+        #         nfa.close()
+        #         cf += 1
+        #     fa.close()
+        #
+        #     self.cf = range(1,cf)
+        #     # Running Triplexator
+        #     get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions,
+        #                  genome_path=self.genome_path)
+        #     get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions,
+        #                  genome_path=self.genome_path)
+        #     for i in self.cf:
+        #         run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"de.fa"),
+        #                         output=os.path.join(temp, "de"+str(i)+".txp"),
+        #                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
+        #         run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"nde.fa"),
+        #                         output=os.path.join(temp, "nde"+str(i)+".txp"),
+        #                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
+        #
+        #     de = open(os.path.join(temp, "de.txp"),"w")
+        #     #nde = open(os.path.join(temp, "nde.txp"),"w")
+        #
+        #     for i in self.cf:
+        #         diff = max(0,(i-1)*self.threshold - l)
+        #
+        #         f_de = open(os.path.join(temp, "de"+str(i)+".txp"))
+        #         for line in f_de:
+        #             line = line.strip("\n")
+        #             if line.startswith("TFO:"):
+        #                 line = line.replace("TFO:", "lncRNA:")
+        #                 print(line, file=de)
+        #                 continue
+        #             elif line.startswith("TTS:"):
+        #                 line = line.replace("TTS:", "Genome:")
+        #                 print(line, file=de)
+        #                 continue
+        #             elif line.startswith("    "):
+        #                 line = "   " + line
+        #                 print(line, file=de)
+        #                 continue
+        #             elif line.startswith("#"):
+        #                 print(line, file=de)
+        #                 continue
+        #             else:
+        #                 try:
+        #                     linel = line.split()
+        #                     linel[1] = str(int(linel[1])+ diff )
+        #                     linel[2] = str(int(linel[2])+ diff )
+        #                     print("\t".join(linel), file=de)
+        #                     print("# RBS: "+linel[0]+" "+linel[1]+"-"+linel[2]+"-"+linel[11], file=de)
+        #                     chro = linel[3].partition(":")[0]
+        #                     base = int(linel[3].partition(":")[2].split("-")[0])
+        #                     print("# DBS: "+chro+":"+str(base+ int(linel[4]))+"-"+str(base+ int(linel[5])), file=de)
+        #                     print("# Score: "+linel[6], file=de)
+        #
+        #
+        #                     #de.write("\t".join(line))
+        #                 except:
+        #                     print(line, file=de)
+        #                     #de.write("\t".join(line))
+        #         f_de.close()
+        #
+        #
+        #         if None:
+        #             f_nde = open(os.path.join(temp, "nde"+str(i)+".txp"))
+        #             for line in f_nde:
+        #                 if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"):
+        #                     continue
+        #                 elif line == "":
+        #                     continue
+        #                 else:
+        #                     try:
+        #                         l = line.split()
+        #                         l[1] = str(int(l[1])+ diff )
+        #                         l[2] = str(int(l[2])+ diff )
+        #                         print("\t".join(l), file=nde)
+        #                         #nde.write("\t".join(line)+"\n")
+        #                     except:
+        #                         print("\t".join(line), file=nde)
+        #                         #nde.write("\t".join(line)+"\n")
+        #
+        #             f_nde.close()
+        #         # if remove_temp:
+        #         # os.remove(os.path.join(temp, "de"+str(i)+".txp"))
+        #         # os.remove(os.path.join(temp,"rna_"+str(i)))
+        #     de.close()
+        #     #nde.close()
+        #
+        # else:
             
-            self.cf = range(1,cf)
-            # Running Triplexator
-            get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
-                         genome_path=self.genome_path)
-            get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
-                         genome_path=self.genome_path)
-            for i in self.cf:
-                run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"de.fa"), 
-                                output=os.path.join(temp, "de"+str(i)+".txp"), 
-                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
-                run_triplexator(ss=os.path.join(temp,"rna_"+str(i)), ds=os.path.join(temp,"nde.fa"), 
-                                output=os.path.join(temp, "nde"+str(i)+".txp"), 
-                                l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
-            
-            de = open(os.path.join(temp, "de.txp"),"w")
-            #nde = open(os.path.join(temp, "nde.txp"),"w")
-            
-            for i in self.cf:
-                diff = max(0,(i-1)*self.threshold - l)
+        self.split_rna = False
+        # DE
+        get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions,
+                     genome_path=self.genome_path)
+        run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"),
+                        output=os.path.join(temp, "de.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
 
-                f_de = open(os.path.join(temp, "de"+str(i)+".txp"))
-                for line in f_de:
-                    line = line.strip("\n")
-                    if line.startswith("TFO:"):
-                        line = line.replace("TFO:", "lncRNA:")
-                        print(line, file=de)
-                        continue
-                    elif line.startswith("TTS:"):
-                        line = line.replace("TTS:", "Genome:")
-                        print(line, file=de)
-                        continue
-                    elif line.startswith("    "):
-                        line = "   " + line
-                        print(line, file=de)
-                        continue
-                    elif line.startswith("#"): 
-                        print(line, file=de)
-                        continue
-                    else:
-                        try:
-                            linel = line.split()
-                            linel[1] = str(int(linel[1])+ diff ) 
-                            linel[2] = str(int(linel[2])+ diff ) 
-                            print("\t".join(linel), file=de)
-                            print("# RBS: "+linel[0]+" "+linel[1]+"-"+linel[2]+"-"+linel[11], file=de)
-                            chro = linel[3].partition(":")[0]
-                            base = int(linel[3].partition(":")[2].split("-")[0])
-                            print("# DBS: "+chro+":"+str(base+ int(linel[4]))+"-"+str(base+ int(linel[5])), file=de)
-                            print("# Score: "+linel[6], file=de)
-
-                            
-                            #de.write("\t".join(line))   
-                        except:
-                            print(line, file=de)
-                            #de.write("\t".join(line))
-                f_de.close()
-                
-
-                if None:
-                    f_nde = open(os.path.join(temp, "nde"+str(i)+".txp"))
-                    for line in f_nde: 
-                        if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"): 
-                            continue
-                        elif line == "":
-                            continue
-                        else:
-                            try:
-                                l = line.split()
-                                l[1] = str(int(l[1])+ diff ) 
-                                l[2] = str(int(l[2])+ diff )
-                                print("\t".join(l), file=nde)
-                                #nde.write("\t".join(line)+"\n")
-                            except:
-                                print("\t".join(line), file=nde)
-                                #nde.write("\t".join(line)+"\n")
-                            
-                    f_nde.close()
-                # if remove_temp:
-                # os.remove(os.path.join(temp, "de"+str(i)+".txp"))
-                # os.remove(os.path.join(temp,"rna_"+str(i)))
-            de.close()
-            #nde.close()
-
-        else:
-            
-            self.split_rna = False
-            # DE
-            get_sequence(dir=temp, filename=os.path.join(temp,"de.fa"), regions=self.de_regions, 
-                         genome_path=self.genome_path)
-            run_triplexator(ss=rna, ds=os.path.join(temp,"de.fa"), 
-                            output=os.path.join(temp, "de.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
-            
-            # non-DE
-            get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions, 
-                         genome_path=self.genome_path)
-            run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"), 
-                            output=os.path.join(temp, "nde.txp"), 
-                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
+        # non-DE
+        get_sequence(dir=temp, filename=os.path.join(temp,"nde.fa"), regions=self.nde_regions,
+                     genome_path=self.genome_path)
+        run_triplexator(ss=rna, ds=os.path.join(temp,"nde.fa"),
+                        output=os.path.join(temp, "nde.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
         
         #os.remove(os.path.join(args.o,"rna_temp.fa"))
         if remove_temp:

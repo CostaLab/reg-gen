@@ -1,23 +1,26 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
-import sys
-import os
-from collections import OrderedDict
+from __future__ import print_function
+
 import argparse
-import time, datetime, getpass, fnmatch
+import datetime
+import fnmatch
+import getpass
+import os
+import sys
+import time
+from collections import OrderedDict
 from shutil import copyfile
-import numpy
+
 import matplotlib.pyplot as plt
-from matplotlib.pyplot import cm
 from matplotlib.backends.backend_pdf import PdfPages
 
-# Local Libraries
-# Distal Libraries
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.Util import GenomeData, OverlapType, Html
-from plotTools import Projection, Jaccard, Combinatorial, Intersect, Boxplot, Lineplot, Venn
+from boxplot import Boxplot
+from intersection_test import Intersect
+from jaccard_test import Jaccard
+from lineplot import Lineplot
+from projection_test import Projection
+from rgt.Util import Html
 
 dir = os.getcwd()
 """
@@ -288,7 +291,7 @@ def main():
     parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference.")
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    parser_lineplot.add_argument('-strand', action="store_true", help='Set the plot strand-specific.')
+    parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific.')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -652,7 +655,7 @@ def main():
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
-                                test=args.test, strand=args.strand)
+                                test=args.test, sense=args.sense)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
