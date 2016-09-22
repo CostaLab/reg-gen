@@ -46,7 +46,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RGT'
-copyright = u'2016, Manuel Allhoff, Joseph Kuo, Eduardo G. Gusmao, Ivan G. Costa'
+copyright = u'2016, Manuel Allhoff, Joseph C.C. Kuo, Eduardo G. Gusmao, Ivan G. Costa'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -218,7 +218,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
   ('index', 'RGT.tex', u'RGT Documentation',
-   u'Manuel Allhoff, Joseph Kuo, Eduardo G. Gusmao, Ivan G. Costa', 'manual'),
+   u'Manuel Allhoff, Joseph C.C. Kuo, Eduardo G. Gusmao, Ivan G. Costa', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -248,7 +248,7 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'rgt', u'RGT Documentation',
-     [u'Manuel Allhoff, Joseph Kuo, Eduardo G. Gusmao, Ivan G. Costa'], 1)
+     [u'Manuel Allhoff, Joseph C.C. Kuo, Eduardo G. Gusmao, Ivan G. Costa'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -262,7 +262,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
   ('index', 'RGT', u'RGT Documentation',
-   u'Manuel Allhoff, Joseph Kuo, Eduardo G. Gusmao, Ivan G. Costa', 'RGT', 'One line description of project.',
+   u'Manuel Allhoff, Joseph C.C. Kuo, Eduardo G. Gusmao, Ivan G. Costa', 'RGT', 'One line description of project.',
    'Miscellaneous'),
 ]
 

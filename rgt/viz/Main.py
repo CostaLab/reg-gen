@@ -23,7 +23,7 @@ dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix
 
-Author: Joseph Kuo
+Author: Joseph C.C. Kuo
 """
 
 #################################################################################################
@@ -145,7 +145,7 @@ def main():
     helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
     helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
-    \nAuthor: Joseph Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
     
     ################### Projection test ##########################################
