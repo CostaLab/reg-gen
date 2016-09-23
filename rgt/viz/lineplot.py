@@ -65,25 +65,25 @@ class Lineplot:
         for bed in self.beds:
             if self.center == 'bothends':
                 newbed = bed.relocate_regions(center='leftend',
-                                              left_length=self.extend + int(0.5 * self.bs),
-                                              right_length=self.extend + int(0.5 * self.bs))
+                                              left_length=self.extend + self.bs,
+                                              right_length=self.extend + self.bs)
                 self.processed_beds.append(newbed)
                 newbedF = bed.relocate_regions(center='rightend',
-                                               left_length=self.extend + int(0.5 * self.bs),
-                                               right_length=self.extend + int(0.5 * self.bs))
+                                               left_length=self.extend + self.bs,
+                                               right_length=self.extend + self.bs)
                 self.processed_bedsF.append(newbedF)
             elif self.center == 'upstream' or self.center == 'downstream':
                 allbed = bed.relocate_regions(center=self.center,
-                                              left_length=self.extend + int(0.5 * self.bs),
-                                              right_length=self.extend + int(0.5 * self.bs))
+                                              left_length=self.extend + self.bs,
+                                              right_length=self.extend + self.bs)
                 newbed = allbed.filter_strand(strand="+")
                 self.processed_beds.append(newbed)
                 newbedF = allbed.filter_strand(strand="-")
                 self.processed_bedsF.append(newbedF)
             else:
                 newbed = bed.relocate_regions(center=self.center,
-                                              left_length=self.extend + int(0.5 * self.bs),
-                                              right_length=self.extend + int(0.5 * self.bs))
+                                              left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
+                                              right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
                 self.processed_beds.append(newbed)
 
     def group_tags(self, groupby, sortby, colorby):
@@ -151,7 +151,7 @@ class Lineplot:
                 if a in tags: return ind
 
         if mp: ts = time.time()
-        normRPM = True
+        normRPM = False
         # Calculate for coverage
         mp_input = []
         data = OrderedDict()
@@ -169,6 +169,7 @@ class Lineplot:
                     else:
                         dfs = self.exps.fieldsDict[self.dft].keys()
                     for d in dfs:
+                        data[s][g][c][d] = defaultdict(list)
                         for bed in self.cuebed.keys():
                             # print(self.cuebed[bed])
                             # print(set([s,g,c,d]))
@@ -182,12 +183,13 @@ class Lineplot:
                                     if self.cuebam[bam] <= set([s, g, c, d]):
                                         i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
-                                        if len(self.processed_beds[i]) == 0:
-                                            try:
-                                                data[s][g][c][d].append(numpy.empty(1, dtype=object))
-                                            except:
-                                                data[s][g][c][d] = [numpy.empty(1, dtype=object)]
-                                            continue
+
+                                        # if len(self.processed_beds[i]) == 0:
+                                        #     try:
+                                        #         data[s][g][c][d].append(numpy.empty(1, dtype=object))
+                                        #     except:
+                                        #         data[s][g][c][d] = [numpy.empty(1, dtype=object)]
+                                        #     continue
                                         #########################################################################
                                         if mp:  # Multiple processing
                                             mp_input.append([self.processed_beds[i], self.reads[j],
@@ -211,7 +213,8 @@ class Lineplot:
                                                 else:  # Sense specific
                                                     cov.coverage_from_bam(bam_file=self.reads[j],
                                                                           extension_size=self.rs, binsize=self.bs,
-                                                                          stepsize=self.ss, get_sense_info=True)
+                                                                          stepsize=self.ss, get_sense_info=True,
+                                                                          paired_reads=True)
                                                     cov.array_transpose()
                                                     if normRPM: cov.normRPM()
 
@@ -232,11 +235,13 @@ class Lineplot:
                                                     else:  # Sense specific
                                                         flap.coverage_from_bam(bam_file=self.reads[j],
                                                                                extension_size=self.rs, binsize=self.bs,
-                                                                               stepsize=self.ss, get_sense_info=True)
+                                                                               stepsize=self.ss, get_sense_info=True,
+                                                                               paired_reads=True)
                                                         flap.array_transpose(flip=True)
                                                         if normRPM: flap.normRPM()
                                                     ffcoverage = numpy.fliplr(flap.coverage)
-                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                                    try: cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                                    except: pass
 
                                                     if self.sense:
                                                         cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1,
@@ -259,32 +264,21 @@ class Lineplot:
                                                     continue
                                                 else:
                                                     for i, car in enumerate(cov.coverage):
-                                                        car = numpy.delete(car, [0, 1])
-                                                        car = car[:-2]
-                                                        if i == 0:
-                                                            avearr = np.array(car)
-                                                            lenr = car.shape[0]
-                                                        elif car.shape[0] == lenr:
-                                                            avearr = numpy.vstack((avearr, car))
-                                                        else:
-                                                            pass
+                                                        if i == 0: avearr = np.array(car)
+                                                        else: avearr = numpy.vstack((avearr, car))
 
                                                     avearr = numpy.average(avearr, axis=0)
                                                     if self.sense:
-                                                        sense_1 = numpy.average(cov.transpose_cov1, axis=0)
-                                                        sense_2 = numpy.average(cov.transpose_cov2, axis=0)
-
-                                                    data[s][g][c][d] = defaultdict(list)
-
+                                                        sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
+                                                        sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
+                                                    cut_end = int(self.bs/self.ss)
+                                                    avearr = avearr[cut_end:-cut_end]
                                                     data[s][g][c][d]["all"].append(avearr)
                                                     if self.sense:
+                                                        sense_1 = sense_1[cut_end:-cut_end]
+                                                        sense_2 = sense_2[cut_end:-cut_end]
                                                         data[s][g][c][d]["sense_1"].append(sense_1)
                                                         data[s][g][c][d]["sense_2"].append(sense_2)
-
-                                            for k, t in data[s][g][c][d].iteritems():
-                                                print(k)
-                                                # print(len(t))
-                                                # print(t)
 
                                             bi += 1
                                             te = time.time()
@@ -320,13 +314,13 @@ class Lineplot:
             for s in data.keys():
                 for g in data[s].keys():
                     for c in data[s][g].keys():
-                        # print(s+"  "+ g+"  "+ c)
-                        # print(len(data[s][g][c]))
                         for d in data[s][g][c].keys():
-                            for i, e in enumerate(data[s][g][c][d]["all"]):
-                                diff = numpy.subtract(e[0], e[1])
-                                print(diff)
-                                data[s][g][c][d]["df"] = diff.tolist()
+                            if isinstance(data[s][g][c][d]["all"], list) and len(data[s][g][c][d]["all"]) > 1:
+                                diff = numpy.subtract(data[s][g][c][d]["all"][0], data[s][g][c][d]["all"][1])
+                                data[s][g][c][d]["df"].append(diff.tolist())
+                            else:
+                                print("Warning: There is no repetitive reads for calculating difference.\n"
+                                      "         Please add one more entry in experimental matrix.")
         self.data = data
 
     def colormap(self, colorby, definedinEM):
@@ -361,7 +355,6 @@ class Lineplot:
         for it, s in enumerate(self.data.keys()):
 
             for i, g in enumerate(self.data[s].keys()):
-
                 try:
                     ax = axs[it, i]
                 except:
@@ -386,20 +379,17 @@ class Lineplot:
                             continue
                         else:
                             if not self.sense:
-                                if self.df: pt = [ self.data[s][g][c][d]["df"] ]
+                                if self.df: pt = self.data[s][g][c][d]["df"]
                                 else: pt = self.data[s][g][c][d]["all"]
 
                                 for l, y in enumerate(pt):
-                                    print(y)
+                                    # print(y)
                                     yaxmax[i] = max(numpy.amax(y), yaxmax[i])
                                     sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
                                     if self.df:
                                         yaxmin[i] = min(numpy.amin(y), yaxmin[i])
                                         sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
-                                    # if not y.all():
-                                    #     pass
-                                    # else:
                                     x = numpy.linspace(-self.extend, self.extend, len(y))
                                     ax.plot(x, y, color=self.colors[c], lw=1, label=c)
                                     if it < nit - 1:
@@ -407,66 +397,32 @@ class Lineplot:
                                     # Processing for future output
                                     if printtable: pArr.append([g, s, c, d] + list(y))
                             else:
-                                for l, y in enumerate(self.data[s][g][c][d]["+"]):
-                                    print("+")
-                                    # print(y)
-                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                                    if self.df:
-                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
+                                plt.text(0.5, 0.51, 'sense',transform=ax.transAxes,fontsize=ticklabelsize,
+                                         horizontalalignment='center', verticalalignment='bottom')
+                                plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
+                                         horizontalalignment='center', verticalalignment='top')
+                                plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
+                                for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
+                                    ymax1 = numpy.amax(y)
+                                    yaxmax[i] = max(ymax1, yaxmax[i])
+                                    sx_ymax[it] = max(ymax1, sx_ymax[it])
+                                    x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                    ax.plot(x, y, color=self.colors[c], lw=1, label=c)
+                                    if it < nit - 1: ax.set_xticklabels([])
+                                    # Processing for future output
+                                    if printtable: pArr.append([g, s, c, d, "+"] + list(y))
 
-                                    if not y.all():
-                                        pass
-                                    else:
-                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                        ax.plot(x, y, color=self.colors[c], lw=1, label=c)
-                                        if it < nit - 1:
-                                            ax.set_xticklabels([])
-                                        # Processing for future output
-                                        if printtable: pArr.append([g, s, c, d, "+"] + list(y))
-
-                                for l, y in enumerate(self.data[s][g][c][d]["-"]):
-                                    print("-")
-                                    # print(y)
-                                    yaxmax[i] = max(numpy.amax(y), yaxmax[i])
-                                    sx_ymax[it] = max(numpy.amax(y), sx_ymax[it])
-                                    if self.df:
-                                        yaxmin[i] = min(numpy.amin(y), yaxmin[i])
-                                        sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
-
-                                    if not y.all():
-                                        pass
-                                    else:
-                                        x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                        ax.plot(x, y, color=self.colors[c], lw=1, label=c)
-                                        if it < nit - 1:
-                                            ax.set_xticklabels([])
-                                        # Processing for future output
-                                        if printtable: pArr.append([g, s, c, d, "-"] + list(y))
-
-                                        # for l, y in enumerate(self.data[s][g][c][d]):
-                                        #     yaxmax[i] = max(numpy.amax(y["+"]), yaxmax[i])
-                                        #     yaxmax[i] = max(numpy.amax(y["-"]), yaxmax[i])
-                                        #     sx_ymax[it] = max(numpy.amax(y["+"]), sx_ymax[it])
-                                        #     sx_ymax[it] = max(numpy.amax(y["-"]), sx_ymax[it])
-                                        #     if self.df:
-                                        #         yaxmin[i] = max(numpy.amin(y["+"]), yaxmin[i])
-                                        #         yaxmin[i] = max(numpy.amin(y["-"]), yaxmin[i])
-                                        #         sx_ymin[it] = max(numpy.amin(y["+"]), sx_ymin[it])
-                                        #         sx_ymin[it] = max(numpy.amin(y["-"]), sx_ymin[it])
-
-                                        #     if not y["+"].all() or not y["-"].all():
-                                        #         pass
-                                        #     else:
-                                        #         x = numpy.linspace(-self.extend, self.extend, len(y["+"]))
-
-                                        #         ax.plot(x,y["+"], color=self.colors[c], lw=1, label=c)
-                                        #         ax.plot(x,y["-"], color=self.colors[c], lw=1, label=c)
-                                        #         if it < nit - 1:
-                                        #             ax.set_xticklabels([])
-                                        #         # Processing for future output
-                                        #         if printtable: pArr.append([g,s,c,d]+list(y))
+                                for l, y in enumerate(self.data[s][g][c][d]["sense_2"]):
+                                    ymax2 = numpy.amax(y)
+                                    yaxmax[i] = max(ymax2, yaxmax[i])
+                                    sx_ymax[it] = max(ymax2, sx_ymax[it])
+                                    x = numpy.linspace(-self.extend, self.extend, y.shape[0])
+                                    ax.plot(x, -y, color=self.colors[c], lw=1, label=c)
+                                    if it < nit - 1: ax.set_xticklabels([])
+                                    # Processing for future output
+                                    if printtable: pArr.append([g, s, c, d, "-"] + list(y))
+                                ym = 1.2 * max(max(yaxmax), max(sx_ymax))
+                                ax.set_ylim([-ym, ym])
 
                 ax.get_yaxis().set_label_coords(-0.1, 0.5)
                 ax.set_xlim([-self.extend, self.extend])
@@ -489,48 +445,32 @@ class Lineplot:
                 except:
                     axs.set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
 
-            if scol:
-                for i, g in enumerate(self.data[ty].keys()):
-                    if self.df:
-                        try:
-                            axs[it, i].set_ylim([yaxmin[i] - abs(yaxmin[i] * 0.2), yaxmax[i] + abs(yaxmax[i] * 0.2)])
-                        except:
-                            if len(self.data.keys()) == 1:
-                                axs[i].set_ylim([yaxmin[i] - abs(yaxmin[i] * 0.2), yaxmax[i] + abs(yaxmax[i] * 0.2)])
-                            else:
-                                axs[it].set_ylim([yaxmin[i] - abs(yaxmin[i] * 0.2), yaxmax[i] + abs(yaxmax[i] * 0.2)])
+            for i, g in enumerate(self.data[ty].keys()):
+                try: axx = axs[it, i]
+                except:
+                    try:
+                        if len(self.data.keys()) == 1:
+                            axx = axs[i]
+                        else:
+                            axx = axs[it]
+                    except: axx = axs
+
+                if self.df:
+                    if scol:
+                        ymin = yaxmin[i] - abs(yaxmin[i] * 0.2)
+                        ymax = yaxmax[i] + abs(yaxmax[i] * 0.2)
+                    elif srow:
+                        ymin = sx_ymin[it] - abs(sx_ymin[it] * 0.2)
+                        ymax = sx_ymax[it] + abs(sx_ymax[it] * 0.2)
+                else:
+                    if scol: ymax = yaxmax[i] * 1.2
+                    elif srow: ymax = sx_ymax[it] * 1.2
                     else:
-                        try:
-                            axs[it, i].set_ylim([0, yaxmax[i] * 1.2])
-                        except:
-                            if len(self.data.keys()) == 1:
-                                axs[i].set_ylim([0, yaxmax[i] * 1.2])
-                            else:
-                                axs[it].set_ylim([0, yaxmax[i] * 1.2])
-            elif srow:
-                for i, g in enumerate(self.data[ty].keys()):
-                    if self.df:
-                        try:
-                            axs[it, i].set_ylim(
-                                [sx_ymin[it] - abs(sx_ymin[it] * 0.2), sx_ymax[it] + abs(sx_ymax[it] * 0.2)])
-                        except:
-                            # if len(self.data.keys()) == 1:
-                            try:
-                                axs[i].set_ylim(
-                                    [sx_ymin[it] - abs(sx_ymin[it] * 0.2), sx_ymax[it] + abs(sx_ymax[it] * 0.2)])
-                            # else:
-                            except:
-                                # axs[it].set_ylim([sx_ymin[it] - abs(sx_ymin[it]*0.2), sx_ymax[it] + abs(sx_ymax[it]*0.2)])
-                                axs.set_ylim(
-                                    [sx_ymin[it] - abs(sx_ymin[it] * 0.2), sx_ymax[it] + abs(sx_ymax[it] * 0.2)])
-                    else:
-                        try:
-                            axs[it, i].set_ylim([0, sx_ymax[it] * 1.2])
-                        except:
-                            if len(self.data.keys()) == 1:
-                                axs[i].set_ylim([0, sx_ymax[it] * 1.2])
-                            else:
-                                axs[it].set_ylim([0, sx_ymax[it] * 1.2])
+                        ymax = axx.get_ylim()[1]
+                    if self.sense: ymin = -ymax
+                    else: ymin = 0
+
+                axx.set_ylim([ymin, ymax])
 
         handles, labels = ax.get_legend_handles_labels()
         uniq_labels = unique(labels)
