@@ -28,7 +28,7 @@ group = "."
 ###################################################################################################
 
 # Fetching file names
-source = "hocomoco"
+source = "hocomoco_v9"
 inputLocation = dataLocation+source+"/"
 resultMatrix = []
 for inputFileName in glob.glob(inputLocation+"*.pwm"):

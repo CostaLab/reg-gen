@@ -40,7 +40,6 @@ Dependencies:
 - scikit >= 0.14
 - hmmlearn >= 0.1.1
 - pysam >= 0.7.5
-- ngslib >= 1.1.14 (optional - only if you want to INPUT a bigwig file)
 
 Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
@@ -135,8 +134,9 @@ def main():
                       help = ("Path where the output files will be written."))
     parser.add_option("--print-raw-signal", dest = "print_raw_signal", type = "string", metavar="STRING", 
                       default = None,
-                      help = ("If used, it will print the base overlap (raw) signals from all data. "
-                              "The option should equal the file name. The extension must be (.wig)."))
+                      help = ("If used, it will print the base overlap (raw) signals from DNase-seq "
+                              " or ATAC-seq data. The option should equal the file name."
+                              "The extension must be (.wig)."))
     parser.add_option("--print-bias-signal", dest = "print_bias_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the DNase-seq or ATAC-seq bias signal. "
@@ -147,12 +147,14 @@ def main():
                               "The option should equal the file name. The extension must be (.wig)."))
     parser.add_option("--print-norm-signal", dest = "print_norm_signal", type = "string", metavar="STRING", 
                       default = None,
-                      help = ("If used, it will print the normalized signals from all data. "
-                              "The option should equal the file name. The extension must be (.wig)."))
+                      help = ("If used, it will print the normalized signals from DNase-seq "
+                              " or ATAC-seq data. The option should equal the file name."
+                              "The extension must be (.wig)."))
     parser.add_option("--print-slope-signal", dest = "print_slope_signal", type = "string", metavar="STRING", 
                       default = None,
-                      help = ("If used, it will print the slope signals from all data. "
-                              "The option should equal the file name. The extension must be (.wig)."))
+                      help = ("If used, it will print the slope signals from DNase-seq "
+                              " or ATAC-seq data. The option should equal the file name."
+                              "The extension must be (.wig)."))
 
     # GENERAL Hidden Options
     parser.add_option("--region-total-ext", dest = "region_total_ext", type = "int", metavar="INT", default = 10000,
@@ -173,6 +175,12 @@ def main():
                       help = SUPPRESS_HELP)
     parser.add_option("--tc-ext-histone", dest = "tc_ext_histone", type = "int", metavar="INT", default = 500,
                       help = SUPPRESS_HELP)
+
+# TODO
+# 1. REMOVER EXT e EXTBOTH
+# 2. ADICIONAR:
+# 2. downstream_ext, upstream_ext, forward_shift, reverse_shift
+# 3. Adicionar entrada pra escrever sinal de histonas
 
     # DNASE Hidden Options
     parser.add_option("--dnase-initial-clip", dest = "dnase_initial_clip", type = "int",
@@ -490,8 +498,6 @@ def main():
     # Main Pipeline
     ###################################################################################################
 
-    # TODO - I'm here
-
     # Iterating over groups
     for group in group_list:
 
@@ -511,7 +517,9 @@ def main():
                 try: dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
                                                dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                               dnase_ext_both_directions, options.print_wig)
+                                               dnase_ext_both_directions, options.print_raw_signal, 
+                                               options.print_bias_signal, options.print_bc_signal, 
+                                               options.print_norm_signal, options.print_slope_signal)
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -567,7 +575,9 @@ def main():
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
                                                   dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
                                                   dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                                  dnase_ext_both_directions, options.print_wig)
+                                                  dnase_ext_both_directions, options.print_raw_signal, 
+                                                  options.print_bias_signal, options.print_bc_signal, 
+                                                  options.print_norm_signal, options.print_slope_signal)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -582,7 +592,7 @@ def main():
                         histone_file = group.histone_file_list[i]
                         histone_norm, histone_slope = histone_file.get_signal(r.chrom, r.initial, r.final, 
                                                       histone_frag_ext, histone_initial_clip, histone_norm_per,
-                                                      histone_slope_per, options.print_wig)
+                                                      histone_slope_per, False, False, False, False, False)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_HISTONE_PROC",add_msg="for region ("+",".join([r.chrom, 

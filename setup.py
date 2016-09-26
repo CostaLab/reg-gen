@@ -76,7 +76,7 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.1.1","pysam>=0.7.5"], #"ngslib>1.1.14"
+    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.1.1","pysam>=0.7.5"],
     []
 ), 
 "ODIN": (
@@ -313,7 +313,7 @@ copy_files_dictionary = {
 "zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
 "zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt"],
-"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco_v10", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
+"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco_v10", "hocomoco_v10.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
