@@ -176,12 +176,6 @@ def main():
     parser.add_option("--tc-ext-histone", dest = "tc_ext_histone", type = "int", metavar="INT", default = 500,
                       help = SUPPRESS_HELP)
 
-# TODO
-# 1. REMOVER EXT e EXTBOTH
-# 2. ADICIONAR:
-# 2. downstream_ext, upstream_ext, forward_shift, reverse_shift
-# 3. Adicionar entrada pra escrever sinal de histonas
-
     # DNASE Hidden Options
     parser.add_option("--dnase-initial-clip", dest = "dnase_initial_clip", type = "int",
                       metavar="INT", default = 1000, help = SUPPRESS_HELP)
@@ -191,10 +185,14 @@ def main():
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
     parser.add_option("--dnase-slope-per", dest = "dnase_slope_per", type = "float",
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
-    parser.add_option("--dnase-frag-ext", dest = "dnase_frag_ext", type = "int",
+    parser.add_option("--dnase-downstream-ext", dest = "dnase_downstream_ext", type = "int",
                       metavar="INT", default = 1, help = SUPPRESS_HELP)
-    parser.add_option("--dnase-ext-both-directions", dest = "dnase_ext_both_directions", action = "store_true",
-                      default = False, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-upstream-ext", dest = "dnase_upstream_ext", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-forward-shift", dest = "dnase_forward_shift", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
+    parser.add_option("--dnase-reverse-shift", dest = "dnase_reverse_shift", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
     parser.add_option("--dnase-bias-correction-k", dest = "dnase_bias_correction_k",  type = "int",
                       metavar="INT", default = 6, help = SUPPRESS_HELP)
 
@@ -207,15 +205,18 @@ def main():
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
     parser.add_option("--atac-slope-per", dest = "atac_slope_per", type = "float",
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
-    parser.add_option("--atac-frag-ext", dest = "atac_frag_ext", type = "int",
+    parser.add_option("--atac-downstream-ext", dest = "atac_downstream_ext", type = "int",
                       metavar="INT", default = 1, help = SUPPRESS_HELP)
-    parser.add_option("--atac-ext-both-directions", dest = "atac_ext_both_directions", action = "store_true",
-                      default = False, help = SUPPRESS_HELP)
+    parser.add_option("--atac-upstream-ext", dest = "atac_upstream_ext", type = "int",
+                      metavar="INT", default = 1, help = SUPPRESS_HELP)
+    parser.add_option("--atac-forward-shift", dest = "atac_forward_shift", type = "int",
+                      metavar="INT", default = 4, help = SUPPRESS_HELP)
+    parser.add_option("--atac-reverse-shift", dest = "atac_reverse_shift", type = "int",
+                      metavar="INT", default = -5, help = SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest = "atac_bias_correction_k",  type = "int",
                       metavar="INT", default = 6, help = SUPPRESS_HELP)
 
     # HISTONE Hidden Options
-
     parser.add_option("--histone-initial-clip", dest = "histone_initial_clip", type = "int", 
                       metavar="INT", default = 1000, help = SUPPRESS_HELP)
     parser.add_option("--histone-sg-window-size", dest = "histone_sg_window_size", type = "int",
@@ -224,8 +225,15 @@ def main():
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
     parser.add_option("--histone-slope-per", dest = "histone_slope_per", type = "float",
                       metavar="INT", default = 98, help = SUPPRESS_HELP)
-    parser.add_option("--histone-frag-ext", dest = "histone_frag_ext", type = "int", 
+    parser.add_option("--histone-downstream-ext", dest = "histone_downstream_ext", type = "int",
                       metavar="INT", default = 200, help = SUPPRESS_HELP)
+    parser.add_option("--histone-upstream-ext", dest = "histone_upstream_ext", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
+    parser.add_option("--histone-forward-shift", dest = "histone_forward_shift", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
+    parser.add_option("--histone-reverse-shift", dest = "histone_reverse_shift", type = "int",
+                      metavar="INT", default = 0, help = SUPPRESS_HELP)
+
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -246,23 +254,30 @@ def main():
     dnase_sg_window_size = options.dnase_sg_window_size
     dnase_norm_per = options.dnase_norm_per
     dnase_slope_per = options.dnase_slope_per
-    dnase_frag_ext = options.dnase_frag_ext
-    dnase_ext_both_directions = options.dnase_ext_both_directions
+    dnase_downstream_ext = options.dnase_downstream_ext
+    dnase_upstream_ext = options.dnase_upstream_ext
+    dnase_forward_shift = options.dnase_forward_shift
+    dnase_reverse_shift = options.dnase_reverse_shift
     dnase_bias_correction_k = options.dnase_bias_correction_k
     # ATAC Hidden Options
     atac_initial_clip = options.atac_initial_clip
     atac_sg_window_size = options.atac_sg_window_size
     atac_norm_per = options.atac_norm_per
-    atac_slope_per = options.atac_slope_per
-    atac_frag_ext = options.atac_frag_ext
-    atac_ext_both_directions = options.atac_ext_both_directions
+    atac_downstream_ext = options.atac_downstream_ext
+    atac_upstream_ext = options.atac_upstream_ext
+    atac_forward_shift = options.atac_forward_shift
+    atac_reverse_shift = options.atac_reverse_shift
     atac_bias_correction_k = options.atac_bias_correction_k
     # HISTONE Hidden Options
     histone_initial_clip = options.histone_initial_clip
     histone_sg_window_size = options.histone_initial_clip
     histone_norm_per = options.histone_norm_per
     histone_slope_per = options.histone_slope_per
-    histone_frag_ext = options.histone_frag_ext
+    histone_downstream_ext = options.histone_downstream_ext
+    histone_upstream_ext = options.histone_upstream_ext
+    histone_forward_shift = options.histone_forward_shift
+    histone_reverse_shift = options.histone_reverse_shift
+
     ########################################################################################
 
     # Output wig signal
@@ -347,7 +362,7 @@ def main():
             elif(name_list[i] in fields_dict["data"]["HISTONE"]):
                 group.histone_file_list.append(GenomicSignal(file_dict[name_list[i]]))
                 group.histone_file_list[-1].load_sg_coefs(histone_sg_window_size)
-            else: pass # TODO Error (Category of data outside "HS, DNASE, ATAC, HISTONE")
+            else: pass # TODO ERROR (Category of data outside "HS, DNASE, ATAC, HISTONE")
         if(group.dnase_file): group.histone_only = False
         if(group.histone_file_list): group.dnase_only = False
         if(group.histone_only and group.dnase_only): pass # TODO ERROR (There is no DNase or histone data)
@@ -513,13 +528,28 @@ def main():
 
             if(group.dnase_only):
 
+    dnase_downstream_ext = options.dnase_downstream_ext
+
                 # Fetching DNase signal
-                try: dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
-                                               dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
-                                               dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                               dnase_ext_both_directions, options.print_raw_signal, 
-                                               options.print_bias_signal, options.print_bc_signal, 
-                                               options.print_norm_signal, options.print_slope_signal)
+                try:
+                    if(group.is_atac):
+                        dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
+                                                  atac_downstream_ext, atac_upstream_ext, 
+                                                  atac_forward_shift, atac_reverse_shift, 
+                                                  dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
+                                                  group.bias_table, genome_data.get_genome(),
+                                                  options.print_raw_signal, options.print_bias_signal, 
+                                                  options.print_bc_signal, options.print_norm_signal, 
+                                                  options.print_slope_signal)
+                    else:
+                        dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
+                                                  dnase_downstream_ext, dnase_upstream_ext, 
+                                                  dnase_forward_shift, dnase_reverse_shift, 
+                                                  dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
+                                                  group.bias_table, genome_data.get_genome(),
+                                                  options.print_raw_signal, options.print_bias_signal, 
+                                                  options.print_bc_signal, options.print_norm_signal, 
+                                                  options.print_slope_signal)
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -535,7 +565,7 @@ def main():
                     continue
 
                 # Applying HMM
-                if(isinstance(group.hmm,list)): continue # TODO Error
+                if(isinstance(group.hmm,list)): continue # TODO ERROR
                 try: posterior_list = group.hmm.predict(input_sequence)
                 except Exception:
                     raise
@@ -572,12 +602,24 @@ def main():
                 # Fetching DNase signal
                 if(not group.histone_only):
                     try:
-                        dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
-                                                  dnase_frag_ext, dnase_initial_clip, dnase_norm_per,
-                                                  dnase_slope_per, group.bias_table, genome_data.get_genome(),
-                                                  dnase_ext_both_directions, options.print_raw_signal, 
-                                                  options.print_bias_signal, options.print_bc_signal, 
-                                                  options.print_norm_signal, options.print_slope_signal)
+                        if(group.is_atac):
+                            dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
+                                                      atac_downstream_ext, atac_upstream_ext, 
+                                                      atac_forward_shift, atac_reverse_shift, 
+                                                      dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
+                                                      group.bias_table, genome_data.get_genome(),
+                                                      options.print_raw_signal, options.print_bias_signal, 
+                                                      options.print_bc_signal, options.print_norm_signal, 
+                                                      options.print_slope_signal)
+                        else:
+                            dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final, 
+                                                      dnase_downstream_ext, dnase_upstream_ext, 
+                                                      dnase_forward_shift, dnase_reverse_shift, 
+                                                      dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
+                                                      group.bias_table, genome_data.get_genome(),
+                                                      options.print_raw_signal, options.print_bias_signal, 
+                                                      options.print_bc_signal, options.print_norm_signal, 
+                                                      options.print_slope_signal)
                     except Exception:
                         raise
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region ("+",".join([r.chrom, 
@@ -591,7 +633,9 @@ def main():
                     try:
                         histone_file = group.histone_file_list[i]
                         histone_norm, histone_slope = histone_file.get_signal(r.chrom, r.initial, r.final, 
-                                                      histone_frag_ext, histone_initial_clip, histone_norm_per,
+                                                      histone_downstream_ext, histone_upstream_ext, 
+                                                      histone_forward_shift, histone_reverse_shift,
+                                                      histone_initial_clip, histone_norm_per,
                                                       histone_slope_per, False, False, False, False, False)
                     except Exception:
                         raise
@@ -652,17 +696,28 @@ def main():
             fp_ext = fp_ext_histone
             tc_ext = tc_ext_histone
             tcsignal = group.histone_file_list[0]
-            tcfragext = 1
+            tcext1 = histone_downstream_ext
+            tcext2 = histone_upstream_ext
+            tcshift1 = histone_forward_shift
+            tcshift2 = histone_reverse_shift
             tcinitialclip = histone_initial_clip
-            tcextboth = False
         else:
             fp_limit = fp_limit_size_ext
             fp_ext = fp_ext
             tc_ext = tc_ext
             tcsignal = group.dnase_file
-            tcfragext = 1
-            tcinitialclip = dnase_initial_clip
-            tcextboth = dnase_ext_both_directions
+            if(group.is_atac):
+                tcext1 = atac_downstream_ext
+                tcext2 = atac_upstream_ext
+                tcshift1 = atac_forward_shift
+                tcshift2 = atac_reverse_shift
+                tcinitialclip = atac_initial_clip
+            else:
+                tcext1 = dnase_downstream_ext
+                tcext2 = dnase_upstream_ext
+                tcshift1 = dnase_forward_shift
+                tcshift2 = dnase_reverse_shift
+                tcinitialclip = dnase_initial_clip
 
         # Sorting and Merging
         footprints.merge()
@@ -690,7 +745,7 @@ def main():
             mid = (f.initial+f.final)/2
             p1 = max(mid - tc_ext,0)
             p2 = min(mid + tc_ext,chrom_sizes_dict[f.chrom])
-            try: tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcfragext, tcinitialclip, tcextboth)
+            try: tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcext1, tcext2, tcshift1, tcshift2, tcinitialclip)
             except Exception: tag_count = 0
             f.data = str(int(tag_count))
 
@@ -701,16 +756,5 @@ def main():
         # Creating output file
         output_file_name = options.output_location+group.name+".bed"
         footprints.write_bed(output_file_name)
-
-        # Verifying condition to write bb
-        if(options.print_bb):
-
-            # Fetching file with chromosome sizes
-            
-            chrom_sizes_file = genome_data.get_chromosome_sizes()
-
-            # Converting to big bed
-            output_bb_name = options.output_location+options.footprint_name+".bb"
-            system(" ".join(["bedToBigBed",output_file_name,chrom_sizes_file,output_bb_name]))
         
 

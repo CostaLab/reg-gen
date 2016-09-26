@@ -97,7 +97,8 @@ class GenomicSignal:
 
         return tag_count
 
-    def get_signal(self, ref, start, end, ext, initial_clip = 1000, per_norm = 98, per_slope = 98, 
+    def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift, 
+                   initial_clip = 1000, per_norm = 98, per_slope = 98, 
                    bias_table = None, genome_file_name = None, print_raw_signal=False, 
                    print_bias_signal=False, print_bc_signal=False, print_norm_signal=False,
                    print_slope_signal=False):
@@ -179,6 +180,11 @@ class GenomicSignal:
 
         # Returning normalized and slope sequences
         return hon_signal, slopehon_signal
+
+    # TODO - Parei aqui - Fazer TODO o bias correction.
+    # Lembrar de colocar o k como parametro
+    # Lembrar de consertar para um k impar
+    # Lembrar de consertar o erro das bordas das sequencias
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end):
         """ 
@@ -305,7 +311,7 @@ class GenomicSignal:
         """
 
         # Get statistics
-        #try: # TODO Errors
+        #try: # TODO ERRORS
         window_size = abs(int(window_size))
         order = abs(int(order))
         #except ValueError, msg:
