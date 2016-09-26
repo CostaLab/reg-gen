@@ -492,7 +492,6 @@ def main():
 
     # TODO - I'm here
 
-
     # Iterating over groups
     for group in group_list:
 
