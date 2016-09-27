@@ -7,6 +7,7 @@
 import warnings
 warnings.filterwarnings("ignore")
 from itertools import product
+from math import floor
 
 # Internal
 from rgt.Util import ErrorHandler
@@ -193,34 +194,18 @@ class BiasTable:
         return [bias_table_F, bias_table_R]
 
 
-if __name__ == "__main__":
-
-  import sys
-
-  from rgt.GenomicRegionSet import *
-
-  bam_file=sys.argv[1]
-  fasta_file=sys.argv[2]
-  bed_file=sys.argv[3]
-  kmer=int(sys.argv[4])
-  shift=int(sys.argv[5])
-  out=sys.argv[6]
-
-
-  regions=GenomicRegionSet("regions")
-  regions.read_bed(bed_file)
-
-
-  table=BiasTable(regions=regions,dnase_file_name=bam_file,genome_file_name=fasta_file,k_nb=kmer,shift=shift)
-  table.write_tables(out)
-
-
-
-
-
-
-
-
-
+#if __name__ == "__main__":
+#  import sys
+#  from rgt.GenomicRegionSet import *
+#  bam_file=sys.argv[1]
+#  fasta_file=sys.argv[2]
+#  bed_file=sys.argv[3]
+#  kmer=int(sys.argv[4])
+#  shift=int(sys.argv[5])
+#  out=sys.argv[6]
+#  regions=GenomicRegionSet("regions")
+#  regions.read_bed(bed_file)
+#  table=BiasTable(regions=regions,dnase_file_name=bam_file,genome_file_name=fasta_file,k_nb=kmer,shift=shift)
+#  table.write_tables(out)
 
 

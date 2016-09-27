@@ -137,10 +137,6 @@ def main():
                       help = ("If used, it will print the base overlap (raw) signals from DNase-seq "
                               " or ATAC-seq data. The option should equal the file name."
                               "The extension must be (.wig)."))
-    parser.add_option("--print-bias-signal", dest = "print_bias_signal", type = "string", metavar="STRING", 
-                      default = None,
-                      help = ("If used, it will print the DNase-seq or ATAC-seq bias signal. "
-                              "The option should equal the file name. The extension must be (.wig)."))
     parser.add_option("--print-bc-signal", dest = "print_bc_signal", type = "string", metavar="STRING", 
                       default = None,
                       help = ("If used, it will print the DNase-seq or ATAC-seq bias-corrected signal. "
@@ -283,8 +279,6 @@ def main():
     # Output wig signal
     if(options.print_raw_signal):
         system("touch "+options.print_raw_signal+" | echo -n "" > "+options.print_raw_signal)
-    if(options.print_bias_signal):
-        system("touch "+options.print_bias_signal+" | echo -n "" > "+options.print_bias_signal)
     if(options.print_bc_signal):
         system("touch "+options.print_bc_signal+" | echo -n "" > "+options.print_bc_signal)
     if(options.print_norm_signal):
@@ -542,7 +536,7 @@ def main():
                                                   atac_forward_shift, atac_reverse_shift, 
                                                   dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
                                                   group.bias_table, genome_data.get_genome(),
-                                                  options.print_raw_signal, options.print_bias_signal, 
+                                                  options.print_raw_signal,
                                                   options.print_bc_signal, options.print_norm_signal, 
                                                   options.print_slope_signal)
                     else:
@@ -551,7 +545,7 @@ def main():
                                                   dnase_forward_shift, dnase_reverse_shift, 
                                                   dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
                                                   group.bias_table, genome_data.get_genome(),
-                                                  options.print_raw_signal, options.print_bias_signal, 
+                                                  options.print_raw_signal,  
                                                   options.print_bc_signal, options.print_norm_signal, 
                                                   options.print_slope_signal)
                 except Exception:
@@ -612,7 +606,7 @@ def main():
                                                       atac_forward_shift, atac_reverse_shift, 
                                                       dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
                                                       group.bias_table, genome_data.get_genome(),
-                                                      options.print_raw_signal, options.print_bias_signal, 
+                                                      options.print_raw_signal,  
                                                       options.print_bc_signal, options.print_norm_signal, 
                                                       options.print_slope_signal)
                         else:
@@ -621,7 +615,7 @@ def main():
                                                       dnase_forward_shift, dnase_reverse_shift, 
                                                       dnase_initial_clip, dnase_norm_per, dnase_slope_per, 
                                                       group.bias_table, genome_data.get_genome(),
-                                                      options.print_raw_signal, options.print_bias_signal, 
+                                                      options.print_raw_signal,  
                                                       options.print_bc_signal, options.print_norm_signal, 
                                                       options.print_slope_signal)
                     except Exception:

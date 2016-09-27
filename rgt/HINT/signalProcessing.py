@@ -100,8 +100,7 @@ class GenomicSignal:
     def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift, 
                    initial_clip = 1000, per_norm = 98, per_slope = 98, 
                    bias_table = None, genome_file_name = None, print_raw_signal=False, 
-                   print_bias_signal=False, print_bc_signal=False, print_norm_signal=False,
-                   print_slope_signal=False):
+                   print_bc_signal=False, print_norm_signal=False, print_slope_signal=False):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -162,19 +161,19 @@ class GenomicSignal:
 
         # Writing signal
         if(print_raw_signal):
-            signal_file = open(print_raw_signal+"signal.wig","a")
+            signal_file = open(print_raw_signal,"a")
             signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in clip_signal])+"\n")
             signal_file.close()
         if(print_bc_signal):
-            signal_file = open(print_bc_signal+"signal.wig","a")
+            signal_file = open(print_bc_signal,"a")
             signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in bias_corrected_signal])+"\n")
             signal_file.close()
         if(print_norm_signal):
-            signal_file = open(print_norm_signal+"signal.wig","a")
+            signal_file = open(print_norm_signal,"a")
             signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in hon_signal])+"\n")
             signal_file.close()
         if(print_slope_signal):
-            signal_file = open(print_slope_signal+"signal.wig","a")
+            signal_file = open(print_slope_signal,"a")
             signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in slopehon_signal])+"\n")
             signal_file.close()
 
@@ -208,6 +207,10 @@ class GenomicSignal:
         p1_wk = p1_w - int(floor(k_nb/2.)); p2_wk = p2_w + int(ceil(k_nb/2.))
         if(p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
 
+        #print p1, p2
+        #print p1_w, p2_w 
+        #print p1_wk, p2_wk 
+
         # Raw counts
         nf = [0.0] * (p2_w-p1_w); nr = [0.0] * (p2_w-p1_w)
         for r in self.bam.fetch(chrName, p1_w, p2_w):
@@ -225,24 +228,30 @@ class GenomicSignal:
             rSum -= rLast; rSum += nr[i+(window/2)]; rLast = nr[i-(window/2)+1]
 
         # Fetching sequence
-        currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
+        #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
+        #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
 
         # Iterating on sequence to create signal
         af = []; ar = []
-        for i in range( int(floor(k_nb/2.)), len(currStr)-int(ceil(k_nb/2))+1 ):
+        for i in range( int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1 ):
             fseq = currStr[i-int(floor(k_nb/2.)):i+int(ceil(k_nb/2.))]
             rseq = currRevComp[len(currStr)-int(ceil(k_nb/2.))-i:len(currStr)+int(floor(k_nb/2.))-i]
+            #print fseq, rseq
             try: af.append(fBiasDict[fseq])
             except Exception: af.append(defaultKmerValue)
             try: ar.append(rBiasDict[rseq])
             except Exception: ar.append(defaultKmerValue)
+
+        print(len(Nf),len(af))
 
         # Calculating bias and writing to wig file
         fSum = sum(af[:window]); rSum = sum(ar[:window]);
         fLast = af[0]; rLast = ar[0]
         bias_corrected_signal = []
         for i in range((window/2),len(af)-(window/2)):
+            #print i-(window/2), len(Nf), len(af)-(window/2)
             nhatf = Nf[i-(window/2)]*(af[i]/fSum)
             nhatr = Nr[i-(window/2)]*(ar[i]/rSum)
             zf = log(nf[i]+1)-log(nhatf+1)
