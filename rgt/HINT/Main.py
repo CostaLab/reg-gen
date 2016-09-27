@@ -389,10 +389,16 @@ def main():
 
         for group in group_list:
             if(group.histone_only): continue
-            if(group.is_atac): my_k_nb = atac_bias_correction_k
-            else: my_k_nb = dnase_bias_correction_k
-            group.bias_table = BiasTable(regions=group.original_regions,dnase_file_name=group.dnase_file.file_name,
-                                         genome_file_name=genome_data.get_genome(), k_nb=my_k_nb)
+            if(group.is_atac):
+                my_k_nb = atac_bias_correction_k
+                my_shift = atac_downstream_ext
+            else:
+                my_k_nb = dnase_bias_correction_k
+                my_shift = dnase_downstream_ext
+            group.bias_table = BiasTable(regions=group.original_regions,
+                                         dnase_file_name=group.dnase_file.file_name,
+                                         genome_file_name=genome_data.get_genome(), k_nb=my_k_nb, 
+                                         shift=my_shift)
         bias_correction = True
 
     elif(options.default_bias_correction):
@@ -527,8 +533,6 @@ def main():
             ###################################################################################################
 
             if(group.dnase_only):
-
-    dnase_downstream_ext = options.dnase_downstream_ext
 
                 # Fetching DNase signal
                 try:

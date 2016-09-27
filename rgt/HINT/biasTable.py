@@ -119,8 +119,10 @@ class BiasTable:
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
 
                 # Calculating positions
-                if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
-                else: p1 = r.aend - (k_nb/2) + 1 - shift
+                #if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
+                #else: p1 = r.aend - (k_nb/2) + 1 - shift
+                if(not r.is_reverse): p1 = r.pos - int(floor(k_nb/2)) + shift
+                else: p1 = r.aend - int(floor(k_nb/2)) - shift
                 p2 = p1 + k_nb
 
                 # Verifying PCR artifacts

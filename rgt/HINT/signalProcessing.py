@@ -6,7 +6,7 @@
 # Python
 import warnings
 warnings.filterwarnings("ignore")
-from math import log
+from math import log, ceil, floor
 
 # Internal
 from .. Util import ErrorHandler
@@ -181,11 +181,6 @@ class GenomicSignal:
         # Returning normalized and slope sequences
         return hon_signal, slopehon_signal
 
-    # TODO - Parei aqui - Fazer TODO o bias correction.
-    # Lembrar de colocar o k como parametro
-    # Lembrar de consertar para um k impar
-    # Lembrar de consertar o erro das bordas das sequencias
-
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end):
         """ 
         Performs bias correction.
@@ -210,7 +205,8 @@ class GenomicSignal:
         k_nb = len(fBiasDict.keys()[0])
         p1 = start; p2 = end
         p1_w = p1 - (window/2); p2_w = p2 + (window/2)
-        p1_wk = p1_w - (k_nb/2); p2_wk = p2_w + (k_nb/2)
+        p1_wk = p1_w - int(floor(k_nb/2.)); p2_wk = p2_w + int(ceil(k_nb/2.))
+        if(p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
 
         # Raw counts
         nf = [0.0] * (p2_w-p1_w); nr = [0.0] * (p2_w-p1_w)
@@ -234,9 +230,9 @@ class GenomicSignal:
 
         # Iterating on sequence to create signal
         af = []; ar = []
-        for i in range((k_nb/2),len(currStr)-(k_nb/2)+1):
-            fseq = currStr[i-(k_nb/2):i+(k_nb/2)]
-            rseq = currRevComp[len(currStr)-(k_nb/2)-i:len(currStr)+(k_nb/2)-i]
+        for i in range( int(floor(k_nb/2.)), len(currStr)-int(ceil(k_nb/2))+1 ):
+            fseq = currStr[i-int(floor(k_nb/2.)):i+int(ceil(k_nb/2.))]
+            rseq = currRevComp[len(currStr)-int(ceil(k_nb/2.))-i:len(currStr)+int(floor(k_nb/2.))-i]
             try: af.append(fBiasDict[fseq])
             except Exception: af.append(defaultKmerValue)
             try: ar.append(rBiasDict[rseq])
