@@ -273,8 +273,9 @@ data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
 data_config_file.write("default_bias_table_F: fp_hmms/single_hit_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R: fp_hmms/single_hit_bias_table_R.txt\n\n")
-data_config_file.write("[Triplexator]\n")
-data_config_file.write("path: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
+data_config_file.write("[Library]\n")
+data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
+data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/librgt.so") + "\n")
 
 data_config_file.close()
 

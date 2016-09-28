@@ -38,7 +38,7 @@ from rgt.GenomicRegion import GenomicRegion
 from RNADNABindingSet import RNADNABindingSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.Util import SequenceType, Html, ConfigurationFile, GenomeData, Triplexator
+from rgt.Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -173,8 +173,8 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
-    triclass = Triplexator()
-    triplex_lib_path = triclass.get_path()
+    triclass = Library_path()
+    triplex_lib_path = triclass.get_triplexator()
     triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
 
     arguments = ""
