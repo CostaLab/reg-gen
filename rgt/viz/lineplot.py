@@ -32,11 +32,7 @@ class Lineplot:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f)
                 self.exps.remove_name()
-        # print(self.exps.names)
-        # print(self.exps.trash)
-        # self.exps.remove_name()
-        # pretty(self.exps.fieldsDict)
-        # sys.exit(0)
+
         # if annotation:
         #     self.beds, self.bednames, self.annotation = annotation_dump(organism)
 
@@ -269,8 +265,10 @@ class Lineplot:
 
                                                     avearr = numpy.average(avearr, axis=0)
                                                     if self.sense:
-                                                        sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
-                                                        sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
+                                                        # sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
+                                                        # sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
+                                                        sense_1 = numpy.average(cov.transpose_cov1,axis=0)
+                                                        sense_2 = numpy.average(cov.transpose_cov2,axis=0)
                                                     cut_end = int(self.bs/self.ss)
                                                     avearr = avearr[cut_end:-cut_end]
                                                     data[s][g][c][d]["all"].append(avearr)

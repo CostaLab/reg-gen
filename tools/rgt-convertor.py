@@ -82,6 +82,8 @@ if __name__ == "__main__":
                                 help="Define gene status {KNOWN, NOVEL, PUTATIVE,All}")
     parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None, 
                                 help="Define the gene list for filtering, default is None.")
+    parser_gtf2bed.add_argument('-id', action="store_true",
+                                help="Use gene ID as region name, instead of gene symbol.")
     parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
 
@@ -427,10 +429,14 @@ if __name__ == "__main__":
                 # print(line)
                 # print(line[8].split("; "))
                 info = line[8].split("; ")
-                
-                gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-                gn = gn.partition(" (")[0]
-                gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
+
+                if args.id:
+                    gn = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
+                    gn = gn.partition(".")[0]
+                else:
+                    gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+                    gn = gn.partition(" (")[0]
+
                 # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
                 if int(line[3]) < int(line[4]):
@@ -527,7 +533,8 @@ if __name__ == "__main__":
         print("genome:\t" + args.genome)
         print("gene list:\t" + args.g)
 
-        ann = AnnotationSet(gene_source=genome,filter_havana=False, protein_coding=False, known_only=False)
+        ann = AnnotationSet(gene_source=args.genome,
+                            filter_havana=False, protein_coding=False, known_only=False)
         geneset = GeneSet("target")
         geneset.read(args.g)
 
