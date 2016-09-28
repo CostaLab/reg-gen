@@ -296,7 +296,7 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
-"lib": ["libtriplexator.so"],
+"lib": ["libtriplexator.so", "librgt.so"],
 "hg19": ["genes_hg19.bed","chrom.sizes.hg19","alias_human.txt"],
 "hg38": ["genes_hg38.bed","chrom.sizes.hg38","alias_human.txt"],
 "mm9": ["genes_mm9.bed","chrom.sizes.mm9","alias_mouse.txt"],
