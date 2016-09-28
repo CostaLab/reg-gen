@@ -21,7 +21,7 @@ from hmm import HMM
 from biasTable import BiasTable
 
 # External
-from numpy import array
+from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
 
@@ -564,6 +564,7 @@ def main():
 
                 # Applying HMM
                 if(isinstance(group.hmm,list)): continue # TODO ERROR
+                if(isnan(sum(input_sequence))): continue # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                 try: posterior_list = group.hmm.predict(input_sequence)
                 except Exception:
                     raise
@@ -653,6 +654,7 @@ def main():
                     # Applying HMM
                     if(flag_multiple_hmms): current_hmm = group.hmm[i]
                     else: current_hmm = group.hmm
+                    if(isnan(sum(input_sequence))): continue # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try: posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
                         raise
