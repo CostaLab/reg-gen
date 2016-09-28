@@ -7,7 +7,6 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 from __future__ import print_function
 import os
-import math
 import pysam
 import tempfile
 import subprocess
