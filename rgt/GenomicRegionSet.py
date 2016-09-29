@@ -785,10 +785,8 @@ class GenomicRegionSet:
 
             # If there is overlap within a or b, they should be merged first.
             if mode == OverlapType.OVERLAP:
-                if not a.merged:
-                    a = a.merge(w_return=True)
-                if not b.merged:
-                    b = b.merge(w_return=True)
+                a = a.merge(w_return=True)
+                b = b.merge(w_return=True)
 
             # Convert to ctypes
             len_self = len(a)
@@ -837,7 +835,6 @@ class GenomicRegionSet:
             for i in range(size_result_c.value):
                 result.add(GenomicRegion(chromosomes_self_python[indices_c[i]], initials_result_c[i],
                                          finals_result_c[i]))
-
             if rm_duplicates:
                 result.remove_duplicates()
             return result
