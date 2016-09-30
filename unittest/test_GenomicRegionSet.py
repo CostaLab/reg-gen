@@ -453,159 +453,163 @@ class TestGenomicRegionSet(unittest.TestCase):
                          [])
         result = self.setA.closest(self.setB)
         self.assertEqual(len(result), 0)
-        """
-        One empty set
-        A :   -----
-        B : none
-        R : none
-        """
-        self.region_sets([['chr1',5,10]],
-                         [])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 0)
-        """
-        A : none
-        B :   -----
-        R : none
-        """
-        self.region_sets([],
-                         [['chr1',5,10]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 0)
-        """
-        Overlapping within set
-        A : -----====-----
-        B :      ----
-        R :      ----
-        """
-        self.region_sets([['chr1',1,10],['chr1',6,15]],
-                         [['chr1',6,10]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 2)
-        """
-        A :      ----
-        B : -----====-----
-        R : -----====-----
-        """
-        self.region_sets([['chr1',6,10]],
-                         [['chr1',1,10],['chr1',6,15]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 1)
-        """
-        No overlapping
-        A : ------      ---------               ------- 
-        B :        ----          ------  ------   
-        R :                      ------
-        """
-        self.region_sets([['chr1',1,5],['chr1',11,20],['chr1',33,38]],
-                         [['chr1',7,9],['chr1',20,25],['chr1',26,31]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 3)
-        # self.assertEqual(result[0].initial, 20)
-        # self.assertEqual(result[0].final, 25)
-        """
-        End-to-end attach
-        A : ------      ------
-        B :       ------
-        R :       ------
-        """
-        self.region_sets([['chr1',1,5],['chr1',11,20]],
-                         [['chr1',5,11]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 2)
-        # self.assertEqual(result[0].initial, 5)
-        # self.assertEqual(result[0].final, 11)
-        """
-        Perfect overlapping
-        A : ------
-        B : ------
-        R : none
-        """
-        self.region_sets([['chr1',1,10]],
-                         [['chr1',1,10]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        One overlapping region
-        A : ------
-        B :     --------
-        R : none
-        """
-        self.region_sets([['chr1',1,10]],
-                         [['chr1',7,20]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        Two simple overlapping regions
-        A : -------      --------
-        B :     -------------
-        R : none
-        """
-        self.region_sets([['chr1',1,10],['chr1',26,35]],
-                         [['chr1',7,30]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        Two separately overlapping regions 
-        A : -------      --------
-        B :     -----        --------
-        R : none
-        """
-        self.region_sets([['chr1',1,10],['chr1',26,35]],
-                         [['chr1',7,15],['chr1',30,40]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        Many various overlapping (mixed)
-        A :   ------------------            --------   ---------
-        B : ----   -------    ------            ----------      
-        R : none
-        """
-        self.region_sets([['chr1',3,30],['chr1',50,60],['chr1',70,85]],
-                         [['chr1',1,5],['chr1',10,19],['chr1',27,35],['chr1',55,75]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        Different chromosomes
-        A : chr1  -------
-        B : chr2  -------
-        R : chr2  -------
-        
-        """
-        self.region_sets([['chr1',1,10]],
-                         [['chr2',1,10]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 0)
-        """
-        Completely included overlapping
-        A : ---------------------------
-        B : ----    ------       -----------
-        R : none
-        """
-        self.region_sets([['chr1',1,50]],
-                         [['chr1',1,5],['chr1',10,19],['chr1',45,60]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        A : ----    ------       -----------
-        B : ---------------------------
-        R : none
-        """
-        self.region_sets([['chr1',1,5],['chr1',10,19],['chr1',45,60]],
-                         [['chr1',1,50]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(result, False)
-        """
-        A : ----         ------                  ---
-        B :        ---              -----
-        R :        ---
-        """
-        self.region_sets([['chr1',1,5],['chr1',27,45],['chr1',85,95]],
-                         [['chr1',15,20],['chr1',55,65]])
-        result = self.setA.closest(self.setB)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].initial, 15)
-        self.assertEqual(result[0].final, 20)
+        # """
+        # One empty set
+        # A :   -----
+        # B : none
+        # R : none
+        # """
+        # self.region_sets([['chr1',5,10]],
+        #                  [])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 0)
+        # """
+        # A : none
+        # B :   -----
+        # R : none
+        # """
+        # self.region_sets([],
+        #                  [['chr1',5,10]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 0)
+        # """
+        # Overlapping within set
+        # A : -----====-----
+        # B :      ----
+        # R :      ----
+        # """
+        # self.region_sets([['chr1',1,10],['chr1',6,15]],
+        #                  [['chr1',6,10]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 2)
+        # """
+        # A :      ----
+        # B : -----====-----
+        # R : -----====-----
+        # """
+        # self.region_sets([['chr1',6,10]],
+        #                  [['chr1',1,10],['chr1',6,15]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 1)
+        # """
+        # No overlapping
+        # A : ------      ---------               -------
+        # B :        ----          ------  ------
+        # R :                      ------
+        # """
+        # self.region_sets([['chr1',1,5],['chr1',11,20],['chr1',33,38]],
+        #                  [['chr1',7,9],['chr1',20,25],['chr1',26,31]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 3)
+        # # self.assertEqual(result[0].initial, 20)
+        # # self.assertEqual(result[0].final, 25)
+        # """
+        # End-to-end attach
+        # A : ------      ------
+        # B :       ------
+        # R :       ------
+        # """
+        # self.region_sets([['chr1',1,5],['chr1',11,20]],
+        #                  [['chr1',5,11]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 2)
+        # # self.assertEqual(result[0].initial, 5)
+        # # self.assertEqual(result[0].final, 11)
+        # """
+        # Perfect overlapping
+        # A : ------
+        # B : ------
+        # R : ------
+        # """
+        # self.region_sets([['chr1',1,10]],
+        #                  [['chr1',1,10]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 1)
+        # self.assertEqual(result[0].initial, 1)
+        # self.assertEqual(result[0].final, 10)
+        # """
+        # One overlapping region
+        # A : ------
+        # B :     --------
+        # R :     --------
+        # """
+        # self.region_sets([['chr1',1,10]],
+        #                  [['chr1',7,20]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(result[0].initial, 7)
+        # self.assertEqual(result[0].final, 20)
+        # """
+        # Two simple overlapping regions
+        # A : -------      --------
+        # B :     -------------
+        # R :     -------------
+        # """
+        # self.region_sets([['chr1',1,10],['chr1',26,35]],
+        #                  [['chr1',7,30]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(result[0].initial, 7)
+        # self.assertEqual(result[0].final, 30)
+        # """
+        # Two separately overlapping regions
+        # A : -------      --------
+        # B :     -----        --------
+        # R : none
+        # """
+        # self.region_sets([['chr1',1,10],['chr1',26,35]],
+        #                  [['chr1',7,15],['chr1',30,40]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 2)
+        # """
+        # Many various overlapping (mixed)
+        # A :   ------------------            --------   ---------
+        # B : ----   -------    ------            ----------
+        # R : none
+        # """
+        # self.region_sets([['chr1',3,30],['chr1',50,60],['chr1',70,85]],
+        #                  [['chr1',1,5],['chr1',10,19],['chr1',27,35],['chr1',55,75]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 4)
+        # """
+        # Different chromosomes
+        # A : chr1  -------
+        # B : chr2  -------
+        # R : chr2  -------
+        #
+        # """
+        # self.region_sets([['chr1',1,10]],
+        #                  [['chr2',1,10]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 0)
+        # """
+        # Completely included overlapping
+        # A : ---------------------------
+        # B : ----    ------       -----------
+        # R : ----    ------       -----------
+        # """
+        # self.region_sets([['chr1',1,50]],
+        #                  [['chr1',1,5],['chr1',10,19],['chr1',45,60]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 3)
+        # """
+        # A : ----    ------       -----------
+        # B : ---------------------------
+        # R : none
+        # """
+        # self.region_sets([['chr1',1,5],['chr1',10,19],['chr1',45,60]],
+        #                  [['chr1',1,50]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(result, False)
+        # """
+        # A : ----         ------                  ---
+        # B :        ---              -----
+        # R :        ---
+        # """
+        # self.region_sets([['chr1',1,5],['chr1',27,45],['chr1',85,95]],
+        #                  [['chr1',15,20],['chr1',55,65]])
+        # result = self.setA.closest(self.setB)
+        # self.assertEqual(len(result), 1)
+        # self.assertEqual(result[0].initial, 15)
+        # self.assertEqual(result[0].final, 20)
     
     def test_remove_duplicates(self):
         """
