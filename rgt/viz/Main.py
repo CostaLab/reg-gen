@@ -604,7 +604,7 @@ def main():
             # Generate individual table for each bed
             print2(parameter,"Step 4/5: Constructing different tables for box plot")
             boxplot.tables_for_plot()
-            if args.table: boxplot.print_plot_table(directory = args.o, folder = args.t)
+            # if args.table: boxplot.print_plot_table(directory = args.o, folder = args.t)
             t4 = time.time()
             print2(parameter,"    --- finished in {0} secs\n".format(round(t4-t3)))
             
@@ -615,7 +615,7 @@ def main():
             boxplot.group_data(directory = args.o, folder = args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
             boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim, pw=args.pw, ph=args.ph)
-            #if args.table: boxplot.print_table(directory=args.output, folder=args.title)
+            if args.table: boxplot.print_table(directory=args.o, folder=args.t)
             output(f=boxplot.fig, directory = args.o, folder = args.t, filename="boxplot",extra=plt.gci(),pdf=True,show=args.show)
             # HTML
             boxplot.gen_html(args.o, args.t, align = 50)
