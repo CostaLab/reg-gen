@@ -753,8 +753,10 @@ def main():
             f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
             output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)
 
+
         ################### Integration ##########################################
         if args.mode=='integration':
             print("\n################# Integration ###############")
             if args.ihtml:
                 list_all_index(path=args.o)
+
