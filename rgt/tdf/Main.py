@@ -6,26 +6,20 @@ import os
 import re
 import argparse
 import shutil
-import time, datetime, getpass, fnmatch
+import time, datetime, getpass
 import subprocess
-import pickle
 from collections import OrderedDict, defaultdict
 import numpy
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
 from matplotlib import colors
-import scipy.cluster.hierarchy as sch
 
 # Local Libraries
 # Distal Libraries
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
-from triplexTools import PromoterTest, RandomTest, value2str,\
+from triplexTools import PromoterTest, RandomTest,\
                          split_gene_name, rna_associated_gene, get_dbss
-from rgt.SequenceSet import Sequence, SequenceSet
-from rgt.Util import SequenceType, Html, ConfigurationFile
+from rgt.Util import Html
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.viz.plotTools import output_array
 
