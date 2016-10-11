@@ -55,14 +55,14 @@ def print2(summary, string):
     summary.append(string)
 
 
-def mp_find_rbs(s, motif, min_len, max_len):
-    triplex = TriplexSearch()
-    return triplex.find_rbs(s, motif, min_len, max_len)
-
-
-def mp_find_dbs(s, min_len, max_len):
-    triplex = TriplexSearch()
-    return triplex.find_dbs(s, min_len, max_len)
+# def mp_find_rbs(s, motif, min_len, max_len):
+#     triplex = TriplexSearch()
+#     return triplex.find_rbs(s, motif, min_len, max_len)
+#
+#
+# def mp_find_dbs(s, min_len, max_len):
+#     triplex = TriplexSearch()
+#     return triplex.find_dbs(s, min_len, max_len)
 
 
 def value2str(value):
@@ -1098,7 +1098,7 @@ class PromoterTest:
         #txp_de.remove_duplicates()
         self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff, 
                               region_set=self.de_regions, name_replace=self.de_regions)
-        
+
         self.rbss = self.txp_de.merged_dict.keys()
         for rbs in self.rbss:
             # DE
@@ -1185,28 +1185,28 @@ class PromoterTest:
 
         ndef_dbs = GenomicRegionSet("nde_dbs")
 
-        if self.split_rna:
-            print("\t\t", end="")
-            for i in self.cf:
-                print(str(i)+"..", end="")
-                ndef = RNADNABindingSet("non-DE")
-                ndef.read_txp(os.path.join(temp, "nde"+str(i)+".txp"), dna_fine_posi=True, 
-                             shift= max(0,(i-1)*self.threshold - l))
-                
-                ndef.merge_rbs(rbss=self.rbss, rm_duplicate=True)
+        # if self.split_rna:
+        #     print("\t\t", end="")
+        #     for i in self.cf:
+        #         print(str(i)+"..", end="")
+        #         ndef = RNADNABindingSet("non-DE")
+        #         ndef.read_txp(os.path.join(temp, "nde"+str(i)+".txp"), dna_fine_posi=True,
+        #                      shift= max(0,(i-1)*self.threshold - l))
+        #
+        #         ndef.merge_rbs(rbss=self.rbss, rm_duplicate=True)
+        #
+        #         ndef_dbs.combine(ndef.get_dbs())
+        #     print()
+        #
+        # else:
 
-                ndef_dbs.combine(ndef.get_dbs())
-            print()
-                
-        else:
+        self.txp_nde = RNADNABindingSet("non-DE")
+        self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
+        #print("\t\t"+str(len(self.txp_nde))+"\tBinding nde promoters")
+        #txp_nde.remove_duplicates()
+        self.txp_nde.merge_rbs(rbss=self.rbss, rm_duplicate=True)#, asgene_organism=self.organism)
 
-            self.txp_nde = RNADNABindingSet("non-DE")
-            self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
-            #print("\t\t"+str(len(self.txp_nde))+"\tBinding nde promoters")
-            #txp_nde.remove_duplicates()
-            self.txp_nde.merge_rbs(rbss=self.rbss, rm_duplicate=True)#, asgene_organism=self.organism)
-
-            ndef_dbs = self.txp_nde.get_dbs()
+        ndef_dbs = self.txp_nde.get_dbs()
 
         counts = self.nde_regions.counts_per_region(regionset=ndef_dbs)
         #ndef_dbs.merge()
@@ -1311,45 +1311,45 @@ class PromoterTest:
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,  
                  filename=filename, ac=ac, showpa=showpa, exons=self.rna_regions)
     
-    def promoter_profile(self):
-        """count the number of DBD and DBS regarding to each promoter"""
-        self.promoter = { "de": {},
-                          "nde": {} }
-
-        #################################################
-        # Untargeted promoters
-    
-        self.promoter["nde"]["rd"] = self.txp_ndef.sort_rd_by_regions(regionset=self.nde_regions)
-        self.txp_ndef = None
-        # Untargeted promoters
-        #self.promoter["nde"]["merged_dbs"] = {}
-        self.promoter["nde"]["dbs"] = {}
-        self.promoter["nde"]["dbs_coverage"] = {}
-
-        for promoter in self.nde_regions:
-        #for k, rds in self.promoter["nde"]["rd"].items():
-            dbs = self.promoter["nde"]["rd"][promoter.toString()].get_dbs()
-            #m_dbs = dbs.merge(w_return=True)
-            self.promoter["nde"]["dbs"][promoter.toString()] = len(dbs)
-            #self.promoter["nde"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
-        self.promoter["nde"]["rd"] = [] # remove to save memory
-
-        #################################################
-        # Targeted promoters
-
-        self.promoter["de"]["rd"] = self.txp_def.sort_rd_by_regions(regionset=self.de_regions)
-        #self.txp_def = None
-        #self.promoter["de"]["merged_dbs"] = {}
-        self.promoter["de"]["dbs"] = {}
-        self.promoter["de"]["dbs_coverage"] = {}
-        
-        for promoter in self.de_regions:
-            dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
-            #m_dbs = dbs.merge(w_return=True)
-            self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
-            #self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
+    # def promoter_profile(self):
+    #     """count the number of DBD and DBS regarding to each promoter"""
+    #     self.promoter = { "de": {},
+    #                       "nde": {} }
+    #
+    #     #################################################
+    #     # Untargeted promoters
+    #
+    #     self.promoter["nde"]["rd"] = self.txp_ndef.sort_rd_by_regions(regionset=self.nde_regions)
+    #     self.txp_ndef = None
+    #     # Untargeted promoters
+    #     #self.promoter["nde"]["merged_dbs"] = {}
+    #     self.promoter["nde"]["dbs"] = {}
+    #     self.promoter["nde"]["dbs_coverage"] = {}
+    #
+    #     for promoter in self.nde_regions:
+    #     #for k, rds in self.promoter["nde"]["rd"].items():
+    #         dbs = self.promoter["nde"]["rd"][promoter.toString()].get_dbs()
+    #         #m_dbs = dbs.merge(w_return=True)
+    #         self.promoter["nde"]["dbs"][promoter.toString()] = len(dbs)
+    #         #self.promoter["nde"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+    #         self.promoter["nde"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
+    #     self.promoter["nde"]["rd"] = [] # remove to save memory
+    #
+    #     #################################################
+    #     # Targeted promoters
+    #
+    #     self.promoter["de"]["rd"] = self.txp_def.sort_rd_by_regions(regionset=self.de_regions)
+    #     #self.txp_def = None
+    #     #self.promoter["de"]["merged_dbs"] = {}
+    #     self.promoter["de"]["dbs"] = {}
+    #     self.promoter["de"]["dbs_coverage"] = {}
+    #
+    #     for promoter in self.de_regions:
+    #         dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
+    #         #m_dbs = dbs.merge(w_return=True)
+    #         self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
+    #         #self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+    #         self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
         
     def barplot(self, dirp, filename, sig_region, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""

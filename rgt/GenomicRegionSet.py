@@ -791,7 +791,7 @@ class GenomicRegionSet:
             # Convert to ctypes
             len_self = len(a)
             len_y = len(b)
-            max_len_result = min(len_self, len_y)
+            max_len_result = max(len_self, len_y)
 
             chromosomes_self_python = [gr.chrom for gr in a.sequences]
             chromosomes_self_c = (c_char_p * len_self)(*chromosomes_self_python)
