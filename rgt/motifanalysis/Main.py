@@ -6,19 +6,21 @@
 # Python
 import os
 import sys
-from glob import glob
 import warnings
+from glob import glob
+import time
+from random import seed
+
 warnings.filterwarnings("ignore")
 
 # Internal
-from .. Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
-from .. ExperimentalMatrix import ExperimentalMatrix
-from .. GeneSet import GeneSet
-from .. GenomicRegion import GenomicRegion
-from .. GenomicRegionSet import GenomicRegionSet
+from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
+from rgt.ExperimentalMatrix import ExperimentalMatrix
+from rgt.GeneSet import GeneSet
+from rgt.GenomicRegionSet import GenomicRegionSet
 from Motif import Motif, Thresholds
 from Match import match_single
-from Statistics import multiple_test_correction, get_fisher_dict
+from Statistics import multiple_test_correction, get_fisher_dict_old, get_fisher_dict
 from Util import Input, Result
 
 # External
@@ -43,6 +45,7 @@ Authors: Eduardo G. Gusmao.
 """
 
 def main():
+    start=time.time()
     """
     Main function that redirects tool usage.
 
@@ -56,6 +59,7 @@ def main():
     ###################################################################################################
 
     # Parameters
+    seed(42)
     current_version = "0.0.1"
     usage_message = ("\n--------------------------------------------------\n"
                      "The motif analysis program performs various motif-based analyses. "
@@ -86,7 +90,6 @@ def main():
 
     # Initializing Error Handler
     main_error_handler = ErrorHandler()
-
     ###################################################################################################
     # Redirecting to Specific Functions
     ###################################################################################################
@@ -98,6 +101,8 @@ def main():
         main_enrichment()
     else:
         main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
+
+    print(time.time() - start)
 
 def main_matching():
     """
@@ -910,3 +915,5 @@ def main_enrichment():
     # TODO
 
 
+    if __name__ == "__main__":
+        main()

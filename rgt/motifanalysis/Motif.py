@@ -7,7 +7,7 @@
 from os.path import basename
 
 # Internal
-from .. Util import ErrorHandler
+from rgt.Util import ErrorHandler
 
 # External
 from Bio import motifs
