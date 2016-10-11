@@ -117,14 +117,15 @@ class Boxplot:
 
     def print_plot_table(self, directory, folder):
         for i, bed in enumerate(self.tableDict.keys()):
-            table = []
-            header = ["chrom", "initial", "final"]
-            for rp in self.reads:
-                header.append(os.path.basename(rp))
-            table.append(header)
-            for j, re in enumerate(self.beds[i]):
-                table.append([re.chrom, re.initial, re.final] + self.tableDict[bed][j].tolist())
-            output_array(table, directory, folder, filename="table_" + bed + ".txt")
+            # table = []
+            # header = ["chrom", "initial", "final"]
+            # for rp in self.reads:
+            #     header.append(os.path.basename(rp))
+            # table.append(header)
+            # for j, re in enumerate(self.beds[i]):
+            #     table.append([re.chrom, re.initial, re.final] + self.tableDict[bed][j].tolist())
+            # output_array(table, directory, folder, filename="table_" + bed + ".txt")
+            output_array(self.tableDict[bed], directory, folder, filename="table_" + bed + ".txt")
 
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -183,17 +184,14 @@ class Boxplot:
                                     if self.df:
                                         sortDict[g][a][c].append(plotDict[bed][bam])
                                         if len(sortDict[g][a][c]) == 2:
-                                            bam2 = bam
                                             if log:
-                                                sortDict[g][a][c][0] = numpy.log(sortDict[g][a][c][0])
-                                                sortDict[g][a][c][1] = numpy.log(sortDict[g][a][c][1])
+                                                sortDict[g][a][c][0] = numpy.log(sortDict[g][a][c][0]+1)
+                                                sortDict[g][a][c][1] = numpy.log(sortDict[g][a][c][1]+1)
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],
                                                                                    sortDict[g][a][c][1]).tolist()
                                             else:
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],
                                                                                    sortDict[g][a][c][1]).tolist()
-                                        else:
-                                            bam1 = bam
                                     else:
                                         sortDict[g][a][c] = plotDict[bed][bam]
         self.sortDict = sortDict
@@ -244,22 +242,21 @@ class Boxplot:
         # plt.subplots_adjust(bottom=0.3)
         if logT:
             if self.df:
-                axarr[0].set_ylabel("Count number difference (log)",
+                axarr[0].set_ylabel("Read number difference (log)",
                                     fontsize=ticklabelsize + 1)
             else:
-                axarr[0].set_ylabel("Count number (log)", fontsize=ticklabelsize + 1)
+                axarr[0].set_ylabel("Read number (log)", fontsize=ticklabelsize + 1)
         else:
-
             if self.df:
-                axarr[0].set_ylabel("Count number difference", fontsize=ticklabelsize + 1)
+                axarr[0].set_ylabel("Read number difference", fontsize=ticklabelsize + 1)
             else:
-                axarr[0].set_ylabel("Count number", fontsize=ticklabelsize + 1)
+                axarr[0].set_ylabel("Read number", fontsize=ticklabelsize + 1)
 
         for i, g in enumerate(self.sortDict.keys()):
-            if self.df:
-                axarr[i].set_title(g + "_df", y=1.02, fontsize=ticklabelsize + 2)
-            else:
-                axarr[i].set_title(g, y=1.02, fontsize=ticklabelsize + 2)
+            # if self.df:
+            #     axarr[i].set_title(g + "_df", y=1.02, fontsize=ticklabelsize + 2)
+            # else:
+            axarr[i].set_title(g, y=1.02, fontsize=ticklabelsize + 2)
 
             if logT and not self.df:
                 axarr[i].set_yscale('log')
@@ -275,10 +272,10 @@ class Boxplot:
             color_t = []  # Store tag for coloring boxes
             x_ticklabels = []  # Store ticklabels
             for j, a in enumerate(self.sortDict[g].keys()):
-                if len(a) > 10:
+                # if len(a) > 10:
                     # print(a)
-                    self.xtickrotation = 70
-                    self.xtickalign = "right"
+                self.xtickrotation = 70
+                self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
                     if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
                         continue

@@ -76,7 +76,8 @@ class Intersect:
         """color_list is a Dict [query] : color """
         if ref_que == "que":
             self.color_list = color_groupded_region(self.qEM, self.groupedquery, colorby, definedinEM)
-            if self.groupedquery.keys()[0] == "":
+            # print(self.groupedquery.keys())
+            if not self.groupedquery.keys()[0] == "":
                 self.color_tags = [n.name for n in self.groupedquery[""]]
             else:
                 self.color_tags = gen_tags(self.qEM, colorby)

@@ -179,8 +179,11 @@ class GenomicRegion:
         """
         
         if self.chrom == y.chrom:
-            if self.overlap(y): return 0
-            elif self < y: return y.initial - self.final
-            else: return self.initial - y.final
+            if self.overlap(y):
+                return 0
+            elif self < y:
+                return y.initial - self.final
+            else:
+                return self.initial - y.final
         else:
             return None

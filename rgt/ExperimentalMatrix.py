@@ -75,7 +75,7 @@ class ExperimentalMatrix:
         #assert(header[1] == "type")
         #assert(header[2] == "file")
         #self.fields = header
-        
+        base_dir = ""
         for line in f:
             # Neglect comment lines
             line = line.strip()
@@ -101,15 +101,16 @@ class ExperimentalMatrix:
             else:
                 # line = line.strip("\n")
                 # line = line.strip(" ")
-                line = line.split()
-                
+                line = line.split("\t")
+                if line[0].startswith("BASE_DIR"):
+                    base_dir = line[1]
                 if len(line) < 3:  # Skip the row which has insufficient information
                     #print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                     continue
                 if verbose: print("Reading: ", line, file=sys.stderr)
                 
                 self.names.append(line[0])
-                self.files[line[0]] = line[2] #dict: filename -> filepath
+                self.files[line[0]] = os.path.join(base_dir,line[2]) #dict: filename -> filepath
                 self.types.append(line[1])
                 
                 curr_id = None

@@ -204,6 +204,8 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         arg_ptr[i + 1] = s
     
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
+    os.remove(os.path.join(output + ".summary"))
+    os.remove(os.path.join(output + ".log"))
 
 
 def read_ac(path, cut_off, rnalen):
