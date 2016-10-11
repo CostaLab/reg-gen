@@ -264,7 +264,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
     # Performing intersections
     if (len(mpbs_motif) > 0):
         # regions which are overlapping with mpbs_motif
-        intersect_original = regions.intersect(mpbs_motif, mode=OverlapType.ORIGINAL, rm_duplicates=True, use_c=False)
+        intersect_original = regions.intersect(mpbs_motif, mode=OverlapType.ORIGINAL, rm_duplicates=True)
         # regions which are not overlapping with regions from mpbs_motif
         substract_overlap = regions.subtract(mpbs_motif, whole_region=True)
 
@@ -285,7 +285,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
         # Fetching mpbs
         if (output_mpbs_file):
             mpbs_list = []
-            fetch_mpbs = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True, use_c=False)
+            fetch_mpbs = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True)
             for region in fetch_mpbs.sequences:
                 s = []
                 s.extend([region.chrom, str(region.initial), str(region.final), region.name, str(region.data), region.orientation])
@@ -345,7 +345,7 @@ def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, temp_file_pat
         #curr_proc_nb = len(curr_data_input)
 
         # Evaluating fisher table with multiprocessing
-        curr_res = [fisher_table_new(xx) for xx in curr_data_input]
+        curr_res = [fisher_table(xx) for xx in curr_data_input]
         for i in range(0, len(mpbs_name_group)):
             res1_dict[mpbs_name_group[i]] = curr_res[i][0]
             res2_dict[mpbs_name_group[i]] = curr_res[i][1]
