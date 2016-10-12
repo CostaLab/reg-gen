@@ -81,6 +81,7 @@ class Projection:
 
         all_p = {}
         for ty in self.groupedquery.keys():
+            # print(ty)
             self.bglist[ty] = OrderedDict()
             self.qlist[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
@@ -89,6 +90,7 @@ class Projection:
             else: bgset = None
 
             for i, r in enumerate(self.groupedreference[ty]):
+                # print(r.name)
                 self.bglist[ty][r.name] = OrderedDict()
                 self.qlist[ty][r.name] = OrderedDict()
                 self.plist[ty][r.name] = OrderedDict()
@@ -142,8 +144,7 @@ class Projection:
 
         tw = pw
         th = len(self.qlist.keys()) * ph
-        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300,
-                             figsize=(tw, th))
+        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300,figsize=(tw, th))
 
         # f, ax = plt.subplots(len(self.qlist.keys()),1)
         try:

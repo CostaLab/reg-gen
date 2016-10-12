@@ -442,8 +442,7 @@ class RNADNABindingSet:
         if region_set:
             for r in self.merged_dict.keys():
                 s = region_set.intersect(self.merged_dict[r],
-                                         # mode=OverlapType.ORIGINAL,
-                                         mode=OverlapType.OVERLAP,
+                                         mode=OverlapType.ORIGINAL,
                                          rm_duplicates=rm_duplicate)
                 self.merged_dict[r] = s
 
@@ -459,7 +458,7 @@ class RNADNABindingSet:
             for r in self.merged_dict.keys():
                 self.merged_dict[r].replace_region_name(regions=res)
         #self.merged_dict = new_dict
-        if asgene_organism and not res:
+        elif asgene_organism:
             for r in self.merged_dict.keys():
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass

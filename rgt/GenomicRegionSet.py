@@ -11,7 +11,7 @@ GenomicRegionSet represent a list of GenomicRegions.
 from __future__ import print_function
 from __future__ import division
 import sys
-# import copy
+import copy
 import random
 from ctypes import *
 from scipy import stats
@@ -1921,8 +1921,8 @@ class GenomicRegionSet:
         if len(self) == 0 or len(regions) == 0: return
 
         else:
-            #res = copy.deepcopy(regions)
-            res = regions
+            res = copy.deepcopy(regions)
+            # res = regions
             # If there is overlap within self or y, they should be merged first.
 
             if not self.sorted: self.sort()
@@ -1933,8 +1933,6 @@ class GenomicRegionSet:
             last_j = len(res) - 1
             j = 0
             cont_loop = True
-            pre_inter = 0
-            cont_overlap = False
 
             while cont_loop:
                 # print(str(s),"\t",str(b[j]))
