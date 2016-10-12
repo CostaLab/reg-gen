@@ -385,7 +385,6 @@ class RNADNABindingSet:
         # reg = region_set
         res = name_replace
 
-
         if not rbss:
             # Merge RBS
             rna_merged = self.get_rbs()

@@ -1663,8 +1663,6 @@ class PromoterTest:
                               "Sum up the ranks from left-hand side columns"]
 
         for rbsm in self.frequency["promoters"]["de"].keys():
-            print(rbsm.str_rna())
-            print(rbsm)
             html.add_heading("DNA Binding Domain: "+rbsm.str_rna(), idtag=rbsm.str_rna())
             data_table = []
             # Calculate the ranking
