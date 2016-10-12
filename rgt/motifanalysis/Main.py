@@ -3,6 +3,7 @@
 ###################################################################################################
 
 # Python
+from __future__ import print_function
 import os
 import sys
 import warnings
@@ -103,7 +104,7 @@ def main():
     else:
         main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
-    print(time.time() - start)
+    print("Completed in", time.time() - start, "seconds")
 
 def main_matching():
     """
