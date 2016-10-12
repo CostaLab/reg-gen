@@ -12,6 +12,7 @@ import sys
 import ConfigParser
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
+import traceback
 
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
@@ -406,6 +407,7 @@ class ErrorHandler():
                                   "Behaviour: The program will quit with exit status "+str(exit_status)+".\n"
                                   "--------------------------------------------------")
         print(complete_error_message, file=sys.stderr)
+        traceback.print_exc()
         sys.exit(exit_status)
 
     def throw_warning(self, warning_type, add_msg = ""):
