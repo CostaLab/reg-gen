@@ -167,6 +167,7 @@ def main_matching():
     # Additional Parameters
     matching_folder_name = "Match"
     random_region_name = "random_regions"
+    background_regions_name = "background_regions"
 
     ###################################################################################################
     # Initializations
@@ -248,7 +249,8 @@ def main_matching():
 
         # TODO: should also accept big bed
 
-        bg_regions = GenomicRegionSet("background")
+        bg_regions = GenomicRegionSet(background_regions_name)
+
         try:
             bg_regions.read_bed(os.path.abspath(options.background_bed))
         except Exception:
@@ -265,7 +267,7 @@ def main_matching():
         rand_region.sort()
         rand_region.name = random_region_name
 
-        # Put random regions in the end of the input regions
+        # Add random regions to the list of regions to perform matching on
         regions_to_match.append(rand_region)
 
         # Writing random regions
@@ -389,27 +391,29 @@ def main_enrichment():
 
     # Parameters Options
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
-                      help=("Organism considered on the analysis. Check our full documentation for all available "
-                            "options. All default files such as genomes will be based on the chosen organism "
-                            "and the data.config file."))
+                      help="Organism considered on the analysis. Check our full documentation for all available "
+                           "options. All default files such as genomes will be based on the chosen organism "
+                           "and the data.config file.")
     parser.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
-                      help=(
-                          "Length of the promoter region (in bp) considered on the creation of the regions-gene association."))
+                      help="Length of the promoter region (in bp) considered on the creation of the "
+                           "regions-gene association.")
     parser.add_option("--maximum-association-length", dest="maximum_association_length", type="int", metavar="INT",
                       default=50000,
-                      help=("Maximum distance between a coordinate and a gene (in bp) in order for the former to "
-                            "be considered associated with the latter."))
+                      help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
+                           "be considered associated with the latter.")
     parser.add_option("--multiple-test-alpha", dest="multiple_test_alpha", type="float", metavar="FLOAT", default=0.05,
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-
+    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
+                      help="Bed file containing the genomic regions to use as background."
+                           "If set, the random regions files will be ignored.")
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
                       help="Path where the output files will be written. Default is the input PATH.")
     parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
-                      help=("Only MPBSs whose factor's enrichment corrected p-value are less than equal "
-                            "this option are print. Use 1.0 to print all MPBSs."))
+                      help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
+                           "this option are print. Use 1.0 to print all MPBSs.")
     parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                       help="If this option is used, all bed files will be written as bigbed.")
 
@@ -419,13 +423,14 @@ def main_enrichment():
     # Additional Parameters
     matching_folder_name = "Match"
     random_region_name = "random_regions"
+    background_region_name = "background_regions"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
     output_mpbs_filtered_ev = "mpbs_ev"
     output_mpbs_filtered_nev = "mpbs_nev"
     output_stat_genetest = "genetest_statistics"
-    output_stat_randtest = "randtest_statistics"
+    output_stat_fulltest = "fulltest_statistics"
     ev_color = "0,130,0"
     nev_color = "130,0,0"
     results_header_text = "\t".join(
@@ -506,7 +511,7 @@ def main_enrichment():
     except Exception:
         main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
-    if flag_gene:  # Genelist and randomic analysis will be performed
+    if flag_gene:  # Genelist and full site analysis will be performed
 
         # Iterating on experimental matrix fields
         for g in exp_matrix_fields_dict.keys():
@@ -547,7 +552,7 @@ def main_enrichment():
             # Update input list
             input_list.append(curr_input)
 
-    else:  # Only randomic analysis will be performed
+    else:  # Only full site analysis will be performed
 
         # Create single input which will contain all regions
         single_input = Input(None, [])
@@ -565,7 +570,7 @@ def main_enrichment():
                 # Updating Input object
                 single_input.region_list.append(curr_object)
 
-        # Updating input list with single input (only randomic analysis will be performed)
+        # Updating input list with single input (only full site analysis will be performed)
         input_list = [single_input]
 
     ###################################################################################################
@@ -589,49 +594,57 @@ def main_enrichment():
     motif_names_grouped = [[e2 for e2 in e1 if e2 is not None] for e1 in motif_names_grouped]
 
     ###################################################################################################
-    # Random Statistics
+    # Background Statistics
     ###################################################################################################
 
-    # Verifying random region file exists
-    random_region_glob = glob(os.path.join(input_location, matching_folder_name, random_region_name + ".*"))
-    try:
-        random_region_file_name = random_region_glob[0]
-    except Exception:
-        main_error_handler.throw_error("ME_RAND_NOTFOUND")
+    # FIXME: this is brittle. The files to use as background, both normal regions and mpbs, should be
+    # passed as arguments, not globbed - in both the "given" and the "random" cases
 
-    # Verifying random region MPBS file exists
-    random_region_glob = glob(os.path.join(input_location, matching_folder_name, random_region_name + "_mpbs.*"))
+    # if the background is not defined, we expect random regions instead
+    if not options.background_bed:
+        background_region_name = random_region_name
+
+        # Verifying background region file exists
+        background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + ".*"))
+        try:
+            background_region_file_name = background_region_glob[0]
+        except Exception:
+            main_error_handler.throw_error("ME_RAND_NOTFOUND")
+    else:
+        background_region_file_name = os.path.abspath(options.background_bed)
+
+    # Verifying background region MPBS file exists
+    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + "_mpbs.*"))
     try:
-        random_mpbs_file_name = random_region_glob[0]
+        background_mpbs_file_name = background_region_glob[0]
     except Exception:
         pass  # XXX TODO main_error_handler.throw_error("ME_RANDMPBS_NOTFOUND")
 
     # Converting regions bigbed file
-    random_region_bed_name = ".".join(random_region_file_name.split(".")[:-1]) + ".bed"
-    if random_region_file_name.split(".")[-1] == "bb":
-        random_region_bed_name = os.path.join(output_location_results, random_region_name + ".bed")
-        os.system(" ".join(["bigBedToBed", random_region_file_name, random_region_bed_name]))
-    elif random_region_file_name.split(".")[-1] != "bed":
+    background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
+    if background_region_file_name.split(".")[-1] == "bb":
+        background_region_bed_name = os.path.join(output_location_results, background_region_name + ".bed")
+        os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
+    elif background_region_file_name.split(".")[-1] != "bed":
         main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
 
     # Converting mpbs bigbed file
-    random_mpbs_bed_name = ".".join(random_mpbs_file_name.split(".")[:-1]) + ".bed"
-    if random_mpbs_file_name.split(".")[-1] == "bb":
-        random_mpbs_bed_name = os.path.join(output_location_results, random_region_name + "_mpbs.bed")
-        os.system(" ".join(["bigBedToBed", random_mpbs_file_name, random_mpbs_bed_name]))
-    elif random_mpbs_file_name.split(".")[-1] != "bed":
+    background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
+    if background_mpbs_file_name.split(".")[-1] == "bb":
+        background_mpbs_bed_name = os.path.join(output_location_results, background_region_name + "_mpbs.bed")
+        os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
+    elif background_mpbs_file_name.split(".")[-1] != "bed":
         pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
 
-    # Evaluating random statistics
-    rand_c_dict, rand_d_dict = get_fisher_dict(motif_names_grouped, random_region_bed_name, random_mpbs_bed_name,
-                                               output_location_results,
-                                               return_geneset=False)
+    # Evaluating background statistics
+    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
+                                           output_location_results, return_geneset=False)
 
     # Removing bed files if bb exist
-    if random_region_file_name.split(".")[-1] == "bb":
-        os.remove(random_region_bed_name)
-    if random_mpbs_file_name.split(".")[-1] == "bb":
-        os.remove(random_mpbs_bed_name)
+    if background_region_file_name.split(".")[-1] == "bb":
+        os.remove(background_region_bed_name)
+    if background_mpbs_file_name.split(".")[-1] == "bb":
+        os.remove(background_mpbs_bed_name)
 
     ###################################################################################################
     # Enrichment Statistics
@@ -639,7 +652,7 @@ def main_enrichment():
 
     # Creating link dictionary for HTML file
     genetest_link_dict = dict()
-    randtest_link_dict = dict()
+    sitetest_link_dict = dict()
     link_location = "file://" + os.path.abspath(output_location_results)
     for curr_input in input_list:
         for grs in curr_input.region_list:
@@ -647,11 +660,11 @@ def main_enrichment():
                 link_name = grs.name + " (" + curr_input.gene_set.name + ")"
                 genetest_link_dict[link_name] = os.path.join(link_location, grs.name + "__" + curr_input.gene_set.name,
                                                              output_stat_genetest + ".html")
-                randtest_link_dict[link_name] = os.path.join(link_location, grs.name + "__" + curr_input.gene_set.name,
-                                                             output_stat_randtest + ".html")
+                sitetest_link_dict[link_name] = os.path.join(link_location, grs.name + "__" + curr_input.gene_set.name,
+                                                             output_stat_fulltest + ".html")
             else:
                 link_name = grs.name
-                randtest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_randtest + ".html")
+                sitetest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_fulltest + ".html")
 
     # Iterating on each input object
     for curr_input in input_list:
@@ -887,7 +900,7 @@ def main_enrichment():
 
             else:
 
-                # Association still needs to be done with all genes in order to print gene list of random test
+                # Association still needs to be done with all genes in order to print gene list
                 grs = grs.gene_association(None, options.organism, options.promoter_length,
                                            options.maximum_association_length)
 
@@ -913,7 +926,7 @@ def main_enrichment():
                 to_remove_list.append(ev_mpbs_file_name_temp)
 
             ###################################################################################################
-            # Random Statistics
+            # Final wrap-up
             ###################################################################################################
 
             # Performing fisher test
@@ -923,8 +936,8 @@ def main_enrichment():
                 r.name = k
                 r.a = curr_a_dict[k]
                 r.b = curr_b_dict[k]
-                r.c = rand_c_dict[k]
-                r.d = rand_d_dict[k]
+                r.c = bg_c_dict[k]
+                r.d = bg_d_dict[k]
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
                 r.genes = ev_genelist_dict[k]
@@ -991,7 +1004,7 @@ def main_enrichment():
                         pass  # WARNING
 
             # Printing statistics text
-            output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_randtest + ".txt")
+            output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_fulltest + ".txt")
             output_file = open(output_file_name_stat_text, "w")
             output_file.write(results_header_text + "\n")
             for r in result_list:
@@ -1012,20 +1025,20 @@ def main_enrichment():
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
             # Printing statistics html
-            output_file_name_html = os.path.join(curr_output_folder_name, output_stat_randtest + ".html")
-            html = Html("Motif Enrichment Analysis", randtest_link_dict)
+            output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
+            html = Html("Motif Enrichment Analysis", sitetest_link_dict)
             if curr_input.gene_set:
                 html.add_heading(
-                    "Results for <b>" + original_name + "</b> region <b>Random Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
+                    "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
                 html.add_heading(
-                    "* This random test considered regions associated to the gene list given against background (random) regions",
+                    "* This test considered regions associated to the gene list given against background regions",
                     align="center", bold=False, size=3)
             else:
                 html.add_heading(
-                    "Results for <b>" + original_name + "</b> region <b>Random Test*</b> using all input regions",
+                    "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using all input regions",
                     align="center", bold=False)
-                html.add_heading("* This random test considered all regions against background (random) regions",
+                html.add_heading("* This test considered all regions against background regions",
                                  align="center", bold=False, size=3)
 
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
