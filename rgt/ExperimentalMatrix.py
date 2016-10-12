@@ -65,16 +65,7 @@ class ExperimentalMatrix:
             ======== ======== ========= ==================
         """
         f = open(file_path,'rU')
-        
-        #read and check header
-        #header = f.readline()
-        #header = header.strip("\n")
-        #header = header.split("\t")
-        
-        #assert(header[0] == "name")
-        #assert(header[1] == "type")
-        #assert(header[2] == "file")
-        #self.fields = header
+
         base_dir = ""
         for line in f:
             # Neglect comment lines
@@ -84,10 +75,7 @@ class ExperimentalMatrix:
             
             # Read header
             elif line[:4] == "name":
-                # header = line.strip("\n")
-                # header = line.strip(" ")
-                header = line.split("\t")
-                
+                header = line.split()
                 assert(header[0] == "name")
                 assert(header[1] == "type")
                 assert(header[2] == "file")
@@ -99,9 +87,7 @@ class ExperimentalMatrix:
                 
             # Read further information    
             else:
-                # line = line.strip("\n")
-                # line = line.strip(" ")
-                line = line.split("\t")
+                line = line.split()
                 if line[0].startswith("BASE_DIR"):
                     base_dir = line[1]
                 if len(line) < 3:  # Skip the row which has insufficient information
@@ -128,12 +114,10 @@ class ExperimentalMatrix:
                                 if f != fi:
                                     try: self.fieldsDict[ self.fields[f] ][line[f]].append(line[0]+t)
                                     except: self.fieldsDict[ self.fields[f] ][line[f]] = [line[0]+t]
-
                             if line[0] not in self.trash: 
                                 self.trash.append(line[0])
                             
                     else:
-                        
                         if curr_id:
                             try: d[line[fi]] += curr_id
                             except: d[line[fi]] = curr_id
@@ -146,6 +130,7 @@ class ExperimentalMatrix:
         self.remove_name()
         self.load_bed_url(".")
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
+
         
     def get_genesets(self):
         """Returns the GeneSets."""

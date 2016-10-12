@@ -8,6 +8,7 @@ import pysam
 # Distal Libraries
 from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
+from rgt.Util import OverlapType
 from BindingSiteSet import BindingSite, BindingSiteSet
 
 class RNADNABinding:
@@ -381,8 +382,9 @@ class RNADNABindingSet:
         self.merged_dict = OrderedDict()
         # reg = copy.deepcopy(region_set)
         # res = copy.deepcopy(name_replace)
-        reg = region_set
+        # reg = region_set
         res = name_replace
+
 
         if not rbss:
             # Merge RBS
@@ -436,12 +438,15 @@ class RNADNABindingSet:
                 except: 
                     try: rd = con.next()
                     except: con_loop = False
-        if reg:
+
+        if region_set:
             for r in self.merged_dict.keys():
-                self.merged_dict[r] = reg.intersect(self.merged_dict[r], 
-                                                    mode=OverlapType.ORIGINAL, 
-                                                    rm_duplicates=rm_duplicate)
-        if not reg and rm_duplicate:
+                s = region_set.intersect(self.merged_dict[r],
+                                         mode=OverlapType.ORIGINAL,
+                                         rm_duplicates=rm_duplicate)
+                self.merged_dict[r] = s
+
+        if not region_set and rm_duplicate:
             for r in self.merged_dict.keys():
                 self.merged_dict[r].remove_duplicates()
 
@@ -453,7 +458,7 @@ class RNADNABindingSet:
             for r in self.merged_dict.keys():
                 self.merged_dict[r].replace_region_name(regions=res)
         #self.merged_dict = new_dict
-        if asgene_organism and not res:
+        elif asgene_organism:
             for r in self.merged_dict.keys():
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass
