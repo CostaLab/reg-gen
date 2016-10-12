@@ -763,6 +763,7 @@ class PromoterTest:
         self.scores = None
         self.scoreh = scoreh
         self.motif = OrderedDict()
+        self.stat = OrderedDict(name=rna_name)
         
 
         # Input BED files
