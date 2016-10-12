@@ -1,4 +1,9 @@
-.idea/
+*.pyc
+*~
+*.path
 RGT.egg-info/
 build/
 dist/
+docs/_build/
+.idea
+

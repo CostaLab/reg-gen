@@ -430,12 +430,16 @@ if __name__ == "__main__":
                 # print(line[8].split("; "))
                 info = line[8].split("; ")
 
+
+                gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
+                gi = gi.partition(".")[0]
+                gs = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
+                gs = gs.partition(" (")[0]
+
                 if args.id:
-                    gn = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
-                    gn = gn.partition(".")[0]
+                    gn = gi
                 else:
-                    gn = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-                    gn = gn.partition(" (")[0]
+                    gn = gs
 
                 # print(gn)
                 # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
@@ -462,8 +466,7 @@ if __name__ == "__main__":
 
                 if not args.g:
                     print(seq, file=g)
-                elif select_genes.check(gn) or select_genes.check(gi):
-                    
+                elif select_genes.check(gs) or select_genes.check(gi):
                     print(seq, file=g)
                 else:
                     continue
