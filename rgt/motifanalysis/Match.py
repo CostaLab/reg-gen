@@ -7,10 +7,15 @@
 from gc import collect
 
 # Internal
-from .. Util import ErrorHandler
+from rgt.Util import ErrorHandler
 
 # External
-from MOODS import search
+try:
+    import MOODS.tools
+    import MOODS.scan
+except:
+    import MOODS
+
 
 ###################################################################################################
 # Functions
@@ -46,8 +51,20 @@ def match_single(motif, sequence, genomic_region, output_file, unique_threshold=
         motif_max = motif.max
  
     # Performing motif matching
-    for search_result in search(sequence, [motif.pssm_list], current_threshold, absolute_threshold=True, both_strands=True):
-        for (position, score) in search_result:
+    try:
+        results = MOODS.search(sequence, [motif.pssm_list], current_threshold, absolute_threshold=True, both_strands=True)
+
+    except:
+        bg = MOODS.tools.flat_bg(4)
+        results = MOODS.scan.scan_dna(sequence, [motif.pssm_list], bg, [current_threshold], 7)
+
+    for search_result in results:
+        for r in search_result:
+            try:
+                position=r.pos
+                score=r.score
+            except:
+                (position, score)=r
 
             # Verifying unique threshold acceptance
             if(unique_threshold and score/motif.len < unique_threshold): continue
@@ -102,7 +119,10 @@ def match_multiple(motif_name_list, motif_pssm_list, motif_thresh_list, motif_is
 
     # Performing motif matching
     counter = 0
-    for search_result in search(sequence, motif_pssm_list, motif_thresh_list, absolute_threshold=True, both_strands=True):
+
+    results = MOODS.search(sequence, motif_pssm_list, motif_thresh_list, absolute_threshold=True, both_strands=True)
+
+    for search_result in results:
 
         # Evaluating structures
         curr_index = int(counter/2)
