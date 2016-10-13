@@ -248,6 +248,12 @@ if __name__ == "__main__":
     parser_ensembl2symbol.add_argument('-o', '-output', type=str, help="Output gene list")
     parser_ensembl2symbol.add_argument('-organism', type=str, help="Define the organism")
 
+    parser_sumbol2ensembl = subparsers.add_parser('symbol2ensembl',
+                                                  help="[GENE] Convert the gene list from gene symbol to ensembl ID")
+    parser_sumbol2ensembl.add_argument('-i', '-input', type=str, help="Input gene list")
+    parser_sumbol2ensembl.add_argument('-o', '-output', type=str, help="Output gene list")
+    parser_sumbol2ensembl.add_argument('-organism', type=str, help="Define the organism")
+
     ############### STAR junction to BED #############################################
     parser_circRNA = subparsers.add_parser('circRNA', 
                        help="[junction] Convert the Chimeric junction from STAR to BED file")
@@ -967,6 +973,23 @@ if __name__ == "__main__":
         ann = AnnotationSet(gene_source=args.organism, tf_source=None, alias_source=args.organism, 
                             filter_havana=False, protein_coding=False, known_only=False)
         mapped_list, unmapped_list = ann.get_official_symbol(gene_name_source=g.genes)
+        print("\t"+str(len(g.genes))+"\tgenes are loaded.")
+        print("\t"+str(len(mapped_list))+"\tgenes are mapped.")
+        print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
+        g.genes = mapped_list
+        g.save(args.o)
+
+
+    elif args.mode == "symbol2ensembl":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        print("organism:\t" + args.organism)
+        g = GeneSet("symbol")
+        g.read(args.i)
+
+        ann = AnnotationSet(gene_source=args.organism, tf_source=None, alias_source=args.organism,
+                            filter_havana=False, protein_coding=False, known_only=False)
+        mapped_list, unmapped_list = ann.fix_gene_names(g)
         print("\t"+str(len(g.genes))+"\tgenes are loaded.")
         print("\t"+str(len(mapped_list))+"\tgenes are mapped.")
         print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
