@@ -157,10 +157,10 @@ def main_matching():
                       default=os.getcwd(), help="Path where the output files will be written.")
     parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                       help="If this option is used, all bed files will be written as bigbed.")
-    parser.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_false", default=True,
+    parser.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
                       help="In order to print bigbed files the scores need to be normalized between 0 and 1000."
-                           "Use this option if real bitscores should be printed in the resulting bed file."
-                           "In this case, a bigbed file will not be created.")
+                           "Don't use this option if real bitscores should be printed in the resulting bed file."
+                           "Without this option, bigbed files will never be created.")
 
     # Processing Options
     options, arguments = parser.parse_args()
