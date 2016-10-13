@@ -4,6 +4,7 @@
 ###################################################################################################
 
 # Python
+from __future__ import print_function
 from os import waitpid
 from os.path import basename, join, dirname
 from subprocess import Popen, check_output
@@ -13,7 +14,6 @@ from pipes import quote
 from rgt.GeneSet import GeneSet
 from rgt.Util import ErrorHandler, OverlapType
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
 
 # External
 from numpy import asarray, argsort, sum, arange, nonzero, minimum, maximum, int64, any, nan, inf, abs
@@ -22,12 +22,14 @@ from numpy import asarray, argsort, sum, arange, nonzero, minimum, maximum, int6
 # Functions
 ###################################################################################################
 
+
 def ecdf(x):
     """
     Auxiliary function for multiple_test_correction
     """
     nobs = len(x)
     return arange(1,nobs+1)/float(nobs)
+
 
 def multiple_test_correction(pvals, alpha=0.05, method='indep'):
     """ 
@@ -85,7 +87,8 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
     pvals_corrected[pvals_corrected>1] = 1
     return reject[sortrevind], pvals_corrected[sortrevind]
 
-def fisher_table_old((motif_name,region_file_name,mpbs_file_name,return_geneset,output_mpbs_file)):
+
+def fisher_table_old((motif_name, region_file_name, mpbs_file_name, return_geneset, output_mpbs_file)):
     """ 
     TODO
 
@@ -116,7 +119,7 @@ def fisher_table_old((motif_name,region_file_name,mpbs_file_name,return_geneset,
     a_file_name = mpbs_file_name+motif_name+"_A.bed"
     b_file_name = mpbs_file_name+motif_name+"_B.bed"
     n_lines_grep = int(check_output(['wc', '-l', grep_file_name]).split()[0])
-    if(n_lines_grep > 0):
+    if n_lines_grep > 0:
         p2 = Popen("intersectBed -a "+quote(region_file_name)+" -b "+quote(grep_file_name)+" -wa -u > "+quote(a_file_name), shell=True)
         waitpid(p2.pid, 0)
         p3 = Popen("intersectBed -a "+quote(region_file_name)+" -b "+quote(grep_file_name)+" -wa -v > "+quote(b_file_name), shell=True)
@@ -129,12 +132,12 @@ def fisher_table_old((motif_name,region_file_name,mpbs_file_name,return_geneset,
         return_vec.append(a); return_vec.append(b)
 
         # Fetching genes
-        if(return_geneset):
+        if return_geneset:
             gene_set = GeneSet(motif_name)
             a_file = open(a_file_name,"r")
             for line in a_file:
                 ll = line.strip().split("\t")
-                if(ll[3]):
+                if ll[3]:
                     gene_list = [e if e[0]!="." else e[1:] for e in ll[3].split(":")]
                     for g in gene_list: gene_set.genes.append(g)
             a_file.close()
@@ -142,7 +145,7 @@ def fisher_table_old((motif_name,region_file_name,mpbs_file_name,return_geneset,
             return_vec.append(gene_set)
 
         # Fetching mpbs
-        if(output_mpbs_file):
+        if output_mpbs_file:
             mpbs_list = []
             mpbs_temp_file_name = mpbs_file_name+motif_name+"_mpbstemp.bed"; to_remove.append(mpbs_temp_file_name)
             p4 = Popen("intersectBed -a "+quote(grep_file_name)+" -b "+quote(region_file_name)+" -wa -u > "+quote(mpbs_temp_file_name), shell=True)
@@ -167,6 +170,7 @@ def fisher_table_old((motif_name,region_file_name,mpbs_file_name,return_geneset,
 
     # Return
     return return_vec
+
 
 def get_fisher_dict_old(motif_names, region_file_name, mpbs_file_name, temp_file_path, return_geneset=False, output_mpbs_file=None, color="0,130,0"):
     """ 
@@ -202,20 +206,19 @@ def get_fisher_dict_old(motif_names, region_file_name, mpbs_file_name, temp_file
     # Calculating statistics for EV
     res1_dict = dict()
     res2_dict = dict()
-    if(return_geneset): geneset_dict = dict()
+    if return_geneset: geneset_dict = dict()
     for mpbs_name_group in motif_names:
 
         # Creating data input
         curr_data_input = [[m,region_file_name_sort,mpbs_file_name_sort,return_geneset,output_mpbs_file] for m in mpbs_name_group]
-        curr_proc_nb = len(curr_data_input)
 
         # Evaluating fisher table with multiprocessing
-        curr_res = [fisher_table(xx) for xx in curr_data_input]
-        for i in range(0,len(mpbs_name_group)):
+        curr_res = [fisher_table_old(x) for x in curr_data_input]
+        for i in range(0, len(mpbs_name_group)):
             res1_dict[mpbs_name_group[i]] = curr_res[i][0]
             res2_dict[mpbs_name_group[i]] = curr_res[i][1]
-            if(return_geneset): geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
-            if(output_mpbs_file):
+            if return_geneset: geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
+            if output_mpbs_file:
                 for vec in curr_res[i][3]: output_mpbs_file.write("\t".join(vec+[vec[1],vec[2],color])+"\n")
 
     # Remove all files
@@ -224,15 +227,15 @@ def get_fisher_dict_old(motif_names, region_file_name, mpbs_file_name, temp_file
         waitpid(p5.pid, 0)
 
     # Return
-    if(return_geneset): return res1_dict, res2_dict, geneset_dict
+    if return_geneset: return res1_dict, res2_dict, geneset_dict
     return res1_dict, res2_dict
-
 
 
 ################### NEW FISHER TABLE #############################
 ##################################################################
 ######### without temp file creation and shell script ############
 ##################################################################
+
 
 def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
     """
@@ -252,7 +255,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
     mpbs_list -- TODO
     """
 
-    #Initialization
+    # Initialization
     return_vec = []
 
     # Fetching motif
@@ -262,28 +265,29 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
             mpbs_motif.add(region)
 
     # Performing intersections
-    if (len(mpbs_motif) > 0):
+    if len(mpbs_motif) > 0:
         # regions which are overlapping with mpbs_motif
         intersect_original = regions.intersect(mpbs_motif, mode=OverlapType.ORIGINAL, rm_duplicates=True)
         # regions which are not overlapping with regions from mpbs_motif
-        substract_overlap = regions.subtract(mpbs_motif, whole_region=True)
+        subtract_overlap = regions.subtract(mpbs_motif, whole_region=True)
 
         # Counting the number of regions
         return_vec.append(len(intersect_original))
-        return_vec.append(len(substract_overlap))
+        return_vec.append(len(subtract_overlap))
 
         # Fetching genes
-        if (return_geneset):
+        if return_geneset:
             gene_set = GeneSet(motif_name)
-            for genomicregion in intersect_original.sequences:
-                if (genomicregion.name):
-                    gene_list = [e if e[0] != "." else e[1:] for e in genomicregion.name.split(":")]
-                    for g in gene_list: gene_set.genes.append(g)
+            for genomic_region in intersect_original.sequences:
+                if genomic_region.name:
+                    gene_list = [e if e[0] != "." else e[1:] for e in genomic_region.name.split(":")]
+                    for g in gene_list:
+                        gene_set.genes.append(g)
             gene_set.genes = list(set(gene_set.genes))  # Keep only unique genes
             return_vec.append(gene_set)
 
         # Fetching mpbs
-        if (output_mpbs_file):
+        if output_mpbs_file:
             mpbs_list = []
             fetch_mpbs = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True)
             for region in fetch_mpbs.sequences:
@@ -293,7 +297,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
             return_vec.append(mpbs_list)
 
     else:
-        return_vec.append(0);
+        return_vec.append(0)
         return_vec.append(len(regions))
         gene_set = GeneSet(motif_name)
         return_vec.append(gene_set)
@@ -336,24 +340,29 @@ def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, temp_file_pat
     # Calculating statistics for EV
     res1_dict = dict()
     res2_dict = dict()
-    if (return_geneset): geneset_dict = dict()
+
+    if return_geneset:
+        geneset_dict = dict()
+
     for mpbs_name_group in motif_names:
 
         # Creating data input
-        curr_data_input = [[m, regions, mpbs, return_geneset, output_mpbs_file] for m in
-                           mpbs_name_group]
-        #curr_proc_nb = len(curr_data_input)
+        curr_data_input = [[m, regions, mpbs, return_geneset, output_mpbs_file] for m in mpbs_name_group]
 
         # Evaluating fisher table with multiprocessing
-        curr_res = [fisher_table(xx) for xx in curr_data_input]
+        curr_res = [fisher_table(x) for x in curr_data_input]
         for i in range(0, len(mpbs_name_group)):
             res1_dict[mpbs_name_group[i]] = curr_res[i][0]
             res2_dict[mpbs_name_group[i]] = curr_res[i][1]
-            if (return_geneset): geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
-            if (output_mpbs_file):
-                for vec in curr_res[i][3]: output_mpbs_file.write("\t".join(vec + [vec[1], vec[2], color]) + "\n")
+            if return_geneset:
+                geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
+            if output_mpbs_file:
+                for vec in curr_res[i][3]:
+                    output_mpbs_file.write("\t".join(vec + [vec[1], vec[2], color]) + "\n")
 
     # Return
-    if (return_geneset): return res1_dict, res2_dict, geneset_dict
+    if return_geneset:
+        return res1_dict, res2_dict, geneset_dict
+
     return res1_dict, res2_dict
 

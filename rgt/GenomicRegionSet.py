@@ -834,7 +834,9 @@ class GenomicRegionSet:
             # Construct result set
             for i in range(size_result_c.value):
                 result.add(GenomicRegion(chromosomes_self_python[indices_c[i]], initials_result_c[i],
-                                         finals_result_c[i]))
+                                         finals_result_c[i], name=a.sequences[i].name,
+                                         orientation=a.sequences[i].orientation, data=a.sequences[i].data,
+                                         proximity=a.sequences[i].proximity))
             if rm_duplicates:
                 result.remove_duplicates()
             return result
