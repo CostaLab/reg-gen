@@ -6,13 +6,13 @@
 # Python
 from __future__ import print_function
 from os import waitpid
-from os.path import basename, join, dirname
+from os.path import basename, join
 from subprocess import Popen, check_output
 from pipes import quote
 
 # Internal
 from rgt.GeneSet import GeneSet
-from rgt.Util import ErrorHandler, OverlapType
+from rgt.Util import OverlapType
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 # External
