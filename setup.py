@@ -345,9 +345,11 @@ for tool_option in options.param_rgt_tool:
     for e in tools_dictionary[tool_option][3]: external_scripts.append(e)
 
 # Fetching Additional Structural Files
-readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.txt")
+readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 
 # Fetching Long Description
+# FIXME: might need to wrap this around pypandoc or similar, to convert from Markdown to rst or txt.
+# this is (or at least, was) needed on some python-package websites.
 readme_file = open(readme_file_name,"r")
 long_description =readme_file.read() + "nn"
 readme_file.close()
