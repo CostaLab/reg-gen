@@ -254,6 +254,12 @@ if __name__ == "__main__":
     parser_sumbol2ensembl.add_argument('-o', '-output', type=str, help="Output gene list")
     parser_sumbol2ensembl.add_argument('-organism', type=str, help="Define the organism")
 
+    ############### Get length in bp from FASTA files ################################
+    parser_fasta2bp = subparsers.add_parser('fasta2bp',
+                                            help="[FASTA] Get the length in bp of FASTA files")
+    parser_fasta2bp.add_argument('-i', '-input', type=str, help="Input FASTA file or directory")
+    parser_fasta2bp.add_argument('-o', '-output', type=str, default="", help="Output file with a table")
+
     ############### STAR junction to BED #############################################
     parser_circRNA = subparsers.add_parser('circRNA', 
                        help="[junction] Convert the Chimeric junction from STAR to BED file")
@@ -995,6 +1001,38 @@ if __name__ == "__main__":
         print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
         g.genes = mapped_list
         g.save(args.o)
+
+
+    elif args.mode == "fasta2bp":
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+
+        def fasta2bp(filename):
+            s = ""
+            with open(filename) as f:
+                for line in f:
+                    l = line.strip()
+                    if l.startswith(">"): continue
+                    elif not l: continue
+                    else: s += l
+            return len(s)
+
+        if os.path.isfile(args.i):
+            l = fasta2bp(args.i)
+            print("Length:\t\t" + str(l)+" bp")
+
+        elif os.path.isdir(args.i) and args.o:
+            list_bp = []
+            for root, dirs, files in os.walk(args.i):
+                for f in files:
+                    if f.endswith(".fa") or f.endswith(".fasta"):
+                        # print(f.partition(".")[0])
+                        # print(parser_fasta2bp(filename=os.path.join(root,f)))
+                        list_bp.append([f.partition(".")[0],
+                                        str(fasta2bp(os.path.join(root,f)))])
+            with open(args.o, "w") as g:
+                for l in list_bp:
+                    print("\t".join(l), file=g)
 
     ############### STAR junction to BED #######################################
     elif args.mode == "circRNA":
