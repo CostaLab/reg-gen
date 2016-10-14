@@ -159,4 +159,5 @@ def match_multiple(motif_name_list, motif_pssm_list, motif_thresh_list, motif_is
             else:
                 norm_score = 1000
 
-            output_file.write("\t".join([genomic_region.chrom, str(p1), str(p2), motif_name, str(norm_score), strand]) + "\n")
+            output_file.write("\t".join([genomic_region.chrom,
+                                         str(p1), str(p2), motif_name, str(norm_score), strand]) + "\n")

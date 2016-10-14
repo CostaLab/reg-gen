@@ -16,6 +16,7 @@ from Bio import motifs
 # Classes
 ###################################################################################################
 
+
 class Motif:
     """
     Represent a DNA binding affinity motif.
@@ -45,30 +46,37 @@ class Motif:
         repository = input_file_name.split("/")[-2]
 
         # Creating PFM & PWM
-        input_file = open(input_file_name,"r")
+        input_file = open(input_file_name, "r")
         self.pfm = motifs.read(input_file, "pfm")
         self.pwm = self.pfm.counts.normalize(pseudocounts)
         input_file.close()
         self.len = len(self.pfm)
 
         # Creating PSSM
-        background = {'A':0.25,'C':0.25,'G':0.25,'T':0.25}
+        background = {'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}
         self.pssm = self.pwm.log_odds(background)
-        self.pssm_list = [self.pssm[e] for e in ["A","C","G","T"]]
+        self.pssm_list = [self.pssm[e] for e in ["A", "C", "G", "T"]]
         self.max = self.pssm.max
 
         # Evaluating threshold
         try:
-            if(pseudocounts != 0.1 or precision != 10000): 1/0 # Induce Exception
+            if pseudocounts != 0.1 or precision != 10000:
+                # FIXME: brittle, we can improve this
+                # Induce Exception
+                1/0
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
-            try: distribution = self.pssm.distribution(background=background, precision=precision)
-            except Exception: main_error_handler.throw_error("MM_PSEUDOCOUNT_0")
+            try:
+                distribution = self.pssm.distribution(background=background, precision=precision)
+            except Exception:
+                main_error_handler.throw_error("MM_PSEUDOCOUNT_0")
             self.threshold = distribution.threshold_fpr(fpr)
 
-        # Evaluating if motf is palindromic
-        if(str(self.pfm.consensus) == str(self.pfm.consensus.reverse_complement())): self.is_palindrome = True
-        else: self.is_palindrome = False
+        # Evaluating if motif is palindromic
+        if str(self.pfm.consensus) == str(self.pfm.consensus.reverse_complement()):
+            self.is_palindrome = True
+        else:
+            self.is_palindrome = False
 
 
 class Thresholds:
@@ -101,13 +109,14 @@ class Thresholds:
             self.dict[fpr_name] = dict()
 
             # Iterating in fpr file
-            fpr_file = open(fpr_file_name,"r")
+            fpr_file = open(fpr_file_name, "r")
             header = fpr_file.readline()
             fpr_values = [float(e) for e in header.strip().split("\t")[1:]]
             for line in fpr_file:
                 ll = line.strip().split("\t")
-                self.dict[fpr_name][ll[0]] = dict()# Initializing dictionary level 2
-                for i in range(1,len(ll)): self.dict[fpr_name][ll[0]][fpr_values[i-1]] = float(ll[i]) # Updating dictionary
+                # Initializing dictionary level 2
+                self.dict[fpr_name][ll[0]] = dict()
+                for i in range(1, len(ll)):
+                    # Updating dictionary
+                    self.dict[fpr_name][ll[0]][fpr_values[i-1]] = float(ll[i])
             fpr_file.close()
-
-
