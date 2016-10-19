@@ -23,8 +23,10 @@ parser = OptionParser(usage = usage_message)
 # Parameter: RGT Data Location
 parser.add_option("--all", dest = "all", action = "store_true", default = False,
                   help = ("Fetch all data sets."))
-parser.add_option("--hocomoco", dest = "hocomoco", action = "store_true", default = False,
-                  help = ("Creates logos only for HOCOMOCO repository."))
+parser.add_option("--hocomoco9", dest = "hocomoco9", action = "store_true", default = False,
+                  help = ("Creates logos only for HOCOMOCO v.9 repository."))
+parser.add_option("--hocomoco10", dest = "hocomoco10", action = "store_true", default = False,
+                  help = ("Creates logos only for HOCOMOCO v.10 repository."))
 parser.add_option("--jaspar-vertebrates", dest = "jaspar_vertebrates", action = "store_true", default = False,
                   help = ("Creates logos only for Jaspar Vertebrates repository."))
 parser.add_option("--uniprobe-primary", dest = "uniprobe_primary", action = "store_true", default = False,
@@ -33,7 +35,8 @@ parser.add_option("--uniprobe-secondary", dest = "uniprobe_secondary", action = 
                   help = ("Creates logos only for Uniprobe (secondary motifs) repository."))
 options, arguments = parser.parse_args()
 if(options.all):
-    options.hocomoco = True
+    options.hocomoco9 = True
+    options.hocomoco10 = True
     options.jaspar_vertebrates = True
     options.uniprobe_primary = True
     options.uniprobe_secondary = True
@@ -60,7 +63,7 @@ output_logos_dir = path.join(curr_dir,"logos")
 if(not path.exists(output_logos_dir)): mkdir(output_logos_dir)
 for dir_name, subdir_list, file_list in walk(path.join(curr_dir,"motifs")):
     base_name = path.basename(dir_name)
-    if((options.hocomoco and base_name == "hocomoco") or (options.jaspar_vertebrates and base_name == "jaspar_vertebrates") or (options.uniprobe_primary and base_name == "uniprobe_primary") or (options.uniprobe_secondary and base_name == "uniprobe_secondary")):
+    if((options.hocomoco9 and base_name == "hocomoco_v9") or (options.hocomoco10 and base_name == "hocomoco_v10") or (options.jaspar_vertebrates and base_name == "jaspar_vertebrates") or (options.uniprobe_primary and base_name == "uniprobe_primary") or (options.uniprobe_secondary and base_name == "uniprobe_secondary")):
         output_dir = path.join(curr_dir,"logos",base_name)
         if(not path.exists(output_dir)): mkdir(output_dir)
         else: continue

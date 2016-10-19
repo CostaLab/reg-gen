@@ -1,1 +1,1 @@
-__all__ = ["hmm","signalProcessing"]
+__all__ = ["biasTable","hmm","Main","pileupRegion","signalProcessing"]
