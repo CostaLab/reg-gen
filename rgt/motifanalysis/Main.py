@@ -151,6 +151,9 @@ def main_matching():
     parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
                       help="Bed file containing the genomic regions to use as background."
                            "If set, --rand-proportion has no effect.")
+    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+                      help="Only use the motifs contained within this file (one for each line).")
+    # TODO: allow a more complex file type, specifying both motif name and database maybe?
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
@@ -187,6 +190,17 @@ def main_matching():
 
     # Default motif data
     motif_data = MotifData()
+
+    # Reading motif file
+    selected_motifs = []
+
+    if options.selected_motifs_filename:
+        try:
+            with open(options.selected_motifs_filename) as f:
+                selected_motifs = f.read().splitlines()
+                selected_motifs = filter(None, selected_motifs)
+        except Exception:
+            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Matrix
@@ -310,7 +324,11 @@ def main_matching():
     motif_file_names = []
     for motif_repository in motif_data.get_pwm_list():
         for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
-            motif_file_names.append(motif_file_name)
+            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
+            # if the user has given a list of motifs to use, we only
+            # add those to our list
+            if not selected_motifs or motif_name in selected_motifs:
+                motif_file_names.append(motif_file_name)
 
     # Iterating on grouped file name list
     for motif_file_name in motif_file_names:

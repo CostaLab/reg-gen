@@ -345,7 +345,7 @@ class ErrorHandler():
             "MM_NO_ARGUMENT": [11,0,"Could not read the arguments. Make sure you provided an experimental matrix."],
             "MM_WRONG_EXPMAT": [12,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
             "MM_WRONG_RANDPROP": [13,0,"Proportion of random regions is too low (<= 0)."],
-            "MM_LOW_NPROC": [14,0,"Number of processor is too low (<= 0)."],
+            "MM_LOW_NPROC": [14,0,"Number of processors is too low (<= 0)."],
             "ME_OUT_FOLDER_CREATION": [15,0,"Could not create output folder."],
             "ME_FEW_ARG": [16,0,"There are too few arguments. Please use -h option in order to verify command usage."],
             "ME_WRONG_EXPMAT": [17,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
@@ -356,7 +356,8 @@ class ErrorHandler():
             "ME_BAD_RAND": [22,0,"Could not read random regions."],
             "ME_RAND_NOT_BED_BB": [23,0,"Random regions are not in bed or bigbed format."],
             "MM_PSEUDOCOUNT_0": [24,0,"There were errors involved in the creation of Position Weight Matrices. Some distributions of numpy  and/or scipy does not allow for pseudocounts == 0. Please increase the pseudocount (or use default value of 0.1) and try again."],
-            "XXXXXXX": [25,0,"Xxxxxx"]
+            "MM_MOTIFS_NOTFOUND": [25,0,"A motif file was provided but it could not be loaded."],
+            "XXXXXXX": [26,0,"Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
