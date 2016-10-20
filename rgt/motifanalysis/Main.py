@@ -427,6 +427,8 @@ def main_enrichment():
     parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
                       help="Bed file containing the genomic regions to use as background."
                            "If set, the random regions files will be ignored.")
+    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+                      help="Only use the motifs contained within this file (one for each line).")
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
                       help="Path where the output files will be written. Default is the input PATH.")
@@ -486,6 +488,17 @@ def main_enrichment():
 
     # Default motif data
     motif_data = MotifData()
+
+    # Reading motif file
+    selected_motifs = []
+
+    if options.selected_motifs_filename:
+        try:
+            with open(options.selected_motifs_filename) as f:
+                selected_motifs = f.read().splitlines()
+                selected_motifs = filter(None, selected_motifs)
+        except Exception:
+            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     # Default image data
     image_data = ImageData()
@@ -600,7 +613,11 @@ def main_enrichment():
     motif_names = []
     for motif_repository in motif_data.get_pwm_list():
         for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
-            motif_names.append(".".join(os.path.basename(motif_file_name).split(".")[:-1]))
+            motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
+            # if the user has given a list of motifs to use, we only
+            # add those to our list
+            if not selected_motifs or motif_name in selected_motifs:
+                motif_names.append(motif_name)
     motif_names = sorted(motif_names)
 
     # Grouping motif file names by the number of processes requested
