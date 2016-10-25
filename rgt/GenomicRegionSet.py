@@ -1197,7 +1197,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-            - w_return -- If TRUE, it returns a GenomicRegionSet; if FASLSE, it merge the regions in place.
+            - w_return -- If TRUE, it returns a GenomicRegionSet; if FALSE, it merges the regions in place.
             - namedistinct -- Merge the regions which have the same names only.
         """
         if self.sorted == False: self.sort()
