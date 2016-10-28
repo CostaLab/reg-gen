@@ -213,6 +213,9 @@ if not path.exists(options.param_rgt_data_location):
 data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
 # if not os.path.isfile(data_config_file_name):
 data_config_file = open(data_config_file_name,"w")
+data_config_file.write("# Configuration file loaded at rgt startup. CAREFUL: any changes shall be overwritten\n"
+                       "# whenever rgt is (re)installed. Use data.config.user for permanent changes.\n\n")
+
 genome = "mm9"
 genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
@@ -261,14 +264,6 @@ data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv
 data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
-genome = "self_defined"
-genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: undefined\n")
-data_config_file.write("chromosome_sizes: undefined\n")
-data_config_file.write("gene_regions: undefined\n")
-data_config_file.write("annotation: undefined\n")
-data_config_file.write("gene_alias: undefined\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
@@ -295,6 +290,23 @@ data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_locatio
 
 data_config_file.close()
 
+# Creating data.config.user, but only if not already present
+user_config_file_name = path.join(options.param_rgt_data_location, "data.config.user")
+if not os.path.isfile(user_config_file_name):
+    user_config_file = open(user_config_file_name, "w")
+
+    user_config_file.write("# Here you can overwrite any property set in the data.config file. It shall not be\n"
+                           "# be overwritten in any case, so if you are experiencing problems rename or remove this\n"
+                           "# file. See data.config for how the file should be formatted.\n\n")
+    genome = "self_defined"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    user_config_file.write("# Template to add a genomic section.\n")
+    user_config_file.write("#["+genome+"]\n")
+    user_config_file.write("#genome: undefined\n")
+    user_config_file.write("#chromosome_sizes: undefined\n")
+    user_config_file.write("#gene_regions: undefined\n")
+    user_config_file.write("#annotation: undefined\n")
+    user_config_file.write("#gene_alias: undefined\n\n")
 
 # Creating data.config.path
 script_dir = path.dirname(path.abspath(__file__))
@@ -320,7 +332,7 @@ copy_files_dictionary = {
 "zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
 "zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.hmm", "atac_bc.hmm", "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm", "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
-"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco_v10", "hocomoco_v10.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
+"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
