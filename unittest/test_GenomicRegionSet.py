@@ -309,9 +309,8 @@ class TestGenomicRegionSet(unittest.TestCase):
 
         self.region_sets([['chr1',3,30],['chr1',50,60],['chr1',70,85]],
                          [['chr1',1,5],['chr1',10,19],['chr1',27,35],['chr1',55,75]])
-        
-        result = self.setA.intersect(self.setB)
 
+        result = self.setA.intersect(self.setB, mode=OverlapType.OVERLAP)
         self.assertEqual(len(result), 5)
         self.assertEqual(result[0].initial, 3)
         self.assertEqual(result[0].final, 5)
@@ -1165,4 +1164,5 @@ class TestGenomicRegionSet(unittest.TestCase):
         
 if __name__ == "__main__":
 
-    unittest.main()
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestGenomicRegionSet)
+    unittest.TextTestRunner(verbosity=3).run(suite)

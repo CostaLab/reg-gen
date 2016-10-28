@@ -791,7 +791,6 @@ class GenomicRegionSet:
             # Convert to ctypes
             len_self = len(a)
             len_y = len(b)
-            # max_len_result = max(len_self, len_y)
             max_len_result = len_self + len_y
 
             chromosomes_self_python = [gr.chrom for gr in a.sequences]
@@ -835,9 +834,8 @@ class GenomicRegionSet:
             # Construct result set
             for i in range(size_result_c.value):
                 ci = indices_c[i]
-                # print([i, ci])
-                result.add(GenomicRegion(chrom=chromosomes_self_c[i], initial=initials_result_c[i],
-                                         final=finals_result_c[i], name=a.sequences[ci].name,
+                result.add(GenomicRegion(chromosomes_self_c[ci], initials_result_c[i],
+                                         finals_result_c[i], name=a.sequences[ci].name,
                                          orientation=a.sequences[ci].orientation, data=a.sequences[ci].data,
                                          proximity=a.sequences[ci].proximity))
             if rm_duplicates:
