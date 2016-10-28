@@ -4,24 +4,26 @@ from __future__ import division
 import sys
 import os
 import re
-import argparse
-import shutil
-import time, datetime, getpass
-import subprocess
-from collections import OrderedDict, defaultdict
+import time
 import numpy
+import shutil
+import getpass
+import argparse
+import datetime
+import subprocess
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import colors
+from collections import OrderedDict, defaultdict
 
 # Local Libraries
 # Distal Libraries
+from rgt.Util import Html
+from rgt.viz.plotTools import output_array
+from rgt.motifanalysis.Statistics import multiple_test_correction
 from triplexTools import PromoterTest, RandomTest,\
                          split_gene_name, rna_associated_gene, get_dbss
-from rgt.Util import Html
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.viz.plotTools import output_array
 
 dir = os.getcwd()
 
