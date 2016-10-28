@@ -261,14 +261,6 @@ data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv
 data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
-genome = "self_defined"
-genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: undefined\n")
-data_config_file.write("chromosome_sizes: undefined\n")
-data_config_file.write("gene_regions: undefined\n")
-data_config_file.write("annotation: undefined\n")
-data_config_file.write("gene_alias: undefined\n\n")
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
@@ -295,6 +287,23 @@ data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_locatio
 
 data_config_file.close()
 
+# Creating data.config.user, but only if not already present
+user_config_file_name = path.join(options.param_rgt_data_location, "data.config.user")
+if not os.path.isfile(user_config_file_name):
+    user_config_file = open(user_config_file_name, "w")
+
+    user_config_file.write("# Here you can overwrite any property set in the data.config file. It shall not be\n"
+                           "# be overwritten in any case, so if you are experiencing problems rename or remove this\n"
+                           "# file. See data.config for how the file should be formatted.\n\n")
+    genome = "self_defined"
+    genome_dir = path.join(options.param_rgt_data_location, genome)
+    user_config_file.write("# Template to add a genomic section.\n")
+    user_config_file.write("#["+genome+"]\n")
+    user_config_file.write("#genome: undefined\n")
+    user_config_file.write("#chromosome_sizes: undefined\n")
+    user_config_file.write("#gene_regions: undefined\n")
+    user_config_file.write("#annotation: undefined\n")
+    user_config_file.write("#gene_alias: undefined\n\n")
 
 # Creating data.config.path
 script_dir = path.dirname(path.abspath(__file__))
