@@ -213,6 +213,9 @@ if not path.exists(options.param_rgt_data_location):
 data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
 # if not os.path.isfile(data_config_file_name):
 data_config_file = open(data_config_file_name,"w")
+data_config_file.write("# Configuration file loaded at rgt startup. CAREFUL: any changes shall be overwritten\n"
+                       "# whenever rgt is (re)installed. Use data.config.user for permanent changes.\n\n")
+
 genome = "mm9"
 genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
