@@ -791,7 +791,8 @@ class GenomicRegionSet:
             # Convert to ctypes
             len_self = len(a)
             len_y = len(b)
-            max_len_result = max(len_self, len_y)
+            # max_len_result = max(len_self, len_y)
+            max_len_result = len_self + len_y
 
             chromosomes_self_python = [gr.chrom for gr in a.sequences]
             chromosomes_self_c = (c_char_p * len_self)(*chromosomes_self_python)
@@ -834,8 +835,9 @@ class GenomicRegionSet:
             # Construct result set
             for i in range(size_result_c.value):
                 ci = indices_c[i]
-                result.add(GenomicRegion(chromosomes_self_c[i], initials_result_c[i],
-                                         finals_result_c[i], name=a.sequences[ci].name,
+                # print([i, ci])
+                result.add(GenomicRegion(chrom=chromosomes_self_c[i], initial=initials_result_c[i],
+                                         final=finals_result_c[i], name=a.sequences[ci].name,
                                          orientation=a.sequences[ci].orientation, data=a.sequences[ci].data,
                                          proximity=a.sequences[ci].proximity))
             if rm_duplicates:
@@ -1924,38 +1926,38 @@ class GenomicRegionSet:
         if len(self) == 0 or len(regions) == 0: return
 
         else:
-            res = copy.deepcopy(regions)
+            # res = copy.deepcopy(regions)
             # res = regions
             # If there is overlap within self or y, they should be merged first.
 
             if not self.sorted: self.sort()
-            if not res.sorted: res.sort()
+            if not regions.sorted: regions.sort()
 
             iter_a = iter(self)
             s = iter_a.next()
-            last_j = len(res) - 1
+            last_j = len(regions) - 1
             j = 0
             cont_loop = True
 
             while cont_loop:
                 # print(str(s),"\t",str(b[j]))
                 # When the res overlap
-                if s.overlap(res[j]):
+                if s.overlap(regions[j]):
                     if combine:
-                        s.name = s.name + "_" + res[j].name
+                        s.name = s.name + "_" + regions[j].name
                     else:
-                        s.name = res[j].name
+                        s.name = regions[j].name
                     try:
                         s = iter_a.next()
                     except:
                         cont_loop = False
 
-                elif s < res[j]:
+                elif s < regions[j]:
                     try:
                         s = iter_a.next()
                     except:
                         cont_loop = False
-                elif s > res[j]:
+                elif s > regions[j]:
                     if j == last_j:
                         cont_loop = False
                     else:

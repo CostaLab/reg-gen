@@ -775,9 +775,9 @@ if __name__ == "__main__":
         input_regions = GenomicRegionSet("input")
         input_regions.read_bed(args.i)
         if args.k:
-            output_regions = input_regions.intersect(t,mode=OverlapType.ORIGINAL)
+            output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
-            output_regions = input_regions.subtract(t,whole_region=True)
+            output_regions = input_regions.subtract(t, whole_region=True)
         output_regions.write_bed(args.o)
         print("complete.")
 
@@ -992,6 +992,7 @@ if __name__ == "__main__":
         print("organism:\t" + args.organism)
         g = GeneSet("symbol")
         g.read(args.i)
+        print(len(g.genes))
 
         ann = AnnotationSet(gene_source=args.organism, tf_source=None, alias_source=args.organism,
                             filter_havana=False, protein_coding=False, known_only=False)
@@ -1000,6 +1001,7 @@ if __name__ == "__main__":
         print("\t"+str(len(mapped_list))+"\tgenes are mapped.")
         print("\t"+str(len(unmapped_list))+"\tgenes are not mapped.")
         g.genes = mapped_list
+        print(len(g.genes))
         g.save(args.o)
 
 
