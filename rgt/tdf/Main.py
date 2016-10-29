@@ -5,7 +5,6 @@ import sys
 import os
 import re
 import time
-import numpy
 import shutil
 import getpass
 import argparse
@@ -13,19 +12,16 @@ import datetime
 import subprocess
 import matplotlib
 matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from collections import OrderedDict, defaultdict
 
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html
-from rgt.viz.plotTools import output_array
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from triplexTools import PromoterTest, RandomTest,\
-                         split_gene_name, rna_associated_gene, get_dbss, check_dir,\
+from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
-                         output_summary, list_all_index
+                         output_summary, list_all_index, no_binding_response
+
+from tdf_projectiontest import PromoterTest
+from tdf_regiontest import RandomTest
 
 dir = os.getcwd()
 
@@ -39,11 +35,6 @@ Triplexator
 https://github.com/zbarni/triplexator
 Author: Barna Zajzon
 """
-
-##########################################################################
-##### UNIVERSAL FUNCTIONS ################################################
-##########################################################################
-
 
 def main():
     ##########################################################################
@@ -88,7 +79,7 @@ def main():
     parser_promotertest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_promotertest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_promotertest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
-    parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
+    # parser_promotertest.add_argument('-motif', action="store_true", default=False, help="Show motif of binding sites.")
     parser_promotertest.add_argument('-filter_havana', type=str, default="F", metavar='  ', help="Apply filtering to remove HAVANA entries.")
     parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
     parser_promotertest.add_argument('-known_only', type=str, default="F", metavar='  ', help="Apply filtering to get only known genes.")
@@ -168,6 +159,7 @@ def main():
     ##########################################################################
     parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
     parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
+
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -186,7 +178,7 @@ def main():
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        #cf = ConfigurationFile()
+
         ####################################################################################
         ######### Integration
         if args.mode == "integrate":
@@ -233,33 +225,17 @@ def main():
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
             sys.exit(0)
+
         ####################################################################################
         ######### updatehtml
         elif args.mode == "updatehtml":
             revise_index(root=args.path, show_RNA_ass_gene=True)
             generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
-
-
-        #######################################################################################
-        ######## Test triplexator
-        # if args.tp:
-        #     process = subprocess.Popen([args.tp, "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # else:
-        #     process = subprocess.Popen(["triplexator", "--help"], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # # wait for the process to terminate
-        # out, err = process.communicate()
-        # errcode = process.returncode
-        # if errcode == 0:
-        #     print("** Triplexator: OK")
-        # else:
-        #     print("** Error: Triplexator cannot be found. Please export Triplexator path into $PATH")
-        #     print(err)
-        #     sys.exit(1)
         
         ####################################################################################
         ######### get_dbss
-        if args.mode == "get_dbss":
+        elif args.mode == "get_dbss":
             get_dbss(input_BED=args.i,output_BED=args.dbs,rna_fasta=args.r,output_rbss=args.rbs,
                      organism=args.organism,l=args.l,e=args.e,c=args.c,
                      fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=dir)
@@ -269,7 +245,7 @@ def main():
         #######################################################################
         #### Checking arguments
         if not args.o: 
-            print("Please define the output diractory name. \n")
+            print("Please define the output directory name. \n")
             sys.exit(1)
         if not args.organism: 
             print("Please define the organism. (hg19 or mm9)")
@@ -285,7 +261,6 @@ def main():
                     line = line.strip()
                     rn = os.path.basename(line).rpartition(".")[0]
                     print("\tProcessing: "+rn)
-                    #print(ps)
                     command = ["rgt-TDF", args.mode, 
                                "-r", line, "-rn", rn,
                                "-o", os.path.join(args.o, rn),
@@ -312,9 +287,7 @@ def main():
                     if args.fr != 'off': command += ["-fr", args.fr ]
                     if args.fr != 'off': command += ["-fr", args.fr ]
                     if args.fr != 'off': command += ["-fr", args.fr ]
-
                     subprocess.call(command)
-
             sys.exit(0)
 
         t0 = time.time()
@@ -336,47 +309,7 @@ def main():
     ##### Promoter Test ############################################################
     ################################################################################
     if args.mode == 'promotertest':
-        def no_binding_code():
-            print("*** Find no triple helices binding on the given RNA")
 
-            pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
-            exp = os.path.basename(args.o)
-            if args.de: tar_reg = os.path.basename(args.de)
-            else: tar_reg = os.path.basename(args.bed)
-            r_genes = rna_associated_gene(rna_regions=promoter.rna_regions, name=promoter.rna_name, organism=promoter.organism)
-            newlines = []
-            if os.path.isfile(pro_path):
-                with open(pro_path,'r') as f:
-                    new_exp = True
-                    for line in f:
-                        line = line.strip()
-                        line = line.split("\t")
-                        if line[0] == exp:
-                            newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
-                            new_exp = False
-                        else:
-                            newlines.append(line)
-                    if new_exp:
-                        newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg,"0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
-            else:
-                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
-                                 "Top_DBD", "p-value","closest_genes"])
-                newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
-            with open(pro_path,'w') as f:
-                for lines in newlines:
-                    print("\t".join(lines), file=f)
-
-            #shutil.rmtree(args.o)
-            #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-            revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
-            shutil.rmtree(args.o)
-            sys.exit(1)
 
 ################################################################################################3
 
@@ -427,9 +360,9 @@ def main():
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
-        if len(promoter.rbss) == 0:  no_binding_code()
+        if len(promoter.rbss) == 0:  no_binding_response()
 
-        promoter.dbd_regions(sig_region=promoter.sig_region_promoter, output=args.o)
+        promoter.dbd_regions(output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
@@ -440,11 +373,12 @@ def main():
         print2(summary, "Step 4: Generate plot and output html files.")
         promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
-                            sig_region=promoter.sig_region_promoter,
+                            sig_region=promoter.sig_DBD,
                             ylabel="Number of DBSs", 
                             linelabel="No. DBSs", filename="plot_promoter.png")
 
-        promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_region_promoter)
+        promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_DBD
+                        )
         #if args.showdbs:
         #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
         #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
@@ -452,9 +386,8 @@ def main():
         #                        ylabel="Number of DBSs on target promoters", 
         #                        linelabel="No. DBSs", filename="plot_dbss.png")
         #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
-        if args.motif: promoter.gen_motifs(temp=args.o)
+        # if args.motif: promoter.gen_motifs(temp=args.o)
 
-        
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
         promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable, 
@@ -470,12 +403,13 @@ def main():
     
         output_summary(summary, args.o, "summary.txt")
         promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        #list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
         revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
         try: os.remove(os.path.join(args.o, "de.fa"))
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))
         except OSError: pass
+
+        print(promoter.stat)
 
 
     ################################################################################
