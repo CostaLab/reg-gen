@@ -1036,7 +1036,7 @@ def get_rna_region_str(rna):
     return rna_regions
 
 
-def no_binding_response():
+def no_binding_response(args):
     print("*** Find no triple helices binding on the given RNA")
 
     pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
@@ -1079,3 +1079,9 @@ def no_binding_response():
     revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
     shutil.rmtree(args.o)
     sys.exit(1)
+
+def write_stat(stat, filename):
+    """Write the statistics into file"""
+    with open(filename, "w") as f:
+        for k, v in stat.iteritems():
+            print("\t".join([k,v]), file=f)

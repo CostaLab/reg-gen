@@ -211,8 +211,8 @@ class PromoterTest:
                 if score: data.append(self.scores)
                 dump(object=data, path=temp, filename=dumpname)
 
-            self.stat["Target_regions"] = str(len(self.de_regions))
-            self.stat["Background_regions"] = str(len(self.nde_regions))
+            self.stat["target_regions"] = str(len(self.de_regions))
+            self.stat["background_regions"] = str(len(self.nde_regions))
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
@@ -288,6 +288,9 @@ class PromoterTest:
             l2 = len(self.txp_nde.merged_dict[rbs])
             self.frequency["promoters"]["nde"][rbs] = [l2, len_nde - l2]
 
+        self.stat["target_DBS"] = str(len(self.txp_de))
+        self.stat["background_DBS"] = str(len(self.txp_nde))
+
         ########################################################
         # Count the number of hits on the promoters from each merged DBD
 
@@ -299,6 +302,7 @@ class PromoterTest:
         self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True,
                                name_replace=self.de_regions)  # asgene_organism=self.organism
         print("\t\t" + str(len(self.txp_def)) + "\tBinding sites on de promoters")
+
 
         # Promoter profiling
         self.promoter = {"de": {},"nde": {}}
@@ -325,6 +329,7 @@ class PromoterTest:
         self.txp_nde = RNADNABindingSet("non-DE")
         self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
         self.txp_nde.merge_rbs(rbss=self.rbss, rm_duplicate=True)  # , asgene_organism=self.organism)
+
 
         ndef_dbs = self.txp_nde.get_dbs()
 
@@ -408,8 +413,8 @@ class PromoterTest:
     def dbd_regions(self, output):
         dbd_regions(exons=self.rna_regions, sig_region=self.sig_DBD,
                     rna_name=self.rna_name, output=output)
-        self.stat["DBD"] = str(len(self.rna_regions))
-        self.stat["Enriched_DBD"] = str(len(self.sig_DBD))
+        self.stat["DBD"] = str(len(self.rbss))
+        self.stat["sDBD"] = str(len(self.sig_DBD))
 
 
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):

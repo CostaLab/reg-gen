@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
-                         output_summary, list_all_index, no_binding_response
+                         output_summary, list_all_index, no_binding_response, write_stat
 
 from tdf_projectiontest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -408,8 +408,7 @@ def main():
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))
         except OSError: pass
-
-        print(promoter.stat)
+        write_stat(stat=promoter.stat, filename=os.path.join(args.o, "stat.txt"))
 
 
     ################################################################################
