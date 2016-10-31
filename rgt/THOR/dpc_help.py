@@ -487,7 +487,7 @@ def input(laptop):
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
         parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
-                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: %default]")
+                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: do not merge]")
         parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
                            help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
         parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \

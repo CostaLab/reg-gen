@@ -19,8 +19,11 @@ from copy import deepcopy
 from collections import OrderedDict
 # Internal
 from rgt.GenomicRegion import GenomicRegion
+from rgt.SequenceSet import *
 from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
 from rgt.GeneSet import GeneSet
+
+import os
 
 ###############################################################################
 # Class
@@ -151,6 +154,52 @@ class GenomicRegionSet:
                         if error_line > 2:
                             print("Error at line", line, self.fileName)  # Skip the first error line which contains the track information
             self.sort()
+
+    def read_sequence(self, genome_file_dir):
+        """Read the sequences defined by a given genomic set.s
+        *Keyword arguments:*
+
+            - genomic_set - genomic set with regions to obtain the fasta file
+            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+        """
+
+        bed=self
+        # Parse each chromosome and fetch the defined region in this chromosome
+        chroms = list(set(bed.get_chrom()))
+
+        chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
+
+        for ch in chroms:
+            if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
+
+            # Read genome in FASTA according to the given chromosome
+            ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
+            try: 
+                ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
+            except:
+                continue
+            
+            # Regions in given chromosome
+            beds = bed.any_chrom(chrom=ch)
+
+            for s in beds:
+                seq = ch_seq[0].seq[s.initial:s.final]
+                try: strand = s.strand
+                except: strand = "+"
+                s.sequence=(Sequence(seq=seq, name=s.__repr__(), strand=strand))
+
+    def write_sequence(self, out_file):
+        """Write the sequences defined by a given genomic set. 
+        *Keyword arguments:*
+            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+        """
+        f=open(out_file,"w")
+        for r in self:
+          try:
+            f.write(">"+r.chrom+":"+str(r.initial)+"-"+str(r.final)+"-"+str(r.orientation)+"\n"+r.sequence.seq+"\n")
+          except:
+            pass
+                 
 
     def read_bedgraph(self, filename):
         """Read BEDGRAPH file and add every row as a GenomicRegion.

@@ -7,7 +7,7 @@ import copy
 
 # Distal Libraries
 from Util import SequenceType
-from rgt.GenomicRegionSet import GenomicRegionSet
+#from rgt.GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
@@ -49,6 +49,23 @@ class Sequence():
         """Return the ratio of GC content in this sequence."""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
+
+    def methylated_sequence(self,CpG):
+#ALPHABET "DNA with covalent modifications" DNA-LIKE
+
+# Core symbols
+# A "Adenine" 8510A8 ~ T "Thymine" A89610
+# C "Cytosine" A50026 ~ G "Guanine" 313695
+# m "5-Methylcytosine" D73027 ~ 1 "Guanine:5-Methylcytosine" 4575B4
+        aux=list(self.seq)
+        for pos in CpG:
+          if self.seq[pos]=="C":
+            aux[pos]="m"
+          elif self.seq[pos]=="G":
+            aux[pos]="1"
+          else:
+            raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")         
+        self.seq="".join(aux)
         
     def complement(self):
         """Return another Sequence which is the complement to original sequence."""
@@ -131,19 +148,15 @@ class SequenceSet:
                     pre_seq = True
             self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
-    def read_bed(self, bedfile, genome_file_dir):
-        """Read the sequences defined by BED file on the given genomce.
-
+    def read_genomic_set(self, genomic_set, genome_file_dir):
+        """Read the sequences defined by a given genomic set.s
         *Keyword arguments:*
 
-            - bedfile -- The path to the BED file which defines the regions.
+            - genomic_set - genomic set with regions to obtain the fasta file
             - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
         """
 
-        # Read BED into GenomicRegionSet
-        bed = GenomicRegionSet(os.path.basename(bedfile))
-        bed.read_bed(bedfile)
-        
+        bed=genomic_set
         # Parse each chromosome and fetch the defined region in this chromosome
         chroms = list(set(bed.get_chrom()))
 
@@ -167,6 +180,24 @@ class SequenceSet:
                 try: strand = s.strand
                 except: strand = "+"
                 self.sequences.append(Sequence(seq=seq, name=s.__repr__(), strand=strand))
+
+
+
+    def read_bed(self, bedfile, genome_file_dir):
+        """Read the sequences defined by BED file on the given genomce.
+
+        *Keyword arguments:*
+
+            - bedfile -- The path to the BED file which defines the regions.
+            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+        """
+
+        # Read BED into GenomicRegionSet
+        bed = GenomicRegionSet(os.path.basename(bedfile))
+        bed.read_bed(bedfile)
+        self.read_genomic_set(bed, genome_file_dir)
+        
+
 
     def total_len(self):
         """Retrun the total length of the given SequenceSet."""
