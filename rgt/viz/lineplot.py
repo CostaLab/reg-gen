@@ -400,6 +400,7 @@ class Lineplot:
                                          horizontalalignment='center', verticalalignment='top')
                                 plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
                                 for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
+                                    # print(y)
                                     ymax1 = numpy.amax(y)
                                     yaxmax[i] = max(ymax1, yaxmax[i])
                                     sx_ymax[it] = max(ymax1, sx_ymax[it])
@@ -410,6 +411,7 @@ class Lineplot:
                                     if printtable: pArr.append([g, s, c, d, "+"] + list(y))
 
                                 for l, y in enumerate(self.data[s][g][c][d]["sense_2"]):
+                                    # print(y)
                                     ymax2 = numpy.amax(y)
                                     yaxmax[i] = max(ymax2, yaxmax[i])
                                     sx_ymax[it] = max(ymax2, sx_ymax[it])

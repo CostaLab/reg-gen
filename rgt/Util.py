@@ -37,6 +37,9 @@ class ConfigurationFile:
         self.config = ConfigParser.ConfigParser()
         self.config.read(data_config_file_name)
 
+        # Overwriting config using user options
+        self.config.read(data_config_file_name + ".user")
+
         # Reading data directory
         self.data_dir = os.path.split(data_config_file_name)[0]
 
