@@ -1,16 +1,16 @@
 # Python Libraries
 from __future__ import print_function
-import sys
-import argparse
 import os
 import re
-from os.path import expanduser
+import sys
 import math
+import pysam
+import argparse
+from os.path import expanduser
 home = expanduser("~")
 
 # Local Libraries
 from rgt.GeneSet import GeneSet
-from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.AnnotationSet import AnnotationSet
 from rgt.Util import OverlapType
@@ -140,6 +140,22 @@ if __name__ == "__main__":
     parser_bedex.add_argument('-both',action="store_true", default=False, 
                               help="Extend from the both ends.")
 
+    ############### BED subtract ###############################################
+    # python rgt-convertor.py
+    parser_bedsub = subparsers.add_parser('bed_subtract', help="[BED] Subtract the regions")
+    parser_bedsub.add_argument('-i', type=str, help="Input BED file")
+    parser_bedsub.add_argument('-o', type=str, help="Output BED name.")
+    parser_bedsub.add_argument('-t', "-target", type=str,
+                              help="Define the target BED file to subtract.")
+
+    ############### BED cut ###############################################
+    # python rgt-convertor.py
+    parser_bedcut = subparsers.add_parser('bed_cut', help="[BED] Cut the regions")
+    parser_bedcut.add_argument('-i', type=str, help="Input BED file")
+    parser_bedcut.add_argument('-o', type=str, help="Output BED name.")
+    parser_bedcut.add_argument('-t', "-target", type=str,
+                               help="Define the target BED file for cutting.")
+
     ############### BED get promoters ########################################
     # python rgt-convertor.py bed_get_promoters -i -o -organism
     parser_bedgp = subparsers.add_parser('bed_get_promoters', 
@@ -202,7 +218,13 @@ if __name__ == "__main__":
     parser_divideBED.add_argument('-o2', '-output2', type=str, help="Output second BED file")
     parser_divideBED.add_argument('-c', '-cutoff', type=int, help="Define the cutoff")
     parser_divideBED.add_argument('-m', type=str, help="Define the mode, such as mean, max, or min.")
-    
+
+    ############### BAM Filter reads by BED file #######################
+    parser_filterBAM = subparsers.add_parser('bam_filter',
+                                             help="[BAM] Filter BAM file by the given regions in BED.")
+    parser_filterBAM.add_argument('-i', type=str, help="Input BAM file")
+    parser_filterBAM.add_argument('-bed', type=str, help="Input BED file for the regions for filtering")
+    parser_filterBAM.add_argument('-o', type=str, help="Output BAM file")
 
     ############### THOR calculate FC ################################
     parser_thorfc = subparsers.add_parser('thor_fc', 
@@ -624,7 +646,43 @@ if __name__ == "__main__":
                 else: pass
                 region.final += args.l
 
-        bed.write_bed(args.o) 
+        bed.write_bed(args.o)
+
+
+    ############### BED subtract ###############################################
+    elif args.mode == "bed_subtract":
+        print("input:\t" + args.i)
+        print("target:\t" + args.t)
+        print("output:\t" + args.o)
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+        target = GenomicRegionSet("target")
+        target.read_bed(args.t)
+        out = bed.subtract(y=target)
+        out.write_bed(args.o)
+
+
+    ############### BED subtract ###############################################
+    elif args.mode == "bed_cut":
+        print("input:\t" + args.i)
+        print("target:\t" + args.t)
+        print("output:\t" + args.o)
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+        target = GenomicRegionSet("target")
+        target.read_bed(args.t)
+        out = GenomicRegionSet("output")
+        for b in bed:
+            z = GenomicRegionSet("temp")
+            z.add(b)
+            y = z.subtract(y=target)
+            y.sort()
+            if len(y) > 0:
+                if b.orientation == "+":
+                    out.add(y[-1])
+                else:
+                    out.add(y[0])
+        out.write_bed(args.o)
 
     ############### BED get promoters #########################################
     elif args.mode == "bed_get_promoters":
@@ -857,6 +915,41 @@ if __name__ == "__main__":
             elif r.name in gene2: o2.add(r)
         o1.write_bed(args.o1)
         o2.write_bed(args.o2)
+
+
+    ############### BAM filtering by BED ###########################
+    #
+    elif args.mode == "bam_filter":
+        print("input:\t" + args.i)
+        print("regions:\t" + args.bed)
+        print("output:\t" + args.o)
+
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.bed)
+
+        bam = pysam.AlignmentFile(args.i, "rb")
+        outbam = pysam.AlignmentFile(args.o, "wh", template=bam)
+        for region in bed:
+            if "_" not in region.chrom:
+                for read in bam.fetch(region.chrom, region.initial, region.final):
+                    # print(region)
+                    # print(read.reference_start)
+                    # print(read.reference_end)
+                    # print(read.get_reference_positions())
+                    if read.reference_start > region.initial and read.is_read1:
+                        outbam.write(read)
+                    elif read.reference_end < region.final and read.is_read2:
+                        outbam.write(read)
+        bam.close()
+        outbam.close()
+        name = args.o.split(".")[0]
+        os.system("samtools view -Sb "+args.o+" > "+name+"_temp.bam")
+        os.system("samtools sort " + name+"_temp.bam " + name)
+        os.system("samtools index " + name + ".bam")
+        pysam.index(name+".bam")
+        os.remove(name+"_temp.bam")
+
+
 
 
     ############### THOR FC #############################################
