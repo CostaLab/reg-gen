@@ -34,7 +34,6 @@ class GenomicRegionSet:
 
         - name -- Name of the GenomicRegionSet
     """
-    #__slots__ = ['name', 'sequences', 'sorted', 'fileName', 'genome_path' ]
 
     def __init__(self, name):
         self.name = name
@@ -152,7 +151,8 @@ class GenomicRegionSet:
                     else:
                         error_line += 1
                         if error_line > 2:
-                            print("Error at line", line, self.fileName)  # Skip the first error line which contains the track information
+                            # Skip the first error line which contains the track information
+                            print("Error at line", line, self.fileName)
             self.sort()
 
     def read_sequence(self, genome_file_dir):
@@ -236,7 +236,6 @@ class GenomicRegionSet:
         samp = random.sample(range(len(self)), size)
         for i in samp:
             z.add(self.sequences[i])
-        #z.sort()
         return z
 
     def random_split(self, size):
@@ -506,9 +505,9 @@ class GenomicRegionSet:
                 
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
-                #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3],
+
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1],
+                                             name=new_genes_list, data=coord[3],
                                              orientation=coord[4], proximity=new_prox_list))
              
         return result_grs
@@ -700,7 +699,6 @@ class GenomicRegionSet:
             if mode == OverlapType.OVERLAP:
                 while cont_loop:
                     # When the regions overlap
-                    # print(s.toString() + "\t"+b[j].toString())
                     if s.overlap(b[j]):
                         z.add( GenomicRegion(chrom=s.chrom,
                                               initial=max(s.initial, b[j].initial),
@@ -1034,16 +1032,12 @@ class GenomicRegionSet:
         loop = True
         while loop:
             try:
-                #if self.sequences[i] == self.sequences[i+1]:
                 if self.sequences[i].toString() == self.sequences[i+1].toString():
                     del self.sequences[i+1]
-                    #loop = True
                 else:
-                    #loop = False
                     i += 1
             except:
                 loop = False
-                #continue
             
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs upstream and downstream of each region in self. In effect, this allows regions in y that are near regions in self to be detected.
@@ -1436,14 +1430,12 @@ class GenomicRegionSet:
             return b.name
             
         intersects = a.intersect(b)
-        #print(intersects.total_coverage(),self.total_coverage(), query.total_coverage(),sep="\t")
         intersects.merge()
         inter = intersects.total_coverage()
         
         a.combine(b, change_name=False)
         a.merge()
         uni = a.total_coverage()
-        #print(self.name+"   "+query.name+"   "+str(inter)+"   "+str(uni))
         similarity = inter / uni
         return similarity
 

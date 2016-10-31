@@ -1,1 +1,1 @@
-__all__ = ["BindingSiteSet","RNADNABindingSet","triplexTools","pytriplexator"]
+__all__ = ["BindingSiteSet","RNADNABindingSet","triplexTools","tdf_projectiontest", "tdf_regiontest"]
