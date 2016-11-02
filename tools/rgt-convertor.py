@@ -886,7 +886,6 @@ if __name__ == "__main__":
         gene1 = []
         gene2 = []
         
-
         with open(args.t) as t:
             for line in t:
                 l = line.strip().split()
@@ -926,48 +925,26 @@ if __name__ == "__main__":
 
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.bed)
-
         bam = pysam.AlignmentFile(args.i, "rb")
         outbam = pysam.AlignmentFile(args.o+".sam", "wh", template=bam)
         # in_reads = []
         for region in bed:
             if "_" not in region.chrom:
                 for read in bam.fetch(region.chrom, region.initial, region.final):
-                    if read.reference_start > region.initial and read.reference_end < region.final:
-                        m = bam.mate(read)
-                        if m.reference_start > region.initial and m.reference_end < region.final:
-                            outbam.write(read)
-                    # if read.reference_start > region.initial and read.is_read1:
-                    #     if bam.mate(read).reference_end < region.final:
-                    #         outbam.write(read)
-                    #     # in_reads.append(read.query_name)
-                    # elif read.reference_end < region.final and read.is_read2:
-                    #     if bam.mate(read).reference_start > region.initial:
-                    #         outbam.write(read)
-                        # in_reads.append(read.query_name)
-
-        # d = [x for x in set(in_reads) if in_reads.count(x) > 1]
-        # for region in bed:
-        #     if "_" not in region.chrom:
-        #         for read in bam.fetch(region.chrom, region.initial, region.final):
-        #             if read.reference_start > region.initial and read.is_read1:
-        #                 if read.query_name in d:
-        #                     outbam.write(read)
-        #             elif read.reference_end < region.final and read.is_read2:
-        #                 if read.query_name in d:
-        #                     outbam.write(read)
+                    if read.is_proper_pair:
+                        if read.reference_start > region.initial and read.reference_end < region.final:
+                            m = bam.mate(read)
+                            if m.reference_start > region.initial and m.reference_end < region.final:
+                                outbam.write(read)
 
         bam.close()
         outbam.close()
-        # name = args.o.split(".")[0]
         os.system("samtools view -Sb "+args.o+".sam"+" > "+args.o+"_temp.bam")
         os.system("samtools sort " + args.o+"_temp.bam " + args.o)
         os.system("samtools index " + args.o + ".bam")
         pysam.index(args.o+".bam")
         os.remove(args.o+"_temp.bam")
         os.remove(args.o + ".sam")
-
-
 
 
     ############### THOR FC #############################################
