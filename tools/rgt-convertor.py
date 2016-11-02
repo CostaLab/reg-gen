@@ -224,7 +224,7 @@ if __name__ == "__main__":
                                              help="[BAM] Filter BAM file by the given regions in BED.")
     parser_filterBAM.add_argument('-i', type=str, help="Input BAM file")
     parser_filterBAM.add_argument('-bed', type=str, help="Input BED file for the regions for filtering")
-    parser_filterBAM.add_argument('-o', type=str, help="Output BAM file")
+    parser_filterBAM.add_argument('-o', type=str, help="Output prefix for BAM file")
 
     ############### THOR calculate FC ################################
     parser_thorfc = subparsers.add_parser('thor_fc', 
@@ -922,13 +922,13 @@ if __name__ == "__main__":
     elif args.mode == "bam_filter":
         print("input:\t" + args.i)
         print("regions:\t" + args.bed)
-        print("output:\t" + args.o)
+        print("output prefix:\t" + args.o)
 
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.bed)
 
         bam = pysam.AlignmentFile(args.i, "rb")
-        outbam = pysam.AlignmentFile(args.o, "wh", template=bam)
+        outbam = pysam.AlignmentFile(args.o+".sam", "wh", template=bam)
         for region in bed:
             if "_" not in region.chrom:
                 for read in bam.fetch(region.chrom, region.initial, region.final):
@@ -942,12 +942,13 @@ if __name__ == "__main__":
                         outbam.write(read)
         bam.close()
         outbam.close()
-        name = args.o.split(".")[0]
-        os.system("samtools view -Sb "+args.o+" > "+name+"_temp.bam")
-        os.system("samtools sort " + name+"_temp.bam " + name)
-        os.system("samtools index " + name + ".bam")
-        pysam.index(name+".bam")
-        os.remove(name+"_temp.bam")
+        # name = args.o.split(".")[0]
+        os.system("samtools view -Sb "+args.o+".sam"+" > "+args.o+"_temp.bam")
+        os.system("samtools sort " + args.o+"_temp.bam " + args.o)
+        os.system("samtools index " + args.o + ".bam")
+        pysam.index(args.o+".bam")
+        os.remove(args.o+"_temp.bam")
+        os.remove(args.o + ".sam")
 
 
 
