@@ -929,17 +929,34 @@ if __name__ == "__main__":
 
         bam = pysam.AlignmentFile(args.i, "rb")
         outbam = pysam.AlignmentFile(args.o+".sam", "wh", template=bam)
+        # in_reads = []
         for region in bed:
             if "_" not in region.chrom:
                 for read in bam.fetch(region.chrom, region.initial, region.final):
-                    # print(region)
-                    # print(read.reference_start)
-                    # print(read.reference_end)
-                    # print(read.get_reference_positions())
-                    if read.reference_start > region.initial and read.is_read1:
-                        outbam.write(read)
-                    elif read.reference_end < region.final and read.is_read2:
-                        outbam.write(read)
+                    if read.reference_start > region.initial and read.reference_end < region.final:
+                        m = bam.mate(read)
+                        if m.reference_start > region.initial and m.reference_end < region.final:
+                            outbam.write(read)
+                    # if read.reference_start > region.initial and read.is_read1:
+                    #     if bam.mate(read).reference_end < region.final:
+                    #         outbam.write(read)
+                    #     # in_reads.append(read.query_name)
+                    # elif read.reference_end < region.final and read.is_read2:
+                    #     if bam.mate(read).reference_start > region.initial:
+                    #         outbam.write(read)
+                        # in_reads.append(read.query_name)
+
+        # d = [x for x in set(in_reads) if in_reads.count(x) > 1]
+        # for region in bed:
+        #     if "_" not in region.chrom:
+        #         for read in bam.fetch(region.chrom, region.initial, region.final):
+        #             if read.reference_start > region.initial and read.is_read1:
+        #                 if read.query_name in d:
+        #                     outbam.write(read)
+        #             elif read.reference_end < region.final and read.is_read2:
+        #                 if read.query_name in d:
+        #                     outbam.write(read)
+
         bam.close()
         outbam.close()
         # name = args.o.split(".")[0]
