@@ -196,8 +196,10 @@ class Lineplot:
                                         else:  # Single thread
                                             ts = time.time()
                                             cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
+                                            if "Conservation" in [s,g,c,d]:
+                                                cov.phastCons46way_score(stepsize=self.ss)
 
-                                            if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
+                                            elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
                                                 if not self.sense:
@@ -215,7 +217,12 @@ class Lineplot:
 
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                if ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
+                                                if "Conservation" in [s,g,c,d]:
+                                                    flap = CoverageSet("for flap", self.processed_bedsF[i])
+                                                    flap.phastCons46way_score(stepsize=self.ss)
+                                                    ffcoverage = numpy.fliplr(flap.coverage)
+                                                    cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                     flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                     flap.coverage_from_bigwig(bigwig_file=self.reads[j],
                                                                               stepsize=self.ss)
@@ -282,6 +289,7 @@ class Lineplot:
                                             print2(self.parameter,
                                                    "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}s".format(
                                                        bed + "." + bam, ts - te))
+                                            
 
         if mp:
             # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())

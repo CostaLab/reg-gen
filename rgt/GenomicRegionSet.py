@@ -2235,9 +2235,7 @@ class GenomicRegionSet:
                                     final=mid + int(0.5*len_each),
                                     orientation=longest.orientation)
             return res
-        # print(len(background))
         a = background.intersect(self, mode = OverlapType.ORIGINAL)
-        # print(len(a))
         b = self.extend(left=min_dis, right=min_dis,w_return=True)
         b.merge()
         c = a.subtract(b)
@@ -2276,3 +2274,11 @@ class GenomicRegionSet:
 
         return z
 
+    def split_by_chromosome(self):
+        """Return a list of many GenomicRegionSets, each one for one chromosome """
+        chrom_list = set(self.get_chrom())
+        z = []
+        for c in chrom_list:
+            g = self.any_chrom(chrom=c, return_list=False,return_regionset=True)
+            z.append(g)
+        return z

@@ -24,7 +24,7 @@ from rgt.AnnotationSet import AnnotationSet
 from RNADNABindingSet import RNADNABindingSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.Util import SequenceType, Html, GenomeData
+from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
     get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
     split_gene_name, rna_associated_gene
@@ -288,8 +288,8 @@ class PromoterTest:
             l2 = len(self.txp_nde.merged_dict[rbs])
             self.frequency["promoters"]["nde"][rbs] = [l2, len_nde - l2]
 
-        self.stat["target_DBS"] = str(len(self.txp_de))
-        self.stat["background_DBS"] = str(len(self.txp_nde))
+        self.stat["DBSs_target_all"] = str(len(self.txp_de))
+        self.stat["DBSs_background_all"] = str(len(self.txp_nde))
 
         ########################################################
         # Count the number of hits on the promoters from each merged DBD
@@ -324,7 +324,7 @@ class PromoterTest:
         self.promoter["nde"]["dbs"] = {}
         self.promoter["nde"]["dbs_coverage"] = {}
 
-        ndef_dbs = GenomicRegionSet("nde_dbs")
+        # ndef_dbs = GenomicRegionSet("nde_dbs")
 
         self.txp_nde = RNADNABindingSet("non-DE")
         self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
@@ -395,7 +395,6 @@ class PromoterTest:
             self.hoddsratio = {}
             self.hpvalue = {}
             pvalues = []
-            self.sig_region_dbs = []
             for rbs in self.frequency["hits"]["de"]:
                 table = numpy.array([self.frequency["hits"]["de"][rbs], self.frequency["hits"]["nde"][rbs]])
                 self.hoddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
@@ -408,14 +407,22 @@ class PromoterTest:
             for i, rbs in enumerate(self.frequency["hits"]["de"].keys()):
                 self.hpvalue[rbs] = pvals_corrected[i]
                 if pvals_corrected[i] < alpha:
-                    self.sig_region_dbs.append(rbs)
+                    self.sig_DBD.append(rbs)
 
     def dbd_regions(self, output):
         dbd_regions(exons=self.rna_regions, sig_region=self.sig_DBD,
                     rna_name=self.rna_name, output=output)
-        self.stat["DBD"] = str(len(self.rbss))
-        self.stat["sDBD"] = str(len(self.sig_DBD))
+        self.stat["DBD_all"] = str(len(self.rbss))
+        self.stat["DBD_sig"] = str(len(self.sig_DBD))
 
+        sigDBD = GenomicRegionSet("DBD_sig")
+        sigDBD.sequences = self.sig_DBD
+        rbss = self.txp_de.get_rbs()
+        overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+        self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+        rbss = self.txp_nde.get_rbs()
+        overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+        self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
 
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS

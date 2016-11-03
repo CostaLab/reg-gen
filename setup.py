@@ -1,12 +1,10 @@
 import os
 import sys
+from shutil import copy
 from pwd import getpwnam
-# from errno import ENOTDIR
-# import distutils.dir_util
 from sys import platform, exit
 from distutils import dir_util
-from shutil import copy, copytree
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 

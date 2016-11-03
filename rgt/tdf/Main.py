@@ -360,7 +360,8 @@ def main():
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
-        if len(promoter.rbss) == 0:  no_binding_response()
+        if len(promoter.rbss) == 0:  no_binding_response(args, promoter.rna_regions,
+                                                         promoter.rna_name, promoter.organism)
 
         promoter.dbd_regions(output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))

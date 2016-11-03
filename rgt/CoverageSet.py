@@ -628,21 +628,13 @@ class CoverageSet:
         - stepsize -- used stepsize
         """
         self.coverage = []
-        # phastCons46way_dir = "/data/phastCons46way/"
-        # for gr in self.genomicRegions:
-        #     bwf = BigWigFile(os.path.join(phastCons46way_dir, gr.chrom+".phastCons46way.bw"))
-        #     depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-        #     ds = []
-        #     for i in range(0, gr.final-gr.initial):
-        #         d = [ depth[j] for j in range(i,i+stepsize) ]
-        #         ds.append(sum(d)/len(d))
-        #
-        #     if gr.orientation == "-":
-        #         self.coverage.append( np.array(list(reversed(ds))) )
-        #     else:
-        #         self.coverage.append( np.array(ds) )
-        #
-        #     bwf.close()
+        phastCons46way_dir = "/data/phastCons46way/"
+        grs = self.genomicRegions.split_by_chromosome()
+        for gr in grs:
+            cov = CoverageSet("chrom",gr)
+            bwpath = os.path.join(phastCons46way_dir, gr.sequences[0].chrom+".phastCons46way.bw")
+            cov.coverage_from_bigwig(bigwig_file=bwpath,stepsize=stepsize)
+            self.coverage += cov.coverage
 
     def norm_gc_content(self, cov, genome_path, chrom_sizes):
         chrom_sizes_dict = {}

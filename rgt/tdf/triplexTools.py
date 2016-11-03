@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import pysam
+import shutil
 import pickle
 from ctypes import *
 from collections import *
@@ -356,10 +357,6 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
                 else:
                     newline.append("n.a.")
             print("\t".join(newline), file=t)
-
-    for d, p in plist.iteritems():
-        list_all_index(path=os.path.dirname(p),
-                       link_d=dirlist, show_RNA_ass_gene=show_RNA_ass_gene)
 
 
 def value2str(value):
@@ -957,10 +954,11 @@ def connect_rna(rna, temp, rna_name):
     exons = 0
     with open(rna) as f:
         for line in f:
-            if line[0] != ">":
+            if line.startswith(">"):
+                exons += 1
+            else:
                 line = line.strip()
                 seq += line
-                exons += 1
 
     with open(os.path.join(temp,"rna_temp.fa"), "w") as r:
         print(">"+rna_name, file=r)
@@ -1036,7 +1034,7 @@ def get_rna_region_str(rna):
     return rna_regions
 
 
-def no_binding_response(args):
+def no_binding_response(args, rna_regions, rna_name, organism):
     print("*** Find no triple helices binding on the given RNA")
 
     pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
@@ -1045,7 +1043,7 @@ def no_binding_response(args):
         tar_reg = os.path.basename(args.de)
     else:
         tar_reg = os.path.basename(args.bed)
-    r_genes = rna_associated_gene(rna_regions=promoter.rna_regions, name=promoter.rna_name, organism=promoter.organism)
+    r_genes = rna_associated_gene(rna_regions=rna_regions, name=rna_name, organism=organism)
     newlines = []
     if os.path.isfile(pro_path):
         with open(pro_path, 'r') as f:
@@ -1082,6 +1080,35 @@ def no_binding_response(args):
 
 def write_stat(stat, filename):
     """Write the statistics into file"""
+    order_stat = ["name", "genome", "exons", "seq_length",
+                  "target_regions", "background_regions",
+                  "DBD_all", "DBD_sig",
+                  "DBSs_target_all", "DBSs_target_DBD_sig",
+                  "DBSs_background_all", "DBSs_background_DBD_sig"]
     with open(filename, "w") as f:
-        for k, v in stat.iteritems():
-            print("\t".join([k,v]), file=f)
+        for k in order_stat:
+            print("\t".join([k,stat[k]]), file=f)
+
+def integrate_stat(path):
+    """Integrate all statistics within a directory"""
+    base = os.path.basename(path)
+    order_stat = ["name", "genome", "exons", "seq_length",
+                  "target_regions", "background_regions",
+                  "DBD_all", "DBD_sig",
+                  "DBSs_target_all", "DBSs_target_DBD_sig",
+                  "DBSs_background_all", "DBSs_background_DBD_sig"]
+    nested_dict = lambda: defaultdict(nested_dict)
+    data = nested_dict()
+
+    for item in os.listdir(path):
+        pro = os.path.join(path, item, "stat.txt")
+        if os.path.isfile(pro):
+            with open(pro) as f:
+                for line in f:
+                    l = line.split()
+                    data[item][l[0]] = l[1]
+    with open(os.path.join(path,"statistics_"+base+".txt"), "w") as g:
+        print("\t".join(order_stat), file=g)
+
+        for item in data.keys():
+            print("\t".join([data[item][o] for o in order_stat]), file=g)
