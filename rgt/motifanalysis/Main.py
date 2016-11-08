@@ -14,6 +14,7 @@ from random import seed
 warnings.filterwarnings("ignore")
 
 # Internal
+from rgt import __version__
 from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
@@ -61,7 +62,6 @@ def main():
 
     # Parameters
     seed(42)
-    current_version = "0.0.1"
     usage_message = ("\n--------------------------------------------------\n"
                      "The motif analysis program performs various motif-based analyses. "
                      "In order to use these tools, please type: \n\n"
@@ -79,7 +79,7 @@ def main():
                      "-h, --help    show this help message and exit.\n"
                      "--matching    Performs motif matching analysis.\n"
                      "--enrichment  Performs motif enrichment analysis.\n")
-    version_message = "Motif Analysis - Regulatory Analysis Toolbox (RGT). Version: " + str(current_version)
+    version_message = "Motif Analysis - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
 
     # Processing Help/Version Options
     if len(sys.argv) <= 1 or sys.argv[1] == "-h" or sys.argv[1] == "--help":

@@ -12,6 +12,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Internal
+from rgt import __version__
 from .. Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
 from .. ExperimentalMatrix import ExperimentalMatrix
 from .. GenomicRegion import GenomicRegion
@@ -61,7 +62,6 @@ def main():
     error_handler = ErrorHandler()
  
     # Parameters
-    current_version = "0.0.1"
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
                      "In order to use this tools, please type: \n\n"
@@ -81,10 +81,10 @@ def main():
                      "For further questions or comments please refer to our group:\n"
                      "https://groups.google.com/forum/#!forum/rgtusers\n"
                      "--------------------------------------------------")
-    version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: "+str(current_version)
+    version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: "+str(__version__)
 
     # Initializing Option Parser
-    parser = PassThroughOptionParser(usage = usage_message, version = version_message)
+    parser = PassThroughOptionParser(usage=usage_message, version=version_message)
 
     # Optional Input Options
     parser.add_option("--hmm-file", dest = "hmm_file", type = "string", 

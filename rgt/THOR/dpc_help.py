@@ -42,6 +42,7 @@ from rgt.ODIN.dpc_help import which
 import pysam
 import os.path
 import tempfile
+from rgt import __version__
 
 FOLDER_REPORT = None
 
@@ -559,10 +560,9 @@ def input(laptop):
     options.verbose = False
     options.hmm_free_para = False
     
-    version = "version \"0.1\""
     if options.version:
         print("")
-        print(version)
+        print(__version__)
         sys.exit()
     
     if len(args) != 1:

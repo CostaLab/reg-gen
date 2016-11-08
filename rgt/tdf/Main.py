@@ -15,6 +15,7 @@ matplotlib.use('Agg')
 
 # Local Libraries
 # Distal Libraries
+from rgt import __version__
 from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
@@ -45,7 +46,7 @@ def main():
                                                   for detection of triple helix potential of \
                                                   lncRNAs from genome-wide functional data. \
                                                   Author: Chao-Chung Kuo\
-                                                  \nVersion: 0.1.1', 
+                                                  \nVersion: ' + __version__,
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')

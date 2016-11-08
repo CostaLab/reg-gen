@@ -14,6 +14,7 @@ conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function
+from rgt import __version__
 from optparse import OptionParser, OptionGroup
 from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
@@ -474,9 +475,8 @@ def input(test):
             options.verbose = True
         
         if options.version:
-            version = "version \"0.4.1\""
             print("")
-            print(version)
+            print(__version__)
             sys.exit()
         
         if options.bibtex:
