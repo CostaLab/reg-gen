@@ -17,7 +17,7 @@ if not sys.version_info[0] == 2:
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 
-Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph C.C. Kuo, Ivan G. Costa.
+Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph C.C. Kuo, Fabio Ticconi, Ivan G. Costa.
 
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
@@ -90,7 +90,7 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.1.1","pysam>=0.7.5"],
+    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn<0.2.0","pysam>=0.7.5"],
     []
 ), 
 "ODIN": (
