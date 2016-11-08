@@ -5,17 +5,16 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 """
 
-
 from __future__ import print_function
-from rgt.GenomicRegionSet import *
-import pysam, sys  # @UnresolvedImport
-import numpy as np
-import numpy.ma
 import os
+import pysam
 import tempfile
 import subprocess
-# from helper import BigWigFile
+import numpy as np
+from sys import platform
+from rgt.GenomicRegionSet import *
 from rgt.ODIN.gc_content import get_gc_context
+
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -101,8 +100,13 @@ class CoverageSet:
             sys.exit(1)
 
         factor=1000000/float(self.reads)
-
         self.coverage = np.array(self.coverage)*factor
+        try:
+            self.transpose_cov1 = np.array(self.transpose_cov1) * factor
+            self.transpose_cov2 = np.array(self.transpose_cov2) * factor
+        except:
+            pass
+
 
     def write_bed(self, filename, zero=False):
         """Output coverage in BED format. 
@@ -189,19 +193,19 @@ class CoverageSet:
     def _init_read_number(self, bamFile):
         """Compute number of reads and number of mapped reads for CoverageSet"""
         # XXX ToDo add number of mapped reads in all cases
-        try:
-            if pysam.__version__ == '0.9.0':
-                a = pysam.idxstats(bamFile)
-                mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
-                unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
-                self.reads = mapped_reads + unmapped_read
-                self.mapped_reads = mapped_reads
-            else:
-                self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
-                self.mapped_reads = None
-        except:
-            self.reads = None
+        # try:
+        if '0.9.0' in pysam.__version__ or '0.9.1' in pysam.__version__:
+            a = pysam.idxstats(bamFile)
+            mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+            unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
+            self.reads = mapped_reads + unmapped_read
+            self.mapped_reads = mapped_reads
+        else:
+            self.reads = reduce(lambda x, y: x + y, [ eval('+'.join(l.rstrip('\n').split('\t')[2:]) ) for l in pysam.idxstats(bamFile)])
             self.mapped_reads = None
+        # except:
+        #     self.reads = None
+        #     self.mapped_reads = None
     
     def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
 
@@ -220,8 +224,6 @@ class CoverageSet:
         Class variable <coverage>: a list where the elements correspond to the GenomicRegion. The list elements give
         the number of reads falling into the GenomicRegion.
         
-        .. warning:: Function not tested. Please do not use it!
-        
         """
         
         bam = pysam.Samfile(bamFile, "rb" )
@@ -229,6 +231,7 @@ class CoverageSet:
         
         cov=[0]*len(self.genomicRegions)
         for i,region in enumerate(self.genomicRegions):
+            
             try:
                 if not strand_specific:
                     for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
@@ -241,11 +244,10 @@ class CoverageSet:
                         elif region.orientation == "-" and r.is_reverse: cov[i] += 1
                 
             except:
-                # pass
-                print("\tSkip: "+region.toString()+" "+region.name)
+                print("\tSkip: "+region.toString())
 
-        self.coverage=cov 
-        self.coverageOrig=cov
+        self.coverage = cov 
+        self.coverageOrig = cov
 
     def _get_bedinfo(self, l):
         if len(l) > 1:
@@ -255,8 +257,10 @@ class CoverageSet:
         else:
             return -1, -1, -1, False
 
-    def coverage_from_bam(self, bam_file, read_size = 200, binsize = 100, stepsize = 50, rmdup = True, mask_file = None, 
-                          get_strand_info = False):
+    
+    def coverage_from_bam(self, bam_file, extension_size=200, binsize=100, stepsize=50, rmdup=False,
+                          maxdup=None, mask_file=None, paired_reads=False,
+                          get_strand_info=False, get_sense_info=False, no_gaps=False):
         """Compute coverage based on GenomicRegionSet. 
         
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet). The GenomicRegion is divided into consecutive bins with lenth <binsize>.
@@ -265,10 +269,11 @@ class CoverageSet:
         *Keyword arguments:*
         
         - bam_file -- path to bam file
-        - read_size -- used read size
+        - extension_size -- used read size
         - binsize -- size of bins
         - stepsize -- stepsize for the window-based approach to generat the signal
         - rmdup -- remove dupliacted reads (reads with same starting coordinate)
+        - maxdup -- define the maximum count for the dupliacted reads (0: remove all;-1:no limit)
         - mask_file -- ignore region described in <mask_file> (tab-separated: chrom, start, end)
         - get_strand_info -- compute strand information for each bin
         
@@ -284,7 +289,7 @@ class CoverageSet:
         First, we compute a GenomicRegionSet that covers the entire mouse genome mm9. We use the annotation of RGT to compute the variable <regionset>::
             
             >>>from rgt.Util import GenomeData
-            >>>from helper import get_chrom_sizes_as_genomicregionset
+            >>>from rgt.helper import get_chrom_sizes_as_genomicregionset
             
             >>>g = GenomeData('mm9')
             >>>regionset = get_chrom_sizes_as_genomicregionset(g.get_chromosome_sizes())
@@ -293,7 +298,7 @@ class CoverageSet:
         
             >>>from rgt.CoverageSet import CoverageSet
             >>>cov = CoverageSet('IP coverage', regionset)
-            >>>cov.coverage_from_bam(bam_file=bamfile, read_size=200)
+            >>>cov.coverage_from_bam(bam_file=bamfile, extension_size=200)
         
         We can now access <cov>::
         
@@ -310,16 +315,20 @@ class CoverageSet:
          the length of the <overall_cov> equals 54515813, as we take the entire genome into account, but use a the default stepsize of 50 for segmentation. 
         
         """
-        
+
+        if len(self.genomicRegions) == 0:
+            return
+        log_aver = False
         self.binsize = binsize
         self.stepsize = stepsize
+        self.coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
         
         for read in bam.fetch():
-            read_size += read.rlen
+            fragment_size = read.rlen + extension_size
             break
-        
+
         self._init_read_number(bam_file)
         
         #check whether one should mask
@@ -335,6 +344,8 @@ class CoverageSet:
         
         if get_strand_info:
             self.cov_strand_all = []
+        if get_sense_info:
+            self.cov_sense_all = []
         
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
@@ -342,45 +353,75 @@ class CoverageSet:
             if get_strand_info:
                 cov_strand = [[0,0]] * (len(region) / stepsize)
                 strand_info = {}
+            if get_sense_info:
+                cov_sense = [[0,0]] * (len(region) / stepsize)
+                sense_info = {}
             
             positions = []
             j = 0
             read_length = -1
-            try:
-                for read in bam.fetch(region.chrom, max(0, region.initial-read_size), region.final+read_size):
-                    
-                    j += 1
-                    read_length = read.rlen 
-                    if not read.is_unmapped:
-                        pos = read.pos - read_size if read.is_reverse else read.pos
-                        pos_help = read.pos - read.qlen if read.is_reverse else read.pos
-                        
-                        #if position in mask region, then ignore
-                        if mask:
-                            while next_it and c_help not in chrom_regions: #do not consider this deadzone
+            # try:
+            for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
+                if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
+                j += 1
+                read_length = read.rlen
+                if not read.is_unmapped:
+                    # pos = read.pos - extension_size if read.is_reverse else read.pos
+                    # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                    pos = read.pos - extension_size if read.is_reverse else read.pos
+                    pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+
+                    within_gap = False
+                    if no_gaps:
+                        blocks = read.get_blocks()
+                        if len(blocks) > 1:
+                            # print(read.is_reverse)
+                            # print(read.pos)
+                            # print(blocks)
+                            for b_ind in range(len(blocks) - 1):
+                                # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
+                                if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
+                                    within_gap = True
+
+
+                    #if position in mask region, then ignore
+                    if mask:
+                        while next_it and c_help not in chrom_regions: #do not consider this deadzone
+                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                        if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
+                            while next_it and c_help != region.chrom: #get right chromosome
                                 c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                            if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
-                                while next_it and c_help != region.chrom: #get right chromosome
-                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                            while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
-                                c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                            if next_it and s_help <= pos_help and c_help == region.chrom:
-                                continue #pos in mask region
-                        
-                        positions.append(pos)
-                        
-                        if get_strand_info:
-                            if pos not in strand_info:
-                                strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
-                        
-            except ValueError:
-                pass
+                        while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
+                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                        if next_it and s_help <= pos_help and c_help == region.chrom:
+                            continue #pos in mask region
+                    if within_gap: continue
+                    else: positions.append(pos)
+
+                    if get_strand_info:
+                        if pos not in strand_info:
+                            strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
+                    if get_sense_info:
+                        if pos not in sense_info:
+                            if paired_reads and not read.is_read1:
+                                continue
+                            else:
+                                if region.orientation == "+":
+                                    sense_info[pos] = (1,0) if read.is_reverse else (0,1)
+                                elif region.orientation == "-":
+                                    sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
+            # except ValueError:
+                # pass
+
+            # if maxdup == -1: # No limit
+            # elif maxdup == 0: # Remove all duplicates
+            # else: # 
+
             if rmdup:
                 positions = list(set(positions))
                 
             positions.sort()
             positions.reverse()
-            
             i = 0
             while positions:
                 win_s = max(0, i * stepsize - binsize*0.5) + region.initial
@@ -388,6 +429,8 @@ class CoverageSet:
                 c = 0
                 if get_strand_info:
                     sum_strand_info = [0,0]
+                if get_sense_info:
+                    sum_sense_info = [0,0]
                 
                 taken = []
                 while True:
@@ -399,30 +442,77 @@ class CoverageSet:
                         if get_strand_info:
                             sum_strand_info[0] += strand_info[s][0]
                             sum_strand_info[1] += strand_info[s][1]
-                        
+                        if get_sense_info:
+                            try:
+                                sum_sense_info[0] += sense_info[s][0]
+                                sum_sense_info[1] += sense_info[s][1]
+                            except:
+                                pass
                     if s >= win_e or not positions:
                         taken.reverse()
                         for s in taken:
-                            if s + read_size + read_length >= win_s: #consider read in next iteration
+                            if s + extension_size + read_length >= win_s: #consider read in next iteration
                                 positions.append(s)
                             else:
                                 break #as taken decreases monotonously
                         taken = []
                         break
-                
                 if i < len(cov):
                     cov[i] = c
                     if get_strand_info:
                         cov_strand[i] = sum_strand_info
+                    if get_sense_info:
+                        cov_sense[i] = sum_sense_info
                 i += 1
 
-            self.coverage.append(np.array(cov))
+            if not log_aver:
+                self.coverage.append(np.array(cov))
+            else:
+                ov = [x + 1 for x in cov]
+                self.coverage.append(np.log(np.array(cov)))
+
             if get_strand_info:
                 self.cov_strand_all.append(np.array(cov_strand))
+            if get_sense_info:
+                self.cov_sense_all.append(np.array(cov_sense))
+            # print(np.array(cov_sense))
             
         self.coverageorig = self.coverage[:]
         self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
-    
+        if mask: f.close()
+
+
+    def array_transpose(self, flip=False):
+        """Transpose the arrays in strand coverage"""
+        self.transpose_cov1 = []
+        self.transpose_cov2 = []
+        # print(self.coverage)
+        for a in self.cov_sense_all:
+            if flip:
+                # print(a[:, 0])
+                # print(a[:, 1])
+                a1 = np.transpose(a[:, 0])
+                a1.shape = (a1.shape[0],1)
+                self.transpose_cov1.append(np.fliplr(a1))
+                a2 = np.transpose(a[:, 0])
+                a2.shape = (a2.shape[0], 1)
+                self.transpose_cov2.append(np.fliplr(a2))
+            else:
+                # print(a[:, 0])
+                # print(a[:, 1])
+                a1 = np.transpose(a[:, 0])
+                a1.shape = (a1.shape[0], 1)
+                self.transpose_cov1.append(a1)
+                a2 = np.transpose(a[:, 1])
+                a2.shape = (a2.shape[0], 1)
+                self.transpose_cov2.append(a2)
+        self.transpose_cov1 = np.array(self.transpose_cov1)
+        self.transpose_cov2 = np.array(self.transpose_cov2)
+        # print(self.transpose_cov1)
+        # print(self.transpose_cov2)
+
+
+
     def index2coordinates(self, index, regions):
         """Convert index of class variable <overall_cov> to genomic coordinates.
         
@@ -443,7 +533,7 @@ class CoverageSet:
         
             >>>from rgt.CoverageSet import CoverageSet
             >>>cov = CoverageSet('IP coverage', regionset)
-            >>>cov.coverage_from_bam(bam_file=bamfile, read_size=200)
+            >>>cov.coverage_from_bam(bam_file=bamfile, extension_size=200)
             >>>for i, el in enumerate(cov.overall_cov):
             >>>    if el > 10:
             >>>        chrom, s, e = cov.index2coordinates(i, regionset)
@@ -471,6 +561,7 @@ class CoverageSet:
             min((index-last) * self.stepsize + self.stepsize, r.final)
     
     def coverage_from_bigwig(self, bigwig_file, stepsize=100):
+
         """Return list of arrays describing the coverage of each genomicRegions from <bigwig_file>.
         
         *Keyword arguments:*
@@ -484,37 +575,50 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        self.coverage = []
+        if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
+            self.coverage = []
+            # mp_input = []
+            for gr in self.genomicRegions:
+                # print(gr)
+                steps = int(abs(gr.final-gr.initial)/stepsize)
+                cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
+                # print(" ".join(cmd))
+                try:
+                    output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+                    # print(output)
+                    ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+                    self.coverage.append( np.array(ds) )
+                except:
+                    continue
+        
+        ### Linux platform
+        else:
+            # print("\tUsing ngslib on linux system...")
+            from ngslib import BigWigFile
+            self.coverage = []
+            bwf = BigWigFile(bigwig_file)
 
-        for gr in self.genomicRegions:
-            cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial),str(gr.final),str(stepsize)]
-            try:
-                output = subprocess.check_output(cmd, shell=False)
-                ds = [0 if x=="n/a" else float(x) for x in output.strip().split()]
-            except:
-                ds = [0] * stepsize
-            self.coverage.append( np.array(ds) )
+            for gr in self.genomicRegions:
+                depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
+                                             max(1,int(gr.final+stepsize/2)))
+                ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
+                self.coverage.append( np.array(ds) )
+            bwf.close()
 
-        ##################
+            # import pyBigWig
+            # self.coverage = []
+            # bwf = pyBigWig.open(bigwig_file)
+            # # print("1")
+            # steps = int(len(self.genomicRegions[0])/stepsize)
+            # for gr in self.genomicRegions:
+            #     ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
+            #     ds = [ x if x else 0 for x in ds ]
+            #     self.coverage.append( np.array(ds) )
+            #     # print(np.array(ds))
+            # # print("2")
+            # bwf.close()
 
-        # self.coverage = []
-        # bwf = BigWigFile(bigwig_file)
-        # #ds = []
-        # for gr in self.genomicRegions:
-        #     #print(".", end="")
-        #     depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-        #     #ds = []
-        #     ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-        #     #for i in range(0, gr.final-gr.initial):
-        #     #    d = [ depth[j] for j in range(i,i+stepsize) ]
-        #     #    ds.append(sum(d)/len(d))
 
-        #     #if gr.orientation == "-":
-        #     #    self.coverage.ap    pend( np.array(list(reversed(ds))) )
-        #     #else:
-        #     self.coverage.append( np.array(ds) )
-        # #print(len(ds))
-        # bwf.close()
         
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.
@@ -525,20 +629,12 @@ class CoverageSet:
         """
         self.coverage = []
         phastCons46way_dir = "/data/phastCons46way/"
-        for gr in self.genomicRegions:
-            bwf = BigWigFile(os.path.join(phastCons46way_dir, gr.chrom+".phastCons46way.bw"))
-            depth = bwf.pileup(gr.chrom, gr.initial-stepsize/2, gr.final+stepsize/2)
-            ds = []
-            for i in range(0, gr.final-gr.initial):
-                d = [ depth[j] for j in range(i,i+stepsize) ]
-                ds.append(sum(d)/len(d))
-                
-            if gr.orientation == "-":
-                self.coverage.append( np.array(list(reversed(ds))) )
-            else:
-                self.coverage.append( np.array(ds) )
-
-            bwf.close()
+        grs = self.genomicRegions.split_by_chromosome()
+        for gr in grs:
+            cov = CoverageSet("chrom",gr)
+            bwpath = os.path.join(phastCons46way_dir, gr.sequences[0].chrom+".phastCons46way.bw")
+            cov.coverage_from_bigwig(bigwig_file=bwpath,stepsize=stepsize)
+            self.coverage += cov.coverage
 
     def norm_gc_content(self, cov, genome_path, chrom_sizes):
         chrom_sizes_dict = {}

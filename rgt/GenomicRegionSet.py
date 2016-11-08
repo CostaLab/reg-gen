@@ -13,13 +13,17 @@ from __future__ import division
 import sys
 import copy
 import random
-from copy import deepcopy
+from ctypes import *
 from scipy import stats
+from copy import deepcopy
 from collections import OrderedDict
 # Internal
-from GenomicRegion import GenomicRegion
-from Util import GenomeData, OverlapType, AuxiliaryFunctions
-from GeneSet import GeneSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.SequenceSet import *
+from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
+from rgt.GeneSet import GeneSet
+
+import os
 
 ###############################################################################
 # Class
@@ -30,7 +34,6 @@ class GenomicRegionSet:
 
         - name -- Name of the GenomicRegionSet
     """
-    #__slots__ = ['name', 'sequences', 'sorted', 'fileName', 'genome_path' ]
 
     def __init__(self, name):
         self.name = name
@@ -61,23 +64,36 @@ class GenomicRegionSet:
     def __getitem__(self, key):
         return self.sequences[key]
 
-    def extend(self, left, right, percentage=False):
+    def extend(self, left, right, percentage=False, w_return=False):
         """Perform extend step for every element.
 
         *Keyword arguments:*
 
             - percentage -- input value of left and right can be any positive value or negative value larger than -50 %
         """
+        z = GenomicRegionSet(name=self.name)
+
         if percentage:
             if percentage > -50:
                 for s in self.sequences:
-                    s.extend(int(len(s)*left/100), int(len(s)*right/100))
+                    if w_return:
+                        z.add(s.extend(int(len(s) * left / 100), int(len(s) * right / 100), w_return=True))
+                    else:
+                        s.extend(int(len(s) * left / 100), int(len(s) * right / 100))
             else:
                 print("Percentage for extension must be larger than 50%%.")
                 sys.exit(0)
         else:
             for s in self.sequences:
-                s.extend(left, right)
+                if w_return:
+                    z.add(s.extend(left, right, w_return=True))
+                else:
+                    s.extend(left, right)
+
+        if w_return:
+            return z
+        else:
+            return
 
     def sort(self, key=None, reverse=False):
         """Sort Elements by criteria defined by a GenomicRegion.
@@ -135,8 +151,55 @@ class GenomicRegionSet:
                     else:
                         error_line += 1
                         if error_line > 2:
-                            print("Error at line", line, self.fileName)  # Skip the first error line which contains the track information
+                            # Skip the first error line which contains the track information
+                            print("Error at line", line, self.fileName)
             self.sort()
+
+    def read_sequence(self, genome_file_dir):
+        """Read the sequences defined by a given genomic set.s
+        *Keyword arguments:*
+
+            - genomic_set - genomic set with regions to obtain the fasta file
+            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+        """
+
+        bed=self
+        # Parse each chromosome and fetch the defined region in this chromosome
+        chroms = list(set(bed.get_chrom()))
+
+        chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
+
+        for ch in chroms:
+            if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
+
+            # Read genome in FASTA according to the given chromosome
+            ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
+            try: 
+                ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
+            except:
+                continue
+            
+            # Regions in given chromosome
+            beds = bed.any_chrom(chrom=ch)
+
+            for s in beds:
+                seq = ch_seq[0].seq[s.initial:s.final]
+                try: strand = s.strand
+                except: strand = "+"
+                s.sequence=(Sequence(seq=seq, name=s.__repr__(), strand=strand))
+
+    def write_sequence(self, out_file):
+        """Write the sequences defined by a given genomic set. 
+        *Keyword arguments:*
+            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+        """
+        f=open(out_file,"w")
+        for r in self:
+          try:
+            f.write(">"+r.chrom+":"+str(r.initial)+"-"+str(r.final)+"-"+str(r.orientation)+"\n"+r.sequence.seq+"\n")
+          except:
+            pass
+                 
 
     def read_bedgraph(self, filename):
         """Read BEDGRAPH file and add every row as a GenomicRegion.
@@ -161,18 +224,18 @@ class GenomicRegionSet:
 
             self.sort()
 
-    def random_subregions(self, size):
+    def random_subregions(self, size, name=None):
         """Return a subsampling of the genomic region set with a specific number of regions.
 
         *Keyword arguments:*
 
             - size -- define number of the subsampling regions.
         """
-        z = GenomicRegionSet(self.name + '_random')
+        if not name: name = self.name + '_random'
+        z = GenomicRegionSet(name)
         samp = random.sample(range(len(self)), size)
         for i in samp:
             z.add(self.sequences[i])
-        #z.sort()
         return z
 
     def random_split(self, size):
@@ -442,9 +505,9 @@ class GenomicRegionSet:
                 
                 new_genes_list = ":".join(new_genes_list)
                 new_prox_list = ":".join(new_prox_list)
-                #result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=new_prox_list, orientation=coord[4])) # EG
-                
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1], name=new_genes_list, data=coord[3],
+
+                result_grs.add(GenomicRegion(chrom, coord[0], coord[1],
+                                             name=new_genes_list, data=coord[3],
                                              orientation=coord[4], proximity=new_prox_list))
              
         return result_grs
@@ -607,11 +670,12 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-        # a = self
-        # b = y
 
-        z = GenomicRegionSet(self.name + " + " + y.name)
-        # XXX - someone putted an special symbol and spaces in the name! this is used as file name, never use strange characters.
+        return self.intersect_c(y, mode, rm_duplicates)
+
+
+    def intersect_python(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
+        z = GenomicRegionSet(self.name)
         if len(self) == 0 or len(y) == 0: return z
 
         else:
@@ -631,31 +695,32 @@ class GenomicRegionSet:
             cont_loop = True
             pre_inter = 0
             cont_overlap = False
-            ########################### OverlapType.OVERLAP ###################################
+            ####################### OverlapType.OVERLAP ###############################
             if mode == OverlapType.OVERLAP:
                 while cont_loop:
                     # When the regions overlap
                     if s.overlap(b[j]):
-                        c = GenomicRegion(chrom=s.chrom,
-                                          initial=max(s.initial, b[j].initial),
-                                          final=min(s.final, b[j].final),
-                                          name=s.name,
-                                          orientation=s.orientation,
-                                          data=s.data,
-                                          proximity=s.proximity)
-                        z.add(c)
+                        z.add( GenomicRegion(chrom=s.chrom,
+                                              initial=max(s.initial, b[j].initial),
+                                              final=min(s.final, b[j].final),
+                                              name=s.name,
+                                              orientation=s.orientation,
+                                              data=s.data,
+                                              proximity=s.proximity) )
 
-                        if cont_overlap == False: pre_inter = j
+                        if cont_overlap == False: 
+                            pre_inter = j
                         if j == last_j:
                             try: s = iter_a.next()
                             except: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                         cont_overlap = True
 
                     elif s < b[j]:
                         try:
                             s = iter_a.next()
-                            j = pre_inter
+                            if s.chrom == b[j].chrom and pre_inter > 0:
+                                j = pre_inter
                             cont_overlap = False
                         except: cont_loop = False
 
@@ -663,48 +728,48 @@ class GenomicRegionSet:
                         if j == last_j:
                             cont_loop = False
                         else:
-                            j = j + 1
+                            j += 1
                             cont_overlap = False
-
-            ########################### OverlapType.ORIGINAL ###################################
-            if mode == OverlapType.ORIGINAL:
-                while cont_loop:
-                    #print(str(s),"\t",str(b[j]))
-                    # When the regions overlap
-                    if s.overlap(b[j]):
-                        z.add(s)
-
+                    else:
                         try: s = iter_a.next()
                         except: cont_loop = False
 
+            ####################### OverlapType.ORIGINAL ###############################
+            if mode == OverlapType.ORIGINAL:
+                while cont_loop:
+                    # When the regions overlap
+                    if s.overlap(b[j]):
+                        z.add(s)
+                        try: s = iter_a.next()
+                        except: cont_loop = False
                     elif s < b[j]:
                         try: s = iter_a.next()
                         except: cont_loop = False
                     elif s > b[j]:
                         if j == last_j: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                     else:
                         try: s = iter_a.next()
                         except: cont_loop = False
-
+            ####################### OverlapType.COMP_INCL ###############################
             if mode == OverlapType.COMP_INCL:
                 while cont_loop:
                     # When the regions overlap
                     if s.overlap(b[j]):
                         if s.initial >= b[j].initial and s.final <= b[j].final:
                             z.add(s)
-
                         if cont_overlap == False: pre_inter = j
                         if j == last_j:
                             try: s = iter_a.next()
                             except: cont_loop = False
-                        else: j = j + 1
+                        else: j += 1
                         cont_overlap = True
 
                     elif s < b[j]:
                         try:
                             s = iter_a.next()
-                            j = pre_inter
+                            if s.chrom == b[j].chrom and pre_inter > 0:
+                                j = pre_inter
                             cont_overlap = False
                         except: cont_loop = False
 
@@ -712,12 +777,118 @@ class GenomicRegionSet:
                         if j == last_j:
                             cont_loop = False
                         else:
-                            j = j + 1
+                            j += 1
                             cont_overlap = False
+                    else:
+                        try: s = iter_a.next()
+                        except: cont_loop = False
 
             if rm_duplicates: z.remove_duplicates()
             #z.sort()
             return z
+
+    def intersect_c(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
+        # Determine path of shared library
+        Lib = Library_path()
+        lib = cdll.LoadLibrary(Lib.get_c_rgt())
+        # C-Binding of intersect overlap function
+        intersect_overlap_c = lib.intersectGenomicRegionSetsOverlap
+        intersect_overlap_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+                                        POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
+                                        POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
+        intersect_overlap_c.restype = None
+
+        # C-Binding of intersect original function
+        intersect_original_c = lib.intersectGenomicRegionSetsOriginal
+        intersect_original_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+                                         POINTER(c_int), POINTER(c_int), c_int, POINTER(POINTER(c_int)),
+                                         POINTER(POINTER(c_int)), POINTER(POINTER(c_int)), POINTER(c_int)]
+        intersect_original_c.restype = None
+
+        # C-Binding of intersect completely function
+        intersect_completely_included_c = lib.intersectGenomicRegionSetsCompletelyIncluded
+        intersect_completely_included_c.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
+                                                    POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int,
+                                                    POINTER(POINTER(c_int)), POINTER(POINTER(c_int)),
+                                                    POINTER(POINTER(c_int)), POINTER(c_int)]
+        intersect_completely_included_c.restype = None
+
+        # If one of the sets is empty, the intersection is trivially empty as well
+        result = GenomicRegionSet(self.name)
+        if len(self) == 0 or len(y) == 0:
+            return result
+
+        # Otherwise
+        else:
+            a = self
+            b = y
+            # Sort sets if necessary
+            if not a.sorted:
+                a.sort()
+            if not b.sorted:
+                b.sort()
+            assert a.sorted
+            assert b.sorted
+
+            # If there is overlap within a or b, they should be merged first.
+            if mode == OverlapType.OVERLAP:
+                a = a.merge(w_return=True)
+                b = b.merge(w_return=True)
+
+            # Convert to ctypes
+            len_self = len(a)
+            len_y = len(b)
+            max_len_result = len_self + len_y
+
+            chromosomes_self_python = [gr.chrom for gr in a.sequences]
+            chromosomes_self_c = (c_char_p * len_self)(*chromosomes_self_python)
+
+            chromosomes_y_python = [gr.chrom for gr in b.sequences]
+            chromosomes_y_c = (c_char_p * len_y)(*chromosomes_y_python)
+
+            initials_self_python = [gr.initial for gr in a.sequences]
+            initials_self_c = (c_int * len_self)(*initials_self_python)
+
+            initials_y_python = [gr.initial for gr in b.sequences]
+            initials_y_c = (c_int * len_y)(*initials_y_python)
+
+            finals_self_python = [gr.final for gr in a.sequences]
+            finals_self_c = (c_int * len_self)(*finals_self_python)
+
+            finals_y_python = [gr.final for gr in b.sequences]
+            finals_y_c = (c_int * len_y)(*finals_y_python)
+
+            indices_c = POINTER(c_int)((c_int * max_len_result)())
+            initials_result_c = POINTER(c_int)((c_int * max_len_result)())
+            finals_result_c = POINTER(c_int)((c_int * max_len_result)())
+            size_result_c = c_int()
+
+            # Call C-function
+            if mode == OverlapType.OVERLAP:
+                intersect_overlap_c(chromosomes_self_c, initials_self_c, finals_self_c, len_self, chromosomes_y_c,
+                                    initials_y_c, finals_y_c, len_y, pointer(indices_c), pointer(initials_result_c),
+                                    pointer(finals_result_c), byref(size_result_c))
+            elif mode == OverlapType.ORIGINAL:
+                intersect_original_c(chromosomes_self_c, initials_self_c, finals_self_c, len_self, chromosomes_y_c,
+                                     initials_y_c, finals_y_c, len_y, pointer(indices_c), pointer(initials_result_c),
+                                     pointer(finals_result_c), byref(size_result_c))
+            elif mode == OverlapType.COMP_INCL:
+                intersect_completely_included_c(chromosomes_self_c, initials_self_c, finals_self_c, len_self,
+                                                chromosomes_y_c, initials_y_c, finals_y_c, len_y, pointer(indices_c),
+                                                pointer(initials_result_c), pointer(finals_result_c),
+                                                byref(size_result_c))
+
+            # Construct result set
+            for i in range(size_result_c.value):
+                ci = indices_c[i]
+                result.add(GenomicRegion(chromosomes_self_c[ci], initials_result_c[i],
+                                         finals_result_c[i], name=a.sequences[ci].name,
+                                         orientation=a.sequences[ci].orientation, data=a.sequences[ci].data,
+                                         proximity=a.sequences[ci].proximity))
+            if rm_duplicates:
+                result.remove_duplicates()
+            return result
+
 
     def intersect_count(self, regionset, mode_count="count", threshold=False):
         """Return the number of regions in regionset A&B in following order: (A-B, B-A, intersection)
@@ -732,79 +903,24 @@ class GenomicRegionSet:
         
             - A tupple of numbers: (A-B, B-A, intersection)
         """
-        #a = self
-        #b = regionset
-        a = copy.deepcopy(self)
-        b = copy.deepcopy(regionset)
 
-        if len(a) == 0:
-            return 0, len(b), 0
-        elif len(b) == 0: 
-            return len(a), 0, 0
+        if len(self) == 0:
+            return 0, len(regionset), 0
+        elif len(regionset) == 0: 
+            return len(self), 0, 0
 
         else:
-            # If there is overlap within self or y, they should be merged first. 
-            if not a.sorted: a.sort()
-            if not b.sorted: b.sort()
-            
+            a = deepcopy(self)
+            b = deepcopy(regionset)
             a.merge()
             b.merge()
-
             if mode_count=="count":
-                if threshold:
-                    if a.total_coverage() == 0:
-                        print("\n ** Warning : "+ bed1.name +" has no length (only points) for finding intersection with given threshold.")
-                        sys.exit(1)
-                    if b.total_coverage() == 0:
-                        print("\n ** Warning : "+ bed2.name +" has no length (only points) for finding intersection with given threshold.")
-                        sys.exit(1)
-                    if 50 >= threshold > 0:
-                        a.extend(-threshold,-threshold, percentage=True)
-                    elif threshold > 50 or threshold < 0:
-                        print("\n **** Threshold should be the percentage between 0 and 50. ****\n")
-                        sys.exit(1)
-                
-                iter_a = iter(a)
-                s = iter_a.next()
-                last_j = len(b)-1
-                j = 0
-                cont_loop = True
-                pre_inter = 0
-                cont_overlap = False
-                
-                c_a = len(a)
-                c_b = len(b)
-                c_ab = 0
 
-                while cont_loop:
-                    # When the regions overlap
-                    if s.overlap(b[j]):
-                        c_ab += 1
-                        
-                        if cont_overlap == False: pre_inter = j
-                        if j == last_j: 
-                            try: 
-                                s = iter_a.next()
-                                c_a -= 1
-                            except: cont_loop = False 
-                        else: 
-                            j = j + 1
-                            c_b -= 1
-                        cont_overlap = True
-                    
-                    elif s < b[j]:
-                        try: 
-                            s = iter_a.next()
-                            j = pre_inter
-                            cont_overlap = False
-                        except: cont_loop = False 
-                    
-                    elif s > b[j]:
-                        if j == last_j:
-                            cont_loop = False
-                        else:
-                            j = j + 1
-                            cont_overlap = False
+                inter = a.intersect(b, mode=OverlapType.ORIGINAL)
+                inter2 = b.intersect(a, mode=OverlapType.ORIGINAL)
+                c_a = len(a) - len(inter)
+                c_b = len(b) - len(inter2)
+                c_ab = len(inter)    
                 return c_a, c_b, c_ab
 
             elif mode_count=="bp":
@@ -845,7 +961,7 @@ class GenomicRegionSet:
         if not top_N:
             if return_list: z_list = []
 
-            z = GenomicRegionSet("closest regions")
+            z = GenomicRegionSet(self.name)
 
             for region in self:
                 distances = []
@@ -907,127 +1023,6 @@ class GenomicRegionSet:
                 return res_dict, res_dist
             else:
                 return res_dict
-
-        # def jump_s(s, j, mind, last_j):
-        #     try: 
-        #         s = con_self.next()
-        #         #print(s)
-        #         mind = float("inf")
-        #         j = lastj
-        #         cont_loop = True
-        #         return s, mind, j, cont_loop
-        #     except: 
-        #         #print(mind)
-        #         cont_loop = False
-        #         return s, mind, j, cont_loop
-
-        # if len(self) == 0 or len(y) == 0:
-        #     return GenomicRegionSet('Empty set') 
-        # #elif len(self.intersect(y)) != 0:
-        # #    if return_list:
-        # #        return 0
-        # #    else:
-        # #        return False
-        # else:
-        #     #z_dict = {}  # For storing the distance and the regions
-        #     if return_list: z = []
-        #     else: z = GenomicRegionSet("closest regions")
-        #     #dict_r = {}
-        
-        #     if self.sorted == False: self.sort()
-        #     if y.sorted == False: y.sort()
-        
-        #     con_self = iter(self)
-
-        #     s = con_self.next()
-        #     j = 0
-        #     last_j = 0
-        #     mj = len(y)
-        #     mins = y[j]
-        #     cont_loop = True
-
-        #     mind = float("inf")
-
-        #     while cont_loop:
-                
-        #         d = s.distance(y[j])
-        #         #print(str(y[j])+"\t"+str(d)+"\t"+str(s))
-                
-
-        #         if d == 0:
-        #         # Overlap
-        #             if return_list: z.append(0)
-        #             else: 
-        #                 if s.name:
-        #                     gn = "close_to_"+s.name
-        #                 else: 
-        #                     gn = y[j].name
-        #                 if distance: score=str(d)
-        #                 else: score = "."
-        #                 g = GenomicRegion(chrom=y[j].chrom, initial=y[j].initial, 
-        #                                   final=y[j].final, name=gn, 
-        #                                   orientation=y[j].orientation, data=score )
-        #                 z.add(g)
-        #             #dict_r[s.toString()] = j
-        #             last_j = j
-        #             s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
- 
-        #         elif not d:
-        #         # different chromosomes
-        #             if searching and mind != float("inf"):
-        #                 if return_list: z.append(mind)
-        #                 else: 
-        #                     if s.name:
-        #                         gn = "close_to_"+s.name
-        #                     else: 
-        #                         gn = y[j].name
-        #                     if distance: score=str(mind)
-        #                     else: score = "."
-        #                     g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
-        #                                       final=y[last_j].final, name=gn, 
-        #                                       orientation=y[last_j].orientation, data=score )
-        #                     z.add(g)
-        #                 #dict_r[s.toString()] = lastj
-        #                 searching = False
-                    
-        #             if s > y[j]:
-        #                 try: j += 1
-        #                 except: s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
-        #             elif s < y[j]:
-        #                 s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
-                    
-
-        #         else:
-        #         # on the same chromosome but different loci
-        #             if d < mind:
-        #                 mind = d
-        #                 lastj = j
-        #                 try: j += 1
-        #                 except: s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
-
-        #             elif d > mind:
-        #                 #print(mind)
-                        
-        #                 if return_list: z.append(mind)
-        #                 else: 
-        #                     if s.name:
-        #                         gn = "close_to_"+s.name
-        #                     else: 
-        #                         gn = y[j].name
-        #                     if distance: score=str(mind)
-        #                     else: score = "."
-        #                     g = GenomicRegion(chrom=y[last_j].chrom, initial=y[last_j].initial, 
-        #                                       final=y[last_j].final, name=gn, 
-        #                                       orientation=y[last_j].orientation, data=score )
-        #                     z.add(g)
-        #                 #dict_r[s.toString()] = lastj
-        #                 s, mind, j, cont_loop = jump_s(s, j, mind, last_j)
-
-        #             searching = True
-
-        #         if j == mj: cont_loop = False
-
-        #     return z
         
     def remove_duplicates(self):
         """Remove the duplicate regions and remain the unique regions. (No return)"""
@@ -1037,16 +1032,12 @@ class GenomicRegionSet:
         loop = True
         while loop:
             try:
-                #if self.sequences[i] == self.sequences[i+1]:
                 if self.sequences[i].toString() == self.sequences[i+1].toString():
                     del self.sequences[i+1]
-                    #loop = True
                 else:
-                    #loop = False
                     i += 1
             except:
                 loop = False
-                #continue
             
     def window(self,y,adding_length = 1000):
         """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs upstream and downstream of each region in self. In effect, this allows regions in y that are near regions in self to be detected.
@@ -1249,7 +1240,7 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-            - w_return -- If TRUE, it returns a GenomicRegionSet; if FASLSE, it merge the regions in place.
+            - w_return -- If TRUE, it returns a GenomicRegionSet; if FALSE, it merges the regions in place.
             - namedistinct -- Merge the regions which have the same names only.
         """
         if self.sorted == False: self.sort()
@@ -1316,21 +1307,28 @@ class GenomicRegionSet:
             - output -- If TRUE, it returns a GenomicRegionSet; if FASLSE, it merge the regions in place.
         """
         if output:
-            a = copy.deepcopy(self)
-            a.sequences.extend(region_set.sequences)
+            a = GenomicRegionSet(name="")
+            for s in self.sequences:
+                a.add(s)
+            for s in region_set.sequences:
+                a.add(s)
             if change_name:
-                if a.name == "" : a.name = region_set.name
-                else: a.name = a.name + " + " + region_set.name
+                if a.name == "":
+                    a.name = region_set.name
+                else:
+                    a.name = a.name + " + " + region_set.name
             a.sorted = False
             return a
         else:
             self.sequences.extend(region_set.sequences)
             if change_name:
-                if self.name == "" : self.name = region_set.name
-                else: self.name = self.name + " + " + region_set.name
+                if self.name == "":
+                    self.name = region_set.name
+                else:
+                    self.name = self.name + " + " + region_set.name
             self.sorted = False
         
-    def cluster(self,max_distance):
+    def cluster(self, max_distance):
         """Cluster the regions with a certain distance and return the result as a new GenomicRegionSet.
         
         *Keyword arguments:*
@@ -1419,6 +1417,9 @@ class GenomicRegionSet:
             intersect         -5-             -4-    2
             similarity: (5+4+2)/[(8+10+4)+(10+10)-(5+4+2)] = 11/31
         """
+        return self.jaccard_c(query)
+
+    def jaccard_python(self, query):
         a = copy.deepcopy(self)
         b = copy.deepcopy(query)
         if a.total_coverage() == 0 and len(a) > 0:
@@ -1429,17 +1430,67 @@ class GenomicRegionSet:
             return b.name
             
         intersects = a.intersect(b)
-        #print(intersects.total_coverage(),self.total_coverage(), query.total_coverage(),sep="\t")
         intersects.merge()
         inter = intersects.total_coverage()
         
         a.combine(b, change_name=False)
         a.merge()
         uni = a.total_coverage()
-        #print(self.name+"   "+query.name+"   "+str(inter)+"   "+str(uni))
         similarity = inter / uni
         return similarity
-    
+
+    def jaccard_c(self, query):
+        # Determine path of shared library
+        Lib = Library_path()
+        lib = cdll.LoadLibrary(Lib.get_c_rgt())
+
+        # Bind library
+        ctypes_jaccardC = lib.jaccard
+
+        # Specify data types
+        ctypes_jaccardC.argtypes = [POINTER(c_char_p), POINTER(c_int), POINTER(c_int), c_int, POINTER(c_char_p),
+                                    POINTER(c_int), POINTER(c_int), c_int]
+        ctypes_jaccardC.restype = c_double
+
+        if not self.sorted:
+            self.sort()
+        if not query.sorted:
+            query.sort()
+
+        assert self.sorted
+        assert query.sorted
+
+        # Convert to ctypes
+        chroms_self_python = [gr.chrom for gr in self.sequences]
+        chroms_self_c = (c_char_p * len(chroms_self_python))(*chroms_self_python)
+        #print('Converted self.chroms to c', str(chroms_self_python[:4]), '...')
+
+        chroms_query_python = [gr.chrom for gr in query.sequences]
+        chroms_query_c = (c_char_p * len(chroms_query_python))(*chroms_query_python)
+        #print('Converted query.chroms to c', str(chroms_query_python[:4]), '...')
+
+        initials_self_python = [gr.initial for gr in self.sequences]
+        initials_self_c = (c_int * len(initials_self_python))(*initials_self_python)
+        #print('Converted self.initials to c', str(initials_self_python[:4]), '...')
+
+        initials_query_python = [gr.initial for gr in query.sequences]
+        initials_query_c = (c_int * len(initials_query_python))(*initials_query_python)
+        #print('Converted query.initials to c', str(initials_query_python[:4]), '...')
+
+        finals_self_python = [gr.final for gr in self.sequences]
+        finals_self_c = (c_int * len(finals_self_python))(*finals_self_python)
+        #print('Converted self.finals to c', str(finals_self_python[:4]), '...')
+
+        finals_query_python = [gr.final for gr in query.sequences]
+        finals_query_c = (c_int * len(finals_query_python))(*finals_query_python)
+        #print('Converted query.finals to c', str(finals_query_python[:4]), '...')
+
+        #print('Converted to ctypes')
+
+        # Call C-function
+        return ctypes_jaccardC(chroms_self_c, initials_self_c, finals_self_c, len(self), chroms_query_c,
+                               initials_query_c, finals_query_c, len(query))
+
     def within_overlap(self):
         """Check whether there is overlapping within or not."""
         refer_posi = GenomicRegion(name="reference",chrom="chr1",initial=0,final=0)
@@ -1506,44 +1557,45 @@ class GenomicRegionSet:
 
             - z -- A GenomicRegionSet which contains the random regions
         """
+
         def list_max(chrom_list, result_map):
             """Generate a list containing maximum length for each chromosome."""
-            map_max = [] # Store the minimum length corresponding to chrom_list
+            map_max = []  # Store the minimum length corresponding to chrom_list
             for ch in chrom_list:
                 map_max.append(max([len(s) for s in result_map.any_chrom(ch)]))
             return map_max
-        
+
         def randoming(length, result_map, chrom_list, map_max, choices):
             """Return a new GenomicRegion as the result of randomization."""
             cont_loop = True
-            candidate_chrom = [chrom_list[i] for i,l in enumerate(map_max) if l > length]
+            candidate_chrom = [chrom_list[i] for i, l in enumerate(map_max) if l > length]
 
             while True:
                 ch = weighted_choice(choices)
                 if ch in candidate_chrom: break
-           
+
             while cont_loop:
-                #try:
+                # try:
                 regions = result_map.any_chrom(ch, len_min=length)
                 sample = random.choice(regions)
-                if len(sample) < length: 
+                if len(sample) < length:
                     print("1", end="")
                     continue
                 else:
                     # print("2", end="")
                     random_posi = random.randint(sample.initial, sample.final - length)
-                    #print(sample.toString())
-                    #print(random_posi)
+                    # print(sample.toString())
+                    # print(random_posi)
                     cont_loop = False
-                
-                #except: 
+
+                #except:
                     #print("3", end="")
                 #    continue
 
             return GenomicRegion(chrom=sample.chrom,initial=random_posi,final=random_posi + length)
-            
+
             #raise Exception("There is no further space for randomization on the genome.")
-            
+
         def weighted_choice(choices):
             total = sum(w for c, w in choices)
             r = random.uniform(0, total)
@@ -1553,8 +1605,11 @@ class GenomicRegionSet:
                     return c
                 upto += w
             assert False, "Shouldn't get here"
+
         ############################################
-        input_map = copy.deepcopy(self)
+        #input_map = copy.deepcopy(self)
+
+        input_map = self
         input_num = len(self)
         input_list = [len(x) for x in self.sequences]
         result_list = []
@@ -1565,7 +1620,7 @@ class GenomicRegionSet:
         elif multiply_factor > 0:
             for i in range(int(multiply_factor * input_num)):
                 result_list.append(input_list[i % input_num])
-            
+
         # Maps
         # Fetching the chromosome length from data
         chrom_map = GenomicRegionSet("chrom_map")
@@ -1589,18 +1644,25 @@ class GenomicRegionSet:
         for ch in chrom_list:
             cov = result_map.any_chrom(ch)
             pk = sum([len(s) for s in cov])
+
             choices.append([ch,pk])
-        
+
+
         for length in result_list:
             new_region = randoming(length, result_map, chrom_list, map_max, choices)
             z.add(new_region)
             if overlap_result == False:
                 result_map = result_map.subtract_aregion(new_region)
-                map_max[chrom_list.index(new_region.chrom)] = max([len(s) for s in result_map.any_chrom(new_region.chrom)])
+                map_max[chrom_list.index(new_region.chrom)] = max(
+                    [len(s) for s in result_map.any_chrom(new_region.chrom)])
                 choices[chrom_list.index(new_region.chrom)][1] -= len(new_region)
         return z
 
-        
+    def trim_by(self, background):
+        """Trim a GenomicRegionSet by a given background, another GenomicRegionSet."""
+        return self.intersect(background, mode = OverlapType.ORIGINAL)
+        # self = self.intersect(background, mode = OverlapType.OVERLAP)
+        # self = s
     
     def projection_test(self, query, organism, extra=None, background=None):
         """"Return the p value of binomial test.
@@ -1611,10 +1673,11 @@ class GenomicRegionSet:
             - organism -- Define the organism
             - extra -- Return the extra statistics
             - background -- Use a GenomicRegionSet as the background
+            - return_intersected_query -- Return a GenomicRegionSet containing the intersected regions of query
 
         *Return:*
 
-            - if extra=True, returns (possibility, ration, p-value)
+            - if extra=True, returns (possibility, ration, p-value, intersected_query)
             - if extra=False, returns p-value
         """
         chrom_map = GenomicRegionSet("Genome")
@@ -1636,18 +1699,21 @@ class GenomicRegionSet:
 
         nquery = query.relocate_regions(center='midpoint', left_length=0, right_length=0)
         intersect_regions = nquery.intersect(self,mode=OverlapType.ORIGINAL)
-        #intersect_regions = self.intersect(nquery,mode=OverlapType.OVERLAP)
+        if extra:
+            intersect_q = query.intersect(self,mode=OverlapType.ORIGINAL)
         n = len(nquery)
         k = len(intersect_regions)
+        try: r = k/n
+        except: r = 0
         #print("intersections: ",k,"\tnumber of query",n,"\tgenetic coverage: ",possibility)
         p = float(stats.binom_test(k, n, possibility))
         if extra:
-            try: return possibility, k/n, p  # for the case n = 0
-            except: return possibility, 0, p
+            return possibility, r, p, intersect_q
         else:
             return p
 
-    def any_chrom(self,chrom,len_min=False, len_max=False):
+    def any_chrom(self,chrom,len_min=False, len_max=False, 
+                  return_list=True, return_regionset=False):
         """Return a list of regions which belongs to given chromosome.
 
         *Keyword arguments:*
@@ -1661,14 +1727,23 @@ class GenomicRegionSet:
             - A list of regions which belongs to given chromosome.
         """
         if len_min == False and len_max == False:
-            return [s for s in self if s.chrom == chrom] 
+            res = [s for s in self if s.chrom == chrom]      
         elif len_min > 0 and len_max == False:
-            return [s for s in self if s.chrom == chrom and len(s) >= len_min] 
+            res = [s for s in self if s.chrom == chrom and len(s) >= len_min]
         elif len_max > 0 and len_min == False:
-            return [s for s in self if s.chrom == chrom and len(s) <= len_max] 
+            res = [s for s in self if s.chrom == chrom and len(s) <= len_max]
         else:
-            return [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max] 
-        
+            res = [s for s in self if s.chrom == chrom and len_min <= len(s) <= len_max]
+                    
+        if return_list:
+            return res
+        elif return_regionset:
+            z = GenomicRegionSet(chrom)
+            z.sequences = res
+            return z
+        else:
+            self.sequences = res
+
     def relocate_regions(self, center='midpoint',left_length=2000,right_length=2000):
         """Return a new GenomicRegionSet which relocates the regions by given center and extend length.
         
@@ -1880,49 +1955,59 @@ class GenomicRegionSet:
 
     def replace_region_name(self, regions, combine=False):
         """Replace the region names by the given GenomicRegionSet.
-        
+
         *Keyword arguments:*
 
             - regions -- A GenomicRegionSet as the source for the names.
             - combine -- Combine the names from the old and new regions.
         """
+
         if len(self) == 0 or len(regions) == 0: return
-        
+
         else:
-            res = copy.deepcopy(regions)
-            # If there is overlap within self or y, they should be merged first. 
+            # res = copy.deepcopy(regions)
+            # res = regions
+            # If there is overlap within self or y, they should be merged first.
+
             if not self.sorted: self.sort()
-            if not res.sorted: res.sort()
-            
+            if not regions.sorted: regions.sort()
+
             iter_a = iter(self)
             s = iter_a.next()
-            last_j = len(res)-1
+            last_j = len(regions) - 1
             j = 0
             cont_loop = True
-            pre_inter = 0
-            cont_overlap = False
-            
+
             while cont_loop:
-                #print(str(s),"\t",str(b[j]))
+                # print(str(s),"\t",str(b[j]))
                 # When the res overlap
-                if s.overlap(res[j]):
+                if s.overlap(regions[j]):
                     if combine:
-                        s.name = s.name+"_"+res[j].name
+                        s.name = s.name + "_" + regions[j].name
                     else:
-                        s.name = res[j].name
-                    try: s = iter_a.next()
-                    except: cont_loop = False
-                    
-                elif s < res[j]:
-                    try: s = iter_a.next()
-                    except: cont_loop = False
-                elif s > res[j]:
-                    if j == last_j: cont_loop = False
-                    else: j = j + 1
+                        s.name = regions[j].name
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
+
+                elif s < regions[j]:
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
+                elif s > regions[j]:
+                    if j == last_j:
+                        cont_loop = False
+                    else:
+                        j = j + 1
                 else:
-                    try: s = iter_a.next()
-                    except: cont_loop = False        
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
             return
+
 
     def change_name_by_dict(self, convert_dict):
         """Change the names of each region by the given dictionary.
@@ -1945,16 +2030,19 @@ class GenomicRegionSet:
 
         *Keyword arguments:*
 
-            - names -- A list of names as targets.
+            - names -- A list of names as targets or a GeneSet.
 
         *Return:*
 
             - A GenomicRegionSet containing the regions with the target names.
         """
         z = GenomicRegionSet(self.name)
+        if isinstance(names, list): targets = names
+        elif isinstance(names.genes, list): targets = names.genes
         for gr in self:
-            if gr.name in names:
+            if gr.name in targets:
                 z.add(gr)
+
         return z
 
     def write_bed_blocks(self, filename):
@@ -2109,3 +2197,88 @@ class GenomicRegionSet:
         a = self.gene_association(organism=organism)
         for i,r in enumerate(self):
             r.data = r.data + "\t"+a[i].name
+
+    def longest_region(self, return_set=False):
+        """Return the longest region(s)"""
+        length_list = [ len(region) for region in self ]
+        max_len = max(length_list)
+        longest_ind = [i for i, j in enumerate(length_list) if j == max_len]
+        if not return_set:
+            return self[longest_ind[0]]
+        else:
+            z = GenomicRegionSet("longest regions")
+            for i in longest_ind:
+                z.add(self[i])
+        
+    def sample_close_region(self, background, min_dis=200, len_each=100):
+        """Return a GenomicRegionSet which includes the regions close to the self and within the backgourd under the limit of distance."""
+        
+        def random_choose(col_regionset):
+            options = []
+            for i, region in enumerate(col_regionset):
+                if len(region) > len_each:
+                    options.append(i)
+            if options:
+                ind = random.sample(options, 1)[0]
+                ssite = random.sample(range(col_regionset[ind].initial, col_regionset[ind].final-len_each), 1)[0]
+                res = GenomicRegion(chrom=col_regionset[ind].chrom,
+                                    initial=ssite,
+                                    final=ssite + len_each,
+                                    orientation=col_regionset[ind].orientation)
+            else:
+                print("Find not enough space in "+col_regionset[0].chrom+
+                      ":"+str(col_regionset[0].initial)+"-"+str(col_regionset[-1].final) + "\tSample from the largest region.")
+                longest = col_regionset.longest_region()
+                mid = int(0.5*(longest.final + longest.initial))
+                res = GenomicRegion(chrom=longest.chrom,
+                                    initial=mid - int(0.5*len_each),
+                                    final=mid + int(0.5*len_each),
+                                    orientation=longest.orientation)
+            return res
+        a = background.intersect(self, mode = OverlapType.ORIGINAL)
+        b = self.extend(left=min_dis, right=min_dis,w_return=True)
+        b.merge()
+        c = a.subtract(b)
+        # Iteration
+        iter_a = iter(a)
+        sa = iter_a.next()
+        iter_c = iter(c)
+        sc = iter_c.next()
+        # Loop
+        z = GenomicRegionSet("sample")
+        q_coll = GenomicRegionSet(sa.toString())
+        cont_loop = True
+        while cont_loop:
+            # print("\t".join([sa.toString(), sc.toString()]))
+            if sa.overlap(sc):
+                q_coll.add(sc)
+                try: sc = iter_c.next()
+                except: 
+                    if len(q_coll):
+                        z.add(random_choose(col_regionset=q_coll))
+                    try: sa = iter_a.next()
+                    except: cont_loop = False
+            elif sa < sc:
+                if len(q_coll):
+                    z.add(random_choose(col_regionset=q_coll))
+                q_coll = GenomicRegionSet(sa.toString())
+                try: sa = iter_a.next()
+                except: cont_loop = False
+
+            else:
+                if len(q_coll):
+                    z.add(random_choose(col_regionset=q_coll))
+                q_coll = GenomicRegionSet(sa.toString())
+                try: sc = iter_c.next()
+                except: cont_loop = False
+
+        return z
+
+    def split_by_chromosome(self):
+        """Return a list of many GenomicRegionSets, each one for one chromosome """
+        chrom_list = set(self.get_chrom())
+        z = []
+        for c in chrom_list:
+            g = self.any_chrom(chrom=c, return_list=False,return_regionset=True)
+            z.append(g)
+        return z

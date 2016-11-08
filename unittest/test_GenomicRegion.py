@@ -52,12 +52,12 @@ class TestGenomicRegion(unittest.TestCase):
         #they have zero length
         r = GenomicRegion(chrom=1, initial=10, final=10)
         r2 = GenomicRegion(chrom=1, initial=11, final=11)
-        self.assertTrue(r.overlap(r2))
+        self.assertFalse(r.overlap(r2))
         
         #they have zero length
         r = GenomicRegion(chrom=1, initial=10, final=10)
         r2 = GenomicRegion(chrom=1, initial=5, final=10)
-        self.assertTrue(r.overlap(r2))
+        self.assertFalse(r.overlap(r2))
         
     def test_extend(self):
         #normal extend
@@ -109,6 +109,6 @@ class TestGenomicRegion(unittest.TestCase):
         self.assertTrue(r >= r2)
     
 if __name__ == '__main__':
-    unittest.main()
-    
-    
+
+    suite = unittest.TestLoader().loadTestsFromTestCase(TestGenomicRegion)
+    unittest.TextTestRunner(verbosity=2).run(suite)

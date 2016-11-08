@@ -12,6 +12,7 @@ import sys
 import ConfigParser
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
+import traceback
 
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
@@ -35,6 +36,9 @@ class ConfigurationFile:
         # Parsing config file
         self.config = ConfigParser.ConfigParser()
         self.config.read(data_config_file_name)
+
+        # Overwriting config using user options
+        self.config.read(data_config_file_name + ".user")
 
         # Reading data directory
         self.data_dir = os.path.split(data_config_file_name)[0]
@@ -156,17 +160,25 @@ class MotifData(ConfigurationFile):
         return self.fpr_list
 
 class HmmData(ConfigurationFile):
-    """Represent HMM data. Inherits Co7nfigurationFile."""
+    """Represent HMM data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
         self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
         self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
+        self.default_hmm_atac = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac'))
+        self.default_hmm_atac_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_bc'))
         self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
         self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
         self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
-        self.default_bias_table_F = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F'))
-        self.default_bias_table_R = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R'))
+        self.default_hmm_atac_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone'))
+        self.default_hmm_atac_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone_bc'))
+        self.default_bias_table_F_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_SH'))
+        self.default_bias_table_R_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_SH'))
+        self.default_bias_table_F_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_DH'))
+        self.default_bias_table_R_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_DH'))
+        self.default_bias_table_F_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_ATAC'))
+        self.default_bias_table_R_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_ATAC'))
 
     def get_default_hmm_dnase(self):
         """Returns the current default DNase only hmm."""
@@ -175,6 +187,14 @@ class HmmData(ConfigurationFile):
     def get_default_hmm_dnase_bc(self):
         """Returns the current default DNase only hmm."""
         return self.default_hmm_dnase_bc
+
+    def get_default_hmm_atac(self):
+        """Returns the current default atac only hmm."""
+        return self.default_hmm_atac
+
+    def get_default_hmm_atac_bc(self):
+        """Returns the current default atac only hmm."""
+        return self.default_hmm_atac_bc
 
     def get_default_hmm_histone(self):
         """Returns the current default Histone only hmm."""
@@ -188,13 +208,37 @@ class HmmData(ConfigurationFile):
         """Returns the current default DNase+histone hmm."""
         return self.default_hmm_dnase_histone_bc
 
-    def get_default_bias_table_F(self):
-        """Returns the current default bias table for the forward strand."""
-        return self.default_bias_table_F
+    def get_default_hmm_atac_histone(self):
+        """Returns the current default atac+histone hmm."""
+        return self.default_hmm_atac_histone
 
-    def get_default_bias_table_R(self):
-        """Returns the current default bias table for the reverse strand."""
-        return self.default_bias_table_R
+    def get_default_hmm_atac_histone_bc(self):
+        """Returns the current default atac+histone hmm."""
+        return self.default_hmm_atac_histone_bc
+
+    def get_default_bias_table_F_SH(self):
+        """Returns the DNase-seq single hit default bias table for the forward strand."""
+        return self.default_bias_table_F_SH
+
+    def get_default_bias_table_R_SH(self):
+        """Returns the DNase-seq single hit default bias table for the reverse strand."""
+        return self.default_bias_table_R_SH
+
+    def get_default_bias_table_F_DH(self):
+        """Returns the DNase-seq double hit default bias table for the forward strand."""
+        return self.default_bias_table_F_DH
+
+    def get_default_bias_table_R_DH(self):
+        """Returns the DNase-seq double hit default bias table for the reverse strand."""
+        return self.default_bias_table_R_DH
+
+    def get_default_bias_table_F_ATAC(self):
+        """Returns the ATAC-seq default bias table for the forward strand."""
+        return self.default_bias_table_F_ATAC
+
+    def get_default_bias_table_R_ATAC(self):
+        """Returns the ATAC-seq default bias table for the reverse strand."""
+        return self.default_bias_table_R_ATAC
 
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""
@@ -246,7 +290,22 @@ class ImageData(ConfigurationFile):
     def get_viz_logo(self):
         """Returns the default RGT viz logo."""
         return self.viz_logo
-    
+
+class Library_path(ConfigurationFile):
+    """Represent the path to triplexator. Inherits ConfigurationFile."""
+
+    def __init__(self):
+        ConfigurationFile.__init__(self)
+        self.path_triplexator = self.config.get("Library",'path_triplexator')
+
+        self.path_c_rgt = self.config.get("Library", 'path_c_rgt')
+
+    def get_triplexator(self):
+        return self.path_triplexator
+    def get_c_rgt(self):
+        return self.path_c_rgt
+
+
 class OverlapType:
     """Class of overlap type constants.
 
@@ -320,8 +379,8 @@ class ErrorHandler():
             "FP_WRONG_ARGUMENT": [2,0,"You must provide at least one and no more than one experimental matrix as input argument."],
             "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
             "FP_ONE_REGION": [4,0,"You must provide one 'regions' bed file in the experiment matrix."],
-            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE in the experiment matrix."],
-            "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE (histone modification) in the experiment matrix."],
+            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE or ATAC in the experiment matrix."],
+            "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE or ATAC (histone modification) in the experiment matrix."],
             "FP_NB_HMMS": [7,0,"You must provide one HMM file or X HMM files where X is the number of histone tracks detected in the experiment matrix."],
             "FP_HMM_FILES": [8,0,"Your HMM file could not be read. If you did not provide any HMM file, you may not have installed scikit correctly."],
             "FP_BB_CREATION": [9,0,"Big Bed file (.bb) could not be created. Check if you have the bedToBigBed script in $PATH."],
@@ -329,7 +388,7 @@ class ErrorHandler():
             "MM_NO_ARGUMENT": [11,0,"Could not read the arguments. Make sure you provided an experimental matrix."],
             "MM_WRONG_EXPMAT": [12,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
             "MM_WRONG_RANDPROP": [13,0,"Proportion of random regions is too low (<= 0)."],
-            "MM_LOW_NPROC": [14,0,"Number of processor is too low (<= 0)."],
+            "MM_LOW_NPROC": [14,0,"Number of processors is too low (<= 0)."],
             "ME_OUT_FOLDER_CREATION": [15,0,"Could not create output folder."],
             "ME_FEW_ARG": [16,0,"There are too few arguments. Please use -h option in order to verify command usage."],
             "ME_WRONG_EXPMAT": [17,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
@@ -340,7 +399,8 @@ class ErrorHandler():
             "ME_BAD_RAND": [22,0,"Could not read random regions."],
             "ME_RAND_NOT_BED_BB": [23,0,"Random regions are not in bed or bigbed format."],
             "MM_PSEUDOCOUNT_0": [24,0,"There were errors involved in the creation of Position Weight Matrices. Some distributions of numpy  and/or scipy does not allow for pseudocounts == 0. Please increase the pseudocount (or use default value of 0.1) and try again."],
-            "XXXXXXX": [25,0,"Xxxxxx"]
+            "MM_MOTIFS_NOTFOUND": [25,0,"A motif file was provided but it could not be loaded."],
+            "XXXXXXX": [26,0,"Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
@@ -349,11 +409,11 @@ class ErrorHandler():
         self.warning_dictionary = {
             "DEFAULT_WARNING": [0,"Undefined warning."],
             "FP_ONE_REGION": [1,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
-            "FP_MANY_DNASE": [2,"There are more than one DNASE 'reads' file. Only the first one will be used."],
+            "FP_MANY_DNASE": [2,"There are more than one DNASE or ATAC 'reads' file. Only the first one will be used."],
             "FP_MANY_HISTONE": [3,"It is recomended that no more than three histone modifications should be used."],
-            "FP_DNASE_PROC": [4,"The DNase file could not be processed."],
+            "FP_DNASE_PROC": [4,"The DNase  or ATAC file could not be processed."],
             "FP_HISTONE_PROC": [5,"The Histone file could not be processed."],
-            "FP_SEQ_FORMAT": [6,"The DNase+Histone sequence could not be formatted to be input for scikit."],
+            "FP_SEQ_FORMAT": [6,"The DNase/ATAC+Histone sequence could not be formatted to be input for scikit."],
             "FP_HMM_APPLIC": [7,"The scikit HMM encountered errors when applied."],
             "MM_MANY_ARG": [8,"There are more than one arguments, only the first experimental matrix will be used."],
             "ME_MANY_ARG": [9,"There are more than two arguments, only the two first arguments will be used."],
@@ -391,6 +451,7 @@ class ErrorHandler():
                                   "Behaviour: The program will quit with exit status "+str(exit_status)+".\n"
                                   "--------------------------------------------------")
         print(complete_error_message, file=sys.stderr)
+        traceback.print_exc()
         sys.exit(exit_status)
 
     def throw_warning(self, warning_type, add_msg = ""):

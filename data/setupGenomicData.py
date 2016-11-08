@@ -59,7 +59,7 @@ parser.add_option("--hg19-gtf-path", type = "string", metavar="STRING",
                   dest = "hg19_gtf_path", default = None)
 parser.add_option("--hg38-gtf-path", type = "string", metavar="STRING",
                   help = "Path to an already existing hg38 GTF file.",
-                  dest = "hg19_gtf_path", default = None)
+                  dest = "hg38_gtf_path", default = None)
 parser.add_option("--mm9-gtf-path", type = "string", metavar="STRING",
                   help = "Path to an already existing mm9 GTF file.",
                   dest = "mm9_gtf_path", default = None)
@@ -264,30 +264,27 @@ if(options.mm10):
         system("ln -s "+options.mm10_genome_path+" "+output_genome_file_name)
         print "OK"
     else:
-        gen_root_url = "http://hgdownload.cse.ucsc.edu/goldenPath/mm10/chromosomes/"
-        chr_list = ["chr"+str(e) for e in range(1,20)+["X","Y","M"]]
-        output_genome_file = open(output_genome_file_name,"w")
-        for chr_name in chr_list:
-            print "Downloading MM10 genome ("+chr_name+")"
-            gz_file_name = path.join(output_location,chr_name+".fa.gz")
-            if(path.isfile(gz_file_name)): remove(gz_file_name)
-            system("wget "+gen_root_url+chr_name+".fa.gz -P "+output_location)
-            gz_file = gzip.open(gz_file_name, 'rb')
-            output_genome_file.write( gz_file.read() )
-            gz_file.close()
-            remove(gz_file_name)
-            print "OK"
+        gen_root_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M11/GRCm38.primary_assembly.genome.fa.gz"
+        output_genome_file = open(output_genome_file_name, "w")
+        print "Downloading mm10 genome"
+        gz_file_name = path.join(output_location, "GRCm38.primary_assembly.genome.fa.gz")
+        system("wget " + gen_root_url + " -P " + output_location)
+        gz_file = gzip.open(gz_file_name, 'rb')
+        output_genome_file.write(gz_file.read())
+        gz_file.close()
+        remove(gz_file_name)
+        print "OK"
         output_genome_file.close()
 
     # Fetching GTF
-    gtf_output_file_name = path.join(output_location,"gencode.vM9.annotation.gtf")
+    gtf_output_file_name = path.join(output_location,"gencode.vM11.annotation.gtf")
     if(options.mm10_gtf_path):
         print "Creating symbolic link to MM10 GTF"
         system("ln -s "+options.mm10_gtf_path+" "+gtf_output_file_name)
         print "OK"
     else:
-        gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M9/gencode.vM9.annotation.gtf.gz"
-        gtf_output_file_name_gz = path.join(output_location,"gencode.vM9.annotation.gtf.gz")
+        gtf_url = "ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_mouse/release_M11/gencode.vM11.annotation.gtf.gz"
+        gtf_output_file_name_gz = path.join(output_location,"gencode.vM11.annotation.gtf.gz")
         if(path.isfile(gtf_output_file_name_gz)): remove(gtf_output_file_name_gz)
         print "Downloading MM10 GTF (gene annotation)"
         system("wget "+gtf_url+" -P "+output_location)
@@ -405,5 +402,6 @@ if(options.zv10):
         gz_file.close()
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
+        # system("sed -i -e 's/^/chr/' "+gtf_output_file_name)
         ## TODO add chr in each entry
         print "OK"

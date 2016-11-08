@@ -53,8 +53,8 @@ class DualCoverageSet():
         self.cov2 = CoverageSet('second file', region)
         
         print("Loading reads...", file=sys.stderr)
-        self.cov1.coverage_from_bam(bam_file=file_1, read_size=ext_1, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
-        self.cov2.coverage_from_bam(bam_file=file_2, read_size=ext_2, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
+        self.cov1.coverage_from_bam(bam_file=file_1, extension_size=ext_1, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
+        self.cov2.coverage_from_bam(bam_file=file_2, extension_size=ext_2, rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=deadzones)
         
         map_input = {1: {'input': input_1, 'input_factor': input_factor_1, 'ext': ext_input_1, 'cov-ip': self.cov1, 'ip': file_1}, 
                      2: {'input': input_2, 'input_factor': input_factor_2, 'ext': ext_input_2, 'cov-ip': self.cov2, 'ip': file_2}}
@@ -73,7 +73,7 @@ class DualCoverageSet():
             
             if input['input'] is not None:
                 input['cov-input'] = CoverageSet('%s file' %input['input'], region)
-                input['cov-input'].coverage_from_bam(bam_file=input['input'], read_size=input['ext'], rmdup=rmdup, binsize=binsize, stepsize=stepsize)
+                input['cov-input'].coverage_from_bam(bam_file=input['input'], extension_size=input['ext'], rmdup=rmdup, binsize=binsize, stepsize=stepsize)
                 map_input[i]['cov-input'] = input['cov-input']
                 
             

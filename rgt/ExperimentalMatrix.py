@@ -65,17 +65,8 @@ class ExperimentalMatrix:
             ======== ======== ========= ==================
         """
         f = open(file_path,'rU')
-        
-        #read and check header
-        #header = f.readline()
-        #header = header.strip("\n")
-        #header = header.split("\t")
-        
-        #assert(header[0] == "name")
-        #assert(header[1] == "type")
-        #assert(header[2] == "file")
-        #self.fields = header
-        
+
+        base_dir = ""
         for line in f:
             # Neglect comment lines
             line = line.strip()
@@ -84,10 +75,7 @@ class ExperimentalMatrix:
             
             # Read header
             elif line[:4] == "name":
-                # header = line.strip("\n")
-                # header = line.strip(" ")
                 header = line.split()
-                
                 assert(header[0] == "name")
                 assert(header[1] == "type")
                 assert(header[2] == "file")
@@ -99,42 +87,50 @@ class ExperimentalMatrix:
                 
             # Read further information    
             else:
-                # line = line.strip("\n")
-                # line = line.strip(" ")
                 line = line.split()
-                
+                if line[0].startswith("BASE_DIR"):
+                    base_dir = line[1]
                 if len(line) < 3:  # Skip the row which has insufficient information
                     #print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                     continue
                 if verbose: print("Reading: ", line, file=sys.stderr)
                 
                 self.names.append(line[0])
-                self.files[line[0]] = line[2] #dict: filename -> filepath
+                self.files[line[0]] = os.path.join(base_dir,line[2]) #dict: filename -> filepath
                 self.types.append(line[1])
                 
+                curr_id = None
                 for fi in range(3, len(self.fields)): #read further information
                     d = self.fieldsDict[ self.fields[fi] ]
                     # print(line[fi])
                     if "," in line[fi] and "(" not in line[fi]:
                         for t in line[fi].split(","):
-                            try:
-                                d[t].append(line[0])
-                            except:
-                                try:
-                                    d[t] = [line[0]]
-                                except:
-                                    continue
+                            try: d[t].append(line[0]+t)
+                            except: d[t] = [line[0]+t]
+                            self.names.append(line[0]+t)
+                            self.files[line[0]+t] = line[2]
+                            self.types.append(line[1])
+                            for f in range(3, len(self.fields)):
+                                if f != fi:
+                                    try: self.fieldsDict[ self.fields[f] ][line[f]].append(line[0]+t)
+                                    except: self.fieldsDict[ self.fields[f] ][line[f]] = [line[0]+t]
+                            if line[0] not in self.trash: 
+                                self.trash.append(line[0])
+                            
                     else:
-                        try:
-                            d[line[fi]].append(line[0])
-                        except:
-                            try:
-                                d[line[fi]] = [line[0]]
-                            except:
-                                continue
+                        if curr_id:
+                            try: d[line[fi]] += curr_id
+                            except: d[line[fi]] = curr_id
+                        else:
+                            try: d[line[fi]].append(line[0])
+                            except: d[line[fi]] = [line[0]]
+                            
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
+        self.remove_name()
+        self.load_bed_url(".")
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
+
         
     def get_genesets(self):
         """Returns the GeneSets."""
@@ -198,6 +194,9 @@ class ExperimentalMatrix:
             - name -- Name to return.
             - field -- Field to return.
         """
+        
+        if field == "regions" or field == "reads":
+            field = "factor"
         
         for t in self.fieldsDict[field].keys():
             if name in self.fieldsDict[field][t]:
@@ -269,16 +268,64 @@ class ExperimentalMatrix:
                     self.names.append(n)
                     self.types.append(self.types[i])
                     self.files[n] = self.files[name]
-                    types = self.get_types(name,skip_all=True)
+                    # types = self.get_types(name,skip_all=True)
                     # print("************")
                     # print(types)
-                    self.fieldsDict[field][t].append(n)
-                    for f in self.fieldsDict.keys():
-                        for ty in types:
-                            try: self.fieldsDict[f][ty].append(n)
-                            except: pass
+
+                    for f in self.fields[3:]:
+                        if f == field: 
+                            try: self.fieldsDict[f][t].append(n)
+                            except: self.fieldsDict[f][t] = [n]
+                        else:
+                            try: self.fieldsDict[f][self.get_type(name=name,field=f)].append(n)
+                            except: self.fieldsDict[f][self.get_type(name=name,field=f)] = [n]
+                    # for f in self.fieldsDict.keys():
+                    #     for ty in types:
+                    #         try: self.fieldsDict[f][ty].append(n)
+                    #         except: pass
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
                         g.read_bed(self.files[name])
                         self.objectsDict[n] = g
                     self.trash.append(name)
+
+    def remove_empty_regionset(self):
+        """Remove the entry with zero regions."""
+        for r in self.get_regionsnames():
+            if len(self.objectsDict[r]) == 0:
+                self.trash.append(r)
+                print("***Warning: "+r+" has zero regions and is ignored.")
+        self.remove_name()
+
+
+    def load_bed_url(self, temp_dir):
+        """Load the BED files which contains url as file path to temporary directory."""
+        import urllib
+        for key, value in self.files.iteritems():
+            if self.types[self.names.index(key)] == "regions" and "http" in value:
+                tmpfile = os.path.join(temp_dir, value.split('/')[-1])
+                dest_name = tmpfile.partition(".gz")[0]
+                if not os.path.isfile(dest_name):
+                    if not os.path.isfile(tmpfile):
+                        urllib.urlretrieve(value, tmpfile)
+                    if value.endswith(".gz"):
+                        import gzip
+                        with gzip.open(tmpfile, 'rb') as infile:
+                            with open(dest_name, 'w') as outfile:
+                                for line in infile:
+                                    outfile.write(line)
+                        os.remove(tmpfile)
+                    else:
+                        dest_name = tmpfile
+
+                self.files[key] = dest_name
+
+    def add_factor_col(self):
+        """Add factor column by the entry name"""
+        self.fields.append("factor")
+        self.fieldsDict["factor"] = {}
+        for n in self.names:
+            try:
+                self.fieldsDict["factor"][n].append(n)
+            except:
+                self.fieldsDict["factor"][n] = [n]

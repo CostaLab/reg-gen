@@ -46,13 +46,13 @@ class MultiCoverageSet(DualCoverageSet):
         self.exts = exts
         self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
         for i, c in enumerate(self.covs):
-            c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
+            c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize, get_strand_info = strand_cov)
         self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
         if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
             for i, c in enumerate(self.inputs):
-                c.coverage_from_bam(bam_file=path_inputs[i], read_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
+                c.coverage_from_bam(bam_file=path_inputs[i], extension_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
@@ -61,7 +61,7 @@ class MultiCoverageSet(DualCoverageSet):
         if norm_regionset:
             self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
             for i, c in enumerate(self.norm_regions):
-                c.coverage_from_bam(bam_file=path_bamfiles[i], read_size=exts[i], rmdup=rmdup, binsize=binsize,\
+                c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                     stepsize=stepsize, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:

@@ -28,6 +28,7 @@ group = "."
 ###################################################################################################
 
 # Fetching file names
+# TODO: check if this still works for hocomoco v10
 source = "hocomoco"
 inputLocation = dataLocation+source+"/"
 resultMatrix = []
