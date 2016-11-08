@@ -1,1 +1,6 @@
 include *.txt
+include c/librgt.so
+include README.md
+
+recursive-include data *
+
