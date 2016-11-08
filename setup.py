@@ -1,5 +1,7 @@
 import os
 import sys
+import io
+import re
 from shutil import copy
 from pwd import getpwnam
 from sys import platform, exit
@@ -18,6 +20,25 @@ Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 """
 
+
+def read(*names, **kwargs):
+    with io.open(
+        os.path.join(os.path.dirname(__file__), *names),
+        encoding=kwargs.get("encoding", "utf8")
+    ) as fp:
+        return fp.read()
+
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
+
+current_version = find_version("rgt", "__version__.py")
+
 ###################################################################################################
 # Unsupported Platforms
 ###################################################################################################
@@ -30,14 +51,6 @@ if platform not in supported_platforms:
 ###################################################################################################
 # Parameters
 ###################################################################################################
-
-"""
-Current Version Standard: X.Y.Z
-X: Major RGT release.
-Y: Major Specific-Tool release.
-Z: Minor RGT/Specific-Tool bug corrections.
-"""
-current_version = "0.0.1"
 
 """
 Tools Dictionary:
@@ -378,26 +391,26 @@ readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.md")
 # FIXME: might need to wrap this around pypandoc or similar, to convert from Markdown to rst or txt.
 # this is (or at least, was) needed on some python-package websites.
 readme_file = open(readme_file_name,"r")
-long_description =readme_file.read() + "nn"
+long_description = readme_file.read() + "nn"
 readme_file.close()
 
 # Setup Function
 
+setup(name="RGT",
+      version=current_version,
+      description=short_description,
+      long_description=long_description,
+      classifiers=classifiers_list,
+      keywords=", ".join(keywords_list),
+      author=", ".join(author_list),
+      author_email=corresponding_mail,
+      license=license_type,
+      packages=find_packages(),
+      package_data=package_data_dictionary,
+      entry_points=current_entry_points,
+      install_requires=current_install_requires,
+      scripts=external_scripts)
 
-setup(name = "RGT",
-      version = current_version,
-      description = short_description,
-      long_description = long_description,
-      classifiers = classifiers_list,
-      keywords = ", ".join(keywords_list),
-      author = ", ".join(author_list),
-      author_email = corresponding_mail,
-      license = license_type,
-      packages = find_packages(),
-      package_data = package_data_dictionary,
-      entry_points = current_entry_points,
-      install_requires = current_install_requires,
-      scripts = external_scripts )
 ###################################################################################################
 # Termination
 ###################################################################################################
