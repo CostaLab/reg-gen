@@ -10,6 +10,9 @@ from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
+if not sys.version_info[0] == 2:
+    sys.exit("Sorry, Python 3 is not supported (yet)")
+
 """
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
@@ -371,10 +374,10 @@ for copy_folder in copy_files_dictionary.keys():
 
 # Parameters
 short_description = "Toolkit to perform regulatory genomics data analysis"
-classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatic",
+classifiers_list = ["Topic :: Scientific/Engineering :: Bio-Informatics",
                     "Topic :: Scientific/Engineering :: Artificial Intelligence"]
 keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Motif Enrichment", "HMM"]
-author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo","Ivan G. Costa"]
+author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
@@ -409,7 +412,10 @@ setup(name="RGT",
       package_data=package_data_dictionary,
       entry_points=current_entry_points,
       install_requires=current_install_requires,
-      scripts=external_scripts)
+      scripts=external_scripts,
+      url="http://www.regulatory-genomics.org",
+      download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
+      platforms=supported_platforms)
 
 ###################################################################################################
 # Termination
