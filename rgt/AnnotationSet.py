@@ -746,5 +746,36 @@ class AnnotationSet:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
         if(gene_set): return result_grs, unmapped_gene_list
         else: return result_grs
-    
-    
+
+    def get_transcripts(self, gene_set = None):
+        """Gets transcripts of genes. It returns a GenomicRegionSet with such transcripts. The id of each gene will be put in the NAME field of each GenomicRegion.
+
+        *Keyword arguments:*
+
+            - gene_set -- A set of genes to narrow the search.
+
+        *Return:*
+
+            - result_grs -- A GenomicRegionSet containing the exons.
+            - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
+        """
+
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+
+        # Fetching exons
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("exon")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.TRANSCRIPT_ID]
+            result_grs.add(gr)
+
+        if(gene_set): return result_grs, unmapped_gene_list
+        else: return result_grs

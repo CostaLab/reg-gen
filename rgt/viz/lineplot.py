@@ -138,7 +138,7 @@ class Lineplot:
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
 
-    def coverage(self, sortby, heatmap=False, logt=False, mp=False):
+    def coverage(self, sortby, heatmap=False, logt=False, mp=False, log=False):
 
         def annot_ind(bednames, tags):
             """Find the index for annotation tag"""
@@ -271,10 +271,12 @@ class Lineplot:
 
                                                     avearr = numpy.average(avearr, axis=0)
                                                     if self.sense:
-                                                        # sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
-                                                        # sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
-                                                        sense_1 = numpy.average(cov.transpose_cov1,axis=0)
-                                                        sense_2 = numpy.average(cov.transpose_cov2,axis=0)
+                                                        if log:
+                                                            sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
+                                                            sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
+                                                        else:
+                                                            sense_1 = numpy.average(cov.transpose_cov1,axis=0)
+                                                            sense_2 = numpy.average(cov.transpose_cov2,axis=0)
                                                     cut_end = int(self.bs/self.ss)
                                                     avearr = avearr[cut_end:-cut_end]
                                                     data[s][g][c][d]["all"].append(avearr)
@@ -289,7 +291,7 @@ class Lineplot:
                                             print2(self.parameter,
                                                    "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}s".format(
                                                        bed + "." + bam, ts - te))
-                                            
+
 
         if mp:
             # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())

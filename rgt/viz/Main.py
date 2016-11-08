@@ -280,6 +280,7 @@ def main():
     parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
     parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
     parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
+    parser_lineplot.add_argument('-log', action="store_true", help="Take log for the value before calculating average")
     parser_lineplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
     parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows.")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
@@ -667,7 +668,7 @@ def main():
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
             lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.row, mp=args.mp)
+            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log)
             t2 = time.time()
             print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             

@@ -87,7 +87,12 @@ if __name__ == "__main__":
     parser_gtf2bed.add_argument('-b', action="store_true", 
                                 help="Save exons into entries with block in BED")
 
-
+    ############### GTF to BED ###############################################
+    # python rgt-convertor.py gtf_to_bed -i -o
+    parser_gtf2bed2 = subparsers.add_parser('gtf2bed',
+                                           help="[GTF] Convert GTF file to BED by the given biotype")
+    parser_gtf2bed2.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
+    parser_gtf2bed2.add_argument('-o', metavar='  ', type=str, help="Output BED file")
     ############### GTF to FASTA #############################################
     # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
@@ -128,7 +133,8 @@ if __name__ == "__main__":
                                   help="Define the length of promoter region (default:1000 bp)")
     parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
                                   help="Define the threshold of distance (default:50000bp")
-    
+    parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str, help="Target BED file")
+
     ############### BED extend ###############################################
     # python rgt-convertor.py
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
@@ -247,7 +253,7 @@ if __name__ == "__main__":
     parser_getseq.add_argument('-d', '-dna', type=str, help="DNA sequence in FASTA format")
     parser_getseq.add_argument('-b', '-bed', type=str, help="Input BED file")
     parser_getseq.add_argument('-p', '-pos', type=str, help="position")
-    parser_getseq.add_argument('-s', '-strand', type=str, default="+", help="strand (+ or -)")
+    parser_getseq.add_argument('-s', '-strand', type=str, default="both", help="strand (+, -, or both)")
     parser_getseq.add_argument('-ch', '-chr', type=str, help="chromosome")
     parser_getseq.add_argument('-ss', '-start', type=int, help="start site")
     parser_getseq.add_argument('-es', '-end', type=int, help="end site")
@@ -560,8 +566,19 @@ if __name__ == "__main__":
         #                 exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
         #                                         name=line[15][1:-2], orientation=line[6]))         
         #     exons.write_bed_blocks(args.o)
-        
 
+
+    ############### GTF to BED ######################################
+    elif args.mode == "gtf2bed":
+        print(tag + ": [GTF] Convert GTF to BED")
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+
+        ann = AnnotationSet(gene_source=args.i)
+        # query_dictionary = {}
+        # query_annset = ann.get(query_dictionary)
+        exons = ann.get_exons()
+        exons.write_bed(args.o)
     ############### GTF to FASTA #############################################
     elif args.mode == "gtf_to_fasta":
         print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
@@ -621,14 +638,23 @@ if __name__ == "__main__":
         print(tag+": [BED] Rename regions by associated genes")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
-        print("organism:\t" + args.organism)
+        if args.target:
+            print("target:\t" + args.target)
+        else:
+            print("organism:\t" + args.organism)
 
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
-        renamebed = bed.gene_association(gene_set=None, organism=args.organism, 
-                                         promoterLength=args.l, 
-                                         threshDist=args.t, show_dis=args.d)
-        renamebed.write_bed(args.o)
+        if args.target:
+            target = GenomicRegionSet(args.target)
+            target.read_bed(args.target)
+            bed.replace_region_name(regions=target)
+            bed.write_bed(args.o)
+        else:
+            renamebed = bed.gene_association(gene_set=None, organism=args.organism,
+                                             promoterLength=args.l,
+                                             threshDist=args.t, show_dis=args.d)
+            renamebed.write_bed(args.o)
 
     ############### BED extend ###############################################
     elif args.mode == "bed_extend":
@@ -1017,10 +1043,29 @@ if __name__ == "__main__":
                 args.ch = args.p.partition(":")[0]
                 args.ss = int(args.p.partition(":")[2].partition("-")[0])
                 args.es = int(args.p.partition(":")[2].partition("-")[2])
-            seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s, 
-                               reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
-
-            print(seq)
+            if args.s == "both":
+                seq1 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="+",
+                                    reverse=False, complement=False, rna=args.r, ex=args.ex)
+                seq2 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="-",
+                                    reverse=False, complement=True, rna=args.r, ex=args.ex)
+                print("5'- " + seq1 + " -3'")
+                print("3'- " + seq2 + " -5'")
+            elif args.s == "+" and not args.re:
+                seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
+                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                print("5'- " + seq + " -3'")
+            elif args.s == "+" and args.re:
+                seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
+                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                print("3'- " + seq + " -5'")
+            elif args.s == "-" and not args.re:
+                seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
+                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                print("3'- "+seq+" -5'")
+            elif args.s == "-" and args.re:
+                seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
+                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                print("5'- " + seq + " -3'")
             
         print()
     ############### WIG trim end #############################################
