@@ -2008,6 +2008,52 @@ class GenomicRegionSet:
                         cont_loop = False
             return
 
+    def replace_region_strand(self, regions):
+        """Replace the region strand by the given GenomicRegionSet.
+
+        *Keyword arguments:*
+
+            - regions -- A GenomicRegionSet as the source for the strand.
+        """
+
+        if len(self) == 0 or len(regions) == 0: return
+
+        else:
+            if not self.sorted: self.sort()
+            if not regions.sorted: regions.sort()
+
+            iter_a = iter(self)
+            s = iter_a.next()
+            last_j = len(regions) - 1
+            j = 0
+            cont_loop = True
+
+            while cont_loop:
+                # When the res overlap
+                if s.overlap(regions[j]):
+                    s.orientation = regions[j].orientation
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
+
+                elif s < regions[j]:
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
+                elif s > regions[j]:
+                    if j == last_j:
+                        cont_loop = False
+                    else:
+                        j = j + 1
+                else:
+                    try:
+                        s = iter_a.next()
+                    except:
+                        cont_loop = False
+            return
+
 
     def change_name_by_dict(self, convert_dict):
         """Change the names of each region by the given dictionary.

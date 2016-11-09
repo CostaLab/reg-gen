@@ -42,11 +42,9 @@ def get_sequence(sequence, ch, ss, es, reverse=False, complement=False, rna=Fals
 
     if reverse:
         seq = seq[::-1]
-        return seq   
-        #print("3'- "+seq+" -5'")
+        return seq
     else:
-        return seq        
-        #print("5'- "+seq+" -3'")
+        return seq
 
 if __name__ == "__main__":
     ##########################################################################
@@ -134,6 +132,14 @@ if __name__ == "__main__":
     parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
                                   help="Define the threshold of distance (default:50000bp")
     parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str, help="Target BED file")
+    ############### BED chnage strand ###############################################
+    # python rgt-convertor.py
+    parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")
+    parser_bedchstrand.add_argument('-i', metavar='  ', type=str, help="Input BED file")
+    parser_bedchstrand.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_bedchstrand.add_argument('-d', metavar='  ', type=int, default=0,
+                                    help="Define the threshold of distance (default:0 bp")
+    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, help="Target BED file")
 
     ############### BED extend ###############################################
     # python rgt-convertor.py
@@ -655,6 +661,24 @@ if __name__ == "__main__":
                                              promoterLength=args.l,
                                              threshDist=args.t, show_dis=args.d)
             renamebed.write_bed(args.o)
+
+
+    ############### BED change strands #######################################
+    elif args.mode == "bed_change_strand":
+        print(tag + ": [BED] Change strands by target BED file")
+        print("input:\t" + args.i)
+        print("output:\t" + args.o)
+        print("target:\t" + args.t)
+
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        target = GenomicRegionSet(args.t)
+        target.read_bed(args.t)
+        if args.d != "0":
+            target.extend(left=int(args.d), right=int(args.d))
+        bed.replace_region_strand(regions=target)
+        bed.write_bed(args.o)
+
 
     ############### BED extend ###############################################
     elif args.mode == "bed_extend":
