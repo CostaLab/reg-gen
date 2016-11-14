@@ -91,6 +91,8 @@ if __name__ == "__main__":
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed2.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed2.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_gtf2bed2.add_argument('-b', action="store_true",
+                                help="Save exons into entries with block in BED")
     ############### GTF to FASTA #############################################
     # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
                                   help="Define the threshold of distance (default:50000bp")
     parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str, help="Target BED file")
-    ############### BED chnage strand ###############################################
+    ############### BED change strand ###############################################
     # python rgt-convertor.py
     parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")
     parser_bedchstrand.add_argument('-i', metavar='  ', type=str, help="Input BED file")
@@ -140,6 +142,7 @@ if __name__ == "__main__":
     parser_bedchstrand.add_argument('-d', metavar='  ', type=int, default=0,
                                     help="Define the threshold of distance (default:0 bp")
     parser_bedchstrand.add_argument('-t', metavar='  ', type=str, help="Target BED file")
+    parser_bedchstrand.add_argument('-r', action="store_true", help="Reverse the strand")
 
     ############### BED extend ###############################################
     # python rgt-convertor.py
@@ -583,8 +586,11 @@ if __name__ == "__main__":
         ann = AnnotationSet(gene_source=args.i)
         # query_dictionary = {}
         # query_annset = ann.get(query_dictionary)
-        exons = ann.get_exons()
-        exons.write_bed(args.o)
+        exons = ann.get_exons(merge=False)
+        if args.b:
+            exons.write_bed_blocks(args.o)
+        else:
+            exons.write_bed(args.o)
     ############### GTF to FASTA #############################################
     elif args.mode == "gtf_to_fasta":
         print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
@@ -676,7 +682,7 @@ if __name__ == "__main__":
         target.read_bed(args.t)
         if args.d != "0":
             target.extend(left=int(args.d), right=int(args.d))
-        bed.replace_region_strand(regions=target)
+        bed.replace_region_strand(regions=target, reverse=args.r)
         bed.write_bed(args.o)
 
 

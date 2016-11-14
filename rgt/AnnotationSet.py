@@ -644,7 +644,7 @@ class AnnotationSet:
         if(gene_set): return result_grs, unmapped_gene_list
         else: return result_grs
     
-    def get_exons(self, start_site=False, end_site=False, gene_set = None):
+    def get_exons(self, start_site=False, end_site=False, gene_set = None, merge=True):
         """Gets exons of genes. It returns a GenomicRegionSet with such exons. The id of each gene will be put in the NAME field of each GenomicRegion.
 
         *Keyword arguments:*
@@ -680,7 +680,7 @@ class AnnotationSet:
             result_grs.relocate_regions("leftend", left_length=1, right_length=1)
         elif end_site:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
-        result_grs.merge()
+        if merge: result_grs.merge()
         if(gene_set): return result_grs, unmapped_gene_list
         else: return result_grs
     

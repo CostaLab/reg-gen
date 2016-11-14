@@ -966,7 +966,7 @@ def connect_rna(rna, temp, rna_name):
             print(s, file=r)
     return [exons, len(seq)]
 
-def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp,tp):
+def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
     regions = GenomicRegionSet("Target")
     regions.read_bed(input_BED)
     regions.gene_association(organism=organism)
@@ -979,7 +979,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
     genome = GenomeData(organism)
     genome_path = genome.get_genome()
     txp = find_triplex(rna_fasta=rna_fasta, dna_region=regions, 
-                       temp=temp, organism=organism, remove_temp=False, tp=tp,
+                       temp=temp, organism=organism, remove_temp=False,
                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, genome_path=genome_path,
                        prefix="targeted_region", dna_fine_posi=True)
 

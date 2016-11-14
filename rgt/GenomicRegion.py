@@ -148,7 +148,7 @@ class GenomicRegion:
                 else:
                     return 0
 
-    def extract_blocks(self):
+    def extract_blocks(self, keep_name=False):
         """Extract the block information in self.data into a GenomicRegionSet."""
         z = []
         data = self.data.split("\t")
@@ -162,11 +162,12 @@ class GenomicRegion:
                 reverse = True
             else:
                 n = "_exon_"+str(i + 1)
-                
+            if keep_name: name = self.name
+            else: name = self.name+n
             z.append(GenomicRegion(chrom=self.chrom, 
                                    initial=self.initial+int(posit[i]), 
                                    final=self.initial+int(posit[i])+int(width[i]), 
-                                   name=self.name+n, orientation=self.orientation, data=data[0] ))
+                                   name=name, orientation=self.orientation, data=data[0] ))
         if reverse: return z[::-1]
         else: return z
 

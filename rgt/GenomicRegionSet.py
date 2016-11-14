@@ -265,7 +265,8 @@ class GenomicRegionSet:
             for s in self:
                 print(s, file=f)
 
-    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000, threshDist=50000, show_dis=False):
+    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
+                         threshDist=50000, show_dis=False):
         """Associates coordinates to genes given the following rules:
         
             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
@@ -2008,7 +2009,7 @@ class GenomicRegionSet:
                         cont_loop = False
             return
 
-    def replace_region_strand(self, regions):
+    def replace_region_strand(self, regions, reverse=False):
         """Replace the region strand by the given GenomicRegionSet.
 
         *Keyword arguments:*
@@ -2031,7 +2032,12 @@ class GenomicRegionSet:
             while cont_loop:
                 # When the res overlap
                 if s.overlap(regions[j]):
-                    s.orientation = regions[j].orientation
+                    if not reverse:
+                        s.orientation = regions[j].orientation
+                    elif reverse and regions[j].orientation == "+":
+                        s.orientation = "-"
+                    elif reverse and regions[j].orientation == "-":
+                        s.orientation = "+"
                     try:
                         s = iter_a.next()
                     except:
@@ -2205,12 +2211,12 @@ class GenomicRegionSet:
                     cont_overlap = False
         return coverages
 
-    def extract_blocks(self):
+    def extract_blocks(self, keep_name=False):
         """Extract the exon information from self.data and add them into the self GenomicRegionSet."""
         regions = []
         for rg in self:
             try: 
-                z = rg.extract_blocks()
+                z = rg.extract_blocks(keep_name)
             except:
                 z = [ rg ]
             regions = regions + z
