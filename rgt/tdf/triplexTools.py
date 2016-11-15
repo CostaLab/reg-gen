@@ -1074,7 +1074,7 @@ def no_binding_response(args, rna_regions, rna_name, organism):
 
     # shutil.rmtree(args.o)
     # list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-    revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
+    revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=rna_regions)
     shutil.rmtree(args.o)
     sys.exit(1)
 
