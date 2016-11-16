@@ -19,7 +19,8 @@ from rgt import __version__
 from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
-                         output_summary, list_all_index, no_binding_response, write_stat
+                         output_summary, list_all_index, no_binding_response, write_stat, \
+                         integrate_stat
 
 from tdf_projectiontest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -225,6 +226,7 @@ def main():
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
+            integrate_stat(path=args.path)
             sys.exit(0)
 
         ####################################################################################
