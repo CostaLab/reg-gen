@@ -192,6 +192,7 @@ def main():
                     h = os.path.join(item, "index.html")
                     pro = os.path.join(args.path, item, "profile.txt")
                     if os.path.isfile(pro):
+                        integrate_stat(path=os.path.join(args.path, item))
                         nt = 0
                         ns = 0
                         with open(pro) as f:
@@ -226,7 +227,7 @@ def main():
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
-            integrate_stat(path=args.path)
+
             sys.exit(0)
 
         ####################################################################################
