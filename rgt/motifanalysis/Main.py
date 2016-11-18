@@ -11,7 +11,7 @@ from glob import glob
 import time
 from random import seed
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
 # Internal
 from rgt import __version__
@@ -42,7 +42,7 @@ Dependencies:
 - bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
 - bedTools (deprecate this option)
 
-Authors: Eduardo G. Gusmao.
+Authors: Eduardo G. Gusmao, Fabio Ticconi
 """
 
 
@@ -105,6 +105,7 @@ def main():
         main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
     print("Completed in", time.time() - start, "seconds")
+
 
 def main_matching():
     """
@@ -830,7 +831,7 @@ def main_enrichment():
                     result_list.append(r)
 
                 # Performing multiple test correction
-                multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+                multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                                  alpha=options.multiple_test_alpha,
                                                                                  method='indep')
                 corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
@@ -985,7 +986,7 @@ def main_enrichment():
                 result_list.append(r)
 
             # Performing multiple test correction
-            multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+            multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                              alpha=options.multiple_test_alpha,
                                                                              method='indep')
             corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
