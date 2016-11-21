@@ -360,58 +360,59 @@ class CoverageSet:
             positions = []
             j = 0
             read_length = -1
-            # try:
-            for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
-                if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
-                j += 1
-                read_length = read.rlen
-                if not read.is_unmapped:
-                    # pos = read.pos - extension_size if read.is_reverse else read.pos
-                    # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
-                    pos = read.pos - extension_size if read.is_reverse else read.pos
-                    pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+            try:
+                for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
+                    if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
+                    j += 1
+                    read_length = read.rlen
+                    if not read.is_unmapped:
+                        # pos = read.pos - extension_size if read.is_reverse else read.pos
+                        # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                        pos = read.pos - extension_size if read.is_reverse else read.pos
+                        pos_help = read.pos - read.qlen if read.is_reverse else read.pos
 
-                    within_gap = False
-                    if no_gaps:
-                        blocks = read.get_blocks()
-                        if len(blocks) > 1:
-                            # print(read.is_reverse)
-                            # print(read.pos)
-                            # print(blocks)
-                            for b_ind in range(len(blocks) - 1):
-                                # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
-                                if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
-                                    within_gap = True
+                        within_gap = False
+                        if no_gaps:
+                            blocks = read.get_blocks()
+                            if len(blocks) > 1:
+                                # print(read.is_reverse)
+                                # print(read.pos)
+                                # print(blocks)
+                                for b_ind in range(len(blocks) - 1):
+                                    # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
+                                    if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
+                                        within_gap = True
 
-
-                    #if position in mask region, then ignore
-                    if mask:
-                        while next_it and c_help not in chrom_regions: #do not consider this deadzone
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
-                            while next_it and c_help != region.chrom: #get right chromosome
+                        #if position in mask region, then ignore
+                        if mask:
+                            while next_it and c_help not in chrom_regions: #do not consider this deadzone
                                 c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if next_it and s_help <= pos_help and c_help == region.chrom:
-                            continue #pos in mask region
-                    if within_gap: continue
-                    else: positions.append(pos)
+                            # deadzones behind, go further
+                            if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help):
+                                while next_it and c_help != region.chrom: #get right chromosome
+                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
+                                c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            if next_it and s_help <= pos_help and c_help == region.chrom:
+                                continue #pos in mask region
+                        if within_gap: continue
+                        else: positions.append(pos)
 
-                    if get_strand_info:
-                        if pos not in strand_info:
-                            strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
-                    if get_sense_info:
-                        if pos not in sense_info:
-                            if paired_reads and not read.is_read1:
-                                continue
-                            else:
-                                if region.orientation == "+":
-                                    sense_info[pos] = (1,0) if read.is_reverse else (0,1)
-                                elif region.orientation == "-":
-                                    sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
-            # except ValueError:
-                # pass
+                        if get_strand_info:
+                            if pos not in strand_info:
+                                strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
+                        if get_sense_info:
+                            if pos not in sense_info:
+                                if paired_reads and not read.is_read1:
+                                    continue
+                                else:
+                                    if region.orientation == "+":
+                                        sense_info[pos] = (1,0) if read.is_reverse else (0,1)
+                                    elif region.orientation == "-":
+                                        sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
+            except ValueError as e:
+                print("warning: {}".format(e))
+                pass
 
             # if maxdup == -1: # No limit
             # elif maxdup == 0: # Remove all duplicates
