@@ -10,6 +10,7 @@ import warnings
 from glob import glob
 import time
 from random import seed
+from optparse import OptionGroup
 
 # warnings.filterwarnings("ignore")
 
@@ -23,6 +24,7 @@ from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
 from Util import Input, Result
+from rgt.AnnotationSet import  AnnotationSet
 
 # External
 from pysam import Fastafile
@@ -122,7 +124,7 @@ def main_matching():
     main_error_handler = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] input1.bed input2.bed .."
+    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -139,35 +141,45 @@ def main_matching():
     parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=0.1,
                       help="Pseudocounts to be added to raw counts of each PFM.")
     parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT", default=0,
-                      help="If set, a random regions file will be create (eg, for later enrichment analysis). "
+                      help="If set, a random regions file will be created (eg, for later enrichment analysis). "
                            "The number of coordinates will be equal to this value times the size of the input regions. "
                            "We advise you use a value of at least 10.")
     parser.add_option("--norm-threshold", dest="norm_threshold", action="store_true", default=False,
-                      help="If this option is used, the thresholds for all PWMs will be normalized by their length."
-                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr."
-                           "Then, all thresholds are divided by the length of the motif. The final threshold"
-                           "consists of the average between all normalized motif thresholds. This single threshold"
+                      help="If this option is used, the thresholds for all PWMs will be normalized by their length. "
+                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr. "
+                           "Then, all thresholds are divided by the length of the motif. The final threshold "
+                           "consists of the average between all normalized motif thresholds. This single threshold "
                            "will be applied to all motifs.")
-    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
-    parser.add_option("--promoter-test-genes", dest="promoter_genes_filename", type="string", metavar="STRING",
-                      help="If a genes file is provided (one per line), the input regions/matrix will be "
-                           "ignored. Instead, we will find the genomic regions corresponding to the promoter of "
-                           "the provided genes and perform motif matching on those regions (background is the total "
-                           "set of genes).")
-    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="STRING",
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
                       help="If an experimental matrix is passed, the input arguments will be ignored.")
-    # TODO: allow a more complex file type, specifying both motif name and database maybe?
 
-    # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                      default=os.getcwd(), help="Path where the output files will be written.")
-    parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
-                      help="If this option is used, all bed files will be written as bigbed.")
-    parser.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
-                      help="In order to print bigbed files the scores need to be normalized between 0 and 1000."
-                           "Don't use this option if real bitscores should be printed in the resulting bed file."
-                           "Without this option, bigbed files will never be created.")
+    # Promoter-matching options
+    group = OptionGroup(parser, "Promoter-regions matching options",
+                        "Takes a list of genes, extracts their promoter regions and performs motif matching on these. "
+                        "If a genes file is provided, the input regions/matrix will be ignored.")
+    group.add_option("--gene-list", dest="promoter_genes_filename", type="string", metavar="PATH",
+                     help="List of genes (one per line) to get the promoter regions from.")
+    group.add_option("--make-background", dest="promoter_make_background", action="store_true", default=False,
+                     help="If set, it will perform motif matching on the 'background regions', composed of "
+                          "the promoters of all available genes.")
+    group.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
+                     help="Length of the promoter region (in bp) to be extracted from each gene.")
+    parser.add_option_group(group)
+
+    # Output options
+    group = OptionGroup(parser, "Output options",
+                        "Where to put the output files and how to post-process them.")
+    group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
+                     default=os.getcwd(), help="Path where the output files will be written.")
+    group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
+                     help="If this option is used, all bed files will be written as bigbed.")
+    group.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
+                     help="In order to print bigbed files the scores need to be normalized between 0 and 1000. "
+                          "Don't use this option if real bitscores should be printed in the resulting bed file. "
+                          "Without this option, bigbed files will never be created.")
+    parser.add_option_group(group)
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -211,22 +223,30 @@ def main_matching():
         except Exception:
             main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
-    # Reading motif file
-    promoter_test_genes = []
-
-    if options.promoter_genes_filename:
-        try:
-            with open(options.promoter_genes_filename) as f:
-                promoter_test_genes = f.read().splitlines()
-                promoter_test_genes = filter(None, promoter_test_genes)
-        except Exception:
-            main_error_handler.throw_error("DEFAULT_ERROR", add_msg=options.promoter_genes_filename)
-
     ###################################################################################################
     # Reading Input Regions
     ###################################################################################################
 
     genomic_regions_dict = {}
+
+    # get promoter regions from list of genes (both target and background)
+    # TODO: should be more clever, allow precomputed regions etc
+    if options.promoter_genes_filename:
+        annotation = AnnotationSet(options.organism, protein_coding=True, known_only=True)
+
+        target_genes = GeneSet("target_regions")
+        target_genes.read(options.promoter_genes_filename)
+
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
+        target_regions.name = "target_regions"
+
+        genomic_regions_dict[target_regions.name] = target_regions
+
+        if options.promoter_make_background:
+            background_regions = annotation.get_promoters(promoterLength=options.promoter_length)
+            background_regions.name = "background_regions"
+
+            genomic_regions_dict[background_regions.name] = background_regions
 
     # get experimental matrix, if available
     if options.input_matrix:
@@ -252,6 +272,10 @@ def main_matching():
             regions.read_bed(os.path.abspath(input_filename))
 
             genomic_regions_dict[name] = regions
+
+    if not genomic_regions_dict:
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
+                                                                "or at least an input file, or both")
 
     max_region_len = 0
     max_region = None
