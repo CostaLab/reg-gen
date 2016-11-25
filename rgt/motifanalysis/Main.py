@@ -6,13 +6,10 @@
 from __future__ import print_function
 import os
 import sys
-import warnings
 from glob import glob
 import time
 from random import seed
 from optparse import OptionGroup
-
-# warnings.filterwarnings("ignore")
 
 # Internal
 from rgt import __version__
@@ -24,7 +21,7 @@ from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
 from Util import Input, Result
-from rgt.AnnotationSet import  AnnotationSet
+from rgt.AnnotationSet import AnnotationSet
 
 # External
 from pysam import Fastafile
@@ -429,7 +426,7 @@ def main_enrichment():
     main_error_handler = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <experiment_matrix> <input_path>"
+    usage_message = "%prog --enrichment [options] <experimental_matrix> <input_path>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -450,11 +447,17 @@ def main_enrichment():
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
-                      help="Bed file containing the genomic regions to use as background."
-                           "If set, the random regions files will be ignored.")
-    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--background-prefix", dest="background_prefix", type="string", metavar="STRING",
+                      default="background_regions",
+                      help="By default we shall look for the following files to use as background: "
+                           "background_regions.bed and background_regions_mpbs.bed. "
+                           "If you created random regions during matching, or are using a different name for "
+                           "the background files, set the prefix accordingly.")
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
+    # parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+    #                   help="If an experimental matrix is NOT passed, then all files within the input path will "
+    #                        "be considered for enrichment.")
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
                       help="Path where the output files will be written. Default is the input PATH.")
@@ -469,8 +472,6 @@ def main_enrichment():
 
     # Additional Parameters
     matching_folder_name = "match_result"
-    random_region_name = "random_regions"
-    background_region_name = "background_regions"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -560,7 +561,7 @@ def main_enrichment():
     flag_gene = True
     try:
         exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
-    except Exception:
+    except KeyError:
         flag_gene = False
 
     # Reading dictionary of objects
@@ -577,7 +578,8 @@ def main_enrichment():
             # Create input which will contain all regions associated with such gene group
             curr_input = Input(None, [])
 
-            # This flag will be used to see if there are two gene files associated with the same gene label on genegroup column
+            # This flag will be used to see if there are two gene files associated with
+            # the same gene label on genegroup column
             flag_foundgeneset = False
 
             # Iterating on experimental matrix objects
@@ -597,7 +599,8 @@ def main_enrichment():
                 if isinstance(curr_object, GeneSet):
 
                     # Updating Input object
-                    curr_object.name = g  # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    curr_object.name = g
                     if not flag_foundgeneset:
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
@@ -659,44 +662,37 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
-    # FIXME: this is brittle. The files to use as background, both normal regions and mpbs, should be
-    # passed as arguments, not globbed - in both the "given" and the "random" cases
+    background_name = options.background_prefix
 
-    # if the background is not defined, we expect random regions instead
-    if not options.background_bed:
-        background_region_name = random_region_name
-
-        # Verifying background region file exists
-        background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + ".*"))
-        try:
-            background_region_file_name = background_region_glob[0]
-        except Exception:
-            main_error_handler.throw_error("ME_RAND_NOTFOUND")
-    else:
-        background_region_file_name = os.path.abspath(options.background_bed)
+    # Verifying background region file exists
+    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_name + ".*"))
+    try:
+        background_region_file_name = background_region_glob[0]
+    except Exception:
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background not found")
 
     # Verifying background region MPBS file exists
-    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + "_mpbs.*"))
+    background_region_mpbs_glob = glob(os.path.join(input_location, matching_folder_name, background_name + "_mpbs.*"))
     try:
-        background_mpbs_file_name = background_region_glob[0]
+        background_mpbs_file_name = background_region_mpbs_glob[0]
     except Exception:
         main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs not found")
 
     # Converting regions bigbed file
     background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
     if background_region_file_name.split(".")[-1] == "bb":
-        background_region_bed_name = os.path.join(output_location_results, background_region_name + ".bed")
+        background_region_bed_name = os.path.join(output_location_results, background_name + ".bed")
         os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
     elif background_region_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background neither BED nor BigBed")
 
     # Converting mpbs bigbed file
     background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
     if background_mpbs_file_name.split(".")[-1] == "bb":
-        background_mpbs_bed_name = os.path.join(output_location_results, background_region_name + "_mpbs.bed")
+        background_mpbs_bed_name = os.path.join(output_location_results, background_name + "_mpbs.bed")
         os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
     elif background_mpbs_file_name.split(".")[-1] != "bed":
-        pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs neither BED nor BigBed")
 
     # Evaluating background statistics
     bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
