@@ -238,12 +238,18 @@ def main_matching():
         # TODO what do we do with unmapped genes? maybe just print them out
         target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
         target_regions.name = "target_regions"
+        target_regions.sort()
+        output_file_name = os.path.join(matching_output_location, target_regions.name + ".bed")
+        target_regions.write_bed(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
 
         if options.promoter_make_background:
             background_regions = annotation.get_promoters(promoterLength=options.promoter_length)
             background_regions.name = "background_regions"
+            background_regions.sort()
+            output_file_name = os.path.join(matching_output_location, background_regions.name + ".bed")
+            background_regions.write_bed(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
 
@@ -428,7 +434,7 @@ def main_enrichment():
     main_error_handler = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <experimental_matrix> <input_path>"
+    usage_message = "%prog --enrichment [options] <input_path>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -457,9 +463,10 @@ def main_enrichment():
                            "the background files, set the prefix accordingly.")
     parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
-    # parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
-    #                   help="If an experimental matrix is NOT passed, then all files within the input path will "
-    #                        "be considered for enrichment.")
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+                      help="If an experimental matrix is NOT passed, then all files within the input path will "
+                           "be considered for enrichment.")
+
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
                       help="Path where the output files will be written. Default is the input PATH.")
@@ -472,8 +479,15 @@ def main_enrichment():
     # Processing Options
     options, arguments = parser.parse_args()
 
+    if len(arguments) != 1:
+        parser.print_help()
+        sys.exit(1)
+
+    input_location = arguments[0]
+
     # Additional Parameters
     matching_folder_name = "match_result"
+    enrichment_folder_name = "enrichment_result"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -503,13 +517,14 @@ def main_enrichment():
     if options.output_location:
         output_location = options.output_location  # Output location was given
     else:
-        output_location = arguments[1]  # Output location is the same as the match folder location
+        output_location = input_location
+
     try:
-        matrix_name_without_ext = ".".join(arguments[0].split(".")[:-1])
-        output_location_results = os.path.join(output_location, os.path.basename(matrix_name_without_ext))
+        output_location_results = os.path.join(output_location, enrichment_folder_name)
+
         if not os.path.isdir(output_location_results):
             os.makedirs(output_location_results)
-    except Exception:
+    except IOError:
         main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Default genomic data
@@ -532,25 +547,67 @@ def main_enrichment():
     # Default image data
     image_data = ImageData()
 
+    genomic_regions_dict = {}
+    exp_matrix_fields_dict = {}
+
+    # will be set if genelists are used in the experimental matrix
+    flag_gene = False
+
     ###################################################################################################
     # Reading Input Matrix
     ###################################################################################################
 
-    # Reading arguments
-    try:
-        input_matrix = arguments[0]
-        input_location = arguments[1]
-        if len(arguments) > 2:
-            main_error_handler.throw_warning("ME_MANY_ARG")
-    except Exception:
-        main_error_handler.throw_error("ME_FEW_ARG")
+    # get experimental matrix, if available
+    if options.input_matrix:
+        try:
+            exp_matrix = ExperimentalMatrix()
+            exp_matrix.read(options.input_matrix)
 
-    # Create experimental matrix
-    try:
-        exp_matrix = ExperimentalMatrix()
-        exp_matrix.read(input_matrix)
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
+            # if the matrix is present, the (empty) dictionary is overwritten
+            genomic_regions_dict = exp_matrix.objectsDict
+
+            # Reading dictionary grouped by fields (only for gene association)
+            try:
+                exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
+                flag_gene = True
+            except KeyError:
+                flag_gene = False
+
+            del exp_matrix
+
+        except Exception:
+            main_error_handler.throw_error("MM_WRONG_EXPMAT")
+    else:
+        # if no input matrix is provided, we directly get the files in the input folder
+        input_files = glob(os.path.join(input_location, matching_folder_name, "*"))
+
+        # filter out mpbs and background file
+        def filter_fun(filename):
+            filename = os.path.basename(filename)
+            if filename.endswith("_mpbs.bed") or filename.endswith("_mpbs.bb"):
+                return False
+            if filename.startswith(options.background_prefix):
+                return False
+            if filename.endswith(".bb") or filename.endswith(".bed"):
+                return True
+            return False
+
+        for input_filename in filter(filter_fun, input_files):
+
+            name, _ = os.path.splitext(os.path.basename(input_filename))
+
+            if name in genomic_regions_dict:
+                main_error_handler.throw_error("DEFAULT_ERROR",
+                                               add_msg="region file named {} has already been loaded".format(name))
+
+            regions = GenomicRegionSet(name)
+            regions.read_bed(os.path.abspath(input_filename))
+
+            genomic_regions_dict[name] = regions
+
+        if not genomic_regions_dict:
+            main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
+                                                                "or at least an input file, or both")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -558,19 +615,6 @@ def main_enrichment():
 
     # Initializations
     input_list = []
-
-    # Reading dictionary grouped by fields
-    flag_gene = True
-    try:
-        exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
-    except KeyError:
-        flag_gene = False
-
-    # Reading dictionary of objects
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
     if flag_gene:  # Genelist and full site analysis will be performed
 
@@ -584,10 +628,10 @@ def main_enrichment():
             # the same gene label on genegroup column
             flag_foundgeneset = False
 
-            # Iterating on experimental matrix objects
+            # Iterating over the genomic regions
             for k in exp_matrix_fields_dict[g]:
 
-                curr_object = exp_matrix_objects_dict[k]
+                curr_object = genomic_regions_dict[k]
 
                 # If the current object is a GenomicRegionSet
                 if isinstance(curr_object, GenomicRegionSet):
@@ -621,9 +665,9 @@ def main_enrichment():
         single_input = Input(None, [])
 
         # Iterating on experimental matrix objects
-        for k in exp_matrix_objects_dict.keys():
+        for k in genomic_regions_dict.keys():
 
-            curr_object = exp_matrix_objects_dict[k]
+            curr_object = genomic_regions_dict[k]
 
             # If the current object is a GenomicRegionSet
             if isinstance(curr_object, GenomicRegionSet):
