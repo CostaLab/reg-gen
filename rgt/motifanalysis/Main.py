@@ -229,11 +229,13 @@ def main_matching():
     # get promoter regions from list of genes (both target and background)
     # TODO: should be more clever, allow precomputed regions etc
     if options.promoter_genes_filename:
-        annotation = AnnotationSet(options.organism, protein_coding=True, known_only=True)
+        annotation = AnnotationSet(options.organism, alias_source=options.organism,
+                                   protein_coding=True, known_only=True)
 
         target_genes = GeneSet("target_regions")
         target_genes.read(options.promoter_genes_filename)
 
+        # TODO what do we do with unmapped genes? maybe just print them out
         target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
         target_regions.name = "target_regions"
 
