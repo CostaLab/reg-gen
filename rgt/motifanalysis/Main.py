@@ -607,7 +607,7 @@ def main_enrichment():
 
         if not genomic_regions_dict:
             main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
-                                                                "or at least an input file, or both")
+                                                                    "or at least an input file, or both")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
