@@ -107,7 +107,7 @@ class GeneSet:
         """
         genome = GenomeData(organism=organism)
         self.genes = []
-        f = open(genome.get_association_file())
+        f = open(genome.get_gene_regions())
         for l in f.readlines():
             l = l.strip("\n")
             l = l.split("\t")
