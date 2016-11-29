@@ -232,7 +232,7 @@ def main_matching():
         annotation = AnnotationSet(options.organism, alias_source=options.organism,
                                    protein_coding=True, known_only=True)
 
-        target_genes = GeneSet("target_regions")
+        target_genes = GeneSet("target_genes")
         target_genes.read(options.promoter_genes_filename)
 
         # TODO what do we do with unmapped genes? maybe just print them out
@@ -245,7 +245,13 @@ def main_matching():
         genomic_regions_dict[target_regions.name] = target_regions
 
         if options.promoter_make_background:
-            background_regions = annotation.get_promoters(promoterLength=options.promoter_length)
+            # background is made of all genes minus the target genes
+            background_genes = GeneSet("background_genes")
+            background_genes.get_all_genes(organism=options.organism)
+            background_genes.subtract(target_genes)
+
+            background_regions = annotation.get_promoters(gene_set=background_genes,
+                                                          promoterLength=options.promoter_length)
             background_regions.name = "background_regions"
             background_regions.sort()
             output_file_name = os.path.join(matching_output_location, background_regions.name + ".bed")
