@@ -6,12 +6,10 @@
 from __future__ import print_function
 import os
 import sys
-import warnings
 from glob import glob
 import time
 from random import seed
-
-warnings.filterwarnings("ignore")
+from optparse import OptionGroup
 
 # Internal
 from rgt import __version__
@@ -23,6 +21,7 @@ from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
 from Util import Input, Result
+from rgt.AnnotationSet import AnnotationSet
 
 # External
 from pysam import Fastafile
@@ -42,7 +41,7 @@ Dependencies:
 - bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
 - bedTools (deprecate this option)
 
-Authors: Eduardo G. Gusmao.
+Authors: Eduardo G. Gusmao, Fabio Ticconi
 """
 
 
@@ -106,6 +105,7 @@ def main():
 
     print("Completed in", time.time() - start, "seconds")
 
+
 def main_matching():
     """
     Performs motif matching.
@@ -121,7 +121,7 @@ def main_matching():
     main_error_handler = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] <experiment_matrix>"
+    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -137,41 +137,59 @@ def main_matching():
                       help="Score distribution precision for determining false positive rate cutoff.")
     parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=0.1,
                       help="Pseudocounts to be added to raw counts of each PFM.")
-    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT", default=10.0,
-                      help="If random coordinates need to be created (for further motif enrichment),"
-                           "then it will be created a number of coordinates that equals this"
-                           "parameter x the number of input regions (in case of multiple regions, the"
-                           "larger is considered). If zero (0) is passed, then no random coordinates are created.")
+    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT", default=0,
+                      help="If set, a random regions file will be created (eg, for later enrichment analysis). "
+                           "The number of coordinates will be equal to this value times the size of the input regions. "
+                           "We advise you use a value of at least 10.")
     parser.add_option("--norm-threshold", dest="norm_threshold", action="store_true", default=False,
-                      help="If this option is used, the thresholds for all PWMs will be normalized by their length."
-                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr."
-                           "Then, all thresholds are divided by the length of the motif. The final threshold"
-                           "consists of the average between all normalized motif thresholds. This single threshold"
+                      help="If this option is used, the thresholds for all PWMs will be normalized by their length. "
+                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr. "
+                           "Then, all thresholds are divided by the length of the motif. The final threshold "
+                           "consists of the average between all normalized motif thresholds. This single threshold "
                            "will be applied to all motifs.")
-    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
-                      help="Bed file containing the genomic regions to use as background."
-                           "If set, --rand-proportion has no effect.")
-    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
-    # TODO: allow a more complex file type, specifying both motif name and database maybe?
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+                      help="If an experimental matrix is passed, the input arguments will be ignored.")
 
-    # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                      default=os.getcwd(), help="Path where the output files will be written.")
-    parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
-                      help="If this option is used, all bed files will be written as bigbed.")
-    parser.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
-                      help="In order to print bigbed files the scores need to be normalized between 0 and 1000."
-                           "Don't use this option if real bitscores should be printed in the resulting bed file."
-                           "Without this option, bigbed files will never be created.")
+    # Promoter-matching options
+    group = OptionGroup(parser, "Promoter-regions matching options",
+                        "Takes a list of genes, extracts their promoter regions and performs motif matching on these. "
+                        "If a genes file is provided, the input regions/matrix will be ignored.")
+    group.add_option("--gene-list", dest="promoter_genes_filename", type="string", metavar="PATH",
+                     help="List of genes (one per line) to get the promoter regions from.")
+    group.add_option("--make-background", dest="promoter_make_background", action="store_true", default=False,
+                     help="If set, it will perform motif matching on the 'background regions', composed of "
+                          "the promoters of all available genes.")
+    group.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
+                     help="Length of the promoter region (in bp) to be extracted from each gene.")
+    parser.add_option_group(group)
+
+    # Output options
+    group = OptionGroup(parser, "Output options",
+                        "Where to put the output files and how to post-process them.")
+    group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
+                     default=os.getcwd(), help="Path where the output files will be written.")
+    group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
+                     help="If this option is used, all bed files will be written as bigbed.")
+    group.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
+                     help="In order to print bigbed files the scores need to be normalized between 0 and 1000. "
+                          "Don't use this option if real bitscores should be printed in the resulting bed file. "
+                          "Without this option, bigbed files will never be created.")
+    parser.add_option_group(group)
 
     # Processing Options
     options, arguments = parser.parse_args()
 
     # Additional Parameters
-    matching_folder_name = "Match"
+    matching_folder_name = "match_result"
     random_region_name = "random_regions"
-    background_regions_name = "background_regions"
+
+    # we take care of conflicting parameters before going into the core of the method
+    if options.promoter_genes_filename:
+        # disable random regions and input matrix
+        options.rand_proportion = 0
+        options.input_matrix = None
 
     ###################################################################################################
     # Initializations
@@ -203,42 +221,75 @@ def main_matching():
             main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     ###################################################################################################
-    # Reading Input Matrix
+    # Reading Input Regions
     ###################################################################################################
 
-    # Reading arguments
-    try:
-        input_matrix = arguments[0]
-        if len(arguments) > 1:
-            main_error_handler.throw_warning("MM_MANY_ARG")
-    except Exception:
-        main_error_handler.throw_error("MM_NO_ARGUMENT")
+    genomic_regions_dict = {}
 
-    # Create experimental matrix
-    try:
-        exp_matrix = ExperimentalMatrix()
-        exp_matrix.read(input_matrix)
-    except Exception:
-        main_error_handler.throw_error("MM_WRONG_EXPMAT")
+    # get promoter regions from list of genes (both target and background)
+    # TODO: should be more clever, allow precomputed regions etc
+    if options.promoter_genes_filename:
+        annotation = AnnotationSet(options.organism, alias_source=options.organism,
+                                   protein_coding=True, known_only=True)
 
-    ###################################################################################################
-    # Reading Regions
-    ###################################################################################################
+        target_genes = GeneSet("target_regions")
+        target_genes.read(options.promoter_genes_filename)
 
-    # Initialization
+        # TODO what do we do with unmapped genes? maybe just print them out
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
+        target_regions.name = "target_regions"
+        target_regions.sort()
+        output_file_name = os.path.join(matching_output_location, target_regions.name + ".bed")
+        target_regions.write_bed(output_file_name)
+
+        genomic_regions_dict[target_regions.name] = target_regions
+
+        if options.promoter_make_background:
+            background_regions = annotation.get_promoters(promoterLength=options.promoter_length)
+            background_regions.name = "background_regions"
+            background_regions.sort()
+            output_file_name = os.path.join(matching_output_location, background_regions.name + ".bed")
+            background_regions.write_bed(output_file_name)
+
+            genomic_regions_dict[background_regions.name] = background_regions
+
+    # get experimental matrix, if available
+    if options.input_matrix:
+        try:
+            exp_matrix = ExperimentalMatrix()
+            exp_matrix.read(options.input_matrix)
+
+            # if the matrix is present, the (empty) dictionary is overwritten
+            genomic_regions_dict = exp_matrix.objectsDict
+        except Exception:
+            main_error_handler.throw_error("MM_WRONG_EXPMAT")
+
+    # Reading input regions files, if available
+    if arguments:
+        for input_filename in arguments:
+            name, _ = os.path.splitext(os.path.basename(input_filename))
+
+            if name in genomic_regions_dict:
+                main_error_handler.throw_error("DEFAULT_ERROR",
+                                               add_msg="region file named {} has already been loaded".format(name))
+
+            regions = GenomicRegionSet(name)
+            regions.read_bed(os.path.abspath(input_filename))
+
+            genomic_regions_dict[name] = regions
+
+    if not genomic_regions_dict:
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
+                                                                "or at least an input file, or both")
+
     max_region_len = 0
     max_region = None
     regions_to_match = []
 
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception:
-        main_error_handler.throw_error("MM_WRONG_EXPMAT")
-
     # Iterating on experimental matrix objects
-    for k in exp_matrix_objects_dict.keys():
+    for k in genomic_regions_dict.keys():
 
-        curr_genomic_region = exp_matrix_objects_dict[k]
+        curr_genomic_region = genomic_regions_dict[k]
 
         # If the object is a GenomicRegionSet
         if isinstance(curr_genomic_region, GenomicRegionSet):
@@ -253,29 +304,14 @@ def main_matching():
             curr_len = len(curr_genomic_region)
             if curr_len > max_region_len:
                 max_region_len = curr_len
-                max_region = exp_matrix_objects_dict[k]
+                max_region = genomic_regions_dict[k] # FIXME why not curr_genomic_region?
 
     ###################################################################################################
-    # Creating background regions
+    # Creating random regions
     ###################################################################################################
 
-    # if a background file is provided, use it
-    if options.background_bed:
-
-        # TODO: should also accept big bed
-
-        bg_regions = GenomicRegionSet(background_regions_name)
-
-        try:
-            bg_regions.read_bed(os.path.abspath(options.background_bed))
-        except Exception:
-            # FIXME: add another error type, requires some fixing around
-            main_error_handler.throw_error("DEFAULT_ERROR")
-
-        regions_to_match.append(bg_regions)
-
-    # otherwise if a random proportion is set, create random regions
-    elif options.rand_proportion > 0:
+    # if a random proportion is set, create random regions
+    if options.rand_proportion > 0:
 
         # Create random coordinates and name it random_regions
         rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
@@ -304,11 +340,6 @@ def main_matching():
                 os.remove(rand_bed_file_name)
             except Exception:
                 main_error_handler.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
-    else:
-        # FIXME: not very neat
-        main_error_handler.throw_warning("DEFAULT_WARNING", add_msg="No background was selected")
-
-    # if neither case was selected, we just do the motif matching over the input regions, without background
 
     ###################################################################################################
     # Creating PWMs
@@ -403,7 +434,7 @@ def main_enrichment():
     main_error_handler = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <experiment_matrix> <input_path>"
+    usage_message = "%prog --enrichment [options] <input_path>"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -424,11 +455,18 @@ def main_enrichment():
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
-                      help="Bed file containing the genomic regions to use as background."
-                           "If set, the random regions files will be ignored.")
-    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--background-prefix", dest="background_prefix", type="string", metavar="STRING",
+                      default="background_regions",
+                      help="By default we shall look for the following files to use as background: "
+                           "background_regions.bed and background_regions_mpbs.bed. "
+                           "If you created random regions during matching, or are using a different name for "
+                           "the background files, set the prefix accordingly.")
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+                      help="If an experimental matrix is NOT passed, then all files within the input path will "
+                           "be considered for enrichment.")
+
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
                       help="Path where the output files will be written. Default is the input PATH.")
@@ -441,10 +479,15 @@ def main_enrichment():
     # Processing Options
     options, arguments = parser.parse_args()
 
+    if len(arguments) != 1:
+        parser.print_help()
+        sys.exit(1)
+
+    input_location = arguments[0]
+
     # Additional Parameters
-    matching_folder_name = "Match"
-    random_region_name = "random_regions"
-    background_region_name = "background_regions"
+    matching_folder_name = "match_result"
+    enrichment_folder_name = "enrichment_result"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -474,13 +517,14 @@ def main_enrichment():
     if options.output_location:
         output_location = options.output_location  # Output location was given
     else:
-        output_location = arguments[1]  # Output location is the same as the match folder location
+        output_location = input_location
+
     try:
-        matrix_name_without_ext = ".".join(arguments[0].split(".")[:-1])
-        output_location_results = os.path.join(output_location, os.path.basename(matrix_name_without_ext))
+        output_location_results = os.path.join(output_location, enrichment_folder_name)
+
         if not os.path.isdir(output_location_results):
             os.makedirs(output_location_results)
-    except Exception:
+    except IOError:
         main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Default genomic data
@@ -503,25 +547,67 @@ def main_enrichment():
     # Default image data
     image_data = ImageData()
 
+    genomic_regions_dict = {}
+    exp_matrix_fields_dict = {}
+
+    # will be set if genelists are used in the experimental matrix
+    flag_gene = False
+
     ###################################################################################################
     # Reading Input Matrix
     ###################################################################################################
 
-    # Reading arguments
-    try:
-        input_matrix = arguments[0]
-        input_location = arguments[1]
-        if len(arguments) > 2:
-            main_error_handler.throw_warning("ME_MANY_ARG")
-    except Exception:
-        main_error_handler.throw_error("ME_FEW_ARG")
+    # get experimental matrix, if available
+    if options.input_matrix:
+        try:
+            exp_matrix = ExperimentalMatrix()
+            exp_matrix.read(options.input_matrix)
 
-    # Create experimental matrix
-    try:
-        exp_matrix = ExperimentalMatrix()
-        exp_matrix.read(input_matrix)
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
+            # if the matrix is present, the (empty) dictionary is overwritten
+            genomic_regions_dict = exp_matrix.objectsDict
+
+            # Reading dictionary grouped by fields (only for gene association)
+            try:
+                exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
+                flag_gene = True
+            except KeyError:
+                flag_gene = False
+
+            del exp_matrix
+
+        except Exception:
+            main_error_handler.throw_error("MM_WRONG_EXPMAT")
+    else:
+        # if no input matrix is provided, we directly get the files in the input folder
+        input_files = glob(os.path.join(input_location, matching_folder_name, "*"))
+
+        # filter out mpbs and background file
+        def filter_fun(filename):
+            filename = os.path.basename(filename)
+            if filename.endswith("_mpbs.bed") or filename.endswith("_mpbs.bb"):
+                return False
+            if filename.startswith(options.background_prefix):
+                return False
+            if filename.endswith(".bb") or filename.endswith(".bed"):
+                return True
+            return False
+
+        for input_filename in filter(filter_fun, input_files):
+
+            name, _ = os.path.splitext(os.path.basename(input_filename))
+
+            if name in genomic_regions_dict:
+                main_error_handler.throw_error("DEFAULT_ERROR",
+                                               add_msg="region file named {} has already been loaded".format(name))
+
+            regions = GenomicRegionSet(name)
+            regions.read_bed(os.path.abspath(input_filename))
+
+            genomic_regions_dict[name] = regions
+
+        if not genomic_regions_dict:
+            main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
+                                                                    "or at least an input file, or both")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -529,19 +615,6 @@ def main_enrichment():
 
     # Initializations
     input_list = []
-
-    # Reading dictionary grouped by fields
-    flag_gene = True
-    try:
-        exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
-    except Exception:
-        flag_gene = False
-
-    # Reading dictionary of objects
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
     if flag_gene:  # Genelist and full site analysis will be performed
 
@@ -551,13 +624,14 @@ def main_enrichment():
             # Create input which will contain all regions associated with such gene group
             curr_input = Input(None, [])
 
-            # This flag will be used to see if there are two gene files associated with the same gene label on genegroup column
+            # This flag will be used to see if there are two gene files associated with
+            # the same gene label on genegroup column
             flag_foundgeneset = False
 
-            # Iterating on experimental matrix objects
+            # Iterating over the genomic regions
             for k in exp_matrix_fields_dict[g]:
 
-                curr_object = exp_matrix_objects_dict[k]
+                curr_object = genomic_regions_dict[k]
 
                 # If the current object is a GenomicRegionSet
                 if isinstance(curr_object, GenomicRegionSet):
@@ -571,7 +645,8 @@ def main_enrichment():
                 if isinstance(curr_object, GeneSet):
 
                     # Updating Input object
-                    curr_object.name = g  # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    curr_object.name = g
                     if not flag_foundgeneset:
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
@@ -590,9 +665,9 @@ def main_enrichment():
         single_input = Input(None, [])
 
         # Iterating on experimental matrix objects
-        for k in exp_matrix_objects_dict.keys():
+        for k in genomic_regions_dict.keys():
 
-            curr_object = exp_matrix_objects_dict[k]
+            curr_object = genomic_regions_dict[k]
 
             # If the current object is a GenomicRegionSet
             if isinstance(curr_object, GenomicRegionSet):
@@ -633,44 +708,37 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
-    # FIXME: this is brittle. The files to use as background, both normal regions and mpbs, should be
-    # passed as arguments, not globbed - in both the "given" and the "random" cases
+    background_name = options.background_prefix
 
-    # if the background is not defined, we expect random regions instead
-    if not options.background_bed:
-        background_region_name = random_region_name
-
-        # Verifying background region file exists
-        background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + ".*"))
-        try:
-            background_region_file_name = background_region_glob[0]
-        except Exception:
-            main_error_handler.throw_error("ME_RAND_NOTFOUND")
-    else:
-        background_region_file_name = os.path.abspath(options.background_bed)
+    # Verifying background region file exists
+    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_name + ".*"))
+    try:
+        background_region_file_name = background_region_glob[0]
+    except Exception:
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background not found")
 
     # Verifying background region MPBS file exists
-    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + "_mpbs.*"))
+    background_region_mpbs_glob = glob(os.path.join(input_location, matching_folder_name, background_name + "_mpbs.*"))
     try:
-        background_mpbs_file_name = background_region_glob[0]
+        background_mpbs_file_name = background_region_mpbs_glob[0]
     except Exception:
-        pass  # XXX TODO main_error_handler.throw_error("ME_RANDMPBS_NOTFOUND")
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs not found")
 
     # Converting regions bigbed file
     background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
     if background_region_file_name.split(".")[-1] == "bb":
-        background_region_bed_name = os.path.join(output_location_results, background_region_name + ".bed")
+        background_region_bed_name = os.path.join(output_location_results, background_name + ".bed")
         os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
     elif background_region_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background neither BED nor BigBed")
 
     # Converting mpbs bigbed file
     background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
     if background_mpbs_file_name.split(".")[-1] == "bb":
-        background_mpbs_bed_name = os.path.join(output_location_results, background_region_name + "_mpbs.bed")
+        background_mpbs_bed_name = os.path.join(output_location_results, background_name + "_mpbs.bed")
         os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
     elif background_mpbs_file_name.split(".")[-1] != "bed":
-        pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs neither BED nor BigBed")
 
     # Evaluating background statistics
     bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
@@ -830,7 +898,7 @@ def main_enrichment():
                     result_list.append(r)
 
                 # Performing multiple test correction
-                multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+                multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                                  alpha=options.multiple_test_alpha,
                                                                                  method='indep')
                 corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
@@ -985,7 +1053,7 @@ def main_enrichment():
                 result_list.append(r)
 
             # Performing multiple test correction
-            multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+            multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                              alpha=options.multiple_test_alpha,
                                                                              method='indep')
             corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
