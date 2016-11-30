@@ -661,5 +661,5 @@ def input(laptop):
     if options.exts_inputs is None:
         options.exts_inputs = []
     
-    return options, bamfiles, genome, chrom_sizes, dims, inputs, version
+    return options, bamfiles, genome, chrom_sizes, dims, inputs, __version__
 
