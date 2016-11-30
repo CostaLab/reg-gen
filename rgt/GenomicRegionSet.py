@@ -284,7 +284,7 @@ class GenomicRegionSet:
 
         *Return:*
 
-            - result_grs -- GenomicRegionSet exactely as self, but with the following additional information:
+            - result_grs -- GenomicRegionSet exactly as self, but with the following additional information:
                 
                 1. name: String of genes associated with that coordinate separated by ':'
                 2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'

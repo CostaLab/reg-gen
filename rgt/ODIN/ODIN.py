@@ -88,9 +88,9 @@ def main():
         print("---------- TEST MODE ----------", file=sys.stderr)
     
     options, bamfile_1, bamfile_2, genome, chrom_sizes = input(test)
-    if not verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes):
-        print("error: bam, genome and chromosome files do not contain the same chromosome names!", file=sys.stderr)
-        sys.exit()
+
+    # checks that the above four files have coherent chromosome names and sizes
+    verify_chrom_in_paths(genome, bamfile_1, bamfile_2, chrom_sizes)
 
     ######### WORK! ##########
     tracker = Tracker(options.name + '-setup.info')
@@ -100,13 +100,13 @@ def main():
     else:
         tracker.write(text=options.pcutoff, header="p-value cutoff, with p-value correction (Benjamini/Hochberg)")
     
-    exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize, \
-                          bam_file_1 = bamfile_1, ext_1=options.ext_1, bam_file_2 = bamfile_2, ext_2=options.ext_2, \
-                          input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1, \
-                          input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2, \
-                          chrom_sizes = chrom_sizes,
-                          verbose = options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones, \
-                          factor_input_1 = options.factor_input_1, factor_input_2 = options.factor_input_2, debug=options.debug, tracker=tracker)
+    exp_data, ext_sizes = initialize(name=options.name, genome_path=genome, regions=options.regions, stepsize=options.stepsize, binsize=options.binsize,
+                          bam_file_1=bamfile_1, ext_1=options.ext_1, bam_file_2=bamfile_2, ext_2=options.ext_2,
+                          input_1=options.input_1, input_factor_1=options.input_factor_1, ext_input_1=options.ext_input_1,
+                          input_2=options.input_2, input_factor_2=options.input_factor_2, ext_input_2=options.ext_input_2,
+                          chrom_sizes=chrom_sizes,
+                          verbose=options.verbose, norm_strategy=options.norm_strategy, no_gc_content=options.no_gc_content, deadzones=options.deadzones,
+                          factor_input_1=options.factor_input_1, factor_input_2=options.factor_input_2, debug=options.debug, tracker=tracker)
     exp_data.compute_putative_region_index()
     print('Number of regions with putative differential peaks:', len(exp_data.indices_of_interest), file=sys.stderr)
     

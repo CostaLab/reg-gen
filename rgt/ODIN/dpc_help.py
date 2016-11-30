@@ -49,42 +49,71 @@ def get_bibtex_entry():
     print("    URL = {http://bioinformatics.oxfordjournals.org/content/30/24/3467}", file=sys.stderr)
     print("}", file=sys.stderr)
 
-def verify_chrom_in_paths(genome_path, bamfile1, bamfile2, chrom_sizes):
-    """Check whether the chromsome info overlap in bamfiles, genome path and chrom size path"""
-    chrom_bams = set()
-    chrom_genome = set()
-    chrom_chrom_sizes = set()
-    #check bam files
-    try:
-        if pysam.__version__ == '0.9.0':
-            chrom_bams_1 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile1).split('\n')[:len(pysam.idxstats(bamfile1).split('\n'))-1]])
-            chrom_bams_2 = set([el.split('\t')[0] for el in pysam.idxstats(bamfile2).split('\n')[:len(pysam.idxstats(bamfile2).split('\n'))-1]])
-        else:
-            chrom_bams_1 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile1)))
-            chrom_bams_2 = set(map(lambda x: x.split('\t')[0], pysam.idxstats(bamfile2)))
-    except:
-        return True
-            
-    chrom_bams = chrom_bams_1 & chrom_bams_2
-    #check chrom_sizes
-    with open(chrom_sizes) as f:
+
+def verify_chrom_in_paths(genome_file, bamfile1, bamfile2, chrom_sizes_file):
+    """
+    Check whether the chromsome info overlap in bamfiles, genome path and chrom size path.
+
+    In particular, the reference and chromosome sizes file must be completely consistent.
+
+    The BAM files, instead, need to:
+        - have only chromosomes that exist in the reference
+        - have positions consistent with the reference chromosomes
+    """
+
+    # load chrom_sizes
+    chrom_sizes = {}
+    with open(chrom_sizes_file) as f:
         for line in f:
             line = line.split('\t')
-            if line[0] not in chrom_chrom_sizes:
-                chrom_chrom_sizes.add(line[0])
-    
-    tmp = chrom_bams & chrom_chrom_sizes
-    if len(tmp) == 0:
-        return False
-    
-    #check genome
-    for s in FastaReader(genome_path):
-        if s.name not in chrom_genome:
-            chrom_genome.add(s.name)
-	    if s.name in tmp: #one overlap is sufficient
-		return True
-    
-    return len(chrom_bams & chrom_genome & chrom_chrom_sizes) >= 1
+            chrom, end = line[0].strip(), line[1].strip()
+
+            if chrom in chrom_sizes and chrom_sizes[chrom] != end:
+                raise ValueError("{} is duplicate in {}".format(chrom, chrom_sizes_file))
+
+            chrom_sizes[chrom] = end
+
+    # load the reference chromosomes
+    genome_chromosomes = set()
+    for s in FastaReader(genome_file):
+        if s.name in genome_chromosomes:
+            raise ValueError("{} is duplicate in {}".format(s.name, genome_file))
+
+        genome_chromosomes.add(s.name)
+
+    # check that the reference is compliant with the chromosome size file
+    if genome_chromosomes != set(chrom_sizes):
+        raise ValueError("reference and chromosome size file do not agree")
+
+    # load bam files chromosome information
+    if pysam.__version__.split(".")[1] > 8:
+        idxstats_1 = filter(None, pysam.idxstats(bamfile1).split("\n"))
+        idxstats_2 = filter(None, pysam.idxstats(bamfile2).split("\n"))
+    else:
+        idxstats_1 = pysam.idxstats(bamfile1)
+        idxstats_2 = pysam.idxstats(bamfile2)
+
+    chrom_bams_1 = dict(map(lambda x: x.split('\t')[0:2], idxstats_1))
+    chrom_bams_2 = dict(map(lambda x: x.split('\t')[0:2], idxstats_2))
+
+    # now check the chromosomes
+
+    for chrom, end in chrom_bams_1.items():
+        if chrom == "*":
+            continue
+        if chrom not in chrom_sizes:
+            raise ValueError("{} has chromosome {} but it's not in reference".format(bamfile1, chrom))
+        if chrom_sizes[chrom] != end:
+            raise ValueError("{} has chromosome {} but size is wrong".format(bamfile1, chrom))
+
+    for chrom, end in chrom_bams_2.items():
+        if chrom == "*":
+            continue
+        if chrom not in chrom_sizes:
+            raise ValueError("{} has chromosome {} but it's not in reference".format(bamfile2, chrom))
+        if chrom_sizes[chrom] != end:
+            raise ValueError("{} has chromosome {} but size is wrong".format(bamfile2, chrom))
+
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     indices_of_interest = DCS.indices_of_interest
@@ -237,9 +266,9 @@ def _get_log10pvalue(x):
             res = sys.maxint
         return res
 
-def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2, \
-               input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes, verbose, norm_strategy, no_gc_content, deadzones,\
-               factor_input_1, factor_input_2, debug, tracker):
+def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_file_2, ext_1, ext_2,
+               input_1, input_factor_1, ext_input_1, input_2, input_factor_2, ext_input_2, chrom_sizes,
+               verbose, norm_strategy, no_gc_content, deadzones, factor_input_1, factor_input_2, debug, tracker):
     
     regionset = GenomicRegionSet(name)
     chrom_sizes_dict = {}
@@ -314,13 +343,16 @@ def initialize(name, genome_path, regions, stepsize, binsize, bam_file_1, bam_fi
                 for v, i in values_input_2:
                     print(i, v, sep='\t', file=f)
 
-    cov_cdp_mpp = DualCoverageSet(name=name, region=regionset, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=True,\
-                                  file_1=bam_file_1, ext_1=ext_1,\
-                                  file_2=bam_file_2, ext_2=ext_2, \
-                                  input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1, \
-                                  input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy, no_gc_content=no_gc_content, deadzones=deadzones,\
-                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2, chrom_sizes_dict=chrom_sizes_dict, debug=debug, tracker=tracker)
+    cov_cdp_mpp = DualCoverageSet(name=name, region=regionset, genome_path=genome_path,
+                                  binsize=binsize, stepsize=stepsize, rmdup=True,
+                                  file_1=bam_file_1, ext_1=ext_1,
+                                  file_2=bam_file_2, ext_2=ext_2,
+                                  input_1=input_1, ext_input_1=ext_input_1, input_factor_1=input_factor_1,
+                                  input_2=input_2, ext_input_2=ext_input_2, input_factor_2=input_factor_2,
+                                  chrom_sizes=chrom_sizes, verbose=verbose, norm_strategy=norm_strategy,
+                                  no_gc_content=no_gc_content, deadzones=deadzones,
+                                  factor_input_1=factor_input_1, factor_input_2=factor_input_2,
+                                  chrom_sizes_dict=chrom_sizes_dict, debug=debug, tracker=tracker)
     
     return cov_cdp_mpp, [ext_1, ext_2]
 
@@ -402,65 +434,65 @@ def input(test):
             options.verbose = True
         print(options, file=sys.stderr)
     else:
-        parser.add_option("--input-1", dest="input_1", default=None, \
+        parser.add_option("--input-1", dest="input_1", default=None,
                           help="Input control for first parameter [default: %default]")
-        parser.add_option("--input-2", dest="input_2", default=None, \
+        parser.add_option("--input-2", dest="input_2", default=None,
                           help="Input control for second parameter [default: %default]")
-        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
+        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",
                           help="p-value cutoff: call only peaks with p-value lower than cutoff [default: %default]")
-        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
+        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true",
                           help="No Benjamini/Hochberg p-value multiple testing correction [default: %default]")
-        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
+        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true",
                           help="Merge peaks which have a distance less than the estimated fragment size (recommended for histone data). [default: %default]")
-        parser.add_option("-n", "--name", default=None, dest="name", type="string",\
+        parser.add_option("-n", "--name", default=None, dest="name", type="string",
                           help="Experiment's name and prefix for all files that are created.")
-        parser.add_option("--ext-1", default=None, dest="ext_1", type="int",\
+        parser.add_option("--ext-1", default=None, dest="ext_1", type="int",
                           help="Read's extension size for first BAM file. If option is not chosen, estimate extension size. [default: %default]")
-        parser.add_option("--ext-2", default=None, dest="ext_2", type="int",\
+        parser.add_option("--ext-2", default=None, dest="ext_2", type="int",
                           help="Read's extension size for second BAM file. If option is not chosen, estimate extension size [default: %default]")
-        parser.add_option("--ext-input-1", default=None, dest="ext_input_1", type="int",\
+        parser.add_option("--ext-input-1", default=None, dest="ext_input_1", type="int",
                           help="Read's extension size for first input file. If option is not chosen, estimate extension size. [default: %default]")
-        parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",\
+        parser.add_option("--ext-input-2", default=None, dest="ext_input_2", type="int",
                           help="Read's extension size for second input file. If option is not chosen, estimate extension size. [default: %default]")
         #parser.add_option("--factor-1", default=None, dest="factor_input_1", type="float",\
         #                  help="Factor for first BAM. [default: %default]")
         #parser.add_option("--factor-2", default=None, dest="factor_input_2", type="float",\
         #                  help="Factor for second BAM. [default: %default]")
         
-        parser.add_option("--distr", default="binom", dest="distr", type="string", \
+        parser.add_option("--distr", default="binom", dest="distr", type="string",
                           help="HMM's emission distribution. [Binomial (binom), (constraint) mixture of poisson (poisson-c)] [default: %default]")
         parser.add_option("--mag", default=3, dest="mag", type="int", help="Magnitude of Poisson mixture model. [default: %default]")
         
-        parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
+        parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true",
                           help="output further information of DP-Calling progress [default: %default]")
         parser.add_option("--version", dest="version", default=False, action="store_true", help="show version [default: %default]")
         parser.add_option("--bibtex", dest="bibtex", default=False, action="store_true", help="show BibTeX entry [default: %default]")
         #parser.add_option("--norm-strategy", dest="norm_strategy", default=5, type="int", help="1: naive; 2: Diaz; 3: own; 4: Diaz and own; 5: diaz and naive")
-        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
+        parser.add_option("--output-dir", dest="outputdir", default=None, type="string",
                           help="All files are stored in output directory which is created if necessary.")
         
         group = OptionGroup(parser, "Advanced options")
-        group.add_option("--regions", dest="regions", default=None,\
+        group.add_option("--regions", dest="regions", default=None,
                           help="regions (BED) to restrict the analysis (that is, where to train the HMM and search for DPs;\
                            it is faster, but inaccurate) [default: entire genome]")
         group.add_option("--deadzones", dest="deadzones", default=None, help="Deadzones (BED) [default: %default]")
-        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
+        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true",
                           help="turn of GC-content calculation (faster, but less accurate) [default: %default]")
-        group.add_option("--const-chrom", default=None, dest="constchrom", type="string",\
+        group.add_option("--const-chrom", default=None, dest="constchrom", type="string",
                           help="Constrain HMM learning process to chromosome. [default: %default]")
-        group.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",\
+        group.add_option("--factor-input-1", default=None, dest="input_factor_1", type="float",
                           help="Normalization factor for first input. If option is not chosen, estimate factor. [default: %default]")
-        group.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",\
+        group.add_option("--factor-input-2", default=None, dest="input_factor_2", type="float",
                           help="Normalization factor for second input. If option is not chosen, estimate factor. [default: %default]")
-        group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",\
+        group.add_option("-c", "--confidence_threshold", dest="confidence_threshold", default=0.7, type="float",
                           help="Threshold that each observation's posterior probability must exceed to be considered as a differential peak. [default: %default]")
-        group.add_option("-f", "--foldchange", default=2.0, dest="foldchange", type="float",\
+        group.add_option("-f", "--foldchange", default=2.0, dest="foldchange", type="float",
                           help="Minimum fold change which a potential differential peak must exhibit. [default: %default]")
-        group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
+        group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",
                           help="Size of underlying bins for creating the signal [default: %default]")
-        group.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
+        group.add_option("-s", "--step", dest="stepsize", default=50, type="int",
                           help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
-        group.add_option("--debug", default=False, dest="debug", action="store_true", \
+        group.add_option("--debug", default=False, dest="debug", action="store_true",
                           help="Output debug information. Warning: space consuming! [default: %default]")
 
         parser.add_option_group(group)
