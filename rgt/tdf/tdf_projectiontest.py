@@ -125,7 +125,8 @@ class PromoterTest:
                 self.de_gene = GeneSet("de genes")
 
                 if score:
-                    self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
+                    self.de_gene.read(gene_list_file, score=True)
+                    # self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
@@ -390,6 +391,9 @@ class PromoterTest:
             self.pvalue[rbs] = pvals_corrected[i]
             if pvals_corrected[i] < alpha:
                 self.sig_DBD.append(rbs)
+
+        try: self.stat["p_value"] = str(min(pvals_corrected))
+        except: self.stat["p_value"] = "1"
 
         if self.showdbs:
             self.hoddsratio = {}

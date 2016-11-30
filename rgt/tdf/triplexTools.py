@@ -1,6 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
+import sys
 import pysam
 import shutil
 import pickle
@@ -1084,7 +1085,7 @@ def write_stat(stat, filename):
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig"]
+                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
     with open(filename, "w") as f:
         for k in order_stat:
             print("\t".join([k,stat[k]]), file=f)
@@ -1096,7 +1097,7 @@ def integrate_stat(path):
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig"]
+                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
     nested_dict = lambda: defaultdict(nested_dict)
     data = nested_dict()
 
