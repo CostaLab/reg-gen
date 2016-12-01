@@ -517,7 +517,7 @@ class AnnotationSet:
                     except Exception: unmapped_list.append(e)
             return mapped_list, unmapped_list
 
-    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False):
+    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False, variants=False):
         """Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters. The ID of each gene will be put in the NAME field of each GenomicRegion. Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual length is promoterLength+1.
 
         *Keyword arguments:*
@@ -536,20 +536,15 @@ class AnnotationSet:
         mapped_gene_list = None
         unmapped_gene_list = None
         if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
-        # print(mapped_gene_list[0:5])
-        # print(len(mapped_gene_list))
-        # sys.exit(0)
+
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
-        # if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
-        # else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
+        if not variants: target = "gene"
+        else: target = "transcript"
+        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:target, self.GeneField.GENE_ID:mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE:target}
         
         query_annset = self.get(query_dictionary)
-        # print(self.gene_list[0:5])
-        # print(query_annset.gene_list[0:5])
-        # print(len(query_annset.gene_list))
-        # sys.exit(0)
+
         # Creating GenomicRegionSet
         result_grs = GenomicRegionSet("promoters")
         for e in query_annset.gene_list:

@@ -22,7 +22,7 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat
 
-from tdf_projectiontest import PromoterTest
+from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
 
 dir = os.getcwd()
