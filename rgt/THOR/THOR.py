@@ -114,7 +114,7 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         pvalues += inst_pvalues
         ratios += inst_ratios
     
-    res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output, options.no_correction, options.name)
+    res_output, res_pvalues, res_filter_pass = filter_by_pvalue_strand_lag(ratios, options.pcutoff, pvalues, output, options.no_correction, options.name, options.singlestrand)
     
     _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
     _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)

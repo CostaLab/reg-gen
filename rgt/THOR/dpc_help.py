@@ -538,7 +538,8 @@ def input(laptop):
                           help="Percentile for p-value postprocessing filter. [default: %default]")
         group.add_option("--poisson", default=False, dest="poisson", action="store_true", \
                           help="Use binomial distribution as emmission. [default: %default]")
-        
+        group.add_option("--single-strand", default=False, dest="singlestrand", action="store_true", \
+                         help="Allow single strand BAM file as input. [default: %default]")
         parser.add_option_group(group)
         
         ##deprecated options
