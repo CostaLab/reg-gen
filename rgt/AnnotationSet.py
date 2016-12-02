@@ -9,14 +9,11 @@ AnnotationSet represent genomic annotation from genes.
 
 # Python
 from __future__ import print_function
-import os
-import sys
-from copy import deepcopy
 
 # Internal
-from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.Util import GenomeData, MotifData, AuxiliaryFunctions
+
 
 class AnnotationSet:
     """This class represents genomic annotation from genes.
@@ -139,10 +136,10 @@ class AnnotationSet:
         self.symbol_dict = dict() # ENSEMBL ID -> Official gene symbol
 
         # Initializing Required Field - Gene List
-        if(isinstance(gene_source,list)): # It can be a matrix - Used by internal methods.
+        if isinstance(gene_source,list): # It can be a matrix - Used by internal methods.
             self.gene_list = gene_source
-        if(isinstance(gene_source,str)): # It can be a string.
-            if(os.path.isfile(gene_source)): # The string may represent a path to a gtf file.
+        if isinstance(gene_source,str): # It can be a string.
+            if os.path.isfile(gene_source): # The string may represent a path to a gtf file.
                 # FTT for TDF True
                 #filter_havana = False
                 protein_coding = False
@@ -159,15 +156,15 @@ class AnnotationSet:
                                     known_only=known_only)
 
         # Initializing Optional Field - TF List
-        if(tf_source):
-            if(isinstance(tf_source,list)):
-                if(isinstance(tf_source[0],list)): # It can be a matrix
+        if tf_source:
+            if isinstance(tf_source, list):
+                if isinstance(tf_source[0], list): # It can be a matrix
                     self.tf_list = tf_source
                 else:
                     mtf_file_list = []
                     motif_data = MotifData()
                     for e in tf_source:
-                        if(os.path.isfile(e)): # It can be a path to a mtf file.
+                        if os.path.isfile(e): # It can be a path to a mtf file.
                             mtf_file_list.append(e)
                         else: # It can represent an organism which points to an mtf file within data.config.
                             mtf_file = motif_data.get_mtf_path(e)
@@ -176,17 +173,16 @@ class AnnotationSet:
             else: pass # TODO Throw error.
 
         # Initializing Optional Field - Alias Dictionary
-        if(alias_source):
-            if(isinstance(alias_source,dict)): # It can be a dictionary - Used by internal methods.
+        if alias_source:
+            if isinstance(alias_source,dict): # It can be a dictionary - Used by internal methods.
                 self.alias_dict = alias_source
-            if(isinstance(alias_source,str)): # It can be a string.
-                if(os.path.isfile(alias_source)): # The string may represent a path to a txt alias file.
+            if isinstance(alias_source,str): # It can be a string.
+                if os.path.isfile(alias_source): # The string may represent a path to a txt alias file.
                     self.load_alias_dict(alias_source)
                 else: # The string may represent an organism which points to a txt alias file within data.config.
                     genome_data = GenomeData(alias_source)
                     self.load_alias_dict(genome_data.get_gene_alias())
             else: pass # TODO Throw error
-            
 
     def load_gene_list(self, file_name, filter_havana=True, protein_coding=False, known_only=False):
         """Reads gene annotation in gtf (gencode) format. It populates self.gene_list with such entries.
@@ -196,7 +192,7 @@ class AnnotationSet:
             - file_name -- The gencode .gtf file name.
         """
         # Opening GTF file
-        try: gtf_file = open(file_name,"r")
+        try: gtf_file = open(file_name, "r")
         except Exception: 
             print("Error: Cannot find the annotation file: "+file_name)
             print("Please check the path in ~/rgtdata/data.config")
@@ -204,56 +200,66 @@ class AnnotationSet:
         
         # Reading GTF file
         for line in gtf_file:
-        
+
             # Processing line
             line = line.strip()
-            if(line[0] == "#"): continue
+            if line[0] == "#": continue
             line_list = line.split("\t")
             try:
-                if(filter_havana and line_list[1] == "HAVANA"): continue
+                if filter_havana and line_list[1] == "HAVANA": continue
             except: pass
             
             addt_list = line_list[8].split(";")
-
-            if(protein_coding and "protein_coding" not in addt_list[2] ): continue
-            if(known_only and "KNOWN" not in addt_list[3] ): continue
-            
-            if(protein_coding and "protein_coding" not in addt_list[5] ): continue
-            if(known_only and "KNOWN" not in addt_list[6] ): continue
-            
-            addt_list = filter(None,addt_list)
+            addt_list = filter(None, addt_list)
 
             # Processing additional list of options
             addt_dict = dict()
             for addt_element in addt_list:
                 addt_element_list = addt_element.split(" ")
-                addt_element_list = filter(None,addt_element_list)
-                addt_element_list[1] = addt_element_list[1].replace("\"","") # Removing " symbol from string options
+                addt_element_list = filter(None, addt_element_list)
+                # Removing " symbol from string options
+                addt_element_list[1] = addt_element_list[1].replace("\"", "")
                 addt_dict[addt_element_list[0]] = addt_element_list[1]
+
+            # filter non-protein-coding sequences, if required
+            if protein_coding:
+                if "gene_type" not in addt_dict or addt_dict["gene_type"] != "protein_coding":
+                    continue
+                if "transcript_type" in addt_dict and addt_dict["transcript_type"] != "protein_coding":
+                    continue
+
+            # filter unknown sequences, if required
+            if known_only:
+                if "gene_status" not in addt_dict or addt_dict["gene_status"] != "KNOWN":
+                    continue
+                if "transcript_status" in addt_dict and addt_dict["transcript_status"] != "KNOWN":
+                    continue
         
             # Removing dot from IDs
             addt_dict["gene_id"] = addt_dict["gene_id"].split(".")[0]
             try: addt_dict["transcript_id"] = addt_dict["transcript_id"].split(".")[0]
             except: pass
-                
-                                                                                                                                                                                          # Creating final version of additional arguments
+
+            # Creating final version of additional arguments
             final_addt_list = []
             for addt_key in ["gene_id", "transcript_id", "gene_type", "gene_status", "gene_name", 
                              "transcript_type", "transcript_status", "transcript_name", "level"]:
-                try: final_addt_list.append(addt_dict[addt_key])
-                except Exception: final_addt_list.append(None)
+                try:
+                    final_addt_list.append(addt_dict[addt_key])
+                except Exception:
+                    final_addt_list.append(None)
 
             # Handling score
             current_score = 0
-            if(AuxiliaryFunctions.string_is_int(line_list[5])):
+            if AuxiliaryFunctions.string_is_int(line_list[5]):
                 current_score = AuxiliaryFunctions.correct_standard_bed_score(line_list[5])
             
             # Creating GenomicRegion
-            genomic_region = GenomicRegion(chrom = line_list[0], 
-                                           initial = int(line_list[3])-1, 
-                                           final = int(line_list[4]), 
-                                           orientation = line_list[6], 
-                                           data = current_score)
+            genomic_region = GenomicRegion(chrom=line_list[0],
+                                           initial=int(line_list[3])-1,
+                                           final=int(line_list[4]),
+                                           orientation=line_list[6],
+                                           data=current_score)
 
             # Creating final vector
             extra_index_elements = [[],[]] # One list for each: EXACT_GENE_MATCHES, INEXACT_GENE_MATCHES
@@ -287,7 +293,6 @@ class AnnotationSet:
 
         # Termination
         alias_file.close()
-        
 
     def load_tf_list(self, file_name_list):
         """Reads TF annotation in mtf (internal -- check manual) format. It populates self.tf_list with such entries. Everytime a TF annotation is loaded, a mapping with gene list is performed.
@@ -309,7 +314,7 @@ class AnnotationSet:
 
                 # Processing line
                 line_list = line.strip().split("\t")
-                while(len(line_list) < 5): line_list.append(".")
+                while len(line_list) < 5: line_list.append(".")
                 
                 # Creating final vector
                 extra_index_elements = [[],[]] # One list for each: EXACT_GENE_MATCHES, INEXACT_GENE_MATCHES
@@ -353,13 +358,13 @@ class AnnotationSet:
             tf_vec = self.tf_list[tf_assist[1]]
             try: cmp_res = cmp(gene_genename,tf_genename)
             except IndexError: break
-            if(cmp_res == 0):
+            if cmp_res == 0:
                 gene_vec[self.GeneField.EXACT_GENE_MATCHES] = tf_vec
                 tf_vec[self.TfField.EXACT_GENE_MATCHES] = gene_vec
                 curr_gene_index += 1
-            elif(cmp_res == -1):
+            elif cmp_res == -1:
                 curr_gene_index += 1
-            elif(cmp_res == 1):
+            elif cmp_res == 1:
                 curr_tf_index += 1
 
     def inexact_mapping(self):
@@ -392,9 +397,9 @@ class AnnotationSet:
             # Verifying if it is ensembl name
             flag_ensembl = False
             try:
-                if(len(gene_name) >= 15 and gene_name[:3] == "ENS"): flag_ensembl = True
+                if len(gene_name) >= 15 and gene_name[:3] == "ENS": flag_ensembl = True
             except Exception: flag_ensembl = False
-            if(flag_ensembl): 
+            if flag_ensembl:
                 mapped_gene_list.append(gene_name)
                 sym = self.get_official_symbol(gene_name)
                 if output_dict and sym and gene_name:
@@ -402,7 +407,7 @@ class AnnotationSet:
             else:
                 try:
                     alias_list = self.alias_dict[gene_name.upper()]
-                    if(len(alias_list) > 1): 
+                    if len(alias_list) > 1:
                         if not mute_warn: 
                             print("Warning: The gene "+gene_name+" contains more than one matching IDs, both will be used.")
                     for e in alias_list: 
@@ -437,19 +442,20 @@ class AnnotationSet:
         # Fetching local copies of the lists
         gene_list = deepcopy(self.gene_list)
         tf_list = deepcopy(self.tf_list)
+        current_list = None
 
         # Deciding which list to be subsetted/returned
-        if(list_type == self.DataType.GENE_LIST): current_list = gene_list
-        elif(list_type == self.DataType.TF_LIST): current_list = tf_list
+        if list_type == self.DataType.GENE_LIST: current_list = gene_list
+        elif list_type == self.DataType.TF_LIST: current_list = tf_list
 
         # Subsetting
-        if(isinstance(query,dict)):
+        if isinstance(query, dict):
         
             # Iterating over query elements
             for query_key in query.keys():
 
                 # O(n) operation if a single value is being queried.
-                if(not isinstance(query[query_key],list)):
+                if not isinstance(query[query_key], list):
                     current_list = filter(lambda k: k[query_key] == query[query_key], current_list)
 
                 # O(n log n) operation if multiple values are being queried.
@@ -461,32 +467,33 @@ class AnnotationSet:
 
                     # Initializing index and output structures
                     result_list = []
-                    curr_value_index = 0;
-                    curr_list_index = 0;
+                    curr_value_index = 0
+                    curr_list_index = 0
 
                     # Linear while comparison loop
                     while True:
-                        try: cmp_res = cmp(current_list[curr_list_index][query_key],values_list[curr_value_index])
+                        try: cmp_res = cmp(current_list[curr_list_index][query_key], values_list[curr_value_index])
                         except IndexError: break
-                        if(cmp_res == 0):
+                        if cmp_res == 0:
                             result_list.append(current_list[curr_list_index])
                             curr_list_index += 1
-                        elif(cmp_res == -1):
+                        elif cmp_res == -1:
                             curr_list_index += 1
-                        elif(cmp_res == 1):
+                        elif cmp_res == 1:
                             curr_value_index += 1
 
                     # Resolving reference
                     current_list = result_list
 
         # Deciding which list to be subsetted/returned
-        if(list_type == self.DataType.GENE_LIST): gene_list = current_list
-        elif(list_type == self.DataType.TF_LIST): tf_list = current_list
+        if list_type == self.DataType.GENE_LIST: gene_list = current_list
+        elif list_type == self.DataType.TF_LIST: tf_list = current_list
 
         # Return
-        if(return_type == self.ReturnType.ANNOTATION_SET): 
-            return AnnotationSet(gene_list, tf_list, deepcopy(self.alias_dict))
-        elif(return_type == self.ReturnType.LIST): 
+        if return_type == self.ReturnType.ANNOTATION_SET:
+            # FIXME is deepcopy necessary here? seems overkill
+            return AnnotationSet(gene_list, tf_source=tf_list, alias_source=deepcopy(self.alias_dict))
+        elif return_type == self.ReturnType.LIST:
             return current_list
 
     def get_official_symbol(self, gene_name_source):
@@ -502,11 +509,11 @@ class AnnotationSet:
             - if gene_source is list then returns two lists containing, respectively, converted and not-converted gene names.
         """
 
-        if(isinstance(gene_name_source,str)):
+        if isinstance(gene_name_source, str):
             try: return self.symbol_dict[gene_name_source]
             except Exception: return None
         else:
-            if(isinstance(gene_name_source,list)): curr_list = gene_name_source
+            if isinstance(gene_name_source,list): curr_list = gene_name_source
             else: curr_list = gene_name_source.genes
             mapped_list = []
             unmapped_list = []
@@ -518,7 +525,11 @@ class AnnotationSet:
             return mapped_list, unmapped_list
 
     def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False):
-        """Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters. The ID of each gene will be put in the NAME field of each GenomicRegion. Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual length is promoterLength+1.
+        """
+        Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters.
+        The ID of each gene will be put in the NAME field of each GenomicRegion.
+        Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual
+        length is promoterLength+1.
 
         *Keyword arguments:*
 
@@ -535,26 +546,17 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
-        # print(mapped_gene_list[0:5])
-        # print(len(mapped_gene_list))
-        # sys.exit(0)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
-        # if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript", self.GeneField.GENE_ID:mapped_gene_list}
-        # else: query_dictionary = {self.GeneField.FEATURE_TYPE:"transcript"}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE: "gene", self.GeneField.GENE_ID: mapped_gene_list}
+        else: query_dictionary = {self.GeneField.FEATURE_TYPE: "gene"}
         
         query_annset = self.get(query_dictionary)
-        # print(self.gene_list[0:5])
-        # print(query_annset.gene_list[0:5])
-        # print(len(query_annset.gene_list))
-        # sys.exit(0)
         # Creating GenomicRegionSet
         result_grs = GenomicRegionSet("promoters")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
-            if(gr.orientation == "+"):
+            if gr.orientation == "+":
                 gr.final = gr.initial + 1
                 gr.initial = gr.initial - promoterLength
             else:
@@ -582,10 +584,10 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
@@ -593,7 +595,7 @@ class AnnotationSet:
         result_grs = GenomicRegionSet("TSS")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
-            if(gr.orientation == "+"):
+            if gr.orientation == "+":
                 gr.initial = gr.initial
                 gr.final = gr.initial + 1
             else:
@@ -602,7 +604,7 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
 
     def get_tts(self, gene_set = None):
@@ -621,10 +623,10 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
@@ -632,7 +634,7 @@ class AnnotationSet:
         result_grs = GenomicRegionSet("TTS")
         for e in query_annset.gene_list:
             gr = e[self.GeneField.GENOMIC_REGION]
-            if(gr.orientation == "+"):
+            if gr.orientation == "+":
                 gr.initial = gr.initial
                 gr.final = gr.initial + 1
             else:
@@ -641,7 +643,7 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
     
     def get_exons(self, start_site=False, end_site=False, gene_set = None, merge=True):
@@ -662,10 +664,10 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching exons
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
         query_annset = self.get(query_dictionary)
 
@@ -681,7 +683,7 @@ class AnnotationSet:
         elif end_site:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
         if merge: result_grs.merge()
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
     
     def get_genes(self, gene_set = None):
@@ -700,10 +702,10 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching genes
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"gene"}
         query_annset = self.get(query_dictionary)
 
@@ -714,7 +716,7 @@ class AnnotationSet:
             gr.name = e[self.GeneField.GENE_ID]
             result_grs.add(gr)
         result_grs.merge()
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
     
     def get_introns(self, start_site=False, end_site=False, gene_set = None):
@@ -732,7 +734,7 @@ class AnnotationSet:
             - unmapped_gene_list -- A list of genes that could not be mapped to an ENSEMBL ID.
         """
 
-        if(gene_set):
+        if gene_set:
             genes, unmapped_gene_list = self.get_genes(gene_set=gene_set)
             exons, unmapped_gene_list_e = self.get_exons(gene_set=gene_set)
         else:
@@ -744,7 +746,7 @@ class AnnotationSet:
             result_grs.relocate_regions("leftend", left_length=1, right_length=1)
         elif end_site:
             result_grs.relocate_regions("rightend", left_length=1, right_length=1)
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
 
     def get_transcripts(self, gene_set = None):
@@ -763,10 +765,10 @@ class AnnotationSet:
         # Fetching gene names
         mapped_gene_list = None
         unmapped_gene_list = None
-        if(gene_set): mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
 
         # Fetching exons
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
+        if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
         query_annset = self.get(query_dictionary)
 
@@ -777,5 +779,5 @@ class AnnotationSet:
             gr.name = e[self.GeneField.TRANSCRIPT_ID]
             result_grs.add(gr)
 
-        if(gene_set): return result_grs, unmapped_gene_list
+        if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
