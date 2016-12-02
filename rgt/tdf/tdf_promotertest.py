@@ -151,7 +151,7 @@ class PromoterTest:
                 # print("After fixing")
                 de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
                                                                 gene_set=self.de_gene,
-                                                                unmaplist=True)
+                                                                unmaplist=True, variants=False)
                 # print(len(unmapped_gene_list))
                 print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
                 if len(unmapped_gene_list) > 0:

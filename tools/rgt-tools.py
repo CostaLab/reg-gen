@@ -11,10 +11,11 @@ home = expanduser("~")
 
 # Local Libraries
 from rgt.GeneSet import GeneSet
+from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.AnnotationSet import AnnotationSet
 from rgt.Util import OverlapType
-tag = "RGT-convertor"
+tag = "RGT-tools"
 
 #print(os.getcwd())
 
@@ -65,34 +66,27 @@ if __name__ == "__main__":
     parser_gtfat.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtfat.add_argument('-o', metavar='  ', type=str, help="Output GTF file")
 
+
     ############### GTF to BED ###############################################
     # python rgt-convertor.py gtf_to_bed -i -o
-    parser_gtf2bed = subparsers.add_parser('gtf_to_bed', 
+    parser_gtf2bed = subparsers.add_parser('gtf_to_bed',
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
     parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
     parser_gtf2bed.add_argument('-s', '-source', type=str, default="All", help="Define the source {ENSEMBL,HAVANA,All}")
-    parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene", 
-                                help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine}")
-    parser_gtf2bed.add_argument('-t', '-type', type=str, default="All", 
+    parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene",
+                                help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine,All}")
+    parser_gtf2bed.add_argument('-t', '-type', type=str, default="All",
                                 help="Define gene type e.g. 'protein_coding' more: http://www.gencodegenes.org/gencode_biotypes.html")
-    parser_gtf2bed.add_argument('-st', '-status', type=str, default="All", 
+    parser_gtf2bed.add_argument('-st', '-status', type=str, default="All",
                                 help="Define gene status {KNOWN, NOVEL, PUTATIVE,All}")
-    parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None, 
+    parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None,
                                 help="Define the gene list for filtering, default is None.")
     parser_gtf2bed.add_argument('-id', action="store_true",
                                 help="Use gene ID as region name, instead of gene symbol.")
-    parser_gtf2bed.add_argument('-b', action="store_true", 
+    parser_gtf2bed.add_argument('-b', action="store_true",
                                 help="Save exons into entries with block in BED")
 
-    ############### GTF to BED ###############################################
-    # python rgt-convertor.py gtf_to_bed -i -o
-    parser_gtf2bed2 = subparsers.add_parser('gtf2bed',
-                                           help="[GTF] Convert GTF file to BED by the given biotype")
-    parser_gtf2bed2.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
-    parser_gtf2bed2.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed2.add_argument('-b', action="store_true",
-                                help="Save exons into entries with block in BED")
     ############### GTF to FASTA #############################################
     # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
@@ -404,193 +398,68 @@ if __name__ == "__main__":
 
     ############### GTF to BED ######################################
     elif args.mode == "gtf_to_bed":
-        print(tag+": [GTF] Convert GTF to BED")
+        print(tag + ": [GTF] Convert GTF to BED")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
         print("source:\t\t" + args.s)
         print("feature:\t" + args.f)
         print("type:\t\t" + args.t)
         print("status:\t\t" + args.st)
-        if args.g:
-            print("gene list:\t" + args.g)
-        
-        if args.s == "ENSEMBL": tag_s = "ENSEMBL"
-        elif args.s == "HAVANA": tag_s = "HAVANA"
-        elif args.s == "All": tag_s = None
-        else: 
-            print("Please redefine the argument -s.")
-            sys.exit(1)
-
-        if args.f == "gene": tag_f = "gene"
-        elif args.f == "transcript": tag_f = "transcript"
-        elif args.f == "exon": tag_f = "exon"
-        elif args.f == "CDS": tag_f = "CDS"
-        elif args.f == "UTR": tag_f = "UTR"
-        elif args.f == "start_codon": tag_f = "start_codon"
-        elif args.f == "stop_codon": tag_f = "stop_codon"
-        elif args.f == "Selenocysteine": tag_f = "Selenocysteine"
-        elif args.f == "All": tag_f = None
-        else: 
-            print("Please redefine the argument -f.")
-            sys.exit(1)
-
-        if args.t == "All": tag_t = None
-        # else: tag_t = ' \"'+args.t+'\"'
-        else: tag_t = r'\"*'+args.t+'\"'
-
-        # args.t == "protein_coding": tag_t = ' \"protein_coding\"'
-        # elif args.t == "non_coding": tag_t = ' \"non_coding\"'
-        # elif args.t == "known_ncrna": tag_t = ' \"known_ncrna\"'
-        # elif args.t == "pseudogene": tag_t = ' \"pseudogene\"'
-        # elif args.t == "All": tag_t = None
-        # else: 
-        #     print("Please redefine the argument -t.")
-        #     sys.exit(1)
-
-        if args.st == "KNOWN": tag_st = 'gene_status \"KNOWN\"'
-        elif args.st == "NOVEL": tag_st = 'gene_status \"NOVEL\"'
-        elif args.st == "PUTATIVE": tag_st = 'gene_status \"PUTATIVE\"'
-        elif args.st == "All": tag_st = None
-        else: 
-            print("Please redefine the argument -st.")
-            sys.exit(1)
+        if args.g: print("gene list:\t" + args.g)
+        # Sorting all parameters
 
         if args.g:
             select_genes = GeneSet("genes")
             select_genes.read(args.g)
 
-        ### Indexing
+        regions = GenomicRegionSet("output")
         with open(args.i, "r") as f,open(args.o, "w") as g:
             for line in f:
                 if line[0] == "#": continue
                 line = line.strip().split("\t")
-
                 if len(line) < 5: continue
-                if tag_s and tag_s != line[1]: continue
-                if tag_f and tag_f != line[2]: continue
-                # if tag_t and tag_t in line[8]: pass
-                if tag_t and re.search(tag_t, line[8]): pass
-                elif not tag_t: pass
-                else: continue              
-                if tag_st and tag_st in line[8]: pass
-                elif not tag_st: pass
-                else: continue
-                # print(line)
-                # print(line[8].split("; "))
+                if args.s == "All": pass
+                elif args.s != line[1]: continue
+                if args.f == "All": pass
+                elif args.f != line[2]: continue
+                # Further details
                 info = line[8].split("; ")
 
+                gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1].partition(".")[0]
+                gs = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1].partition(" (")[0]
 
-                gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1]
-                gi = gi.partition(".")[0]
-                gs = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1]
-                gs = gs.partition(" (")[0]
+                if args.id: gn = gi
+                else: gn = gs
 
-                if args.id:
-                    gn = gi
-                else:
-                    gn = gs
+                if args.t == "All": pass
+                elif args.t != [s for s in info if "gene_type" in s][0].partition("\"")[2][:-1].partition(" (")[0]: continue
 
-                # print(gn)
-                # print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]))
-                if int(line[3]) < int(line[4]):
-                    if line[0].isdigit():
-                        ch = "chr" + line[0]
-                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
-                    elif line[0].startswith("chr"):
-                        ch = line[0]
-                        seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
-                    else:
-                        continue
-                    
-                else:
-                    if line[0].isdigit():
-                        ch = "chr" + line[0]
-                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
-                    elif line[0].startswith("chr"):
-                        ch = line[0]
-                        seq = "\t".join([ch, line[4], line[3], gn, ".", line[6]])
-                    else:
-                        continue
-                # print(seq)
+                if args.st == "All": pass
+                elif args.st != [s for s in info if "gene_status" in s][0].partition("\"")[2][:-1].partition(" (")[0]: continue
 
+                if line[0].isdigit(): ch = "chr" + line[0]
+                else: ch = line[0]
+                # seq = "\t".join([ch, line[3], line[4], gn, ".", line[6]])
                 if not args.g:
-                    print(seq, file=g)
+                    # print(seq, file=g)
+                    regions.add(GenomicRegion(chrom=ch, initial=int(line[3]), final=int(line[4]),
+                                              name=gn, orientation=line[6]))
                 elif select_genes.check(gs) or select_genes.check(gi):
-                    print(seq, file=g)
-                else:
-                    continue
+                    # print(seq, file=g)
+                    regions.add(GenomicRegion(chrom=ch, initial=int(line[3]), final=int(line[4]),
+                                              name=gn, orientation=line[6]))
 
         if args.b:
-            exons = GenomicRegionSet("output")
-            exons.read_bed(args.o)
-            exons.write_bed_blocks(args.o)
-
-        # sys.exit(1)
-
-        # if args.g:
-        #     select_genes = GeneSet("genes")
-        #     select_genes.read(args.g)
-
-        # # if args.t == "gene" or args.t == "transcript":
-        # with open(args.i, "r") as f,open(args.o, "w") as g:
-        #     find_ind = False
-        #     for line in f:
-        #         if line[0] == "#": 
-        #             continue
-        #         elif args.known_only:
-        #             if "gene_status \"KNOWN\"" in line:
-        #                 pass
-        #             else:
-        #                 continue
-
-        #         line = line.split()
-        #         #print(line)
-        #         if not find_ind:
-        #             for i, l in enumerate(line):
-        #                 if "gene_name" in l: 
-        #                     ind = i
-        #                     find_ind = True
-
-        #         if line[2] == args.t:
-                    
-        #             if not args.g:
-        #                 print(line[ind+1][1:-2])
-        #                 print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
-        #             elif select_genes.check(line[ind+1][1:-2]):
-        #                 print(line[ind+1][1:-2])
-        #                 print("\t".join([line[0], line[3], line[4], line[ind+1][1:-2], ".", line[6]]), file=g)
-        #             else:
-        #                 continue
-
-
-        # elif args.t == "exon":
-        #     exons = GenomicRegionSet("exons")
-        #     with open(args.i) as f:
-        #         for line in f:
-        #             if line[0] == "#": continue
-        #             line = line.split()
-        #             #print(line)
-        #             if line[2] == args.t:
-        #                 #print(line[9].split('"')[1])
-        #                 exons.add(GenomicRegion(chrom=line[0], initial=int(line[3]), final=int(line[4]), 
-        #                                         name=line[15][1:-2], orientation=line[6]))         
-        #     exons.write_bed_blocks(args.o)
-
-
-    ############### GTF to BED ######################################
-    elif args.mode == "gtf2bed":
-        print(tag + ": [GTF] Convert GTF to BED")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-
-        ann = AnnotationSet(gene_source=args.i)
-        # query_dictionary = {}
-        # query_annset = ann.get(query_dictionary)
-        exons = ann.get_exons(merge=False)
-        if args.b:
-            exons.write_bed_blocks(args.o)
+            # exons = GenomicRegionSet("output")
+            # exons.read_bed(args.o)
+            # exons.write_bed_blocks(args.o)
+            regions.write_bed_blocks(filename=args.o)
         else:
-            exons.write_bed(args.o)
+            regions.write_bed(filename=args.o)
+        print("Number:\t\t" + str(len(regions)))
+
+
+
     ############### GTF to FASTA #############################################
     elif args.mode == "gtf_to_fasta":
         print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
@@ -605,7 +474,6 @@ if __name__ == "__main__":
         geneset.read(args.g)
 
         genes = ann.get_genes(gene_set = geneset)
-        
 
 
     ############### GTF add chr ##############################################
