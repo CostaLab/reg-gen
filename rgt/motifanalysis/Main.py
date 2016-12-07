@@ -763,7 +763,7 @@ def main_enrichment():
     # Creating link dictionary for HTML file
     genetest_link_dict = dict()
     sitetest_link_dict = dict()
-    link_location = "file://" + os.path.abspath(output_location_results)
+    link_location = "../"
     for curr_input in input_list:
         for grs in curr_input.region_list:
             if curr_input.gene_set:
@@ -991,14 +991,15 @@ def main_enrichment():
                         if os.path.isfile(logo_file_name):
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                          str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                html = Html("Motif Enrichment Analysis", genetest_link_dict)
+                fig_path = os.path.join(output_location_results, "fig")
+                html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
@@ -1130,13 +1131,14 @@ def main_enrichment():
                     if os.path.isfile(logo_file_name):
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            html = Html("Motif Enrichment Analysis", sitetest_link_dict)
+            fig_path = os.path.join(output_location_results, "fig")
+            html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
