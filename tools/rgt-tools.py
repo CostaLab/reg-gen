@@ -240,6 +240,8 @@ if __name__ == "__main__":
                        help="[THOR] Calculate the fold change from the differential peaks from rgt-THOR")
     parser_thorfc.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_thorfc.add_argument('-o', '-output', default=None, type=str, help="Output BED file. (Default is to modify the input file.)")
+    parser_thorfc.add_argument('-g', '-genome', type=str, help="Define the genome")
+
 
     ############### THOR split and filter ################################
     parser_thorsf = subparsers.add_parser('thor_split', 
@@ -247,7 +249,11 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_thorsf.add_argument('-o', '-output', default=None, type=str, help="Output directory.")
     parser_thorsf.add_argument('-p', '-p--value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
-    
+    parser_thorsf.add_argument('-fc', '-fold--change', type=int,
+                               help="Define the cut-off of foldchange for filtering.")
+    parser_thorsf.add_argument('-rn', '-rename', action="store_true",
+                               help="Rename the peak names by associated genes.")
+    parser_thorsf.add_argument('-g', '-genome', type=str, help="Define the genome")
 
     ############### GENOME get sequence ####################################################
     parser_getseq = subparsers.add_parser('getseq', 
@@ -880,7 +886,8 @@ if __name__ == "__main__":
 
         bed = GenomicRegionSet("input")
         bed.read_bed(args.i)
-        for region in bed:
+        renamed_bed = bed.gene_association(organism=args.g)
+        for region in renamed_bed:
             # print(region.data)
             data = region.data.split()
             stat = data[5].split(";")
@@ -889,7 +896,7 @@ if __name__ == "__main__":
 
             fc = math.log((sum(s2)/len(s2)) / (sum(s1)/len(s1)),2)
             region.data = "\t".join([str(fc)]+data[1:])
-        bed.write_bed(args.o)
+        renamed_bed.write_bed(args.o)
         # print(bed[0])
 
 
@@ -899,20 +906,55 @@ if __name__ == "__main__":
         if not args.o:
             args.o = os.path.dirname(args.i)
         print("output:\t" + args.o)
+
         name = os.path.basename(args.i).split(".")[0]
-        gain_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_gain.bed"), "w")
-        lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
-        with open(args.i) as f:
-            for line in f:
-                line = line.strip()
-                l = line.split("\t")
-                if float(l[10].split(";")[2]) > args.p:
-                    if l[5] == "-":
-                        print(line, file=gain_f)
-                    else:
-                        print(line, file=lose_f)
-        gain_f.close()
-        lose_f.close()
+
+        bed = GenomicRegionSet("input")
+        bed.read_bed(args.i)
+        print("Number of input peaks:\t"+str(len(bed)))
+
+        if args.rn and args.g:
+            bed2 = bed.gene_association(organism=args.g)
+        else:
+            bed2 = bed
+
+        for region in bed2:
+            data = region.data.split()
+            stat = data[5].split(";")
+            s1 = [float(x) + 1 for x in stat[0].split(":")]
+            s2 = [float(x) + 1 for x in stat[1].split(":")]
+            fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
+            region.data = "\t".join([str(fc)] + data[1:])
+        # bed2.write_bed(args.o)
+
+        # gain_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_gain.bed"), "w")
+        # lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
+        gain_peaks = GenomicRegionSet("gain_peaks")
+        lose_peaks = GenomicRegionSet("lose_peaks")
+
+        for region in bed2:
+            l = region.data.split()
+            if abs(float(l[0])) > args.fc and float(l[5].split(";")[2]) > args.p:
+                if float(l[0]) > 0:
+                    gain_peaks.add(region)
+                elif float(l[0]) < 0:
+                    lose_peaks.add(region)
+        tag = "_p"+str(args.p)+"_fc"+str(args.fc)
+        gain_peaks.write_bed(os.path.join(args.o,name+tag+"_gain.bed"))
+        lose_peaks.write_bed(os.path.join(args.o, name +tag+ "_lose.bed"))
+        print("Number of gain peaks:\t" + str(len(gain_peaks)))
+        print("Number of lose peaks:\t" + str(len(lose_peaks)))
+        # with open(args.i) as f:
+        #     for line in f:
+        #         line = line.strip()
+        #         l = line.split("\t")
+        #         if float(l[10].split(";")[2]) > args.p:
+        #             if l[5] == "-":
+        #                 print(line, file=gain_f)
+        #             else:
+        #                 print(line, file=lose_f)
+        # gain_f.close()
+        # lose_f.close()
         
         
     ############### getseq #############################################
