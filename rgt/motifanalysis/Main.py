@@ -10,6 +10,7 @@ from glob import glob
 import time
 from random import seed
 from optparse import OptionGroup
+from shutil import copy
 
 # Internal
 from rgt import __version__
@@ -26,6 +27,7 @@ from rgt.AnnotationSet import AnnotationSet
 # External
 from pysam import Fastafile
 from fisher import pvalue
+
 
 """
 Contains functions to common motif analyses.
@@ -481,6 +483,9 @@ def main_enrichment():
                            "this option are print. Use 1.0 to print all MPBSs.")
     parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                       help="If this option is used, all bed files will be written as bigbed.")
+    parser.add_option("--no-copy-logos", dest="no_copy_logos", action="store_true", default=False,
+                      help="If set, the logos to be showed on the enrichment statistics page will NOT be copied "
+                           "to a local directory. Instead we'll use their absolute path to your rgtdata directory.")
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -763,7 +768,7 @@ def main_enrichment():
     # Creating link dictionary for HTML file
     genetest_link_dict = dict()
     sitetest_link_dict = dict()
-    link_location = "file://" + os.path.abspath(output_location_results)
+    link_location = "../"
     for curr_input in input_list:
         for grs in curr_input.region_list:
             if curr_input.gene_set:
@@ -982,23 +987,40 @@ def main_enrichment():
                     output_file.write(str(r) + "\n")
                 output_file.close()
 
+                # unless explicitly forbidden, we copy the logo images locally
+                if not options.no_copy_logos:
+                    logo_dir_path = os.path.join(output_location_results, "logos")
+                    try:
+                        os.stat(logo_dir_path)
+                    except:
+                        os.mkdir(logo_dir_path)
+
                 # Printing statistics html - Creating data table
                 data_table = []
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                     for rep in motif_data.get_logo_list():
                         logo_file_name = os.path.join(rep, r.name + ".png")
+
                         if os.path.isfile(logo_file_name):
+                            if not options.no_copy_logos:
+                                copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+
+                                # use relative paths in the html
+                                # FIXME can we do it in a better way? (inside the Html class)
+                                logo_file_name = os.path.join("..", "logos", r.name + ".png")
+
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                          str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                html = Html("Motif Enrichment Analysis", genetest_link_dict)
+                fig_path = os.path.join(output_location_results, "fig")
+                html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
@@ -1121,22 +1143,39 @@ def main_enrichment():
                 output_file.write(str(r) + "\n")
             output_file.close()
 
+            # unless explicitly forbidden, we copy the logo images locally
+            if not options.no_copy_logos:
+                logo_dir_path = os.path.join(output_location_results, "logos")
+                try:
+                    os.stat(logo_dir_path)
+                except:
+                    os.mkdir(logo_dir_path)
+
             # Printing statistics html - Creating data table
             data_table = []
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                 for rep in motif_data.get_logo_list():
                     logo_file_name = os.path.join(rep, r.name + ".png")
+
                     if os.path.isfile(logo_file_name):
+                        if not options.no_copy_logos:
+                            copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+
+                            # use relative paths in the html
+                            # FIXME can we do it in a better way? (inside the Html class)
+                            logo_file_name = os.path.join("..", "logos", r.name + ".png")
+
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            html = Html("Motif Enrichment Analysis", sitetest_link_dict)
+            fig_path = os.path.join(output_location_results, "fig")
+            html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
