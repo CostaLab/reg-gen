@@ -4,17 +4,21 @@ import os
 import re
 import sys
 import math
+import glob
 import pysam
+import numpy
+import matplotlib.pyplot as plt
 import argparse
 from os.path import expanduser
 home = expanduser("~")
 
 # Local Libraries
 from rgt.GeneSet import GeneSet
+from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.AnnotationSet import AnnotationSet
-from rgt.Util import OverlapType
+from rgt.Util import OverlapType, GenomeData
+from rgt.GenomicRegionSet import GenomicRegionSet
 tag = "RGT-tools"
 
 #print(os.getcwd())
@@ -235,13 +239,14 @@ if __name__ == "__main__":
     parser_filterBAM.add_argument('-bed', type=str, help="Input BED file for the regions for filtering")
     parser_filterBAM.add_argument('-o', type=str, help="Output prefix for BAM file")
 
-    ############### THOR calculate FC ################################
-    parser_thorfc = subparsers.add_parser('thor_fc', 
-                       help="[THOR] Calculate the fold change from the differential peaks from rgt-THOR")
-    parser_thorfc.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_thorfc.add_argument('-o', '-output', default=None, type=str, help="Output BED file. (Default is to modify the input file.)")
-    parser_thorfc.add_argument('-g', '-genome', type=str, help="Define the genome")
-
+    ############### THOR MAplot ################################
+    parser_thorma = subparsers.add_parser('thor_ma',
+                       help="[THOR] Create the MA plot for understanding the effect of normalization.")
+    parser_thorma.add_argument('-i', '-input', type=str, help="Input data config.")
+    parser_thorma.add_argument('-thor', '-thor--result', type=str, default=".", help="Output directory of THOR.")
+    parser_thorma.add_argument('-o', '-output', default=None, type=str, help="Output directory")
+    parser_thorma.add_argument('-e', '-ext', default=None, type=str, help="Define the extension size.")
+    parser_thorma.add_argument('-b', '-bin', default=None, type=str, help="Define the bin size.")
 
     ############### THOR split and filter ################################
     parser_thorsf = subparsers.add_parser('thor_split', 
@@ -249,7 +254,7 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_thorsf.add_argument('-o', '-output', default=None, type=str, help="Output directory.")
     parser_thorsf.add_argument('-p', '-p--value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
-    parser_thorsf.add_argument('-fc', '-fold--change', type=int,
+    parser_thorsf.add_argument('-fc', '-fold--change', type=int,default=0,
                                help="Define the cut-off of foldchange for filtering.")
     parser_thorsf.add_argument('-rn', '-rename', action="store_true",
                                help="Rename the peak names by associated genes.")
@@ -876,28 +881,136 @@ if __name__ == "__main__":
         os.remove(args.o+"_temp.bam")
         os.remove(args.o + ".sam")
 
+    ############### THOR MAplot #############################################
+    elif args.mode == "thor_ma":
+        print("input:\t"+args.i)
+        print("result from THOR:\t"+args.thor)
+        print("output:\t"+args.o)
+        if not os.path.exists(args.o):
+            os.makedirs(args.o)
+        print("extension:\t" + args.e)
+        print("bin size:\t" + args.b)
 
-    ############### THOR FC #############################################
-    elif args.mode == "thor_fc":
-        print("input:\t" + args.i)
-        if not args.o:
-            args.o = args.i
-        print("output:\t" + args.o)
+        chr = "chr1"
+        # Parse data config
+        data = {}
+        with open(args.i) as f:
+            t = None
+            for line in f:
+                l = line.strip()
+                if l.startswith("#"):
+                    data[l[1:]] = []
+                    t = l[1:]
+                elif t and l:
+                    data[t].append(l)
+        organism = data["chrom_sizes"][0].split(".")[0]
+        # Get one chromosome
+        chrom_size = None
+        with open(data["chrom_sizes"][0]) as c:
+            for line in c:
+                l = line.strip().split()
+                if l[0] == chr: chrom_size = int(l[1])
+            if not chrom_size:
+                print("Chromosome is not found in chrom.size file")
+                sys.exit(1)
+        gr_chrom = GenomicRegionSet(chr)
+        gr_chrom.add(GenomicRegion(chrom=chr, initial=0,final=chrom_size))
+        # Load factors
+        info_file = glob.glob(os.path.join(args.thor, '*-setup.info'))
+        with open(info_file[0]) as f:
+            c = False
+            ce = False
+            for line in f:
+                if line.startswith("#Scaling factors"):
+                    c = True
+                elif c:
+                    factors = [ float(x) for x in line.strip().split() ]
+                    c = False
+                if line.startswith("#Extension size"):
+                    ce = True
+                elif ce:
+                    extension = [ int(x) for x in line.strip().split() ]
+                    ce = False
+        # Calculate coverage rep1
+        # rep = data["rep1"][0]
+        bin_cov1 = []
+        for i, rep in enumerate(data["rep1"]+data["rep2"]):
+            cov = CoverageSet("rep", gr_chrom)
+            cov.coverage_from_bam(bam_file=rep,extension_size=extension[i], binsize=int(args.b), stepsize=int(args.e))
+            c = cov.coverage[0] + 1
+            bin_cov1.append(c)
 
-        bed = GenomicRegionSet("input")
-        bed.read_bed(args.i)
-        renamed_bed = bed.gene_association(organism=args.g)
-        for region in renamed_bed:
-            # print(region.data)
-            data = region.data.split()
-            stat = data[5].split(";")
-            s1 = [float(x)+1 for x in stat[0].split(":")]
-            s2 = [float(x)+1 for x in stat[1].split(":")]
+        # bin_cov1 = [ i.tolist() for i in bin_cov1 ]
 
-            fc = math.log((sum(s2)/len(s2)) / (sum(s1)/len(s1)),2)
-            region.data = "\t".join([str(fc)]+data[1:])
-        renamed_bed.write_bed(args.o)
-        # print(bed[0])
+        bin_cov2 = []
+        for i, rep in enumerate(data["rep1"] + data["rep2"]):
+            cov = CoverageSet("rep", gr_chrom)
+            cov.coverage_from_bam(bam_file=rep, extension_size=extension[i], binsize=int(args.b), stepsize=int(args.e))
+            # bin_cov2.append(cov.coverage[0]*factors[i])
+            c = cov.coverage[0]*factors[i] + 1
+            bin_cov2.append(c)
+        # bin_cov1 = [i.tolist() for i in bin_cov1]
+
+        # print(max(bin_cov1))
+        # print(max(bin_cov2))
+        #
+        # print(bin_cov1[0:10])
+        # print(bin_cov2[0:10])
+
+        bin_cov1 = [ numpy.log2(x) for x in bin_cov1]
+        bin_cov2 = [ numpy.log2(x) for x in bin_cov2]
+
+        # M =
+        # A =
+        #
+        # print(max(M))
+        # print(max(A))
+
+        # from matplotlib.backends.backend_pdf import PdfPages
+        # pp = PdfPages('MAplot.pdf')
+        # print(bin_cov1)
+
+        # plt.scatter(bin_cov1[0], bin_cov2[0], s=1, alpha=0.5)
+        plt.figure(1)
+        plt.subplot(221)
+        plt.title('Sample 1 before norm.')
+        plt.scatter([ 0.5*(bin_cov1[2] + bin_cov1[0]) ], [ bin_cov1[2] - bin_cov1[0] ], s=1, alpha=0.5)
+        plt.xlim([0, 6])
+        plt.ylim([-6, 6])
+        plt.ylabel('M (log ratio)')
+        # plt.xlabel('A (mean average)')
+        plt.subplot(222)
+        plt.title('Sample 1 after norm.')
+        plt.scatter([ 0.5*(bin_cov2[2] + bin_cov2[0]) ], [ bin_cov2[2] - bin_cov2[0] ], s=1, alpha=0.5)
+        plt.xlim([0, 6])
+        plt.ylim([-6, 6])
+        plt.ylabel('M (log ratio)')
+        # plt.xlabel('A (mean average)')
+        plt.subplot(223)
+        plt.title('Sample 2 before norm.')
+        plt.scatter([0.5 * (bin_cov1[3] + bin_cov1[1])], [bin_cov1[3] - bin_cov1[1]], s=1, alpha=0.5)
+        plt.xlim([0, 6])
+        plt.ylim([-6, 6])
+        # plt.ylabel('M (log ratio)')
+        plt.xlabel('A (mean average)')
+        plt.subplot(224)
+        plt.title('Sample 2 after norm.')
+        plt.scatter([0.5 * (bin_cov2[3] + bin_cov2[1])], [bin_cov2[3] - bin_cov2[1]], s=1, alpha=0.5)
+        plt.xlim([0, 6])
+        plt.ylim([-6, 6])
+        # plt.ylabel('M (log ratio)')
+        plt.xlabel('A (mean average)')
+        # plt.savefig(pp, format='pdf')
+        # pp.close()
+        plt.savefig(os.path.join(args.o,'MAplot.png'), bbox_inches='tight')
+
+
+        print("finish")
+
+
+
+
+
 
 
     ############### THOR split #############################################
@@ -908,6 +1021,8 @@ if __name__ == "__main__":
         print("output:\t" + args.o)
 
         name = os.path.basename(args.i).split(".")[0]
+        if args.fc == 0: tag = "_p" + str(args.p)
+        else: tag = "_p"+str(args.p)+"_fc"+str(args.fc)
 
         bed = GenomicRegionSet("input")
         bed.read_bed(args.i)
@@ -931,30 +1046,35 @@ if __name__ == "__main__":
         # lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
         gain_peaks = GenomicRegionSet("gain_peaks")
         lose_peaks = GenomicRegionSet("lose_peaks")
+        mix = GenomicRegionSet("mix")
 
         for region in bed2:
             l = region.data.split()
-            if abs(float(l[0])) > args.fc and float(l[5].split(";")[2]) > args.p:
+            s = l[5].split(";")
+            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
                 if float(l[0]) > 0:
                     gain_peaks.add(region)
                 elif float(l[0]) < 0:
                     lose_peaks.add(region)
-        tag = "_p"+str(args.p)+"_fc"+str(args.fc)
-        gain_peaks.write_bed(os.path.join(args.o,name+tag+"_gain.bed"))
-        lose_peaks.write_bed(os.path.join(args.o, name +tag+ "_lose.bed"))
+        gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
+        lose_peaks.write_bed(os.path.join(args.o, name + tag + "_lose.bed"))
+
+        for region in bed2:
+            l = region.data.split()
+            s = l[5].split(";")
+            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
+                s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
+                s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
+                length = abs(region.final - region.initial)
+                ns1 = float(s1) / length
+                ns2 = float(s2) / length
+                region.data = "\t".join([l[0], str(s1), str(s2), str(length),
+                                         str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
+                mix.add(region)
+
+        mix.write_bed(os.path.join(args.o, name+tag+".table"))
         print("Number of gain peaks:\t" + str(len(gain_peaks)))
         print("Number of lose peaks:\t" + str(len(lose_peaks)))
-        # with open(args.i) as f:
-        #     for line in f:
-        #         line = line.strip()
-        #         l = line.split("\t")
-        #         if float(l[10].split(";")[2]) > args.p:
-        #             if l[5] == "-":
-        #                 print(line, file=gain_f)
-        #             else:
-        #                 print(line, file=lose_f)
-        # gain_f.close()
-        # lose_f.close()
         
         
     ############### getseq #############################################
