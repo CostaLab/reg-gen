@@ -886,7 +886,7 @@ if __name__ == "__main__":
     ############### THOR MAplot #############################################
     elif args.mode == "thor_ma":
         print("input:\t"+args.i)
-        tag = args.i.split(".")[0].split("/")[-1]
+        tag = os.path.basename(args.i).split(".")[0].split("/")[-1]
         print("result from THOR:\t"+args.thor)
         print("output:\t"+args.o)
         if not os.path.exists(args.o):
