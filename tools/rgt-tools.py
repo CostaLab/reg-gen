@@ -7,8 +7,10 @@ import math
 import glob
 import pysam
 import numpy
-import matplotlib.pyplot as plt
 import argparse
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from os.path import expanduser
 home = expanduser("~")
 
