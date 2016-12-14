@@ -893,7 +893,8 @@ if __name__ == "__main__":
         print("extension:\t" + args.e)
         print("bin size:\t" + args.b)
 
-        chr = "chr1"
+        chr = "chr10"
+        # config_dir = os.path.dirname(args.i)
         # Parse data config
         data = {}
         with open(args.i) as f:
@@ -953,53 +954,55 @@ if __name__ == "__main__":
             bin_cov2.append(c)
         # bin_cov1 = [i.tolist() for i in bin_cov1]
 
-        # print(max(bin_cov1))
-        # print(max(bin_cov2))
+        # print(max(bin_cov1[0]))
+        # print(max(bin_cov2[0]))
         #
         # print(bin_cov1[0:10])
         # print(bin_cov2[0:10])
 
         bin_cov1 = [ numpy.log2(x) for x in bin_cov1]
         bin_cov2 = [ numpy.log2(x) for x in bin_cov2]
+        # print(bin_cov1[0].max())
+        s1_1_M = 0.5 * (bin_cov1[2] + bin_cov1[0])
+        s1_1_A = bin_cov1[2] - bin_cov1[0]
+        s1_2_M = 0.5 * (bin_cov2[2] + bin_cov2[0])
+        s1_2_A = bin_cov2[2] - bin_cov2[0]
+        s2_1_M = 0.5 * (bin_cov1[3] + bin_cov1[1])
+        s2_1_A = bin_cov1[3] - bin_cov1[1]
+        s2_2_M = 0.5 * (bin_cov2[3] + bin_cov2[1])
+        s2_2_A = bin_cov2[3] - bin_cov2[1]
+        max_x = max([s1_1_M.max(), s1_2_M.max(), s2_1_M.max(), s2_2_M.max()])
+        max_y = max([numpy.absolute(s1_1_A).max(), numpy.absolute(s1_2_A).max(),
+                     numpy.absolute(s2_1_A).max(), numpy.absolute(s2_2_A).max()])
+        # print([max_x, max_y])
 
-        # M =
-        # A =
-        #
-        # print(max(M))
-        # print(max(A))
-
-        # from matplotlib.backends.backend_pdf import PdfPages
-        # pp = PdfPages('MAplot.pdf')
-        # print(bin_cov1)
-
-        # plt.scatter(bin_cov1[0], bin_cov2[0], s=1, alpha=0.5)
         plt.figure(1)
         plt.subplot(221)
         plt.title('Sample 1 before norm.')
-        plt.scatter([ 0.5*(bin_cov1[2] + bin_cov1[0]) ], [ bin_cov1[2] - bin_cov1[0] ], s=1, alpha=0.5)
-        plt.xlim([0, 6])
-        plt.ylim([-6, 6])
+        plt.scatter(s1_1_M.tolist(), s1_1_A.tolist(), s=1, alpha=0.5)
+        plt.xlim([0, max_x])
+        plt.ylim([-max_y, max_y])
         plt.ylabel('M (log ratio)')
         # plt.xlabel('A (mean average)')
         plt.subplot(222)
         plt.title('Sample 1 after norm.')
-        plt.scatter([ 0.5*(bin_cov2[2] + bin_cov2[0]) ], [ bin_cov2[2] - bin_cov2[0] ], s=1, alpha=0.5)
-        plt.xlim([0, 6])
-        plt.ylim([-6, 6])
+        plt.scatter(s1_2_M, s1_2_A, s=1, alpha=0.5)
+        plt.xlim([0, max_x])
+        plt.ylim([-max_y, max_y])
         plt.ylabel('M (log ratio)')
         # plt.xlabel('A (mean average)')
         plt.subplot(223)
         plt.title('Sample 2 before norm.')
-        plt.scatter([0.5 * (bin_cov1[3] + bin_cov1[1])], [bin_cov1[3] - bin_cov1[1]], s=1, alpha=0.5)
-        plt.xlim([0, 6])
-        plt.ylim([-6, 6])
+        plt.scatter(s2_1_M, s2_1_A, s=1, alpha=0.5)
+        plt.xlim([0, max_x])
+        plt.ylim([-max_y, max_y])
         # plt.ylabel('M (log ratio)')
         plt.xlabel('A (mean average)')
         plt.subplot(224)
         plt.title('Sample 2 after norm.')
-        plt.scatter([0.5 * (bin_cov2[3] + bin_cov2[1])], [bin_cov2[3] - bin_cov2[1]], s=1, alpha=0.5)
-        plt.xlim([0, 6])
-        plt.ylim([-6, 6])
+        plt.scatter(s2_2_M, s2_2_A, s=1, alpha=0.5)
+        plt.xlim([0, max_x])
+        plt.ylim([-max_y, max_y])
         # plt.ylabel('M (log ratio)')
         plt.xlabel('A (mean average)')
         # plt.savefig(pp, format='pdf')
