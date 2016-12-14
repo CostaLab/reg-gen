@@ -886,6 +886,7 @@ if __name__ == "__main__":
     ############### THOR MAplot #############################################
     elif args.mode == "thor_ma":
         print("input:\t"+args.i)
+        tag = args.i.split(".")[0]
         print("result from THOR:\t"+args.thor)
         print("output:\t"+args.o)
         if not os.path.exists(args.o):
@@ -1007,7 +1008,7 @@ if __name__ == "__main__":
         plt.xlabel('A (mean average)')
         # plt.savefig(pp, format='pdf')
         # pp.close()
-        plt.savefig(os.path.join(args.o,'MAplot.png'), bbox_inches='tight')
+        plt.savefig(os.path.join(args.o,tag+'_MAplot.png'), bbox_inches='tight')
 
 
         print("finish")
