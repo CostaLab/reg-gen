@@ -26,7 +26,7 @@ mkdir -p $DIR
 
  # Run test script
  cd THOR_example_data/
- rgt-THOR THOR.config
+ rgt-THOR THOR.config --a_threshold 80
  echo "********* THOR test completed ****************"
 
 ################################################################

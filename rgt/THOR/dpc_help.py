@@ -420,7 +420,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
                test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True, save_input=False):
+               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95):
     """Initialize the MultiCoverageSet"""
     regionset = regions
     regionset.sequences.sort()
@@ -438,7 +438,8 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
                                   housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
-                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report, save_input=save_input)
+                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report,
+                                  save_input=save_input, m_threshold=m_threshold, a_threshold=a_threshold)
     return multi_cov_set
 
 
@@ -540,6 +541,10 @@ def input(laptop):
                           help="Use binomial distribution as emmission. [default: %default]")
         group.add_option("--single-strand", default=False, dest="singlestrand", action="store_true", \
                          help="Allow single strand BAM file as input. [default: %default]")
+        group.add_option("--m_threshold", default=80, dest="m_threshold", type="int",
+                         help="Define the M threshold of percentile for training TMM. [default: %default]")
+        group.add_option("--a_threshold", default=95, dest="a_threshold", type="int",
+                         help="Define the A threshold of percentile for training TMM. [default: %default]")
         parser.add_option_group(group)
         
         ##deprecated options
