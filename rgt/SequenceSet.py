@@ -144,7 +144,8 @@ class SequenceSet:
                     try: strand = line[line.index("strand")+7]
                     except: strand = "+"
                 else:
-                    seq = seq + line
+                    try: seq = seq + line
+                    except: seq = line
                     pre_seq = True
             self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
