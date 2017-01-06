@@ -201,6 +201,7 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output directory for FASTA files")
     parser_bed2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome sequence")
+    parser_bed2fasta.add_argument('-id', action="store_true", default=False, help="Make id number as sequence name")
 
     ############### BED filtered by gene name ################################
     parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
@@ -224,6 +225,11 @@ if __name__ == "__main__":
     parser_bedaddcol.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
     parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
+
+    ############### BED average size ################################
+    parser_bedaversize = subparsers.add_parser('bed_size',
+                                             help="[BED] Calculate the average size.")
+    parser_bedaversize.add_argument('-i', '-input', type=str, help="Input BED file")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -703,7 +709,10 @@ if __name__ == "__main__":
         if not os.path.exists(args.o): os.makedirs(args.o)
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
-        for r in regions:
+        for i, r in enumerate(regions):
+            if args.id: name = "peak_"+str(i+1)
+            else: name = r.name
+
             if len(r.data.split()) == 7:
                 target = r.extract_blocks()
                 #print("*** using block information in BED file")
@@ -722,7 +731,7 @@ if __name__ == "__main__":
                     ss = [s[i:i+70] for i in range(0, len(s), 70)]
                     writelines += ss
 
-                with open(os.path.join(args.o, r.name + ".fa"), "w") as f:
+                with open(os.path.join(args.o, name + ".fa"), "w") as f:
                     for line in writelines:
                         print(line, file=f)
             else:
@@ -730,8 +739,8 @@ if __name__ == "__main__":
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
                 ss = [s[i:i+70] for i in range(0, len(s), 70)]
-                with open(os.path.join(args.o, r.name + ".fa"), "w") as f:
-                    print("> "+ r.name + " "+r.toString()+ " "+r.orientation, file=f)
+                with open(os.path.join(args.o, name + ".fa"), "w") as f:
+                    print("> "+ name + " "+r.toString()+ " "+r.orientation, file=f)
                     for seq in ss:
                         print(seq, file=f)
 
@@ -859,6 +868,17 @@ if __name__ == "__main__":
             elif r.name in gene2: o2.add(r)
         o1.write_bed(args.o1)
         o2.write_bed(args.o2)
+
+
+    ############### BED average size ###########################
+    elif args.mode == "bed_size":
+        print("input:\t" + args.i)
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+        print("Average size:\t"+str(bed.average_size()))
+        print("Size variance:\t" + str(bed.size_variance()))
+        print()
+
 
 
     ############### BAM filtering by BED ###########################
