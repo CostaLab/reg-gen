@@ -473,7 +473,7 @@ class CoverageSet:
             if not log_aver:
                 self.coverage.append(np.array(cov))
             else:
-                ov = [x + 1 for x in cov]
+                cov = [x + 1 for x in cov]
                 self.coverage.append(np.log(np.array(cov)))
 
             if get_strand_info:

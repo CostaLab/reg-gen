@@ -544,3 +544,4 @@ def main():
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))
+        write_stat(stat=randomtest.stat, filename=os.path.join(args.o, "stat.txt"))

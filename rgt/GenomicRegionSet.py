@@ -2009,15 +2009,26 @@ class GenomicRegionSet:
                         cont_loop = False
             return
 
-    def replace_region_strand(self, regions, reverse=False):
+    def replace_region_strand(self, regions, reverse=False, all=None):
         """Replace the region strand by the given GenomicRegionSet.
 
         *Keyword arguments:*
 
             - regions -- A GenomicRegionSet as the source for the strand.
         """
+        if regions == None:
+            for r in self:
+                if r.orientation == "+":
+                    r.orientation = "-"
+                elif r.orientation == "-":
+                    r.orientation = "+"
+            return
+        elif all=="+" or all=="-":
+            for r in self:
+                r.orientation = all
+            return
 
-        if len(self) == 0 or len(regions) == 0: return
+        elif len(self) == 0 or len(regions) == 0: return
 
         else:
             if not self.sorted: self.sort()

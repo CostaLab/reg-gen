@@ -171,14 +171,9 @@ class ExperimentalMatrix:
                 regions = GenomicRegionSet(self.names[i])
                 if is_bedgraph:
                     regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
-                    
                 else:
-                    if test:
-                        g = GenomicRegionSet(self.names[i])
-                        g.read_bed(os.path.abspath(self.files[self.names[i]]))
-                        regions.sequences = g.sequences[0:11]
-                    else:
-                        regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
+                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
             
             elif t == "genes":
@@ -244,7 +239,7 @@ class ExperimentalMatrix:
             except: pass
         self.trash = []
 
-    def match_ms_tags(self,field):
+    def match_ms_tags(self,field, test=False):
         """Add more entries to match the missing tags of the given field. For example, there are tags for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. Then the regions are repeated for each tags from reads to match all reads.
 
         *Keyword arguments:*
@@ -286,6 +281,7 @@ class ExperimentalMatrix:
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
                         g.read_bed(self.files[name])
+                        if test: g.sequences = g.sequences[0:11]
                         self.objectsDict[n] = g
                     self.trash.append(name)
 

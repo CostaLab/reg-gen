@@ -141,8 +141,10 @@ if __name__ == "__main__":
     parser_bedchstrand.add_argument('-o', metavar='  ', type=str, help="Output BED file")
     parser_bedchstrand.add_argument('-d', metavar='  ', type=int, default=0,
                                     help="Define the threshold of distance (default:0 bp")
-    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, help="Target BED file")
+    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, default=None, help="Target BED file")
     parser_bedchstrand.add_argument('-r', action="store_true", help="Reverse the strand")
+    parser_bedchstrand.add_argument('-a', metavar='  ', type=str, default=None,
+                                    help="Define the stand for all regions")
 
     ############### BED extend ###############################################
     # python rgt-convertor.py
@@ -555,15 +557,21 @@ if __name__ == "__main__":
         print(tag + ": [BED] Change strands by target BED file")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
-        print("target:\t" + args.t)
+
 
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
-        target = GenomicRegionSet(args.t)
-        target.read_bed(args.t)
-        if args.d != "0":
-            target.extend(left=int(args.d), right=int(args.d))
-        bed.replace_region_strand(regions=target, reverse=args.r)
+        if args.t:
+            print("target:\t" + args.t)
+            target = GenomicRegionSet(args.t)
+            target.read_bed(args.t)
+            if args.d != "0":
+                target.extend(left=int(args.d), right=int(args.d))
+            bed.replace_region_strand(regions=target, reverse=args.r)
+        elif args.a:
+            bed.replace_region_strand()
+        else:
+            bed.replace_region_strand(regions=None, reverse=args.r)
         bed.write_bed(args.o)
 
 

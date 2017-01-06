@@ -1088,7 +1088,10 @@ def write_stat(stat, filename):
                   "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
     with open(filename, "w") as f:
         for k in order_stat:
-            print("\t".join([k,stat[k]]), file=f)
+            try:
+                print("\t".join([k,stat[k]]), file=f)
+            except:
+                continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
