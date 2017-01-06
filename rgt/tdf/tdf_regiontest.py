@@ -47,6 +47,7 @@ class RandomTest:
         self.dna_region.read_bed(dna_region)
         self.dna_region = self.dna_region.gene_association(organism=self.organism)
         self.topDBD = []
+        self.stat = OrderedDict(name=rna_name, genome=self.gtf)
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
@@ -55,7 +56,10 @@ class RandomTest:
         self.rna_regions = get_rna_region_str(rna)
 
     def connect_rna(self, rna, temp):
-        connect_rna(rna, temp, self.rna_name)
+        # connect_rna(rna, temp, self.rna_name)
+        d = connect_rna(rna, temp, self.rna_name)
+        self.stat["exons"] = str(d[0])
+        self.stat["seq_length"] = str(d[1])
 
         rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
         rnas.read_fasta(os.path.join(temp, "rna_temp.fa"))
@@ -86,6 +90,8 @@ class RandomTest:
         txpf.merge_rbs(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
 
+        self.stat["DBSs_target_all"] = str(len(self.txpf))
+
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
 
@@ -104,6 +110,7 @@ class RandomTest:
             self.region_dbsm[region.toString()] = self.region_dbs[region.toString()].get_dbs().merge(w_return=True)
             self.region_coverage[region.toString()] = float(self.region_dbsm[region.toString()].total_coverage()) / len \
                 (region)
+        self.stat["target_regions"] = str(len(self.dna_region))
 
         if obed:
             btr = self.txp.get_dbs()
@@ -112,6 +119,7 @@ class RandomTest:
             dbss = txpf.get_dbs()
             # dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
+
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, tp, filter_bed, alpha):
         """Perform randomization for the given times"""
@@ -194,9 +202,16 @@ class RandomTest:
         self.region_matrix = numpy.array(self.region_matrix)
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
 
+        counts_dbss = [v[i] for v in dbss_counts]
+        self.stat["DBSs_random_ave"] = numpy.mean(counts_dbss)
+        try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
+        except: self.stat["p_value"] = "1"
+
     def dbd_regions(self, sig_region, output):
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
         dbd_regions(exons=self.rna_regions, sig_region=sig_region, rna_name=self.rna_name, output=output)
+        self.stat["DBD_all"] = str(len(self.rbss))
+        self.stat["DBD_sig"] = str(len(self.data["region"]["sig_region"]))
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""

@@ -2334,3 +2334,14 @@ class GenomicRegionSet:
             g = self.any_chrom(chrom=c, return_list=False,return_regionset=True)
             z.append(g)
         return z
+
+    def average_size(self):
+        """Return the average size of the regions"""
+        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        return sum(size)/len(size)
+
+    def size_variance(self):
+        """Return the average size of the regions"""
+        import numpy as np
+        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        return np.std(size)
