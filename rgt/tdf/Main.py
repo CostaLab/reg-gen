@@ -97,8 +97,6 @@ def main():
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_promotertest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
     parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
-    parser_promotertest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
-    
     
     ################### Genomic Region Test ##########################################
     h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
@@ -136,8 +134,7 @@ def main():
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_randomtest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
     parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
-    parser_randomtest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
-        
+
     ##########################################################################
     parser_bed2bed = subparsers.add_parser('get_dbss', help="Get DBSs in BED format from the single BED file")
     parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
@@ -351,7 +348,7 @@ def main():
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, tp=args.tp)
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
         
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -476,7 +473,7 @@ def main():
         obed = os.path.basename(args.o)
         randomtest.connect_rna(rna=args.r, temp=args.o)
 
-        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed, tp=args.tp,
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -485,7 +482,7 @@ def main():
 
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
-                               filter_bed=args.f, alpha=args.a, tp=args.tp)
+                               filter_bed=args.f, alpha=args.a)
         
         if len(randomtest.rbss) == 0: 
             no_binding_code()

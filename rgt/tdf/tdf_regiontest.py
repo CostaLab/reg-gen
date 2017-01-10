@@ -63,12 +63,12 @@ class RandomTest:
         self.stat["seq_length"] = str(d[1])
         self.rna_len = d[1]
 
-    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, tp, obed=False):
+    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
 
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                           temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                           temp=temp, organism=self.organism, remove_temp=remove_temp,
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                            prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=True, region_set=self.dna_region, asgene_organism=self.organism, cutoff=cutoff)
@@ -81,7 +81,7 @@ class RandomTest:
             sys.exit(1)
 
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                            temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                            temp=temp, organism=self.organism, remove_temp=remove_temp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                             prefix="dbs", dna_fine_posi=True)
         txpf.remove_duplicates()
@@ -119,7 +119,7 @@ class RandomTest:
             dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
 
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, tp, filter_bed, alpha):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats - 1, num=41)).tolist()
@@ -131,7 +131,7 @@ class RandomTest:
             mp_input.append([str(i), os.path.join(temp, "rna_temp.fa"), self.dna_region,
                              temp, self.organism, self.rbss, str(marks.count(i)),
                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm),
-                             filter_bed, self.genome_path, tp, par])
+                             filter_bed, self.genome_path, par])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")

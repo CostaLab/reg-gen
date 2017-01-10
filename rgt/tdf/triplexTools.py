@@ -390,8 +390,8 @@ def random_each(input):
     str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
     number, rna,            region,          temp, organism,      rbss,      number of mark
 
-    7  8  9  10  11  12  13  14  15          16                17   18
-    l, e, c, fr, fm, of, mf, rm, filter_bed, self.genome_path, tp   par
+    7  8  9  10  11  12  13  14  15          16                 17
+    l, e, c, fr, fm, of, mf, rm, filter_bed, self.genome_path,  par
     """
     import sys
     # Filter BED file
@@ -408,8 +408,8 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True,
                        l=int(input[7]), e=int(input[8]), c=input[9], fr=input[10],
                        fm=input[11], of=input[12], mf=input[13], rm=input[14],
-                       par=input[18], genome_path=input[16],
-                       dna_fine_posi=False, tp=input[17])
+                       par=input[17], genome_path=input[16],
+                       dna_fine_posi=False)
 
     txp.merge_rbs(rbss=input[5], rm_duplicate=True)
 
@@ -417,8 +417,8 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], 
-                       par=input[18], genome_path=input[16],
-                       dna_fine_posi=True, tp=input[17])
+                       par=input[17], genome_path=input[16],
+                       dna_fine_posi=True)
 
     txpf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
@@ -444,7 +444,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", tp=False):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -453,7 +453,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     # Triplexator
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
                     output=os.path.join(temp, "dna_"+prefix+".txp"), 
-                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par, tp=tp)
+                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par)
     # Read txp
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
@@ -465,7 +465,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 
     return txp
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", tp=False):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm

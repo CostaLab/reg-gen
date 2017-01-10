@@ -226,7 +226,7 @@ class PromoterTest:
         self.stat["exons"] = str(d[0])
         self.stat["seq_length"] = str(d[1])
 
-    def search_triplex(self, temp, l, e, c, fr, fm, of, mf, par, remove_temp=False, tp=False):
+    def search_triplex(self, temp, l, e, c, fr, fm, of, mf, par, remove_temp=False):
         print("    \tRunning Triplexator...")
         rna = os.path.join(temp, "rna_temp.fa")
         self.triplexator_p = [l, e, c, fr, fm, of, mf]
@@ -236,14 +236,14 @@ class PromoterTest:
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "de.fa"),
                         output=os.path.join(temp, "de.txp"),
-                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par)
 
         # non-DE
         get_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "nde.fa"),
                         output=os.path.join(temp, "nde.txp"),
-                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, tp=tp)
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par)
 
         # os.remove(os.path.join(args.o,"rna_temp.fa"))
         if remove_temp:
@@ -1001,11 +1001,10 @@ class PromoterTest:
             if self.promoter["de"]["dbs"][promoter.toString()] == 0:
                 dbssount = str(0)
             else:
-                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + '" style="text-align:left">' + str(
-                    self.promoter["de"]["dbs"][promoter.toString()]) + '</a>'
+                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + '" style="text-align:left">' + \
+                           str(self.promoter["de"]["dbs"][promoter.toString()]) + '</a>'
 
             if self.ani:
-
                 region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
                                        "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
                                        str(promoter.final), '" style="text-align:left" target="_blank">',
@@ -1108,43 +1107,46 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # spromoters_dbds.html
-        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
-                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+        # html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+        #             fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         sig_promoter_count = {}
         for i, promoter in enumerate(self.de_regions):
             if self.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
             else:
-                try:
-                    gn = self.ensembl2symbol[promoter.name]
-                except:
-                    gn = promoter.name
-                html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
-                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
-                    promoter.final) +
-                                       '" style="margin-left:50">' +
-                                       promoter.toString(space=True) + '</a>'])
+                # try:
+                #     gn = self.ensembl2symbol[promoter.name]
+                # except:
+                #     gn = promoter.name
+
                 data_table = []
+                overlapping = False
 
                 for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
-                    overlapping = False
+
                     for rbsm in self.sig_DBD:
-                        if rd.rna.overlap(rbsm): overlapping = True
-                    if overlapping:
-                        data_table.append([str(j + 1),
-                                           rd.rna.str_rna(pa=False),
-                                           rd.dna.toString(space=True),
-                                           rd.dna.orientation,
-                                           rd.score,
-                                           rd.motif, rd.orient])
+                        if rd.rna.overlap(rbsm):
+                            overlapping = True
+                    # if overlapping:
+                    data_table.append([str(j + 1),
+                                       rd.rna.str_rna(pa=False),
+                                       rd.dna.toString(space=True),
+                                       rd.dna.orientation,
+                                       rd.score,
+                                       rd.motif, rd.orient])
                 if overlapping:
+                    # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
+                    # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
+                    #                        self.organism + "&position=" + promoter.chrom +
+                    #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
+                    #                        '" style="margin-left:50">' +
+                    #                        promoter.toString(space=True) + '</a>'])
                     sig_promoter_count[promoter] = len(data_table)
-                    html.add_zebra_table(header_list, col_size_list, type_list, data_table,
-                                         align=align, cell_align="left",
-                                         header_titles=header_titles, sortable=True)
-        html.add_fixed_rank_sortable()
-        html.write(os.path.join(directory, "spromoters_dbds.html"))
+        #             html.add_zebra_table(header_list, col_size_list, type_list, data_table,
+        #                                  align=align, cell_align="left",
+        #                                  header_titles=header_titles, sortable=True)
+        # html.add_fixed_rank_sortable()
+        # html.write(os.path.join(directory, "spromoters_dbds.html"))
 
         ##############################################################################################
         # spromoters.html    for significant promoters
@@ -1155,9 +1157,8 @@ class PromoterTest:
         spromoters = sig_promoter_count.keys()
         if len(spromoters) == 0:
             html.add_heading("There is no significant DBD.")
-
         else:
-            html.add_heading("Target promoters binded by significant DBD")
+            html.add_heading("Target promoters bond by significant DBD")
             # for rbsm in self.sig_region_promoter:
             #     spromoters = spromoters + [p for p in self.txp_de.merged_dict[rbsm]]
             # spromoters = list(set(spromoters))
@@ -1176,14 +1177,10 @@ class PromoterTest:
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
 
-                    try:
-                        gene_sym = self.ensembl2symbol[p.name].upper()
-                    except:
-                        gene_sym = p.name.upper()
-                    try:
-                        sscores.append(self.de_gene.values[gene_sym.upper()])
-                    except:
-                        sscores.append(0)
+                    try: gene_sym = self.ensembl2symbol[p.name].upper()
+                    except: gene_sym = p.name.upper()
+                    try: sscores.append(self.de_gene.values[gene_sym.upper()])
+                    except: sscores.append(0)
 
                 if isinstance(sscores[0], str):
                     if "(" in sscores[0]:
@@ -1200,8 +1197,6 @@ class PromoterTest:
                             s = s.split(",")
                             scs.append([float(ss) for ss in s])
                         ar = numpy.array(scs)
-                        # ar.transpose()
-                        # print(ar)
                         score_ar = ar.tolist()
                         rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
                         rank_score = rank_score.transpose()
@@ -1233,9 +1228,8 @@ class PromoterTest:
                 rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
 
             for i, promoter in enumerate(spromoters):
-
-                dbssount = '<a href="spromoters_dbds.html#' + promoter.toString() + '" style="text-align:left">' + str(
-                    sig_promoter_count[promoter]) + '</a>'
+                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + \
+                           '" style="text-align:left">' + str(sig_promoter_count[promoter]) + '</a>'
 
                 if self.ani:
                     region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
@@ -1251,13 +1245,11 @@ class PromoterTest:
                              promoter.toString(space=True), '</a>'])
                     else:
                         region_link = promoter.toString(space=True)
-
                 try:
                     gn = self.ensembl2symbol[promoter.name]
                     if not gn: gn = promoter.name
                 except:
                     gn = promoter.name
-
                 self.ranktable[gn] = str(int(rank_sum[i]))
                 self.dbstable[gn] = str(sig_promoter_count[promoter])
 
@@ -1267,7 +1259,6 @@ class PromoterTest:
                            dbssount,
                            value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                            ]
-
                 if self.scores:
                     if multiple_scores:
                         # print(score_ar)
