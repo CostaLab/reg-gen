@@ -88,7 +88,7 @@ def main():
     parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the experimental file and leave the program.")
     
 
-    parser_promotertest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
+    parser_promotertest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 20)")
     parser_promotertest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
     parser_promotertest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
     parser_promotertest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexator] Activates the filtering of low complexity regions and repeats in the sequence data (Default: off)")
@@ -125,7 +125,7 @@ def main():
     parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     
-    parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
+    parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 20)")
     parser_randomtest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
     parser_randomtest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
     parser_randomtest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexator] Activates the filtering of low complexity regions and repeats in the sequence data (Default: off)")

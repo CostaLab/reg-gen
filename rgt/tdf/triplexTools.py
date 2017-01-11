@@ -136,46 +136,47 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     for line in profile_f:
         line = line.strip()
         line = line.split("\t")
-        profile[line[0]] = line[1:]
+        if line[0] == "Experiment": continue
+        else: profile[line[0]] = line[1:]
 
     for i, exp in enumerate(profile.keys()):
-        # print(exp)
+        print(exp)
         c += 1
 
-        try:
-            if profile[exp][5] == "-":
-                new_line = [str(c), exp, profile[exp][0]]
-            else:
-                new_line = [str(c),
-                            '<a href="' + os.path.join(exp, "index.html") + \
-                            '">' + exp + "</a>", profile[exp][0]]
+        # try:
+        if profile[exp][5] == "-":
+            new_line = [str(c), exp, profile[exp][0]]
+        else:
+            new_line = [str(c),
+                        '<a href="' + os.path.join(exp, "index.html") + \
+                        '">' + exp + "</a>", profile[exp][0]]
 
-            if show_RNA_ass_gene:
-                new_line.append(
-                    split_gene_name(gene_name=profile[exp][7],
-                                    org=profile[exp][2])
-                )
+        if show_RNA_ass_gene:
+            new_line.append(
+                split_gene_name(gene_name=profile[exp][7],
+                                org=profile[exp][2])
+            )
 
-            if profile[exp][6] == "-":
-                new_line += [profile[exp][4],
-                             profile[exp][5], profile[exp][6],
-                             profile[exp][2], profile[exp][3]]
+        if profile[exp][6] == "-":
+            new_line += [profile[exp][4],
+                         profile[exp][5], profile[exp][6],
+                         profile[exp][2], profile[exp][3]]
 
-            elif float(profile[exp][6]) < 0.05:
-                new_line += [profile[exp][4],
-                             profile[exp][5],
-                             "<font color=\"red\">" + \
-                             profile[exp][6] + "</font>",
-                             profile[exp][2], profile[exp][3]]
-            else:
-                new_line += [profile[exp][4],
-                             profile[exp][5], profile[exp][6],
-                             profile[exp][2], profile[exp][3]]
-            data_table.append(new_line)
-        except:
-            if exp != "Experiment":
-                print("Error in loading profile: " + exp)
-            continue
+        elif float(profile[exp][6]) < 0.05:
+            new_line += [profile[exp][4],
+                         profile[exp][5],
+                         "<font color=\"red\">" + \
+                         profile[exp][6] + "</font>",
+                         profile[exp][2], profile[exp][3]]
+        else:
+            new_line += [profile[exp][4],
+                         profile[exp][5], profile[exp][6],
+                         profile[exp][2], profile[exp][3]]
+        data_table.append(new_line)
+        # except:
+        #     if exp != "Experiment":
+        #         print("Error in loading profile: " + exp)
+        #     continue
 
     html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                          align=10, cell_align="left", sortable=True)
@@ -574,26 +575,30 @@ def split_gene_name(gene_name, org):
                     glist.append(g)
 
                 else:
-                    if i == 0:
-                        result = p1+g+p2+g+p3
+                    dlist.append(0)
+                    glist.append(g)
+                    # if i == 0:
+                    #     result = p1+g+p2+g+p3
+                    # else:
+                    #     result += ","+p1+g+p2+g+p3
+            # if dlist:
+            i = dlist.index(min(dlist))
+            if dlist[i] < 0:
+                ds = str(dlist[i])
+                result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+                try:
+                    j = dlist.index(max(dlist))
+                    if dlist[j] < 0: rds = str(dlist[j])
                     else:
-                        result += ","+p1+g+p2+g+p3
-            if dlist:
-                i = dlist.index(min(dlist))
-                if dlist[i] < 0: 
-                    ds = str(dlist[i])
-                    result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-                    try:
-                        j = dlist.index(max(dlist))
-                        if dlist[j] < 0: rds = str(dlist[j])
-                        else:
-                            rds = "+"+ str(dlist[j])
-                            result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
-                    except:
-                        pass
-                else: 
-                    ds = "+"+str(dlist[i])
-                    result = p1+glist[i]+p2+glist[i]+p3+"("+str(dlist[i])+")"
+                        rds = "+"+ str(dlist[j])
+                        result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
+                except:
+                    pass
+            elif dlist[i] > 0:
+                ds = "+"+str(dlist[i])
+                result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+            else:
+                result = p1 + glist[i] + p2 + glist[i] + p3
                 
                     
         elif gene_name == ".":
