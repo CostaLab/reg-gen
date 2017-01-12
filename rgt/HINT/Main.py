@@ -667,7 +667,7 @@ def main():
                         fp_state_nb = 4
                     else: fp_state_nb = 7
 
-            	    # Formatting results
+                    # Formatting results
                     start_pos = 0
                     flag_start = False
                     for k in range(r.initial, r.final):
