@@ -235,8 +235,7 @@ class CoverageSet:
             try:
                 bin_start = max(0, region.initial-readSize)
                 bin_end = region.final+readSize
-                print(bin_start)
-                print(bin_end)
+
                 if not strand_specific:
                     for r in bam.fetch(region.chrom,bin_start,bin_end):
                         cov[i] += 1
