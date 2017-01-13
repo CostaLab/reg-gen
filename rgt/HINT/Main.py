@@ -20,6 +20,7 @@ from .. GenomicRegionSet import GenomicRegionSet
 from signalProcessing import GenomicSignal
 from hmm import HMM
 from biasTable import BiasTable
+from evaluation import Evaluation
 
 # External
 from numpy import array, sum, isnan
@@ -151,6 +152,20 @@ def main():
                       help = ("If used, it will print the slope signals from DNase-seq "
                               " or ATAC-seq data. The option should equal the file name."
                               "The extension must be (.wig)."))
+
+    # Evaluation Options
+    parser.add_option("--evaluate-footprints", dest= "evaluate_footprints", type = "bool", metavar="BOOL",
+                      default = False,
+                      help = ("If used, it will evaluate the footprints prediction"))
+    parser.add_option("--footprint-predictions", dest = "footprint_predictions", type = "string", metavar="STRING",
+                      default = None,
+                      help = ("A bed file containing the footprint predictions."
+                              "The extension must be (.bed)."))
+    parser.add_option("--motif-predictions", dest = "motifs_predictions", type = "string", metaver="STRING",
+                      default = None,
+                      help = ("A bed file containing all motif-predicted binding sites (MPBSs)."
+                              "The values in the bed SCORE field will be used to rank the MPBSs."
+                              "The extension must be (.bed)."))
 
     # GENERAL Hidden Options
     parser.add_option("--region-total-ext", dest = "region_total_ext", type = "int", metavar="INT", default = 10000,
@@ -285,6 +300,12 @@ def main():
         system("touch "+options.print_norm_signal+" | echo -n "" > "+options.print_norm_signal)
     if(options.print_slope_signal):
         system("touch "+options.print_raw_signal+" | echo -n "" > "+options.print_slope_signal)
+
+
+    # If HINT is required to evaluate the existing footprint predictions
+    if options.evaluate_footprints and options.footprint_predictions and options.motifs_predictions:
+        evaluation = Evaluation(options.footprint_predictions, options.motifs_predictions)
+
 
     # Global class initialization
     genome_data = GenomeData(options.organism)
@@ -756,5 +777,6 @@ def main():
         # Creating output file
         output_file_name = options.output_location+group.name+".bed"
         footprints.write_bed(output_file_name)
+
         
 
