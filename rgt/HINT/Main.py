@@ -154,17 +154,17 @@ def main():
                               "The extension must be (.wig)."))
 
     # Evaluation Options
-    parser.add_option("--evaluate-footprints", dest= "evaluate_footprints",
-                      action="store_true", default = False,
-                      help = ("If used, HINT will evaluate the footprints prediction."))
-    parser.add_option("--footprint-predictions", dest = "footprint_predictions", type = "string", metavar="STRING",
-                      default = None,
-                      help = ("A bed file containing the footprint predictions."
+    parser.add_option("--evaluate-footprints", dest="evaluate_footprints",
+                      action="store_true", default=False,
+                      help=("If used, HINT will evaluate the footprints prediction."))
+    parser.add_option("--pred-footprints", dest="pred_footprints", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bed file containing the footprint predictions."
                               "If given, this file will be evaluated as the footprint predictions"
                               "The extension must be (.bed)."))
-    parser.add_option("--motif-predictions", dest = "motifs_predictions", type = "string", metavar="STRING",
-                      default = None,
-                      help = ("A bed file containing all motif-predicted binding sites (MPBSs)."
+    parser.add_option("--pred-mpbs", dest="pred_mpbs", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bed file containing all motif-predicted binding sites (MPBSs)."
                               "The values in the bed SCORE field will be used to rank the MPBSs."
                               "The extension must be (.bed)."))
 
@@ -251,6 +251,13 @@ def main():
     options, arguments = parser.parse_args()
     #if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
+    # If HINT is required to evaluate the existing footprint predictions
+    if options.evaluate_footprints and options.pred_footprints and options.pred_mpbs:
+        evaluation = Evaluation(options.pred_footprints, options.pred_mpbs)
+        evaluation.chip_evaluate(options.output_location)
+        # Exit
+        exit(0)
+
     # General hidden options ###############################################################
     region_total_ext = options.region_total_ext
     fp_limit_size = options.fp_limit_size
@@ -302,11 +309,6 @@ def main():
     if(options.print_slope_signal):
         system("touch "+options.print_raw_signal+" | echo -n "" > "+options.print_slope_signal)
 
-
-    # If HINT is required to evaluate the existing footprint predictions
-    if options.evaluate_footprints and options.footprint_predictions and options.motifs_predictions:
-        evaluation = Evaluation(options.footprint_predictions, options.motifs_predictions)
-        evaluation.chip_evaluate(options.output_location)
 
 
     # Global class initialization
