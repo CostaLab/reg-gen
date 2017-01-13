@@ -59,3 +59,4 @@ class Evaluation:
         max_score = max_score + 1
 
         # Sort prediction and mpbs bed files
+        max_score = 1
