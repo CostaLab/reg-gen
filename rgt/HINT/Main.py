@@ -154,14 +154,15 @@ def main():
                               "The extension must be (.wig)."))
 
     # Evaluation Options
-    parser.add_option("--evaluate-footprints", dest= "evaluate_footprints", type = "bool", metavar="BOOL",
-                      default = False,
-                      help = ("If used, it will evaluate the footprints prediction"))
+    parser.add_option("--evaluate-footprints", dest= "evaluate_footprints",
+                      action="store_true", default = False,
+                      help = ("If used, HINT will evaluate the footprints prediction."))
     parser.add_option("--footprint-predictions", dest = "footprint_predictions", type = "string", metavar="STRING",
                       default = None,
                       help = ("A bed file containing the footprint predictions."
+                              "If given, this file will be evaluated as the footprint predictions"
                               "The extension must be (.bed)."))
-    parser.add_option("--motif-predictions", dest = "motifs_predictions", type = "string", metaver="STRING",
+    parser.add_option("--motif-predictions", dest = "motifs_predictions", type = "string", metavar="STRING",
                       default = None,
                       help = ("A bed file containing all motif-predicted binding sites (MPBSs)."
                               "The values in the bed SCORE field will be used to rank the MPBSs."
@@ -305,6 +306,7 @@ def main():
     # If HINT is required to evaluate the existing footprint predictions
     if options.evaluate_footprints and options.footprint_predictions and options.motifs_predictions:
         evaluation = Evaluation(options.footprint_predictions, options.motifs_predictions)
+        evaluation.chip_evaluate(options.output_location)
 
 
     # Global class initialization
