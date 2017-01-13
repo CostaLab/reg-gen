@@ -1,4 +1,3 @@
-
 ###################################################################################################
 # Libraries
 ###################################################################################################
@@ -12,13 +11,14 @@ import numpy as np
 from pickle import load
 from sklearn.metrics import auc
 from scipy.integrate import simps, trapz
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
+from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
 
-Authors: Eduardo G. Gusmao.
+Authors: Eduardo G. Gusmao, Zhijian Li
 """
+
 
 class Evaluation:
     """
@@ -30,15 +30,15 @@ class Evaluation:
 
     """
 
-    def __init__(self, mpbs_fname, footprints_fname):
-        self.mpbs_fname = mpbs_fname
+    def __init__(self, footprints_fname, mpbs_fname):
         self.footprints_fname = footprints_fname
+        self.mpbs_fname = mpbs_fname
 
     # Function standardize
     def standardize(vec):
         maxN = max(vec)
         minN = min(vec)
-        return [(e-minN)/(maxN-minN) for e in vec]
+        return [(e - minN) / (maxN - minN) for e in vec]
 
     def chip_evaluate(self):
         """
@@ -59,5 +59,3 @@ class Evaluation:
         max_score = max_score + 1
 
         # Sort prediction and mpbs bed files
-
-
