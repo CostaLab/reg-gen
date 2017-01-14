@@ -10,7 +10,8 @@ import math
 import operator
 import numpy as np
 from pickle import load
-from sklearn.metrics import auc
+from sklearn import metrics
+import matplotlib.pyplot as plt
 from scipy.integrate import simps, trapz
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
@@ -57,6 +58,10 @@ class Evaluation:
         return:
         """
 
+        maxPoints = 10000
+        fpr_auc_1 = 0.1
+        fpr_auc_2 = 0.01
+
         pred_footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
         pred_footprints_gen_regions.read_bed(self.pred_footprints_fname)
         mpbs_gen_regions = GenomicRegionSet("MPBS")
@@ -75,13 +80,37 @@ class Evaluation:
         pred_footprints_gen_regions.sort()
         mpbs_gen_regions.sort()
 
+
         # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
-        increased_score_mpbs_regions = GenomicRegionSet("Increased score mpbs")
-        intersect_mpbs_regions = mpbs_gen_regions.intersect(pred_footprints_gen_regions, mode = OverlapType.ORIGINAL)
-        for region in iter(mpbs_gen_regions):
-            if intersect_mpbs_regions.include(region):
-                region.data = str(int(region.data) + max_score)
+        increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
+        intersect_mpbs_regions = mpbs_gen_regions.intersect(pred_footprints_gen_regions, mode=OverlapType.ORIGINAL)
+        for region in iter(intersect_mpbs_regions):
+            region.data = str(int(region.data) + max_score)
             increased_score_mpbs_regions.add(region)
-        increased_score_mpbs_regions.write_bed("score.bed")
 
+        without_intersect_regions = GenomicRegionSet("Without Increased Regions")
+        without_intersect_regions = mpbs_gen_regions.subtract(pred_footprints_gen_regions, whole_region=True)
+        for region in iter(without_intersect_regions):
+            increased_score_mpbs_regions.add(region)
 
+        # Evaluate Statistics
+        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
+
+        increased_score_mpbs_regions.sort_score()
+        increased_score_mpbs_regions.write_bed("score.sorted.bed")
+        gs = GenomicRegionSet("gs")
+        gs.read_bed("gs_o.bed")
+        # Calculating receiver operating characteristic curve (ROC)
+        # Reading data points
+        y_true = list()
+        y_score = list()
+        for region in iter(gs):
+            if str(region.name).split(":")[-1] == "N":
+                y_true.append(0)
+            else:
+                y_true.append(1)
+            y_score.append(int(region.data))
+        fpr, tpr, thresholds = metrics.roc_curve(np.array(y_true), np.array(y_score))
+        roc_auc = metrics.auc(fpr, tpr)
+        pr_auc = metrics.average_precision_score(np.array(y_true), np.array(y_score))
+        print(pr_auc)
