@@ -4,24 +4,13 @@
 
 # Python
 from __future__ import print_function
-import os
-import sys
-import math
-import operator
 import numpy as np
-from pickle import load
 from sklearn import metrics
-import matplotlib.pyplot as plt
-from scipy.integrate import simps, trapz
-from optparse import OptionParser, BadOptionError, AmbiguousOptionError
-
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.SequenceSet import *
 from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
-
-
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
@@ -66,11 +55,10 @@ class Evaluation:
         mpbs_gen_regions = GenomicRegionSet("MPBS")
         mpbs_gen_regions.read_bed(self.mpbs_fname)
 
-
         # Verifying the maximum score of the MPBS file
         max_score = -99999999
         for region in iter(mpbs_gen_regions):
-            score = int(str(region).split("\t")[4])
+            score = int(region.data)
             if score > max_score:
                 max_score = score
         max_score += 1
@@ -79,7 +67,6 @@ class Evaluation:
         pred_footprints_gen_regions.sort()
         mpbs_gen_regions.sort()
 
-
         # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
         increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
         intersect_mpbs_regions = mpbs_gen_regions.intersect(pred_footprints_gen_regions, mode=OverlapType.ORIGINAL)
@@ -87,7 +74,7 @@ class Evaluation:
             region.data = str(int(region.data) + max_score)
             increased_score_mpbs_regions.add(region)
 
-        without_intersect_regions = GenomicRegionSet("Without Increased Regions")
+        # without_intersect_regions = GenomicRegionSet("Without Increased Regions")
         without_intersect_regions = mpbs_gen_regions.subtract(pred_footprints_gen_regions, whole_region=True)
         for region in iter(without_intersect_regions):
             increased_score_mpbs_regions.add(region)
@@ -114,7 +101,7 @@ class Evaluation:
         counter_2 = 0
         for region in iter(increased_score_mpbs_regions):
             if str(region.name).split(":")[-1] == "N":
-                if counter_n < rate_n and counter_2%my_step != 0:
+                if counter_n < rate_n and counter_2 % my_step != 0:
                     region.data = str(0)
                     counter_n += 1
                 counter_2 += 1
@@ -145,13 +132,16 @@ class Evaluation:
                 fpr_2.append(fpr[i])
                 tpr_2.append(tpr[i])
 
+        fpr_1.append(fpr_auc_threshold_1)
+        tpr_1.append(tpr_1[-1])
+        fpr_2.append(fpr_auc_threshold_2)
+        tpr_2.append(tpr_2[-1])
         roc_auc = metrics.auc(fpr, tpr)
         roc_auc_1 = metrics.auc(np.array(fpr_1), np.array(tpr_1)) * 10
         roc_auc_2 = metrics.auc(np.array(fpr_2), np.array(tpr_2)) * 100
         stats_list.append(str(roc_auc))
         stats_list.append(str(roc_auc_1))
         stats_list.append(str(roc_auc_2))
-
 
         # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
         precision, recall, thresholds = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
@@ -162,14 +152,14 @@ class Evaluation:
         roc_fname = output_location + mpbs_name + "_roc.txt"
         pr_fname = output_location + mpbs_name + "_prc.txt"
         stats_fname = output_location + mpbs_name + "_stats.txt"
-        with open(roc_fname, "w") as file:
-            file.write(mpbs_name + "_FPR" + "\t" + mpbs_name + "_TPR" + "\n")
+        with open(roc_fname, "w") as roc_file:
+            roc_file.write(mpbs_name + "_FPR" + "\t" + mpbs_name + "_TPR" + "\n")
             for i in range(len(fpr)):
-                file.write(str(fpr[i]) + "\t" + str(tpr[i]) + "\n")
-        with open(pr_fname, "w") as file:
-            file.write(mpbs_name + "_REC" + "\t" + mpbs_name + "_PRE" + "\n")
+                roc_file.write(str(fpr[i]) + "\t" + str(tpr[i]) + "\n")
+        with open(pr_fname, "w") as pr_file:
+            pr_file.write(mpbs_name + "_REC" + "\t" + mpbs_name + "_PRE" + "\n")
             for i in range(len(recall)):
-                file.write(str(recall[i]) + "\t" + str(precision[i]) + "\n")
-        with open(stats_fname, "w") as file:
-            file.write("\t".join(stats_header) + "\n")
-            file.write("\t".join(stats_list) + "\n")
+                pr_file.write(str(recall[i]) + "\t" + str(precision[i]) + "\n")
+        with open(stats_fname, "w") as stats_file:
+            stats_file.write("\t".join(stats_header) + "\n")
+            stats_file.write("\t".join(stats_list) + "\n")
