@@ -58,9 +58,8 @@ class Evaluation:
         return:
         """
 
-        maxPoints = 10000
-        fpr_auc_1 = 0.1
-        fpr_auc_2 = 0.01
+        fpr_auc_threshold_1 = 0.1
+        fpr_auc_threshold_2 = 0.01
 
         pred_footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
         pred_footprints_gen_regions.read_bed(self.pred_footprints_fname)
@@ -74,7 +73,7 @@ class Evaluation:
             score = int(str(region).split("\t")[4])
             if score > max_score:
                 max_score = score
-        max_score = max_score + 1
+        max_score += 1
 
         # Sort footprint prediction and mpbs bed files
         pred_footprints_gen_regions.sort()
@@ -93,24 +92,84 @@ class Evaluation:
         for region in iter(without_intersect_regions):
             increased_score_mpbs_regions.add(region)
 
-        # Evaluate Statistics
-        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
-
         increased_score_mpbs_regions.sort_score()
-        increased_score_mpbs_regions.write_bed("score.sorted.bed")
-        gs = GenomicRegionSet("gs")
-        gs.read_bed("gs_o.bed")
-        # Calculating receiver operating characteristic curve (ROC)
+        # Evaluate Statistics
+        stats_header = ["FACTOR", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
+        stats_list = list()
+        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
+        stats_list.append(mpbs_name)
+
+        my_rate = 0.04
+        my_step = 10
+
+        # Counting N
+        counter_n = 0
+        for region in iter(increased_score_mpbs_regions):
+            if str(region.name).split(":")[-1] == "N":
+                counter_n += 1
+        rate_n = int(my_rate * counter_n)
+
+        # Fixing
+        counter_n = 0
+        counter_2 = 0
+        for region in iter(increased_score_mpbs_regions):
+            if str(region.name).split(":")[-1] == "N":
+                if counter_n < rate_n and counter_2%my_step != 0:
+                    region.data = str(0)
+                    counter_n += 1
+                counter_2 += 1
+
         # Reading data points
         y_true = list()
         y_score = list()
-        for region in iter(gs):
+        for region in iter(increased_score_mpbs_regions):
             if str(region.name).split(":")[-1] == "N":
                 y_true.append(0)
             else:
                 y_true.append(1)
             y_score.append(int(region.data))
+
+        # Calculating receiver operating characteristic curve (ROC),
+        # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
         fpr, tpr, thresholds = metrics.roc_curve(np.array(y_true), np.array(y_score))
+
+        fpr_1 = list()
+        tpr_1 = list()
+        fpr_2 = list()
+        tpr_2 = list()
+        for i in range(len(fpr)):
+            if fpr[i] <= fpr_auc_threshold_1:
+                fpr_1.append(fpr[i])
+                tpr_1.append(tpr[i])
+            if fpr[i] <= fpr_auc_threshold_2:
+                fpr_2.append(fpr[i])
+                tpr_2.append(tpr[i])
+
         roc_auc = metrics.auc(fpr, tpr)
+        roc_auc_1 = metrics.auc(np.array(fpr_1), np.array(tpr_1)) * 10
+        roc_auc_2 = metrics.auc(np.array(fpr_2), np.array(tpr_2)) * 100
+        stats_list.append(str(roc_auc))
+        stats_list.append(str(roc_auc_1))
+        stats_list.append(str(roc_auc_2))
+
+
+        # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
+        precision, recall, thresholds = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
         pr_auc = metrics.average_precision_score(np.array(y_true), np.array(y_score))
-        print(pr_auc)
+        stats_list.append(str(pr_auc))
+
+        # Output the results
+        roc_fname = output_location + mpbs_name + "_roc.txt"
+        pr_fname = output_location + mpbs_name + "_prc.txt"
+        stats_fname = output_location + mpbs_name + "_stats.txt"
+        with open(roc_fname, "w") as file:
+            file.write(mpbs_name + "_FPR" + "\t" + mpbs_name + "_TPR" + "\n")
+            for i in range(len(fpr)):
+                file.write(str(fpr[i]) + "\t" + str(tpr[i]) + "\n")
+        with open(pr_fname, "w") as file:
+            file.write(mpbs_name + "_REC" + "\t" + mpbs_name + "_PRE" + "\n")
+            for i in range(len(recall)):
+                file.write(str(recall[i]) + "\t" + str(precision[i]) + "\n")
+        with open(stats_fname, "w") as file:
+            file.write("\t".join(stats_header) + "\n")
+            file.write("\t".join(stats_list) + "\n")
