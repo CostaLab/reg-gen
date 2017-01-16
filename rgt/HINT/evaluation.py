@@ -9,8 +9,7 @@ from sklearn import metrics
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.SequenceSet import *
-from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
+from rgt.Util import OverlapType
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
@@ -22,10 +21,6 @@ Authors: Eduardo G. Gusmao, Zhijian Li
 class Evaluation:
     """
     Contains two different methodologies: TF ChIP-seq Based Evaluation
-    Usage:
-    1. Initialize class.
-    2. Call load_sg_coefs once.
-    3. Call get_signal as many times as needed.
 
     """
 
@@ -33,11 +28,6 @@ class Evaluation:
         self.pred_footprints_fname = pred_footprints_fname
         self.mpbs_fname = mpbs_fname
 
-    # Function standardize
-    def standardize(vec):
-        maxN = max(vec)
-        minN = min(vec)
-        return [(e - minN) / (maxN - minN) for e in vec]
 
     def chip_evaluate(self, output_location):
         """
