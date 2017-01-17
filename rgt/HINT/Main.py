@@ -264,8 +264,9 @@ def main():
 
     # If HINT is required to evaluate the existing footprint predictions
     if options.evaluate_footprints and options.mpbs_file and options.footprint_file and options.footprint_name:
-        evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name)
-        evaluation.chip_evaluate(options.output_location, options.print_roc_curve, options.print_pr_curve)
+        evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
+                                options.print_roc_curve, options.print_roc_curve, options.output_location)
+        evaluation.chip_evaluate()
         # Exit
         exit(0)
 
