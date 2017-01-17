@@ -171,7 +171,8 @@ def main():
     parser.add_option("--footprint-name", dest="footprint_name", type="string",
                       metavar="NAME1,NAME2,NAME3,NAME4...",
                       default=None,
-                      help=("The methods name used to predicted the footprint."))
+                      help=("The methods name used to predicted the footprint."
+                            "The number of name must be consistent with that of footprint file"))
     parser.add_option("--print-roc-curve", dest="print_roc_curve",
                       action="store_true", default=False,
                       help=("If used, HINT will print the receiver operating characteristic curve."))
