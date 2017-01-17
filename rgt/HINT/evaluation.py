@@ -5,7 +5,9 @@
 # Python
 from __future__ import print_function
 import numpy as np
+import pylab
 from sklearn import metrics
+import matplotlib.pyplot as plt
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -24,12 +26,17 @@ class Evaluation:
 
     """
 
-    def __init__(self, pred_footprints_fname, mpbs_fname):
-        self.pred_footprints_fname = pred_footprints_fname
-        self.mpbs_fname = mpbs_fname
+    def __init__(self, mpbs_file, footprint_file, footprint_name, print_roc_curve, print_pr_curve, output_location):
+        self.mpbs_fname = mpbs_file
+        self.footprint_fname = footprint_file.split(",")
+        self.footprint_name = footprint_name.split(",")
+        self.print_roc_curve = print_roc_curve
+        self.print_pr_curve = print_pr_curve
+        self.output_location = output_location
+        if self.output_location[-1] != "/":
+            self.output_location += "/"
 
-
-    def chip_evaluate(self, output_location):
+    def chip_evaluate(self):
         """
         This evaluation methodology uses motif-predicted binding sites (MPBSs) together with TF ChIP-seq data
         to evaluate the footprint predictions.
@@ -40,10 +47,11 @@ class Evaluation:
         fpr_auc_threshold_1 = 0.1
         fpr_auc_threshold_2 = 0.01
 
-        pred_footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
-        pred_footprints_gen_regions.read_bed(self.pred_footprints_fname)
         mpbs_gen_regions = GenomicRegionSet("MPBS")
         mpbs_gen_regions.read_bed(self.mpbs_fname)
+        mpbs_gen_regions.sort()
+
+        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
 
         # Verifying the maximum score of the MPBS file
         max_score = -99999999
@@ -51,105 +59,138 @@ class Evaluation:
             score = int(region.data)
             if score > max_score:
                 max_score = score
-        max_score += 1
+            max_score += 1
 
-        # Sort footprint prediction and mpbs bed files
-        pred_footprints_gen_regions.sort()
-        mpbs_gen_regions.sort()
-
-        # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
-        increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
-        intersect_mpbs_regions = mpbs_gen_regions.intersect(pred_footprints_gen_regions, mode=OverlapType.ORIGINAL)
-        for region in iter(intersect_mpbs_regions):
-            region.data = str(int(region.data) + max_score)
-            increased_score_mpbs_regions.add(region)
-
-        # without_intersect_regions = GenomicRegionSet("Without Increased Regions")
-        without_intersect_regions = mpbs_gen_regions.subtract(pred_footprints_gen_regions, whole_region=True)
-        for region in iter(without_intersect_regions):
-            increased_score_mpbs_regions.add(region)
-
-        increased_score_mpbs_regions.sort_score()
         # Evaluate Statistics
-        stats_header = ["FACTOR", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
-        stats_list = list()
-        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
-        stats_list.append(mpbs_name)
+        stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+        roc_auc_1 = dict()
+        roc_auc_2 = dict()
+        precision = dict()
+        recall = dict()
+        average_precision = dict()
+        for i in range(len(self.footprint_fname)):
+            footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
+            footprints_gen_regions.read_bed(self.footprint_fname[i])
 
-        my_rate = 0.04
-        my_step = 10
+            # Sort footprint prediction bed files
+            footprints_gen_regions.sort()
 
-        # Counting N
-        counter_n = 0
-        for region in iter(increased_score_mpbs_regions):
-            if str(region.name).split(":")[-1] == "N":
-                counter_n += 1
-        rate_n = int(my_rate * counter_n)
+            # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
+            increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
+            intersect_regions = mpbs_gen_regions.intersect(footprints_gen_regions, mode=OverlapType.ORIGINAL)
+            for region in iter(intersect_regions):
+                region.data = str(int(region.data) + max_score)
+                increased_score_mpbs_regions.add(region)
 
-        # Fixing
-        counter_n = 0
-        counter_2 = 0
-        for region in iter(increased_score_mpbs_regions):
-            if str(region.name).split(":")[-1] == "N":
-                if counter_n < rate_n and counter_2 % my_step != 0:
-                    region.data = str(0)
-                    counter_n += 1
-                counter_2 += 1
+            # Keep the score of remained MPBS entry unchanged
+            without_intersect_regions = mpbs_gen_regions.subtract(footprints_gen_regions, whole_region=True)
+            for region in iter(without_intersect_regions):
+                increased_score_mpbs_regions.add(region)
 
-        # Reading data points
-        y_true = list()
-        y_score = list()
-        for region in iter(increased_score_mpbs_regions):
-            if str(region.name).split(":")[-1] == "N":
-                y_true.append(0)
-            else:
-                y_true.append(1)
-            y_score.append(int(region.data))
+            increased_score_mpbs_regions.sort_score()
 
-        # Calculating receiver operating characteristic curve (ROC),
-        # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
-        fpr, tpr, thresholds = metrics.roc_curve(np.array(y_true), np.array(y_score))
+            # Reading data points
+            y_true = list()
+            y_score = list()
+            for region in iter(increased_score_mpbs_regions):
+                if str(region.name).split(":")[-1] == "N":
+                    y_true.append(0)
+                else:
+                    y_true.append(1)
+                y_score.append(int(region.data))
 
-        fpr_1 = list()
-        tpr_1 = list()
-        fpr_2 = list()
-        tpr_2 = list()
-        for i in range(len(fpr)):
-            if fpr[i] <= fpr_auc_threshold_1:
-                fpr_1.append(fpr[i])
-                tpr_1.append(tpr[i])
-            if fpr[i] <= fpr_auc_threshold_2:
-                fpr_2.append(fpr[i])
-                tpr_2.append(tpr[i])
+            # Calculating receiver operating characteristic curve (ROC),
+            # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
+            fpr[i], tpr[i], _ = metrics.roc_curve(np.array(y_true), np.array(y_score))
+            fpr_1 = list()
+            tpr_1 = list()
+            fpr_2 = list()
+            tpr_2 = list()
+            for index in range(len(fpr[i])):
+                if fpr[i][index] <= fpr_auc_threshold_1:
+                    fpr_1.append(fpr[i][index])
+                    tpr_1.append(tpr[i][index])
+                if fpr[i][index] <= fpr_auc_threshold_2:
+                    fpr_2.append(fpr[i][index])
+                    tpr_2.append(tpr[i][index])
 
-        fpr_1.append(fpr_auc_threshold_1)
-        tpr_1.append(tpr_1[-1])
-        fpr_2.append(fpr_auc_threshold_2)
-        tpr_2.append(tpr_2[-1])
-        roc_auc = metrics.auc(fpr, tpr)
-        roc_auc_1 = metrics.auc(np.array(fpr_1), np.array(tpr_1)) * 10
-        roc_auc_2 = metrics.auc(np.array(fpr_2), np.array(tpr_2)) * 100
-        stats_list.append(str(roc_auc))
-        stats_list.append(str(roc_auc_1))
-        stats_list.append(str(roc_auc_2))
+            fpr_1.append(fpr_auc_threshold_1)
+            tpr_1.append(tpr_1[-1])
+            fpr_2.append(fpr_auc_threshold_2)
+            tpr_2.append(tpr_2[-1])
+            roc_auc[i] = metrics.auc(fpr[i], tpr[i])
+            roc_auc_1[i] = metrics.auc(np.array(fpr_1), np.array(tpr_1)) * 10
+            roc_auc_2[i] = metrics.auc(np.array(fpr_2), np.array(tpr_2)) * 100
 
-        # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-        precision, recall, thresholds = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
-        pr_auc = metrics.average_precision_score(np.array(y_true), np.array(y_score))
-        stats_list.append(str(pr_auc))
+            # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
+            precision[i], recall[i], _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
+            average_precision[i] = metrics.average_precision_score(np.array(y_true), np.array(y_score))
 
-        # Output the results
-        roc_fname = output_location + mpbs_name + "_roc.txt"
-        pr_fname = output_location + mpbs_name + "_prc.txt"
-        stats_fname = output_location + mpbs_name + "_stats.txt"
-        with open(roc_fname, "w") as roc_file:
-            roc_file.write(mpbs_name + "_FPR" + "\t" + mpbs_name + "_TPR" + "\n")
-            for i in range(len(fpr)):
-                roc_file.write(str(fpr[i]) + "\t" + str(tpr[i]) + "\n")
-        with open(pr_fname, "w") as pr_file:
-            pr_file.write(mpbs_name + "_REC" + "\t" + mpbs_name + "_PRE" + "\n")
-            for i in range(len(recall)):
-                pr_file.write(str(recall[i]) + "\t" + str(precision[i]) + "\n")
+        # Output the statistics results into text
+        stats_fname = self.output_location + mpbs_name + "_stats.txt"
         with open(stats_fname, "w") as stats_file:
             stats_file.write("\t".join(stats_header) + "\n")
-            stats_file.write("\t".join(stats_list) + "\n")
+            for i in range(len(self.footprint_name)):
+                stats_file.write(self.footprint_name[i] + "\t" + str(roc_auc[i]) + "\t" + str(roc_auc_1[i]) + "\t"
+                                 + str(roc_auc_2[i]) + "\t" + str(average_precision[i]) + "\n")
+
+        # Output the curves
+        if self.print_roc_curve:
+            label_x = "False Positive Rate"
+            label_y = "True Positive Rate"
+            curve_type = "ROC"
+            self.plot_curve(fpr, tpr, roc_auc, label_x, label_y, mpbs_name, curve_type)
+        if self.print_pr_curve:
+            label_x = "Recall"
+            label_y = "Precision"
+            curve_type = "PRC"
+            self.plot_curve(recall, precision, average_precision,
+                            label_x, label_y, mpbs_name, curve_type)
+
+    def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_type):
+        color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
+                      "#FF6600", "#0000CC", "#336633", "#CC0000", "#6600CC", "#FF00FF", "#555555", "#CCCC00",
+                      "#FF9900", "#0000FF", "#33CC33", "#FF0000", "#663399", "#FF33FF", "#888888", "#FFCC00",
+                      "#663300", "#009999", "#66CC66", "#FF3333", "#9933FF", "#FF66FF", "#AAAAAA", "#FFCC33",
+                      "#993300", "#00FFFF", "#99FF33", "#FF6666", "#CC99FF", "#FF99FF", "#CCCCCC", "#FFFF00"]
+
+        # Creating figure
+        fig = plt.figure(figsize=(8, 5), facecolor='w', edgecolor='k')
+        ax = fig.add_subplot(111)
+        for i in range(len(self.footprint_name)):
+            ax.plot(data_x[i], data_y[i], color=color_list[i],
+                    label=self.footprint_name[i] + ": " + str(round(stats[i], 4)))
+
+        # Plot red diagonal line
+        ax.plot([0, 1.0], [0, 1.0], color="#CCCCCC", linestyle="--", alpha=1.0)
+
+        # Line legend
+        leg = ax.legend(bbox_to_anchor=(1.0, 0.0, 1.0, 1.0), loc=2, ncol=2, borderaxespad=0., title="AUC",
+                        prop={'size': 4})
+        for e in leg.legendHandles:
+            e.set_linewidth(2.0)
+
+        # Titles and Axis Labels
+        ax.set_title(mpbs_name)
+        ax.set_xlabel(label_x)
+        ax.set_ylabel(label_y)
+
+        # Ticks
+        ax.grid(True, which='both')
+        ax.set_xticks(np.arange(0.0, 1.01, 0.1))
+        ax.set_yticks(np.arange(0.0, 1.01, 0.1))
+        for tick in ax.xaxis.get_major_ticks():
+            tick.label.set_fontsize(10)
+        for tick in ax.yaxis.get_major_ticks():
+            tick.label.set_fontsize(10)
+
+        # Axis limits
+        pylab.xlim([0, 1.0])
+        pylab.ylim([0, 1.0])
+
+        # Saving figure
+        figure_name = self.output_location + mpbs_name + "_" + curve_type + ".png"
+        fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
