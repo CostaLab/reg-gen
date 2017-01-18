@@ -134,7 +134,6 @@ class GenomicSignal:
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
 
-        print(raw_signal[0:10])
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
@@ -150,7 +149,7 @@ class GenomicSignal:
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
         hon_signal = self.hon_norm(boyle_signal, perc, std)
-        
+        print(hon_signal[:10])
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
