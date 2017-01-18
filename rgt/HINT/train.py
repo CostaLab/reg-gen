@@ -90,7 +90,7 @@ class TrainHMM:
             norm = list()
             slope = list()
             for j in range(len(state_list)):
-                if j == i:
+                if state_list[j] == i:
                     norm.append(norm_signal[j])
                     slope.append(slope_signal[j])
 
