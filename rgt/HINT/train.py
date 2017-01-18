@@ -79,11 +79,11 @@ class TrainHMM:
             prob_list = [e / trans_sum for e in trans_list]
 
             # make sure that the sum of this line converge to 1
-            total_prob = sum(trans_list)
+            total_prob = sum(prob_list)
             if total_prob != 1.0:
-                trans_list[0] += (1.0 - total_prob)
+                prob_list[0] += (1.0 - total_prob)
 
-            hmm_model.A.append(trans_list)
+            hmm_model.A.append(prob_list)
 
         # Emission
         for i in range(hmm_model.states):
