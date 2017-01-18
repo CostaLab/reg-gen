@@ -134,6 +134,7 @@ class GenomicSignal:
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
 
+        print(raw_signal[0:10])
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
