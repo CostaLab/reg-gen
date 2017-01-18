@@ -69,15 +69,15 @@ class TrainHMM:
         # Transition
         trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
         for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
-            trans_matrix[x-1, y-1] = c
+            trans_matrix[x, y] = c
 
-        print(state_list[:10])
-        print(trans_matrix)
-        trans_matrix = trans_matrix / hmm_model.states
         for i in range(hmm_model.states):
             trans_list = list()
             for j in range(hmm_model.states):
                 trans_list.append(trans_matrix[i][j])
+            trans_sum = sum(trans_list)*1.0
+            prob_list = [e / trans_sum for e in trans_list]
+
             # make sure that the sum of this line converge to 1
             total_prob = sum(trans_list)
             if total_prob != 1.0:
