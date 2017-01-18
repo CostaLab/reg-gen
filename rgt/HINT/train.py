@@ -93,14 +93,15 @@ class TrainHMM:
                 if state_list[j] == i:
                     norm.append(norm_signal[j])
                     slope.append(slope_signal[j])
-
+                    print(norm_signal[j])
+                    exit(0)
             # Compute the mean of norm and slope signal
             means_list = list()
             means_list.append(np.mean(norm))
             means_list.append(np.mean(slope))
             hmm_model.means.append(means_list)
 
-            print(means_list)
+
             # Compute covariance matrix of norm and slope signal
             covs_list = list()
             covs_matrix = np.cov(norm, slope)
