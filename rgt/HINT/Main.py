@@ -21,8 +21,10 @@ from signalProcessing import GenomicSignal
 from hmm import HMM
 from biasTable import BiasTable
 from evaluation import Evaluation
+from train import TrainHMM
 
 # External
+import os
 from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
@@ -154,6 +156,26 @@ def main():
                             " or ATAC-seq data. The option should equal the file name."
                             "The extension must be (.wig)."))
 
+    # Train Options
+    parser.add_option("--train-hmm", dest="train_hmm",
+                      action="store_true", default=False,
+                      help=("If used, HINT will train a hidden Markov model (HMM) based on "
+                            "the annotation data"))
+    parser.add_option("--bam-file", dest="bam_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."))
+    parser.add_option("--annotate-file", dest="annotate_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A annotate file containing all the states."))
+    parser.add_option("--print-bed-file", dest="print_bed_file",
+                      action="store_true", default=False,
+                      help=("If used, HINT will output the bed file containing "
+                            "the annotated regions, so that you can visualize "
+                            "you HMM annotation for potential errors"))
+    parser.add_option("--model-fname", dest="model_fname", type="string", metavar="STRING",
+                      default="model",
+                      help=("The output file name"))
+
     # Evaluation Options
     parser.add_option("--evaluate-footprints", dest="evaluate_footprints",
                       action="store_true", default=False,
@@ -263,12 +285,18 @@ def main():
     # if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
     # If HINT is required to evaluate the existing footprint predictions
-    if options.evaluate_footprints and options.mpbs_file and options.footprint_file and options.footprint_name:
+    if options.evaluate_footprints:
         evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
                                 options.print_roc_curve, options.print_roc_curve, options.output_location)
         evaluation.chip_evaluate()
-        # Exit
-        exit(0)
+        return
+
+    # If HINT is required to train a hidden Markov model (HMM)
+    if options.train_hmm:
+        model_fname = os.path.join(options.output_location, options.model_fname)
+        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file, model_fname)
+        train_hmm_model.train()
+        return
 
     # General hidden options ###############################################################
     region_total_ext = options.region_total_ext
@@ -741,7 +769,8 @@ def main():
                     else:
                         current_hmm = group.hmm
                     if (
-                    isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                            isnan(sum(
+                                input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try:
                         posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
