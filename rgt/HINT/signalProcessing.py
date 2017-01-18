@@ -144,7 +144,7 @@ class GenomicSignal:
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
-
+        print(boyle_signal[:10])
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
