@@ -100,6 +100,7 @@ class TrainHMM:
             means_list.append(np.mean(slope))
             hmm_model.means.append(means_list)
 
+            print(means_list)
             # Compute covariance matrix of norm and slope signal
             covs_list = list()
             covs_matrix = np.cov(norm, slope)
