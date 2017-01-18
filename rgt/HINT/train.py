@@ -71,6 +71,7 @@ class TrainHMM:
         for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
             trans_matrix[x-1, y-1] = c
 
+        print(state_list[:10])
         print(trans_matrix)
         trans_matrix = trans_matrix / hmm_model.states
         for i in range(hmm_model.states):
