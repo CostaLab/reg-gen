@@ -7,7 +7,9 @@ from __future__ import print_function
 import numpy as np
 import pylab
 from sklearn import metrics
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+import pylab as plt
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -167,6 +169,7 @@ class Evaluation:
                       "#663300", "#009999", "#66CC66", "#FF3333", "#9933FF", "#FF66FF", "#AAAAAA", "#FFCC33",
                       "#993300", "#00FFFF", "#99FF33", "#FF6666", "#CC99FF", "#FF99FF", "#CCCCCC", "#FFFF00"]
 
+        matplotlib.use('Agg')
         # Creating figure
         fig = plt.figure(figsize=(8, 5), facecolor='w', edgecolor='k')
         ax = fig.add_subplot(111)
