@@ -141,7 +141,7 @@ class GenomicSignal:
 
         # Bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
-        print(bias_corrected_signal[:10])
+        print(bias_corrected_signal)
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
         print(boyle_signal[:10])
