@@ -9,7 +9,7 @@ import pylab
 from sklearn import metrics
 import matplotlib
 matplotlib.use('Agg')
-import pylab as plt
+import matplotlib.pyplot as plt
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
