@@ -39,7 +39,8 @@ class TrainHMM:
                 if (len(line) < 2 or "#" in line or "=" in line):
                     continue
                 ll = line.strip().split(" ")
-                states += ll[1:-1]
+                for state in ll[1:-1]:
+                    states += state
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
