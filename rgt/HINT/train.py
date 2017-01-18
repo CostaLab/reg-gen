@@ -48,7 +48,7 @@ class TrainHMM:
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=0, upstream_ext=0,
                                                           forward_shift=0, reverse_shift=0)
-
+        print(norm_signal[:10])
         return states, norm_signal, slope_signal
 
     def train(self):
@@ -93,8 +93,6 @@ class TrainHMM:
                 if state_list[j] == i:
                     norm.append(norm_signal[j])
                     slope.append(slope_signal[j])
-                    print(norm_signal[j])
-                    exit(0)
             # Compute the mean of norm and slope signal
             means_list = list()
             means_list.append(np.mean(norm))
