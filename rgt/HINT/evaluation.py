@@ -78,6 +78,16 @@ class Evaluation:
             # Sort footprint prediction bed files
             footprints_gen_regions.sort()
 
+            ################################################
+            ## Extend 10 bp for HINT, HINTBC, HINTBCN
+            extend_list = ["HINT", "HINTBC", "HINTBCN"]
+            if self.footprint_fname[i] in extend_list:
+                for region in iter(footprints_gen_regions):
+                    if len(region) < 10:
+                        region.initial = max(0, region.initial - 10)
+                        region.final = region.final + 10
+            #################################################
+
             # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
             increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
             intersect_regions = mpbs_gen_regions.intersect(footprints_gen_regions, mode=OverlapType.ORIGINAL)
