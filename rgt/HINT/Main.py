@@ -42,7 +42,7 @@ Dependencies:
 - scikit >= 0.14
 - hmmlearn >= 0.1.1
 - pysam >= 0.7.5
-
+- matplotlib >= 1.6
 Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph Kuo and Ivan G. Costa.
 """
 
