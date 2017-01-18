@@ -58,7 +58,7 @@ class TrainHMM:
 
         hmm_model.dim = 2
         # States number
-        state_list = list(states)
+        state_list = [int(state) for state in list(states)]
         hmm_model.states = len(np.unique(np.array(state_list)))
 
         # Initial state probabilities vector
