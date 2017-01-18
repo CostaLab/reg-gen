@@ -44,6 +44,7 @@ class TrainHMM:
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
+        raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=0, upstream_ext=0,
                                                           forward_shift=0, reverse_shift=0)
