@@ -130,7 +130,8 @@ class TrainHMM:
                 if state != current_state:
                     bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position) + " "
                                    + state_dict[current_state] + " " + str(1000) + " . "
-                                   + str(start_postion) + " " + str(end_position) + color_dict[current_state])
+                                   + str(start_postion) + " " + str(end_position) + " "
+                                   + color_dict[current_state] + "\n")
                     current_state = state
                     start_postion = end_position + 1
                     end_position = start_postion
