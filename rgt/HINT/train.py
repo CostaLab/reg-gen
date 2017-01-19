@@ -128,9 +128,9 @@ class TrainHMM:
         with open(bed_fname, "w") as bed_file:
             for state in state_list:
                 if state != current_state:
-                    bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position-1) + " "
+                    bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position) + " "
                                    + state_dict[current_state] + " " + str(1000) + " . "
-                                   + str(start_postion) + " " + str(end_position-1) + " "
+                                   + str(start_postion) + " " + str(end_position) + " "
                                    + color_dict[current_state] + "\n")
                     current_state = state
                     start_postion = end_position
