@@ -3,6 +3,7 @@
 ###################################################################################################
 
 # Python
+import os
 import numpy as np
 from collections import Counter
 
@@ -22,10 +23,11 @@ class TrainHMM:
     Contains methods used to train a hidden Markov model
     """
 
-    def __init__(self, bam_file, annotate_file, print_bed_file, output_fname):
+    def __init__(self, bam_file, annotate_file, print_bed_file, output_locaiton, output_fname):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
+        self.output_locaiton = output_locaiton
         self.output_fname = output_fname
         self.chrom = "chr1"
         self.start = 211428000
@@ -48,6 +50,8 @@ class TrainHMM:
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0,
                                                           forward_shift=0, reverse_shift=0)
+        if self.print_bed_file:
+            self.output_bed_file(states)
 
         return states, norm_signal, slope_signal
 
@@ -75,7 +79,7 @@ class TrainHMM:
             trans_list = list()
             for j in range(hmm_model.states):
                 trans_list.append(trans_matrix[i][j])
-            trans_sum = sum(trans_list)*1.0
+            trans_sum = sum(trans_list) * 1.0
             prob_list = [e / trans_sum for e in trans_list]
 
             # make sure that the sum of this line converge to 1
@@ -99,7 +103,6 @@ class TrainHMM:
             means_list.append(np.mean(slope))
             hmm_model.means.append(means_list)
 
-
             # Compute covariance matrix of norm and slope signal
             covs_list = list()
             covs_matrix = np.cov(norm, slope)
@@ -108,4 +111,28 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k])
             hmm_model.covs.append(covs_list)
 
-        hmm_model.save_hmm(self.output_fname)
+        model_fname = os.join.path(self.output_locaiton, self.output_fname)
+        hmm_model.save_hmm(self.model_fname)
+
+    def output_bed_file(self, states):
+        bed_fname = os.join.path(self.output_locaiton, self.output_fname)
+        bed_fname += ".bed"
+
+        state_dict = dict([(0, "BACK"), (1, "UPD"), (2, "TOPD"), (3, "DOWND"), (4, "FP")])
+        color_dict = dict([(0, "50,50,50"), (1, "10,80,0"), (2, "20,40,150"), (3, "150,20,40"), (4, "198,150,0")])
+
+        state_list = [int(state) for state in list(states)]
+        current_state = state_list[0]
+        start_postion = self.start
+        end_position = self.start
+        with open(bed_fname, "w") as bed_file:
+            for state in state_list[1:]:
+                if state != current_state:
+                    bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position) + " "
+                                   + state_dict[current_state] + " " + str(1000) + " . "
+                                   + str(start_postion) + " " + str(end_position) + color_dict[current_state])
+                    current_state = state
+                    start_postion = end_position + 1
+                    end_position = start_postion
+                else:
+                    end_position += 1
