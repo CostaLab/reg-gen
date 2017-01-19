@@ -119,6 +119,7 @@ class HMM:
         Return:
         None -- It saves variables of HMM with information to output_file_name
         """
+        output_file_name += ".hmm"
         with open(output_file_name, "w") as output_file:
             output_file.write("states " + str(self.states) + "\n")
 
