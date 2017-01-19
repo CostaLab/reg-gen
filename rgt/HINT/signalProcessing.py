@@ -133,25 +133,20 @@ class GenomicSignal:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
-        print(len(pileup_region.vector))
-        print(len(raw_signal))
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-        print(len(clip_signal))
         # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
-        print(len(boyle_signal))
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
         hon_signal = self.hon_norm(boyle_signal, perc, std)
 
-        print(len(hon_signal))
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
@@ -341,11 +336,9 @@ class GenomicSignal:
         Return:
         slope_seq -- Slope sequence.
         """
-        print(len(sequence))
         slope_seq = convolve(sequence, sg_coefs)
-        print(len(slope_seq))
         slope_seq = [e for e in slope_seq[(len(sg_coefs)/2):(len(slope_seq)-(len(sg_coefs)/2))]]
-        print(len(slope_seq))
+
         return slope_seq
 
 
