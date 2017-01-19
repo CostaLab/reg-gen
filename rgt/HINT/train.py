@@ -122,6 +122,7 @@ class TrainHMM:
         color_dict = dict([(0, "50,50,50"), (1, "10,80,0"), (2, "20,40,150"), (3, "150,20,40"), (4, "198,150,0")])
 
         state_list = [int(state) for state in list(states)]
+        print(len(state_list))
         current_state = state_list[0]
         start_postion = self.start
         end_position = self.start
