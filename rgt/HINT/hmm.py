@@ -109,7 +109,7 @@ class HMM:
         self.means = means_vec
         self.covs = cov_vec
 
-    def save_hmm(self, output_file_name, precision=4):
+    def save_hmm(self, output_file_name, precision=6):
         """
         Save all objects of this class to the output_file_name.
 
