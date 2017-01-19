@@ -129,7 +129,6 @@ class TrainHMM:
             for i in range(len(state_list)):
                 if state_list[i] != current_state:
                     end_position = self.start + i
-                    current_state = state_list[i]
                     is_print = True
                 elif i == len(state_list) - 1:
                     end_position = self.end
@@ -141,4 +140,5 @@ class TrainHMM:
                                    + str(start_postion) + " " + str(end_position) + " "
                                    + color_dict[current_state] + "\n")
                     start_postion = end_position
+                    current_state = state_list[i]
                     is_print = False
