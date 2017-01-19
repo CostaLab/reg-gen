@@ -221,13 +221,14 @@ class GenomicSignal:
             rSum -= rLast; rSum += nr[i+(window/2)]; rLast = nr[i-(window/2)+1]
 
         # Fetching sequence
+        print(p1_wk, p2_wk)
         #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
 
-        print(currStr)
-        print(currRevComp)
+        #print(currStr)
+        #print(currRevComp)
         # Iterating on sequence to create signal
         af = []; ar = []
         for i in range( int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1 ):
