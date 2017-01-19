@@ -339,9 +339,9 @@ class GenomicSignal:
         Return:
         slope_seq -- Slope sequence.
         """
-        print(sg_coefs)
         slope_seq = convolve(sequence, sg_coefs)
         slope_seq = [e for e in slope_seq[(len(sg_coefs)/2):(len(slope_seq)-(len(sg_coefs)/2))]]
+        print(len(slope_seq))
         return slope_seq
 
 
