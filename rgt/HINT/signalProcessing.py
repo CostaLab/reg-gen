@@ -135,12 +135,12 @@ class GenomicSignal:
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
-        # mean = raw_signal.mean()
-        # std = raw_signal.std()
-        # clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+        mean = raw_signal.mean()
+        std = raw_signal.std()
+        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Bias correction
-        bias_corrected_signal = self.bias_correction(raw_signal, bias_table, genome_file_name, ref, start, end)
+        bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
@@ -288,7 +288,6 @@ class GenomicSignal:
         Return:
         norm_seq -- Normalized sequence.
         """
-        print(len(sequence))
         mean = array([e for e in sequence if e>0]).mean()
         norm_seq = [(float(e)/mean) for e in sequence]
         return norm_seq
