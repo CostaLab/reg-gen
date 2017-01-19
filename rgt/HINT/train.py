@@ -133,7 +133,7 @@ class TrainHMM:
                                    + str(start_postion) + " " + str(end_position) + " "
                                    + color_dict[current_state] + "\n")
                     current_state = state
-                    start_postion = end_position + 1
-                    end_position = start_postion
+                    start_postion = end_position
+                    end_position = start_postion + 1
                 else:
                     end_position += 1
