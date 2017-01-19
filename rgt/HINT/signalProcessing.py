@@ -133,7 +133,8 @@ class GenomicSignal:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
-
+        print(len(pileup_region.vector))
+        print(len(raw_signal))
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
