@@ -123,7 +123,7 @@ class HMM:
             output_file.write("states " + str(self.states) + "\n")
 
             output_file.write("initial" + "\n")
-            output_file.write(str(round(self.pi[0], precision)))
+            output_file.write(str(self.pi[0], precision))
             for e in self.pi[1:]:
                 output_file.write(" " + str(round(e, precision)))
 
@@ -140,7 +140,7 @@ class HMM:
                 for e in self.means[idx][1:]:
                     output_file.write(" " + str(round(e, precision)))
                 output_file.write(" # ")
-                output_file.write(str(self.covs[idx][0]))
+                output_file.write(str(round(self.covs[idx][0], precision)))
                 for e in self.covs[idx][1:]:
                     output_file.write(" " + str(round(e, precision)))
                 output_file.write("\n")
