@@ -111,11 +111,11 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k])
             hmm_model.covs.append(covs_list)
 
-        model_fname = os.join.path(self.output_locaiton, self.output_fname)
-        hmm_model.save_hmm(self.model_fname)
+        model_fname = os.path.join(self.output_locaiton, self.output_fname)
+        hmm_model.save_hmm(model_fname)
 
     def output_bed_file(self, states):
-        bed_fname = os.join.path(self.output_locaiton, self.output_fname)
+        bed_fname = os.path.join(self.output_locaiton, self.output_fname)
         bed_fname += ".bed"
 
         state_dict = dict([(0, "BACK"), (1, "UPD"), (2, "TOPD"), (3, "DOWND"), (4, "FP")])
