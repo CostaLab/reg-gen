@@ -124,14 +124,21 @@ class TrainHMM:
         state_list = [int(state) for state in list(states)]
         current_state = state_list[0]
         start_postion = self.start
+        is_print = False
         with open(bed_fname, "w") as bed_file:
             for i in range(len(state_list)):
-                if state_list[i] != current_state or i == len(state_list) - 1:
+                if state_list[i] != current_state:
                     end_position = self.start + i
+                    current_state = state_list[i]
+                    start_postion = end_position
+                    is_print = True
+                elif i == len(state_list) - 1:
+                    end_position = self.end
+                    is_print = True
+
+                if is_print:
                     bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position) + " "
                                    + state_dict[current_state] + " " + str(1000) + " . "
                                    + str(start_postion) + " " + str(end_position) + " "
                                    + color_dict[current_state] + "\n")
-
-                    current_state = state_list[i]
-                    start_postion = end_position
+                    is_print = False
