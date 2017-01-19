@@ -188,7 +188,7 @@ class GenomicSignal:
         Return:
         bias_corrected_signal -- Bias-corrected sequence.
         """
-        print(chrName, start, end)
+
         if(not bias_table): return signal
 
         # Parameters
