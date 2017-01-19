@@ -103,7 +103,6 @@ class TrainHMM:
             # Compute covariance matrix of norm and slope signal
             covs_list = list()
             covs_matrix = np.cov(norm, slope)
-            print(covs_matrix)
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
                     covs_list.append(covs_matrix[j][k])
