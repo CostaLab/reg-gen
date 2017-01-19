@@ -125,7 +125,7 @@ class HMM:
             output_file.write("initial" + "\n")
             output_file.write(str(self.pi[0]))
             for e in self.pi[1:]:
-                output_file.write(" " + str(round(e, precision)))
+                output_file.write(" " + str(e))
 
             output_file.write("\n" + "transitions" + "\n")
             for e in self.A:
