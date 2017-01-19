@@ -138,18 +138,19 @@ class GenomicSignal:
         mean = raw_signal.mean()
         std = raw_signal.std()
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-
+        print(len(clip_signal))
         # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
-
+        print(len(boyle_signal))
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
         hon_signal = self.hon_norm(boyle_signal, perc, std)
 
+        print(len(hon_signal))
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
