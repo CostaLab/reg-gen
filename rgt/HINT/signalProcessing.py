@@ -178,7 +178,7 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return boyle_signal, slopehon_signal
+        return boyle_signal, slope_signal
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end):
         """ 
