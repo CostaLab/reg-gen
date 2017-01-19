@@ -288,7 +288,7 @@ class GenomicSignal:
         Return:
         norm_seq -- Normalized sequence.
         """
-
+        print(len(sequence))
         mean = array([e for e in sequence if e>0]).mean()
         norm_seq = [(float(e)/mean) for e in sequence]
         return norm_seq
