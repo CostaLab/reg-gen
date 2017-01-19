@@ -139,7 +139,7 @@ class GenomicSignal:
         std = raw_signal.std()
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
-        # Bias correction
+        # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
@@ -229,6 +229,8 @@ class GenomicSignal:
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
 
+        print(currStr)
+        print(currRevComp)
         # Iterating on sequence to create signal
         af = []; ar = []
         for i in range( int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1 ):
@@ -252,9 +254,13 @@ class GenomicSignal:
             fSum -= fLast; fSum += af[i+(window/2)]; fLast = af[i-(window/2)+1]
             rSum -= rLast; rSum += ar[i+(window/2)]; rLast = ar[i-(window/2)+1]
 
+        # Fixing the negative number in bias corrected signal
+        min_value = abs(min(bias_corrected_signal))
+        bias_fixed_signal = [e+min_value for e in bias_corrected_signal]
+
         # Termination
         fastaFile.close()
-        return bias_corrected_signal
+        return bias_fixed_signal
 
     def hon_norm(self, sequence, mean, std):
         """ 
@@ -272,9 +278,7 @@ class GenomicSignal:
 
         norm_seq = []
         for e in sequence:
-            if(e == 0.0): norm_seq.append(0.0)
-            elif(e > 0.0): norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
-            else: norm_seq.append(-1.0/(1.0+(exp(-(-e-mean)/std))))
+            norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
         return norm_seq
 
     def boyle_norm(self, sequence):
@@ -335,6 +339,7 @@ class GenomicSignal:
         Return:
         slope_seq -- Slope sequence.
         """
+        print(sg_coefs)
         slope_seq = convolve(sequence, sg_coefs)
         slope_seq = [e for e in slope_seq[(len(sg_coefs)/2):(len(slope_seq)-(len(sg_coefs)/2))]]
         return slope_seq
