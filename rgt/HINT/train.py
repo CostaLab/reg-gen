@@ -122,12 +122,11 @@ class TrainHMM:
         color_dict = dict([(0, "50,50,50"), (1, "10,80,0"), (2, "20,40,150"), (3, "150,20,40"), (4, "198,150,0")])
 
         state_list = [int(state) for state in list(states)]
-        print(len(state_list))
         current_state = state_list[0]
         start_postion = self.start
         end_position = self.start
         with open(bed_fname, "w") as bed_file:
-            for state in state_list[1:]:
+            for state in state_list:
                 if state != current_state:
                     bed_file.write(self.chrom + " " + str(start_postion) + " " + str(end_position-1) + " "
                                    + state_dict[current_state] + " " + str(1000) + " . "
