@@ -188,7 +188,7 @@ class GenomicSignal:
         Return:
         bias_corrected_signal -- Bias-corrected sequence.
         """
-
+        print(chrName, start, end)
         if(not bias_table): return signal
 
         # Parameters
@@ -206,9 +206,9 @@ class GenomicSignal:
 
         # Raw counts
         nf = [0.0] * (p2_w-p1_w); nr = [0.0] * (p2_w-p1_w)
-        for r in self.bam.fetch(chrName, p1_w, p2_w):
-            if((not r.is_reverse) and (r.pos > p1_w)): nf[r.pos-p1_w] += 1.0
-            if((r.is_reverse) and ((r.aend-1) < p2_w)): nr[r.aend-1-p1_w] += 1.0
+        for read in self.bam.fetch(chrName, p1_w, p2_w):
+            if((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos-p1_w] += 1.0
+            if((read.is_reverse) and ((read.aend-1) < p2_w)): nr[read.aend-1-p1_w] += 1.0
 
         # Smoothed counts
         Nf = []; Nr = [];
@@ -221,17 +221,14 @@ class GenomicSignal:
             rSum -= rLast; rSum += nr[i+(window/2)]; rLast = nr[i-(window/2)+1]
 
         # Fetching sequence
-        print(p1_wk, p2_wk)
         #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
 
-        #print(currStr)
-        #print(currRevComp)
         # Iterating on sequence to create signal
         af = []; ar = []
-        for i in range( int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1 ):
+        for i in range(int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1):
             fseq = currStr[i-int(floor(k_nb/2.)):i+int(ceil(k_nb/2.))]
             rseq = currRevComp[len(currStr)-int(ceil(k_nb/2.))-i:len(currStr)+int(floor(k_nb/2.))-i]
             try: af.append(fBiasDict[fseq])
