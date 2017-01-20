@@ -100,10 +100,10 @@ class Evaluation:
                         break
 
             # if without overlap, score equals TC of themselves
-            # without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
-            # for region in iter(without_intersect_regions):
-            #    region.data = str(bam.count(reference=region.chrom, start=region.initial, end=region.final))
-            #    score_mpbs_regions.add(region)
+            without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
+            for region in iter(without_intersect_regions):
+               region.data = str(bam.count(reference=region.chrom, start=region.initial, end=region.final))
+               score_mpbs_regions.add(region)
 
             score_mpbs_regions.sort_score()
 
