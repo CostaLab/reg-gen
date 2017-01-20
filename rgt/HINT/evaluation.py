@@ -86,7 +86,7 @@ class Evaluation:
             intersect_footprints_regions = footprints_regions.intersect(mpbs_regions, mode=OverlapType.ORIGINAL)
             for region in iter(intersect_footprints_regions):
                 if not region.data:
-                    region.data = int(region.name)
+                    region.data = str(region.name)
             intersect_footprints_regions.sort_score()
 
             for mpbs_region in iter(intersect_mpbs_regions):
