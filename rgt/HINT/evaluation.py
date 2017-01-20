@@ -10,6 +10,8 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab
+from pysam import Samfile
+
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import OverlapType
@@ -37,13 +39,14 @@ class Evaluation:
         if self.output_location[-1] != "/":
             self.output_location += "/"
 
-    def chip_evaluate(self):
+    def chip_evaluate(self, bam_fname):
         """
         This evaluation methodology uses motif-predicted binding sites (MPBSs) together with TF ChIP-seq data
         to evaluate the footprint predictions.
 
         return:
         """
+        bam = Samfile(bam_fname, "rb")
 
         fpr_auc_threshold_1 = 0.1
         fpr_auc_threshold_2 = 0.01
@@ -97,10 +100,10 @@ class Evaluation:
                         break
 
             # if without overlap, score equals TC of themselves
-            # without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
-            # for region in iter(without_intersect_regions):
-            #    region.data = str(0)
-            #    score_mpbs_regions.add(region)
+            without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
+            for region in iter(without_intersect_regions):
+               region.data = str(bam.count(reference=region.chrom, start=region.initial, end=region.final))
+               score_mpbs_regions.add(region)
 
             score_mpbs_regions.sort_score()
 
