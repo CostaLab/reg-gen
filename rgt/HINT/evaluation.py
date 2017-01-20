@@ -48,19 +48,10 @@ class Evaluation:
         fpr_auc_threshold_1 = 0.1
         fpr_auc_threshold_2 = 0.01
 
-        mpbs_gen_regions = GenomicRegionSet("MPBS")
-        mpbs_gen_regions.read_bed(self.mpbs_fname)
-        mpbs_gen_regions.sort()
+        mpbs_regions = GenomicRegionSet("MPBS")
+        mpbs_regions.read_bed(self.mpbs_fname)
 
         mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
-
-        # Verifying the maximum score of the MPBS file
-        max_score = -99999999
-        for region in iter(mpbs_gen_regions):
-            score = int(region.data)
-            if score > max_score:
-                max_score = score
-            max_score += 1
 
         # Evaluate Statistics
         stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
@@ -73,40 +64,46 @@ class Evaluation:
         recall = dict()
         average_precision = dict()
         for i in range(len(self.footprint_fname)):
-            footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
-            footprints_gen_regions.read_bed(self.footprint_fname[i])
+            footprints_regions = GenomicRegionSet("Footprints Prediction")
+            footprints_regions.read_bed(self.footprint_fname[i])
 
             # Sort footprint prediction bed files
-            footprints_gen_regions.sort()
+            footprints_regions.sort()
 
             ################################################
             ## Extend 10 bp for HINT, HINTBC, HINTBCN
             extend_list = ["HINT", "HINTBC", "HINTBCN"]
             if self.footprint_fname[i] in extend_list:
-                for region in iter(footprints_gen_regions):
+                for region in iter(footprints_regions):
                     if len(region) < 10:
                         region.initial = max(0, region.initial - 10)
                         region.final = region.final + 10
             #################################################
 
-            # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
-            increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
-            intersect_regions = mpbs_gen_regions.intersect(footprints_gen_regions, mode=OverlapType.ORIGINAL)
-            for region in iter(intersect_regions):
-                region.data = str(int(region.data) + max_score)
-                increased_score_mpbs_regions.add(region)
+            # if MPBS entry overlaps with the predicted footprints, their score will be TC
+            score_mpbs_regions = GenomicRegionSet("Increased Regions")
+            intersect_mpbs_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
+            intersect_footprints_regions = footprints_regions.intersect(mpbs_regions, mode=OverlapType.ORIGINAL)
+            intersect_footprints_regions.sort_score()
+            for mpbs_region in iter(intersect_mpbs_regions):
+                for footprints_region in iter(intersect_footprints_regions):
+                    if mpbs_region.overlap(footprints_region):
+                        mpbs_region.data = footprints_region.data
+                        score_mpbs_regions.add(mpbs_region)
+                        break
 
-            # Keep the score of remained MPBS entry unchanged
-            without_intersect_regions = mpbs_gen_regions.subtract(footprints_gen_regions, whole_region=True)
+            # if without overlap, score equals 0
+            without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
             for region in iter(without_intersect_regions):
-                increased_score_mpbs_regions.add(region)
+                region.data = 0
+                score_mpbs_regions.add(region)
 
-            increased_score_mpbs_regions.sort_score()
+            score_mpbs_regions.sort_score()
 
             # Reading data points
             y_true = list()
             y_score = list()
-            for region in iter(increased_score_mpbs_regions):
+            for region in iter(score_mpbs_regions):
                 if str(region.name).split(":")[-1] == "N":
                     y_true.append(0)
                 else:
