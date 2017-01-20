@@ -84,6 +84,7 @@ class Evaluation:
             score_mpbs_regions = GenomicRegionSet("Increased Regions")
             intersect_mpbs_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
             intersect_footprints_regions = footprints_regions.intersect(mpbs_regions, mode=OverlapType.ORIGINAL)
+            intersect_footprints_regions.write_bed("123.bed")
             intersect_footprints_regions.sort_score()
             for mpbs_region in iter(intersect_mpbs_regions):
                 for footprints_region in iter(intersect_footprints_regions):
