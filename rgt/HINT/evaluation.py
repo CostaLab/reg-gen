@@ -86,6 +86,11 @@ class Evaluation:
             intersect_footprints_regions = footprints_regions.intersect(mpbs_regions, mode=OverlapType.ORIGINAL)
             intersect_footprints_regions.write_bed("123.bed")
             intersect_footprints_regions.sort_score()
+            for region in iter(intersect_footprints_regions):
+                print(region.name)
+                print(region.data)
+                exit(0)
+
             for mpbs_region in iter(intersect_mpbs_regions):
                 for footprints_region in iter(intersect_footprints_regions):
                     if mpbs_region.overlap(footprints_region):
