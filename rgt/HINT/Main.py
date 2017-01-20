@@ -190,7 +190,7 @@ def main():
                       default=None,
                       help=("The bed files containing the footprint predictions."
                             "The extension must be (.bed)."))
-    parser.add_option("--bam-file", dest="bam_file", type="string",
+    parser.add_option("--alignment-file", dest="alignment_file", type="string",
                       metavar="FILE1",
                       default=None,
                       help=("The bam files containing the raw alignment reads."
@@ -293,7 +293,7 @@ def main():
     if options.evaluate_footprints:
         evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
                                 options.print_roc_curve, options.print_roc_curve, options.output_location)
-        evaluation.chip_evaluate(options.bam_file)
+        evaluation.chip_evaluate(options.alignment_file)
         return
 
     # If HINT is required to train a hidden Markov model (HMM)
