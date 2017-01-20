@@ -80,7 +80,7 @@ class Evaluation:
                         region.final = region.final + 10
             #################################################
 
-            # if MPBS entry overlaps with the predicted footprints, their score will be TC
+            # if MPBS entry overlaps with the predicted footprints, their score will be TC of the footprints
             score_mpbs_regions = GenomicRegionSet("Increased Regions")
             intersect_mpbs_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
             intersect_footprints_regions = footprints_regions.intersect(mpbs_regions, mode=OverlapType.ORIGINAL)
@@ -96,11 +96,11 @@ class Evaluation:
                         score_mpbs_regions.add(mpbs_region)
                         break
 
-            # if without overlap, score equals 0
-            without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
-            for region in iter(without_intersect_regions):
-                region.data = str(0)
-                score_mpbs_regions.add(region)
+            # if without overlap, score equals TC of themselves
+            # without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
+            # for region in iter(without_intersect_regions):
+            #    region.data = str(0)
+            #    score_mpbs_regions.add(region)
 
             score_mpbs_regions.sort_score()
 
