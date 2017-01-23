@@ -48,15 +48,15 @@ class Evaluation:
         fpr_auc_threshold_1 = 0.1
         fpr_auc_threshold_2 = 0.01
 
-        mpbs_gen_regions = GenomicRegionSet("MPBS")
-        mpbs_gen_regions.read_bed(self.mpbs_fname)
-        mpbs_gen_regions.sort()
+        mpbs_regions = GenomicRegionSet("MPBS")
+        mpbs_regions.read_bed(self.mpbs_fname)
+        mpbs_regions.sort()
 
         mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
 
         # Verifying the maximum score of the MPBS file
         max_score = -99999999
-        for region in iter(mpbs_gen_regions):
+        for region in iter(mpbs_regions):
             score = int(region.data)
             if score > max_score:
                 max_score = score
@@ -73,31 +73,29 @@ class Evaluation:
         recall = dict()
         average_precision = dict()
         for i in range(len(self.footprint_fname)):
-            footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
-            footprints_gen_regions.read_bed(self.footprint_fname[i])
+            footprints_regions = GenomicRegionSet("Footprints Prediction")
+            footprints_regions.read_bed(self.footprint_fname[i])
 
             # Sort footprint prediction bed files
-            footprints_gen_regions.sort()
+            footprints_regions.sort()
 
             ################################################
             ## Extend 10 bp for HINT, HINTBC, HINTBCN
-            extend_list = ["HINT", "HINTBC", "HINTBCN"]
-            if self.footprint_fname[i] in extend_list:
-                for region in iter(footprints_gen_regions):
-                    if len(region) < 10:
-                        region.initial = max(0, region.initial - 10)
-                        region.final = region.final + 10
+            for region in iter(footprints_regions):
+                mid = (region.initial + region.final) / 2
+                region.initial = max(0, mid - 5)
+                region.final = mid + 5
             #################################################
 
             # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
             increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
-            intersect_regions = mpbs_gen_regions.intersect(footprints_gen_regions, mode=OverlapType.ORIGINAL)
+            intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
             for region in iter(intersect_regions):
                 region.data = str(int(region.data) + max_score)
                 increased_score_mpbs_regions.add(region)
 
             # Keep the score of remained MPBS entry unchanged
-            without_intersect_regions = mpbs_gen_regions.subtract(footprints_gen_regions, whole_region=True)
+            without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
             for region in iter(without_intersect_regions):
                 increased_score_mpbs_regions.add(region)
 
