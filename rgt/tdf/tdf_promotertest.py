@@ -1318,7 +1318,7 @@ class PromoterTest:
                         new_exp = False
                     elif line[0] == "Experiment":
                         continue
-                    else:
+                    elif not line:
                         newlines.append(line)
                 if new_exp:
                     newlines.append([exp, rna, output.split("_")[-1],

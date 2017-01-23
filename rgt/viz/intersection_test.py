@@ -146,7 +146,7 @@ class Intersect:
                             mp_input.append([q, self.nalist, self.mode_count, self.qlen, threshold,
                                              self.counts, frequency, self.frequency, ty, r])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
-                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-1)
                     mp_output = pool.map(mp_count_intersect, mp_input)
                     pool.close()
                     pool.join()
@@ -822,7 +822,7 @@ class Intersect:
                             inp = [com, self.rlen[ty][r.name], self.mode_count, threshold]
                             mp_input = [inp for i in range(repeat)]
 
-                            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+                            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-1)
                             mp_output = pool.map(mp_count_intersets, mp_input)
                             pool.close()
                             pool.join()

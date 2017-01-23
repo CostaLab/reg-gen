@@ -201,7 +201,7 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output directory for FASTA files")
     parser_bed2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome sequence")
-    parser_bed2fasta.add_argument('-id', action="store_true", default=False, help="Make id number as sequence name")
+    parser_bed2fasta.add_argument('-order', action="store_true", default=False, help="Make ranking number as sequence name")
 
     ############### BED filtered by gene name ################################
     parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
@@ -564,9 +564,9 @@ if __name__ == "__main__":
         print("input:\t" + args.i)
         print("output:\t" + args.o)
 
-
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
+        # print(len(bed))
         if args.t:
             print("target:\t" + args.t)
             target = GenomicRegionSet(args.t)
@@ -575,7 +575,7 @@ if __name__ == "__main__":
                 target.extend(left=int(args.d), right=int(args.d))
             bed.replace_region_strand(regions=target, reverse=args.r)
         elif args.a:
-            bed.replace_region_strand()
+            bed.replace_region_strand(all=args.a)
         else:
             bed.replace_region_strand(regions=None, reverse=args.r)
         bed.write_bed(args.o)
@@ -709,8 +709,20 @@ if __name__ == "__main__":
         if not os.path.exists(args.o): os.makedirs(args.o)
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
+        if args.order:
+            ranking = []
+            with open(args.i) as f:
+                for line in f:
+                    if line.startswith("#"): continue
+                    else:
+                        l = line.strip().split()
+                        ranking.append([l[0],int(l[1]),int(l[2])])
+
         for i, r in enumerate(regions):
-            if args.id: name = "peak_"+str(i+1)
+            if args.order:
+                for j, reg in enumerate(ranking):
+                    if reg[0] == r.chrom and reg[1] == r.initial and reg[2] == r.final:
+                        name = "peak_"+str(j+1)
             else: name = r.name
 
             if len(r.data.split()) == 7:

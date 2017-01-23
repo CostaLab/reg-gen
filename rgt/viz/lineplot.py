@@ -444,7 +444,7 @@ class Lineplot:
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
                 try:
                     ax.locator_params(axis='x', nbins=4)
-                    ax.locator_params(axis='y', nbins=4)
+                    ax.locator_params(axis='y', nbins=2)
                 except:
                     pass
         if printtable:

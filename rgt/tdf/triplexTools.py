@@ -137,10 +137,10 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         line = line.strip()
         line = line.split("\t")
         if line[0] == "Experiment": continue
-        else: profile[line[0]] = line[1:]
+        elif line: profile[line[0]] = line[1:]
 
     for i, exp in enumerate(profile.keys()):
-        print(exp)
+        # print(exp)
         c += 1
 
         # try:

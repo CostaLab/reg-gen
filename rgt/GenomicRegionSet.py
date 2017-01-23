@@ -2009,14 +2009,14 @@ class GenomicRegionSet:
                         cont_loop = False
             return
 
-    def replace_region_strand(self, regions, reverse=False, all=None):
+    def replace_region_strand(self, regions=None, reverse=False, all=None):
         """Replace the region strand by the given GenomicRegionSet.
 
         *Keyword arguments:*
 
             - regions -- A GenomicRegionSet as the source for the strand.
         """
-        if regions == None:
+        if not regions and reverse:
             for r in self:
                 if r.orientation == "+":
                     r.orientation = "-"
@@ -2030,7 +2030,7 @@ class GenomicRegionSet:
 
         elif len(self) == 0 or len(regions) == 0: return
 
-        else:
+        elif regions:
             if not self.sorted: self.sort()
             if not regions.sorted: regions.sort()
 
@@ -2299,7 +2299,7 @@ class GenomicRegionSet:
                                     orientation=longest.orientation)
             return res
         a = background.intersect(self, mode = OverlapType.ORIGINAL)
-        b = self.extend(left=min_dis, right=min_dis,w_return=True)
+        b = self.extend(left=min_dis, right=min_dis, w_return=True)
         b.merge()
         c = a.subtract(b)
         # Iteration
@@ -2356,3 +2356,12 @@ class GenomicRegionSet:
         import numpy as np
         size = [ abs(r.final - r.initial) for r in self.sequences ]
         return np.std(size)
+
+    def filter_by_size(self, maximum, minimum=1 ):
+        """Return a GenomicRegionSet containing filtered regions by the given limits. """
+        z = GenomicRegionSet("filtered")
+        for r in self:
+            if minimum < len(r) < maximum:
+                z.add(r)
+        return(z)
+
