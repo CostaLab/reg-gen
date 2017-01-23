@@ -61,7 +61,7 @@ class Evaluation:
             score = int(region.data)
             if score > max_score:
                 max_score = score
-            max_score += 1
+        max_score += 1
 
         # Evaluate Statistics
         stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
