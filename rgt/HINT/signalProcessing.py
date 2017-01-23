@@ -133,23 +133,20 @@ class GenomicSignal:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
-
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-
-        # Bias correction
+        # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
-
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
         hon_signal = self.hon_norm(boyle_signal, perc, std)
-        
+
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
@@ -209,9 +206,9 @@ class GenomicSignal:
 
         # Raw counts
         nf = [0.0] * (p2_w-p1_w); nr = [0.0] * (p2_w-p1_w)
-        for r in self.bam.fetch(chrName, p1_w, p2_w):
-            if((not r.is_reverse) and (r.pos > p1_w)): nf[r.pos-p1_w] += 1.0
-            if((r.is_reverse) and ((r.aend-1) < p2_w)): nr[r.aend-1-p1_w] += 1.0
+        for read in self.bam.fetch(chrName, p1_w, p2_w):
+            if((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos-p1_w] += 1.0
+            if((read.is_reverse) and ((read.aend-1) < p2_w)): nr[read.aend-1-p1_w] += 1.0
 
         # Smoothed counts
         Nf = []; Nr = [];
@@ -231,7 +228,7 @@ class GenomicSignal:
 
         # Iterating on sequence to create signal
         af = []; ar = []
-        for i in range( int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1 ):
+        for i in range(int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1):
             fseq = currStr[i-int(floor(k_nb/2.)):i+int(ceil(k_nb/2.))]
             rseq = currRevComp[len(currStr)-int(ceil(k_nb/2.))-i:len(currStr)+int(floor(k_nb/2.))-i]
             try: af.append(fBiasDict[fseq])
@@ -252,9 +249,13 @@ class GenomicSignal:
             fSum -= fLast; fSum += af[i+(window/2)]; fLast = af[i-(window/2)+1]
             rSum -= rLast; rSum += ar[i+(window/2)]; rLast = ar[i-(window/2)+1]
 
+        # Fixing the negative number in bias corrected signal
+        min_value = abs(min(bias_corrected_signal))
+        bias_fixed_signal = [e+min_value for e in bias_corrected_signal]
+
         # Termination
         fastaFile.close()
-        return bias_corrected_signal
+        return bias_fixed_signal
 
     def hon_norm(self, sequence, mean, std):
         """ 
@@ -272,9 +273,7 @@ class GenomicSignal:
 
         norm_seq = []
         for e in sequence:
-            if(e == 0.0): norm_seq.append(0.0)
-            elif(e > 0.0): norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
-            else: norm_seq.append(-1.0/(1.0+(exp(-(-e-mean)/std))))
+            norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
         return norm_seq
 
     def boyle_norm(self, sequence):
@@ -288,7 +287,6 @@ class GenomicSignal:
         Return:
         norm_seq -- Normalized sequence.
         """
-
         mean = array([e for e in sequence if e>0]).mean()
         norm_seq = [(float(e)/mean) for e in sequence]
         return norm_seq
@@ -338,6 +336,7 @@ class GenomicSignal:
         """
         slope_seq = convolve(sequence, sg_coefs)
         slope_seq = [e for e in slope_seq[(len(sg_coefs)/2):(len(slope_seq)-(len(sg_coefs)/2))]]
+
         return slope_seq
 
 

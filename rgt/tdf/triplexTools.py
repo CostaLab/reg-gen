@@ -137,7 +137,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         line = line.strip()
         line = line.split("\t")
         if line[0] == "Experiment": continue
-        elif line: profile[line[0]] = line[1:]
+        elif len(line) > 5: profile[line[0]] = line[1:]
 
     for i, exp in enumerate(profile.keys()):
         # print(exp)
@@ -157,12 +157,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                                 org=profile[exp][2])
             )
 
-        if profile[exp][6] == "-":
-            new_line += [profile[exp][4],
-                         profile[exp][5], profile[exp][6],
-                         profile[exp][2], profile[exp][3]]
-
-        elif float(profile[exp][6]) < 0.05:
+        if float(profile[exp][6]) < 0.05:
             new_line += [profile[exp][4],
                          profile[exp][5],
                          "<font color=\"red\">" + \

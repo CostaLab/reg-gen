@@ -222,7 +222,6 @@ class ExperimentalMatrix:
         self.trash = list(set(self.trash))
         # for i, name in enumerate(self.names):
         for name in self.trash:
-            # print("88888888888888   "+name )
             i = self.names.index(name)
             del self.types[i]
             del self.names[i]
@@ -246,15 +245,12 @@ class ExperimentalMatrix:
 
             - field -- Field to add extra entries.
         """
-        
-        # print(field)
-        # print(self.fieldsDict)
+
         # check regions or reads have empty tag
         altypes = self.fieldsDict[field].keys()
         if "ALL" in altypes:
             altypes.remove("ALL")
             for name in self.fieldsDict[field]["ALL"]:
-                # print(name)
                 i = self.names.index(name)
                 for t in altypes:
                     # print("\t"+t)
