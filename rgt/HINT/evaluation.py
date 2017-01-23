@@ -7,7 +7,6 @@ from __future__ import print_function
 import numpy as np
 from sklearn import metrics
 import matplotlib
-from scipy.integrate import trapz
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -120,7 +119,7 @@ class Evaluation:
             _, _, roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
 
             # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score)
+            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score, 1.0)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
@@ -202,20 +201,16 @@ class Evaluation:
         auc_at_cutoff = metrics.auc(np.array(fpr_at_cutoff), np.array(tpr_at_cutoff)) * scale
         return fpr, tpr, auc_at_cutoff
 
-    def compute_precision_recall(self, y_true, y_score):
-        count_x = 0
-        count_y = 0
-        precision = [0.0]
-        recall = [0.0]
-        for idx in range(len(y_true)):
-            if y_true[idx] == 1:
-                count_y += 1
-            else:
-                count_x += 1
-            precision.append(float(count_y) / (count_x + count_y))
-            recall.append(count_y)
-        precision = [e * (1.0 / count_y) for e in precision]
-        precision.append(0.0)
-        recall.append(1.0)
-        auc_pr = abs(trapz(recall,precision))
-        return recall, precision, auc_pr
+    def compute_precision_recall(self, y_true, y_score, fdr_cutoff):
+        precision, recall, _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
+        precision_at_cutoff = list()
+        recall_at_cutoff = list()
+        for idx in range(len(precision)):
+            fdr = 1 - precision[idx]
+            if fdr <= fdr_cutoff:
+                precision_at_cutoff.append(precision[idx])
+                recall_at_cutoff.append(recall[idx])
+        precision_at_cutoff.append(fdr_cutoff)
+        recall_at_cutoff.append(recall[-1])
+        auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff), reorder=True)
+        return recall, precision, auc_at_cutoff
