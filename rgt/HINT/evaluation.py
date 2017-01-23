@@ -120,7 +120,7 @@ class Evaluation:
             _, _, roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
 
             # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score, 1.0)
+            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
