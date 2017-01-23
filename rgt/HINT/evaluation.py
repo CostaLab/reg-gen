@@ -212,5 +212,5 @@ class Evaluation:
                 recall_at_cutoff.append(recall[idx])
         precision_at_cutoff.append(fdr_cutoff)
         recall_at_cutoff.append(recall[-1])
-        auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff))
+        auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff), reorder=True)
         return recall, precision, auc_at_cutoff
