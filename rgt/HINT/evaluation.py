@@ -113,30 +113,12 @@ class Evaluation:
 
             # Calculating receiver operating characteristic curve (ROC),
             # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
-            fpr[i], tpr[i], _ = metrics.roc_curve(np.array(y_true), np.array(y_score))
-            fpr_1 = list()
-            tpr_1 = list()
-            fpr_2 = list()
-            tpr_2 = list()
-            for index in range(len(fpr[i])):
-                if fpr[i][index] <= fpr_auc_threshold_1:
-                    fpr_1.append(fpr[i][index])
-                    tpr_1.append(tpr[i][index])
-                if fpr[i][index] <= fpr_auc_threshold_2:
-                    fpr_2.append(fpr[i][index])
-                    tpr_2.append(tpr[i][index])
-
-            fpr_1.append(fpr_auc_threshold_1)
-            tpr_1.append(tpr_1[-1])
-            fpr_2.append(fpr_auc_threshold_2)
-            tpr_2.append(tpr_2[-1])
-            roc_auc[i] = metrics.auc(fpr[i], tpr[i])
-            roc_auc_1[i] = metrics.auc(np.array(fpr_1), np.array(tpr_1)) * 10
-            roc_auc_2[i] = metrics.auc(np.array(fpr_2), np.array(tpr_2)) * 100
+            roc_auc[i] = self.compute_fpr_tpr(y_true, y_score, 1.0)
+            roc_auc_1[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_1)
+            roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
 
             # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-            precision[i], recall[i], _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
-            average_precision[i] = metrics.average_precision_score(np.array(y_true), np.array(y_score))
+            average_precision[i] = self.compute_precision_recall(y_true, y_score, 1.0)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
@@ -204,3 +186,31 @@ class Evaluation:
         # Saving figure
         figure_name = self.output_location + mpbs_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
+
+    def compute_fpr_tpr(self, y_true, y_score, fpr_cutoff):
+        fpr, tpr, _ = metrics.roc_curve(np.array(y_true), np.array(y_score))
+        fpr_at_cutoff = list()
+        tpr_at_cutoff = list()
+        for idx in range(len(fpr)):
+            if fpr[idx] <= fpr_cutoff:
+                fpr_at_cutoff.append(fpr[idx])
+                tpr_at_cutoff.append(tpr[idx])
+        fpr_at_cutoff.append(fpr_cutoff)
+        tpr_at_cutoff.append(tpr_at_cutoff[-1])
+        scale = 1 / fpr_cutoff
+        auc_at_cutoff = metrics.auc(np.array(fpr_at_cutoff), np.array(tpr_at_cutoff)) * scale
+        return auc_at_cutoff
+
+    def compute_precision_recall(self, y_true, y_score, fdr_cutoff):
+        precision, recall, _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
+        precision_at_cutoff = list()
+        recall_at_cutoff = list()
+        for idx in range(len(precision)):
+            fdr = 1 - precision[idx]
+            if fdr <= fdr_cutoff:
+                precision_at_cutoff.append(precision[idx])
+                recall_at_cutoff.append(recall[idx])
+        precision_at_cutoff.append(fdr_cutoff)
+        recall_at_cutoff.append(recall[-1])
+        auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff))
+        return auc_at_cutoff
