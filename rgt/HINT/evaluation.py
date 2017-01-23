@@ -7,6 +7,7 @@ from __future__ import print_function
 import numpy as np
 from sklearn import metrics
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab
@@ -69,9 +70,9 @@ class Evaluation:
         roc_auc = dict()
         roc_auc_1 = dict()
         roc_auc_2 = dict()
-        precision = dict()
         recall = dict()
-        average_precision = dict()
+        precision = dict()
+        prc_auc = dict()
         for i in range(len(self.footprint_fname)):
             footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
             footprints_gen_regions.read_bed(self.footprint_fname[i])
@@ -80,7 +81,7 @@ class Evaluation:
             footprints_gen_regions.sort()
 
             ################################################
-            ## Extend 10 bp for all methods
+            # Extend 10 bp for all methods
             for region in iter(footprints_gen_regions):
                 mid = (region.initial + region.final) / 2
                 region.initial = max(0, mid - 5)
@@ -113,12 +114,12 @@ class Evaluation:
 
             # Calculating receiver operating characteristic curve (ROC),
             # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
-            roc_auc[i] = self.compute_fpr_tpr(y_true, y_score, 1.0)
-            roc_auc_1[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_1)
-            roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
+            fpr[i], tpr[i], roc_auc[i] = self.compute_fpr_tpr(y_true, y_score, 1.0)
+            _, _, roc_auc_1[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_1)
+            _, _, roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
 
             # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-            average_precision[i] = self.compute_precision_recall(y_true, y_score, 1.0)
+            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score, 1.0)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
@@ -126,7 +127,7 @@ class Evaluation:
             stats_file.write("\t".join(stats_header) + "\n")
             for i in range(len(self.footprint_name)):
                 stats_file.write(self.footprint_name[i] + "\t" + str(roc_auc[i]) + "\t" + str(roc_auc_1[i]) + "\t"
-                                 + str(roc_auc_2[i]) + "\t" + str(average_precision[i]) + "\n")
+                                 + str(roc_auc_2[i]) + "\t" + str(prc_auc[i]) + "\n")
 
         # Output the curves
         if self.print_roc_curve:
@@ -138,8 +139,7 @@ class Evaluation:
             label_x = "Recall"
             label_y = "Precision"
             curve_type = "PRC"
-            self.plot_curve(recall, precision, average_precision,
-                            label_x, label_y, mpbs_name, curve_type)
+            self.plot_curve(recall, precision, prc_auc, label_x, label_y, mpbs_name, curve_type)
 
     def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
@@ -199,7 +199,7 @@ class Evaluation:
         tpr_at_cutoff.append(tpr_at_cutoff[-1])
         scale = 1 / fpr_cutoff
         auc_at_cutoff = metrics.auc(np.array(fpr_at_cutoff), np.array(tpr_at_cutoff)) * scale
-        return auc_at_cutoff
+        return fpr, tpr, auc_at_cutoff
 
     def compute_precision_recall(self, y_true, y_score, fdr_cutoff):
         precision, recall, _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
@@ -213,4 +213,4 @@ class Evaluation:
         precision_at_cutoff.append(fdr_cutoff)
         recall_at_cutoff.append(recall[-1])
         auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff))
-        return auc_at_cutoff
+        return recall, precision, auc_at_cutoff
