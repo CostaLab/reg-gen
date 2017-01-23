@@ -159,7 +159,7 @@ class Evaluation:
             self.plot_curve(recall, precision, average_precision,
                             label_x, label_y, mpbs_name, curve_type)
 
-    def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_type):
+    def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
                       "#FF6600", "#0000CC", "#336633", "#CC0000", "#6600CC", "#FF00FF", "#555555", "#CCCC00",
                       "#FF9900", "#0000FF", "#33CC33", "#FF0000", "#663399", "#FF33FF", "#888888", "#FFCC00",
@@ -202,5 +202,5 @@ class Evaluation:
         pylab.ylim([0, 1.0])
 
         # Saving figure
-        figure_name = self.output_location + mpbs_name + "_" + curve_type + ".png"
+        figure_name = self.output_location + mpbs_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
