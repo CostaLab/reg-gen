@@ -208,7 +208,7 @@ class Evaluation:
         precision = [0.0]
         recall = [0.0]
         for idx in range(len(y_true)):
-            if y_true == 1:
+            if y_true[idx] == 1:
                 count_y += 1
             else:
                 count_x += 1
