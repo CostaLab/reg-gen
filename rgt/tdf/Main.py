@@ -20,7 +20,7 @@ from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
-                         integrate_stat
+                         integrate_stat, update_profile
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -230,6 +230,9 @@ def main():
         ####################################################################################
         ######### updatehtml
         elif args.mode == "updatehtml":
+            for item in os.listdir(args.path):
+                pro = os.path.join(args.path, item, "profile.txt")
+                if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item))
             revise_index(root=args.path, show_RNA_ass_gene=True)
             generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
