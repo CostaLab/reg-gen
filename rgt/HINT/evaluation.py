@@ -297,8 +297,8 @@ class Evaluation:
         with open(roc_fname, "w") as roc_file:
             roc_file.write("\t".join(header) + "\n")
             max_idx = len_vec.index(max(len_vec))
-            to_write = list()
             for j in range(len(new_fpr[max_idx])):
+                to_write = list()
                 for i in range(len(self.footprint_name)):
                     if j >= len(new_fpr[i]):
                         to_write.append("NA")
@@ -322,8 +322,8 @@ class Evaluation:
         with open(prc_fname, "w") as prc_file:
             prc_file.write("\t".join(header) + "\n")
             max_idx = len_vec.index(max(len_vec))
-            to_write = list()
             for j in range(len(new_recall[max_idx])):
+                to_write = list()
                 for i in range(len(self.footprint_name)):
                     if j >= len(new_recall[i]):
                         to_write.append("NA")
