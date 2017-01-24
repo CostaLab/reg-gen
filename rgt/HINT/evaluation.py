@@ -242,7 +242,7 @@ class Evaluation:
         minN = min(vector)
         return [(e - minN) / (maxN - minN) for e in vector]
 
-    def optimize_roc_points(self, fpr, tpr, max_points=10000):
+    def optimize_roc_points(self, fpr, tpr, max_points=1000):
         new_fpr = dict()
         new_tpr = dict()
         for i in range(len(self.footprint_name)):
@@ -261,7 +261,7 @@ class Evaluation:
 
         return new_fpr, new_tpr
 
-    def optimize_pr_points(self, recall, precision, max_points=10000):
+    def optimize_pr_points(self, recall, precision, max_points=1000):
         new_recall = dict()
         new_precision = dict()
 
