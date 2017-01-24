@@ -101,7 +101,7 @@ class Evaluation:
             increased_score_mpbs_regions.sort_score()
 
             fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
-            recall[i], precision[i], prc_auc[i] = self.standardize(increased_score_mpbs_regions)
+            recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
