@@ -133,15 +133,18 @@ class GenomicSignal:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
+
         # Std-based clipping
         mean = raw_signal.mean()
         std = raw_signal.std()
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+
         # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
+
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
@@ -150,11 +153,12 @@ class GenomicSignal:
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
+
         # Hon normalization on slope signal (between-dataset slope smoothing)
-        abs_seq = array([abs(e) for e in slope_signal])
-        perc = scoreatpercentile(abs_seq, per_slope)
-        std = abs_seq.std()
-        slopehon_signal = self.hon_norm(slope_signal, perc, std)
+        # abs_seq = array([abs(e) for e in slope_signal])
+        # perc = scoreatpercentile(abs_seq, per_slope)
+        # std = abs_seq.std()
+        # slopehon_signal = self.hon_norm(slope_signal, perc, std)
 
         # Writing signal
         if(print_raw_signal):
@@ -171,11 +175,11 @@ class GenomicSignal:
             signal_file.close()
         if(print_slope_signal):
             signal_file = open(print_slope_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(slopehon_signal)])+"\n")
+            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(slope_signal)])+"\n")
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return hon_signal, slopehon_signal
+        return hon_signal, slope_signal
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end):
         """ 
