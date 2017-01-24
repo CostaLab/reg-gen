@@ -142,6 +142,7 @@ class GenomicSignal:
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
+
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
@@ -149,6 +150,8 @@ class GenomicSignal:
 
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
+        negative = [e for e in slope_signal if e < 0]
+        print(negative)
 
         # Hon normalization on slope signal (between-dataset slope smoothing)
         abs_seq = array([abs(e) for e in slope_signal])
