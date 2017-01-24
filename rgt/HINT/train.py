@@ -50,6 +50,7 @@ class TrainHMM:
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0,
                                                           forward_shift=0, reverse_shift=0)
+        print(slope_signal)
         if self.print_bed_file:
             self.output_bed_file(states)
 
