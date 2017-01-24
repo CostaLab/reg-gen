@@ -49,7 +49,9 @@ class TrainHMM:
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0,
-                                                          forward_shift=0, reverse_shift=0)
+                                                          forward_shift=0, reverse_shift=0,
+                                                          print_norm_signal="norm.signal",
+                                                          print_slope_signal="slope.signal")
         if self.print_bed_file:
             self.output_bed_file(states)
 
