@@ -113,6 +113,8 @@ class Evaluation:
                                  + str(roc_auc_2[i]) + "\t" + str(prc_auc[i]) + "\n")
 
         # Output the curves
+        self.output_points(mpbs_name, fpr, tpr, recall, precision)
+
         if self.print_roc_curve:
             label_x = "False Positive Rate"
             label_y = "True Positive Rate"
@@ -188,13 +190,13 @@ class Evaluation:
         tpr = [e * (1.0 / count_y) for e in tpr]
 
         # Evaluating 100% AUC
-        roc_auc = metrics.auc(fpr,tpr)
+        roc_auc = metrics.auc(fpr, tpr)
 
         # Evaluating 10% AUC
         fpr_auc = 0.1
         fpr_1 = list()
         tpr_1 = list()
-        for idx in range(0,len(fpr)):
+        for idx in range(0, len(fpr)):
             if (fpr[idx] > fpr_auc): break
             fpr_1.append(fpr[idx])
             tpr_1.append(tpr[idx])
@@ -204,8 +206,9 @@ class Evaluation:
         fpr_auc = 0.01
         fpr_2 = list()
         tpr_2 = list()
-        for idx in range(0,len(fpr)):
-            if (fpr[idx] > fpr_auc): break
+        for idx in range(0, len(fpr)):
+            if (fpr[idx] > fpr_auc):
+                break
             fpr_2.append(fpr[idx])
             tpr_2.append(tpr[idx])
         roc_auc_2 = metrics.auc(self.standardize(fpr_2), tpr_2)
@@ -237,7 +240,7 @@ class Evaluation:
     def standardize(self, vector):
         maxN = max(vector)
         minN = min(vector)
-        return [(e-minN)/(maxN-minN) for e in vector]
+        return [(e - minN) / (maxN - minN) for e in vector]
 
     def optimize_roc_points(self, fpr, tpr, max_points=10000):
         new_fpr = dict()
@@ -265,10 +268,10 @@ class Evaluation:
         for i in range(len(self.footprint_name)):
             data_recall = []
             data_precision = []
-            for j in range(0, min(max_points, len(recall[i]))):
+            for j in range(min(max_points, len(recall[i]))):
                 data_recall.append(recall[i].pop(0))
                 data_precision.append(precision[i].pop(0))
-            if (len(recall[i]) > max_points):
+            if len(recall[i]) > max_points:
                 new_idx_list = [int(math.ceil(e)) for e in np.linspace(0, len(recall[i]) - 1, max_points)]
                 for j in new_idx_list:
                     data_recall.append(recall[i][j])
@@ -280,3 +283,54 @@ class Evaluation:
                 new_precision[i] = data_precision + precision[i]
 
         return new_recall, new_precision
+
+    def output_points(self, mpbs_name, fpr, tpr, recall, precision):
+        roc_fname = self.output_location + mpbs_name + "_roc.txt"
+        new_fpr, new_tpr = self.optimize_roc_points(fpr, tpr)
+        header = list()
+        len_vec = list()
+        for i in range(len(self.footprint_name)):
+            header.append(self.footprint_name[i] + "_FPR")
+            header.append(self.footprint_name[i] + "_TPR")
+            len_vec.append(len(new_fpr[i]))
+
+        with open(roc_fname, "w") as roc_file:
+            roc_file.write("\t".join(header) + "\n")
+            max_idx = len_vec.index(max(len_vec))
+            to_write = list()
+            for j in range(len(new_fpr[max_idx])):
+                for i in range(len(self.footprint_name)):
+                    if j >= len(new_fpr[i]):
+                        to_write.append("NA")
+                    else:
+                        to_write.append(str(new_fpr[i][j]))
+                    if j >= len(new_tpr[i]):
+                        to_write.append("NA")
+                    else:
+                        to_write.append(str(new_tpr[i][j]))
+                roc_file.write("\t".join(to_write) + "\n")
+
+        prc_fname = self.output_location + mpbs_name + "_prc.txt"
+        new_recall, new_precision = self.optimize_pr_points(recall, precision)
+        header = list()
+        len_vec = list()
+        for i in range(len(self.footprint_name)):
+            header.append(self.footprint_name[i] + "_REC")
+            header.append(self.footprint_name[i] + "_PRE")
+            len_vec.append(len(new_recall[i]))
+
+        with open(prc_fname, "w") as prc_file:
+            prc_file.write("\t".join(header) + "\n")
+            max_idx = len_vec.index(max(len_vec))
+            to_write = list()
+            for j in range(len(new_recall[max_idx])):
+                for i in range(len(self.footprint_name)):
+                    if j >= len(new_recall[i]):
+                        to_write.append("NA")
+                    else:
+                        to_write.append(str(new_recall[i][j]))
+                    if j >= len(new_precision[i]):
+                        to_write.append("NA")
+                    else:
+                        to_write.append(str(new_precision[i][j]))
+                prc_file.write("\t".join(to_write) + "\n")
