@@ -113,7 +113,6 @@ class Evaluation:
                                  + str(roc_auc_2[i]) + "\t" + str(prc_auc[i]) + "\n")
 
         # Output the curves
-        self.output_points(mpbs_name, fpr, tpr, recall, precision)
 
         if self.print_roc_curve:
             label_x = "False Positive Rate"
@@ -125,6 +124,8 @@ class Evaluation:
             label_y = "Precision"
             curve_name = "PRC"
             self.plot_curve(recall, precision, prc_auc, label_x, label_y, mpbs_name, curve_name)
+
+        self.output_points(mpbs_name, fpr, tpr, recall, precision)
 
     def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
