@@ -5,7 +5,9 @@
 # Python
 from __future__ import print_function
 import numpy as np
+import math
 from sklearn import metrics
+from scipy.integrate import trapz
 import matplotlib
 
 matplotlib.use('Agg')
@@ -45,10 +47,6 @@ class Evaluation:
 
         return:
         """
-
-        fpr_auc_threshold_1 = 0.1
-        fpr_auc_threshold_2 = 0.01
-
         mpbs_gen_regions = GenomicRegionSet("MPBS")
         mpbs_gen_regions.read_bed(self.mpbs_fname)
         mpbs_gen_regions.sort()
@@ -64,7 +62,6 @@ class Evaluation:
         max_score += 1
 
         # Evaluate Statistics
-        stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
         fpr = dict()
         tpr = dict()
         roc_auc = dict()
@@ -73,6 +70,7 @@ class Evaluation:
         recall = dict()
         precision = dict()
         prc_auc = dict()
+
         for i in range(len(self.footprint_fname)):
             footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
             footprints_gen_regions.read_bed(self.footprint_fname[i])
@@ -102,27 +100,12 @@ class Evaluation:
 
             increased_score_mpbs_regions.sort_score()
 
-            # Reading data points
-            y_true = list()
-            y_score = list()
-            for region in iter(increased_score_mpbs_regions):
-                if str(region.name).split(":")[-1] == "N":
-                    y_true.append(0)
-                else:
-                    y_true.append(1)
-                y_score.append(int(region.data))
-
-            # Calculating receiver operating characteristic curve (ROC),
-            # AUC at 100% FPR, AUC at 10% FPR, AUC at 1% FPR
-            fpr[i], tpr[i], roc_auc[i] = self.compute_fpr_tpr(y_true, y_score, 1.0)
-            _, _, roc_auc_1[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_1)
-            _, _, roc_auc_2[i] = self.compute_fpr_tpr(y_true, y_score, fpr_auc_threshold_2)
-
-            # Calculating precision-recall curve (PRC) and the area under the precision-recall curve
-            recall[i], precision[i], prc_auc[i] = self.compute_precision_recall(y_true, y_score, 1.0)
+            fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
+            recall[i], precision[i], prc_auc[i] = self.standardize(increased_score_mpbs_regions)
 
         # Output the statistics results into text
         stats_fname = self.output_location + mpbs_name + "_stats.txt"
+        stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
         with open(stats_fname, "w") as stats_file:
             stats_file.write("\t".join(stats_header) + "\n")
             for i in range(len(self.footprint_name)):
@@ -187,30 +170,113 @@ class Evaluation:
         figure_name = self.output_location + mpbs_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
 
-    def compute_fpr_tpr(self, y_true, y_score, fpr_cutoff):
-        fpr, tpr, _ = metrics.roc_curve(np.array(y_true), np.array(y_score))
-        fpr_at_cutoff = list()
-        tpr_at_cutoff = list()
-        for idx in range(len(fpr)):
-            if fpr[idx] <= fpr_cutoff:
-                fpr_at_cutoff.append(fpr[idx])
-                tpr_at_cutoff.append(tpr[idx])
-        fpr_at_cutoff.append(fpr_cutoff)
-        tpr_at_cutoff.append(tpr_at_cutoff[-1])
-        scale = 1 / fpr_cutoff
-        auc_at_cutoff = metrics.auc(np.array(fpr_at_cutoff), np.array(tpr_at_cutoff)) * scale
-        return fpr, tpr, auc_at_cutoff
+    def roc_curve(self, sort_score_regions):
+        count_x = 0
+        count_y = 0
+        fpr = [count_x]
+        tpr = [count_y]
+        for region in iter(sort_score_regions):
+            if str(region.name).split(":")[-1] == "Y":
+                count_y += 1
+                fpr.append(count_x)
+                tpr.append(count_y)
+            else:
+                count_x += 1
+                fpr.append(count_x)
+                tpr.append(count_y)
+        fpr = [e * (1.0 / count_x) for e in fpr]
+        tpr = [e * (1.0 / count_y) for e in tpr]
 
-    def compute_precision_recall(self, y_true, y_score, fdr_cutoff):
-        precision, recall, _ = metrics.precision_recall_curve(np.array(y_true), np.array(y_score))
-        precision_at_cutoff = list()
-        recall_at_cutoff = list()
-        for idx in range(len(precision)):
-            fdr = 1 - precision[idx]
-            if fdr <= fdr_cutoff:
-                precision_at_cutoff.append(precision[idx])
-                recall_at_cutoff.append(recall[idx])
-        precision_at_cutoff.append(fdr_cutoff)
-        recall_at_cutoff.append(recall[-1])
-        auc_at_cutoff = metrics.auc(np.array(precision_at_cutoff), np.array(recall_at_cutoff), reorder=True)
-        return recall, precision, auc_at_cutoff
+        # Evaluating 100% AUC
+        roc_auc = metrics.auc(fpr,tpr)
+
+        # Evaluating 10% AUC
+        fpr_auc = 0.1
+        fpr_1 = list()
+        tpr_1 = list()
+        for idx in range(0,len(fpr)):
+            if (fpr[idx] > fpr_auc): break
+            fpr_1.append(fpr[idx])
+            tpr_1.append(tpr[idx])
+        roc_auc_1 = metrics.auc(self.standardize(fpr_1), tpr_1)
+
+        # Evaluating 1% AUC
+        fpr_auc = 0.01
+        fpr_2 = list()
+        tpr_2 = list()
+        for idx in range(0,len(fpr)):
+            if (fpr[idx] > fpr_auc): break
+            fpr_2.append(fpr[idx])
+            tpr_2.append(tpr[idx])
+        roc_auc_2 = metrics.auc(self.standardize(fpr_1), tpr_1)
+
+        return fpr, tpr, roc_auc, roc_auc_1, roc_auc_2
+
+    def precision_recall_curve(self, sort_score_regions):
+        count_x = 0
+        count_y = 0
+        precision = [0.0]
+        recall = [0.0]
+        for region in iter(sort_score_regions):
+            if str(region.name).split(":")[-1] == "Y":
+                count_y += 1
+                precision.append(float(count_y) / (count_x + count_y))
+                recall.append(count_y)
+            else:
+                count_x += 1
+                precision.append(float(count_y) / (count_x + count_y))
+                recall.append(count_y)
+
+        recall = [e * (1.0 / count_y) for e in recall]
+        precision.append(0.0)
+        recall.append(1.0)
+        auc = (abs(trapz(recall, precision)))
+
+        return recall, precision, auc
+
+    def standardize(self, vector):
+        maxN = max(vector)
+        minN = min(vector)
+        return [(e-minN)/(maxN-minN) for e in vector]
+
+    def optimize_roc_points(self, fpr, tpr, max_points=10000):
+        new_fpr = dict()
+        new_tpr = dict()
+        for i in range(len(self.footprint_name)):
+            if (len(fpr[i]) > max_points):
+                new_idx_list = [int(math.ceil(e)) for e in np.linspace(0, len(fpr[i]) - 1, max_points)]
+                new_idx_fpr = []
+                new_idx_tpr = []
+                for j in new_idx_list:
+                    new_idx_fpr.append(fpr[i][j])
+                    new_idx_tpr.append(tpr[i][j])
+                new_fpr[i] = new_idx_fpr
+                new_tpr[i] = new_idx_tpr
+            else:
+                new_fpr[i] = fpr[i]
+                new_tpr[i] = tpr[i]
+
+        return new_fpr, new_tpr
+
+    def optimize_pr_points(self, recall, precision, max_points=10000):
+        new_recall = dict()
+        new_precision = dict()
+
+        for i in range(len(self.footprint_name)):
+            data_recall = []
+            data_precision = []
+            for j in range(0, min(max_points, len(recall[i]))):
+                data_recall.append(recall[i].pop(0))
+                data_precision.append(precision[i].pop(0))
+            if (len(recall[i]) > max_points):
+                new_idx_list = [int(math.ceil(e)) for e in np.linspace(0, len(recall[i]) - 1, max_points)]
+                for j in new_idx_list:
+                    data_recall.append(recall[i][j])
+                    data_precision.append(precision[i][j])
+                new_recall[i] = data_recall
+                new_precision[i] = data_precision
+            else:
+                new_recall[i] = data_recall + recall[i]
+                new_precision[i] = data_precision + precision[i]
+
+        return new_recall, new_precision
