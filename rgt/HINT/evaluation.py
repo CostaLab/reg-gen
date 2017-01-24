@@ -208,7 +208,7 @@ class Evaluation:
             if (fpr[idx] > fpr_auc): break
             fpr_2.append(fpr[idx])
             tpr_2.append(tpr[idx])
-        roc_auc_2 = metrics.auc(self.standardize(fpr_1), tpr_1)
+        roc_auc_2 = metrics.auc(self.standardize(fpr_2), tpr_2)
 
         return fpr, tpr, roc_auc, roc_auc_1, roc_auc_2
 
