@@ -47,10 +47,6 @@ class Evaluation:
 
         return:
         """
-
-        fpr_auc_threshold_1 = 0.1
-        fpr_auc_threshold_2 = 0.01
-
         mpbs_gen_regions = GenomicRegionSet("MPBS")
         mpbs_gen_regions.read_bed(self.mpbs_fname)
         mpbs_gen_regions.sort()
@@ -66,7 +62,6 @@ class Evaluation:
         max_score += 1
 
         # Evaluate Statistics
-        stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
         fpr = dict()
         tpr = dict()
         roc_auc = dict()
