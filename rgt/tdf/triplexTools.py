@@ -137,10 +137,10 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         line = line.strip()
         line = line.split("\t")
         if line[0] == "Experiment": continue
-        else: profile[line[0]] = line[1:]
+        elif len(line) > 5: profile[line[0]] = line[1:]
 
     for i, exp in enumerate(profile.keys()):
-        print(exp)
+        # print(exp)
         c += 1
 
         # try:
@@ -154,15 +154,9 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
         if show_RNA_ass_gene:
             new_line.append(
                 split_gene_name(gene_name=profile[exp][7],
-                                org=profile[exp][2])
-            )
+                                org=profile[exp][2]))
 
-        if profile[exp][6] == "-":
-            new_line += [profile[exp][4],
-                         profile[exp][5], profile[exp][6],
-                         profile[exp][2], profile[exp][3]]
-
-        elif float(profile[exp][6]) < 0.05:
+        if float(profile[exp][6]) < 0.05:
             new_line += [profile[exp][4],
                          profile[exp][5],
                          "<font color=\"red\">" + \
@@ -201,6 +195,47 @@ def revise_index(root, show_RNA_ass_gene=False):
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p),
                        link_d=dir_list, show_RNA_ass_gene=show_RNA_ass_gene)
+
+def update_profile(dirpath, name_list=None):
+    header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
+                   "Top_DBD", "p-value", "closest_genes"]
+    profiles = []
+    pro = os.path.join(dirpath, "profile.txt")
+    if not os.path.isfile(pro):
+        print("There is no profile.txt in this directory.")
+        return
+
+    if name_list:
+        pass
+    else:
+        for item in os.listdir(dirpath):
+            stat = os.path.join(dirpath, item, "stat.txt")
+            summary = os.path.join(dirpath, item, "summary.txt")
+            if os.path.isfile(stat) and os.path.isfile(summary):
+                with open(stat) as f:
+                    for line in f:
+                        l = line.strip().split()
+                        if l[0] == "name":
+                            each_name = l[1]
+                            each_tag = l[1].split("_")[-1]
+                        if l[0] == "genome":
+                            each_organism = l[1]
+                        if l[0] == "DBD_sig":
+                            each_DBD_sig = l[1]
+                        if l[0] == "p_value":
+                            each_p_value = l[1]
+                with open(summary) as g:
+                    for line in g:
+                        if "rgt-TDF" in line and " -de " in line:
+                            l = line.strip().split()
+                            each_target_region = os.path.basename(l[l.index("-de") + 1])
+                profiles.append([item,each_name,each_tag,each_organism,each_target_region,
+                                 each_DBD_sig,"n.a.",each_p_value,"-"])
+
+    with open(pro, "w") as f:
+        print("\t".join(header_list), file=f)
+        for line in profiles:
+            print("\t".join(line), file=f)
 
 
 def gen_heatmap(path):
