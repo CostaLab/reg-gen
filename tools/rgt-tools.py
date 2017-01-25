@@ -127,6 +127,7 @@ if __name__ == "__main__":
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
     parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_bedrename.add_argument('-s', action="store_true", help="Strand specific")
     parser_bedrename.add_argument('-d', action="store_true", help="Show the distance")
     parser_bedrename.add_argument('-organism',metavar='  ', type=str, help="Define the organism")
     parser_bedrename.add_argument('-l', metavar='  ', type=int, default=1000, 
@@ -552,8 +553,8 @@ if __name__ == "__main__":
             bed.replace_region_name(regions=target)
             bed.write_bed(args.o)
         else:
-            renamebed = bed.gene_association(gene_set=None, organism=args.organism,
-                                             promoterLength=args.l,
+            renamebed = bed.gene_association2(gene_set=None, organism=args.organism,
+                                             promoterLength=args.l, strand_specific=args.s,
                                              threshDist=args.t, show_dis=args.d)
             renamebed.write_bed(args.o)
 
@@ -1050,14 +1051,7 @@ if __name__ == "__main__":
         # pp.close()
         plt.savefig(os.path.join(args.o,tag+'_MAplot.png'), bbox_inches='tight')
 
-
         print("finish")
-
-
-
-
-
-
 
     ############### THOR split #############################################
     elif args.mode == "thor_split":
@@ -1086,24 +1080,11 @@ if __name__ == "__main__":
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
             region.data = "\t".join([str(fc)] + data[1:])
-        # bed2.write_bed(args.o)
 
-        # gain_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_gain.bed"), "w")
-        # lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
         gain_peaks = GenomicRegionSet("gain_peaks")
         lose_peaks = GenomicRegionSet("lose_peaks")
-        mix = GenomicRegionSet("mix")
-
-        for region in bed2:
-            l = region.data.split()
-            s = l[5].split(";")
-            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
-                if float(l[0]) > 0:
-                    gain_peaks.add(region)
-                elif float(l[0]) < 0:
-                    lose_peaks.add(region)
-        gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
-        lose_peaks.write_bed(os.path.join(args.o, name + tag + "_lose.bed"))
+        gain_table = GenomicRegionSet("gain_table")
+        lose_table = GenomicRegionSet("lose_table")
 
         for region in bed2:
             l = region.data.split()
@@ -1114,11 +1095,22 @@ if __name__ == "__main__":
                 length = abs(region.final - region.initial)
                 ns1 = float(s1) / length
                 ns2 = float(s2) / length
-                region.data = "\t".join([l[0], str(s1), str(s2), str(length),
-                                         str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
-                mix.add(region)
+                data = "\t".join([l[0], str(s1), str(s2), str(length),
+                                  str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
+                if float(l[0]) > 0:
+                    gain_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                                 orientation=region.orientation, data=data))
+                    gain_peaks.add(region)
+                elif float(l[0]) < 0:
+                    lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                                 orientation=region.orientation, data=data))
+                    lose_peaks.add(region)
 
-        mix.write_bed(os.path.join(args.o, name+tag+".table"))
+        gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
+        lose_peaks.write_bed(os.path.join(args.o, name + tag + "_lose.bed"))
+        gain_table.write_bed(os.path.join(args.o, name + tag + "_gain.table"))
+        lose_table.write_bed(os.path.join(args.o, name + tag + "_lose.table"))
+
         print("Number of gain peaks:\t" + str(len(gain_peaks)))
         print("Number of lose peaks:\t" + str(len(lose_peaks)))
         

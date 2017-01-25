@@ -600,41 +600,45 @@ def split_gene_name(gene_name, org):
         if ":" in gene_name:
             genes = gene_name.split(":")
             genes = list(set(genes))
-            dlist = []
-            glist = []
+            # dlist = []
+            # glist = []
+            result = []
             for i, g in enumerate(genes):
                 if "(" in g:
                     d = g.partition('(')[2].partition(')')[0]
-                    dlist.append((int(d)))
+                    # dlist.append(int(d))
                     g = g.partition('(')[0]
-                    glist.append(g)
+                    # glist.append(g)
+                    result.append(p1+g+p2+g+p3+"("+d+")")
 
                 else:
-                    dlist.append(0)
-                    glist.append(g)
+                    # dlist.append(0)
+                    # glist.append(g)
+                    result.append(p1 + g + p2 + g + p3)
                     # if i == 0:
                     #     result = p1+g+p2+g+p3
                     # else:
                     #     result += ","+p1+g+p2+g+p3
+            result = ",".join(result)
             # if dlist:
-            i = dlist.index(min(dlist))
-            if dlist[i] < 0:
-                ds = str(dlist[i])
-                result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-                try:
-                    j = dlist.index(max(dlist))
-                    if dlist[j] < 0: rds = str(dlist[j])
-                    else:
-                        rds = "+"+ str(dlist[j])
-                        result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
-                except:
-                    pass
-            elif dlist[i] > 0:
-                ds = "+"+str(dlist[i])
-                result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-            else:
-                result = p1 + glist[i] + p2 + glist[i] + p3
-                
+            # i = dlist.index(min(dlist))
+            # if dlist[i] < 0:
+            #     ds = str(dlist[i])
+            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+            #     try:
+            #         j = dlist.index(max(dlist))
+            #         if dlist[j] < 0: rds = str(dlist[j])
+            #         else:
+            #             rds = "+"+ str(dlist[j])
+            #             result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
+            #     except:
+            #         pass
+            # elif dlist[i] > 0:
+            #     ds = "+"+str(dlist[i])
+            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+            # else:
+            #     result = p1 + glist[i] + p2 + glist[i] + p3
+
                     
         elif gene_name == ".":
             result = "none"
