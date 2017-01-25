@@ -300,7 +300,7 @@ def main():
     if options.train_hmm:
         train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
                                    options.output_location, options.model_fname)
-        train_hmm_model.train()
+        train_hmm_model.train(options.print_norm_signal, options.print_slope_signal)
         return
 
     # General hidden options ###############################################################
