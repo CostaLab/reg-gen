@@ -23,12 +23,15 @@ class TrainHMM:
     Contains methods used to train a hidden Markov model
     """
 
-    def __init__(self, bam_file, annotate_file, print_bed_file, output_locaiton, output_fname):
+    def __init__(self, bam_file, annotate_file, print_bed_file,
+                 output_locaiton, output_fname, print_norm_signal, print_slope_signal):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
         self.output_locaiton = output_locaiton
         self.output_fname = output_fname
+        self.print_norm_signal = print_norm_signal
+        self.print_slope_signal = print_slope_signal
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -38,7 +41,7 @@ class TrainHMM:
         states = ""
         with open(self.annotate_fname) as annotate_file:
             for line in annotate_file:
-                if (len(line) < 2 or "#" in line or "=" in line):
+                if len(line) < 2 or "#" in line or "=" in line:
                     continue
                 ll = line.strip().split(" ")
                 for state in ll[1:-1]:
@@ -48,8 +51,9 @@ class TrainHMM:
         raw_signal = GenomicSignal(self.bam_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
-                                                          downstream_ext=1, upstream_ext=0,
-                                                          forward_shift=0, reverse_shift=0)
+                                                          downstream_ext=1, upstream_ext=0, forward_shift=0,
+                                                          reverse_shift=0, print_norm_signal=self.print_norm_signal,
+                                                          print_slope_signal=self.print_slope_signal)
         if self.print_bed_file:
             self.output_bed_file(states)
 
