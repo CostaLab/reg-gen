@@ -59,15 +59,16 @@ class TrainHMM:
         # If need to estimate bias table
         bias_table = None
         genome_data = GenomeData(self.organism)
-        regions = GenomicRegionSet("Bias Regions")
-        if self.original_regions.split(".")[-1] == "bed":
-            regions.read_bed(self.original_regions)
-        if self.original_regions.split(".")[-1] == "fa":
-            regions.read_sequence(self.original_regions)
-
         if self.estimate_bias_correction:
+            regions = GenomicRegionSet("Bias Regions")
+            if self.original_regions.split(".")[-1] == "bed":
+                regions.read_bed(self.original_regions)
+            if self.original_regions.split(".")[-1] == "fa":
+                regions.read_sequence(self.original_regions)
+
             bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
                                     genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
+
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
             bias_table.write_tables(bias_fname)
 
