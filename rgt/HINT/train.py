@@ -8,8 +8,10 @@ import numpy as np
 from collections import Counter
 
 # Internal
+from ..Util import GenomeData
 from signalProcessing import GenomicSignal
 from hmm import HMM
+from biasTable import BiasTable
 
 """
 Train a hidden Markov model (HMM) based on the annotation data
@@ -24,7 +26,8 @@ class TrainHMM:
     """
 
     def __init__(self, bam_file, annotate_file, print_bed_file,
-                 output_locaiton, output_fname, print_norm_signal, print_slope_signal):
+                 output_locaiton, output_fname, print_norm_signal, print_slope_signal,
+                 estimate_bias_correction, original_regions, organism):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
@@ -32,6 +35,9 @@ class TrainHMM:
         self.output_fname = output_fname
         self.print_norm_signal = print_norm_signal
         self.print_slope_signal = print_slope_signal
+        self.estimate_bias_correction = estimate_bias_correction
+        self.original_regions = original_regions
+        self.organism = organism
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -47,12 +53,21 @@ class TrainHMM:
                 for state in ll[1:-1]:
                     states += state
 
+        # If need to estimate bias table
+        bias_table = None
+        genome_data = GenomeData(self.organism)
+        if self.estimate_bias_correction:
+            bias_table = BiasTable(regions=self.original_regions, dnase_file_name=self.bam_file,
+                                    genome_file_name=genome_data.get_genome(), k_nb=6, shift=0)
+
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0, forward_shift=0,
-                                                          reverse_shift=0, print_norm_signal=self.print_norm_signal,
+                                                          reverse_shift=0, bias_table=bias_table,
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          print_norm_signal=self.print_norm_signal,
                                                           print_slope_signal=self.print_slope_signal)
         if self.print_bed_file:
             self.output_bed_file(states)
