@@ -28,7 +28,7 @@ class TrainHMM:
 
     def __init__(self, bam_file, annotate_file, print_bed_file,
                  output_locaiton, output_fname, print_norm_signal, print_slope_signal,
-                 estimate_bias_correction, original_regions, organism):
+                 estimate_bias_correction, original_regions, organism, k_nb, shift):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
@@ -39,6 +39,8 @@ class TrainHMM:
         self.estimate_bias_correction = estimate_bias_correction
         self.original_regions = original_regions
         self.organism = organism
+        self.k_nb = k_nb
+        self.shift = shift
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -65,7 +67,7 @@ class TrainHMM:
 
         if self.estimate_bias_correction:
             bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
-                                    genome_file_name=genome_data.get_genome(), k_nb=6, shift=0)
+                                    genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
