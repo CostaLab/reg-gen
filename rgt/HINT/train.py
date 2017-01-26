@@ -68,6 +68,8 @@ class TrainHMM:
         if self.estimate_bias_correction:
             bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
                                     genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
+            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
+            bias_table.write_tables(bias_fname)
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
@@ -139,7 +141,7 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k])
             hmm_model.covs.append(covs_list)
 
-        model_fname = os.path.join(self.output_locaiton, self.output_fname)
+        model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)
 
     def output_bed_file(self, states):
