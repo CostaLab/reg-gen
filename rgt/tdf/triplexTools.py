@@ -1160,3 +1160,18 @@ def integrate_stat(path):
 
         for item in data.keys():
             print("\t".join([data[item][o] for o in order_stat]), file=g)
+
+def merge_DBD_regions(path):
+    """Merge all available DBD regions in BED format. """
+
+    for t in os.listdir(path):
+        if os.path.isdir(os.path.join(path, t)):
+            dbd_pool = GenomicRegionSet(t)
+            for rna in os.listdir(os.path.join(path,t)):
+                f = os.path.join(path, t, rna, "DBD_"+rna+".bed")
+                if os.path.exists(f):
+                    dbd = GenomicRegionSet(rna)
+                    dbd.read_bed(f)
+                    for r in dbd: r.name = rna+"_"+r.name
+                    dbd_pool.combine(dbd)
+            dbd_pool.write_bed(os.path.join(path, t, "DBD_"+t+".bed"))

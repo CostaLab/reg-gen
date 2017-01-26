@@ -597,7 +597,7 @@ class GenomicRegionSet:
         return result_grs
 
     def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
-                          threshDist=50000, show_dis=False, strand_specific=False):
+                         threshDist=50000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
@@ -659,16 +659,12 @@ class GenomicRegionSet:
                 asso_names = {"overlap": [], "close_l": [], "close_r": []}
 
                 while cont_loop:
-                    # print([ s.orientation, genes[j].orientation])
-                    # print(pre_inter)
                     if strand_specific and s.orientation != genes[j].orientation:
                         if j == last_j:
                             cont_loop = False
                         else:
                             j += 1
                     else:
-
-                        # print(j)
                         d = s.distance(genes[j])
                         if d == 0:
                             asso_names["overlap"].append(genes[j].name)
@@ -695,7 +691,6 @@ class GenomicRegionSet:
                             elif s.chrom == genes[j].chrom and pre_inter > 0:
                                 j = pre_inter
                             cont_loop = False
-                            # print(pre_inter)
 
                         elif 0 < d < threshDist:
                             if show_dis:

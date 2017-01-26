@@ -1069,7 +1069,7 @@ if __name__ == "__main__":
         print("Number of input peaks:\t"+str(len(bed)))
 
         if args.rn and args.g:
-            bed2 = bed.gene_association(organism=args.g)
+            bed2 = bed.gene_association(organism=args.g, strand_specific=True)
         else:
             bed2 = bed
 
@@ -1099,11 +1099,11 @@ if __name__ == "__main__":
                                   str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
                 if float(l[0]) > 0:
                     gain_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data))
+                                                 orientation=region.orientation, data=data, name=region.name))
                     gain_peaks.add(region)
                 elif float(l[0]) < 0:
                     lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
-                                                 orientation=region.orientation, data=data))
+                                                 orientation=region.orientation, data=data, name=region.name))
                     lose_peaks.add(region)
 
         gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
