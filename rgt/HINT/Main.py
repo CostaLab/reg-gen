@@ -140,6 +140,8 @@ def main():
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
                       default=getcwd(),
                       help=("Path where the output files will be written."))
+    parser.add_option("--output-fname", dest="output_fname", type="string", metavar="STRING",
+                      default=None)
     parser.add_option("--print-raw-signal", dest="print_raw_signal", type="string", metavar="STRING",
                       default=None,
                       help=("If used, it will print the base overlap (raw) signals from DNase-seq "
@@ -890,5 +892,5 @@ def main():
         ###################################################################################################
 
         # Creating output file
-        output_file_name = options.output_location + group.name + ".bed"
+        output_file_name = options.output_location + options.output_fname + ".bed"
         footprints.write_bed(output_file_name)
