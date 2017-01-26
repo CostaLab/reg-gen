@@ -121,6 +121,10 @@ def main():
                       action="store_true", default=False,
                       help=("Applies DNase-seq sequence cleavage bias correction with k-mer bias estimated "
                             "from the given DNase-seq data (SLOW HINT-BC)."))
+    parser.add_option("--original-regions", dest="original_regions", type="string",
+                      metavar="STRING", default=None,
+                      help=("The regions that used to estimate the bias table "
+                            "should be bed file containing HS regions or FASTA file containing naked DNA"))
     parser.add_option("--default-bias-correction", dest="default_bias_correction",
                       action="store_true", default=False,
                       help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
@@ -300,7 +304,8 @@ def main():
     if options.train_hmm:
         train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
                                    options.output_location, options.model_fname,
-                                   options.print_norm_signal, options.print_slope_signal)
+                                   options.print_norm_signal, options.print_slope_signal,
+                                   options.estimate_bias_correction, options.original_regions, options.organism)
         train_hmm_model.train()
         return
 
