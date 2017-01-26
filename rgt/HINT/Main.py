@@ -270,6 +270,8 @@ def main():
                       metavar="INT", default=-5, help=SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
+    parser.add_option("--atac-bias-correction-shift", dest="atac_bias_correction_shift", type="int",
+                      metavar="INT", default=0, help=SUPPRESS_HELP)
 
     # HISTONE Hidden Options
     parser.add_option("--histone-initial-clip", dest="histone_initial_clip", type="int",
@@ -305,7 +307,8 @@ def main():
         train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
                                    options.output_location, options.model_fname,
                                    options.print_norm_signal, options.print_slope_signal,
-                                   options.estimate_bias_correction, options.original_regions, options.organism)
+                                   options.estimate_bias_correction, options.original_regions, options.organism,
+                                   options.atac_bias_correction_k, options.atac_bias_correction_shift)
         train_hmm_model.train()
         return
 
