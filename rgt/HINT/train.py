@@ -8,8 +8,11 @@ import numpy as np
 from collections import Counter
 
 # Internal
+from ..Util import GenomeData
 from signalProcessing import GenomicSignal
+from rgt.GenomicRegionSet import GenomicRegionSet
 from hmm import HMM
+from biasTable import BiasTable
 
 """
 Train a hidden Markov model (HMM) based on the annotation data
@@ -24,7 +27,8 @@ class TrainHMM:
     """
 
     def __init__(self, bam_file, annotate_file, print_bed_file,
-                 output_locaiton, output_fname, print_norm_signal, print_slope_signal):
+                 output_locaiton, output_fname, print_norm_signal, print_slope_signal,
+                 estimate_bias_correction, original_regions, organism, k_nb, shift):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
@@ -32,6 +36,11 @@ class TrainHMM:
         self.output_fname = output_fname
         self.print_norm_signal = print_norm_signal
         self.print_slope_signal = print_slope_signal
+        self.estimate_bias_correction = estimate_bias_correction
+        self.original_regions = original_regions
+        self.organism = organism
+        self.k_nb = k_nb
+        self.shift = shift
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -47,12 +56,30 @@ class TrainHMM:
                 for state in ll[1:-1]:
                     states += state
 
+        # If need to estimate bias table
+        bias_table = None
+        genome_data = GenomeData(self.organism)
+        if self.estimate_bias_correction:
+            regions = GenomicRegionSet("Bias Regions")
+            if self.original_regions.split(".")[-1] == "bed":
+                regions.read_bed(self.original_regions)
+            if self.original_regions.split(".")[-1] == "fa":
+                regions.read_sequence(self.original_regions)
+
+            bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
+                                    genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
+
+            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
+            bias_table.write_tables(bias_fname)
+
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0, forward_shift=0,
-                                                          reverse_shift=0, print_norm_signal=self.print_norm_signal,
+                                                          reverse_shift=0, bias_table=bias_table,
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          print_norm_signal=self.print_norm_signal,
                                                           print_slope_signal=self.print_slope_signal)
         if self.print_bed_file:
             self.output_bed_file(states)
@@ -115,11 +142,14 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k])
             hmm_model.covs.append(covs_list)
 
-        model_fname = os.path.join(self.output_locaiton, self.output_fname)
+        if self.estimate_bias_correction:
+            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.shift))
+        else:
+            model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)
 
     def output_bed_file(self, states):
-        bed_fname = os.path.join(self.output_locaiton, self.output_fname)
+        bed_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         bed_fname += ".bed"
 
         state_dict = dict([(0, "BACK"), (1, "UPD"), (2, "TOPD"), (3, "DOWND"), (4, "FP")])
