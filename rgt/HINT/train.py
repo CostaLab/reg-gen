@@ -141,11 +141,14 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k])
             hmm_model.covs.append(covs_list)
 
-        model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
+        if self.estimate_bias_correction:
+            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.shift))
+        else:
+            model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)
 
     def output_bed_file(self, states):
-        bed_fname = os.path.join(self.output_locaiton, self.output_fname)
+        bed_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         bed_fname += ".bed"
 
         state_dict = dict([(0, "BACK"), (1, "UPD"), (2, "TOPD"), (3, "DOWND"), (4, "FP")])
