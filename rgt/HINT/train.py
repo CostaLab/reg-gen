@@ -10,6 +10,7 @@ from collections import Counter
 # Internal
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
+from rgt.GenomicRegionSet import GenomicRegionSet
 from hmm import HMM
 from biasTable import BiasTable
 
@@ -56,8 +57,14 @@ class TrainHMM:
         # If need to estimate bias table
         bias_table = None
         genome_data = GenomeData(self.organism)
+        regions = GenomicRegionSet("Bias Regions")
+        if self.original_regions.split(".")[-1] == "bed":
+            regions.read_bed(self.original_regions)
+        if self.original_regions.split(".")[-1] == "fa":
+            regions.read_sequence(self.original_regions)
+
         if self.estimate_bias_correction:
-            bias_table = BiasTable(regions=self.original_regions, dnase_file_name=self.bam_file,
+            bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
                                     genome_file_name=genome_data.get_genome(), k_nb=6, shift=0)
 
         # Get the normalization and slope signal from the raw bam file
