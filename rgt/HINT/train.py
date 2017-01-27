@@ -66,7 +66,7 @@ class TrainHMM:
             if self.original_regions.split(".")[-1] == "fa":
                 regions.read_sequence(self.original_regions)
 
-            bias_table = BiasTable(regions=regions, dnase_file_name=self.bam_file,
+            bias_table = BiasTable().estimate_table(regions=regions, dnase_file_name=self.bam_file,
                                     genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
