@@ -3,6 +3,7 @@
 ###################################################################################################
 
 # Python
+import os
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -33,10 +34,12 @@ class BiasTable:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self):
+    def __init__(self, output_loc=None):
         """ 
         Initializes BiasTable.
         """
+        self.output_loc = output_loc
+
     def load_table(self, table_file_name_F, table_file_name_R):
         """ 
         Creates a bias table from a tab separated file with a k-mer and bias estimate in each line.
@@ -244,12 +247,9 @@ class BiasTable:
 
         # Iterating on HS regions
         for region in regions:
-
-            # Evaluating observed frequencies ####################################
-
+            # Evaluating observed frequencies
             # Fetching reads
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
-
                 # Calculating positions
                 # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
@@ -273,8 +273,7 @@ class BiasTable:
                     else:
                         obsSeqsR.append(Seq(currStr))
 
-            # Evaluating expected frequencies ####################################
-
+            # Evaluating expected frequencies
             # Fetching whole sequence
             try:
                 currStr = str(fastaFile.fetch(region.chrom, region.initial, region.final)).upper()
@@ -308,43 +307,56 @@ class BiasTable:
         expPwmR = expMotifsR.pwm
 
         # Output logos
-        logo_obsf_fname = "./BiasTables/K562_50K/logos/obs_" + str(k_nb) + "_" + str(shift) + "_f.eps"
-        logo_obsr_fname = "./BiasTables/K562_50K/logos/obs_" + str(k_nb) + "_" + str(shift) + "_r.eps"
-        logo_expf_fname = "./BiasTables/K562_50K/logos/exp_" + str(k_nb) + "_" + str(shift) + "_f.eps"
-        logo_expr_fname = "./BiasTables/K562_50K/logos/exp_" + str(k_nb) + "_" + str(shift) + "_r.eps"
-        obsMotifsF.weblogo(logo_obsf_fname, format="eps", stack_width="large", color_scheme="color_classic",
+        logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
+                                       "obs_{}_{}_f.eps".format(str(k_nb), str(shift)))
+        logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
+                                       "obs_{}_{}_r.eps".format(str(k_nb), str(shift)))
+        logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
+                                       "exp_{}_{}_f.eps".format(str(k_nb), str(shift)))
+        logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
+                                       "exp_{}_{}_r.eps".format(str(k_nb), str(shift)))
+        obsMotifsF.weblogo(logo_obs_f, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        obsMotifsR.weblogo(logo_obsr_fname, format="eps", stack_width="large", color_scheme="color_classic",
+        obsMotifsR.weblogo(logo_obs_r, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        expMotifsF.weblogo(logo_expf_fname, format="eps", stack_width="large", color_scheme="color_classic",
+        expMotifsF.weblogo(logo_exp_f, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        expMotifsR.weblogo(logo_expr_fname, format="eps", stack_width="large", color_scheme="color_classic",
+        expMotifsR.weblogo(logo_exp_r, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
 
         # Output pwms
         pwm_data_list = [obsPwmF, obsPwmR, expPwmF, expPwmR]
-        pwm_fname_list = []
-        pwm_fname_list.append("./BiasTables/K562_50K/pwms/obs_" + str(k_nb) + "_" + str(shift) + "_f.pwm")
-        pwm_fname_list.append("./BiasTables/K562_50K/pwms/obs_" + str(k_nb) + "_" + str(shift) + "_r.pwm")
-        pwm_fname_list.append("./BiasTables/K562_50K/pwms/exp_" + str(k_nb) + "_" + str(shift) + "_f.pwm")
-        pwm_fname_list.append("./BiasTables/K562_50K/pwms/exp_" + str(k_nb) + "_" + str(shift) + "_r.pwm")
+        pwm_file_list = []
+        pwm_obs_f = os.path.join(self.output_loc, "Bias", "pwm",
+                                       "obs_{}_{}_f.pwm".format(str(k_nb), str(shift)))
+        pwm_obs_r = os.path.join(self.output_loc, "Bias", "pwm",
+                                       "obs_{}_{}_r.pwm".format(str(k_nb), str(shift)))
+        pwm_exp_f = os.path.join(self.output_loc, "Bias", "pwm",
+                                       "exp_{}_{}_f.pwm".format(str(k_nb), str(shift)))
+        pwm_exp_r = os.path.join(self.output_loc, "Bias", "pwm",
+                                       "exp_{}_{}_r.pwm".format(str(k_nb), str(shift)))
+
+        pwm_file_list.append(pwm_obs_f)
+        pwm_file_list.append(pwm_obs_r)
+        pwm_file_list.append(pwm_exp_f)
+        pwm_file_list.append(pwm_exp_r)
 
         for i in range(len(pwm_data_list)):
-            with open(pwm_fname_list[i], "w") as f:
+            with open(pwm_file_list[i], "w") as f:
                 f.write(str(pwm_data_list[i]))
 
         # Creating bias dictionary
         alphabet = ["A", "C", "G", "T"]
-        kmerComb = ["".join(e) for e in product(alphabet, repeat=k_nb)]
-        bias_table_F = dict([(e, 0.0) for e in kmerComb])
-        bias_table_R = dict([(e, 0.0) for e in kmerComb])
-        for kmer in kmerComb:
-            obsF = self.get_pwm_score(kmer, obsPwmF, k_nb)
-            expF = self.get_pwm_score(kmer, expPwmF, k_nb)
-            bias_table_F[kmer] = round(obsF / expF, 6)
-            obsR = self.get_pwm_score(kmer, obsPwmR, k_nb)
-            expR = self.get_pwm_score(kmer, expPwmR, k_nb)
-            bias_table_R[kmer] = round(obsR / expR, 6)
+        k_mer_comb = ["".join(e) for e in product(alphabet, repeat=k_nb)]
+        bias_table_F = dict([(e, 0.0) for e in k_mer_comb])
+        bias_table_R = dict([(e, 0.0) for e in k_mer_comb])
+        for k_mer in k_mer_comb:
+            obsF = self.get_pwm_score(k_mer, obsPwmF, k_nb)
+            expF = self.get_pwm_score(k_mer, expPwmF, k_nb)
+            bias_table_F[k_mer] = round(obsF / expF, 6)
+            obsR = self.get_pwm_score(k_mer, obsPwmR, k_nb)
+            expR = self.get_pwm_score(k_mer, expPwmR, k_nb)
+            bias_table_R[k_mer] = round(obsR / expR, 6)
 
         # Return
         return [bias_table_F, bias_table_R]
