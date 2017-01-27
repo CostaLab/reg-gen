@@ -57,7 +57,7 @@ class TrainHMM:
                     states += state
 
         # If need to estimate bias table
-        bias_table = None
+        bias_table = BiasTable(output_loc=self.output_locaiton)
         genome_data = GenomeData(self.organism)
         if self.estimate_bias_correction:
             regions = GenomicRegionSet("Bias Regions")
@@ -66,11 +66,11 @@ class TrainHMM:
             if self.original_regions.split(".")[-1] == "fa":
                 regions.read_sequence(self.original_regions)
 
-            bias_table = BiasTable().estimate_table(regions=regions, dnase_file_name=self.bam_file,
+            tables = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
                                     genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
-            BiasTable().write_tables(bias_fname, bias_table)
+            bias_table.write_tables(bias_fname, tables)
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
