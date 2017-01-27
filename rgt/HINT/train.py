@@ -59,6 +59,7 @@ class TrainHMM:
         # If need to estimate bias table
         bias_table = BiasTable(output_loc=self.output_locaiton)
         genome_data = GenomeData(self.organism)
+        table = None
         if self.estimate_bias_correction:
             regions = GenomicRegionSet("Bias Regions")
             if self.original_regions.split(".")[-1] == "bed":
@@ -77,7 +78,7 @@ class TrainHMM:
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
                                                           downstream_ext=1, upstream_ext=0, forward_shift=0,
-                                                          reverse_shift=0, bias_table=bias_table,
+                                                          reverse_shift=0, bias_table=table,
                                                           genome_file_name=genome_data.get_genome(),
                                                           print_norm_signal=self.print_norm_signal,
                                                           print_slope_signal=self.print_slope_signal)
