@@ -70,7 +70,7 @@ class TrainHMM:
                                     genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
-            bias_table.write_tables(bias_fname)
+            BiasTable().write_tables(bias_fname, bias_table)
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
