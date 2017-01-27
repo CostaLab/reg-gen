@@ -459,7 +459,8 @@ def main():
             group = group_list[g]
             bias_table_list = bias_table_group_list[g].split(",")
             if (group.histone_only): continue
-            group.bias_table = BiasTable(table_file_F=bias_table_list[0], table_file_R=bias_table_list[1])
+            group.bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
+                                                      table_file_name_R=bias_table_list[1])
         bias_correction = True
 
     elif (options.estimate_bias_correction):
@@ -472,7 +473,7 @@ def main():
             else:
                 my_k_nb = dnase_bias_correction_k
                 my_shift = dnase_downstream_ext
-            group.bias_table = BiasTable(regions=group.original_regions,
+            group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
                                          dnase_file_name=group.dnase_file.file_name,
                                          genome_file_name=genome_data.get_genome(), k_nb=my_k_nb,
                                          shift=my_shift)
@@ -493,7 +494,8 @@ def main():
                 my_table_file_F = hmm_data.get_default_bias_table_F_ATAC()
                 my_table_file_R = hmm_data.get_default_bias_table_R_ATAC()
 
-            group.bias_table = BiasTable(table_file_F=my_table_file_F, table_file_R=my_table_file_R)
+            group.bias_table = BiasTable().load_table(table_file_name_F=my_table_file_F,
+                                                      table_file_name_R=my_table_file_R)
         bias_correction = True
 
     ###################################################################################################
