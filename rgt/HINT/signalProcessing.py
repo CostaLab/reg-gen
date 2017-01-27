@@ -201,7 +201,7 @@ class GenomicSignal:
 
         # Initialization
         fastaFile = Fastafile(genome_file_name)
-        fBiasDict = bias_table.table[0]; rBiasDict = bias_table.table[1]
+        fBiasDict = bias_table[0]; rBiasDict = bias_table[1]
         k_nb = len(fBiasDict.keys()[0])
         p1 = start; p2 = end
         p1_w = p1 - (window/2); p2_w = p2 + (window/2)
