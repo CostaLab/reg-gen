@@ -80,10 +80,10 @@ class Evaluation:
 
             ################################################
             # Extend 10 bp for all methods
-            for region in iter(footprints_gen_regions):
-                mid = (region.initial + region.final) / 2
-                region.initial = max(0, mid - 5)
-                region.final = mid + 5
+            # for region in iter(footprints_gen_regions):
+            #    mid = (region.initial + region.final) / 2
+            #    region.initial = max(0, mid - 5)
+            #    region.final = mid + 5
             #################################################
 
             # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
