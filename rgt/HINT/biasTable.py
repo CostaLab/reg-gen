@@ -320,9 +320,9 @@ class BiasTable:
         obsMotifsR.weblogo(logo_obs_r, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
         expMotifsF.weblogo(logo_exp_f, format="eps", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
+                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
         expMotifsR.weblogo(logo_exp_r, format="eps", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
+                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
 
         # Output pwms
         pwm_data_list = [obsPwmF, obsPwmR, expPwmF, expPwmR]
