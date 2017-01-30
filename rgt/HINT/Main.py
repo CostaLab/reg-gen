@@ -316,6 +316,8 @@ def main():
         evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
                             options.mpbs_fname, options.output_location)
         evidence.create_file()
+        return
+
     # If HINT is required to evaluate the existing footprint predictions
     if options.evaluate_footprints:
         evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
