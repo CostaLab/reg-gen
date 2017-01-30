@@ -14,7 +14,7 @@ Authors: Eduardo G. Gusmao, Zhijian Li
 """
 class Evidence:
 
-    def __int__(self, peak_ext, mpbs_name, tfbs_summit_fname, mpbs_fname, output_location):
+    def __init__(self, peak_ext, mpbs_name, tfbs_summit_fname, mpbs_fname, output_location):
         self.peak_ext = peak_ext
         self.mpbs_name = mpbs_name
         self.tfbs_summit_fname = tfbs_summit_fname
