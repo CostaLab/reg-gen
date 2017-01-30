@@ -50,17 +50,6 @@ class Evaluation:
 
         return:
         """
-        mpbs_regions = GenomicRegionSet("TFBS")
-        mpbs_regions.read_bed(self.tfbs_file)
-        mpbs_regions.sort()
-
-        # Verifying the maximum score of the MPBS file
-        max_score = -99999999
-        for region in iter(mpbs_regions):
-            score = int(region.data)
-            if score > max_score:
-                max_score = score
-        max_score += 1
 
         # Evaluate Statistics
         fpr = dict()
@@ -71,6 +60,19 @@ class Evaluation:
         recall = dict()
         precision = dict()
         prc_auc = dict()
+
+        if "SEG" in self.footprint_type:
+            mpbs_regions = GenomicRegionSet("TFBS")
+            mpbs_regions.read_bed(self.tfbs_file)
+            mpbs_regions.sort()
+
+            # Verifying the maximum score of the MPBS file
+            max_score = -99999999
+            for region in iter(mpbs_regions):
+                score = int(region.data)
+                if score > max_score:
+                    max_score = score
+            max_score += 1
 
         for i in range(len(self.footprint_file)):
             footprints_regions = GenomicRegionSet("Footprints Prediction")
