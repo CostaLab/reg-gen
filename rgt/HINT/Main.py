@@ -22,6 +22,7 @@ from hmm import HMM
 from biasTable import BiasTable
 from evaluation import Evaluation
 from train import TrainHMM
+from evidence import Evidence
 
 # External
 import os
@@ -200,13 +201,31 @@ def main():
                       metavar="NAME1,NAME2,NAME3,NAME4...",
                       default=None,
                       help=("The methods name used to predicted the footprint."
-                            "The number of name must be consistent with that of footprint file"))
+                            "The number of methods name must be consistent with that of footprint file"))
     parser.add_option("--print-roc-curve", dest="print_roc_curve",
                       action="store_true", default=False,
                       help=("If used, HINT will print the receiver operating characteristic curve."))
     parser.add_option("--print-pr-curve", dest="print_pr_curve",
                       action="store_true", default=False,
                       help=("If used, HINT will print the precision recall curve."))
+
+    # Evidence Options
+    parser.add_option("--create-evidence", dest="create_evidence",
+                      action="store_true", default=False,
+                      help=("If used, HINT will create a bed file with MPBSs with and "
+                            "without evidence. Also, the name of the instances will be Y "
+                            "for evidence, N for non evidence."))
+    parser.add_option("--peak-ext", dest="peak_ext", type="int", metavar="INT", default=50,
+                      help=("The number used to extend the ChIP-seq summit"))
+    parser.add_option("--mpbs-name", dest="mpbs_name", type="string",
+                      default=None,
+                      help=("motif predicted binding sites name"))
+    parser.add_option("--tfbs-summit-fname", dest="tfbs_summit_fname", type="string",
+                      default=None,
+                      help=("the ChIP-seq peak files"))
+    parser.add_option("--mpbs-fname", dest="mpbs_fname", type="string",
+                      default=None,
+                      help=("motif predicted binding sites file"))
 
     # GENERAL Hidden Options
     parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
@@ -292,6 +311,11 @@ def main():
     options, arguments = parser.parse_args()
     # if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
+    # If HINT is required to create the validation data set
+    if options.create_evidence:
+        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
+                            options.mpbs_fname, options.output_location)
+        evidence.create_file()
     # If HINT is required to evaluate the existing footprint predictions
     if options.evaluate_footprints:
         evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
