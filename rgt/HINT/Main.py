@@ -187,7 +187,10 @@ def main():
     parser.add_option("--evaluate-footprints", dest="evaluate_footprints",
                       action="store_true", default=False,
                       help=("If used, HINT will evaluate the footprints prediction."))
-    parser.add_option("--mpbs-file", dest="mpbs_file", type="string", metavar="STRING",
+    parser.add_option("--tf-name", dest="tf_name", type="string", metavar="STRING",
+                      default=None,
+                      help=("The name of transcription factor"))
+    parser.add_option("--tfbs-file", dest="tfbs_file", type="string", metavar="STRING",
                       default=None,
                       help=("A bed file containing all motif-predicted binding sites (MPBSs)."
                             "The values in the bed SCORE field will be used to rank the MPBSs."
@@ -202,6 +205,11 @@ def main():
                       default=None,
                       help=("The methods name used to predicted the footprint."
                             "The number of methods name must be consistent with that of footprint file"))
+    parser.add_option("--footprint-type", dest="footprint_type", type="string",
+                      metavar="TYPE1,TYPE2,TYPE3,TYPE4...",
+                      default=None,
+                      help=("The methods type used to predicted the footprint."
+                            "Must be SC (site centric) or SEG (segmentation approach)"))
     parser.add_option("--print-roc-curve", dest="print_roc_curve",
                       action="store_true", default=False,
                       help=("If used, HINT will print the receiver operating characteristic curve."))
@@ -320,7 +328,8 @@ def main():
 
     # If HINT is required to evaluate the existing footprint predictions
     if options.evaluate_footprints:
-        evaluation = Evaluation(options.mpbs_file, options.footprint_file, options.footprint_name,
+        evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
+                                options.footprint_name, options.footprint_type,
                                 options.print_roc_curve, options.print_roc_curve, options.output_location)
         evaluation.chip_evaluate()
         return

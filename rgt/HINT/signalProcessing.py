@@ -215,7 +215,7 @@ class GenomicSignal:
             if((read.is_reverse) and ((read.aend-1) < p2_w)): nr[read.aend-1-p1_w] += 1.0
 
         # Smoothed counts
-        Nf = []; Nr = [];
+        Nf = []; Nr = []
         fSum = sum(nf[:window]); rSum = sum(nr[:window]);
         fLast = nf[0]; rLast = nr[0]
         for i in range((window/2),len(nf)-(window/2)):
@@ -241,7 +241,7 @@ class GenomicSignal:
             except Exception: ar.append(defaultKmerValue)
 
         # Calculating bias and writing to wig file
-        fSum = sum(af[:window]); rSum = sum(ar[:window]);
+        fSum = sum(af[:window]); rSum = sum(ar[:window])
         fLast = af[0]; rLast = ar[0]
         bias_corrected_signal = []
         for i in range((window/2),len(af)-(window/2)):

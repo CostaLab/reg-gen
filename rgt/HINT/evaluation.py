@@ -30,10 +30,13 @@ class Evaluation:
 
     """
 
-    def __init__(self, mpbs_file, footprint_file, footprint_name, print_roc_curve, print_pr_curve, output_location):
-        self.mpbs_fname = mpbs_file
-        self.footprint_fname = footprint_file.split(",")
+    def __init__(self, tf_name, tfbs_file, footprint_file, footprint_name, footprint_type,
+                 print_roc_curve, print_pr_curve, output_location):
+        self.tf_name = tf_name
+        self.tfbs_file = tfbs_file
+        self.footprint_file = footprint_file.split(",")
         self.footprint_name = footprint_name.split(",")
+        self.footprint_type = footprint_type.split(",")
         self.print_roc_curve = print_roc_curve
         self.print_pr_curve = print_pr_curve
         self.output_location = output_location
@@ -47,15 +50,13 @@ class Evaluation:
 
         return:
         """
-        mpbs_gen_regions = GenomicRegionSet("MPBS")
-        mpbs_gen_regions.read_bed(self.mpbs_fname)
-        mpbs_gen_regions.sort()
-
-        mpbs_name = self.mpbs_fname.split("/")[-1].split(".")[-2]
+        mpbs_regions = GenomicRegionSet("TFBS")
+        mpbs_regions.read_bed(self.tfbs_file)
+        mpbs_regions.sort()
 
         # Verifying the maximum score of the MPBS file
         max_score = -99999999
-        for region in iter(mpbs_gen_regions):
+        for region in iter(mpbs_regions):
             score = int(region.data)
             if score > max_score:
                 max_score = score
@@ -71,40 +72,36 @@ class Evaluation:
         precision = dict()
         prc_auc = dict()
 
-        for i in range(len(self.footprint_fname)):
-            footprints_gen_regions = GenomicRegionSet("Footprints Prediction")
-            footprints_gen_regions.read_bed(self.footprint_fname[i])
+        for i in range(len(self.footprint_file)):
+            footprints_regions = GenomicRegionSet("Footprints Prediction")
+            footprints_regions.read_bed(self.footprint_file[i])
 
             # Sort footprint prediction bed files
-            footprints_gen_regions.sort()
+            footprints_regions.sort()
 
-            ################################################
-            # Extend 10 bp for all methods
-            # for region in iter(footprints_gen_regions):
-            #    mid = (region.initial + region.final) / 2
-            #    region.initial = max(0, mid - 5)
-            #    region.final = mid + 5
-            #################################################
+            if self.footprint_type[i] == "SEG":
+                # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
+                increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
+                intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
+                for region in iter(intersect_regions):
+                    region.data = str(int(region.data) + max_score)
+                    increased_score_mpbs_regions.add(region)
 
-            # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
-            increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
-            intersect_regions = mpbs_gen_regions.intersect(footprints_gen_regions, mode=OverlapType.ORIGINAL)
-            for region in iter(intersect_regions):
-                region.data = str(int(region.data) + max_score)
-                increased_score_mpbs_regions.add(region)
+                # Keep the score of remained MPBS entry unchanged
+                without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
+                for region in iter(without_intersect_regions):
+                    increased_score_mpbs_regions.add(region)
 
-            # Keep the score of remained MPBS entry unchanged
-            without_intersect_regions = mpbs_gen_regions.subtract(footprints_gen_regions, whole_region=True)
-            for region in iter(without_intersect_regions):
-                increased_score_mpbs_regions.add(region)
+                increased_score_mpbs_regions.sort_score()
 
-            increased_score_mpbs_regions.sort_score()
-
-            fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
-            recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
+                fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
+                recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
+            elif self.footprint_type[i] == "SC":
+                fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(footprints_regions)
+                recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(footprints_regions)
 
         # Output the statistics results into text
-        stats_fname = self.output_location + mpbs_name + "_stats.txt"
+        stats_fname = self.output_location + self.tf_name + "_stats.txt"
         stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
         with open(stats_fname, "w") as stats_file:
             stats_file.write("\t".join(stats_header) + "\n")
@@ -113,21 +110,20 @@ class Evaluation:
                                  + str(roc_auc_2[i]) + "\t" + str(prc_auc[i]) + "\n")
 
         # Output the curves
-
         if self.print_roc_curve:
             label_x = "False Positive Rate"
             label_y = "True Positive Rate"
             curve_name = "ROC"
-            self.plot_curve(fpr, tpr, roc_auc, label_x, label_y, mpbs_name, curve_name)
+            self.plot_curve(fpr, tpr, roc_auc, label_x, label_y, self.tf_name, curve_name)
         if self.print_pr_curve:
             label_x = "Recall"
             label_y = "Precision"
             curve_name = "PRC"
-            self.plot_curve(recall, precision, prc_auc, label_x, label_y, mpbs_name, curve_name)
+            self.plot_curve(recall, precision, prc_auc, label_x, label_y, self.tf_name, curve_name)
 
-        self.output_points(mpbs_name, fpr, tpr, recall, precision)
+        self.output_points(self.tf_name, fpr, tpr, recall, precision)
 
-    def plot_curve(self, data_x, data_y, stats, label_x, label_y, mpbs_name, curve_name):
+    def plot_curve(self, data_x, data_y, stats, label_x, label_y, tf_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
                       "#FF6600", "#0000CC", "#336633", "#CC0000", "#6600CC", "#FF00FF", "#555555", "#CCCC00",
                       "#FF9900", "#0000FF", "#33CC33", "#FF0000", "#663399", "#FF33FF", "#888888", "#FFCC00",
@@ -152,7 +148,7 @@ class Evaluation:
             e.set_linewidth(2.0)
 
         # Titles and Axis Labels
-        ax.set_title(mpbs_name)
+        ax.set_title(tf_name)
         ax.set_xlabel(label_x)
         ax.set_ylabel(label_y)
 
@@ -170,7 +166,7 @@ class Evaluation:
         pylab.ylim([0, 1.0])
 
         # Saving figure
-        figure_name = self.output_location + mpbs_name + "_" + curve_name + ".png"
+        figure_name = self.output_location + tf_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
 
     def roc_curve(self, sort_score_regions):
@@ -285,8 +281,8 @@ class Evaluation:
 
         return new_recall, new_precision
 
-    def output_points(self, mpbs_name, fpr, tpr, recall, precision):
-        roc_fname = self.output_location + mpbs_name + "_roc.txt"
+    def output_points(self, tf_name, fpr, tpr, recall, precision):
+        roc_fname = self.output_location + tf_name + "_roc.txt"
         new_fpr, new_tpr = self.optimize_roc_points(fpr, tpr)
         header = list()
         len_vec = list()
@@ -311,7 +307,7 @@ class Evaluation:
                         to_write.append(str(new_tpr[i][j]))
                 roc_file.write("\t".join(to_write) + "\n")
 
-        prc_fname = self.output_location + mpbs_name + "_prc.txt"
+        prc_fname = self.output_location + tf_name + "_prc.txt"
         new_recall, new_precision = self.optimize_pr_points(recall, precision)
         header = list()
         len_vec = list()
