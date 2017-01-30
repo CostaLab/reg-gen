@@ -40,7 +40,7 @@ class Evaluation:
         if self.output_location[-1] != "/":
             self.output_location += "/"
 
-    def chip_evaluate(self, alignment_file):
+    def chip_evaluate(self):
         """
         This evaluation methodology uses motif-predicted binding sites (MPBSs) together with TF ChIP-seq data
         to evaluate the footprint predictions.
