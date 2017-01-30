@@ -343,6 +343,7 @@ def main():
     atac_initial_clip = options.atac_initial_clip
     atac_sg_window_size = options.atac_sg_window_size
     atac_norm_per = options.atac_norm_per
+    atac_slope_per = options.atac_slope_per
     atac_downstream_ext = options.atac_downstream_ext
     atac_upstream_ext = options.atac_upstream_ext
     atac_forward_shift = options.atac_forward_shift
@@ -510,9 +511,9 @@ def main():
                 my_k_nb = dnase_bias_correction_k
                 my_shift = dnase_downstream_ext
             group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
-                                         dnase_file_name=group.dnase_file.file_name,
-                                         genome_file_name=genome_data.get_genome(), k_nb=my_k_nb,
-                                         shift=my_shift)
+                                                          dnase_file_name=group.dnase_file.file_name,
+                                                          genome_file_name=genome_data.get_genome(), k_nb=my_k_nb,
+                                                          shift=my_shift)
         bias_correction = True
 
     elif (options.default_bias_correction):
