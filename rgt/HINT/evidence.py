@@ -40,5 +40,17 @@ class Evidence:
 
         with_overlap_regions = mpbs_regions.intersect(tfbs_summit_regions, mode=OverlapType.ORIGINAL)
         without_overlap_regions = mpbs_regions.subtract(tfbs_summit_regions, whole_region=True)
-        with_overlap_regions.write_bed("overlap.bed")
-        without_overlap_regions.write_bed("without_overlap.bed")
+        tfbs_regions = GenomicRegionSet("TFBS Regions")
+
+        for region in iter(with_overlap_regions):
+            region.name = region.name + ":Y"
+            tfbs_regions.add(region)
+
+        for region in iter(without_overlap_regions):
+            region.name = region.name + ":N"
+            tfbs_regions.add(region)
+
+        tfbs_regions.sort()
+
+        tfbs_fname = os.path.join(self.output_location, "{}.bed".format(self.mpbs_name))
+        tfbs_regions.write_bed(tfbs_fname)
