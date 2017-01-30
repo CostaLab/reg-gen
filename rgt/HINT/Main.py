@@ -277,7 +277,7 @@ def main():
 
     # ATAC Hidden Options
     parser.add_option("--atac-initial-clip", dest="atac_initial_clip", type="int",
-                      metavar="INT", default=1000, help=SUPPRESS_HELP)
+                      metavar="INT", default=100, help=SUPPRESS_HELP)
     parser.add_option("--atac-sg-window-size", dest="atac_sg_window_size", type="int",
                       metavar="INT", default=9, help=SUPPRESS_HELP)
     parser.add_option("--atac-norm-per", dest="atac_norm_per", type="float",
@@ -319,31 +319,6 @@ def main():
     options, arguments = parser.parse_args()
     # if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
-    # If HINT is required to create the validation data set
-    if options.create_evidence:
-        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
-                            options.mpbs_fname, options.output_location)
-        evidence.create_file()
-        return
-
-    # If HINT is required to evaluate the existing footprint predictions
-    if options.evaluate_footprints:
-        evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
-                                options.footprint_name, options.footprint_type,
-                                options.print_roc_curve, options.print_roc_curve, options.output_location)
-        evaluation.chip_evaluate()
-        return
-
-    # If HINT is required to train a hidden Markov model (HMM)
-    if options.train_hmm:
-        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
-                                   options.output_location, options.model_fname,
-                                   options.print_norm_signal, options.print_slope_signal,
-                                   options.estimate_bias_correction, options.original_regions, options.organism,
-                                   options.atac_bias_correction_k, options.atac_bias_correction_shift)
-        train_hmm_model.train()
-        return
-
     # General hidden options ###############################################################
     region_total_ext = options.region_total_ext
     fp_limit_size = options.fp_limit_size
@@ -373,6 +348,7 @@ def main():
     atac_forward_shift = options.atac_forward_shift
     atac_reverse_shift = options.atac_reverse_shift
     atac_bias_correction_k = options.atac_bias_correction_k
+    atac_bias_correction_shift = options.atac_bias_correction_shift
     # HISTONE Hidden Options
     histone_initial_clip = options.histone_initial_clip
     histone_sg_window_size = options.histone_initial_clip
@@ -385,6 +361,36 @@ def main():
 
     ########################################################################################
 
+    ##########################################################################################
+
+    # If HINT is required to create the validation data set
+    if options.create_evidence:
+        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
+                            options.mpbs_fname, options.output_location)
+        evidence.create_file()
+        return
+
+    # If HINT is required to evaluate the existing footprint predictions
+    if options.evaluate_footprints:
+        evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
+                                options.footprint_name, options.footprint_type,
+                                options.print_roc_curve, options.print_roc_curve, options.output_location)
+        evaluation.chip_evaluate()
+        return
+
+    # If HINT is required to train a hidden Markov model (HMM)
+    if options.train_hmm:
+        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
+                                   options.output_location, options.model_fname,
+                                   options.print_norm_signal, options.print_slope_signal,
+                                   atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
+                                   atac_forward_shift, atac_reverse_shift,
+                                   options.estimate_bias_correction, options.original_regions, options.organism,
+                                   atac_bias_correction_k, atac_bias_correction_shift)
+        train_hmm_model.train()
+        return
+
+    ########################################################################################################
     # Output wig signal
     if (options.print_raw_signal):
         system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_raw_signal)
