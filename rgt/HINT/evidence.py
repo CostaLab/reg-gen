@@ -40,3 +40,5 @@ class Evidence:
 
         with_overlap_regions = mpbs_regions.intersect(tfbs_summit_regions, mode=OverlapType.ORIGINAL)
         without_overlap_regions = mpbs_regions.subtract(tfbs_summit_regions, whole_region=True)
+        with_overlap_regions.write_bed("overlap.bed")
+        without_overlap_regions.write_bed("without_overlap.bed")
