@@ -318,8 +318,7 @@ def main():
         print(options.tfbs_summit_fname)
         print(options.mpbs_fname)
         print(options.output_location)
-        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
-                            options.mpbs_fname, options.output_location)
+        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname, options.mpbs_fname, options.output_location)
         evidence.create_file()
         return
 
