@@ -140,7 +140,8 @@ class GenomicSignal:
         # clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Cleavage bias correction
-        bias_corrected_signal = self.bias_correction(raw_signal, bias_table, genome_file_name, ref, start, end)
+        bias_corrected_signal = self.bias_correction(raw_signal, bias_table, genome_file_name,
+                                                     ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
