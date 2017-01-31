@@ -277,7 +277,7 @@ def main():
 
     # ATAC Hidden Options
     parser.add_option("--atac-initial-clip", dest="atac_initial_clip", type="int",
-                      metavar="INT", default=5, help=SUPPRESS_HELP)
+                      metavar="INT", default=1000, help=SUPPRESS_HELP)
     parser.add_option("--atac-sg-window-size", dest="atac_sg_window_size", type="int",
                       metavar="INT", default=9, help=SUPPRESS_HELP)
     parser.add_option("--atac-norm-per", dest="atac_norm_per", type="float",
@@ -287,7 +287,7 @@ def main():
     parser.add_option("--atac-downstream-ext", dest="atac_downstream_ext", type="int",
                       metavar="INT", default=1, help=SUPPRESS_HELP)
     parser.add_option("--atac-upstream-ext", dest="atac_upstream_ext", type="int",
-                      metavar="INT", default=1, help=SUPPRESS_HELP)
+                      metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--atac-forward-shift", dest="atac_forward_shift", type="int",
                       metavar="INT", default=4, help=SUPPRESS_HELP)
     parser.add_option("--atac-reverse-shift", dest="atac_reverse_shift", type="int",
