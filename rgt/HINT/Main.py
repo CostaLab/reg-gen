@@ -277,7 +277,7 @@ def main():
 
     # ATAC Hidden Options
     parser.add_option("--atac-initial-clip", dest="atac_initial_clip", type="int",
-                      metavar="INT", default=100, help=SUPPRESS_HELP)
+                      metavar="INT", default=50, help=SUPPRESS_HELP)
     parser.add_option("--atac-sg-window-size", dest="atac_sg_window_size", type="int",
                       metavar="INT", default=9, help=SUPPRESS_HELP)
     parser.add_option("--atac-norm-per", dest="atac_norm_per", type="float",
