@@ -146,12 +146,12 @@ class GenomicSignal:
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
 
         # Hon normalization (between-dataset normalization)
-        perc = scoreatpercentile(boyle_signal, per_norm)
-        std = boyle_signal.std()
-        hon_signal = self.hon_norm(boyle_signal, perc, std)
+        # perc = scoreatpercentile(boyle_signal, per_norm)
+        # std = boyle_signal.std()
+        # hon_signal = self.hon_norm(boyle_signal, perc, std)
 
         # Slope signal
-        slope_signal = self.slope(hon_signal, self.sg_coefs)
+        slope_signal = self.slope(boyle_signal, self.sg_coefs)
 
 
         # Hon normalization on slope signal (between-dataset slope smoothing)
@@ -163,7 +163,7 @@ class GenomicSignal:
         # Writing signal
         if(print_raw_signal):
             signal_file = open(print_raw_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(clip_signal)])+"\n")
+            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(raw_signal)])+"\n")
             signal_file.close()
         if(print_bc_signal):
             signal_file = open(print_bc_signal,"a")
@@ -171,7 +171,7 @@ class GenomicSignal:
             signal_file.close()
         if(print_norm_signal):
             signal_file = open(print_norm_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(hon_signal)])+"\n")
+            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(boyle_signal)])+"\n")
             signal_file.close()
         if(print_slope_signal):
             signal_file = open(print_slope_signal,"a")
@@ -179,9 +179,9 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return hon_signal, slope_signal
+        return boyle_signal, slope_signal
 
-    def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end):
+    def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end, forward_shift, reverse_shift):
         """ 
         Performs bias correction.
 
@@ -227,8 +227,8 @@ class GenomicSignal:
         # Fetching sequence
         #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-forward_shift)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk-reverse_shift, p2_wk)).upper())
 
         # Iterating on sequence to create signal
         af = []; ar = []
