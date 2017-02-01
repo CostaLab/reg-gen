@@ -115,10 +115,16 @@ class GenomicSignal:
         per_slope -- Percentile value for 'hon_norm' function of the slope signal.
         bias_table -- Bias table to perform bias correction.
         genome_file_name -- Genome to perform bias correction.
-        downstream_ext -- Number of bps to extend towards the downstream region (right for forward strand and left for reverse strand).
-        upstream_ext -- Number of bps to extend towards the upstream region (left for forward strand and right for reverse strand).
-        forward_shift -- Number of bps to shift the reads aligned to the forward strand. Can be a positive number for a shift towards the downstream region (towards the inside of the aligned read) and a negative number for a shift towards the upstream region.
-        reverse_shift -- Number of bps to shift the reads aligned to the reverse strand. Can be a positive number for a shift towards the upstream region and a negative number for a shift towards the downstream region (towards the inside of the aligned read).
+        downstream_ext -- Number of bps to extend towards the downstream region
+        (right for forward strand and left for reverse strand).
+        upstream_ext -- Number of bps to extend towards the upstream region
+        (left for forward strand and right for reverse strand).
+        forward_shift -- Number of bps to shift the reads aligned to the forward strand.
+        Can be a positive number for a shift towards the downstream region
+        (towards the inside of the aligned read) and a negative number for a shift towards the upstream region.
+        reverse_shift -- Number of bps to shift the reads aligned to the reverse strand.
+        Can be a positive number for a shift towards the upstream region and a negative number
+        for a shift towards the downstream region (towards the inside of the aligned read).
         
         Return:
         hon_signal -- Normalized signal.

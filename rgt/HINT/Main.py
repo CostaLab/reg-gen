@@ -205,6 +205,11 @@ def main():
                       default=None,
                       help=("The methods name used to predicted the footprint."
                             "The number of methods name must be consistent with that of footprint file"))
+    parser.add_option("--alignment-file", dest="alignment_file", type="string",
+                      metavar="FILE",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."
+                            "Used to fetch the tag counts for SEG (segmentation approach)"))
     parser.add_option("--footprint-type", dest="footprint_type", type="string",
                       metavar="TYPE1,TYPE2,TYPE3,TYPE4...",
                       default=None,
@@ -375,7 +380,8 @@ def main():
     if options.evaluate_footprints:
         evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
                                 options.footprint_name, options.footprint_type,
-                                options.print_roc_curve, options.print_roc_curve, options.output_location)
+                                options.print_roc_curve, options.print_roc_curve,
+                                options.output_location, options.alignment_file, options.organism)
         evaluation.chip_evaluate()
         return
 

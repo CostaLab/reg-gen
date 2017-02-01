@@ -9,13 +9,16 @@ import math
 from sklearn import metrics
 from scipy.integrate import trapz
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab
+
+from pysam import Samfile
+
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import OverlapType
+from ..Util import GenomeData
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
@@ -31,7 +34,7 @@ class Evaluation:
     """
 
     def __init__(self, tf_name, tfbs_file, footprint_file, footprint_name, footprint_type,
-                 print_roc_curve, print_pr_curve, output_location):
+                 print_roc_curve, print_pr_curve, output_location, alignment_file, organism):
         self.tf_name = tf_name
         self.tfbs_file = tfbs_file
         self.footprint_file = footprint_file.split(",")
@@ -40,6 +43,8 @@ class Evaluation:
         self.print_roc_curve = print_roc_curve
         self.print_pr_curve = print_pr_curve
         self.output_location = output_location
+        self.alignment_file = alignment_file
+        self.organism = organism
         if self.output_location[-1] != "/":
             self.output_location += "/"
 
@@ -62,17 +67,29 @@ class Evaluation:
         prc_auc = dict()
 
         if "SEG" in self.footprint_type:
+            bam = Samfile(self.alignment_file, "rb")
+            genome_data = GenomeData(self.organism)
+
+            # Fetching chromosome sizes
+            chrom_sizes_file_name = genome_data.get_chromosome_sizes()
+            chrom_sizes_file = open(chrom_sizes_file_name, "r")
+            chrom_sizes_dict = dict()
+            for chrom_sizes_entry_line in chrom_sizes_file:
+                chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
+                chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
+            chrom_sizes_file.close()
+
             mpbs_regions = GenomicRegionSet("TFBS")
             mpbs_regions.read_bed(self.tfbs_file)
             mpbs_regions.sort()
 
             # Verifying the maximum score of the MPBS file
-            max_score = -99999999
-            for region in iter(mpbs_regions):
-                score = int(region.data)
-                if score > max_score:
-                    max_score = score
-            max_score += 1
+            #max_score = -99999999
+            #for region in iter(mpbs_regions):
+            #    score = int(region.data)
+            #    if score > max_score:
+            #        max_score = score
+            #max_score += 1
 
         for i in range(len(self.footprint_file)):
             footprints_regions = GenomicRegionSet("Footprints Prediction")
@@ -86,7 +103,11 @@ class Evaluation:
                 increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
                 intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
                 for region in iter(intersect_regions):
-                    region.data = str(int(region.data) + max_score)
+                    mid = (region.initial + region.final) / 2
+                    region.initial = max(mid - 100, 0)
+                    region.final = min(mid + 100, chrom_sizes_dict[region.chrom])
+                    region.data = bam.count(reference=region.chrom, start=region.initial, end=region.final)
+                    #region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
 
                 # Keep the score of remained MPBS entry unchanged
