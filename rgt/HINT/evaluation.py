@@ -106,7 +106,7 @@ class Evaluation:
                     mid = (region.initial + region.final) / 2
                     region.initial = max(mid - 100, 0)
                     region.final = min(mid + 100, chrom_sizes_dict[region.chrom])
-                    region.data = bam.count(reference=region.chrom, start=region.initial, end=region.final)
+                    region.data = str(bam.count(reference=region.chrom, start=region.initial, end=region.final))
                     #region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
 
