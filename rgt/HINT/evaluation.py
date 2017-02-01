@@ -102,13 +102,17 @@ class Evaluation:
                 # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
                 increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
                 intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
+                true_pos = 0.0
+                false_pos = 0.0
                 for region in iter(intersect_regions):
-                    mid = (region.initial + region.final) / 2
-                    region.initial = max(mid - 100, 0)
-                    region.final = min(mid + 100, chrom_sizes_dict[region.chrom])
-                    region.data = str(bam.count(reference=region.chrom, start=region.initial, end=region.final))
+                    if str(region.name).split(":")[-1] == "Y":
+                        true_pos += 1.0
+                    else :
+                        false_pos += 1.0
                     #region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
+                aupr = true_pos/(true_pos + false_pos)
+                print(aupr)
 
                 # Keep the score of remained MPBS entry unchanged
                 without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)
@@ -116,7 +120,6 @@ class Evaluation:
                     increased_score_mpbs_regions.add(region)
 
                 increased_score_mpbs_regions.sort_score()
-                increased_score_mpbs_regions.write_bed("123.bed")
 
                 fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
                 recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
