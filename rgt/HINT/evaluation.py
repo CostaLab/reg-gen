@@ -116,6 +116,7 @@ class Evaluation:
                     increased_score_mpbs_regions.add(region)
 
                 increased_score_mpbs_regions.sort_score()
+                increased_score_mpbs_regions.write_bed("123.bed")
 
                 fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
                 recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
