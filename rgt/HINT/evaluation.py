@@ -67,29 +67,17 @@ class Evaluation:
         prc_auc = dict()
 
         if "SEG" in self.footprint_type:
-            bam = Samfile(self.alignment_file, "rb")
-            genome_data = GenomeData(self.organism)
-
-            # Fetching chromosome sizes
-            chrom_sizes_file_name = genome_data.get_chromosome_sizes()
-            chrom_sizes_file = open(chrom_sizes_file_name, "r")
-            chrom_sizes_dict = dict()
-            for chrom_sizes_entry_line in chrom_sizes_file:
-                chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
-                chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
-            chrom_sizes_file.close()
-
             mpbs_regions = GenomicRegionSet("TFBS")
             mpbs_regions.read_bed(self.tfbs_file)
             mpbs_regions.sort()
 
             # Verifying the maximum score of the MPBS file
-            #max_score = -99999999
-            #for region in iter(mpbs_regions):
-            #    score = int(region.data)
-            #    if score > max_score:
-            #        max_score = score
-            #max_score += 1
+            max_score = -99999999
+            for region in iter(mpbs_regions):
+                score = int(region.data)
+                if score > max_score:
+                    max_score = score
+            max_score += 1
 
         for i in range(len(self.footprint_file)):
             footprints_regions = GenomicRegionSet("Footprints Prediction")
@@ -109,7 +97,7 @@ class Evaluation:
                         true_pos += 1.0
                     else :
                         false_pos += 1.0
-                    #region.data = str(int(region.data) + max_score)
+                    region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
                 aupr = true_pos/(true_pos + false_pos)
                 print(aupr)
