@@ -126,6 +126,12 @@ def main():
                       metavar="STRING", default=None,
                       help=("The regions that used to estimate the bias table "
                             "should be bed file containing HS regions or FASTA file containing naked DNA"))
+    parser.add_option("--estimate-bias-type", dest="estimate_bias_type", type="string",
+                      metavar="STRING", default=None,
+                      help=("The methods that used to estimate the bias table"
+                            "Available options are: 'FRE' (the bias estimation is computed as the ratio"
+                            "between the observed and background cleavage frequency)"
+                            "'PWM (frequency is replaced by pwm score)'"))
     parser.add_option("--default-bias-correction", dest="default_bias_correction",
                       action="store_true", default=False,
                       help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
@@ -392,7 +398,8 @@ def main():
                                    options.print_norm_signal, options.print_slope_signal,
                                    atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                                    atac_forward_shift, atac_reverse_shift,
-                                   options.estimate_bias_correction, options.original_regions, options.organism,
+                                   options.estimate_bias_correction, options.estimate_bias_type,
+                                   options.original_regions, options.organism,
                                    atac_bias_correction_k, atac_bias_correction_shift)
         train_hmm_model.train()
         return

@@ -30,7 +30,8 @@ class TrainHMM:
                  output_locaiton, output_fname, print_norm_signal, print_slope_signal,
                  atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                  atac_forward_shift, atac_reverse_shift,
-                 estimate_bias_correction, original_regions, organism, k_nb, shift):
+                 estimate_bias_correction, estimate_bias_type,
+                 original_regions, organism, k_nb, shift):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
@@ -44,6 +45,7 @@ class TrainHMM:
         self.atac_forward_shift = atac_forward_shift
         self.atac_reverse_shift = atac_reverse_shift
         self.estimate_bias_correction = estimate_bias_correction
+        self.estimate_bias_type = estimate_bias_type
         self.original_regions = original_regions
         self.organism = organism
         self.k_nb = k_nb
@@ -74,8 +76,14 @@ class TrainHMM:
             if self.original_regions.split(".")[-1] == "fa":
                 regions.read_sequence(self.original_regions)
 
-            table = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
-                                    genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
+            if self.estimate_bias_type == "FRE":
+                table = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
+                                                  genome_file_name=genome_data.get_genome(),
+                                                  k_nb=self.k_nb, shift=self.shift)
+            elif self.estimate_bias_type == "PWM":
+                table = bias_table.estimate_table_pwm(regions=regions, dnase_file_name=self.bam_file,
+                                                  genome_file_name=genome_data.get_genome(),
+                                                  k_nb=self.k_nb, shift=self.shift)
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
             bias_table.write_tables(bias_fname, table)
