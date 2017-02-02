@@ -128,10 +128,10 @@ def main():
                             "should be bed file containing HS regions or FASTA file containing naked DNA"))
     parser.add_option("--estimate-bias-type", dest="estimate_bias_type", type="string",
                       metavar="STRING", default=None,
-                      help=("The methods that used to estimate the bias table"
-                            "Available options are: 'FRE' (the bias estimation is computed as the ratio"
-                            "between the observed and background cleavage frequency)"
-                            "'PWM (frequency is replaced by pwm score)'"))
+                      help=("The methods that used to estimate the bias table "
+                            "Available options are: 'FRE' (the bias estimation is computed as the ratio "
+                            "between the observed and background cleavage frequency) "
+                            "and 'PWM' (frequency is replaced by pwm score)."))
     parser.add_option("--default-bias-correction", dest="default_bias_correction",
                       action="store_true", default=False,
                       help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
