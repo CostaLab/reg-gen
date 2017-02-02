@@ -1,16 +1,16 @@
-
 ###################################################################################################
 # Libraries
 ###################################################################################################
 
 # Python
 import warnings
+
 warnings.filterwarnings("ignore")
 from math import log, ceil, floor
 
 # Internal
-from .. Util import ErrorHandler
-from .. Util import AuxiliaryFunctions
+from ..Util import ErrorHandler
+from ..Util import AuxiliaryFunctions
 from pileupRegion import PileupRegion
 
 # External
@@ -26,6 +26,7 @@ HMM footprinting input.
 
 Authors: Eduardo G. Gusmao.
 """
+
 
 class GenomicSignal:
     """
@@ -45,7 +46,7 @@ class GenomicSignal:
         """
         self.file_name = file_name
         self.sg_coefs = None
-        self.bam = Samfile(file_name,"rb")
+        self.bam = Samfile(file_name, "rb")
 
     def load_sg_coefs(self, slope_window_size):
         """ 
@@ -59,7 +60,8 @@ class GenomicSignal:
         """
         self.sg_coefs = self.savitzky_golay_coefficients(slope_window_size, 2, 1)
 
-    def get_tag_count(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift, initial_clip = 1000):
+    def get_tag_count(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                      initial_clip=1000):
         """ 
         Gets the tag count associated with self.bam based on start, end and ext.
 
@@ -78,13 +80,13 @@ class GenomicSignal:
         """
 
         # Fetch raw signal
-        pileup_region = PileupRegion(start ,end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if(ps_version == "0.7.5"):
-            self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
+        pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
+        if (ps_version == "0.7.5"):
+            self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
         else:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
-        raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
+        raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
         mean = raw_signal.mean()
@@ -92,14 +94,16 @@ class GenomicSignal:
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Tag count
-        try: tag_count = sum(clip_signal)
-        except Exception: tag_count = 0
+        try:
+            tag_count = sum(clip_signal)
+        except Exception:
+            tag_count = 0
 
         return tag_count
 
-    def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift, 
-                   initial_clip = 1000, per_norm = 98, per_slope = 98, 
-                   bias_table = None, genome_file_name = None, print_raw_signal=False, 
+    def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                   initial_clip=1000, per_norm=98, per_slope=98,
+                   bias_table=None, genome_file_name=None, print_raw_signal=False,
                    print_bc_signal=False, print_norm_signal=False, print_slope_signal=False):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
@@ -132,13 +136,13 @@ class GenomicSignal:
         """
 
         # Fetch raw signal
-        pileup_region = PileupRegion(start ,end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if(ps_version == "0.7.5"):
-            self.bam.fetch(reference=ref, start=start, end=end, callback = pileup_region)
+        pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
+        if (ps_version == "0.7.5"):
+            self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
         else:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
             for alignment in iter: pileup_region.__call__(alignment)
-        raw_signal = array([min(e,initial_clip) for e in pileup_region.vector])
+        raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
         # mean = raw_signal.mean()
@@ -160,7 +164,6 @@ class GenomicSignal:
         # Slope signal
         slope_signal = self.slope(boyle_signal, self.sg_coefs)
 
-
         # Hon normalization on slope signal (between-dataset slope smoothing)
         # abs_seq = array([abs(e) for e in slope_signal])
         # perc = scoreatpercentile(abs_seq, per_slope)
@@ -168,21 +171,25 @@ class GenomicSignal:
         # slopehon_signal = self.hon_norm(slope_signal, perc, std)
 
         # Writing signal
-        if(print_raw_signal):
-            signal_file = open(print_raw_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(raw_signal)])+"\n")
+        if (print_raw_signal):
+            signal_file = open(print_raw_signal, "a")
+            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                [str(e) for e in nan_to_num(raw_signal)]) + "\n")
             signal_file.close()
-        if(print_bc_signal):
-            signal_file = open(print_bc_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(bias_corrected_signal)])+"\n")
+        if (print_bc_signal):
+            signal_file = open(print_bc_signal, "a")
+            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                [str(e) for e in nan_to_num(bias_corrected_signal)]) + "\n")
             signal_file.close()
-        if(print_norm_signal):
-            signal_file = open(print_norm_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(boyle_signal)])+"\n")
+        if (print_norm_signal):
+            signal_file = open(print_norm_signal, "a")
+            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                [str(e) for e in nan_to_num(boyle_signal)]) + "\n")
             signal_file.close()
-        if(print_slope_signal):
-            signal_file = open(print_slope_signal,"a")
-            signal_file.write("fixedStep chrom="+ref+" start="+str(start+1)+" step=1\n"+"\n".join([str(e) for e in nan_to_num(slope_signal)])+"\n")
+        if (print_slope_signal):
+            signal_file = open(print_slope_signal, "a")
+            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                [str(e) for e in nan_to_num(slope_signal)]) + "\n")
             signal_file.close()
 
         # Returning normalized and slope sequences
@@ -195,12 +202,12 @@ class GenomicSignal:
         Keyword arguments:
         signal -- Input signal.
         bias_table -- Bias table.
-        
+
         Return:
         bias_corrected_signal -- Bias-corrected sequence.
         """
 
-        if(not bias_table): return signal
+        if (not bias_table): return signal
 
         # Parameters
         window = 50
@@ -208,61 +215,84 @@ class GenomicSignal:
 
         # Initialization
         fastaFile = Fastafile(genome_file_name)
-        fBiasDict = bias_table[0]; rBiasDict = bias_table[1]
+        fBiasDict = bias_table[0];
+        rBiasDict = bias_table[1]
         k_nb = len(fBiasDict.keys()[0])
-        p1 = start; p2 = end
-        p1_w = p1 - (window/2); p2_w = p2 + (window/2)
-        p1_wk = p1_w - int(floor(k_nb/2.)); p2_wk = p2_w + int(ceil(k_nb/2.))
-        if(p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(floor(k_nb / 2.))
+        p2_wk = p2_w + int(ceil(k_nb / 2.))
+        if (p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
 
         # Raw counts
-        nf = [0.0] * (p2_w-p1_w); nr = [0.0] * (p2_w-p1_w)
+        nf = [0.0] * (p2_w - p1_w)
+        nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
-            if((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos-p1_w] += 1.0
-            if((read.is_reverse) and ((read.aend-1) < p2_w)): nr[read.aend-1-p1_w] += 1.0
+            if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
+            if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
 
         # Smoothed counts
-        Nf = []; Nr = []
-        fSum = sum(nf[:window]); rSum = sum(nr[:window]);
-        fLast = nf[0]; rLast = nr[0]
-        for i in range((window/2),len(nf)-(window/2)):
+        Nf = []
+        Nr = []
+        fSum = sum(nf[:window])
+        rSum = sum(nr[:window])
+        fLast = nf[0]
+        rLast = nr[0]
+        for i in range((window / 2), len(nf) - (window / 2)):
             Nf.append(fSum)
             Nr.append(rSum)
-            fSum -= fLast; fSum += nf[i+(window/2)]; fLast = nf[i-(window/2)+1]
-            rSum -= rLast; rSum += nr[i+(window/2)]; rLast = nr[i-(window/2)+1]
+            fSum -= fLast
+            fSum += nf[i + (window / 2)]
+            fLast = nf[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += nr[i + (window / 2)]
+            rLast = nr[i - (window / 2) + 1]
 
         # Fetching sequence
-        #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
-        #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
+        # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
+        # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1, p2_wk)).upper())
 
         # Iterating on sequence to create signal
-        af = []; ar = []
-        for i in range(int(ceil(k_nb/2.)), len(currStr)-int(floor(k_nb/2))+1):
-            fseq = currStr[i-int(floor(k_nb/2.)):i+int(ceil(k_nb/2.))]
-            rseq = currRevComp[len(currStr)-int(ceil(k_nb/2.))-i:len(currStr)+int(floor(k_nb/2.))-i]
-            try: af.append(fBiasDict[fseq])
-            except Exception: af.append(defaultKmerValue)
-            try: ar.append(rBiasDict[rseq])
-            except Exception: ar.append(defaultKmerValue)
+        af = []
+        ar = []
+        for i in range(int(ceil(k_nb / 2.)), len(currStr) - int(floor(k_nb / 2)) + 1):
+            fseq = currStr[i - int(floor(k_nb / 2.)):i + int(ceil(k_nb / 2.))]
+            rseq = currRevComp[len(currStr) - int(ceil(k_nb / 2.)) - i:len(currStr) + int(floor(k_nb / 2.)) - i]
+            try:
+                af.append(fBiasDict[fseq])
+            except Exception:
+                af.append(defaultKmerValue)
+            try:
+                ar.append(rBiasDict[rseq])
+            except Exception:
+                ar.append(defaultKmerValue)
 
         # Calculating bias and writing to wig file
-        fSum = sum(af[:window]); rSum = sum(ar[:window])
-        fLast = af[0]; rLast = ar[0]
+        fSum = sum(af[:window])
+        rSum = sum(ar[:window])
+        fLast = af[0]
+        rLast = ar[0]
         bias_corrected_signal = []
-        for i in range((window/2),len(af)-(window/2)):
-            nhatf = Nf[i-(window/2)]*(af[i]/fSum)
-            nhatr = Nr[i-(window/2)]*(ar[i]/rSum)
-            zf = log(nf[i]+1)-log(nhatf+1)
-            zr = log(nr[i]+1)-log(nhatr+1)
-            bias_corrected_signal.append(zf+zr)
-            fSum -= fLast; fSum += af[i+(window/2)]; fLast = af[i-(window/2)+1]
-            rSum -= rLast; rSum += ar[i+(window/2)]; rLast = ar[i-(window/2)+1]
+        for i in range((window / 2), len(af) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+            zf = log(nf[i] + 1) - log(nhatf + 1)
+            zr = log(nr[i] + 1) - log(nhatr + 1)
+            bias_corrected_signal.append(zf + zr)
+            fSum -= fLast
+            fSum += af[i + (window / 2)]
+            fLast = af[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += ar[i + (window / 2)]
+            rLast = ar[i - (window / 2) + 1]
 
         # Fixing the negative number in bias corrected signal
         min_value = abs(min(bias_corrected_signal))
-        bias_fixed_signal = [e+min_value for e in bias_corrected_signal]
+        bias_fixed_signal = [e + min_value for e in bias_corrected_signal]
 
         # Termination
         fastaFile.close()
@@ -284,7 +314,7 @@ class GenomicSignal:
 
         norm_seq = []
         for e in sequence:
-            norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
+            norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
         return norm_seq
 
     def boyle_norm(self, sequence):
@@ -298,8 +328,8 @@ class GenomicSignal:
         Return:
         norm_seq -- Normalized sequence.
         """
-        mean = array([e for e in sequence if e>0]).mean()
-        norm_seq = [(float(e)/mean) for e in sequence]
+        mean = array([e for e in sequence if e > 0]).mean()
+        norm_seq = [(float(e) / mean) for e in sequence]
         return norm_seq
 
     def savitzky_golay_coefficients(self, window_size, order, deriv):
@@ -317,20 +347,20 @@ class GenomicSignal:
         """
 
         # Get statistics
-        #try: # TODO ERRORS
+        # try: # TODO ERRORS
         window_size = abs(int(window_size))
         order = abs(int(order))
-        #except ValueError, msg:
+        # except ValueError, msg:
         #    raise ValueError("windowSize and order have to be of type int")
-        #if windowSize % 2 != 1 or windowSize < 1:
+        # if windowSize % 2 != 1 or windowSize < 1:
         #    raise TypeError("windowSize size must be a positive odd number")
-        #if windowSize < order + 2:
+        # if windowSize < order + 2:
         #    raise TypeError("windowSize is too small for the polynomials order")
-        order_range = range(order+1)
-        half_window = (window_size -1) // 2
+        order_range = range(order + 1)
+        half_window = (window_size - 1) // 2
 
         # Precompute Coefficients
-        b = mat([[k**i for i in order_range] for k in range(-half_window, half_window+1)])
+        b = mat([[k ** i for i in order_range] for k in range(-half_window, half_window + 1)])
         m = linalg.pinv(b).A[deriv]
         return m[::-1]
 
@@ -346,8 +376,6 @@ class GenomicSignal:
         slope_seq -- Slope sequence.
         """
         slope_seq = convolve(sequence, sg_coefs)
-        slope_seq = [e for e in slope_seq[(len(sg_coefs)/2):(len(slope_seq)-(len(sg_coefs)/2))]]
+        slope_seq = [e for e in slope_seq[(len(sg_coefs) / 2):(len(slope_seq) - (len(sg_coefs) / 2))]]
 
         return slope_seq
-
-
