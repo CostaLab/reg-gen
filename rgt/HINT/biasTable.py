@@ -97,9 +97,9 @@ class BiasTable:
         fastaFile = Fastafile(genome_file_name)
 
         # Initializing dictionaries
-        obsDictF = dict();
+        obsDictF = dict()
         obsDictR = dict()
-        expDictF = dict();
+        expDictF = dict()
         expDictR = dict()
 
         ct_reads_r = 0
