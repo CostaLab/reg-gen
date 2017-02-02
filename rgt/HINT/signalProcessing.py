@@ -227,11 +227,19 @@ class GenomicSignal:
         if (p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
 
         # Raw counts
+
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
-            if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
-            if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
+            if (not read.is_reverse):
+                for i in range(max(read.pos + forward_shift, start), min(read.pos + forward_shift + 1, end - 1)):
+                    nf[i - start] += 1.0
+            else:
+                for i in range(max(read.aend + reverse_shift - 1, start), min(read.aend + reverse_shift, end - 1)):
+                    nr[i - start] += 1.0
+
+            #if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
+            #if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
 
         # Smoothed counts
         Nf = []
@@ -253,9 +261,8 @@ class GenomicSignal:
         # Fetching sequence
         # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        currStr = str(fastaFile.fetch(chrName, p1_wk + forward_shift, p2_wk + forward_shift - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + reverse_shift + 1,
-                                                                     p2_wk + reverse_shift)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1, p2_wk)).upper())
 
         # Iterating on sequence to create signal
         af = []
