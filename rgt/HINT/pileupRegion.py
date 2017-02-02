@@ -87,7 +87,7 @@ class PileupRegion:
 
         try:
             # Forward strand update
-            if(not alignment.is_reverse):
+            if not alignment.is_reverse:
                 for i in range(max(alignment.pos,self.start),min(alignment.pos+self.ext,self.end-1)):
                     self.vector[i-self.start] += 1.0 
             # Reverse strand update
