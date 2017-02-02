@@ -976,7 +976,7 @@ class AuxiliaryFunctions:
         return min(max(score,0),1000)
 
     @staticmethod
-    def overlap(t1, t2):
+    def overlap(t1, t2, strand_specific=False):
         """Checks if one interval contains any overlap with another interval.
 
         *Keyword arguments:*
@@ -989,9 +989,17 @@ class AuxiliaryFunctions:
             - 1 -- if i1 is after i2.
             - 0 -- if there is any overlap.
         """
-        if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
-        if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
-        return 0 # interval1 overlaps interval2
+        if strand_specific:
+            if (t1[1] <= t2[0]): return -1  # interval1 is before interval2
+            if (t2[1] <= t1[0]): return 1  # interval1 is after interval2
+            if t1[4] == t2[2]:
+                return 0  # interval1 overlaps interval2
+            else:
+                return 2  # interval1 overlaps interval2 on the opposite strand
+        else:
+            if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
+            if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
+            return 0 # interval1 overlaps interval2
 
     @staticmethod
     def revcomp(s):

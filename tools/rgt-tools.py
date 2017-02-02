@@ -127,6 +127,7 @@ if __name__ == "__main__":
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
     parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_bedrename.add_argument('-s', action="store_true", help="Strand specific")
     parser_bedrename.add_argument('-d', action="store_true", help="Show the distance")
     parser_bedrename.add_argument('-organism',metavar='  ', type=str, help="Define the organism")
     parser_bedrename.add_argument('-l', metavar='  ', type=int, default=1000, 
@@ -141,8 +142,10 @@ if __name__ == "__main__":
     parser_bedchstrand.add_argument('-o', metavar='  ', type=str, help="Output BED file")
     parser_bedchstrand.add_argument('-d', metavar='  ', type=int, default=0,
                                     help="Define the threshold of distance (default:0 bp")
-    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, help="Target BED file")
+    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, default=None, help="Target BED file")
     parser_bedchstrand.add_argument('-r', action="store_true", help="Reverse the strand")
+    parser_bedchstrand.add_argument('-a', metavar='  ', type=str, default=None,
+                                    help="Define the stand for all regions")
 
     ############### BED extend ###############################################
     # python rgt-convertor.py
@@ -199,6 +202,7 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
     parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output directory for FASTA files")
     parser_bed2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome sequence")
+    parser_bed2fasta.add_argument('-order', action="store_true", default=False, help="Make ranking number as sequence name")
 
     ############### BED filtered by gene name ################################
     parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
@@ -222,6 +226,11 @@ if __name__ == "__main__":
     parser_bedaddcol.add_argument('-o', '-output', type=str, help="Output BED file")
     parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
     parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
+
+    ############### BED average size ################################
+    parser_bedaversize = subparsers.add_parser('bed_size',
+                                             help="[BED] Calculate the average size.")
+    parser_bedaversize.add_argument('-i', '-input', type=str, help="Input BED file")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -544,8 +553,8 @@ if __name__ == "__main__":
             bed.replace_region_name(regions=target)
             bed.write_bed(args.o)
         else:
-            renamebed = bed.gene_association(gene_set=None, organism=args.organism,
-                                             promoterLength=args.l,
+            renamebed = bed.gene_association2(gene_set=None, organism=args.organism,
+                                             promoterLength=args.l, strand_specific=args.s,
                                              threshDist=args.t, show_dis=args.d)
             renamebed.write_bed(args.o)
 
@@ -555,15 +564,21 @@ if __name__ == "__main__":
         print(tag + ": [BED] Change strands by target BED file")
         print("input:\t" + args.i)
         print("output:\t" + args.o)
-        print("target:\t" + args.t)
 
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
-        target = GenomicRegionSet(args.t)
-        target.read_bed(args.t)
-        if args.d != "0":
-            target.extend(left=int(args.d), right=int(args.d))
-        bed.replace_region_strand(regions=target, reverse=args.r)
+        # print(len(bed))
+        if args.t:
+            print("target:\t" + args.t)
+            target = GenomicRegionSet(args.t)
+            target.read_bed(args.t)
+            if args.d != "0":
+                target.extend(left=int(args.d), right=int(args.d))
+            bed.replace_region_strand(regions=target, reverse=args.r)
+        elif args.a:
+            bed.replace_region_strand(all=args.a)
+        else:
+            bed.replace_region_strand(regions=None, reverse=args.r)
         bed.write_bed(args.o)
 
 
@@ -695,7 +710,22 @@ if __name__ == "__main__":
         if not os.path.exists(args.o): os.makedirs(args.o)
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
-        for r in regions:
+        if args.order:
+            ranking = []
+            with open(args.i) as f:
+                for line in f:
+                    if line.startswith("#"): continue
+                    else:
+                        l = line.strip().split()
+                        ranking.append([l[0],int(l[1]),int(l[2])])
+
+        for i, r in enumerate(regions):
+            if args.order:
+                for j, reg in enumerate(ranking):
+                    if reg[0] == r.chrom and reg[1] == r.initial and reg[2] == r.final:
+                        name = "peak_"+str(j+1)
+            else: name = r.name
+
             if len(r.data.split()) == 7:
                 target = r.extract_blocks()
                 #print("*** using block information in BED file")
@@ -714,7 +744,7 @@ if __name__ == "__main__":
                     ss = [s[i:i+70] for i in range(0, len(s), 70)]
                     writelines += ss
 
-                with open(os.path.join(args.o, r.name + ".fa"), "w") as f:
+                with open(os.path.join(args.o, name + ".fa"), "w") as f:
                     for line in writelines:
                         print(line, file=f)
             else:
@@ -722,8 +752,8 @@ if __name__ == "__main__":
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
                 ss = [s[i:i+70] for i in range(0, len(s), 70)]
-                with open(os.path.join(args.o, r.name + ".fa"), "w") as f:
-                    print("> "+ r.name + " "+r.toString()+ " "+r.orientation, file=f)
+                with open(os.path.join(args.o, name + ".fa"), "w") as f:
+                    print("> "+ name + " "+r.toString()+ " "+r.orientation, file=f)
                     for seq in ss:
                         print(seq, file=f)
 
@@ -851,6 +881,17 @@ if __name__ == "__main__":
             elif r.name in gene2: o2.add(r)
         o1.write_bed(args.o1)
         o2.write_bed(args.o2)
+
+
+    ############### BED average size ###########################
+    elif args.mode == "bed_size":
+        print("input:\t" + args.i)
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+        print("Average size:\t"+str(bed.average_size()))
+        print("Size variance:\t" + str(bed.size_variance()))
+        print()
+
 
 
     ############### BAM filtering by BED ###########################
@@ -1010,14 +1051,7 @@ if __name__ == "__main__":
         # pp.close()
         plt.savefig(os.path.join(args.o,tag+'_MAplot.png'), bbox_inches='tight')
 
-
         print("finish")
-
-
-
-
-
-
 
     ############### THOR split #############################################
     elif args.mode == "thor_split":
@@ -1035,7 +1069,7 @@ if __name__ == "__main__":
         print("Number of input peaks:\t"+str(len(bed)))
 
         if args.rn and args.g:
-            bed2 = bed.gene_association(organism=args.g)
+            bed2 = bed.gene_association(organism=args.g, strand_specific=True)
         else:
             bed2 = bed
 
@@ -1046,24 +1080,11 @@ if __name__ == "__main__":
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
             region.data = "\t".join([str(fc)] + data[1:])
-        # bed2.write_bed(args.o)
 
-        # gain_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_gain.bed"), "w")
-        # lose_f = open(os.path.join(args.o,name+"_"+str(args.p)+"_lose.bed"), "w")
         gain_peaks = GenomicRegionSet("gain_peaks")
         lose_peaks = GenomicRegionSet("lose_peaks")
-        mix = GenomicRegionSet("mix")
-
-        for region in bed2:
-            l = region.data.split()
-            s = l[5].split(";")
-            if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
-                if float(l[0]) > 0:
-                    gain_peaks.add(region)
-                elif float(l[0]) < 0:
-                    lose_peaks.add(region)
-        gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
-        lose_peaks.write_bed(os.path.join(args.o, name + tag + "_lose.bed"))
+        gain_table = GenomicRegionSet("gain_table")
+        lose_table = GenomicRegionSet("lose_table")
 
         for region in bed2:
             l = region.data.split()
@@ -1074,11 +1095,22 @@ if __name__ == "__main__":
                 length = abs(region.final - region.initial)
                 ns1 = float(s1) / length
                 ns2 = float(s2) / length
-                region.data = "\t".join([l[0], str(s1), str(s2), str(length),
-                                         str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
-                mix.add(region)
+                data = "\t".join([l[0], str(s1), str(s2), str(length),
+                                  str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
+                if float(l[0]) > 0:
+                    gain_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                                 orientation=region.orientation, data=data, name=region.name))
+                    gain_peaks.add(region)
+                elif float(l[0]) < 0:
+                    lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
+                                                 orientation=region.orientation, data=data, name=region.name))
+                    lose_peaks.add(region)
 
-        mix.write_bed(os.path.join(args.o, name+tag+".table"))
+        gain_peaks.write_bed(os.path.join(args.o, name + tag + "_gain.bed"))
+        lose_peaks.write_bed(os.path.join(args.o, name + tag + "_lose.bed"))
+        gain_table.write_bed(os.path.join(args.o, name + tag + "_gain.table"))
+        lose_table.write_bed(os.path.join(args.o, name + tag + "_lose.table"))
+
         print("Number of gain peaks:\t" + str(len(gain_peaks)))
         print("Number of lose peaks:\t" + str(len(lose_peaks)))
         

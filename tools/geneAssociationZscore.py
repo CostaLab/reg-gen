@@ -10,25 +10,26 @@ outdir=""
 
 back=False
 designFile = sys.argv[1]
-anotationPath = sys.argv[2]
-randomize = int(sys.argv[3])
+genomeName = sys.argv[2]
+geneFile = sys.argv[3]
+randomize = int(sys.argv[4])
 backGroundPeaks=False
-if len(sys.argv) > 4:
-  backGroundPeaksName = sys.argv[4]
+if len(sys.argv) > 5:
+  backGroundPeaksName = sys.argv[6]
   backBed=GenomicRegionSet("BACK")
   backBed.read_bed(backGroundPeaksName)  
   backGroundPeaks=True
    
 distance=50000
-if len(sys.argv) > 5:
-  distance=len(sys.argv[5])
-
 if len(sys.argv) > 6:
-  outdir=sys.argv[6]
+  distance=len(sys.argv[6])
+
+if len(sys.argv) > 7:
+  outdir=sys.argv[7]
 
 
-genomeFile=anotationPath+"chrom.sizes"
-geneFile=anotationPath+"association_file.bed"
+#genomeFile=anotationPath+"chrom.sizes"
+#geneFile=anotationPath+"association_file.bed"
 
 exps=ExperimentalMatrix()
 exps.read(designFile)
@@ -53,6 +54,8 @@ if len(outdir)>0:
   
 print genesets
 
+random_regions=[]
+
 for region in exps.get_regionsets():
     for j,n in enumerate(range(randomize)):
             if backGroundPeaks:
@@ -61,31 +64,39 @@ for region in exps.get_regionsets():
             else:
               br=region.random_regions('hg19',total_size=len(region),overlap_result=True, overlap_input=True)
 
-            br.write_bed(str(j)+"random.bed")
+            #br.write_bed(str(j)+"random.bed")
+            random_regions.append(br)
     for g in genesets:
-        #print region,g
-        bed = GenomicRegionSet("")
-        [degenes,de_peak_genes, mappedGenes, totalPeaks,bla] = bed.filter_by_gene_association(region.fileName,g.genes,geneFile,genomeFile,threshDist=distance)
+        region_aux=deepcopy(region)
+        [all_genes,mapped_genes,all_proxs,mapped_proxs] = region_aux.filter_by_gene_association(gene_set=g,organism=genomeName,threshDist=distance)
+
+#            self in order to keep only the coordinates associated to genes which are in gene_set
+#
+#            - all_genes = GeneSet that contains all genes associated with the coordinates
+#            - mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
+#            - all_proxs = List that contains all the proximity information of genes associated with the coordinates
+#            - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
+
+
         randomRes=[]
         #backBed=GenomicRegionSet("BACK")    
         #backBed.read_bed(backGroundPeaks)
-        for j,n in enumerate(range(randomize)):
-            backUP=GenomicRegionSet("BACKUP")
-            [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks,bla] = backUP.filter_by_gene_association(str(j)+"random.bed",g.genes,geneFile,genomeFile,threshDist=distance)
-            randomRes.append(back_de_peak_genes)
-            #print str(j)+"random.bed"
+        for br in random_regions:
+          random=deepcopy(br)
+          [back_all_genes,back_mapped_genes,back_all_proxs,back_mapped_proxs] = random.filter_by_gene_association(gene_set=g,organism=genomeName,threshDist=distance)
+          randomRes.append(len(back_mapped_genes))
+
         randomRes=numpy.array(randomRes)
-        #print randomRes
-        a=de_peak_genes
+        a=len(mapped_genes)
         m=numpy.mean(randomRes)
         s=numpy.std(randomRes)
         z=(a-m)/s
-        prop_de=de_peak_genes/float(degenes)
-        prop_back=m/float(degenes)
+        #prop_de=a/float(degenes)
+        #prop_back=m/float(degenes)
         p= scipy.stats.norm.sf(z)
-        print region.name,g.name,a,m,z,degenes,mappedGenes,len(allgenes),prop_de,prop_back,prop_de/prop_back,p,degenes
+        print region.name,g.name,a,m,z,len(all_genes),len(allgenes),p
 
-        if len(outdir)>0:
-          outGene.write(region.name+"\t"+g.name+"\t"+("\t".join(bed.genes))+"\n")  
-          bed.write_bed(outdir+"/"+g.name+"_"+region.name+".bed")  
+        #if len(outdir)>0:
+        #  outGene.write(region.name+"\t"+g.name+"\t"+("\t".join(bed.genes))+"\n")  
+        #  bed.write_bed(outdir+"/"+g.name+"_"+region.name+".bed")  
 

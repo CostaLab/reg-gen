@@ -20,7 +20,7 @@ from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
-                         integrate_stat
+                         integrate_stat, update_profile, merge_DBD_regions
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -88,7 +88,7 @@ def main():
     parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the experimental file and leave the program.")
     
 
-    parser_promotertest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
+    parser_promotertest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 20)")
     parser_promotertest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
     parser_promotertest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
     parser_promotertest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexator] Activates the filtering of low complexity regions and repeats in the sequence data (Default: off)")
@@ -97,8 +97,6 @@ def main():
     parser_promotertest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_promotertest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
     parser_promotertest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
-    parser_promotertest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
-    
     
     ################### Genomic Region Test ##########################################
     h_region = "Genomic region test evaluates the association between the given lncRNA to the target regions by randomization."
@@ -127,7 +125,7 @@ def main():
     parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
     
-    parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 15)")
+    parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 20)")
     parser_randomtest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
     parser_randomtest.add_argument('-c', type=int, default=2, metavar='  ', help="[Triplexator] Sets the tolerated number of consecutive errors with respect to the canonical triplex rules as such were found to greatly destabilize triplexes in vitro (Default: 2)")
     parser_randomtest.add_argument('-fr', type=str, default="off", metavar='  ', help="[Triplexator] Activates the filtering of low complexity regions and repeats in the sequence data (Default: off)")
@@ -136,8 +134,7 @@ def main():
     parser_randomtest.add_argument('-mf', action="store_true", default=False, help="[Triplexator] Merge overlapping features into a cluster and report the spanning region.")
     parser_randomtest.add_argument('-rm', type=int, default=0, metavar='  ', help="[Triplexator] Set the multiprocessing")
     parser_randomtest.add_argument('-par', type=str, default="", metavar='  ', help="[Triplexator] Define other parameters for Triplexator")
-    parser_randomtest.add_argument('-tp', type=str, default=False, metavar='  ', help="[Triplexator] Set path of the triplexator program")
-        
+
     ##########################################################################
     parser_bed2bed = subparsers.add_parser('get_dbss', help="Get DBSs in BED format from the single BED file")
     parser_bed2bed.add_argument('-i',type=str, metavar='  ', help='Input BED file of the target regions')
@@ -227,12 +224,16 @@ def main():
             #revise_index(root=args.path, show_RNA_ass_gene=True)
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
+            merge_DBD_regions(path=args.path)
 
             sys.exit(0)
 
         ####################################################################################
         ######### updatehtml
         elif args.mode == "updatehtml":
+            for item in os.listdir(args.path):
+                pro = os.path.join(args.path, item, "profile.txt")
+                if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item))
             revise_index(root=args.path, show_RNA_ass_gene=True)
             generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
@@ -351,7 +352,7 @@ def main():
         promoter.get_rna_region_str(rna=args.r)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, tp=args.tp)
+                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
         
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -476,7 +477,7 @@ def main():
         obed = os.path.basename(args.o)
         randomtest.connect_rna(rna=args.r, temp=args.o)
 
-        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed, tp=args.tp,
+        randomtest.target_dna(temp=args.o, remove_temp=args.rt, l=args.l, e=args.e, obed=obed,
                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, cutoff=args.ccf )
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -485,7 +486,7 @@ def main():
 
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
-                               filter_bed=args.f, alpha=args.a, tp=args.tp)
+                               filter_bed=args.f, alpha=args.a)
         
         if len(randomtest.rbss) == 0: 
             no_binding_code()
@@ -544,3 +545,4 @@ def main():
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))
+        write_stat(stat=randomtest.stat, filename=os.path.join(args.o, "stat.txt"))

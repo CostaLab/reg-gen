@@ -136,46 +136,41 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     for line in profile_f:
         line = line.strip()
         line = line.split("\t")
-        profile[line[0]] = line[1:]
+        if line[0] == "Experiment": continue
+        elif len(line) > 5: profile[line[0]] = line[1:]
 
     for i, exp in enumerate(profile.keys()):
         # print(exp)
         c += 1
 
-        try:
-            if profile[exp][5] == "-":
-                new_line = [str(c), exp, profile[exp][0]]
-            else:
-                new_line = [str(c),
-                            '<a href="' + os.path.join(exp, "index.html") + \
-                            '">' + exp + "</a>", profile[exp][0]]
+        # try:
+        if profile[exp][5] == "-":
+            new_line = [str(c), exp, profile[exp][0]]
+        else:
+            new_line = [str(c),
+                        '<a href="' + os.path.join(exp, "index.html") + \
+                        '">' + exp + "</a>", profile[exp][0]]
 
-            if show_RNA_ass_gene:
-                new_line.append(
-                    split_gene_name(gene_name=profile[exp][7],
-                                    org=profile[exp][2])
-                )
+        if show_RNA_ass_gene:
+            new_line.append(
+                split_gene_name(gene_name=profile[exp][7],
+                                org=profile[exp][2]))
 
-            if profile[exp][6] == "-":
-                new_line += [profile[exp][4],
-                             profile[exp][5], profile[exp][6],
-                             profile[exp][2], profile[exp][3]]
-
-            elif float(profile[exp][6]) < 0.05:
-                new_line += [profile[exp][4],
-                             profile[exp][5],
-                             "<font color=\"red\">" + \
-                             profile[exp][6] + "</font>",
-                             profile[exp][2], profile[exp][3]]
-            else:
-                new_line += [profile[exp][4],
-                             profile[exp][5], profile[exp][6],
-                             profile[exp][2], profile[exp][3]]
-            data_table.append(new_line)
-        except:
-            if exp != "Experiment":
-                print("Error in loading profile: " + exp)
-            continue
+        if float(profile[exp][6]) < 0.05:
+            new_line += [profile[exp][4],
+                         profile[exp][5],
+                         "<font color=\"red\">" + \
+                         profile[exp][6] + "</font>",
+                         profile[exp][2], profile[exp][3]]
+        else:
+            new_line += [profile[exp][4],
+                         profile[exp][5], profile[exp][6],
+                         profile[exp][2], profile[exp][3]]
+        data_table.append(new_line)
+        # except:
+        #     if exp != "Experiment":
+        #         print("Error in loading profile: " + exp)
+        #     continue
 
     html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                          align=10, cell_align="left", sortable=True)
@@ -200,6 +195,47 @@ def revise_index(root, show_RNA_ass_gene=False):
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p),
                        link_d=dir_list, show_RNA_ass_gene=show_RNA_ass_gene)
+
+def update_profile(dirpath, name_list=None):
+    header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
+                   "Top_DBD", "p-value", "closest_genes"]
+    profiles = []
+    pro = os.path.join(dirpath, "profile.txt")
+    if not os.path.isfile(pro):
+        print("There is no profile.txt in this directory.")
+        return
+
+    if name_list:
+        pass
+    else:
+        for item in os.listdir(dirpath):
+            stat = os.path.join(dirpath, item, "stat.txt")
+            summary = os.path.join(dirpath, item, "summary.txt")
+            if os.path.isfile(stat) and os.path.isfile(summary):
+                with open(stat) as f:
+                    for line in f:
+                        l = line.strip().split()
+                        if l[0] == "name":
+                            each_name = l[1]
+                            each_tag = l[1].split("_")[-1]
+                        if l[0] == "genome":
+                            each_organism = l[1]
+                        if l[0] == "DBD_sig":
+                            each_DBD_sig = l[1]
+                        if l[0] == "p_value":
+                            each_p_value = l[1]
+                with open(summary) as g:
+                    for line in g:
+                        if "rgt-TDF" in line and " -de " in line:
+                            l = line.strip().split()
+                            each_target_region = os.path.basename(l[l.index("-de") + 1])
+                profiles.append([item,each_name,each_tag,each_organism,each_target_region,
+                                 each_DBD_sig,"n.a.",each_p_value,"-"])
+
+    with open(pro, "w") as f:
+        print("\t".join(header_list), file=f)
+        for line in profiles:
+            print("\t".join(line), file=f)
 
 
 def gen_heatmap(path):
@@ -390,8 +426,8 @@ def random_each(input):
     str(i), self.rna_fasta, self.dna_region, temp, self.organism, self.rbss, str(marks.count(i)),
     number, rna,            region,          temp, organism,      rbss,      number of mark
 
-    7  8  9  10  11  12  13  14  15          16                17   18
-    l, e, c, fr, fm, of, mf, rm, filter_bed, self.genome_path, tp   par
+    7  8  9  10  11  12  13  14  15          16                 17
+    l, e, c, fr, fm, of, mf, rm, filter_bed, self.genome_path,  par
     """
     import sys
     # Filter BED file
@@ -408,8 +444,8 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True,
                        l=int(input[7]), e=int(input[8]), c=input[9], fr=input[10],
                        fm=input[11], of=input[12], mf=input[13], rm=input[14],
-                       par=input[18], genome_path=input[16],
-                       dna_fine_posi=False, tp=input[17])
+                       par=input[17], genome_path=input[16],
+                       dna_fine_posi=False)
 
     txp.merge_rbs(rbss=input[5], rm_duplicate=True)
 
@@ -417,8 +453,8 @@ def random_each(input):
                        organism=input[4], prefix=str(input[0]), remove_temp=True, 
                        l=int(input[7]), e=int(input[8]),  c=input[9], fr=input[10], 
                        fm=input[11], of=input[12], mf=input[13], rm=input[14], 
-                       par=input[18], genome_path=input[16],
-                       dna_fine_posi=True, tp=input[17])
+                       par=input[17], genome_path=input[16],
+                       dna_fine_posi=True)
 
     txpf.merge_rbs(rbss=input[5], rm_duplicate=True)
     sys.stdout.flush()
@@ -444,7 +480,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", tp=False):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -453,7 +489,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     # Triplexator
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
                     output=os.path.join(temp, "dna_"+prefix+".txp"), 
-                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par, tp=tp)
+                    l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par)
     # Read txp
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
@@ -465,7 +501,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
 
     return txp
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", tp=False):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
@@ -564,37 +600,45 @@ def split_gene_name(gene_name, org):
         if ":" in gene_name:
             genes = gene_name.split(":")
             genes = list(set(genes))
-            dlist = []
-            glist = []
+            # dlist = []
+            # glist = []
+            result = []
             for i, g in enumerate(genes):
                 if "(" in g:
                     d = g.partition('(')[2].partition(')')[0]
-                    dlist.append((int(d)))
+                    # dlist.append(int(d))
                     g = g.partition('(')[0]
-                    glist.append(g)
+                    # glist.append(g)
+                    result.append(p1+g+p2+g+p3+"("+d+")")
 
                 else:
-                    if i == 0:
-                        result = p1+g+p2+g+p3
-                    else:
-                        result += ","+p1+g+p2+g+p3
-            if dlist:
-                i = dlist.index(min(dlist))
-                if dlist[i] < 0: 
-                    ds = str(dlist[i])
-                    result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-                    try:
-                        j = dlist.index(max(dlist))
-                        if dlist[j] < 0: rds = str(dlist[j])
-                        else:
-                            rds = "+"+ str(dlist[j])
-                            result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
-                    except:
-                        pass
-                else: 
-                    ds = "+"+str(dlist[i])
-                    result = p1+glist[i]+p2+glist[i]+p3+"("+str(dlist[i])+")"
-                
+                    # dlist.append(0)
+                    # glist.append(g)
+                    result.append(p1 + g + p2 + g + p3)
+                    # if i == 0:
+                    #     result = p1+g+p2+g+p3
+                    # else:
+                    #     result += ","+p1+g+p2+g+p3
+            result = ",".join(result)
+            # if dlist:
+            # i = dlist.index(min(dlist))
+            # if dlist[i] < 0:
+            #     ds = str(dlist[i])
+            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+            #     try:
+            #         j = dlist.index(max(dlist))
+            #         if dlist[j] < 0: rds = str(dlist[j])
+            #         else:
+            #             rds = "+"+ str(dlist[j])
+            #             result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
+            #     except:
+            #         pass
+            # elif dlist[i] > 0:
+            #     ds = "+"+str(dlist[i])
+            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
+            # else:
+            #     result = p1 + glist[i] + p2 + glist[i] + p3
+
                     
         elif gene_name == ".":
             result = "none"
@@ -1088,7 +1132,10 @@ def write_stat(stat, filename):
                   "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
     with open(filename, "w") as f:
         for k in order_stat:
-            print("\t".join([k,stat[k]]), file=f)
+            try:
+                print("\t".join([k,stat[k]]), file=f)
+            except:
+                continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
@@ -1113,3 +1160,18 @@ def integrate_stat(path):
 
         for item in data.keys():
             print("\t".join([data[item][o] for o in order_stat]), file=g)
+
+def merge_DBD_regions(path):
+    """Merge all available DBD regions in BED format. """
+
+    for t in os.listdir(path):
+        if os.path.isdir(os.path.join(path, t)):
+            dbd_pool = GenomicRegionSet(t)
+            for rna in os.listdir(os.path.join(path,t)):
+                f = os.path.join(path, t, rna, "DBD_"+rna+".bed")
+                if os.path.exists(f):
+                    dbd = GenomicRegionSet(rna)
+                    dbd.read_bed(f)
+                    for r in dbd: r.name = rna+"_"+r.name
+                    dbd_pool.combine(dbd)
+            dbd_pool.write_bed(os.path.join(path, t, "DBD_"+t+".bed"))

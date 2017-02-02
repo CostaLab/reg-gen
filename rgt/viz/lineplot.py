@@ -29,7 +29,7 @@ class Lineplot:
         self.exps.read(EMpath, test=test)
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
-                self.exps.match_ms_tags(f)
+                self.exps.match_ms_tags(f, test=test)
                 self.exps.remove_name()
 
         # if annotation:
@@ -173,11 +173,13 @@ class Lineplot:
                                     set([s, g, c, d])):
                                 # if self.cuebed[bed] <= set([s,g,c]):
                                 for bam in self.cuebam.keys():
+
                                     # print(self.cuebam[bam])
                                     # print(set([s,g,c]))
                                     if self.cuebam[bam] <= set([s, g, c, d]):
                                         i = self.bednames.index(bed)
                                         j = self.readsnames.index(bam)
+                                        # print(bed + "." + bam)
 
                                         # if len(self.processed_beds[i]) == 0:
                                         #     try:
@@ -196,6 +198,7 @@ class Lineplot:
                                         else:  # Single thread
                                             ts = time.time()
                                             cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
+                                            # print(len(self.processed_beds[i]))
                                             if "Conservation" in [s,g,c,d]:
                                                 cov.phastCons46way_score(stepsize=self.ss)
 
@@ -266,9 +269,11 @@ class Lineplot:
                                                     continue
                                                 else:
                                                     for i, car in enumerate(cov.coverage):
-                                                        if i == 0: avearr = np.array(car)
-                                                        else: avearr = numpy.vstack((avearr, car))
-
+                                                        if i == 0: avearr = np.array(car, ndmin=2)
+                                                        else:
+                                                            # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
+                                                            try: avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
+                                                            except: print(bed+"."+bam+"."+str(i))
                                                     avearr = numpy.average(avearr, axis=0)
                                                     if self.sense:
                                                         if log:
@@ -439,7 +444,7 @@ class Lineplot:
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
                 try:
                     ax.locator_params(axis='x', nbins=4)
-                    ax.locator_params(axis='y', nbins=4)
+                    ax.locator_params(axis='y', nbins=2)
                 except:
                     pass
         if printtable:

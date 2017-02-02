@@ -85,7 +85,7 @@ class GenomicRegion:
         else:
             return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 
-    def extend(self, left, right):
+    def extend(self, left, right, w_return=False):
         """Extend GenomicRegion on both sides.
 
         *Keyword arguments:*
@@ -93,14 +93,22 @@ class GenomicRegion:
             - left -- Define the length to extend on left.
             - right -- Define the length to extend on right.
         """
-        self.initial -= left
-        self.final += right 
-        
+
+        initial = self.initial - left
+        final = self.final + right
+
         #if left, right are negative, switching the border may be necessary
-        if self.initial > self.final:
-            self.initial, self.final = self.final, self.initial
-        
-        self.initial = max(self.initial, 0)
+        if initial > final:
+            initial, final = final, initial
+
+        initial = max(initial, 0)
+
+        if w_return:
+            return GenomicRegion(chrom=self.chrom,initial=initial, final=final,
+                                 name=self.name, orientation=self.orientation, data=self.data)
+        else:
+            self.initial = initial
+            self.final = final
 
     def overlap(self, region):
         """Return True, if GenomicRegion overlaps with region, else False.

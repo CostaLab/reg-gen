@@ -171,14 +171,9 @@ class ExperimentalMatrix:
                 regions = GenomicRegionSet(self.names[i])
                 if is_bedgraph:
                     regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
-                    
                 else:
-                    if test:
-                        g = GenomicRegionSet(self.names[i])
-                        g.read_bed(os.path.abspath(self.files[self.names[i]]))
-                        regions.sequences = g.sequences[0:11]
-                    else:
-                        regions.read_bed(os.path.abspath(self.files[self.names[i]]))  # Here change the relative path into absolute path
+                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
             
             elif t == "genes":
@@ -227,7 +222,6 @@ class ExperimentalMatrix:
         self.trash = list(set(self.trash))
         # for i, name in enumerate(self.names):
         for name in self.trash:
-            # print("88888888888888   "+name )
             i = self.names.index(name)
             del self.types[i]
             del self.names[i]
@@ -244,22 +238,19 @@ class ExperimentalMatrix:
             except: pass
         self.trash = []
 
-    def match_ms_tags(self,field):
+    def match_ms_tags(self,field, test=False):
         """Add more entries to match the missing tags of the given field. For example, there are tags for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. Then the regions are repeated for each tags from reads to match all reads.
 
         *Keyword arguments:*
 
             - field -- Field to add extra entries.
         """
-        
-        # print(field)
-        # print(self.fieldsDict)
+
         # check regions or reads have empty tag
         altypes = self.fieldsDict[field].keys()
         if "ALL" in altypes:
             altypes.remove("ALL")
             for name in self.fieldsDict[field]["ALL"]:
-                # print(name)
                 i = self.names.index(name)
                 for t in altypes:
                     # print("\t"+t)
@@ -286,6 +277,7 @@ class ExperimentalMatrix:
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
                         g.read_bed(self.files[name])
+                        if test: g.sequences = g.sequences[0:11]
                         self.objectsDict[n] = g
                     self.trash.append(name)
 

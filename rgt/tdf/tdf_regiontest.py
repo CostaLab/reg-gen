@@ -16,7 +16,7 @@ from matplotlib.ticker import MaxNLocator
 # Distal Libraries
 from rgt.SequenceSet import SequenceSet
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import SequenceType, Html, GenomeData
+from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import get_rna_region_str, connect_rna,\
     dbd_regions, lineplot, value2str, rank_array,\
     split_gene_name, rna_associated_gene, find_triplex, random_each
@@ -46,32 +46,34 @@ class RandomTest:
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
         self.dna_region = self.dna_region.gene_association(organism=self.organism)
+
         self.topDBD = []
+        self.stat = OrderedDict(name=rna_name, genome=organism)
+        self.stat["target_regions"] = str(len(self.dna_region))
+
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
-
         self.rna_regions = get_rna_region_str(rna)
 
     def connect_rna(self, rna, temp):
-        connect_rna(rna, temp, self.rna_name)
+        d = connect_rna(rna, temp, self.rna_name)
+        self.stat["exons"] = str(d[0])
+        self.stat["seq_length"] = str(d[1])
+        self.rna_len = d[1]
 
-        rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
-        rnas.read_fasta(os.path.join(temp, "rna_temp.fa"))
-        if not self.rna_name: self.rna_name = rnas[0].name
-        self.rna_len = rnas.total_len()
-
-    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, tp, obed=False):
+    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
 
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                           temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                           temp=temp, organism=self.organism, remove_temp=remove_temp,
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                            prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=True, region_set=self.dna_region, asgene_organism=self.organism, cutoff=cutoff)
         self.txp = txp
+        self.stat["DBSs_target_all"] = str(len(self.txp))
         txp.remove_duplicates()
         self.rbss = txp.merged_dict.keys()
         if len(self.rbss) == 0:
@@ -79,12 +81,14 @@ class RandomTest:
             sys.exit(1)
 
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                            temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                            temp=temp, organism=self.organism, remove_temp=remove_temp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                             prefix="dbs", dna_fine_posi=True)
         txpf.remove_duplicates()
         txpf.merge_rbs(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
+
+        self.stat["DBSs_target_all"] = str(len(self.txpf))
 
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
@@ -104,16 +108,18 @@ class RandomTest:
             self.region_dbsm[region.toString()] = self.region_dbs[region.toString()].get_dbs().merge(w_return=True)
             self.region_coverage[region.toString()] = float(self.region_dbsm[region.toString()].total_coverage()) / len \
                 (region)
+        self.stat["target_regions"] = str(len(self.dna_region))
 
         if obed:
             btr = self.txp.get_dbs()
             btr = btr.gene_association(organism=self.organism)
-            btr.write_bed(os.path.join(temp, obed+ "_target_region_dbs.bed"))
+            btr.write_bed(os.path.join(temp, obed + "_target_region_dbs.bed"))
             dbss = txpf.get_dbs()
             # dbss = dbss.gene_association(organism=self.organism)
             dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, tp, filter_bed, alpha):
+
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats - 1, num=41)).tolist()
@@ -125,7 +131,7 @@ class RandomTest:
             mp_input.append([str(i), os.path.join(temp, "rna_temp.fa"), self.dna_region,
                              temp, self.organism, self.rbss, str(marks.count(i)),
                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm),
-                             filter_bed, self.genome_path, tp, par])
+                             filter_bed, self.genome_path, par])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
@@ -190,13 +196,33 @@ class RandomTest:
                     self.data["dbs"]["sig_boolean"].append(True)
                 else:
                     self.data["dbs"]["sig_boolean"].append(False)
+            try:
+                self.stat["p_value"] = str(min(self.data["region"]["p"]))
+            except:
+                self.stat["p_value"] = "1"
 
         self.region_matrix = numpy.array(self.region_matrix)
+
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
+
+        counts_dbss = [v[i] for v in dbss_counts]
+        self.stat["DBSs_random_ave"] = numpy.mean(counts_dbss)
+        try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
+        except: self.stat["p_value"] = "1"
 
     def dbd_regions(self, sig_region, output):
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
         dbd_regions(exons=self.rna_regions, sig_region=sig_region, rna_name=self.rna_name, output=output)
+
+        self.stat["DBD_all"] = str(len(self.rbss))
+        self.stat["DBD_sig"] = str(len(self.data["region"]["sig_region"]))
+
+        sigDBD = GenomicRegionSet("DBD_sig")
+        sigDBD.sequences = self.data["region"]["sig_region"]
+        rbss = self.txp.get_rbs()
+        overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+        self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""

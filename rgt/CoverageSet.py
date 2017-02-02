@@ -235,8 +235,7 @@ class CoverageSet:
             try:
                 bin_start = max(0, region.initial-readSize)
                 bin_end = region.final+readSize
-                print(bin_start)
-                print(bin_end)
+
                 if not strand_specific:
                     for r in bam.fetch(region.chrom,bin_start,bin_end):
                         cov[i] += 1
@@ -473,7 +472,7 @@ class CoverageSet:
             if not log_aver:
                 self.coverage.append(np.array(cov))
             else:
-                ov = [x + 1 for x in cov]
+                cov = [x + 1 for x in cov]
                 self.coverage.append(np.log(np.array(cov)))
 
             if get_strand_info:
