@@ -215,7 +215,7 @@ class GenomicSignal:
 
         # Initialization
         fastaFile = Fastafile(genome_file_name)
-        fBiasDict = bias_table[0];
+        fBiasDict = bias_table[0]
         rBiasDict = bias_table[1]
         k_nb = len(fBiasDict.keys()[0])
         p1 = start
@@ -253,8 +253,9 @@ class GenomicSignal:
         # Fetching sequence
         # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1, p2_wk)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk + forward_shift, p2_wk + forward_shift - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + reverse_shift + 1,
+                                                                     p2_wk + reverse_shift)).upper())
 
         # Iterating on sequence to create signal
         af = []
