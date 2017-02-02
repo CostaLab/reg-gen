@@ -234,8 +234,8 @@ class GenomicSignal:
         # Fetching sequence
         #currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        currStr = str(fastaFile.fetch(chrName, p1_wk+forward_shift, p2_wk+forward_shift-1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+reverse_shift+1, p2_wk+reverse_shift)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk-1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+1, p2_wk)).upper())
 
         # Iterating on sequence to create signal
         af = []; ar = []
