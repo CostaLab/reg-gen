@@ -400,6 +400,7 @@ def main():
                                    atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                                    atac_forward_shift, atac_reverse_shift,
                                    options.estimate_bias_correction, options.estimate_bias_type,
+                                   options.bias_table,
                                    options.original_regions, options.organism,
                                    atac_bias_correction_k, atac_bias_correction_shift)
         train_hmm_model.train()

@@ -31,7 +31,7 @@ class TrainHMM:
                  print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal,
                  atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                  atac_forward_shift, atac_reverse_shift,
-                 estimate_bias_correction, estimate_bias_type,
+                 estimate_bias_correction, estimate_bias_type, bias_table,
                  original_regions, organism, k_nb, shift):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
@@ -49,6 +49,7 @@ class TrainHMM:
         self.atac_reverse_shift = atac_reverse_shift
         self.estimate_bias_correction = estimate_bias_correction
         self.estimate_bias_type = estimate_bias_type
+        self.bias_table = bias_table
         self.original_regions = original_regions
         self.organism = organism
         self.k_nb = k_nb
@@ -90,6 +91,12 @@ class TrainHMM:
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
             bias_table.write_tables(bias_fname, table)
+
+        # If the bias table is provided
+        if self.bias_table:
+            bias_table_list = self.bias_table.split(",")
+            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                          table_file_name_R=bias_table_list[1])
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)

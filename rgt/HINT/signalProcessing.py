@@ -89,13 +89,13 @@ class GenomicSignal:
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
-        mean = raw_signal.mean()
-        std = raw_signal.std()
-        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+        # mean = raw_signal.mean()
+        # std = raw_signal.std()
+        # clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Tag count
         try:
-            tag_count = sum(clip_signal)
+            tag_count = sum(raw_signal)
         except Exception:
             tag_count = 0
 
@@ -141,7 +141,8 @@ class GenomicSignal:
             self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
         else:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
-            for alignment in iter: pileup_region.__call__(alignment)
+            for alignment in iter:
+                pileup_region.__call__(alignment)
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
@@ -240,7 +241,24 @@ class GenomicSignal:
 
             #if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
             #if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
-
+        ############################################
+        # Test
+        signal_file = open("nf.wig", "a")
+        signal_file.write("fixedStep chrom=" + chrName + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+            [str(e) for e in nan_to_num(nf)]) + "\n")
+        signal_file.close()
+        signal_file = open("nr.wig", "a")
+        signal_file.write("fixedStep chrom=" + chrName + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+            [str(e) for e in nan_to_num(nr)]) + "\n")
+        signal_file.close()
+        nfr = [0.0] * (p2_w - p1_w)
+        for idx in range(len(nf)):
+            nfr[idx] = nf[idx] + nr[idx]
+        signal_file = open("nfr.wig", "a")
+        signal_file.write("fixedStep chrom=" + chrName + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+            [str(e) for e in nan_to_num(nr)]) + "\n")
+        signal_file.close()
+        #############################################
         # Smoothed counts
         Nf = []
         Nr = []

@@ -62,13 +62,18 @@ class PileupRegion:
     def __call__(self, alignment):
         try:
             if (not alignment.is_reverse):
-                for i in range(max(alignment.pos + self.forward_shift - self.upstream_ext, self.start),
-                               min(alignment.pos + self.forward_shift + self.downstream_ext, self.end - 1)):
-                    self.vector[i - self.start] += 1.0
+                cut_site = alignment.pos + self.forward_shift
+                if cut_site >= self.start and cut_site < self.end:
+                    self.vector[cut_site - self.start] += 1.0
+                #for i in range(max(alignment.pos + self.forward_shift - self.upstream_ext, self.start),
+                #               min(alignment.pos + self.forward_shift + self.downstream_ext, self.end - 1)):
             else:
-                for i in range(max(alignment.aend + self.reverse_shift - self.downstream_ext, self.start),
-                               min(alignment.aend + self.reverse_shift + self.upstream_ext, self.end - 1)):
-                    self.vector[i - self.start] += 1.0
+                cut_site = alignment.aend + self.reverse_shift - 1
+                if cut_site >= self.start and cut_site < self.end:
+                    self.vector[cut_site - self.start] += 1.0
+                #for i in range(max(alignment.aend + self.reverse_shift - self.downstream_ext, self.start),
+                #               min(alignment.aend + self.reverse_shift + self.upstream_ext, self.end - 1)):
+                #    self.vector[i - self.start] += 1.0
         except Exception:
             pass
 
