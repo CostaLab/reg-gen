@@ -395,6 +395,7 @@ def main():
     if options.train_hmm:
         train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
                                    options.output_location, options.model_fname,
+                                   options.print_raw_signal, options.print_bc_signal,
                                    options.print_norm_signal, options.print_slope_signal,
                                    atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                                    atac_forward_shift, atac_reverse_shift,

@@ -27,7 +27,8 @@ class TrainHMM:
     """
 
     def __init__(self, bam_file, annotate_file, print_bed_file,
-                 output_locaiton, output_fname, print_norm_signal, print_slope_signal,
+                 output_locaiton, output_fname,
+                 print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal,
                  atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                  atac_forward_shift, atac_reverse_shift,
                  estimate_bias_correction, estimate_bias_type,
@@ -37,6 +38,8 @@ class TrainHMM:
         self.print_bed_file = print_bed_file
         self.output_locaiton = output_locaiton
         self.output_fname = output_fname
+        self.print_raw_signal = print_raw_signal
+        self.print_bc_signal = print_bc_signal
         self.print_norm_signal = print_norm_signal
         self.print_slope_signal = print_slope_signal
         self.atac_initial_clip = atac_initial_clip
@@ -99,6 +102,8 @@ class TrainHMM:
                                                           initial_clip=self.atac_initial_clip,
                                                           bias_table=table,
                                                           genome_file_name=genome_data.get_genome(),
+                                                          print_raw_signal=self.print_raw_signal,
+                                                          print_bc_signal=self.print_bc_signal,
                                                           print_norm_signal=self.print_norm_signal,
                                                           print_slope_signal=self.print_slope_signal)
         if self.print_bed_file:
