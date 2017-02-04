@@ -527,8 +527,10 @@ def main():
                 my_shift = dnase_downstream_ext
             group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
                                                           dnase_file_name=group.dnase_file.file_name,
-                                                          genome_file_name=genome_data.get_genome(), k_nb=my_k_nb,
-                                                          shift=my_shift)
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          k_nb=my_k_nb, shift=my_shift,
+                                                          forward_shift=atac_forward_shift,
+                                                          reverse_shift=atac_reverse_shift)
         bias_correction = True
 
     elif (options.default_bias_correction):

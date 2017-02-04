@@ -83,11 +83,15 @@ class TrainHMM:
             if self.estimate_bias_type == "FRE":
                 table = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
                                                   genome_file_name=genome_data.get_genome(),
-                                                  k_nb=self.k_nb, shift=self.shift)
+                                                  k_nb=self.k_nb, shift=self.shift,
+                                                  forward_shift=self.atac_forward_shift,
+                                                  reverse_shift=self.atac_reverse_shift)
             elif self.estimate_bias_type == "PWM":
                 table = bias_table.estimate_table_pwm(regions=regions, dnase_file_name=self.bam_file,
-                                                  genome_file_name=genome_data.get_genome(),
-                                                  k_nb=self.k_nb, shift=self.shift)
+                                                      genome_file_name=genome_data.get_genome(),
+                                                      k_nb=self.k_nb, shift=self.shift,
+                                                      forward_shift=self.atac_forward_shift,
+                                                      reverse_shift=self.atac_reverse_shift)
 
             bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
             bias_table.write_tables(bias_fname, table)

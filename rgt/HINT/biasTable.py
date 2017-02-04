@@ -74,7 +74,7 @@ class BiasTable:
             f.write(t + "\t" + str(table[1][t]) + "\n")
         f.close()
 
-    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, shift):
+    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, shift, forward_shift, reverse_shift):
         """ 
         Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
 
@@ -114,7 +114,6 @@ class BiasTable:
             trueCounter = 0
 
             # Evaluating observed frequencies ####################################
-
             # Fetching reads
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
 
@@ -122,9 +121,11 @@ class BiasTable:
                 # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
-                    p1 = r.pos - int(floor(k_nb / 2)) + shift
+                    cut_site = r.pos + forward_shift
+                    p1 = cut_site - int(floor(k_nb / 2)) + shift
                 else:
-                    p1 = r.aend - int(floor(k_nb / 2)) - shift
+                    cut_site = r.aend + reverse_shift
+                    p1 = cut_site - int(floor(k_nb / 2)) - shift
                 p2 = p1 + k_nb
 
                 # Verifying PCR artifacts
@@ -144,21 +145,19 @@ class BiasTable:
 
                 # Counting k-mer in dictionary
                 if (not r.is_reverse):
-                    ct_reads_r += 1
+                    ct_reads_f += 1
                     try:
                         obsDictF[currStr] += 1
                     except Exception:
                         obsDictF[currStr] = 1
                 else:
-                    ct_reads_f += 1
+                    ct_reads_r += 1
                     try:
                         obsDictR[currStr] += 1
                     except Exception:
                         obsDictR[currStr] = 1
 
-
-                    # Evaluating expected frequencies ####################################
-
+            # Evaluating expected frequencies ####################################
             # Fetching whole sequence
             try:
                 currStr = str(fastaFile.fetch(region.chrom, region.initial, region.final)).upper()
@@ -201,7 +200,10 @@ class BiasTable:
                 expF = expDictF[kmer] + pseudocount
             except Exception:
                 expF = pseudocount
-            bias_table_F[kmer] = round(float(obsF / ct_reads_f) / float(expF / ct_kmers), 6)
+            if ct_reads_f == 0:
+                bias_table_F[kmer] = 1
+            else:
+                bias_table_F[kmer] = round(float(obsF / ct_reads_f) / float(expF / ct_kmers), 6)
             try:
                 obsR = obsDictR[kmer] + pseudocount
             except Exception:
@@ -210,7 +212,10 @@ class BiasTable:
                 expR = expDictR[kmer] + pseudocount
             except Exception:
                 expR = pseudocount
-            bias_table_R[kmer] = round(float(obsR / ct_reads_r) / float(expR / ct_kmers), 6)
+            if ct_reads_r == 0:
+                bias_table_R[kmer] = 1
+            else:
+                bias_table_R[kmer] = round(float(obsR / ct_reads_r) / float(expR / ct_kmers), 6)
 
         # Return
         return [bias_table_F, bias_table_R]
@@ -222,7 +227,7 @@ class BiasTable:
             score *= pwm[letter][position]
         return score
 
-    def estimate_table_pwm(self, regions, dnase_file_name, genome_file_name, k_nb, shift):
+    def estimate_table_pwm(self, regions, dnase_file_name, genome_file_name, k_nb, shift, forward_shift, reverse_shift):
         """
         Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
 
@@ -254,9 +259,11 @@ class BiasTable:
                 # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
-                    p1 = r.pos - int(floor(k_nb / 2)) + shift
+                    cut_site = r.pos + forward_shift
+                    p1 = cut_site - int(floor(k_nb / 2)) + shift
                 else:
-                    p1 = r.aend - int(floor(k_nb / 2)) - shift
+                    cut_site = r.aend + reverse_shift
+                    p1 = cut_site - int(floor(k_nb / 2)) - shift
                 p2 = p1 + k_nb
 
                 # Fetching k-mer
