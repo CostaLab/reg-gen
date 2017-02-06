@@ -354,11 +354,8 @@ if __name__ == "__main__":
         sys.exit(1)
     else:   
         args = parser.parse_args()
-        
 
-        
         try:
-
             if not os.path.exists(args.o.rpartition("/")[0]):
                 os.makedirs(args.o.rpartition("/")[0])
             if "~" in args.i: args.i = args.i.replace("~", home)
@@ -553,7 +550,7 @@ if __name__ == "__main__":
             bed.replace_region_name(regions=target)
             bed.write_bed(args.o)
         else:
-            renamebed = bed.gene_association2(gene_set=None, organism=args.organism,
+            renamebed = bed.gene_association(gene_set=None, organism=args.organism,
                                              promoterLength=args.l, strand_specific=args.s,
                                              threshDist=args.t, show_dis=args.d)
             renamebed.write_bed(args.o)
@@ -1263,6 +1260,7 @@ if __name__ == "__main__":
                         # print(parser_fasta2bp(filename=os.path.join(root,f)))
                         list_bp.append([f.partition(".")[0],
                                         str(fasta2bp(os.path.join(root,f)))])
+        if args.o:
             with open(args.o, "w") as g:
                 for l in list_bp:
                     print("\t".join(l), file=g)

@@ -3,6 +3,7 @@ from __future__ import print_function
 import os
 import time
 import shutil
+import natsort
 import datetime
 from collections import *
 
@@ -365,8 +366,7 @@ class PromoterTest:
             output.write_bed(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
 
             self.txp_de.write_bed(filename=os.path.join(temp, obedp + "_target_promoters_dbs.bed"),
-                                  remove_duplicates=False, convert_dict=self.ensembl2symbol)
-
+                                  associated=self.organism)
             self.txp_def.write_bed(filename=os.path.join(temp, obedp + "_dbss.bed"),
                                    remove_duplicates=False, associated=self.organism)
 
@@ -663,7 +663,7 @@ class PromoterTest:
                             p_hit]
 
             data_table.append(new_row)
-
+        data_table = sorted(data_table, key=lambda x: x[7])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titles, border_list=border_list, sortable=True)
 
@@ -835,6 +835,7 @@ class PromoterTest:
                 newline += ["<i>" + str(int(rank_sum[i])) + "</i>"]
                 # print(newline)
                 data_table.append(newline)
+            data_table = sorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                  header_titles=header_titles, sortable=True, border_list=None)
         html.add_fixed_rank_sortable()
@@ -1158,7 +1159,7 @@ class PromoterTest:
         if len(spromoters) == 0:
             html.add_heading("There is no significant DBD.")
         else:
-            html.add_heading("Target promoters bond by significant DBD")
+            html.add_heading("Target promoters bound by significant DBD")
             # for rbsm in self.sig_region_promoter:
             #     spromoters = spromoters + [p for p in self.txp_de.merged_dict[rbsm]]
             # spromoters = list(set(spromoters))
@@ -1304,6 +1305,12 @@ class PromoterTest:
         r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
 
         newlines = []
+
+        this_rna = [exp, rna, output.split("_")[-1], self.organism, tar_reg,
+                    value2str(float(self.stat["DBSs_target_all"])/int(self.stat["seq_length"])*1000),
+                    value2str(float(self.stat["DBSs_target_DBD_sig"])/int(self.stat["seq_length"])*1000),
+                    value2str(float(self.stat["DBD_all"])/int(self.stat["seq_length"])*1000), str(len(self.sig_DBD)),
+                    self.topDBD[0], value2str(self.topDBD[1]), r_genes]
         # try:
         if os.path.isfile(pro_path):
             with open(pro_path, 'r') as f:
@@ -1312,27 +1319,23 @@ class PromoterTest:
                     line = line.strip()
                     line = line.split("\t")
                     if line[0] == exp:
-                        newlines.append([exp, rna, output.split("_")[-1],
-                                         self.organism, tar_reg, str(len(self.sig_DBD)),
-                                         self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+                        newlines.append(this_rna)
                         new_exp = False
                     elif line[0] == "Experiment":
                         continue
                     else:
                         newlines.append(line)
                 if new_exp:
-                    newlines.append([exp, rna, output.split("_")[-1],
-                                     self.organism, tar_reg, str(len(self.sig_DBD)),
-                                     self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+                    newlines.append(this_rna)
         else:
-            newlines.append([exp, rna, output.split("_")[-1],
-                             self.organism, tar_reg, str(len(self.sig_DBD)),
-                             self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+            newlines.append(this_rna)
 
-        newlines.sort(key=lambda x: float(x[7]))
+        print(newlines[0])
 
-        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                     "Top_DBD", "p-value", "closest_genes"]] + newlines
+        newlines.sort(key=lambda x: float(x[10]))
+        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
+                    "Norm_DBS", "Norm_DBS_on_sig_DBD",
+                    "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"]] + newlines
 
         with open(pro_path, 'w') as f:
             for lines in newlines:

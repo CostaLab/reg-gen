@@ -7,10 +7,9 @@ import matplotlib.pyplot as plt
 
 # Local Libraries
 # Distal Libraries
-from rgt.ExperimentalMatrix import *
-from rgt.AnnotationSet import *
 from rgt.Util import Html
 from rgt.CoverageSet import *
+from rgt.ExperimentalMatrix import *
 from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
 # Local test
 dir = os.getcwd()
@@ -138,14 +137,14 @@ class Lineplot:
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
 
-    def coverage(self, sortby, heatmap=False, logt=False, mp=False, log=False):
+    def coverage(self, sortby, heatmap=False, logt=False, mp=0, log=False):
 
         def annot_ind(bednames, tags):
             """Find the index for annotation tag"""
             for ind, a in enumerate(bednames):
                 if a in tags: return ind
 
-        if mp: ts = time.time()
+        if mp>0: ts = time.time()
         normRPM = False
         # Calculate for coverage
         mp_input = []
@@ -188,7 +187,7 @@ class Lineplot:
                                         #         data[s][g][c][d] = [numpy.empty(1, dtype=object)]
                                         #     continue
                                         #########################################################################
-                                        if mp:  # Multiple processing
+                                        if mp > 0:  # Multiple processing
                                             mp_input.append([self.processed_beds[i], self.reads[j],
                                                              self.rs, self.bs, self.ss, self.center, heatmap, logt,
                                                              s, g, c, d])
@@ -198,6 +197,7 @@ class Lineplot:
                                         else:  # Single thread
                                             ts = time.time()
                                             cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
+
                                             # print(len(self.processed_beds[i]))
                                             if "Conservation" in [s,g,c,d]:
                                                 cov.phastCons46way_score(stepsize=self.ss)
@@ -274,6 +274,9 @@ class Lineplot:
                                                             # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
                                                             try: avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
                                                             except: print(bed+"."+bam+"."+str(i))
+                                                    if log:
+                                                        avearr = numpy.log2(avearr+1)
+
                                                     avearr = numpy.average(avearr, axis=0)
                                                     if self.sense:
                                                         if log:
@@ -285,6 +288,7 @@ class Lineplot:
                                                     cut_end = int(self.bs/self.ss)
                                                     avearr = avearr[cut_end:-cut_end]
                                                     data[s][g][c][d]["all"].append(avearr)
+
                                                     if self.sense:
                                                         sense_1 = sense_1[cut_end:-cut_end]
                                                         sense_2 = sense_2[cut_end:-cut_end]
@@ -298,9 +302,8 @@ class Lineplot:
                                                        bed + "." + bam, ts - te))
 
 
-        if mp:
-            # pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
-            pool = MyPool(multiprocessing.cpu_count())
+        if mp > 0:
+            pool = MyPool(mp)
             mp_output = pool.map(compute_coverage, mp_input)
             pool.close()
             pool.join()
@@ -320,8 +323,6 @@ class Lineplot:
                                             data[s][g][c][d].append(out[4])
                                         except:
                                             data[s][g][c][d] = [out[4]]
-            te = time.time()
-
         if self.df:
             for s in data.keys():
                 for g in data[s].keys():
@@ -414,6 +415,7 @@ class Lineplot:
                                 plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
                                          horizontalalignment='center', verticalalignment='top')
                                 plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
+                                print(self.data[s][g][c][d])
                                 for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
                                     # print(y)
                                     ymax1 = numpy.amax(y)
@@ -442,11 +444,15 @@ class Lineplot:
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
-                try:
-                    ax.locator_params(axis='x', nbins=4)
-                    ax.locator_params(axis='y', nbins=2)
-                except:
-                    pass
+
+
+                ax.locator_params(axis='x', nbins=4)
+                ax.locator_params(axis='y', nbins=2)
+                # try:
+                #
+                # except:
+                #     ax.locator_params(axis='y', nbins=2)
+                #     pass
         if printtable:
             output_array(pArr, directory=output, folder=self.title, filename="plot_table.txt")
 
@@ -476,6 +482,7 @@ class Lineplot:
                     elif srow:
                         ymin = sx_ymin[it] - abs(sx_ymin[it] * 0.2)
                         ymax = sx_ymax[it] + abs(sx_ymax[it] * 0.2)
+
                 else:
                     if scol: ymax = yaxmax[i] * 1.2
                     elif srow: ymax = sx_ymax[it] * 1.2
@@ -484,7 +491,8 @@ class Lineplot:
                     if self.sense: ymin = -ymax
                     else: ymin = 0
 
-                axx.set_ylim([ymin, ymax])
+                try: axx.set_ylim([ymin, ymax])
+                except: pass
 
         handles, labels = ax.get_legend_handles_labels()
         uniq_labels = unique(labels)

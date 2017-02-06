@@ -124,12 +124,14 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     c = 0
     if show_RNA_ass_gene:
         header_list = ["No.", "Experiments", "RNA", "Closest genes",
-                       "No sig. DBD",
-                       "Top DBD", "p-value", "Organism", "Target region"]
+                       "Norm DBS", "Norm DBS on sig DBD",
+                       "Norm DBD",  "No sig. DBD", "Top DBD",
+                       "p-value", "Organism", "Target region"]
     else:
-        header_list = ["No.", "Experiments", "RNA", "No sig. DBD",
-                       "Top DBD", "p-value", "Organism",  # "Condition",
-                       "Target region"]
+        header_list = ["No.", "Experiments", "RNA",
+                       "Norm DBS", "Norm DBS on sig DBD",
+                       "Norm DBD",  "No sig. DBD", "Top DBD",
+                       "p-value", "Organism", "Target region"]
 
     profile_f = open(os.path.join(path, "profile.txt"), 'r')
     profile = {}
@@ -142,8 +144,6 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     for i, exp in enumerate(profile.keys()):
         # print(exp)
         c += 1
-
-        # try:
         if profile[exp][5] == "-":
             new_line = [str(c), exp, profile[exp][0]]
         else:
@@ -156,16 +156,23 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                 split_gene_name(gene_name=profile[exp][7],
                                 org=profile[exp][2]))
 
-        if float(profile[exp][6]) < 0.05:
+        if float(profile[exp][9]) < 0.05:
             new_line += [profile[exp][4],
                          profile[exp][5],
+                         profile[exp][6],
+                         profile[exp][7],
+                         profile[exp][8],
                          "<font color=\"red\">" + \
-                         profile[exp][6] + "</font>",
-                         profile[exp][2], profile[exp][3]]
+                         profile[exp][9] + "</font>",
+                         profile[exp][2], profile[exp][10]]
         else:
             new_line += [profile[exp][4],
-                         profile[exp][5], profile[exp][6],
-                         profile[exp][2], profile[exp][3]]
+                         profile[exp][5],
+                         profile[exp][6],
+                         profile[exp][7],
+                         profile[exp][8],
+                         profile[exp][9],
+                         profile[exp][2], profile[exp][10]]
         data_table.append(new_line)
         # except:
         #     if exp != "Experiment":

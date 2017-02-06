@@ -8,8 +8,6 @@ from matplotlib_venn import venn3
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
 from shared_function import *
 
 # Local test
@@ -785,7 +783,7 @@ class Intersect:
         else:
             print("*** For plotting Venn diagram, the number of references must be 2 or 3.")
 
-    def stest(self, repeat, threshold):
+    def stest(self, repeat, threshold, mp):
 
         print("\n\tIntersection random subsampling test:\n    Repeat " + str(repeat) + " times\n")
         self.test_time = repeat
@@ -822,7 +820,7 @@ class Intersect:
                             inp = [com, self.rlen[ty][r.name], self.mode_count, threshold]
                             mp_input = [inp for i in range(repeat)]
 
-                            pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-1)
+                            pool = multiprocessing.Pool(processes=mp)
                             mp_output = pool.map(mp_count_intersets, mp_input)
                             pool.close()
                             pool.join()

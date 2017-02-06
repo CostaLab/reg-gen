@@ -2,26 +2,23 @@
 from __future__ import division
 from __future__ import print_function
 
-import argparse
-import datetime
-import fnmatch
-import getpass
 import os
 import sys
 import time
-from collections import OrderedDict
-from shutil import copyfile
+import getpass
+import argparse
+import datetime
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
 
 from boxplot import Boxplot
-from intersection_test import Intersect
-from jaccard_test import Jaccard
 from lineplot import Lineplot
+from jaccard_test import Jaccard
 from projection_test import Projection
-from rgt.Util import Html
+from intersection_test import Intersect
+from shared_function import check_dir, print2, output_parameters,\
+                            copy_em, list_all_index, output
 
 dir = os.getcwd()
 """
@@ -30,103 +27,6 @@ Statistical analysis methods and plotting tools for ExperimentalMatrix
 Author: Joseph C.C. Kuo
 """
 
-#################################################################################################
-##### FUNCTIONS #################################################################################
-#################################################################################################
-    
-
-######### Universal functions
-def print2(parameter, string):
-    """ Show the message on the console and also save in a list for future backup. """
-    print(string)
-    parameter.append(string)
-    
-######### Projection test
-
-def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
-    """Output the file in the defined folder """
-    pd = os.path.normpath(os.path.join(dir,directory,folder))
-    try:
-        os.stat(os.path.dirname(pd))
-    except:
-        os.mkdir(os.path.dirname(pd))
-    try:
-        os.stat(pd)
-    except:
-        os.mkdir(pd)    
-    
-    # Saving 
-    if not extra:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
-                  bbox_inches='tight', dpi=400)
-    else:
-        f.savefig(os.path.join(pd,filename), facecolor='w', edgecolor='w', 
-                  bbox_extra_artists=(extra), bbox_inches='tight',dpi=400)
-    
-    if pdf:
-        try:
-            pp = PdfPages(os.path.join(pd,filename) + '.pdf')
-            pp.savefig(f, bbox_extra_artists=(extra),bbox_inches='tight') 
-            pp.close()
-        except:
-            print("ERROR: Problem in PDF conversion. Skipped.")
-    if show:
-        plt.show()
-        
-def output_parameters(parameter, directory, folder, filename):
-    pd = os.path.join(dir,directory,folder)
-    try: os.stat(os.path.dirname(pd))
-    except: os.mkdir(os.path.dirname(pd))
-    try: os.stat(pd)
-    except: os.mkdir(pd)    
-    if parameter:
-        with open(os.path.join(pd,"parameters.txt"),'w') as f:
-            for s in parameter:
-                print(s, file=f)
-
-def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
-    copyfile(em, os.path.join(dir,directory,folder,filename))
-
-def list_all_index(path):
-    """Creat an 'index.html' in the defined directory """
-    dirname = os.path.basename(path)
-    parentdir = os.path.basename(os.path.dirname(path))
-
-    # link_d = {"List":"index.html"}
-    link_d = {}
-    ####
-    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
-        for filename in fnmatch.filter(filenames, 'index.html'):
-            if root.split('/')[-2] == parentdir:
-                link_d[root.split('/')[-1]] = "../"+root.split('/')[-1]+"/index.html"
-    link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
-
-    ###
-
-    html = Html(name="Directory: "+dirname, links_dict=link_d, 
-                fig_dir=os.path.join(path,"style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
-    header_list = ["No.", "Experiments"]
-    html.add_heading("All experiments in: "+dirname+"/")
-    data_table = []
-    type_list = 'ssss'
-    col_size_list = [10, 10, 10]
-    c = 0
-    for root, dirnames, filenames in os.walk(path):
-        #roots = root.split('/')
-        for filename in fnmatch.filter(filenames, '*.html'):
-            if filename == 'index.html' and root.split('/')[-1] != dirname:
-                # print(root)
-                c += 1
-                data_table.append([str(c), '<a href="'+os.path.join(root.split('/')[-1], filename)+'"><font size="4">'+root.split('/')[-1]+"</a>"])
-                #print(link_d[roots[-1]])
-    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
-    html.add_fixed_rank_sortable()
-    html.write(os.path.join(path,"index.html"))
-
-def check_dir(path):
-    """Check the availability of the given directory and creat it"""
-    try: os.stat(path)
-    except: os.mkdir(path)
 
 def main():
     ###############################################################################
@@ -135,19 +35,20 @@ def main():
     
     # Some general help descriptions
     ######### Some general plotting arguments descriptions ###############
-    helpinput = 'The file name of the input Experimental Matrix file. Recommended to add more columns for more information for ploting. For example, cell type or factors.'
-    helpoutput = 'The directory name for the output files. For example, project name.'
-    helptitle = 'The title shown on the top of the plot and also the folder name.'
-    helpgroup = "Group the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
-    helpgroupbb = "Group the data by any optional column (for example, 'cell') of experimental matrix, or None."
-    helpsort = "Sort the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
-    helpcolor = "Color the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
-    helpcolorbb = "Color the data by any optional column (for example, 'cell') of experimental matrix, or None."
-    helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB.'
-    helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable.'
-    helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable.'
-    helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
-    helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None."
+    helpinput = 'The file name of the input Experimental Matrix file. Recommended to add more columns for more information for ploting. For example, cell type or factors. (default: %(default)s)'
+    helpoutput = 'The directory name for the output files. For example, project name. (default: %(default)s)'
+    helptitle = 'The title shown on the top of the plot and also the folder name. (default: %(default)s)'
+    helpgroup = "Group the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
+    helpgroupbb = "Group the data by any optional column (for example, 'cell') of experimental matrix, or None. (default: %(default)s)"
+    helpsort = "Sort the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
+    helpcolor = "Color the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
+    helpcolorbb = "Color the data by any optional column (for example, 'cell') of experimental matrix, or None. (default: %(default)s)"
+    helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB. (default: %(default)s)'
+    helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable. (default: %(default)s)'
+    helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable. (default: %(default)s)'
+    helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
+    helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
+    helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
@@ -158,19 +59,19 @@ def main():
     parser_projection.add_argument('-q', metavar='  ', help=helpquery)
     parser_projection.add_argument('-o', metavar='  ', help=helpoutput) 
     parser_projection.add_argument('-t', metavar='  ', default='projection_test', help=helptitle)
-    parser_projection.add_argument('-g', metavar='  ', default=None, help=helpgroupbb +" (Default:None)")
-    parser_projection.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_projection.add_argument('-bg', metavar='  ', type=str, default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
-    parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test.')
-    parser_projection.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
-    parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+    parser_projection.add_argument('-g', metavar='  ', default=None, help=helpgroupbb )
+    parser_projection.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb )
+    parser_projection.add_argument('-bg', metavar='  ', type=str, default=None, help="Define a BED file as background. If not defined, the background is whole genome according to the given organism. (default: %(default)s)")
+    parser_projection.add_argument('-union', action="store_true", help='Take the union of references as background for binominal test. (default: %(default)s)')
+    parser_projection.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (default: %(default)s)')
+    parser_projection.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale. (default: %(default)s)')
     parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    parser_projection.add_argument('-bed', action="store_true", default=False, help='Output BED files for the regions of query which overlap the reference.')
-    parser_projection.add_argument('-pw', metavar='  ', type=int, default=5, help='Define the width of single panel.(Default:3)')
-    parser_projection.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
-    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01, help='Define the cutoff of the proportion.(Default:0.01)')
+    parser_projection.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_projection.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
+    parser_projection.add_argument('-bed', action="store_true", default=False, help='Output BED files for the regions of query which overlap the reference. (default: %(default)s)')
+    parser_projection.add_argument('-pw', metavar='  ', type=int, default=5, help='Define the width of single panel. (default: %(default)s)')
+    parser_projection.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
+    parser_projection.add_argument('-cfp', metavar='  ', type=float, default=0.01, help='Define the cutoff of the proportion. (default: %(default)s)')
     
     ################### Intersect Test ##########################################
     parser_intersect = subparsers.add_parser('intersect',help='Intersection test provides various modes of intersection to test the association between references and queries.')
@@ -178,22 +79,21 @@ def main():
     parser_intersect.add_argument('-q', metavar='  ', help=helpquery)
     parser_intersect.add_argument('-o', help=helpoutput)
     parser_intersect.add_argument('-t', metavar='  ', default='intersection_test', help=helptitle)
-    parser_intersect.add_argument('-g', metavar='  ', default=None, help=helpgroupbb +" (Default:None)")
-    parser_intersect.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_intersect.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
-    parser_intersect.add_argument('-bg', metavar='  ', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
+    parser_intersect.add_argument('-g', metavar='  ', default=None, help=helpgroupbb)
+    parser_intersect.add_argument('-c', metavar='  ', default="regions", help=helpcolorbb)
+    parser_intersect.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (default: %(default)s)')
+    parser_intersect.add_argument('-bg', metavar='  ', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism. (default: %(default)s)")
     parser_intersect.add_argument('-m', metavar='  ', default="count", choices=['count','bp'],
-                                  help="Define the mode of calculating intersection. \
-                                  'count' outputs the number of overlapped regions.\
-                                  'bp' outputs the coverage(basepair) of intersection.")
-    parser_intersect.add_argument('-tc', metavar='  ', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in bp) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20 bp in order to include proximal queries.")
+                                  help="Define the mode of calculating intersection. 'count' outputs the number of overlapped regions.'bp' outputs the coverage(basepair) of intersection. (default: %(default)s)")
+    parser_intersect.add_argument('-tc', metavar='  ', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection. (default: %(default)s)")
+    parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0, help="Define the extension(in bp) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20 bp in order to include proximal queries. (default: %(default)s)")
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
     parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_intersect.add_argument('-stest', metavar='  ', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
-    parser_intersect.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
-    parser_intersect.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_intersect.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_intersect.add_argument('-stest', metavar='  ', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query. (default: %(default)s)')
+    parser_intersect.add_argument('-mp', metavar='  ', default=4, type=int, help=helpmp)
+    parser_intersect.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel. (default: %(default)s)')
+    parser_intersect.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
     
     ################### Jaccard test ##########################################
     
@@ -203,16 +103,16 @@ def main():
     parser_jaccard.add_argument('-r', metavar='  ',help=helpreference)
     parser_jaccard.add_argument('-q', metavar='  ', help=helpquery)
     parser_jaccard.add_argument('-t', metavar='  ', default='jaccard_test', help=helptitle)
-    parser_jaccard.add_argument('-rt',metavar='  ', type=int, default=500, help='Define how many times to run the randomization. (Default:500)')
-    parser_jaccard.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
-    parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
+    parser_jaccard.add_argument('-rt',metavar='  ', type=int, default=500, help='Define how many times to run the randomization. (default: %(default)s)')
+    parser_jaccard.add_argument('-g', default=None, help=helpgroupbb)
+    parser_jaccard.add_argument('-c', default="regions", help=helpcolorbb)
+    parser_jaccard.add_argument('-organism',default='hg19', help='Define the organism. (default: %(default)s)')
+    parser_jaccard.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale. (default: %(default)s)')
     parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    parser_jaccard.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
-    parser_jaccard.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_jaccard.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_jaccard.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
+    parser_jaccard.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel. (default: %(default)s)')
+    parser_jaccard.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
     
     ################### Combinatorial Test ##########################################
     parser_combinatorial = subparsers.add_parser('combinatorial',help='Combinatorial test compare all combinatorial possibilities from reference to test the association between references and queries.')
@@ -221,23 +121,20 @@ def main():
     parser_combinatorial.add_argument('-r', metavar='  ', help=helpreference)
     parser_combinatorial.add_argument('-q', metavar='  ', help=helpquery)
     parser_combinatorial.add_argument('-t', metavar='  ', default='combinatorial_test', help=helptitle)
-    parser_combinatorial.add_argument('-g', default=None, help=helpgroupbb +" (Default:None)")
-    parser_combinatorial.add_argument('-c', default="regions", help=helpcolorbb +' (Default: regions)')
-    parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (Default: hg19)')
-    parser_combinatorial.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism.")
-    parser_combinatorial.add_argument('-m', default="count", choices=['count','bp'],
-                                      help="Define the mode of calculating intersection. \
-                                      'count' outputs the number of overlapped regions.\
-                                      'bp' outputs the coverage(basepair) of intersection.")
-    parser_combinatorial.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection.")
-    parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries.")
-    parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
+    parser_combinatorial.add_argument('-g', default=None, help=helpgroupbb)
+    parser_combinatorial.add_argument('-c', default="regions", help=helpcolorbb)
+    parser_combinatorial.add_argument('-organism',default='hg19', help='Define the organism. (default: %(default)s)')
+    parser_combinatorial.add_argument('-bg', help="Define a BED file as background. If not defined, the background is whole genome according to the given organism. (default: %(default)s)")
+    parser_combinatorial.add_argument('-m', default="count", choices=['count','bp'], help="Define the mode of calculating intersection. 'count' outputs the number of overlapped regions.'bp' outputs the coverage(basepair) of intersection. (default: %(default)s)")
+    parser_combinatorial.add_argument('-tc', type=int, default=False, help="Define the threshold(in percentage) of reference length for intersection counting. For example, '20' means that the query which overlaps more than 20%% of reference is counted as intersection. (default: %(default)s)")
+    parser_combinatorial.add_argument('-ex', type=int, default=0, help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries. (default: %(default)s)")
+    parser_combinatorial.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale. (default: %(default)s)')
     parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references.')
-    parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query.')
-    parser_combinatorial.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
-    parser_combinatorial.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
+    parser_combinatorial.add_argument('-venn', action="store_true", help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
+    parser_combinatorial.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_combinatorial.add_argument('-stest', type=int, default= 0, help='Define the repetition time of random subregion test between reference and query. (default: %(default)s)')
+    parser_combinatorial.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel. (default: %(default)s)')
+    parser_combinatorial.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
     
     ################### Boxplot ##########################################
     
@@ -245,20 +142,20 @@ def main():
     parser_boxplot.add_argument('input',help=helpinput)
     parser_boxplot.add_argument('-o', metavar='  ', help=helpoutput)
     parser_boxplot.add_argument('-t', metavar='  ', default='boxplot', help=helptitle)
-    parser_boxplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup + " (Default:reads)")
-    parser_boxplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor + " (Default:regions)")
-    parser_boxplot.add_argument('-s', metavar='  ', default='None', help=helpsort + " (Default:None)")
-    parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
-    parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale.')
+    parser_boxplot.add_argument('-g', metavar='  ', default='reads', help=helpgroup)
+    parser_boxplot.add_argument('-c', metavar='  ', default='regions', help=helpcolor)
+    parser_boxplot.add_argument('-s', metavar='  ', default='None', help=helpsort)
+    parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns. (default: %(default)s)")
+    parser_boxplot.add_argument('-nlog', action="store_false", help='Set y axis of the plot not in log scale. (default: %(default)s)')
     parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_boxplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
-    parser_boxplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
-    parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation.')
-    parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
-    parser_boxplot.add_argument('-ylim', metavar='  ', type=int, default=None, help="Define the limit of y axis.")
-    parser_boxplot.add_argument('-p', metavar='  ', type=float, default=0.05, help='Define the significance level for multiple test. Default: 0.01')
-    parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_boxplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    parser_boxplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel. (default: %(default)s)')
+    parser_boxplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
+    parser_boxplot.add_argument('-nqn', action="store_true", help='No quantile normalization in calculation. (default: %(default)s)')
+    parser_boxplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second. (default: %(default)s)")
+    parser_boxplot.add_argument('-ylim', metavar='  ', type=int, default=None, help="Define the limit of y axis. (default: %(default)s)")
+    parser_boxplot.add_argument('-p', metavar='  ', type=float, default=0.05, help='Define the significance level for multiple test.  (default: %(default)s)')
+    parser_boxplot.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_boxplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
     
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
@@ -270,30 +167,28 @@ def main():
     parser_lineplot.add_argument('-o', help=helpoutput)
     parser_lineplot.add_argument('-ga', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
     parser_lineplot.add_argument('-t', metavar='  ', default='lineplot', help=helptitle)
-    parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
-                                 help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
-                                 '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
-    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
-    parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
-    parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
-    parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
-    parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
-    parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
-    parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-    parser_lineplot.add_argument('-log', action="store_true", help="Take log for the value before calculating average")
-    parser_lineplot.add_argument('-scol', action="store_true", help="Share y axis among columns.")
-    parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows.")
-    parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
+    parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + '. (default: %(default)s) The bothend mode will flap the right end region for calculation.')
+    parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow)
+    parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol)
+    parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor)
+    parser_lineplot.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting. (default: %(default)s)')
+    parser_lineplot.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage. (default: %(default)s)')
+    parser_lineplot.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage. (default: %(default)s)')
+    parser_lineplot.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage. (default: %(default)s)')
+    parser_lineplot.add_argument('-log', action="store_true", help="Take log for the value before calculating average. (default: %(default)s)")
+    parser_lineplot.add_argument('-scol', action="store_true", help="Share y axis among columns. (default: %(default)s)")
+    parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows. (default: %(default)s)")
+    parser_lineplot.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (default: %(default)s)')
     parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel.(Default:3)')
-    parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel.(Default:3)')
-    parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing.")
-    parser_lineplot.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
-    parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second.")
-    parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference.")
-    parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
-    parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific.')
+    parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3, help='Define the width of single panel. (default: %(default)s)')
+    parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3, help='Define the height of single panel. (default: %(default)s)')
+    parser_lineplot.add_argument('-test', action="store_true", help="Sample only the first 10 regions in all BED files for testing. (default: %(default)s)")
+    parser_lineplot.add_argument('-mp', metavar='  ', type=int, default=0, help="Perform multiprocessing for faster computation. (default: %(default)s)")
+    parser_lineplot.add_argument('-df', action="store_true", help="Show the difference of the two signals which share the same labels.The result is the subtraction of the first to the second. (default: %(default)s)")
+    parser_lineplot.add_argument('-dft', metavar='  ', default=None, help="Add one more tag for calculating difference. (default: %(default)s)")
+    parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
+    parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific. (default: %(default)s)')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -303,28 +198,28 @@ def main():
     
     parser_heatmap.add_argument('input', help=helpinput)
     parser_heatmap.add_argument('-o', metavar='  ', help=helpoutput)
-    parser_heatmap.add_argument('-ga', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
+    parser_heatmap.add_argument('-ga', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix. (default: %(default)s)")
     parser_heatmap.add_argument('-t', metavar='  ', default='heatmap', help=helptitle)
     parser_heatmap.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', 
                                  help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + 
-                                 '.(Default:midpoint) The bothend mode will flap the right end region for calculation.')
+                                 '.(Default:midpoint) The bothend mode will flap the right end region for calculation. (default: %(default)s)')
     parser_heatmap.add_argument('-sort', metavar='  ', type=int, default=None, help='Define the way to sort the signals.'+
                                 'Default is no sorting at all, the signals arrange in the order of their position; '+
                                 '"0" is sorting by the average ranking of all signals; '+
-                                '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on... ')
-    parser_heatmap.add_argument('-col', metavar='  ', default='regions', help=helpcol + " (Default:regions)")
-    parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor + " (Default:reads)")
-    parser_heatmap.add_argument('-row', metavar='  ', default='None', help=helprow + " (Default:None)")
-    parser_heatmap.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting.(Default:2000)')
-    parser_heatmap.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage.(Default:200)')
-    parser_heatmap.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage.(Default:50)')
-    parser_heatmap.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage.(Default:100)')
-    parser_heatmap.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (Default: hg19)')
+                                '"1" is sorting by the ranking of 1st column; "2" is 2nd and so on...  (default: %(default)s)')
+    parser_heatmap.add_argument('-col', metavar='  ', default='regions', help=helpcol)
+    parser_heatmap.add_argument('-c', metavar='  ', default='reads', help=helpcolor)
+    parser_heatmap.add_argument('-row', metavar='  ', default='None', help=helprow)
+    parser_heatmap.add_argument('-e', metavar='  ', type=int, default=2000, help='Define the extend length of interested region for plotting. (default: %(default)s)')
+    parser_heatmap.add_argument('-rs', metavar='  ', type=int, default=200, help='Define the readsize for calculating coverage. (default: %(default)s)')
+    parser_heatmap.add_argument('-ss', metavar='  ', type=int, default=50, help='Define the stepsize for calculating coverage. (default: %(default)s)')
+    parser_heatmap.add_argument('-bs', metavar='  ', type=int, default=100, help='Define the binsize for calculating coverage. (default: %(default)s)')
+    parser_heatmap.add_argument('-organism', metavar='  ', default='hg19', help='Define the organism. (default: %(default)s)')
     parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
-    parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale.')
-    parser_heatmap.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation.")
-    parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen.')
-    parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format.')
+    parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale. (default: %(default)s)')
+    parser_heatmap.add_argument('-mp', action="store_true", help="Perform multiprocessing for faster computation. (default: %(default)s)")
+    parser_heatmap.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
+    parser_heatmap.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
     
     ################### Venn Diagram ########################################
     parser_venn = subparsers.add_parser('venn', help='Generate Venn Diagram with peaks of gene list.')
@@ -472,7 +367,7 @@ def main():
             
             if args.stest > 0:
                 print("\tStatistical testing by randomizing the regions...")
-                inter.stest(repeat=args.stest,threshold=args.tc)
+                inter.stest(repeat=args.stest,threshold=args.tc, mp=args.mp)
             
             # generate html
             inter.gen_html(directory=args.o, title=args.t, align=50, args=args)
@@ -664,7 +559,7 @@ def main():
             t1 = time.time()
             print2(parameter, "\t--- finished in {0} secs".format(str(round(t1-t0))))
             
-            if args.mp: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
+            if args.mp > 0: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
             lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
@@ -753,7 +648,7 @@ def main():
             sets = [s for s in [args.s1, args.s2, args.s3, args.s4] if s ]
             venn = Venn(sets=sets, organism=args.organism)
             f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
-            output(f=f, directory = args.o, folder = args.t, filename="venn",pdf=True)
+            output(f=f, directory = args.o, folder = args.t, filename="venn", pdf=True)
 
         ################### Integration ##########################################
         if args.mode=='integration':
