@@ -1330,8 +1330,6 @@ class PromoterTest:
         else:
             newlines.append(this_rna)
 
-        print(newlines[0])
-
         newlines.sort(key=lambda x: float(x[10]))
         newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
                     "Norm_DBS", "Norm_DBS_on_sig_DBD",
