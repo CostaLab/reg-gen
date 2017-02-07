@@ -152,9 +152,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                         '">' + exp + "</a>", profile[exp][0]]
 
         if show_RNA_ass_gene:
-            new_line.append(
-                split_gene_name(gene_name=profile[exp][7],
-                                org=profile[exp][2]))
+            new_line.append(split_gene_name(gene_name=profile[exp][10],org=profile[exp][2]))
 
         if float(profile[exp][9]) < 0.05:
             new_line += [profile[exp][4],
@@ -164,7 +162,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                          profile[exp][8],
                          "<font color=\"red\">" + \
                          profile[exp][9] + "</font>",
-                         profile[exp][2], profile[exp][10]]
+                         profile[exp][2], profile[exp][3]]
         else:
             new_line += [profile[exp][4],
                          profile[exp][5],
@@ -172,7 +170,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                          profile[exp][7],
                          profile[exp][8],
                          profile[exp][9],
-                         profile[exp][2], profile[exp][10]]
+                         profile[exp][2], profile[exp][3]]
         data_table.append(new_line)
         # except:
         #     if exp != "Experiment":
