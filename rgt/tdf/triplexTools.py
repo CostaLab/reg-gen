@@ -119,8 +119,8 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     html.add_heading("All experiments in: " + dirname + "/")
 
     data_table = []
-    type_list = 'sssssssssssss'
-    col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+    type_list = 'sssssssssssssssssss'
+    col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
     if show_RNA_ass_gene:
         header_list = ["No.", "Experiments", "RNA", "Closest genes",
@@ -1105,21 +1105,22 @@ def no_binding_response(args, rna_regions, rna_name, organism):
                 line = line.split("\t")
                 if line[0] == exp:
                     newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                     args.organism, tar_reg, "0",
-                                     "-", "1.0", r_genes, "No triplex found"])
+                                     args.organism, tar_reg, "0","0","0","0",
+                                     "-", "1.0", r_genes])
                     new_exp = False
                 else:
                     newlines.append(line)
             if new_exp:
                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                 args.organism, tar_reg, "0",
-                                 "-", "1.0", r_genes, "No triplex found"])
+                                 args.organism, tar_reg, "0","0","0","0",
+                                 "-", "1.0", r_genes])
     else:
-        newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                         "Top_DBD", "p-value", "closest_genes"])
+        newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
+                         "Norm_DBS", "Norm_DBS_on_sig_DBD",
+                         "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"])
         newlines.append([exp, args.rn, args.o.split("_")[-1],
-                         args.organism, tar_reg, "0",
-                         "-", "1.0", r_genes, "No triplex found"])
+                         args.organism, tar_reg, "0","0","0","0",
+                         "-", "1.0", r_genes])
     with open(pro_path, 'w') as f:
         for lines in newlines:
             print("\t".join(lines), file=f)
