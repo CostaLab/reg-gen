@@ -23,7 +23,6 @@ from rgt.Util import OverlapType, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet
 tag = "RGT-tools"
 
-#print(os.getcwd())
 
 def get_sequence(sequence, ch, ss, es, reverse=False, complement=False, rna=False, ex=0, strand=None):
     import pysam
@@ -64,29 +63,29 @@ if __name__ == "__main__":
                                                   \nVersion: 0.1.1', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
-    subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
+    subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
     ############### GTF add transcripts ######################################
     parser_gtfat = subparsers.add_parser('gtf_add_transcripts', 
                                          help="[GTF] Add transcripts from the existed exons")
-    parser_gtfat.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
-    parser_gtfat.add_argument('-o', metavar='  ', type=str, help="Output GTF file")
+    parser_gtfat.add_argument('-i', metavar='input', type=str, help="Input GTF file")
+    parser_gtfat.add_argument('-o', metavar='output', type=str, help="Output GTF file")
 
 
     ############### GTF to BED ###############################################
     # python rgt-convertor.py gtf_to_bed -i -o
     parser_gtf2bed = subparsers.add_parser('gtf_to_bed',
                                            help="[GTF] Convert GTF file to BED by the given biotype")
-    parser_gtf2bed.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
-    parser_gtf2bed.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_gtf2bed.add_argument('-s', '-source', type=str, default="All", help="Define the source {ENSEMBL,HAVANA,All}")
-    parser_gtf2bed.add_argument('-f', '-feature', type=str, default="gene",
+    parser_gtf2bed.add_argument('-i', metavar='input', type=str, help="Input GTF file")
+    parser_gtf2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_gtf2bed.add_argument('-s', metavar='source', type=str, default="All", help="Define the source {ENSEMBL,HAVANA,All}")
+    parser_gtf2bed.add_argument('-f', metavar='feature', type=str, default="gene",
                                 help="Define the feature {gene,transcript,exon,CDS,UTR,start_codon,stop_codon,Selenocysteine,All}")
-    parser_gtf2bed.add_argument('-t', '-type', type=str, default="All",
+    parser_gtf2bed.add_argument('-t', metavar='type', type=str, default="All",
                                 help="Define gene type e.g. 'protein_coding' more: http://www.gencodegenes.org/gencode_biotypes.html")
-    parser_gtf2bed.add_argument('-st', '-status', type=str, default="All",
+    parser_gtf2bed.add_argument('-st', metavar='status', type=str, default="All",
                                 help="Define gene status {KNOWN, NOVEL, PUTATIVE,All}")
-    parser_gtf2bed.add_argument('-g', '-gene', type=str, default=None,
+    parser_gtf2bed.add_argument('-g', metavar='gene', type=str, default=None,
                                 help="Define the gene list for filtering, default is None.")
     parser_gtf2bed.add_argument('-id', action="store_true",
                                 help="Use gene ID as region name, instead of gene symbol.")
@@ -97,252 +96,254 @@ if __name__ == "__main__":
     # python rgt-convertor.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
                                              help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
-    parser_gtf2fasta.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
-    parser_gtf2fasta.add_argument('-o', metavar='  ', type=str, help="Output FASTA file")
-    parser_gtf2fasta.add_argument('-t', metavar='  ', type=str, help="Define the target transcript")
-    parser_gtf2fasta.add_argument('-g', metavar='  ', type=str, help="Define the target gene")
-    parser_gtf2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome")
+    parser_gtf2fasta.add_argument('-i', metavar='input', type=str, help="Input GTF file")
+    parser_gtf2fasta.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_gtf2fasta.add_argument('-t', metavar='transcript', type=str, help="Define the target transcript")
+    parser_gtf2fasta.add_argument('-g', metavar='gene', type=str, help="Define the target gene")
+    parser_gtf2fasta.add_argument('-genome', metavar='   ', type=str, help="Define the FASTA file of the genome")
     
     ############### GTF add chr on each entry #################################
     # python rgt-convertor.py
     parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
                                              help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
-    parser_gtfachr.add_argument('-i', metavar='  ', type=str, help="Input GTF file")
+    parser_gtfachr.add_argument('-i', metavar='input', type=str, help="Input GTF file")
     
     ############### BED add score ############################################
     # python rgt-convertor.py
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
-    parser_bedac.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedac.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_bedac.add_argument('-v', type=str, help="Define value to add")
+    parser_bedac.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedac.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedac.add_argument('-v', metavar='value', type=str, help="Define value to add")
 
     ############### BED merge by name ############################################
     # python rgt-convertor.py
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
-    parser_bedmn.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedmn.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bedmn.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedmn.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ############### BED rename ###############################################
     # python rgt-convertor.py
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
-    parser_bedrename.add_argument('-i', metavar='  ', type=str, help="Input BED file")
-    parser_bedrename.add_argument('-o', metavar='  ', type=str, help="Output BED file")
+    parser_bedrename.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedrename.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedrename.add_argument('-s', action="store_true", help="Strand specific")
     parser_bedrename.add_argument('-d', action="store_true", help="Show the distance")
-    parser_bedrename.add_argument('-organism',metavar='  ', type=str, help="Define the organism")
-    parser_bedrename.add_argument('-l', metavar='  ', type=int, default=1000, 
+    parser_bedrename.add_argument('-organism', metavar='  ', type=str, help="Define the organism")
+    parser_bedrename.add_argument('-l', metavar='length', type=int, default=1000,
                                   help="Define the length of promoter region (default:1000 bp)")
-    parser_bedrename.add_argument('-t', metavar='  ', type=int, default=50000, 
+    parser_bedrename.add_argument('-t', metavar='threshold', type=int, default=50000,
                                   help="Define the threshold of distance (default:50000bp")
-    parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str, help="Target BED file")
+    parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str,
+                                  help="Target BED file")
     ############### BED change strand ###############################################
     # python rgt-convertor.py
     parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")
-    parser_bedchstrand.add_argument('-i', metavar='  ', type=str, help="Input BED file")
-    parser_bedchstrand.add_argument('-o', metavar='  ', type=str, help="Output BED file")
-    parser_bedchstrand.add_argument('-d', metavar='  ', type=int, default=0,
+    parser_bedchstrand.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedchstrand.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedchstrand.add_argument('-d', metavar='distance', type=int, default=0,
                                     help="Define the threshold of distance (default:0 bp")
-    parser_bedchstrand.add_argument('-t', metavar='  ', type=str, default=None, help="Target BED file")
+    parser_bedchstrand.add_argument('-t', metavar='target', type=str, default=None, help="Target BED file")
     parser_bedchstrand.add_argument('-r', action="store_true", help="Reverse the strand")
-    parser_bedchstrand.add_argument('-a', metavar='  ', type=str, default=None,
+    parser_bedchstrand.add_argument('-a', metavar='all', type=str, default=None,
                                     help="Define the stand for all regions")
 
     ############### BED extend ###############################################
     # python rgt-convertor.py
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
-    parser_bedex.add_argument('-i', type=str, help="Input BED file")
-    parser_bedex.add_argument('-o', type=str, help="Output BED name.")
-    parser_bedex.add_argument('-oz', "-onlyzero", action="store_true", default=False, 
+    parser_bedex.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedex.add_argument('-o', metavar='output', type=str, help="Output BED name.")
+    parser_bedex.add_argument('-oz', "--onlyzero", action="store_true", default=False,
                               help="Extend only the zero-length regions")
-    parser_bedex.add_argument('-l', type=int, help="Define the length to extend.")
-    parser_bedex.add_argument('-both',action="store_true", default=False, 
+    parser_bedex.add_argument('-l', metavar='length', type=int, help="Define the length to extend.")
+    parser_bedex.add_argument('-both', action="store_true", default=False,
                               help="Extend from the both ends.")
 
     ############### BED subtract ###############################################
     # python rgt-convertor.py
     parser_bedsub = subparsers.add_parser('bed_subtract', help="[BED] Subtract the regions")
-    parser_bedsub.add_argument('-i', type=str, help="Input BED file")
-    parser_bedsub.add_argument('-o', type=str, help="Output BED name.")
-    parser_bedsub.add_argument('-t', "-target", type=str,
-                              help="Define the target BED file to subtract.")
+    parser_bedsub.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedsub.add_argument('-o', metavar='output', type=str, help="Output BED name.")
+    parser_bedsub.add_argument('-t', metavar="target", type=str,
+                               help="Define the target BED file to subtract.")
 
     ############### BED cut ###############################################
     # python rgt-convertor.py
     parser_bedcut = subparsers.add_parser('bed_cut', help="[BED] Cut the regions")
-    parser_bedcut.add_argument('-i', type=str, help="Input BED file")
-    parser_bedcut.add_argument('-o', type=str, help="Output BED name.")
-    parser_bedcut.add_argument('-t', "-target", type=str,
+    parser_bedcut.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedcut.add_argument('-o', metavar='output', type=str, help="Output BED name.")
+    parser_bedcut.add_argument('-t', metavar="target", type=str,
                                help="Define the target BED file for cutting.")
 
     ############### BED get promoters ########################################
     # python rgt-convertor.py bed_get_promoters -i -o -organism
     parser_bedgp = subparsers.add_parser('bed_get_promoters', 
                        help="[BED] Get promoters from the given genes")
-    parser_bedgp.add_argument('-i', '-input', type=str, help="Input file (BED or gene list)")
-    parser_bedgp.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bedgp.add_argument('-i', metavar='input', type=str, help="Input file (BED or gene list)")
+    parser_bedgp.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedgp.add_argument('-organism', type=str, help="Define the organism (necessary if input is a gene list)")
-    parser_bedgp.add_argument('-l', type=int, default=1000, 
+    parser_bedgp.add_argument('-l', metavar='length', type=int, default=1000,
                               help="Define length of promoters (default:1000bp)")
     
     ############### BED get upstream regions #################################
     # python rgt-convertor.py bed_upstream -i -o
     parser_bedupstream = subparsers.add_parser('bed_upstream', 
                        help="[BED] Get regions upstream from the given BED file")
-    parser_bedupstream.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedupstream.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_bedupstream.add_argument('-l', type=int, default=100, help="Define length (default:100bp)")
-    parser_bedupstream.add_argument('-d', type=int, default=100, help="Define distance (default:100bp)")
-    parser_bedupstream.add_argument('-min', type=int, default=0, 
+    parser_bedupstream.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedupstream.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedupstream.add_argument('-l', metavar='length', type=int, default=100, help="Define length (default:100bp)")
+    parser_bedupstream.add_argument('-d', metavar='distance', type=int, default=100, help="Define distance (default:100bp)")
+    parser_bedupstream.add_argument('-min', metavar='minimum', type=int, default=0,
                                     help="Define minimum length of gene to filter out the small genes (default:0)")
-    parser_bedupstream.add_argument('-r', action="store_true", default=False, help="Reverse the strand.")
+    parser_bedupstream.add_argument('-r', '--reverse', action="store_true", default=False,
+                                    help="Reverse the strand.")
 
     ############### BED to FASTA #############################################
     parser_bed2fasta = subparsers.add_parser('bed_to_fasta', 
                        help="[BED] Export the sequences in FASTA according to the given BED file")
-    parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output directory for FASTA files")
-    parser_bed2fasta.add_argument('-genome', type=str, help="Define the FASTA file of the genome sequence")
+    parser_bed2fasta.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bed2fasta.add_argument('-o', metavar='output', type=str, help="Output directory for FASTA files")
+    parser_bed2fasta.add_argument('-genome', metavar='   ', type=str, help="Define the FASTA file of the genome sequence")
     parser_bed2fasta.add_argument('-order', action="store_true", default=False, help="Make ranking number as sequence name")
 
     ############### BED filtered by gene name ################################
     parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
                        help="[BED] Filter by the given gene list")
-    parser_bed2fasta.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bed2fasta.add_argument('-o', '-output', type=str, help="Output BED file")
+    parser_bed2fasta.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bed2fasta.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bed2fasta.add_argument('-gene', type=str, help="Define file for the gene list")
 
     ############### BED remove if overlap ################################
     parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
                        help="[BED] Remove the regions if they overlap with the target regions")
-    parser_bedro.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedro.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_bedro.add_argument('-t', '-target', type=str, help="Define BED file for target regions")
-    parser_bedro.add_argument('-k', action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
+    parser_bedro.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedro.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedro.add_argument('-t', metavar='target', type=str, help="Define BED file for target regions")
+    parser_bedro.add_argument('-k', "--keep", action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
 
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
                        help="[BED] Add extra columns to the BED file by gene name")
-    parser_bedaddcol.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedaddcol.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_bedaddcol.add_argument('-ref', type=str, help="Define file for referring the extra columns ")
-    parser_bedaddcol.add_argument('-f', '-field', type=int, help="Which field of the reference file is compared for names.")
+    parser_bedaddcol.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedaddcol.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedaddcol.add_argument('-ref', metavar='refer', type=str, help="Define file for referring the extra columns ")
+    parser_bedaddcol.add_argument('-f', '--field', type=int, help="Which field of the reference file is compared for names.")
 
     ############### BED average size ################################
     parser_bedaversize = subparsers.add_parser('bed_size',
                                              help="[BED] Calculate the average size.")
-    parser_bedaversize.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedaversize.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
     ############### BED detect polyA reads within the regions ################################
     parser_bedpolya = subparsers.add_parser('bed_polya',
                                                help="[BED] Detect polyA reads within the regions.")
-    parser_bedpolya.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bedpolya.add_argument('-b', '-bam', type=str, help="Input BAM file")
-    parser_bedpolya.add_argument('-o', '-output', type=str, help="Output file")
+    parser_bedpolya.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedpolya.add_argument('-b', metavar='bam', type=str, help="Input BAM file")
+    parser_bedpolya.add_argument('-o', metavar='output', type=str, help="Output file")
 
     ############### BED to GTF ################################
     parser_bed2gtf = subparsers.add_parser('bed_to_gtf',
                                             help="[BED] Convert BED file to GTF format.")
-    parser_bed2gtf.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_bed2gtf.add_argument('-o', '-output', type=str, help="Output GTF file")
+    parser_bed2gtf.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bed2gtf.add_argument('-o', metavar='output', type=str, help="Output GTF file")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
                        help="[BED] Divide the BEd files by the expression.")
-    parser_divideBED.add_argument('-bed', type=str, help="Input BED file")
-    parser_divideBED.add_argument('-t','-table', type=str, help="Input expression table (Gene name should match the region name.")
-    parser_divideBED.add_argument('-o1', '-output1', type=str, help="Output first BED file")
-    parser_divideBED.add_argument('-o2', '-output2', type=str, help="Output second BED file")
-    parser_divideBED.add_argument('-c', '-cutoff', type=int, help="Define the cutoff")
-    parser_divideBED.add_argument('-m', type=str, help="Define the mode, such as mean, max, or min.")
+    parser_divideBED.add_argument('-bed', metavar='   ', type=str, help="Input BED file")
+    parser_divideBED.add_argument('-t', metavar='table', type=str, help="Input expression table (Gene name should match the region name.")
+    parser_divideBED.add_argument('-o1', metavar='output1', type=str, help="Output first BED file")
+    parser_divideBED.add_argument('-o2', metavar='output2', type=str, help="Output second BED file")
+    parser_divideBED.add_argument('-c', metavar='cutoff', type=int, help="Define the cutoff")
+    parser_divideBED.add_argument('-m', metavar='mode', type=str, help="Define the mode, such as mean, max, or min.")
 
     ############### BAM Filter reads by BED file #######################
     parser_filterBAM = subparsers.add_parser('bam_filter',
                                              help="[BAM] Filter BAM file by the given regions in BED.")
-    parser_filterBAM.add_argument('-i', type=str, help="Input BAM file")
-    parser_filterBAM.add_argument('-bed', type=str, help="Input BED file for the regions for filtering")
-    parser_filterBAM.add_argument('-o', type=str, help="Output prefix for BAM file")
+    parser_filterBAM.add_argument('-i', metavar='input', type=str, help="Input BAM file")
+    parser_filterBAM.add_argument('-bed', metavar='   ', type=str, help="Input BED file for the regions for filtering")
+    parser_filterBAM.add_argument('-o', metavar='output', type=str, help="Output prefix for BAM file")
 
     ############### THOR MAplot ################################
     parser_thorma = subparsers.add_parser('thor_ma',
                        help="[THOR] Create the MA plot for understanding the effect of normalization.")
-    parser_thorma.add_argument('-i', '-input', type=str, help="Input data config.")
-    parser_thorma.add_argument('-thor', '-thor--result', type=str, default=".", help="Output directory of THOR.")
-    parser_thorma.add_argument('-o', '-output', default=None, type=str, help="Output directory")
-    parser_thorma.add_argument('-e', '-ext', default=None, type=str, help="Define the extension size.")
-    parser_thorma.add_argument('-b', '-bin', default=None, type=str, help="Define the bin size.")
+    parser_thorma.add_argument('-i', metavar='input', type=str, help="Input data config.")
+    parser_thorma.add_argument('-thor', metavar='THOR result', type=str, default=".", help="Output directory of THOR.")
+    parser_thorma.add_argument('-o', metavar='output', default=None, type=str, help="Output directory")
+    parser_thorma.add_argument('-e', metavar='extension', default=None, type=str, help="Define the extension size.")
+    parser_thorma.add_argument('-b', metavar='bin size', default=None, type=str, help="Define the bin size.")
 
     ############### THOR split and filter ################################
     parser_thorsf = subparsers.add_parser('thor_split', 
                        help="[THOR] Split and filter the differential peaks from rgt-THOR")
-    parser_thorsf.add_argument('-i', '-input', type=str, help="Input BED file")
-    parser_thorsf.add_argument('-o', '-output', default=None, type=str, help="Output directory.")
-    parser_thorsf.add_argument('-p', '-p--value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
-    parser_thorsf.add_argument('-fc', '-fold--change', type=int,default=0,
+    parser_thorsf.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_thorsf.add_argument('-o', metavar='output', default=None, type=str, help="Output directory.")
+    parser_thorsf.add_argument('-p', metavar='p-value', type=int, help="Define the cut-off of p-value (-log10) for filtering.")
+    parser_thorsf.add_argument('-fc', metavar='fold-change', type=int,default=0,
                                help="Define the cut-off of foldchange for filtering.")
-    parser_thorsf.add_argument('-rn', '-rename', action="store_true",
+    parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
-    parser_thorsf.add_argument('-g', '-genome', type=str, help="Define the genome")
+    parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
 
     ############### GENOME get sequence ####################################################
     parser_getseq = subparsers.add_parser('getseq', 
                        help="[FASTA] Get sequence from genome FASTA")
-    parser_getseq.add_argument('-o', type=str, help="Output FASTA file")
-    parser_getseq.add_argument('-d', '-dna', type=str, help="DNA sequence in FASTA format")
-    parser_getseq.add_argument('-b', '-bed', type=str, help="Input BED file")
-    parser_getseq.add_argument('-p', '-pos', type=str, help="position")
-    parser_getseq.add_argument('-s', '-strand', type=str, default="both", help="strand (+, -, or both)")
-    parser_getseq.add_argument('-ch', '-chr', type=str, help="chromosome")
-    parser_getseq.add_argument('-ss', '-start', type=int, help="start site")
-    parser_getseq.add_argument('-es', '-end', type=int, help="end site")
-    parser_getseq.add_argument('-ex', '-extention', default=0, type=int, help="extention")
-    parser_getseq.add_argument('-re', '-reverse', action="store_true", help="Reverse the sequence")
-    parser_getseq.add_argument('-c', '-complement', action="store_true", help="Get the complement of the sequence")
-    parser_getseq.add_argument('-r', '-rna', default=False, action="store_true", help="Convert T to U")
+    parser_getseq.add_argument('-b', metavar='bed', type=str, help="Input BED file")
+    parser_getseq.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_getseq.add_argument('-d', metavar='dna', type=str, help="DNA sequence in FASTA format")
+    parser_getseq.add_argument('-p', metavar='pos', type=str, help="position")
+    parser_getseq.add_argument('-s', metavar='strand', type=str, default="both", help="strand (+, -, or both)")
+    parser_getseq.add_argument('-ch', metavar='chr', type=str, help="chromosome")
+    parser_getseq.add_argument('-ss', metavar='start', type=int, help="start site")
+    parser_getseq.add_argument('-es', metavar='end', type=int, help="end site")
+    parser_getseq.add_argument('-ex', metavar='extention', default=0, type=int, help="extention")
+    parser_getseq.add_argument('-re', '--reverse', action="store_true", help="Reverse the sequence")
+    parser_getseq.add_argument('-c', '--complement', action="store_true", help="Get the complement of the sequence")
+    parser_getseq.add_argument('-r', '--rna', default=False, action="store_true", help="Convert T to U")
 
     ############### WIG trim ends by chromosome #############################################
     parser_wig_trim = subparsers.add_parser('wig_trim_end', 
                        help="[WIG] Trim the WIG file according to the given chromosome size")
-    parser_wig_trim.add_argument('-i', '-input', type=str, help="Input WIG file")
-    parser_wig_trim.add_argument('-o', '-output', type=str, help="Output WIG file")
-    parser_wig_trim.add_argument('-chrosize', type=str, help="Define path to the chromosome size file")
+    parser_wig_trim.add_argument('-i', metavar='input', type=str, help="Input WIG file")
+    parser_wig_trim.add_argument('-o', metavar='output', type=str, help="Output WIG file")
+    parser_wig_trim.add_argument('-chrosize', metavar='  ', type=str, help="Define path to the chromosome size file")
 
     ############### GENE list convertion #############################################
     parser_ensembl2symbol = subparsers.add_parser('ensembl2symbol', 
                        help="[GENE] Convert the gene list from ensembl ID to gene symbol")
-    parser_ensembl2symbol.add_argument('-i', '-input', type=str, help="Input gene list")
-    parser_ensembl2symbol.add_argument('-o', '-output', type=str, help="Output gene list")
-    parser_ensembl2symbol.add_argument('-organism', type=str, help="Define the organism")
+    parser_ensembl2symbol.add_argument('-i', metavar='input', type=str, help="Input gene list")
+    parser_ensembl2symbol.add_argument('-o', metavar='output', type=str, help="Output gene list")
+    parser_ensembl2symbol.add_argument('-organism', metavar='  ', type=str, help="Define the organism")
 
     parser_sumbol2ensembl = subparsers.add_parser('symbol2ensembl',
                                                   help="[GENE] Convert the gene list from gene symbol to ensembl ID")
-    parser_sumbol2ensembl.add_argument('-i', '-input', type=str, help="Input gene list")
-    parser_sumbol2ensembl.add_argument('-o', '-output', type=str, help="Output gene list")
-    parser_sumbol2ensembl.add_argument('-organism', type=str, help="Define the organism")
+    parser_sumbol2ensembl.add_argument('-i', metavar='input', type=str, help="Input gene list")
+    parser_sumbol2ensembl.add_argument('-o', metavar='output', type=str, help="Output gene list")
+    parser_sumbol2ensembl.add_argument('-organism', metavar='  ', type=str, help="Define the organism")
 
     ############### Get length in bp from FASTA files ################################
     parser_fasta2bp = subparsers.add_parser('fasta2bp',
                                             help="[FASTA] Get the length in bp of FASTA files")
-    parser_fasta2bp.add_argument('-i', '-input', type=str, help="Input FASTA file or directory")
-    parser_fasta2bp.add_argument('-o', '-output', type=str, default="", help="Output file with a table")
+    parser_fasta2bp.add_argument('-i', metavar='input', type=str, help="Input FASTA file or directory")
+    parser_fasta2bp.add_argument('-o', metavar='output', type=str, default="", help="Output file with a table")
 
     ############### STAR junction to BED #############################################
     parser_circRNA = subparsers.add_parser('circRNA', 
                        help="[junction] Convert the Chimeric junction from STAR to BED file")
-    parser_circRNA.add_argument('-i', '-input', type=str, help="Input chimeric junction file from STAR")
-    parser_circRNA.add_argument('-t', '-tcons', type=str, help="Input BED file of tcons")
-    parser_circRNA.add_argument('-o', '-output', type=str, help="Output BED file")
-    parser_circRNA.add_argument('-c', '-circ', type=str, help="Output BED file of circular RNA")
+    parser_circRNA.add_argument('-i', metavar='input', type=str, help="Input chimeric junction file from STAR")
+    parser_circRNA.add_argument('-t', metavar='tcons', type=str, help="Input BED file of tcons")
+    parser_circRNA.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_circRNA.add_argument('-c', metavar='circ', type=str, help="Output BED file of circular RNA")
 
     ############### FASTA slicing #############################################
     # python rgt-convertor.py sliceFASTA -i -o -l -p
     parser_sliceFASTA = subparsers.add_parser('sliceFASTA', 
                        help="[FASTA] Slice the sequence by given position and length")
-    parser_sliceFASTA.add_argument('-i', '-input', type=str, help="Input FASTA file")
-    parser_sliceFASTA.add_argument('-l', type=int, help="Length of the slice sequence")
-    parser_sliceFASTA.add_argument('-o', '-output', type=str, help="Output FASTA file")
-    parser_sliceFASTA.add_argument('-p', type=int, help="The start position")
-    parser_sliceFASTA.add_argument('-r', default=False, action="store_true", help="Reverse the sequence")
+    parser_sliceFASTA.add_argument('-i', metavar='input', type=str, help="Input FASTA file")
+    parser_sliceFASTA.add_argument('-l', metavar='length', type=int, help="Length of the slice sequence")
+    parser_sliceFASTA.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_sliceFASTA.add_argument('-p', metavar='position', type=int, help="The start position")
+    parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
 
 
@@ -396,7 +397,6 @@ if __name__ == "__main__":
                     #print([ line[:7] + adddata])
                     entries.append( line[:8] + adddata )
         # sort
-        #print(entries[0][8])
         entries.sort(key=lambda x: x[9])
 
         # iterate
@@ -511,7 +511,7 @@ if __name__ == "__main__":
     ############### GTF add chr ##############################################
     elif args.mode == "gtf_add_chr":
         print(tag+": [GTF] Add 'chr' to each entry")
-        print("input:\t" + args.i)
+
         with open("temp.gtf", "w") as f:
             with open(args.i) as g:
                 for line in g:
@@ -525,9 +525,8 @@ if __name__ == "__main__":
 
     ############### BED add score ############################################
     elif args.mode == "bed_add_score":
-        print(tag+": [BED] Add scores")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+        print(tag+": [BED] Add scores into BED format")
+
         with open(args.i) as f, open(args.o, "w") as g:
             for line in f:
                 line = line.strip() 
@@ -537,8 +536,6 @@ if __name__ == "__main__":
     ############### BED merge by name ########################################
     elif args.mode == "bed_merge_by_name":
         print(tag+": [BED] Merge regions by name")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
 
         bed1 = GenomicRegionSet("input")
         bed1.read_bed(args.i)
@@ -548,8 +545,7 @@ if __name__ == "__main__":
     ############### BED rename regions #######################################
     elif args.mode == "bed_rename":
         print(tag+": [BED] Rename regions by associated genes")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+
         if args.target:
             print("target:\t" + args.target)
         else:
@@ -572,8 +568,6 @@ if __name__ == "__main__":
     ############### BED change strands #######################################
     elif args.mode == "bed_change_strand":
         print(tag + ": [BED] Change strands by target BED file")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
 
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
@@ -594,8 +588,7 @@ if __name__ == "__main__":
 
     ############### BED extend ###############################################
     elif args.mode == "bed_extend":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Entend the regions")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
         for region in bed:
@@ -613,9 +606,7 @@ if __name__ == "__main__":
 
     ############### BED subtract ###############################################
     elif args.mode == "bed_subtract":
-        print("input:\t" + args.i)
-        print("target:\t" + args.t)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Subtract the regions")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
         target = GenomicRegionSet("target")
@@ -624,11 +615,9 @@ if __name__ == "__main__":
         out.write_bed(args.o)
 
 
-    ############### BED subtract ###############################################
+    ############### BED cut ###############################################
     elif args.mode == "bed_cut":
-        print("input:\t" + args.i)
-        print("target:\t" + args.t)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Cut the regions and neglect the down stream ones")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
         target = GenomicRegionSet("target")
@@ -648,9 +637,7 @@ if __name__ == "__main__":
 
     ############### BED get promoters #########################################
     elif args.mode == "bed_get_promoters":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-        print("organism:\t" + args.organism)
+        print(tag + ": [BED] Get promoter regions from the genes")
         gene = GenomicRegionSet("genes")
         ### Input BED file
         if args.i.endswith(".bed"):
@@ -683,8 +670,7 @@ if __name__ == "__main__":
 
     ############### BED get upstream regions ####################################
     elif args.mode == "bed_upstream":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Get upstream regions from the given BED file")
 
         gene = GenomicRegionSet("genes")
         ### Input BED file
@@ -715,8 +701,7 @@ if __name__ == "__main__":
     ############### BED to FASTA #############################################
     elif args.mode == "bed_to_fasta":
         print(tag+": [BED] BED to FASTA")
-        print("input:\t\t" + args.i)
-        print("output directory:\t" + args.o)
+
         if not os.path.exists(args.o): os.makedirs(args.o)
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
@@ -769,8 +754,7 @@ if __name__ == "__main__":
 
     ############### BED filter gene #############################################
     elif args.mode == "bed_filter_gene":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Filter genes")
         
         if not args.gene:
             print("Please define the file for gene list.")
@@ -792,9 +776,7 @@ if __name__ == "__main__":
 
     ############### BED remove if overlap ########################################
     elif args.mode == "bed_remove_if_overlap":
-
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Remove the overlapping regions")
         
         if not args.t:
             print("Please define the file for target regions.")
@@ -818,9 +800,7 @@ if __name__ == "__main__":
 
     ############### BED add columns #############################################
     elif args.mode == "bed_add_columns":
-        print("input:\t" + args.i)
-        print("reference:\t" + args.ref)
-        print("output:\t" + args.o)
+        print(tag + ": [BED] Add column")
         
         if not args.ref:
             print("Please define the file for reference.")
@@ -857,8 +837,7 @@ if __name__ == "__main__":
 
     ############### BED divide by expression ###########################
     elif args.mode == "bed_divide":
-        print("input:\t" + args.bed)
-        print("table:\t" + args.t)
+        print(tag + ": [BED] Divide by expression data")
         
         gene1 = []
         gene2 = []
@@ -895,7 +874,7 @@ if __name__ == "__main__":
 
     ############### BED average size ###########################
     elif args.mode == "bed_size":
-        print("input:\t" + args.i)
+        print(tag + ": [BED] Average size")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
         print("Average size:\t"+str(bed.average_size()))
@@ -904,6 +883,7 @@ if __name__ == "__main__":
 
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
+        print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
         def count_polyA_on_bam(bed, bam):
             samfile = pysam.AlignmentFile(bam, "rb")
             res = []
@@ -928,30 +908,6 @@ if __name__ == "__main__":
             samfile.close()
             return res
 
-            # samfile = pysam.AlignmentFile(bam, "rb")
-            # res = []
-            # for r in bed:
-            #     count_polyA = 0
-            #     rr = GenomicRegionSet(r.name)
-            #     rr.add(r)
-            #     try:
-            #         rr.extract_blocks()
-            #     except:
-            #         pass
-            #     for rrr in rr:
-            #         for pileupcolumn in samfile.pileup(rrr.chrom, rrr.initial, rrr.final):
-            #             for pileupread in pileupcolumn.pileups:
-            #                 if not pileupread.is_del and not pileupread.is_refskip:
-            #                     # query position is None if is_del or is_refskip is set.
-            #                     if pileupread.alignment.query_sequence.endswith("AAAAA"):
-            #                         # print(pileupread.alignment.query_sequence)
-            #                         count_polyA += 1
-            #     res.append([r.name, count_polyA])
-            #
-            # samfile.close()
-            # return res
-
-        print("input:\t" + args.i)
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
 
@@ -985,6 +941,7 @@ if __name__ == "__main__":
     ############### BED to GTF ###########################
     #
     elif args.mode == "bed_to_gtf":
+        print(tag + ": [BED] Convert BED to GTF")
         inf = open(args.i, 'r')
         outf = open(args.o, 'w')
 
@@ -1005,9 +962,7 @@ if __name__ == "__main__":
     ############### BAM filtering by BED ###########################
     #
     elif args.mode == "bam_filter":
-        print("input:\t" + args.i)
-        print("regions:\t" + args.bed)
-        print("output prefix:\t" + args.o)
+        print(tag + ": [BED] Filtering BAM file by the regions in BED file")
 
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.bed)
@@ -1034,14 +989,10 @@ if __name__ == "__main__":
 
     ############### THOR MAplot #############################################
     elif args.mode == "thor_ma":
-        print("input:\t"+args.i)
+        print(tag + ": [THOR] Generate MA plot")
         tag = os.path.basename(args.i).split(".")[0].split("/")[-1]
-        print("result from THOR:\t"+args.thor)
-        print("output:\t"+args.o)
         if not os.path.exists(args.o):
             os.makedirs(args.o)
-        print("extension:\t" + args.e)
-        print("bin size:\t" + args.b)
 
         chr = "chr10"
         # config_dir = os.path.dirname(args.i)
@@ -1104,11 +1055,6 @@ if __name__ == "__main__":
             bin_cov2.append(c)
         # bin_cov1 = [i.tolist() for i in bin_cov1]
 
-        # print(max(bin_cov1[0]))
-        # print(max(bin_cov2[0]))
-        #
-        # print(bin_cov1[0:10])
-        # print(bin_cov2[0:10])
 
         bin_cov1 = [ numpy.log2(x) for x in bin_cov1]
         bin_cov2 = [ numpy.log2(x) for x in bin_cov2]
@@ -1163,10 +1109,9 @@ if __name__ == "__main__":
 
     ############### THOR split #############################################
     elif args.mode == "thor_split":
-        print("input:\t" + args.i)
+        print(tag + ": [THOR] Split the differential peaks")
         if not args.o:
             args.o = os.path.dirname(args.i)
-        print("output:\t" + args.o)
 
         name = os.path.basename(args.i).split(".")[0]
         if args.fc == 0: tag = "_p" + str(args.p)
@@ -1225,8 +1170,7 @@ if __name__ == "__main__":
         
     ############### getseq #############################################
     elif args.mode == "getseq":
-        #print("input:\t" + args.i)
-        #print("output:\t" + args.o)
+        print(tag + ": [FASTA] Get sequence from the given regions")
         
         if args.b:
             regions = GenomicRegionSet("regions")
@@ -1276,9 +1220,6 @@ if __name__ == "__main__":
         print()
     ############### WIG trim end #############################################
     elif args.mode == "wig_trim_end":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-        print("chromosome size:\t" + args.chrosize)
         
         chromD = {}
         with open(args.chrosize) as c:
@@ -1309,9 +1250,7 @@ if __name__ == "__main__":
 
     ############### GENE  ensembl2symbol #############################################
     elif args.mode == "ensembl2symbol":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-        print("organism:\t" + args.organism)
+
         g = GeneSet("ensembl_id")
         g.read(args.i)
 
@@ -1326,9 +1265,6 @@ if __name__ == "__main__":
 
 
     elif args.mode == "symbol2ensembl":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-        print("organism:\t" + args.organism)
         g = GeneSet("symbol")
         g.read(args.i)
         print(len(g.genes))
@@ -1345,8 +1281,6 @@ if __name__ == "__main__":
 
 
     elif args.mode == "fasta2bp":
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
 
         def fasta2bp(filename):
             s = ""
