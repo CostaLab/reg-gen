@@ -1,6 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
+import sys
 import natsort
 import multiprocessing
 from collections import *
@@ -142,7 +143,7 @@ class RandomTest:
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-2)
         mp_output = pool.map(random_each, mp_input)
         # print(mp_output)
         pool.close()

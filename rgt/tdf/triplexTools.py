@@ -350,8 +350,11 @@ def gen_heatmap(path):
 
     output_array(array=lmats, directory=path, folder="", filename='matrix_p.txt')
     # os.path.join(path,'matrix_p.txt'), lmats, delimiter='\t')
-    fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.png'))
-    fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
+    try:
+        fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.png'))
+        fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
+    except:
+        pass
 
 
 def generate_rna_exp_pv_table(root, multi_corr=True):

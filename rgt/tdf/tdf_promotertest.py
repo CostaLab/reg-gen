@@ -268,7 +268,7 @@ class PromoterTest:
 
         self.txp_de.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=False)
         print("\t\t" + str(len(self.txp_de)) + "\tBinding de promoters")
-        # txp_de.remove_duplicates()
+        self.txp_de.remove_duplicates()
         self.txp_de.merge_rbs(rm_duplicate=True, cutoff=cutoff,
                               region_set=self.de_regions, name_replace=self.de_regions)
 
@@ -282,7 +282,7 @@ class PromoterTest:
         self.txp_nde = RNADNABindingSet("non-DE")
         self.txp_nde.read_txp(os.path.join(temp, "nde.txp"), dna_fine_posi=False)
         print("\t\t" + str(len(self.txp_nde)) + "\tBinding nde promoters")
-        # txp_nde.remove_duplicates()
+        self.txp_nde.remove_duplicates()
         self.txp_nde.merge_rbs(rbss=self.rbss, region_set=self.nde_regions,
                                rm_duplicate=True)  # , asgene_organism=self.organism)
 
@@ -715,8 +715,7 @@ class PromoterTest:
             header_titles = ["", "Target promoters", "Gene symbol",
                              "Number of DNA Binding sites locating within the promoter",
                              "The proportion of promoter covered by binding sites"]
-            header_titles += [
-                                 "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(
+            header_titles += ["Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(
                 score_header)
             header_titles += ["Sum up the ranks from left-hand side columns"]
 
@@ -926,8 +925,7 @@ class PromoterTest:
             header_titlesp = ["", "Target promoters", "Gene symbol",
                               "Number of DNA Binding sites locating within the promoter",
                               "The proportion of promoter covered by binding sites"]
-            header_titlesp += [
-                                  "Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(
+            header_titlesp += ["Scores loaded by their absolute values from gene list or BED input. If there is annotation error for the gene names, it shows zero instead."] * len(
                 score_header)
             header_titlesp += ["Sum up the ranks from left-hand side columns"]
 

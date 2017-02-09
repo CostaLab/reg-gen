@@ -232,6 +232,19 @@ if __name__ == "__main__":
                                              help="[BED] Calculate the average size.")
     parser_bedaversize.add_argument('-i', '-input', type=str, help="Input BED file")
 
+    ############### BED detect polyA reads within the regions ################################
+    parser_bedpolya = subparsers.add_parser('bed_polya',
+                                               help="[BED] Detect polyA reads within the regions.")
+    parser_bedpolya.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bedpolya.add_argument('-b', '-bam', type=str, help="Input BAM file")
+    parser_bedpolya.add_argument('-o', '-output', type=str, help="Output file")
+
+    ############### BED to GTF ################################
+    parser_bed2gtf = subparsers.add_parser('bed_to_gtf',
+                                            help="[BED] Convert BED file to GTF format.")
+    parser_bed2gtf.add_argument('-i', '-input', type=str, help="Input BED file")
+    parser_bed2gtf.add_argument('-o', '-output', type=str, help="Output GTF file")
+
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
@@ -842,7 +855,7 @@ if __name__ == "__main__":
         print("complete.")
 
 
-    ############### BED divide by erxpression ###########################
+    ############### BED divide by expression ###########################
     elif args.mode == "bed_divide":
         print("input:\t" + args.bed)
         print("table:\t" + args.t)
@@ -889,7 +902,105 @@ if __name__ == "__main__":
         print("Size variance:\t" + str(bed.size_variance()))
         print()
 
+    ############### BED Detect polyA reads ###########################
+    elif args.mode == "bed_polya":
+        def count_polyA_on_bam(bed, bam):
+            samfile = pysam.AlignmentFile(bam, "rb")
+            res = []
+            for r in bed:
+                count_polyA = 0
+                rr = GenomicRegionSet(r.name)
+                rr.add(r)
+                try:
+                    rr.extract_blocks()
+                except:
+                    pass
+                for rrr in rr:
+                    for pileupcolumn in samfile.pileup(rrr.chrom, rrr.initial, rrr.final):
+                        for pileupread in pileupcolumn.pileups:
+                            if not pileupread.is_del and not pileupread.is_refskip:
+                                # query position is None if is_del or is_refskip is set.
+                                if pileupread.alignment.query_sequence.endswith("AAAAA"):
+                                    # print(pileupread.alignment.query_sequence)
+                                    count_polyA += 1
+                res.append([r.name, count_polyA])
 
+            samfile.close()
+            return res
+
+            # samfile = pysam.AlignmentFile(bam, "rb")
+            # res = []
+            # for r in bed:
+            #     count_polyA = 0
+            #     rr = GenomicRegionSet(r.name)
+            #     rr.add(r)
+            #     try:
+            #         rr.extract_blocks()
+            #     except:
+            #         pass
+            #     for rrr in rr:
+            #         for pileupcolumn in samfile.pileup(rrr.chrom, rrr.initial, rrr.final):
+            #             for pileupread in pileupcolumn.pileups:
+            #                 if not pileupread.is_del and not pileupread.is_refskip:
+            #                     # query position is None if is_del or is_refskip is set.
+            #                     if pileupread.alignment.query_sequence.endswith("AAAAA"):
+            #                         # print(pileupread.alignment.query_sequence)
+            #                         count_polyA += 1
+            #     res.append([r.name, count_polyA])
+            #
+            # samfile.close()
+            # return res
+
+        print("input:\t" + args.i)
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+
+        if os.path.isfile(args.b):
+            res = count_polyA_on_bam(bed=bed, bam=args.b)
+            with open(args.o, "w") as f:
+                print("\t".join(["name", "number_of_polyA_reads"]), file=f)
+                for l in res:
+                    print("\t".join([l[0], str(l[1])]), file=f)
+        elif os.path.isdir(args.b):
+            col_res = {}
+            bams = []
+            for r in bed:
+                col_res[r.name] = []
+
+            for root, dirs, files in os.walk(args.b):
+                for f in files:
+                    if f.endswith(".bam"):
+                        bams.append(f.rpartition(".")[0])
+                        res = count_polyA_on_bam(bed=bed, bam=os.path.join(root,f))
+                        for line in res:
+                            col_res[line[0]].append(str(line[1]))
+
+            with open(args.o, "w") as f:
+                print("\t".join(bams), file=f)
+                for gene, row in col_res.items():
+                    print("\t".join([gene] + row), file=f)
+        print()
+
+
+    ############### BED to GTF ###########################
+    #
+    elif args.mode == "bed_to_gtf":
+        inf = open(args.i, 'r')
+        outf = open(args.o, 'w')
+
+        for linea in inf:
+            linea_split = linea.split()
+            chrom = linea_split[0]
+            ini_pos = int(linea_split[1])
+            fin_pos = int(linea_split[2])
+            peak = linea_split[3].split("_")[0]
+            print(peak)
+
+            outf.write(chrom + "\tjoseph\ttranscript\t" + str(ini_pos) + "\t" + str(fin_pos) + '\t.\t+\t.\t'+
+                       'gene_name "' + peak + '";' + '\n')
+
+        inf.close()
+        outf.close()
 
     ############### BAM filtering by BED ###########################
     #
@@ -1239,17 +1350,19 @@ if __name__ == "__main__":
 
         def fasta2bp(filename):
             s = ""
+            exon = 0
             with open(filename) as f:
                 for line in f:
                     l = line.strip()
-                    if l.startswith(">"): continue
+                    if l.startswith(">"):
+                        exon += 1
                     elif not l: continue
                     else: s += l
-            return len(s)
+            return [str(len(s)), str(exon)]
 
         if os.path.isfile(args.i):
             l = fasta2bp(args.i)
-            print("Length:\t\t" + str(l)+" bp")
+            print("Length:\t\t" + l[0]+" bp; Number of exons:\t\t"+ l[1])
 
         elif os.path.isdir(args.i) and args.o:
             list_bp = []
@@ -1258,10 +1371,10 @@ if __name__ == "__main__":
                     if f.endswith(".fa") or f.endswith(".fasta"):
                         # print(f.partition(".")[0])
                         # print(parser_fasta2bp(filename=os.path.join(root,f)))
-                        list_bp.append([f.partition(".")[0],
-                                        str(fasta2bp(os.path.join(root,f)))])
+                        list_bp.append([f.partition(".")[0]] + fasta2bp(os.path.join(root,f)))
         if args.o:
             with open(args.o, "w") as g:
+                print("\t".join(["name", "sequence_length","number_of_exons"]), file=g)
                 for l in list_bp:
                     print("\t".join(l), file=g)
 
