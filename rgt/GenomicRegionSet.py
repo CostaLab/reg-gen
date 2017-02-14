@@ -1168,7 +1168,7 @@ class GenomicRegionSet:
                 len_21 = allbed2 - len_inter
                 return len_12, len_21, len_inter
              
-    def closest(self,y, max_dis=10000, return_list=False, top_N=None):
+    def closest(self, y, max_dis=10000, return_list=False, top_N=None):
         """Return a new GenomicRegionSet including the region(s) of y which is closest to any self region. 
         If there are intersection, return False.
         

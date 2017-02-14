@@ -248,6 +248,14 @@ if __name__ == "__main__":
     parser_bed2gtf.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bed2gtf.add_argument('-o', metavar='output', type=str, help="Output GTF file")
 
+    ############### BED distance ###############################################
+    # python rgt-convertor.py
+    parser_beddis = subparsers.add_parser('bed_distance', help="[BED] Show the distance between two region sets")
+    parser_beddis.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_beddis.add_argument('-o', metavar='output', type=str, help="Output table.")
+    parser_beddis.add_argument('-t', metavar="target", type=str,
+                               help="Define the target BED file to define the distance.")
+
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
@@ -1006,6 +1014,18 @@ if __name__ == "__main__":
                        '\n')
         inf.close()
         outf.close()
+
+
+    ############### BED distance ###########################
+    #
+    elif args.mode == "bed_distance":
+        print(tag + ": [BED] Convert BED to GTF")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        target = GenomicRegionSet(args.t)
+        target.read_bed(args.t)
+        res_dict, dis_list = bed.closest(target, max_dis=5000, return_list=True)
+        
 
     ############### BAM filtering by BED ###########################
     #
