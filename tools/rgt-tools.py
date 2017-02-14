@@ -135,6 +135,8 @@ if __name__ == "__main__":
                                   help="Define the threshold of distance (default:50000bp")
     parser_bedrename.add_argument('-target', metavar='  ', default=False, type=str,
                                   help="Target BED file")
+    parser_bedrename.add_argument('-genes', metavar='  ', default=False, type=str,
+                                  help="Target gene list")
     ############### BED change strand ###############################################
     # python rgt-convertor.py
     parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")
@@ -559,9 +561,17 @@ if __name__ == "__main__":
             bed.replace_region_name(regions=target)
             bed.write_bed(args.o)
         else:
-            renamebed = bed.gene_association(gene_set=None, organism=args.organism,
-                                             promoterLength=args.l, strand_specific=args.s,
-                                             threshDist=args.t, show_dis=args.d)
+            if not args.genes:
+                renamebed = bed.gene_association(gene_set=None, organism=args.organism,
+                                                 promoterLength=args.l, strand_specific=args.s,
+                                                 threshDist=args.t, show_dis=args.d)
+            else:
+                genes = GeneSet("genes")
+                genes.read(args.genes)
+                renamebed = bed.gene_association(gene_set=genes, organism=args.organism,
+                                                 promoterLength=args.l, strand_specific=args.s,
+                                                 threshDist=args.t, show_dis=args.d)
+
             renamebed.write_bed(args.o)
 
 
@@ -885,26 +895,56 @@ if __name__ == "__main__":
     elif args.mode == "bed_polya":
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
         def count_polyA_on_bam(bed, bam):
+            pattern = "AAAAA"
             samfile = pysam.AlignmentFile(bam, "rb")
+            win_width = int(numpy.mean([ read.qlen for read in samfile]))
             res = []
             for r in bed:
                 count_polyA = 0
+                all_read = 0
+                if r.orientation == "-":
+                    start = r.initial
+                    end = r.initial + win_width
+                else:
+                    start = r.final - win_width
+                    end = r.final
+                for pileupcolumn in samfile.pileup(r.chrom, start, end):
+                    for pileupread in pileupcolumn.pileups:
+                        if not pileupread.is_del and not pileupread.is_refskip:
+                            # query position is None if is_del or is_refskip is set.
+                            all_read += 1
+                            if pileupread.alignment.query_sequence.endswith(pattern):
+                                # print(pileupread.alignment.query_sequence)
+                                count_polyA += 1
+
+
+                # all transcript
                 rr = GenomicRegionSet(r.name)
                 rr.add(r)
-                try:
-                    rr.extract_blocks()
-                except:
-                    pass
-                for rrr in rr:
-                    for pileupcolumn in samfile.pileup(rrr.chrom, rrr.initial, rrr.final):
+                rr.extract_blocks()
+                all_a = 0
+                all_r = 0
+                for exon in rr:
+                    for pileupcolumn in samfile.pileup(exon.chrom, exon.initial, exon.final):
                         for pileupread in pileupcolumn.pileups:
                             if not pileupread.is_del and not pileupread.is_refskip:
                                 # query position is None if is_del or is_refskip is set.
-                                if pileupread.alignment.query_sequence.endswith("AAAAA"):
+                                all_r += 1
+                                if pileupread.alignment.query_sequence.endswith(pattern):
                                     # print(pileupread.alignment.query_sequence)
-                                    count_polyA += 1
-                res.append([r.name, count_polyA])
+                                    all_a += 1
 
+                if all_read == 0:
+                    if all_r == 0:
+                        res.append([r.name, count_polyA, all_read, "n.a.", all_a, all_r, "n.a."])
+                    else:
+                        res.append([r.name, count_polyA, all_read, "n.a.", all_a, all_r, float(all_a)/all_r])
+                else:
+                    res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read])
+                    if all_r == 0:
+                        res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, "n.a."])
+                    else:
+                        res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, float(all_a)/all_r])
             samfile.close()
             return res
 
@@ -914,27 +954,32 @@ if __name__ == "__main__":
         if os.path.isfile(args.b):
             res = count_polyA_on_bam(bed=bed, bam=args.b)
             with open(args.o, "w") as f:
-                print("\t".join(["name", "number_of_polyA_reads"]), file=f)
+                print("\t".join(["name", "polyA_reads_in_window", "all_reads_in_window",
+                                 "polyA_reads_on_transcript", "all_reads_on_transcript"]), file=f)
                 for l in res:
-                    print("\t".join([l[0], str(l[1])]), file=f)
+                    print("\t".join([ str(x) for x in l ]), file=f)
         elif os.path.isdir(args.b):
             col_res = {}
             bams = []
             for r in bed:
-                col_res[r.name] = []
+                col_res[r.name] = {}
 
             for root, dirs, files in os.walk(args.b):
                 for f in files:
                     if f.endswith(".bam"):
                         bams.append(f.rpartition(".")[0])
+
                         res = count_polyA_on_bam(bed=bed, bam=os.path.join(root,f))
                         for line in res:
-                            col_res[line[0]].append(str(line[1]))
+                            col_res[line[0]][f.rpartition(".")[0]] = [ str(x) for x in line[1:] ]
 
             with open(args.o, "w") as f:
-                print("\t".join(bams), file=f)
-                for gene, row in col_res.items():
-                    print("\t".join([gene] + row), file=f)
+                print("\t".join(["name", "bam_file", "polyA_reads_in_window", "all_reads_in_window",
+                                 "polyA_reads_on_transcript", "all_reads_on_transcript"]), file=f)
+                # print("\t".join(bams), file=f)
+                for gene, bamdict in col_res.items():
+                    for b, row in bamdict.items():
+                        print("\t".join([gene, b] + row), file=f)
         print()
 
 
@@ -953,9 +998,12 @@ if __name__ == "__main__":
             peak = linea_split[3].split("_")[0]
             print(peak)
 
-            outf.write(chrom + "\tjoseph\ttranscript\t" + str(ini_pos) + "\t" + str(fin_pos) + '\t.\t+\t.\t'+
-                       'gene_name "' + peak + '";' + '\n')
-
+            outf.write(chrom + "\tjoseph\texon\t" + str(ini_pos) + "\t" + str(fin_pos) + '\t.\t+\t.\t'+
+                       'gene_name "' + peak + '";' +
+                       'gene_id "' + peak + '";' +
+                       'transcript_name "' + peak + '";' +
+                       'transcript_id "' + peak + '";' +
+                       '\n')
         inf.close()
         outf.close()
 
