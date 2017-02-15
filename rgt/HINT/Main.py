@@ -23,6 +23,7 @@ from biasTable import BiasTable
 from evaluation import Evaluation
 from train import TrainHMM
 from evidence import Evidence
+from plot import Plot
 
 # External
 import os
@@ -168,6 +169,17 @@ def main():
                       help=("If used, it will print the slope signals from DNase-seq "
                             " or ATAC-seq data. The option should equal the file name."
                             "The extension must be (.wig)."))
+    parser.add_option("--print-line-plot", dest="print_line_plot",
+                      action="store_true", default=False,
+                      help=("If used, it will print the line plot of raw signal and bias corrected"
+                            "signal for the particular motif."))
+    parser.add_option("--window-size", dest="window_size", type="int", metavar="INT", default=50)
+    parser.add_option("--motif-file", dest="motif_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bed file containing all motif-predicted binding sites (MPBSs)."
+                            "The extension must be (.bed)."))
+    parser.add_option("--motif-name", dest="motif_name", type="string", metavar="STRING",
+                      default=None)
 
     # Train Options
     parser.add_option("--train-hmm", dest="train_hmm",
@@ -305,8 +317,6 @@ def main():
                       metavar="INT", default=-5, help=SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
-    parser.add_option("--atac-bias-correction-shift", dest="atac_bias_correction_shift", type="int",
-                      metavar="INT", default=0, help=SUPPRESS_HELP)
 
     # HISTONE Hidden Options
     parser.add_option("--histone-initial-clip", dest="histone_initial_clip", type="int",
@@ -360,7 +370,6 @@ def main():
     atac_forward_shift = options.atac_forward_shift
     atac_reverse_shift = options.atac_reverse_shift
     atac_bias_correction_k = options.atac_bias_correction_k
-    atac_bias_correction_shift = options.atac_bias_correction_shift
     # HISTONE Hidden Options
     histone_initial_clip = options.histone_initial_clip
     histone_sg_window_size = options.histone_initial_clip
@@ -374,6 +383,15 @@ def main():
     ########################################################################################
 
     ##########################################################################################
+
+    # IF HINT is required to output the line plot and motif logo
+    if options.print_line_plot:
+        plot = Plot(options.bam_file, options.motif_file, options.motif_name, options.window_size,
+                    atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
+                    atac_initial_clip, options.organism, options.bias_table,
+                    atac_bias_correction_k, options.output_location)
+        plot.line()
+        return
 
     # If HINT is required to create the validation data set
     if options.create_evidence:
@@ -402,7 +420,7 @@ def main():
                                    options.estimate_bias_correction, options.estimate_bias_type,
                                    options.bias_table,
                                    options.original_regions, options.organism,
-                                   atac_bias_correction_k, atac_bias_correction_shift)
+                                   atac_bias_correction_k)
         train_hmm_model.train()
         return
 

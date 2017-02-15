@@ -6,7 +6,7 @@
 import warnings
 
 warnings.filterwarnings("ignore")
-from math import log, ceil, floor
+from math import log, ceil, floor, isnan
 
 # Internal
 from ..Util import ErrorHandler
@@ -146,24 +146,24 @@ class GenomicSignal:
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
-        # mean = raw_signal.mean()
-        # std = raw_signal.std()
-        # clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+        mean = raw_signal.mean()
+        std = raw_signal.std()
+        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Cleavage bias correction
-        bias_corrected_signal = self.bias_correction(raw_signal, bias_table, genome_file_name,
+        bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name,
                                                      ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
 
         # Hon normalization (between-dataset normalization)
-        # perc = scoreatpercentile(boyle_signal, per_norm)
-        # std = boyle_signal.std()
-        # hon_signal = self.hon_norm(boyle_signal, perc, std)
+        perc = scoreatpercentile(boyle_signal, per_norm)
+        std = boyle_signal.std()
+        hon_signal = self.hon_norm(boyle_signal, perc, std)
 
         # Slope signal
-        slope_signal = self.slope(boyle_signal, self.sg_coefs)
+        slope_signal = self.slope(hon_signal, self.sg_coefs)
 
         # Hon normalization on slope signal (between-dataset slope smoothing)
         # abs_seq = array([abs(e) for e in slope_signal])
@@ -194,7 +194,7 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return boyle_signal, slope_signal
+        return hon_signal, slope_signal
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end, forward_shift, reverse_shift):
         """ 
@@ -327,10 +327,13 @@ class GenomicSignal:
         norm_seq -- Normalized sequence.
         """
 
-        norm_seq = []
-        for e in sequence:
-            norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
-        return norm_seq
+        if std != 0:
+            norm_seq = []
+            for e in sequence:
+                norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+            return norm_seq
+        else:
+            return sequence
 
     def boyle_norm(self, sequence):
         """ 
@@ -344,8 +347,12 @@ class GenomicSignal:
         norm_seq -- Normalized sequence.
         """
         mean = array([e for e in sequence if e > 0]).mean()
-        norm_seq = [(float(e) / mean) for e in sequence]
-        return norm_seq
+        if isnan(mean):
+            return sequence
+        else:
+            norm_seq = [(float(e) / mean) for e in sequence]
+            return norm_seq
+
 
     def savitzky_golay_coefficients(self, window_size, order, deriv):
         """ 

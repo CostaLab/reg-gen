@@ -32,7 +32,7 @@ class TrainHMM:
                  atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                  atac_forward_shift, atac_reverse_shift,
                  estimate_bias_correction, estimate_bias_type, bias_table,
-                 original_regions, organism, k_nb, shift):
+                 original_regions, organism, k_nb):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
@@ -53,7 +53,6 @@ class TrainHMM:
         self.original_regions = original_regions
         self.organism = organism
         self.k_nb = k_nb
-        self.shift = shift
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -83,17 +82,17 @@ class TrainHMM:
             if self.estimate_bias_type == "FRE":
                 table = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
                                                   genome_file_name=genome_data.get_genome(),
-                                                  k_nb=self.k_nb, shift=self.shift,
+                                                  k_nb=self.k_nb,
                                                   forward_shift=self.atac_forward_shift,
                                                   reverse_shift=self.atac_reverse_shift)
             elif self.estimate_bias_type == "PWM":
                 table = bias_table.estimate_table_pwm(regions=regions, dnase_file_name=self.bam_file,
                                                       genome_file_name=genome_data.get_genome(),
-                                                      k_nb=self.k_nb, shift=self.shift,
+                                                      k_nb=self.k_nb,
                                                       forward_shift=self.atac_forward_shift,
                                                       reverse_shift=self.atac_reverse_shift)
 
-            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
+            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.atac_forward_shift))
             bias_table.write_tables(bias_fname, table)
 
         # If the bias table is provided
@@ -179,7 +178,7 @@ class TrainHMM:
             hmm_model.covs.append(covs_list)
 
         if self.estimate_bias_correction:
-            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.shift))
+            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.atac_forward_shift))
         else:
             model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)

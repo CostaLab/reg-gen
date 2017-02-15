@@ -74,7 +74,7 @@ class BiasTable:
             f.write(t + "\t" + str(table[1][t]) + "\n")
         f.close()
 
-    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, shift, forward_shift, reverse_shift):
+    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, forward_shift, reverse_shift):
         """ 
         Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
 
@@ -118,14 +118,12 @@ class BiasTable:
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
 
                 # Calculating positions
-                # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
-                # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
                     cut_site = r.pos + forward_shift
-                    p1 = cut_site - int(floor(k_nb / 2)) + shift
+                    p1 = cut_site - int(floor(k_nb / 2))
                 else:
                     cut_site = r.aend + reverse_shift
-                    p1 = cut_site - int(floor(k_nb / 2)) - shift
+                    p1 = cut_site - int(floor(k_nb / 2))
                 p2 = p1 + k_nb
 
                 # Verifying PCR artifacts
@@ -227,7 +225,7 @@ class BiasTable:
             score *= pwm[letter][position]
         return score
 
-    def estimate_table_pwm(self, regions, dnase_file_name, genome_file_name, k_nb, shift, forward_shift, reverse_shift):
+    def estimate_table_pwm(self, regions, dnase_file_name, genome_file_name, k_nb, forward_shift, reverse_shift):
         """
         Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
 
@@ -260,10 +258,10 @@ class BiasTable:
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
                     cut_site = r.pos + forward_shift
-                    p1 = cut_site - int(floor(k_nb / 2)) + shift
+                    p1 = cut_site - int(floor(k_nb / 2))
                 else:
                     cut_site = r.aend + reverse_shift
-                    p1 = cut_site - int(floor(k_nb / 2)) - shift
+                    p1 = cut_site - int(floor(k_nb / 2))
                 p2 = p1 + k_nb
 
                 # Fetching k-mer
@@ -315,13 +313,13 @@ class BiasTable:
 
         # Output logos
         logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_f.eps".format(str(k_nb), str(shift)))
+                                       "obs_{}_{}_f.eps".format(str(k_nb), str(forward_shift)))
         logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_r.eps".format(str(k_nb), str(shift)))
+                                       "obs_{}_{}_r.eps".format(str(k_nb), str(forward_shift)))
         logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_f.eps".format(str(k_nb), str(shift)))
+                                       "exp_{}_{}_f.eps".format(str(k_nb), str(forward_shift)))
         logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_r.eps".format(str(k_nb), str(shift)))
+                                       "exp_{}_{}_r.eps".format(str(k_nb), str(forward_shift)))
         obsMotifsF.weblogo(logo_obs_f, format="eps", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
         obsMotifsR.weblogo(logo_obs_r, format="eps", stack_width="large", color_scheme="color_classic",
@@ -335,13 +333,13 @@ class BiasTable:
         pwm_data_list = [obsPwmF, obsPwmR, expPwmF, expPwmR]
         pwm_file_list = []
         pwm_obs_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_f.pwm".format(str(k_nb), str(shift)))
+                                       "obs_{}_{}_f.pwm".format(str(k_nb), str(forward_shift)))
         pwm_obs_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_r.pwm".format(str(k_nb), str(shift)))
+                                       "obs_{}_{}_r.pwm".format(str(k_nb), str(forward_shift)))
         pwm_exp_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_f.pwm".format(str(k_nb), str(shift)))
+                                       "exp_{}_{}_f.pwm".format(str(k_nb), str(forward_shift)))
         pwm_exp_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_r.pwm".format(str(k_nb), str(shift)))
+                                       "exp_{}_{}_r.pwm".format(str(k_nb), str(forward_shift)))
 
         pwm_file_list.append(pwm_obs_f)
         pwm_file_list.append(pwm_obs_r)
