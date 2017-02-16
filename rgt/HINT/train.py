@@ -174,7 +174,7 @@ class TrainHMM:
             covs_matrix = np.cov(norm, slope)
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
-                    covs_list.append(covs_matrix[j][k])
+                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
         if self.estimate_bias_correction:
