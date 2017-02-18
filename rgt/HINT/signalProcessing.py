@@ -185,7 +185,7 @@ class GenomicSignal:
         if (print_norm_signal):
             signal_file = open(print_norm_signal, "a")
             signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(boyle_signal)]) + "\n")
+                [str(e) for e in nan_to_num(hon_signal)]) + "\n")
             signal_file.close()
         if (print_slope_signal):
             signal_file = open(print_slope_signal, "a")
@@ -352,7 +352,6 @@ class GenomicSignal:
         else:
             norm_seq = [(float(e) / mean) for e in sequence]
             return norm_seq
-
 
     def savitzky_golay_coefficients(self, window_size, order, deriv):
         """ 

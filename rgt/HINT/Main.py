@@ -180,6 +180,9 @@ def main():
                             "The extension must be (.bed)."))
     parser.add_option("--motif-name", dest="motif_name", type="string", metavar="STRING",
                       default=None)
+    parser.add_option("--protection-score", dest="protection_score",
+                      action="store_true",default=False,
+                      help=("If used, it will print the protection score"))
 
     # Train Options
     parser.add_option("--train-hmm", dest="train_hmm",
@@ -389,7 +392,8 @@ def main():
         plot = Plot(options.bam_file, options.motif_file, options.motif_name, options.window_size,
                     atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
                     atac_initial_clip, options.organism, options.bias_table,
-                    atac_bias_correction_k, options.output_location)
+                    atac_bias_correction_k, options.protection_score,
+                    options.output_location)
         plot.line()
         return
 
