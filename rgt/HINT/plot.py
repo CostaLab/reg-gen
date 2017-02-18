@@ -227,10 +227,10 @@ class Plot:
 
         ax1.set_xticks([-25, -20, -15, -10, -5, 0, 5, 10, 15, 20, 24])
         ax1.set_xticklabels(['-25', '-20', '-15', '-10', '-5', '0', '5', '10', '15', '20', '24'])
-        min_bias_signal = round(min(min(mean_bias_signal_f), min(mean_bias_signal_r)),2)
-        max_bias_signal = round(max(max(mean_bias_signal_f), max(mean_bias_signal_r)),2)
+        min_bias_signal = min(min(mean_bias_signal_f), min(mean_bias_signal_r))
+        max_bias_signal = max(max(mean_bias_signal_f), max(mean_bias_signal_r))
         ax1.set_yticks([min_bias_signal, max_bias_signal])
-        ax1.set_yticklabels([str(min_bias_signal), str(max_bias_signal)], rotation=90)
+        ax1.set_yticklabels([str(round(min_bias_signal,2)), str(round(max_bias_signal,2))], rotation=90)
 
         ax1.text(-22, 1.6, '# Sites = {}'.format(str(num_sites)), fontweight='bold')
         ax1.set_title(self.motif_name, fontweight='bold')
@@ -239,7 +239,8 @@ class Plot:
         ax1.legend(loc="upper right", frameon=False)
         ax1.set_ylabel("Average Bias \nSignal", rotation=90, fontweight='bold')
 
-
+        mean_raw_signal = self.standardize(mean_raw_signal)
+        mean_bc_signal = self.standardize(mean_bc_signal)
         ax2.plot(x, mean_raw_signal, color='red', label='Uncorrected')
         ax2.plot(x, mean_bc_signal, color='green', label='Corrected')
 
@@ -253,13 +254,13 @@ class Plot:
 
         ax2.set_xticks([-25, -20, -15, -10, -5, 0, 5, 10, 15, 20,24])
         ax2.set_xticklabels(['-25', '-20', '-15', '-10', '-5', '0', '5', '10', '15', '20', '24'])
-        min_signal = round(min(min(mean_raw_signal), min(mean_bc_signal)),2)
-        max_signal = round(max(max(mean_raw_signal), max(mean_bc_signal)),2)
-        ax2.set_yticks([min_signal, max_signal])
-        ax2.set_yticklabels([str(min_signal), str(max_signal)], rotation=90)
+        #min_signal = min(min(mean_raw_signal), min(mean_bc_signal))
+        #max_signal = max(max(mean_raw_signal), max(mean_bc_signal))
+        ax2.set_yticks([0, 1])
+        ax2.set_yticklabels([str(0), str(1)], rotation=90)
 
         ax2.set_xlim(-25, 24)
-        ax2.set_ylim([min_signal, max_signal])
+        ax2.set_ylim([0, 1])
         ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
         ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
         ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
@@ -272,11 +273,13 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.motif_name))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.5, 1.54, logo_fname, width=16.7, height=1.75))
+        c.insert(pyx.epsfile.epsfile(2.5, 1.54, logo_fname, width=16, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + output_fname)
 
-    def standardize(self, vector, maxN, minN):
+    def standardize(self, vector):
+        maxN = max(vector)
+        minN = min(vector)
         return [(e - minN) / (maxN - minN) for e in vector]
 
 
