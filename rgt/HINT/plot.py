@@ -260,7 +260,7 @@ class Plot:
 
         ax2.set_xlim(-25, 24)
         ax2.set_ylim([min_signal, max_signal])
-        ax2.legend(loc="lower right", frameon=False)
+        ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
         ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
         ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
 
