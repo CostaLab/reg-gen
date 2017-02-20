@@ -118,6 +118,7 @@ class Plot:
                 # Create bias signal
                 bias_table_f = table[0]
                 bias_table_r = table[1]
+                self.k_nb = len(bias_table_f.keys()[0])
                 bias_signal_f = []
                 bias_signal_r = []
                 p1_wk = p1 - int(math.floor(self.k_nb / 2.))
@@ -232,7 +233,7 @@ class Plot:
         ax1.set_yticks([min_bias_signal, max_bias_signal])
         ax1.set_yticklabels([str(round(min_bias_signal,2)), str(round(max_bias_signal,2))], rotation=90)
 
-        ax1.text(-22, 1.6, '# Sites = {}'.format(str(num_sites)), fontweight='bold')
+        ax1.text(-22, max_bias_signal, '# Sites = {}'.format(str(num_sites)), fontweight='bold')
         ax1.set_title(self.motif_name, fontweight='bold')
         ax1.set_xlim(-25, 24)
         ax1.set_ylim([min_bias_signal, max_bias_signal])
