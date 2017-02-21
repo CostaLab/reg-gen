@@ -183,6 +183,11 @@ def main():
     parser.add_option("--protection-score", dest="protection_score",
                       action="store_true",default=False,
                       help=("If used, it will print the protection score"))
+    parser.add_option("--strands-specific", dest="strands_specific",
+                      action="store_true",default=False,
+                      help=("A boolean indicating if DNaseI digestion site "
+                            "counts should be aggregated across strands. "
+                            "default: False"))
 
     # Train Options
     parser.add_option("--train-hmm", dest="train_hmm",
@@ -392,7 +397,7 @@ def main():
         plot = Plot(options.bam_file, options.motif_file, options.motif_name, options.window_size,
                     atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
                     atac_initial_clip, options.organism, options.bias_table,
-                    atac_bias_correction_k, options.protection_score,
+                    atac_bias_correction_k, options.protection_score, options.strands_specific,
                     options.output_location)
         plot.line()
         return
