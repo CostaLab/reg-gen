@@ -233,15 +233,24 @@ class Plot:
         # Output the raw, bias corrected signal and protection score
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.motif_name))
         output_file = open(output_fname, "w")
-        output_file.write("raw signal: \n" + np.array_str(mean_raw_signal) + "\n")
-        output_file.write("bias corrected signal: \n" + np.array_str(mean_bc_signal) + "\n")
+        if not self.strands_specific:
+            output_file.write("raw signal: \n" + np.array_str(mean_raw_signal) + "\n")
+            output_file.write("bias corrected signal: \n" + np.array_str(mean_bc_signal) + "\n")
+        else:
+            output_file.write("raw forward signal: \n" + np.array_str(mean_raw_signal_f) + "\n")
+            output_file.write("bias corrected forward signal: \n" + np.array_str(mean_bc_signal_f) + "\n")
+            output_file.write("raw reverse signal: \n" + np.array_str(mean_raw_signal_r) + "\n")
+            output_file.write("bias reverse corrected signal: \n" + np.array_str(mean_bc_signal_r) + "\n")
         output_file.write("forward bias signal: \n" + np.array_str(mean_bias_signal_f) + "\n")
         output_file.write("reverse bias signal: \n" + np.array_str(mean_bias_signal_r) + "\n")
         if self.protection_score:
             output_file.write("protection score: \n" + str(protection_score) + "\n")
         output_file.close()
 
-        fig, (ax1, ax2) = plt.subplots(2)
+        if self.strands_specific:
+            fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=(12.0, 10.0))
+        else:
+            fig, (ax1, ax2) = plt.subplots(2)
         x = np.linspace(-50, 49, num=self.window_size)
 
         ax1.plot(x, mean_bias_signal_f, color='red', label='Forward')
@@ -266,7 +275,7 @@ class Plot:
         ax1.set_title(self.motif_name, fontweight='bold')
         ax1.set_xlim(-50, 49)
         ax1.set_ylim([min_bias_signal, max_bias_signal])
-        ax1.legend(loc="upper right", frameon=False, fontsize='x-small')
+        ax1.legend(loc="upper right", frameon=False)
         ax1.set_ylabel("Average Bias \nSignal", rotation=90, fontweight='bold')
 
         if not self.strands_specific:
@@ -279,39 +288,65 @@ class Plot:
             mean_raw_signal_r = self.standardize(mean_raw_signal_r)
             mean_bc_signal_f = self.standardize(mean_bc_signal_f)
             mean_bc_signal_r = self.standardize(mean_bc_signal_r)
-            ax2.plot(x, mean_raw_signal_f, color='red', label='Uncorrected Forward')
-            ax2.plot(x, mean_bc_signal_f, color='green', label='Corrected Forward')
-            ax2.plot(x, mean_raw_signal_r, color='blue', label='Uncorrected Reverse')
-            ax2.plot(x, mean_bc_signal_r, color='purple', label='Corrected Reverse')
+            ax2.plot(x, mean_raw_signal_f, color='red', label='Forward')
+            ax2.plot(x, mean_raw_signal_r, color='green', label='Reverse')
+            ax3.plot(x, mean_bc_signal_f, color='red', label='Forward')
+            ax3.plot(x, mean_bc_signal_r, color='green', label='Reverse')
 
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
         ax2.spines['top'].set_visible(False)
         ax2.spines['right'].set_visible(False)
         ax2.spines['left'].set_position(('outward', 15))
-        ax2.spines['bottom'].set_position(('outward', 40))
         ax2.tick_params(direction='out')
-
         ax2.set_xticks([-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 49])
         ax2.set_xticklabels(['-50', '-40', '-30', '-20', '-10', '0', '10', '20', '30', '40', '49'])
         ax2.set_yticks([0, 1])
         ax2.set_yticklabels([str(0), str(1)], rotation=90)
-
         ax2.set_xlim(-50, 49)
         ax2.set_ylim([0, 1])
-        ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06), fontsize='x-small')
-        ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
+
+        if not self.strands_specific:
+            ax2.spines['bottom'].set_position(('outward', 40))
+            ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
+            ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
+            ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
+        else:
+            ax2.spines['bottom'].set_position(('outward', 5))
+            ax2.set_ylabel("Average ATAC-seq \n Uncorrected Signal", rotation=90, fontweight='bold')
+            ax2.legend(loc="lower right", frameon=False)
+
+            ax3.xaxis.set_ticks_position('bottom')
+            ax3.yaxis.set_ticks_position('left')
+            ax3.spines['top'].set_visible(False)
+            ax3.spines['right'].set_visible(False)
+            ax3.spines['left'].set_position(('outward', 15))
+            ax3.tick_params(direction='out')
+            ax3.set_xticks([-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 49])
+            ax3.set_xticklabels(['-50', '-40', '-30', '-20', '-10', '0', '10', '20', '30', '40', '49'])
+            ax3.set_yticks([0, 1])
+            ax3.set_yticklabels([str(0), str(1)], rotation=90)
+            ax3.set_xlim(-50, 49)
+            ax3.set_ylim([0, 1])
+            ax3.legend(loc="lower right", frameon=False)
+            #ax3.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
+            ax3.spines['bottom'].set_position(('outward', 40))
+            ax3.set_xlabel("Coordinates from Motif Center", fontweight='bold')
+            ax3.set_ylabel("Average ATAC-seq \n Corrected Signal", rotation=90, fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.motif_name))
-        fig.subplots_adjust(bottom=.2, hspace=.4)
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
         fig.savefig(figure_name, format="eps", dpi=300)
 
         # Creating canvas and printing eps / pdf with merged results
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.motif_name))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.5, 1.54, logo_fname, width=16, height=1.75))
+        if self.strands_specific:
+            c.insert(pyx.epsfile.epsfile(2.76, 1.58, logo_fname, width=27.2, height=2.45))
+        else:
+            c.insert(pyx.epsfile.epsfile(2.5, 1.54, logo_fname, width=16, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -321,8 +356,3 @@ class Plot:
         maxN = max(vector)
         minN = min(vector)
         return [(e - minN) / (maxN - minN) for e in vector]
-
-
-
-
-
