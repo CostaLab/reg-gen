@@ -402,13 +402,8 @@ def main_matching():
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            # Splitting the sequence in smaller sequences to remove the "N" regions
-            sequence_list = filter(None, sequence.split("N"))
-
-            # Perform motif matching for each motif in each sequence
-            for seq in sequence_list:
-                for motif in motif_list:
-                    match_single(motif, seq, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
+            for motif in motif_list:
+                match_single(motif, sequence, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
 
         # Closing file
         output_file.close()
