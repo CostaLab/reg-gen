@@ -49,7 +49,7 @@ class RNADNABinding:
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
         self.motif = rna.motif
-        #self.strand = dna.orientation
+        self.strand = dna.orientation
         self.orient = rna.orientation
         self.score = score
         self.err_rate = err_rate
@@ -546,13 +546,15 @@ class RNADNABindingSet:
 
     def write_txp(self, filename):
         """Write RNADNABindingSet into the file"""
-        try: os.stat(os.path.dirname(filename))
-        except: os.mkdir(os.path.dirname(filename))   
+        d = os.path.dirname(filename)
+        if d:
+            try: os.stat(d)
+            except: os.mkdir(d)
         with open(filename, "w") as f:
             print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\
                    \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
-                print(str(rd), file=f) 
+                print(str(rd), file=f)
 
     def write_bed(self, filename, dbd_tag=True, remove_duplicates=False, convert_dict=None, associated=False):
         """Write BED file for all the DNA Binding sites

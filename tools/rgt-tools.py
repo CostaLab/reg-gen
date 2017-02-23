@@ -156,9 +156,15 @@ if __name__ == "__main__":
     parser_bedex.add_argument('-o', metavar='output', type=str, help="Output BED name.")
     parser_bedex.add_argument('-oz', "--onlyzero", action="store_true", default=False,
                               help="Extend only the zero-length regions")
-    parser_bedex.add_argument('-l', metavar='length', type=int, help="Define the length to extend.")
-    parser_bedex.add_argument('-both', action="store_true", default=False,
-                              help="Extend from the both ends.")
+    parser_bedex.add_argument('-len', metavar='length', type=int, help="Define the length to extend.")
+    parser_bedex.add_argument('-l', action="store_true", default=False,
+                              help="Extend from the left ends.")
+    parser_bedex.add_argument('-r', action="store_true", default=False,
+                              help="Extend from the right ends.")
+    parser_bedex.add_argument('-up', action="store_true", default=False,
+                              help="Extend from the upstream ends.")
+    parser_bedex.add_argument('-down', action="store_true", default=False,
+                              help="Extend from the downstream ends.")
 
     ############### BED subtract ###############################################
     # python rgt-convertor.py
@@ -167,6 +173,8 @@ if __name__ == "__main__":
     parser_bedsub.add_argument('-o', metavar='output', type=str, help="Output BED name.")
     parser_bedsub.add_argument('-t', metavar="target", type=str,
                                help="Define the target BED file to subtract.")
+    parser_bedsub.add_argument('-all', action="store_true", default=False,
+                               help="Subtract the whole region when it overlaps.")
 
     ############### BED cut ###############################################
     # python rgt-convertor.py
@@ -206,13 +214,17 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-o', metavar='output', type=str, help="Output directory for FASTA files")
     parser_bed2fasta.add_argument('-genome', metavar='   ', type=str, help="Define the FASTA file of the genome sequence")
     parser_bed2fasta.add_argument('-order', action="store_true", default=False, help="Make ranking number as sequence name")
+    parser_bed2fasta.add_argument('-block', action="store_true", default=False,
+                                  help="Read blocks")
 
     ############### BED filtered by gene name ################################
-    parser_bed2fasta = subparsers.add_parser('bed_filter_gene', 
-                       help="[BED] Filter by the given gene list")
-    parser_bed2fasta.add_argument('-i', metavar='input', type=str, help="Input BED file")
-    parser_bed2fasta.add_argument('-o', metavar='output', type=str, help="Output BED file")
-    parser_bed2fasta.add_argument('-gene', type=str, help="Define file for the gene list")
+    parser_bed_filter = subparsers.add_parser('bed_filter',
+                       help="[BED] Filter by the given gene list or minimal size or maximal size.")
+    parser_bed_filter.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bed_filter.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bed_filter.add_argument('-gene', type=str, default=False, help="Define file for the gene list")
+    parser_bed_filter.add_argument('-min', type=int, default=False, help="Define minimal length")
+    parser_bed_filter.add_argument('-max', type=int, default=False, help="Define maximal length")
 
     ############### BED remove if overlap ################################
     parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
@@ -298,8 +310,8 @@ if __name__ == "__main__":
     ############### GENOME get sequence ####################################################
     parser_getseq = subparsers.add_parser('getseq', 
                        help="[FASTA] Get sequence from genome FASTA")
-    parser_getseq.add_argument('-b', metavar='bed', type=str, help="Input BED file")
-    parser_getseq.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
+    parser_getseq.add_argument('-b', metavar='bed', type=str, default=None, help="Input BED file")
+    parser_getseq.add_argument('-o', metavar='output', type=str, default=None, help="Output FASTA file")
     parser_getseq.add_argument('-d', metavar='dna', type=str, help="DNA sequence in FASTA format")
     parser_getseq.add_argument('-p', metavar='pos', type=str, help="position")
     parser_getseq.add_argument('-s', metavar='strand', type=str, default="both", help="strand (+, -, or both)")
@@ -468,7 +480,10 @@ if __name__ == "__main__":
                 info = line[8].split("; ")
 
                 gi = [s for s in info if "gene_id" in s][0].partition("\"")[2][:-1].partition(".")[0]
-                gs = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1].partition(" (")[0]
+                try:
+                    gs = [s for s in info if "gene_name" in s][0].partition("\"")[2][:-1].partition(" (")[0]
+                except:
+                    gs = gi
 
                 if args.id: gn = gi
                 else: gn = gs
@@ -609,15 +624,25 @@ if __name__ == "__main__":
         print(tag + ": [BED] Entend the regions")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
-        for region in bed:
-            if args.oz:
-                if region.initial == region.final:
-                    region.final += args.l
-            else:
-                if args.both:
-                    region.initial -= args.l
-                else: pass
-                region.final += args.l
+        if args.l:
+            bed.extend(left=args.len)
+        if args.r:
+            bed.extend(right=args.len)
+        if args.up:
+            bed.extend_upstream(length=args.len)
+        if args.down:
+            bed.extend_downstream(length= args.len)
+
+
+        # for region in bed:
+        #     if args.oz:
+        #         if region.initial == region.final:
+        #             region.final += args.l
+        #     else:
+        #         if args.both:
+        #             region.initial -= args.l
+        #         else: pass
+        #         region.final += args.l
 
         bed.write_bed(args.o)
 
@@ -629,7 +654,7 @@ if __name__ == "__main__":
         bed.read_bed(args.i)
         target = GenomicRegionSet("target")
         target.read_bed(args.t)
-        out = bed.subtract(y=target)
+        out = bed.subtract(y=target, whole_region=args.all)
         out.write_bed(args.o)
 
 
@@ -640,17 +665,7 @@ if __name__ == "__main__":
         bed.read_bed(args.i)
         target = GenomicRegionSet("target")
         target.read_bed(args.t)
-        out = GenomicRegionSet("output")
-        for b in bed:
-            z = GenomicRegionSet("temp")
-            z.add(b)
-            y = z.subtract(y=target)
-            y.sort()
-            if len(y) > 0:
-                if b.orientation == "+":
-                    out.add(y[-1])
-                else:
-                    out.add(y[0])
+        out = bed.cut_regions(target)
         out.write_bed(args.o)
 
     ############### BED get promoters #########################################
@@ -703,13 +718,13 @@ if __name__ == "__main__":
             if s.orientation == "+" and len(s) > args.min: 
                 s.initial, s.final = max(s.initial-args.d-args.l, 0), max(s.initial-args.d, 0)
                 if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.r: s.orientation = "-"
+                if args.reverse: s.orientation = "-"
                 target.add(s)
 
             elif s.orientation == "-" and len(s) > args.min: 
                 s.initial, s.final = s.final+args.d, s.final+args.d+args.l
                 if s.initial > s.final: s.initial, s.final = s.final, s.initial
-                if args.r: s.orientation = "+"
+                if args.reverse: s.orientation = "+"
                 target.add(s)
         
         print(len(target))
@@ -720,9 +735,14 @@ if __name__ == "__main__":
     elif args.mode == "bed_to_fasta":
         print(tag+": [BED] BED to FASTA")
 
-        if not os.path.exists(args.o): os.makedirs(args.o)
+        if ".fa" not in args.o and not os.path.exists(args.o):
+            os.makedirs(args.o)
+        elif ".fa" in args.o:
+            fasta = open(args.o, "w")
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
+        if args.block:
+            regions.extract_blocks()
         if args.order:
             ranking = []
             with open(args.i) as f:
@@ -739,7 +759,7 @@ if __name__ == "__main__":
                         name = "peak_"+str(j+1)
             else: name = r.name
 
-            if len(r.data.split()) == 7:
+            if r.data and len(r.data.split()) == 7:
                 target = r.extract_blocks()
                 #print("*** using block information in BED file")
                 writelines = []
@@ -765,29 +785,48 @@ if __name__ == "__main__":
                 s = get_sequence(sequence=args.genome, ch=r.chrom, ss=r.initial, es=r.final, 
                                  strand=r.orientation)
                 ss = [s[i:i+70] for i in range(0, len(s), 70)]
-                with open(os.path.join(args.o, name + ".fa"), "w") as f:
-                    print("> "+ name + " "+r.toString()+ " "+r.orientation, file=f)
-                    for seq in ss:
-                        print(seq, file=f)
+
+                if ".fa" not in args.o:
+                    with open(os.path.join(args.o, name + ".fa"), "w") as f:
+                        if not r.orientation: r.orientation = "."
+                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        for seq in ss: print(seq, file=f)
+                elif ".fa" in args.o:
+                    if not r.orientation: r.orientation = "."
+                    print("> " + name + " " + r.toString() + " " + r.orientation, file=fasta)
+                    for seq in ss: print(seq, file=fasta)
+        if ".fa" in args.o:
+            fasta.close()
+
 
     ############### BED filter gene #############################################
-    elif args.mode == "bed_filter_gene":
+    elif args.mode == "bed_filter":
         print(tag + ": [BED] Filter genes")
-        
-        if not args.gene:
-            print("Please define the file for gene list.")
-            sys.exit(1)
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
 
-        with open(args.gene) as f:
-            genes = f.read().splitlines()
-            genes = map(lambda x: x.split("\t")[0].upper(), genes)
-            print(str(len(genes))+" genes are loaded.")
+        if args.gene:
+            # with open(args.gene) as f:
+            #     genes = f.read().splitlines()
+            #     genes = map(lambda x: x.split("\t")[0].upper(), genes)
+            #     print(str(len(genes))+" genes are loaded.")
+            if os.path.isfile(args.gene):
+                gg = GeneSet("genes")
+                gg.read(args.gene)
+                bed = bed.by_names(gg.genes)
+            else:
+                genes = [ x.upper() for x in args.gene.split(",") ]
+                bed = bed.by_names(genes)
 
-        with open(args.i) as fi, open(args.o, "w") as fo:
-            for line in fi:
-                line = line.strip().split()
-                if line[3].upper() in genes:
-                    print("\t".join(line), file=fo)
+        if isinstance(args.min, int ) and not args.max:
+            bed = bed.filter_by_size(minimum=args.min)
+        elif not args.min and isinstance(args.max, int ):
+            bed = bed.filter_by_size(maximum=args.max)
+        elif isinstance(args.min, int ) and isinstance(args.max, int ):
+            bed = bed.filter_by_size(minimum=args.min, maximum=args.max)
+
+
+        bed.write_bed(args.o)
                     
         print("complete.")
 
@@ -809,7 +848,7 @@ if __name__ == "__main__":
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
         input_regions.read_bed(args.i)
-        if args.k:
+        if args.keep:
             output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
@@ -948,7 +987,6 @@ if __name__ == "__main__":
                     else:
                         res.append([r.name, count_polyA, all_read, "n.a.", all_a, all_r, float(all_a)/all_r])
                 else:
-                    res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read])
                     if all_r == 0:
                         res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, "n.a."])
                     else:
@@ -962,32 +1000,33 @@ if __name__ == "__main__":
         if os.path.isfile(args.b):
             res = count_polyA_on_bam(bed=bed, bam=args.b)
             with open(args.o, "w") as f:
-                print("\t".join(["name", "polyA_reads_in_window", "all_reads_in_window",
-                                 "polyA_reads_on_transcript", "all_reads_on_transcript"]), file=f)
+                print("\t".join(["name", "polyA_reads_in_window", "all_reads_in_window","proportion_in_window",
+                                 "polyA_reads_on_transcript", "all_reads_on_transcript","proportion_on_transcript"]), file=f)
                 for l in res:
                     print("\t".join([ str(x) for x in l ]), file=f)
         elif os.path.isdir(args.b):
             col_res = {}
-            bams = []
+            # bams = []
             for r in bed:
-                col_res[r.name] = {}
+                col_res[r.name] = []
 
             for root, dirs, files in os.walk(args.b):
                 for f in files:
                     if f.endswith(".bam"):
-                        bams.append(f.rpartition(".")[0])
-
-                        res = count_polyA_on_bam(bed=bed, bam=os.path.join(root,f))
+                        # bams.append(f.rpartition(".")[0])
+                        res = count_polyA_on_bam(bed=bed, bam=os.path.join(root, f))
                         for line in res:
-                            col_res[line[0]][f.rpartition(".")[0]] = [ str(x) for x in line[1:] ]
+                            col_res[line[0]].append([line[1:]])
+
+            for r in bed:
+                ar = numpy.array(col_res[r.name])
+                col_res[r.name] = numpy.mean(ar, axis=1).tolist()
 
             with open(args.o, "w") as f:
-                print("\t".join(["name", "bam_file", "polyA_reads_in_window", "all_reads_in_window",
-                                 "polyA_reads_on_transcript", "all_reads_on_transcript"]), file=f)
-                # print("\t".join(bams), file=f)
-                for gene, bamdict in col_res.items():
-                    for b, row in bamdict.items():
-                        print("\t".join([gene, b] + row), file=f)
+                print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave",
+                                 "polyA_reads_on_transcript_ave", "all_reads_on_transcript_ave"]), file=f)
+                for gene, l in col_res.items():
+                    print("\t".join([ gene ] + [ str(x) for x in l ]), file=f)
         print()
 
 
@@ -1019,12 +1058,25 @@ if __name__ == "__main__":
     ############### BED distance ###########################
     #
     elif args.mode == "bed_distance":
-        print(tag + ": [BED] Convert BED to GTF")
+        print(tag + ": [BED] Calculate the distances between two region sets")
         bed = GenomicRegionSet(args.i)
         bed.read_bed(args.i)
         target = GenomicRegionSet(args.t)
         target.read_bed(args.t)
-        res_dict, dis_list = bed.closest(target, max_dis=5000, return_list=True)
+
+        res_dis = []
+        for s in bed:
+            dis = []
+            for a in target:
+                d = s.distance(a)
+                if d != None:
+                    dis.append(s.distance(a))
+            res_dis.append([ s.name, str(min(dis)) ])
+
+        # res_dis = bed.get_distance(target, ignore_overlap=False)
+        with open(args.o, "w") as f:
+            for line in res_dis:
+                print("\t".join(line), file=f)
         
 
     ############### BAM filtering by BED ###########################
@@ -1263,26 +1315,26 @@ if __name__ == "__main__":
                 args.es = int(args.p.partition(":")[2].partition("-")[2])
             if args.s == "both":
                 seq1 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="+",
-                                    reverse=False, complement=False, rna=args.r, ex=args.ex)
+                                    reverse=False, complement=False, rna=args.rna, ex=args.ex)
                 seq2 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="-",
-                                    reverse=False, complement=True, rna=args.r, ex=args.ex)
+                                    reverse=False, complement=True, rna=args.rna, ex=args.ex)
                 print("5'- " + seq1 + " -3'")
                 print("3'- " + seq2 + " -5'")
             elif args.s == "+" and not args.re:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
                 print("5'- " + seq + " -3'")
             elif args.s == "+" and args.re:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
                 print("3'- " + seq + " -5'")
             elif args.s == "-" and not args.re:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
                 print("3'- "+seq+" -5'")
             elif args.s == "-" and args.re:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.r, ex=args.ex)
+                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
                 print("5'- " + seq + " -3'")
             
         print()

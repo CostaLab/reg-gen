@@ -16,7 +16,7 @@ import random
 from ctypes import *
 from scipy import stats
 from copy import deepcopy
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 # Internal
 from rgt.GenomicRegion import GenomicRegion
 from rgt.SequenceSet import *
@@ -45,6 +45,16 @@ class GenomicRegionSet:
     def get_chrom(self):
         """Return all chromosomes."""
         return [r.chrom for r in self.sequences]
+
+    def get_names(self):
+        """Return a list of all region names. If the name is None, it return the region string."""
+        names = []
+        for r in self:
+            if r.name:
+                names.append(r.name)
+            else:
+                names.append(r.toString())
+        return names
 
     def add(self, region):
         """Add GenomicRegion.
@@ -114,6 +124,30 @@ class GenomicRegionSet:
                     s.extend(left=length, right=0)
                 else:
                     s.extend(left=0, right=length)
+        if w_return:
+            return z
+        else:
+            return
+
+    def extend_downstream(self, length=1000, w_return=False):
+        """Perform extend step downstream for every element.
+
+        *Keyword arguments:*
+
+            - length -- Extending length
+        """
+        z = GenomicRegionSet(name=self.name)
+        for s in self.sequences:
+            if w_return:
+                if s.orientation == "+":
+                    z.add(s.extend(left=0, right=length, w_return=True))
+                else:
+                    z.add(s.extend(left=length, right=0, w_return=True))
+            else:
+                if s.orientation == "+":
+                    s.extend(left=0, right=length)
+                else:
+                    s.extend(left=length, right=0)
         if w_return:
             return z
         else:
@@ -597,7 +631,7 @@ class GenomicRegionSet:
         return result_grs
 
     def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
-                         threshDist=50000, show_dis=False, strand_specific=False):
+                         threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
@@ -695,13 +729,21 @@ class GenomicRegionSet:
                         elif 0 < d < threshDist:
                             if show_dis:
                                 if s > genes[j]:
-                                    asso_names["close_l"] = [ d, genes[j].name+"(-"+str(d)+")"]
+                                    if asso_names["close_l"] and d < asso_names["close_l"][0]:
+                                        asso_names["close_l"] = [d, genes[j].name + "(-" + str(d) + ")"]
+                                    else:
+                                        asso_names["close_l"] = [ d, genes[j].name+"(-"+str(d)+")"]
+
                                 elif s < genes[j]:
                                     asso_names["close_r"] = [ d, genes[j].name+"(+"+str(d)+")"]
                                     cont_loop = False
                             else:
                                 if s > genes[j]:
-                                    asso_names["close_l"] = [ d, genes[j].name+"(-)"]
+
+                                    if asso_names["close_l"] and d < asso_names["close_l"][0]:
+                                        asso_names["close_l"] = [d, genes[j].name + "(-)"]
+                                    else:
+                                        asso_names["close_l"] = [d, genes[j].name + "(-)"]
                                 elif s < genes[j]:
                                     asso_names["close_r"] = [ d, genes[j].name+"(+)"]
                                     cont_loop = False
@@ -727,19 +769,33 @@ class GenomicRegionSet:
                             else:
                                 j += 1
 
+
                 if asso_names["overlap"]:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(asso_names["overlap"]),
                                         data=s.data, proximity=s.proximity))
-                elif asso_names["close_l"] or asso_names["close_r"]:
-                    ss = []
-                    try: ss.append(asso_names["close_l"][1])
-                    except: pass
-                    try: ss.append(asso_names["close_r"][1])
-                    except: pass
+                elif asso_names["close_l"] and asso_names["close_r"]:
+                    ss = [asso_names["close_l"][1],
+                          asso_names["close_r"][1]]
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=":".join(ss),
                                         data=s.data, proximity=s.proximity))
+                elif asso_names["close_l"] and not asso_names["close_r"]:
+                    z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
+                                        orientation=s.orientation, name=asso_names["close_l"][1],
+                                        data=s.data, proximity=s.proximity))
+                elif not asso_names["close_l"] and asso_names["close_r"]:
+                    z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
+                                        orientation=s.orientation, name=asso_names["close_r"][1],
+                                        data=s.data, proximity=s.proximity))
+                    # ss = []
+                    # try: ss.append(asso_names["close_l"][1])
+                    # except: pass
+                    # try: ss.append(asso_names["close_r"][1])
+                    # except: pass
+                    # z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
+                    #                     orientation=s.orientation, name=":".join(ss),
+                    #                     data=s.data, proximity=s.proximity))
                 else:
                     z.add(GenomicRegion(chrom=s.chrom, initial=s.initial, final=s.final,
                                         orientation=s.orientation, name=".",
@@ -2337,10 +2393,10 @@ class GenomicRegionSet:
         z = GenomicRegionSet(self.name)
         if isinstance(names, list): targets = names
         elif isinstance(names.genes, list): targets = names.genes
+        targets = [ x.upper() for x in targets ]
         for gr in self:
-            if gr.name in targets:
+            if gr.name.upper() in targets:
                 z.add(gr)
-
         return z
 
     def write_bed_blocks(self, filename):
@@ -2472,15 +2528,7 @@ class GenomicRegionSet:
         """Sort the regions by their scores."""
         self.sort(key=lambda x: float(x.data.split("\t")[0]), reverse=True)
 
-    def get_names(self):
-        """Return a list of all region names. If the name is None, it return the region string."""
-        names = []
-        for r in self:
-            if r.name:
-                names.append(r.name)
-            else:
-                names.append(r.toString())
-        return names
+
 
     def filter_strand(self, strand="+"):
         """Return the defined strands"""
@@ -2592,11 +2640,112 @@ class GenomicRegionSet:
         size = [ abs(r.final - r.initial) for r in self.sequences ]
         return np.std(size)
 
-    def filter_by_size(self, maximum, minimum=1 ):
+    def filter_by_size(self, maximum=None, minimum=1 ):
         """Return a GenomicRegionSet containing filtered regions by the given limits. """
         z = GenomicRegionSet("filtered")
         for r in self:
-            if minimum < len(r) < maximum:
-                z.add(r)
+            if maximum:
+                if minimum < len(r) < maximum:
+                    z.add(r)
+            else:
+                if minimum < len(r):
+                    z.add(r)
         return(z)
 
+    def get_distance(self, y, ignore_overlap=False, strand_specific=False, threshDist=50000):
+        """Return a list of distances between the closest regions from two region sets."""
+        if not self.sorted: self.sort()
+        if not y.sorted: y.sort()
+
+
+
+
+        last_j = len(y) - 1
+        j = 0
+        if strand_specific: pre_inter = [0, 0]
+        else: pre_inter = 0
+        res = []
+        for s in self:
+            cont_loop = True
+            cont_overlap = False
+            asso_names = {"overlap": [], "close_l": [], "close_r": []}
+            while cont_loop:
+                if strand_specific and s.orientation != y[j].orientation:
+                    if j == last_j: cont_loop = False
+                    else: j += 1
+                else:
+                    d = s.distance(y[j])
+                    if d == 0:
+                        asso_names["overlap"].append([s.name, str(0), y[j].name])
+                        if not cont_overlap:
+                            if strand_specific and s.orientation == "+": pre_inter[0] = j
+                            elif strand_specific and s.orientation == "-": pre_inter[1] = j
+                            elif not strand_specific: pre_inter = j
+                        if j == last_j: cont_loop = False
+                        else:
+                            j += 1
+                            cont_overlap = True
+                    elif asso_names["overlap"] and d != 0:
+                        if strand_specific:
+                            if pre_inter[0] > 0 and pre_inter[1] > 0: j = min(pre_inter)
+                            elif pre_inter[0] == 0 and pre_inter[1] > 0: j = pre_inter[1]
+                            elif pre_inter[0] > 0 and pre_inter[1] == 0: j = pre_inter[0]
+                        elif s.chrom == y[j].chrom and pre_inter > 0:
+                            j = pre_inter
+                        cont_loop = False
+                    elif 0 < d < threshDist:
+                        if s > y[j]:
+                            asso_names["close_l"] = [[s.name, "-"+str(d), y[j].name]]
+                        elif s < y[j]:
+                            asso_names["close_r"] = [[s.name, "+"+str(d), y[j].name]]
+                            cont_loop = False
+                        if j == last_j: cont_loop = False
+                        else: j += 1
+                    elif s < y[j]:
+                        if strand_specific and s.orientation == "+":
+                            if s.chrom == y[j].chrom and pre_inter[0] > 0:
+                                j = pre_inter[0]
+                        elif strand_specific and s.orientation == "-":
+                            if s.chrom == y[j].chrom and pre_inter[1] > 0:
+                                j = pre_inter[1]
+                        elif s.chrom == y[j].chrom and pre_inter > 0:
+                            j = pre_inter
+                        cont_loop = False
+                    elif s > y[j]:
+                        if j == last_j: cont_loop = False
+                        else: j += 1
+
+            if asso_names["overlap"] and not ignore_overlap:
+                last_one = ["x", 0, "x"]
+                for line in asso_names["overlap"]:
+                    if line[2] == last_one[2]: continue
+                    else:
+                        res += [line]
+                        last_one = line
+            if asso_names["close_l"]:
+                res += asso_names["close_l"]
+            if asso_names["close_r"]:
+                res += asso_names["close_r"]
+
+        return res
+
+    def cut_regions(self, y, keep="upstream"):
+        z = self.subtract(y)
+        genes = {}
+        for r in z:
+            if r.name in genes.keys():
+                if keep == "upstream" and r.orientation == "+" and r.initial < genes[r.name].initial:
+                    genes[r.name] = r
+                elif keep == "upstream" and r.orientation == "-" and r.final > genes[r.name].final:
+                    genes[r.name] = r
+                elif keep == "downstream" and r.orientation == "+" and r.initial > genes[r.name].initial:
+                    genes[r.name] = r
+                elif keep == "downstream" and r.orientation == "-" and r.initial.final < genes[r.name].final:
+                    genes[r.name] = r
+            else:
+                genes[r.name] = r
+
+        zz = GenomicRegionSet("out")
+        for k in genes.values():
+            zz.add(k)
+        return zz
