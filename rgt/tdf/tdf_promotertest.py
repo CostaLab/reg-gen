@@ -28,7 +28,7 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
     get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, rna_associated_gene
+    split_gene_name
 
 
 # Color code for all analysis
@@ -1282,60 +1282,7 @@ class PromoterTest:
             html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "spromoters.html"))
 
-    def save_profile(self, output, bed, geneset):
-        """Save statistics for comparison with other results"""
-        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
-        exp = os.path.basename(output)
-        # tag = os.path.basename(os.path.dirname(rnafile))
-        if geneset:
-            tar_reg = os.path.basename(geneset)
-        else:
-            tar_reg = os.path.basename(bed)
-        # RNA name with region
-        if self.rna_regions:
-            trans = "Transcript:"
-            for r in self.rna_regions:
-                trans += " " + r[0] + ":" + str(r[1]) + "-" + str(r[2])
-            rna = '<p title="' + trans + '">' + self.rna_name + "<p>"
-        else:
-            rna = self.rna_name
-        # RNA associated genes
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
 
-        newlines = []
-
-        this_rna = [exp, rna, output.split("_")[-1], self.organism, tar_reg,
-                    value2str(float(self.stat["DBSs_target_all"])/int(self.stat["seq_length"])*1000),
-                    value2str(float(self.stat["DBSs_target_DBD_sig"])/int(self.stat["seq_length"])*1000),
-                    value2str(float(self.stat["DBD_all"])/int(self.stat["seq_length"])*1000), str(len(self.sig_DBD)),
-                    self.topDBD[0], value2str(self.topDBD[1]), r_genes]
-        # try:
-        if os.path.isfile(pro_path):
-            with open(pro_path, 'r') as f:
-                new_exp = True
-                for line in f:
-                    line = line.strip()
-                    line = line.split("\t")
-                    if line[0] == exp:
-                        newlines.append(this_rna)
-                        new_exp = False
-                    elif line[0] == "Experiment":
-                        continue
-                    else:
-                        newlines.append(line)
-                if new_exp:
-                    newlines.append(this_rna)
-        else:
-            newlines.append(this_rna)
-
-        newlines.sort(key=lambda x: float(x[10]))
-        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
-                    "Norm_DBS", "Norm_DBS_on_sig_DBD",
-                    "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"]] + newlines
-
-        with open(pro_path, 'w') as f:
-            for lines in newlines:
-                print("\t".join(lines), file=f)
 
     def save_table(self, path, table, filename):
         """Save the summary rank into the table for heatmap"""

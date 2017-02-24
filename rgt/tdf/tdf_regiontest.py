@@ -613,54 +613,141 @@ class RandomTest:
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))
 
-    def save_profile(self, output, bed):
-        """Save some statistics for comparison with other results"""
-        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
-        exp = os.path.basename(output)
-        # tag = os.path.basename(os.path.dirname(rnafile))
-        tar_reg = os.path.basename(bed)
-        # RNA name with region
-        if self.rna_regions:
-            trans = "Transcript:"
-            for r in self.rna_regions:
-                trans += r[0] + ":" + str(r[1]) + "-" + str(r[2])
-            rna = '<p title="' + trans + '">' + self.rna_name + "<p>"
+        ##############################################################################################
+        # starget_regions.html    for significant target regions
+        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+
+        # Select promoters in sig DBD
+        stargets = sig_promoter_count.keys()
+        if len(spromoters) == 0:
+            html.add_heading("There is no significant DBD.")
         else:
-            rna = self.rna_name
-        # RNA associated genes
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
-        newlines = []
-        this_rna = [exp, rna, output.split("_")[-1], self.organism, tar_reg,
-                    value2str(float(self.stat["DBSs_target_all"]) / int(self.stat["seq_length"]) * 1000),
-                    value2str(float(self.stat["DBSs_target_DBD_sig"]) / int(self.stat["seq_length"]) * 1000),
-                    value2str(float(self.stat["DBD_all"]) / int(self.stat["seq_length"]) * 1000),
-                    str(len(self.data["region"]["sig_region"])),
-                    self.topDBD[0], value2str(self.topDBD[1]), r_genes]
-        # try:
-        if os.path.isfile(pro_path):
-            with open(pro_path, 'r') as f:
-                new_exp = True
-                for line in f:
-                    line = line.strip()
-                    line = line.split("\t")
-                    if line[0] == exp:
-                        newlines.append(this_rna)
-                        new_exp = False
-                    elif line[0] == "Experiment":
-                        continue
+            html.add_heading("Target promoters bound by significant DBD")
+            # for rbsm in self.sig_region_promoter:
+            #     spromoters = spromoters + [p for p in self.txp_de.merged_dict[rbsm]]
+            # spromoters = list(set(spromoters))
+            data_table = []
+
+            # Iterate by each gene promoter
+
+            # Calculate the ranking
+            rank_count = len(spromoters) - rank_array([sig_promoter_count[p] for p in spromoters])
+            rank_coverage = len(spromoters) - rank_array(
+                [self.promoter["de"]["dbs_coverage"][p.toString()] for p in spromoters])
+
+            if self.scores:
+                multiple_scores = False
+                sscores = []
+                # de_genes_str = [g.name for g in self.de_gene.genes]
+                for p in spromoters:
+
+                    try:
+                        gene_sym = self.ensembl2symbol[p.name].upper()
+                    except:
+                        gene_sym = p.name.upper()
+                    try:
+                        sscores.append(self.de_gene.values[gene_sym.upper()])
+                    except:
+                        sscores.append(0)
+
+                if isinstance(sscores[0], str):
+                    if "(" in sscores[0]:
+                        def ranking(scores):
+                            rank_score = len(spromoters) - rank_array(scores)
+                            return rank_score
+
+                        multiple_scores = True
+                        scs = []
+
+                        for s in sscores:
+                            s = s.replace("(", "")
+                            s = s.replace(")", "")
+                            s = s.split(",")
+                            scs.append([float(ss) for ss in s])
+                        ar = numpy.array(scs)
+                        score_ar = ar.tolist()
+                        rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
+                        rank_score = rank_score.transpose()
+                        rank_sum = numpy.sum(rank_score, axis=0).tolist()
+                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
+                        rank_score = rank_score.tolist()
+
                     else:
-                        newlines.append(line)
-                if new_exp:
-                    newlines.append(this_rna)
-        else:
-            newlines.append(this_rna)
+                        new_scores = []
+                        for s in sscores:
+                            if s == "Inf" or s == "inf":
+                                new_scores.append(float("inf"))
+                            elif s == "-Inf" or s == "-inf":
+                                new_scores.append(-float("inf"))
+                            elif isinstance(s, str):
+                                new_scores.append(s)
+                            else:
+                                new_scores.append(abs(float(s)))
 
-        newlines.sort(key=lambda x: float(x[10]))
-        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
-                    "Norm_DBS", "Norm_DBS_on_sig_DBD",
-                    "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"]] + newlines
+                        scores = new_scores
+                        rank_score = len(spromoters) - rank_array(scores)
+                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
-        with open(pro_path, 'w') as f:
-            for lines in newlines:
-                print("\t".join(lines), file=f)
+                else:
+                    rank_score = len(spromoters) - rank_array(sscores)
+                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
+            else:
+                rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+
+            for i, promoter in enumerate(spromoters):
+                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + \
+                           '" style="text-align:left">' + str(sig_promoter_count[promoter]) + '</a>'
+
+                if self.ani:
+                    region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
+                                           "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
+                                           str(promoter.final), '" style="text-align:left" target="_blank">',
+                                           promoter.toString(space=True), '</a>'])
+                else:
+                    if self.organism == "tair10":
+                        region_link = "".join(
+                            ['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
+                             promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
+                             '" target="_blank">',
+                             promoter.toString(space=True), '</a>'])
+                    else:
+                        region_link = promoter.toString(space=True)
+                try:
+                    gn = self.ensembl2symbol[promoter.name]
+                    if not gn: gn = promoter.name
+                except:
+                    gn = promoter.name
+                self.ranktable[gn] = str(int(rank_sum[i]))
+                self.dbstable[gn] = str(sig_promoter_count[promoter])
+
+                newline = [str(i + 1),
+                           region_link,
+                           split_gene_name(gene_name=gn, org=self.organism),
+                           dbssount,
+                           value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                           ]
+                if self.scores:
+                    if multiple_scores:
+                        # print(score_ar)
+                        # print(len(score_ar))
+                        for j in range(len(score_ar[0])):
+                            # print(score_ar[j][i])
+                            # print(score_ar[i][j])
+                            newline += [value2str(score_ar[i][j])]
+                    else:
+                        newline += [value2str(scores[i])]
+
+                newline += ["<i>" + str(int(rank_sum[i])) + "</i>"]
+                # print(newline)
+                data_table.append(newline)
+
+            # print(data_table)
+            html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
+                                 header_titles=header_titlesp, border_list=None, sortable=True)
+            html.add_heading("Notes")
+            html.add_list(["DBS stands for DNA Binding Site on DNA.",
+                           "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
+            html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "spromoters.html"))

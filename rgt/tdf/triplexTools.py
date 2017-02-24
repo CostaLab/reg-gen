@@ -102,7 +102,7 @@ def natsorted(seq, cmp=natcmp):
     return temp
 
 
-def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
+def list_all_index(path, link_d=None):
     """Creat an 'index.html' in the defined directory """
 
     dirname = os.path.basename(path)
@@ -122,16 +122,19 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     type_list = 'sssssssssssssssssss'
     col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
-    if show_RNA_ass_gene:
-        header_list = ["No.", "Experiments", "RNA", "Closest genes",
-                       "Norm DBS", "Norm DBS on sig DBD",
-                       "Norm DBD",  "No sig. DBD", "Top DBD",
-                       "p-value", "Organism", "Target region"]
-    else:
-        header_list = ["No.", "Experiments", "RNA",
-                       "Norm DBS", "Norm DBS on sig DBD",
-                       "Norm DBD",  "No sig. DBD", "Top DBD",
-                       "p-value", "Organism", "Target region"]
+    # if show_RNA_ass_gene:
+    header_list = ["No.", "Experiments", "RNA", "Closest genes",
+                   "exon", "length",
+                   "Norm DBS*", "Norm DBS on sig DBD",
+                   "Norm DBD*",  "No sig. DBD", "Top DBD",
+                   "p-value", "Organism", "Target region",
+                   "Rank*"]
+    # else:
+    #     header_list = ["No.", "Experiments", "RNA",
+    #                    "exon", "length",
+    #                    "Norm DBS", "Norm DBS on sig DBD",
+    #                    "Norm DBD",  "No sig. DBD", "Top DBD",
+    #                    "p-value", "Organism", "Target region"]
 
     profile_f = open(os.path.join(path, "profile.txt"), 'r')
     profile = {}
@@ -144,38 +147,41 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     for i, exp in enumerate(profile.keys()):
         # print(exp)
         c += 1
-        if profile[exp][5] == "-":
+        if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
         else:
             new_line = [str(c),
                         '<a href="' + os.path.join(exp, "index.html") + \
                         '">' + exp + "</a>", profile[exp][0]]
+        # if show_RNA_ass_gene:
+        new_line.append(profile[exp][12])
+        new_line += [ profile[exp][1], #5exon
+                      profile[exp][2], #6length
+                      profile[exp][6],
+                      profile[exp][7],
+                      profile[exp][8],
+                      profile[exp][9],
+                      profile[exp][10] ]
 
-        if show_RNA_ass_gene:
-            new_line.append(split_gene_name(gene_name=profile[exp][10],org=profile[exp][2]))
-
-        if float(profile[exp][9]) < 0.05:
-            new_line += [profile[exp][4],
-                         profile[exp][5],
-                         profile[exp][6],
-                         profile[exp][7],
-                         profile[exp][8],
-                         "<font color=\"red\">" + \
-                         profile[exp][9] + "</font>",
-                         profile[exp][2], profile[exp][3]]
+        if float(profile[exp][11]) < 0.05:
+            new_line += ["<font color=\"red\">" + \
+                         profile[exp][11] + "</font>"]
         else:
-            new_line += [profile[exp][4],
-                         profile[exp][5],
-                         profile[exp][6],
-                         profile[exp][7],
-                         profile[exp][8],
-                         profile[exp][9],
-                         profile[exp][2], profile[exp][3]]
+            new_line += [profile[exp][11]]
+        new_line += [ profile[exp][4], profile[exp][5] ]
+
         data_table.append(new_line)
         # except:
         #     if exp != "Experiment":
         #         print("Error in loading profile: " + exp)
         #     continue
+    rank_dbd = len(data_table) - rank_array([x[9] for x in data_table])
+    rank_dbs = len(data_table) - rank_array([x[6] for x in data_table])
+    rank_sum = [x + y for x, y in zip(rank_dbd, rank_dbs)]
+
+    for i, d in enumerate(data_table):
+        d += [str(rank_sum[i])]
+        # print(d)
 
     html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                          align=10, cell_align="left", sortable=True)
@@ -184,7 +190,7 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     html.write(os.path.join(path, "index.html"))
 
 
-def revise_index(root, show_RNA_ass_gene=False):
+def revise_index(root):
     "Revise other index.html in the same project"
 
     dir_list = {}
@@ -199,7 +205,7 @@ def revise_index(root, show_RNA_ass_gene=False):
     # print(dir_list)
     for d, p in plist.iteritems():
         list_all_index(path=os.path.dirname(p),
-                       link_d=dir_list, show_RNA_ass_gene=show_RNA_ass_gene)
+                       link_d=dir_list)
 
 def update_profile(dirpath, name_list=None):
     header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
@@ -1055,81 +1061,107 @@ def get_rna_region_str(rna):
         for line in f:
             if line[0] == ">":
                 line = line.strip()
+                # Loci
                 if "REGION" in line:
-                    line = line.split()
-                    for i, e in enumerate(line):
+                    l = line.split()
+                    for i, e in enumerate(l):
                         if "REGION" in e:
                             e = e.split("_")
                             #print(e)
                             try:
-                                rna_regions.append([e[1], int(e[2]), int(e[3]), e[4]])
+                                r = [e[1], int(e[2]), int(e[3]), e[4]]
                             except:
-                                rna_regions.append([e[1], int(e[3]), int(e[4]), e[5]])
+                                r = [e[1], int(e[3]), int(e[4]), e[5]]
                 
                 elif "chr" in line:
-                    line = line.partition("chr")[2]
-                    chrom = "chr" + line.partition(":")[0]
-                    start = int(line.partition(":")[2].partition("-")[0])
-                    end = int(line.partition(":")[2].partition("-")[2].split()[0])
-                    sign = line.partition(":")[2].partition("-")[2].split()[1]
+                    l = line.partition("chr")[2]
+                    chrom = "chr" + l.partition(":")[0]
+                    start = int(l.partition(":")[2].partition("-")[0])
+                    end = int(l.partition(":")[2].partition("-")[2].split()[0])
+                    sign = l.partition(":")[2].partition("-")[2].split()[1]
                     if sign == "+" or sign == "-" or sign == ".":
-                        rna_regions.append([chrom, start, end, sign])
-
+                        r = [chrom, start, end, sign]
+                    elif "strand" in line:
+                        s = l.partition("strand=")[2][0]
+                        r = [chrom, start, end, s]
                     else:
                         print(line)
 
                 else:
-                    rna_regions = None
-                    break
-    if rna_regions:
-        rna_regions.sort(key=lambda x: x[1])
-        if rna_regions[0][3] == "-":
-            rna_regions = rna_regions[::-1]
+                    r = []
+                # Score
+                if "score" in line:
+                    ss = line.partition("score")[2].partition("=")[2]
+                    score = float(ss.split()[0])
+                    r.append(score)
+
+                if r:
+                    rna_regions.append(r)
+    # if rna_regions:
+    #     rna_regions.sort(key=lambda x: x[1])
+    #     if rna_regions[0][3] == "-":
+    #         rna_regions = rna_regions[::-1]
+
     return rna_regions
 
 
-def no_binding_response(args, rna_regions, rna_name, organism):
+def no_binding_response(args, rna_regions, rna_name, organism, stat):
     print("*** Find no triple helices binding on the given RNA")
 
     pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
     exp = os.path.basename(args.o)
     if args.de:
-        tar_reg = os.path.basename(args.de)
+        tar = args.de
     else:
-        tar_reg = os.path.basename(args.bed)
-    r_genes = rna_associated_gene(rna_regions=rna_regions, name=rna_name, organism=organism)
-    newlines = []
-    if os.path.isfile(pro_path):
-        with open(pro_path, 'r') as f:
-            new_exp = True
-            for line in f:
-                line = line.strip()
-                line = line.split("\t")
-                if line[0] == exp:
-                    newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                     args.organism, tar_reg, "0","0","0","0",
-                                     "-", "1.0", r_genes])
-                    new_exp = False
-                else:
-                    newlines.append(line)
-            if new_exp:
-                newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                 args.organism, tar_reg, "0","0","0","0",
-                                 "-", "1.0", r_genes])
-    else:
-        newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
-                         "Norm_DBS", "Norm_DBS_on_sig_DBD",
-                         "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"])
-        newlines.append([exp, args.rn, args.o.split("_")[-1],
-                         args.organism, tar_reg, "0","0","0","0",
-                         "-", "1.0", r_genes])
-    with open(pro_path, 'w') as f:
-        for lines in newlines:
-            print("\t".join(lines), file=f)
+        tar = args.bed
+    # stat = {}
+    # stat["exons"] =
+    # stat["seq_length"] =
+    stat["DBD_all"] = 0
+    stat["DBSs_target_all"] = 0
+    stat["DBSs_target_DBD_sig"] = 0
+
+    save_profile(rna_regions=rna_regions, rna_name=rna_name,
+                 organism=organism, output=args.o, bed=args.bed,
+                 geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[])
+
+    # if args.de:
+    #     tar_reg = os.path.basename(args.de)
+    # else:
+    #     tar_reg = os.path.basename(args.bed)
+    # r_genes = rna_associated_gene(rna_regions=rna_regions, name=rna_name, organism=organism)
+    # newlines = []
+    # if os.path.isfile(pro_path):
+    #     with open(pro_path, 'r') as f:
+    #         new_exp = True
+    #         for line in f:
+    #             line = line.strip()
+    #             line = line.split("\t")
+    #             if line[0] == exp:
+    #                 newlines.append([exp, args.rn, args.o.split("_")[-1],
+    #                                  args.organism, tar_reg, "0","0","0","0",
+    #                                  "-", "1.0", r_genes])
+    #                 new_exp = False
+    #             else:
+    #                 newlines.append(line)
+    #         if new_exp:
+    #             newlines.append([exp, args.rn, args.o.split("_")[-1],
+    #                              args.organism, tar_reg, "0","0","0","0",
+    #                              "-", "1.0", r_genes])
+    # else:
+    #     newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
+    #                      "Norm_DBS", "Norm_DBS_on_sig_DBD",
+    #                      "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"])
+    #     newlines.append([exp, args.rn, args.o.split("_")[-1],
+    #                      args.organism, tar_reg, "0","0","0","0",
+    #                      "-", "1.0", r_genes])
+    # with open(pro_path, 'w') as f:
+    #     for lines in newlines:
+    #         print("\t".join(lines), file=f)
 
     # shutil.rmtree(args.o)
     # list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
-    revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=rna_regions)
+    revise_index(root=os.path.dirname(os.path.dirname(args.o)))
     shutil.rmtree(args.o)
     sys.exit(1)
 
@@ -1185,3 +1217,61 @@ def merge_DBD_regions(path):
                     for r in dbd: r.name = rna+"_"+r.name
                     dbd_pool.combine(dbd)
             dbd_pool.write_bed(os.path.join(path, t, "DBD_"+t+".bed"))
+
+
+def save_profile(rna_regions, rna_name, organism, output, bed,\
+                 stat, topDBD, sig_DBD, geneset=None):
+    """Save statistics for comparison with other results"""
+    pro_path = os.path.join(os.path.dirname(output), "profile.txt")
+    exp = os.path.basename(output)
+    # tag = os.path.basename(os.path.dirname(rnafile))
+    if geneset:
+        tar_reg = os.path.basename(geneset)
+    else:
+        tar_reg = os.path.basename(bed)
+    # RNA name with region
+    if rna_regions:
+        exon = str(len(rna_regions))
+    else:
+        exon = "-"
+    # rna = self.rna_name
+    # RNA associated genes
+    r_genes = rna_associated_gene(rna_regions=rna_regions, name=rna_name, organism=organism)
+
+    newlines = []
+
+    this_rna = [exp, rna_name, stat["exons"], stat["seq_length"],
+                output.split("_")[-1], organism, tar_reg,
+                value2str(float(stat["DBSs_target_all"])/int(stat["seq_length"])*1000),
+                value2str(float(stat["DBSs_target_DBD_sig"])/int(stat["seq_length"])*1000),
+                value2str(float(stat["DBD_all"])/int(stat["seq_length"])*1000), str(len(sig_DBD)),
+                topDBD[0], value2str(topDBD[1]), r_genes]
+    # try:
+    if os.path.isfile(pro_path):
+        with open(pro_path, 'r') as f:
+            new_exp = True
+            for line in f:
+                line = line.strip()
+                line = line.split("\t")
+                if line[0] == exp:
+                    newlines.append(this_rna)
+                    new_exp = False
+                elif line[0] == "Experiment":
+                    continue
+                else:
+                    newlines.append(line)
+            if new_exp:
+                newlines.append(this_rna)
+    else:
+        newlines.append(this_rna)
+
+    newlines.sort(key=lambda x: float(x[12]))
+    newlines = [["Experiment", "RNA_names", "exon", "length",
+                 "Tag", "Organism", "Target_region",
+                 "Norm_DBS", "Norm_DBS_on_sig_DBD",
+                 "Norm_DBD", "No_sig_DBDs", "Top_DBD",
+                 "p-value", "closest_genes"]] + newlines
+
+    with open(pro_path, 'w') as f:
+        for lines in newlines:
+            print("\t".join(lines), file=f)

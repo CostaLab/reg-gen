@@ -225,6 +225,7 @@ if __name__ == "__main__":
     parser_bed_filter.add_argument('-gene', type=str, default=False, help="Define file for the gene list")
     parser_bed_filter.add_argument('-min', type=int, default=False, help="Define minimal length")
     parser_bed_filter.add_argument('-max', type=int, default=False, help="Define maximal length")
+    parser_bed_filter.add_argument('-score', action="store_true", default=False, help="Add the score from gene list to BED file")
 
     ############### BED remove if overlap ################################
     parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
@@ -813,7 +814,9 @@ if __name__ == "__main__":
             if os.path.isfile(args.gene):
                 gg = GeneSet("genes")
                 gg.read(args.gene)
+                print(len(gg))
                 bed = bed.by_names(gg.genes)
+                print(len(bed))
             else:
                 genes = [ x.upper() for x in args.gene.split(",") ]
                 bed = bed.by_names(genes)

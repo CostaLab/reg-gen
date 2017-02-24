@@ -20,7 +20,8 @@ from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
-                         integrate_stat, update_profile, merge_DBD_regions
+                         integrate_stat, update_profile, merge_DBD_regions,\
+                         save_profile
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -234,7 +235,7 @@ def main():
             for item in os.listdir(args.path):
                 pro = os.path.join(args.path, item, "profile.txt")
                 if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item))
-            revise_index(root=args.path, show_RNA_ass_gene=True)
+            revise_index(root=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
         
@@ -365,9 +366,10 @@ def main():
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
-        if len(promoter.rbss) == 0:  no_binding_response(args, promoter.rna_regions,
-                                                         promoter.rna_name, promoter.organism)
-
+        if len(promoter.rbss) == 0:
+            no_binding_response(args=args, rna_regions=promoter.rna_regions,
+                                rna_name=promoter.rna_name, organism=promoter.organism,
+                                stat=promoter.stat)
         promoter.dbd_regions(output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
@@ -408,8 +410,10 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
-        promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
+        save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
+                     organism=promoter.organism, output=args.o, bed=args.bed,
+                     geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD, sig_DBD=promoter.sig_DBD)
+        revise_index(root=os.path.dirname(os.path.dirname(args.o)))
         try: os.remove(os.path.join(args.o, "de.fa"))
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))
@@ -540,8 +544,12 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
 
         output_summary(summary, args.o, "summary.txt")
-        randomtest.save_profile(output=args.o, bed=args.bed)
-        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
+        # save_profile(output=args.o, bed=args.bed)
+        save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
+                     organism=randomtest.organism, output=args.o, bed=args.bed,
+                     stat=randomtest.stat, topDBD=randomtest.topDBD,
+                     sig_DBD=randomtest.data["region"]["sig_region"])
+        list_all_index(path=os.path.dirname(args.o))
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))
