@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import sys
+import natsort
 import multiprocessing
 from collections import *
 
@@ -45,7 +46,7 @@ class RandomTest:
         # DNA: GenomicRegionSet
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
-        self.dna_region = self.dna_region.gene_association(organism=self.organism)
+        self.dna_region = self.dna_region.gene_association(organism=self.organism, show_dis=True)
 
         self.topDBD = []
         self.stat = OrderedDict(name=rna_name, genome=organism)
@@ -111,12 +112,19 @@ class RandomTest:
         self.stat["target_regions"] = str(len(self.dna_region))
 
         if obed:
-            btr = self.txp.get_dbs()
-            btr = btr.gene_association(organism=self.organism)
-            btr.write_bed(os.path.join(temp, obed + "_target_region_dbs.bed"))
-            dbss = txpf.get_dbs()
-            # dbss = dbss.gene_association(organism=self.organism)
-            dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
+            # btr = self.txp.get_dbs()
+            # btr = btr.gene_association(organism=self.organism, show_dis=True)
+            # btr.write_bed(os.path.join(temp, obed + "_target_region_dbs.bed"))
+            # dbss = txpf.get_dbs()
+            # dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
+
+            # output = self.dna_region.gene_association(organism=self.organism, show_dis=True)
+
+            self.txp.write_bed(filename=os.path.join(temp, obed + "_target_region_dbs.bed"),
+                               dbd_tag=False,
+                               remove_duplicates=False, associated=self.organism)
+            self.txpf.write_bed(filename=os.path.join(temp, obed + "_dbss.bed"),
+                                remove_duplicates=False)
 
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
@@ -135,7 +143,7 @@ class RandomTest:
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-2)
         mp_output = pool.map(random_each, mp_input)
         # print(mp_output)
         pool.close()
@@ -406,6 +414,7 @@ class RandomTest:
                              p_dbs]
             data_table.append(new_line)
 
+        data_table = natsort.natsorted(data_table, key=lambda x: x[6])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, border_list=border_list, sortable=True)
 
@@ -524,7 +533,7 @@ class RandomTest:
                 region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, ranking])
             else:
                 region.data = "\t".join([dbs_counts, dbs_cover, ranking])
-
+        data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, sortable=True)
         html.add_heading("Notes")
@@ -621,6 +630,12 @@ class RandomTest:
         # RNA associated genes
         r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
         newlines = []
+        this_rna = [exp, rna, output.split("_")[-1], self.organism, tar_reg,
+                    value2str(float(self.stat["DBSs_target_all"]) / int(self.stat["seq_length"]) * 1000),
+                    value2str(float(self.stat["DBSs_target_DBD_sig"]) / int(self.stat["seq_length"]) * 1000),
+                    value2str(float(self.stat["DBD_all"]) / int(self.stat["seq_length"]) * 1000),
+                    str(len(self.data["region"]["sig_region"])),
+                    self.topDBD[0], value2str(self.topDBD[1]), r_genes]
         # try:
         if os.path.isfile(pro_path):
             with open(pro_path, 'r') as f:
@@ -629,22 +644,21 @@ class RandomTest:
                     line = line.strip()
                     line = line.split("\t")
                     if line[0] == exp:
-                        newlines.append([exp, rna, output.split("_")[-1],
-                                         self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                                         self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+                        newlines.append(this_rna)
                         new_exp = False
+                    elif line[0] == "Experiment":
+                        continue
                     else:
                         newlines.append(line)
                 if new_exp:
-                    newlines.append([exp, rna, output.split("_")[-1],
-                                     self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                                     self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+                    newlines.append(this_rna)
         else:
-            newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                             "Top_DBD", "p-value", "closest_genes"])
-            newlines.append([exp, rna, output.split("_")[-1],
-                             self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                             self.topDBD[0], value2str(self.topDBD[1]), r_genes])
+            newlines.append(this_rna)
+
+        newlines.sort(key=lambda x: float(x[10]))
+        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
+                    "Norm_DBS", "Norm_DBS_on_sig_DBD",
+                    "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"]] + newlines
 
         with open(pro_path, 'w') as f:
             for lines in newlines:

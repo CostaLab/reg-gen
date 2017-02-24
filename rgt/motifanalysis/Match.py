@@ -46,7 +46,7 @@ def match_single(motif, sequence, genomic_region, output_file, unique_threshold=
         current_threshold = motif.threshold
         eval_threshold = motif.threshold
         motif_max = motif.max
- 
+
     # Performing motif matching
     try:
         results = MOODS.search(sequence, [motif.pssm_list], current_threshold, absolute_threshold=True, both_strands=True)

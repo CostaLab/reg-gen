@@ -5,8 +5,6 @@ from scipy.stats import mstats, mannwhitneyu
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
 from shared_function import *
 
 ###########################################################################################

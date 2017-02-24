@@ -119,17 +119,19 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     html.add_heading("All experiments in: " + dirname + "/")
 
     data_table = []
-    type_list = 'sssssssssssss'
-    col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+    type_list = 'sssssssssssssssssss'
+    col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
     c = 0
     if show_RNA_ass_gene:
         header_list = ["No.", "Experiments", "RNA", "Closest genes",
-                       "No sig. DBD",
-                       "Top DBD", "p-value", "Organism", "Target region"]
+                       "Norm DBS", "Norm DBS on sig DBD",
+                       "Norm DBD",  "No sig. DBD", "Top DBD",
+                       "p-value", "Organism", "Target region"]
     else:
-        header_list = ["No.", "Experiments", "RNA", "No sig. DBD",
-                       "Top DBD", "p-value", "Organism",  # "Condition",
-                       "Target region"]
+        header_list = ["No.", "Experiments", "RNA",
+                       "Norm DBS", "Norm DBS on sig DBD",
+                       "Norm DBD",  "No sig. DBD", "Top DBD",
+                       "p-value", "Organism", "Target region"]
 
     profile_f = open(os.path.join(path, "profile.txt"), 'r')
     profile = {}
@@ -142,8 +144,6 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
     for i, exp in enumerate(profile.keys()):
         # print(exp)
         c += 1
-
-        # try:
         if profile[exp][5] == "-":
             new_line = [str(c), exp, profile[exp][0]]
         else:
@@ -152,19 +152,24 @@ def list_all_index(path, link_d=None, show_RNA_ass_gene=False):
                         '">' + exp + "</a>", profile[exp][0]]
 
         if show_RNA_ass_gene:
-            new_line.append(
-                split_gene_name(gene_name=profile[exp][7],
-                                org=profile[exp][2]))
+            new_line.append(split_gene_name(gene_name=profile[exp][10],org=profile[exp][2]))
 
-        if float(profile[exp][6]) < 0.05:
+        if float(profile[exp][9]) < 0.05:
             new_line += [profile[exp][4],
                          profile[exp][5],
+                         profile[exp][6],
+                         profile[exp][7],
+                         profile[exp][8],
                          "<font color=\"red\">" + \
-                         profile[exp][6] + "</font>",
+                         profile[exp][9] + "</font>",
                          profile[exp][2], profile[exp][3]]
         else:
             new_line += [profile[exp][4],
-                         profile[exp][5], profile[exp][6],
+                         profile[exp][5],
+                         profile[exp][6],
+                         profile[exp][7],
+                         profile[exp][8],
+                         profile[exp][9],
                          profile[exp][2], profile[exp][3]]
         data_table.append(new_line)
         # except:
@@ -345,8 +350,11 @@ def gen_heatmap(path):
 
     output_array(array=lmats, directory=path, folder="", filename='matrix_p.txt')
     # os.path.join(path,'matrix_p.txt'), lmats, delimiter='\t')
-    fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.png'))
-    fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
+    try:
+        fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.png'))
+        fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
+    except:
+        pass
 
 
 def generate_rna_exp_pv_table(root, multi_corr=True):
@@ -818,7 +826,7 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, threshDist=1000000, show_dis=True)
+        asso_genes = g.gene_association(organism=organism, promoterLength=1000, show_dis=True)
         #print(name)
         #print( [ a.name for a in asso_genes ] )
         #print( [ a.proximity for a in asso_genes ])
@@ -1014,7 +1022,7 @@ def connect_rna(rna, temp, rna_name):
 def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
     regions = GenomicRegionSet("Target")
     regions.read_bed(input_BED)
-    regions.gene_association(organism=organism)
+    regions.gene_association(organism=organism, show_dis=True)
 
     connect_rna(rna_fasta, temp=temp, rna_name="RNA")
     rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
@@ -1030,6 +1038,7 @@ def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,
 
     print("Total binding events:\t",str(len(txp)))
     txp.write_bed(output_BED)
+    txp.write_txp(filename=output_BED.replace(".bed",".txp"))
     rbss = txp.get_rbs()
     dbd_regions(exons=rna_regions, sig_region=rbss, rna_name="rna", output=output_rbss, 
                 out_file=True, temp=temp, fasta=False)
@@ -1098,21 +1107,22 @@ def no_binding_response(args, rna_regions, rna_name, organism):
                 line = line.split("\t")
                 if line[0] == exp:
                     newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                     args.organism, tar_reg, "0",
-                                     "-", "1.0", r_genes, "No triplex found"])
+                                     args.organism, tar_reg, "0","0","0","0",
+                                     "-", "1.0", r_genes])
                     new_exp = False
                 else:
                     newlines.append(line)
             if new_exp:
                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                 args.organism, tar_reg, "0",
-                                 "-", "1.0", r_genes, "No triplex found"])
+                                 args.organism, tar_reg, "0","0","0","0",
+                                 "-", "1.0", r_genes])
     else:
-        newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                         "Top_DBD", "p-value", "closest_genes"])
+        newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
+                         "Norm_DBS", "Norm_DBS_on_sig_DBD",
+                         "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"])
         newlines.append([exp, args.rn, args.o.split("_")[-1],
-                         args.organism, tar_reg, "0",
-                         "-", "1.0", r_genes, "No triplex found"])
+                         args.organism, tar_reg, "0","0","0","0",
+                         "-", "1.0", r_genes])
     with open(pro_path, 'w') as f:
         for lines in newlines:
             print("\t".join(lines), file=f)
