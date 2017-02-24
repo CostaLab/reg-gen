@@ -27,9 +27,9 @@ class Evidence:
         tfbs_summit_regions.read_bed(self.tfbs_summit_fname)
 
         for region in iter(tfbs_summit_regions):
-            mid = (region.initial + region.final) / 2
-            region.initial = max(mid - (self.peak_ext / 2), 0)
-            region.final = mid + (self.peak_ext / 2)
+            summit = int(region.data.split()[-1]) + region.initial
+            region.initial = max(summit - (self.peak_ext / 2), 0)
+            region.final = summit + (self.peak_ext / 2)
 
         # Calculating intersections
         mpbs_regions = GenomicRegionSet("MPBS Regions")
@@ -43,11 +43,11 @@ class Evidence:
         tfbs_regions = GenomicRegionSet("TFBS Regions")
 
         for region in iter(with_overlap_regions):
-            region.name = region.name + ":Y"
+            region.name = region.name.split(":")[0] + ":Y"
             tfbs_regions.add(region)
 
         for region in iter(without_overlap_regions):
-            region.name = region.name + ":N"
+            region.name = region.name.split(":")[0] + ":N"
             tfbs_regions.add(region)
 
         tfbs_regions.sort()

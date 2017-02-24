@@ -23,6 +23,7 @@ from biasTable import BiasTable
 from evaluation import Evaluation
 from train import TrainHMM
 from evidence import Evidence
+from plot import Plot
 
 # External
 import os
@@ -126,6 +127,12 @@ def main():
                       metavar="STRING", default=None,
                       help=("The regions that used to estimate the bias table "
                             "should be bed file containing HS regions or FASTA file containing naked DNA"))
+    parser.add_option("--estimate-bias-type", dest="estimate_bias_type", type="string",
+                      metavar="STRING", default=None,
+                      help=("The methods that used to estimate the bias table "
+                            "Available options are: 'FRE' (the bias estimation is computed as the ratio "
+                            "between the observed and background cleavage frequency) "
+                            "and 'PWM' (frequency is replaced by pwm score)."))
     parser.add_option("--default-bias-correction", dest="default_bias_correction",
                       action="store_true", default=False,
                       help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
@@ -162,6 +169,25 @@ def main():
                       help=("If used, it will print the slope signals from DNase-seq "
                             " or ATAC-seq data. The option should equal the file name."
                             "The extension must be (.wig)."))
+    parser.add_option("--print-line-plot", dest="print_line_plot",
+                      action="store_true", default=False,
+                      help=("If used, it will print the line plot of raw signal and bias corrected"
+                            "signal for the particular motif."))
+    parser.add_option("--window-size", dest="window_size", type="int", metavar="INT", default=50)
+    parser.add_option("--motif-file", dest="motif_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bed file containing all motif-predicted binding sites (MPBSs)."
+                            "The extension must be (.bed)."))
+    parser.add_option("--motif-name", dest="motif_name", type="string", metavar="STRING",
+                      default=None)
+    parser.add_option("--protection-score", dest="protection_score",
+                      action="store_true",default=False,
+                      help=("If used, it will print the protection score"))
+    parser.add_option("--strands-specific", dest="strands_specific",
+                      action="store_true",default=False,
+                      help=("A boolean indicating if DNaseI digestion site "
+                            "counts should be aggregated across strands. "
+                            "default: False"))
 
     # Train Options
     parser.add_option("--train-hmm", dest="train_hmm",
@@ -205,6 +231,11 @@ def main():
                       default=None,
                       help=("The methods name used to predicted the footprint."
                             "The number of methods name must be consistent with that of footprint file"))
+    parser.add_option("--alignment-file", dest="alignment_file", type="string",
+                      metavar="FILE",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."
+                            "Used to fetch the tag counts for SEG (segmentation approach)"))
     parser.add_option("--footprint-type", dest="footprint_type", type="string",
                       metavar="TYPE1,TYPE2,TYPE3,TYPE4...",
                       default=None,
@@ -223,7 +254,7 @@ def main():
                       help=("If used, HINT will create a bed file with MPBSs with and "
                             "without evidence. Also, the name of the instances will be Y "
                             "for evidence, N for non evidence."))
-    parser.add_option("--peak-ext", dest="peak_ext", type="int", metavar="INT", default=50,
+    parser.add_option("--peak-ext", dest="peak_ext", type="int", metavar="INT", default=100,
                       help=("The number used to extend the ChIP-seq summit"))
     parser.add_option("--mpbs-name", dest="mpbs_name", type="string",
                       default=None,
@@ -287,15 +318,13 @@ def main():
     parser.add_option("--atac-downstream-ext", dest="atac_downstream_ext", type="int",
                       metavar="INT", default=1, help=SUPPRESS_HELP)
     parser.add_option("--atac-upstream-ext", dest="atac_upstream_ext", type="int",
-                      metavar="INT", default=1, help=SUPPRESS_HELP)
+                      metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--atac-forward-shift", dest="atac_forward_shift", type="int",
                       metavar="INT", default=4, help=SUPPRESS_HELP)
     parser.add_option("--atac-reverse-shift", dest="atac_reverse_shift", type="int",
                       metavar="INT", default=-5, help=SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
-    parser.add_option("--atac-bias-correction-shift", dest="atac_bias_correction_shift", type="int",
-                      metavar="INT", default=0, help=SUPPRESS_HELP)
 
     # HISTONE Hidden Options
     parser.add_option("--histone-initial-clip", dest="histone_initial_clip", type="int",
@@ -318,31 +347,6 @@ def main():
     # Processing Options
     options, arguments = parser.parse_args()
     # if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
-
-    # If HINT is required to create the validation data set
-    if options.create_evidence:
-        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
-                            options.mpbs_fname, options.output_location)
-        evidence.create_file()
-        return
-
-    # If HINT is required to evaluate the existing footprint predictions
-    if options.evaluate_footprints:
-        evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
-                                options.footprint_name, options.footprint_type,
-                                options.print_roc_curve, options.print_roc_curve, options.output_location)
-        evaluation.chip_evaluate()
-        return
-
-    # If HINT is required to train a hidden Markov model (HMM)
-    if options.train_hmm:
-        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
-                                   options.output_location, options.model_fname,
-                                   options.print_norm_signal, options.print_slope_signal,
-                                   options.estimate_bias_correction, options.original_regions, options.organism,
-                                   options.atac_bias_correction_k, options.atac_bias_correction_shift)
-        train_hmm_model.train()
-        return
 
     # General hidden options ###############################################################
     region_total_ext = options.region_total_ext
@@ -368,6 +372,7 @@ def main():
     atac_initial_clip = options.atac_initial_clip
     atac_sg_window_size = options.atac_sg_window_size
     atac_norm_per = options.atac_norm_per
+    atac_slope_per = options.atac_slope_per
     atac_downstream_ext = options.atac_downstream_ext
     atac_upstream_ext = options.atac_upstream_ext
     atac_forward_shift = options.atac_forward_shift
@@ -385,6 +390,50 @@ def main():
 
     ########################################################################################
 
+    ##########################################################################################
+
+    # IF HINT is required to output the line plot and motif logo
+    if options.print_line_plot:
+        plot = Plot(options.bam_file, options.motif_file, options.motif_name, options.window_size,
+                    atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
+                    atac_initial_clip, options.organism, options.bias_table,
+                    atac_bias_correction_k, options.protection_score, options.strands_specific,
+                    options.output_location)
+        plot.line()
+        return
+
+    # If HINT is required to create the validation data set
+    if options.create_evidence:
+        evidence = Evidence(options.peak_ext, options.mpbs_name, options.tfbs_summit_fname,
+                            options.mpbs_fname, options.output_location)
+        evidence.create_file()
+        return
+
+    # If HINT is required to evaluate the existing footprint predictions
+    if options.evaluate_footprints:
+        evaluation = Evaluation(options.tf_name, options.tfbs_file, options.footprint_file,
+                                options.footprint_name, options.footprint_type,
+                                options.print_roc_curve, options.print_roc_curve,
+                                options.output_location, options.alignment_file, options.organism)
+        evaluation.chip_evaluate()
+        return
+
+    # If HINT is required to train a hidden Markov model (HMM)
+    if options.train_hmm:
+        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
+                                   options.output_location, options.model_fname,
+                                   options.print_raw_signal, options.print_bc_signal,
+                                   options.print_norm_signal, options.print_slope_signal,
+                                   atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
+                                   atac_forward_shift, atac_reverse_shift,
+                                   options.estimate_bias_correction, options.estimate_bias_type,
+                                   options.bias_table,
+                                   options.original_regions, options.organism,
+                                   atac_bias_correction_k)
+        train_hmm_model.train()
+        return
+
+    ########################################################################################################
     # Output wig signal
     if (options.print_raw_signal):
         system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_raw_signal)
@@ -504,9 +553,11 @@ def main():
                 my_k_nb = dnase_bias_correction_k
                 my_shift = dnase_downstream_ext
             group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
-                                         dnase_file_name=group.dnase_file.file_name,
-                                         genome_file_name=genome_data.get_genome(), k_nb=my_k_nb,
-                                         shift=my_shift)
+                                                          dnase_file_name=group.dnase_file.file_name,
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          k_nb=my_k_nb, shift=my_shift,
+                                                          forward_shift=atac_forward_shift,
+                                                          reverse_shift=atac_reverse_shift)
         bias_correction = True
 
     elif (options.default_bias_correction):
@@ -898,6 +949,10 @@ def main():
             if (f.final - f.initial < fp_limit):
                 f.initial = max(0, f.initial - fp_ext)
                 f.final = f.final + fp_ext
+            if (f.final - f.initial > 2*fp_limit):
+                mid = (f.initial + f.final) / 2
+                f.initial = max(mid - fp_limit, 0)
+                f.final = f.final + fp_limit
 
         # Fetching chromosome sizes
         chrom_sizes_file_name = genome_data.get_chromosome_sizes()

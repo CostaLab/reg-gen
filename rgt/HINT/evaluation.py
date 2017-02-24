@@ -9,13 +9,16 @@ import math
 from sklearn import metrics
 from scipy.integrate import trapz
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab
+
+from pysam import Samfile
+
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import OverlapType
+from ..Util import GenomeData
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
@@ -31,7 +34,7 @@ class Evaluation:
     """
 
     def __init__(self, tf_name, tfbs_file, footprint_file, footprint_name, footprint_type,
-                 print_roc_curve, print_pr_curve, output_location):
+                 print_roc_curve, print_pr_curve, output_location, alignment_file, organism):
         self.tf_name = tf_name
         self.tfbs_file = tfbs_file
         self.footprint_file = footprint_file.split(",")
@@ -40,6 +43,8 @@ class Evaluation:
         self.print_roc_curve = print_roc_curve
         self.print_pr_curve = print_pr_curve
         self.output_location = output_location
+        self.alignment_file = alignment_file
+        self.organism = organism
         if self.output_location[-1] != "/":
             self.output_location += "/"
 
@@ -88,6 +93,7 @@ class Evaluation:
                 for region in iter(intersect_regions):
                     region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
+
 
                 # Keep the score of remained MPBS entry unchanged
                 without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)

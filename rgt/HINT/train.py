@@ -27,20 +27,32 @@ class TrainHMM:
     """
 
     def __init__(self, bam_file, annotate_file, print_bed_file,
-                 output_locaiton, output_fname, print_norm_signal, print_slope_signal,
-                 estimate_bias_correction, original_regions, organism, k_nb, shift):
+                 output_locaiton, output_fname,
+                 print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal,
+                 atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
+                 atac_forward_shift, atac_reverse_shift,
+                 estimate_bias_correction, estimate_bias_type, bias_table,
+                 original_regions, organism, k_nb):
         self.bam_file = bam_file
         self.annotate_fname = annotate_file
         self.print_bed_file = print_bed_file
         self.output_locaiton = output_locaiton
         self.output_fname = output_fname
+        self.print_raw_signal = print_raw_signal
+        self.print_bc_signal = print_bc_signal
         self.print_norm_signal = print_norm_signal
         self.print_slope_signal = print_slope_signal
+        self.atac_initial_clip = atac_initial_clip
+        self.atac_downstream_ext = atac_downstream_ext
+        self.atac_upstream_ext = atac_upstream_ext
+        self.atac_forward_shift = atac_forward_shift
+        self.atac_reverse_shift = atac_reverse_shift
         self.estimate_bias_correction = estimate_bias_correction
+        self.estimate_bias_type = estimate_bias_type
+        self.bias_table = bias_table
         self.original_regions = original_regions
         self.organism = organism
         self.k_nb = k_nb
-        self.shift = shift
         self.chrom = "chr1"
         self.start = 211428000
         self.end = 211438000
@@ -67,19 +79,41 @@ class TrainHMM:
             if self.original_regions.split(".")[-1] == "fa":
                 regions.read_sequence(self.original_regions)
 
-            table = bias_table.estimate_table_pwm(regions=regions, dnase_file_name=self.bam_file,
-                                    genome_file_name=genome_data.get_genome(), k_nb=self.k_nb, shift=self.shift)
+            if self.estimate_bias_type == "FRE":
+                table = bias_table.estimate_table(regions=regions, dnase_file_name=self.bam_file,
+                                                  genome_file_name=genome_data.get_genome(),
+                                                  k_nb=self.k_nb,
+                                                  forward_shift=self.atac_forward_shift,
+                                                  reverse_shift=self.atac_reverse_shift)
+            elif self.estimate_bias_type == "PWM":
+                table = bias_table.estimate_table_pwm(regions=regions, dnase_file_name=self.bam_file,
+                                                      genome_file_name=genome_data.get_genome(),
+                                                      k_nb=self.k_nb,
+                                                      forward_shift=self.atac_forward_shift,
+                                                      reverse_shift=self.atac_reverse_shift)
 
-            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.shift))
+            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.atac_forward_shift))
             bias_table.write_tables(bias_fname, table)
+
+        # If the bias table is provided
+        if self.bias_table:
+            bias_table_list = self.bias_table.split(",")
+            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                          table_file_name_R=bias_table_list[1])
 
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.bam_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
-                                                          downstream_ext=1, upstream_ext=0, forward_shift=0,
-                                                          reverse_shift=0, bias_table=table,
+                                                          downstream_ext=self.atac_downstream_ext,
+                                                          upstream_ext=self.atac_upstream_ext,
+                                                          forward_shift=self.atac_forward_shift,
+                                                          reverse_shift=self.atac_reverse_shift,
+                                                          initial_clip=self.atac_initial_clip,
+                                                          bias_table=table,
                                                           genome_file_name=genome_data.get_genome(),
+                                                          print_raw_signal=self.print_raw_signal,
+                                                          print_bc_signal=self.print_bc_signal,
                                                           print_norm_signal=self.print_norm_signal,
                                                           print_slope_signal=self.print_slope_signal)
         if self.print_bed_file:
@@ -140,11 +174,11 @@ class TrainHMM:
             covs_matrix = np.cov(norm, slope)
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
-                    covs_list.append(covs_matrix[j][k])
+                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
         if self.estimate_bias_correction:
-            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.shift))
+            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.atac_forward_shift))
         else:
             model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)
