@@ -5,8 +5,6 @@
 # Python
 import os
 import numpy as np
-import math
-from pysam import Samfile
 from pysam import Fastafile
 from Bio import motifs
 import matplotlib
@@ -148,15 +146,13 @@ class Plot:
                 self.k_nb = len(bias_table_f.keys()[0])
                 bias_signal_f = []
                 bias_signal_r = []
-                p1_wk = p1 - int(math.floor(self.k_nb / 2.))
-                p2_wk = p2 + int(math.ceil(self.k_nb / 2.))
-                dna_seq = str(fasta.fetch(region.chrom, p1_wk, p2_wk)).upper()
-                dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom, p1_wk + 1, p2_wk)).upper())
-
-                for i in range(int(math.ceil(self.k_nb / 2.)), len(dna_seq) - int(math.floor(self.k_nb / 2))):
-                    fseq = dna_seq[i - int(math.floor(self.k_nb / 2.)):i + int(math.ceil(self.k_nb / 2.))]
-                    rseq = dna_seq_rev[len(dna_seq) - int(math.ceil(self.k_nb / 2.))
-                                       - i:len(dna_seq) + int(math.floor(self.k_nb / 2.)) - i]
+                p1_wk = p1 - int(self.k_nb / 2)
+                p2_wk = p2 + int(self.k_nb / 2)
+                dna_seq = str(fasta.fetch(region.chrom, p1_wk, p2_wk - 1)).upper()
+                dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom, p1_wk, p2_wk + 1)).upper())
+                for i in range(int(self.k_nb / 2), len(dna_seq) - int(self.k_nb / 2) + 1):
+                    fseq = dna_seq[i - int(self.k_nb / 2):i + int(self.k_nb / 2)]
+                    rseq = dna_seq_rev[len(dna_seq) - int(self.k_nb / 2) - i:len(dna_seq) + int(self.k_nb / 2) - i]
                     try:
                         bias_signal_f.append(bias_table_f[fseq])
                     except Exception:
@@ -329,10 +325,11 @@ class Plot:
             ax3.set_xlim(-50, 49)
             ax3.set_ylim([0, 1])
             ax3.legend(loc="lower right", frameon=False)
-            #ax3.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
             ax3.spines['bottom'].set_position(('outward', 40))
             ax3.set_xlabel("Coordinates from Motif Center", fontweight='bold')
             ax3.set_ylabel("Average ATAC-seq \n Corrected Signal", rotation=90, fontweight='bold')
+            ax3.text(-48, 0.05, '# K-mer = {}\n# Forward Shift = {}'.format(str(self.k_nb), str(self.atac_forward_shift)),
+                     fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.motif_name))
         fig.subplots_adjust(bottom=.2, hspace=.5)

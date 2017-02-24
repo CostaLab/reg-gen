@@ -254,7 +254,7 @@ def main():
                       help=("If used, HINT will create a bed file with MPBSs with and "
                             "without evidence. Also, the name of the instances will be Y "
                             "for evidence, N for non evidence."))
-    parser.add_option("--peak-ext", dest="peak_ext", type="int", metavar="INT", default=50,
+    parser.add_option("--peak-ext", dest="peak_ext", type="int", metavar="INT", default=100,
                       help=("The number used to extend the ChIP-seq summit"))
     parser.add_option("--mpbs-name", dest="mpbs_name", type="string",
                       default=None,

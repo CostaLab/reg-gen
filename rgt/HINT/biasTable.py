@@ -119,10 +119,10 @@ class BiasTable:
 
                 # Calculating positions
                 if (not r.is_reverse):
-                    cut_site = r.pos + forward_shift
+                    cut_site = r.pos + forward_shift - 1
                     p1 = cut_site - int(floor(k_nb / 2))
                 else:
-                    cut_site = r.aend + reverse_shift
+                    cut_site = r.aend + reverse_shift + 1
                     p1 = cut_site - int(floor(k_nb / 2))
                 p2 = p1 + k_nb
 
@@ -257,10 +257,10 @@ class BiasTable:
                 # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
-                    cut_site = r.pos + forward_shift
+                    cut_site = r.pos + forward_shift - 1
                     p1 = cut_site - int(floor(k_nb / 2))
                 else:
-                    cut_site = r.aend + reverse_shift
+                    cut_site = r.aend + reverse_shift + 1
                     p1 = cut_site - int(floor(k_nb / 2))
                 p2 = p1 + k_nb
 
@@ -313,20 +313,20 @@ class BiasTable:
 
         # Output logos
         logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_f.eps".format(str(k_nb), str(forward_shift)))
+                                       "obs_{}_{}_f.pdf".format(str(k_nb), str(forward_shift)))
         logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_r.eps".format(str(k_nb), str(forward_shift)))
+                                       "obs_{}_{}_r.pdf".format(str(k_nb), str(forward_shift)))
         logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_f.eps".format(str(k_nb), str(forward_shift)))
+                                       "exp_{}_{}_f.pdf".format(str(k_nb), str(forward_shift)))
         logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_r.eps".format(str(k_nb), str(forward_shift)))
-        obsMotifsF.weblogo(logo_obs_f, format="eps", stack_width="large", color_scheme="color_classic",
+                                       "exp_{}_{}_r.pdf".format(str(k_nb), str(forward_shift)))
+        obsMotifsF.weblogo(logo_obs_f, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        obsMotifsR.weblogo(logo_obs_r, format="eps", stack_width="large", color_scheme="color_classic",
+        obsMotifsR.weblogo(logo_obs_r, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        expMotifsF.weblogo(logo_exp_f, format="eps", stack_width="large", color_scheme="color_classic",
+        expMotifsF.weblogo(logo_exp_f, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.02, yaxis_tic_interval=0.01)
-        expMotifsR.weblogo(logo_exp_r, format="eps", stack_width="large", color_scheme="color_classic",
+        expMotifsR.weblogo(logo_exp_r, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.02, yaxis_tic_interval=0.01)
 
         # Output pwms
