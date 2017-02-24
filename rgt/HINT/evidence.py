@@ -27,9 +27,9 @@ class Evidence:
         tfbs_summit_regions.read_bed(self.tfbs_summit_fname)
 
         for region in iter(tfbs_summit_regions):
-            mid = (region.initial + region.final) / 2
-            region.initial = max(mid - (self.peak_ext / 2), 0)
-            region.final = mid + (self.peak_ext / 2)
+            summit = int(region.data.split()[-1]) + region.initial
+            region.initial = max(summit - (self.peak_ext / 2), 0)
+            region.final = summit + (self.peak_ext / 2)
 
         # Calculating intersections
         mpbs_regions = GenomicRegionSet("MPBS Regions")
