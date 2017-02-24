@@ -945,14 +945,14 @@ def main():
         footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
 
         # Extending footprints
-        for f in footprints.sequences:
-            if (f.final - f.initial < fp_limit):
-                f.initial = max(0, f.initial - fp_ext)
-                f.final = f.final + fp_ext
-            if (f.final - f.initial > 2*fp_limit):
-                mid = (f.initial + f.final) / 2
-                f.initial = max(mid - fp_limit, 0)
-                f.final = f.final + fp_limit
+        #for f in footprints.sequences:
+        #    if (f.final - f.initial < fp_limit):
+        #        f.initial = max(0, f.initial - fp_ext)
+        #        f.final = f.final + fp_ext
+        #    if (f.final - f.initial > 2*fp_limit):
+        #        mid = (f.initial + f.final) / 2
+        #        f.initial = max(mid - fp_limit, 0)
+        #        f.final = f.final + fp_limit
 
         # Fetching chromosome sizes
         chrom_sizes_file_name = genome_data.get_chromosome_sizes()
