@@ -413,6 +413,8 @@ class PromoterTest:
                 if pvals_corrected[i] < alpha:
                     self.sig_DBD.append(rbs)
 
+        # Generate a dict for DBS from sig. DBD
+
     def dbd_regions(self, output):
         dbd_regions(exons=self.rna_regions, sig_region=self.sig_DBD,
                     rna_name=self.rna_name, output=output)
@@ -476,10 +478,10 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
-        rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
-                          edgecolor="none", label="Target promoters")
-        rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
-                           edgecolor="none", label="Non-target promoters")
+        # rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
+        #                   edgecolor="none", label="Target promoters")
+        # rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
+        #                    edgecolor="none", label="Non-target promoters")
 
         # Legend
         tr_legend, = plt.plot([1, 1], color=target_color, linewidth=6, alpha=1)
@@ -1106,33 +1108,26 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # spromoters_dbds.html
-        # html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
-        #             fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         sig_promoter_count = {}
         for i, promoter in enumerate(self.de_regions):
             if self.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
             else:
-                # try:
-                #     gn = self.ensembl2symbol[promoter.name]
-                # except:
-                #     gn = promoter.name
-
-                data_table = []
+                c = 0
                 overlapping = False
 
                 for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
-
                     for rbsm in self.sig_DBD:
                         if rd.rna.overlap(rbsm):
                             overlapping = True
                     # if overlapping:
-                    data_table.append([str(j + 1),
-                                       rd.rna.str_rna(pa=False),
-                                       rd.dna.toString(space=True),
-                                       rd.dna.orientation,
-                                       rd.score,
-                                       rd.motif, rd.orient])
+                    # data_table.append([str(j + 1),
+                    #                    rd.rna.str_rna(pa=False),
+                    #                    rd.dna.toString(space=True),
+                    #                    rd.dna.orientation,
+                    #                    rd.score,
+                    #                    rd.motif, rd.orient])
+                    c += 1
                 if overlapping:
                     # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
                     # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
@@ -1140,7 +1135,8 @@ class PromoterTest:
                     #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
                     #                        '" style="margin-left:50">' +
                     #                        promoter.toString(space=True) + '</a>'])
-                    sig_promoter_count[promoter] = len(data_table)
+                    # sig_promoter_count[promoter] = len(data_table)
+                    sig_promoter_count[promoter] = c
         #             html.add_zebra_table(header_list, col_size_list, type_list, data_table,
         #                                  align=align, cell_align="left",
         #                                  header_titles=header_titles, sortable=True)
