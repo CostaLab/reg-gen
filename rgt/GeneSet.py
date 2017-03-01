@@ -52,7 +52,8 @@ class GeneSet:
                     l = line.split()
                     if l[0] != "":
                         if "." in l[0]:
-                            gene_name = l[0].upper()
+                            # gene_name = l[0].upper()
+                            gene_name = l[0].partition(".")[0].upper()
                             # self.genes.append(l[0].partition(".")[0].upper())
                         elif "," in l[0]:
                             gene_name = l[0].partition(",")[0].upper()

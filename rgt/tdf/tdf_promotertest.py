@@ -28,7 +28,7 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
     get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, rna_associated_gene
+    split_gene_name
 
 
 # Color code for all analysis
@@ -147,8 +147,8 @@ class PromoterTest:
                 if len(unmap_gs) > 0:
                     print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
 
-                # if "ENSG" in self.ensembl2symbol.keys()[0]: self.ensembl2symbol = None
                 self.de_gene.genes = de_ensembl
+                # print(de_ensembl[0:5])
                 # print("After fixing")
                 de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
                                                                 gene_set=self.de_gene,
@@ -216,11 +216,22 @@ class PromoterTest:
             self.stat["target_regions"] = str(len(self.de_regions))
             self.stat["background_regions"] = str(len(self.nde_regions))
 
-    def get_rna_region_str(self, rna):
+    def get_rna_region_str(self, rna, expfile):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
+
+        if len(self.rna_regions[0]) == 5:
+            self.rna_expression = float(self.rna_regions[0][-1])
+        elif expfile:
+            with open(expfile) as f:
+                for line in f:
+                    l = line.strip().split()
+                    if self.rna_name == l[0].partition(".")[0]:
+                        self.rna_expression = l[1]
+        else:
+            self.rna_expression = "n.a."
 
     def connect_rna(self, rna, temp):
         d = connect_rna(rna, temp, self.rna_name)
@@ -413,9 +424,13 @@ class PromoterTest:
                 if pvals_corrected[i] < alpha:
                     self.sig_DBD.append(rbs)
 
+        # Generate a dict for DBS from sig. DBD
+
     def dbd_regions(self, output):
         dbd_regions(exons=self.rna_regions, sig_region=self.sig_DBD,
                     rna_name=self.rna_name, output=output)
+        # if len(self.rna_regions[0]) == 4:
+        #     self.stat["expression"] = str(self.rna_regions[0][3])
         self.stat["DBD_all"] = str(len(self.rbss))
         self.stat["DBD_sig"] = str(len(self.sig_DBD))
 
@@ -476,10 +491,10 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
-        rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
-                          edgecolor="none", label="Target promoters")
-        rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
-                           edgecolor="none", label="Non-target promoters")
+        # rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
+        #                   edgecolor="none", label="Target promoters")
+        # rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
+        #                    edgecolor="none", label="Non-target promoters")
 
         # Legend
         tr_legend, = plt.plot([1, 1], color=target_color, linewidth=6, alpha=1)
@@ -910,12 +925,11 @@ class PromoterTest:
                 score_header = [self.de_gene.cond[0]]
             else:
                 if "(" in self.scores[0]:
-                    scs = self.scores[0].replace("(", "")
-                    scs = scs.replace(")", "")
-                    scs = scs.split(",")
+                    # scs = self.scores[0].replace("(", "")
+                    # scs = scs.replace(")", "")
+                    # scs = scs.split(",")
                     # score_header = ["Score"] * len(scs)
                     score_header = ["Fold_change", "Filtered"]
-
                 else:
                     score_header = ["Fold Change Score"]
             header_listp = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage"]
@@ -952,19 +966,20 @@ class PromoterTest:
         if self.scores:
             multiple_scores = False
             if isinstance(self.scores[0], str):
+                new_scores = []
                 if "(" in self.scores[0]:
                     def ranking(scores):
                         rank_score = len(self.de_regions) - rank_array(scores)
                         return rank_score
 
                     multiple_scores = True
-                    scs = []
+                    # scs = []
                     for s in self.scores:
                         s = s.replace("(", "")
                         s = s.replace(")", "")
                         s = s.split(",")
-                        scs.append([float(ss) for ss in s])
-                    ar = numpy.array(scs)
+                        new_scores.append([float(ss) for ss in s])
+                    ar = numpy.array(new_scores)
                     # ar.transpose()
                     # print(ar)
                     score_ar = ar.tolist()
@@ -973,9 +988,10 @@ class PromoterTest:
                     rank_sum = numpy.sum(rank_score, axis=0).tolist()
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
                     rank_score = rank_score.tolist()
+                    scores = new_scores
 
                 else:
-                    new_scores = []
+
                     for s in self.scores:
                         if s == "Inf" or s == "inf":
                             new_scores.append(float("inf"))
@@ -1106,33 +1122,26 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # spromoters_dbds.html
-        # html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
-        #             fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         sig_promoter_count = {}
         for i, promoter in enumerate(self.de_regions):
             if self.promoter["de"]["dbs"][promoter.toString()] == 0:
                 continue
             else:
-                # try:
-                #     gn = self.ensembl2symbol[promoter.name]
-                # except:
-                #     gn = promoter.name
-
-                data_table = []
+                c = 0
                 overlapping = False
 
                 for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
-
                     for rbsm in self.sig_DBD:
                         if rd.rna.overlap(rbsm):
                             overlapping = True
                     # if overlapping:
-                    data_table.append([str(j + 1),
-                                       rd.rna.str_rna(pa=False),
-                                       rd.dna.toString(space=True),
-                                       rd.dna.orientation,
-                                       rd.score,
-                                       rd.motif, rd.orient])
+                    # data_table.append([str(j + 1),
+                    #                    rd.rna.str_rna(pa=False),
+                    #                    rd.dna.toString(space=True),
+                    #                    rd.dna.orientation,
+                    #                    rd.score,
+                    #                    rd.motif, rd.orient])
+                    c += 1
                 if overlapping:
                     # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
                     # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
@@ -1140,7 +1149,8 @@ class PromoterTest:
                     #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
                     #                        '" style="margin-left:50">' +
                     #                        promoter.toString(space=True) + '</a>'])
-                    sig_promoter_count[promoter] = len(data_table)
+                    # sig_promoter_count[promoter] = len(data_table)
+                    sig_promoter_count[promoter] = c
         #             html.add_zebra_table(header_list, col_size_list, type_list, data_table,
         #                                  align=align, cell_align="left",
         #                                  header_titles=header_titles, sortable=True)
@@ -1282,64 +1292,10 @@ class PromoterTest:
             html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "spromoters.html"))
 
-    def save_profile(self, output, bed, geneset):
-        """Save statistics for comparison with other results"""
-        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
-        exp = os.path.basename(output)
-        # tag = os.path.basename(os.path.dirname(rnafile))
-        if geneset:
-            tar_reg = os.path.basename(geneset)
-        else:
-            tar_reg = os.path.basename(bed)
-        # RNA name with region
-        if self.rna_regions:
-            trans = "Transcript:"
-            for r in self.rna_regions:
-                trans += " " + r[0] + ":" + str(r[1]) + "-" + str(r[2])
-            rna = '<p title="' + trans + '">' + self.rna_name + "<p>"
-        else:
-            rna = self.rna_name
-        # RNA associated genes
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
 
-        newlines = []
-
-        this_rna = [exp, rna, output.split("_")[-1], self.organism, tar_reg,
-                    value2str(float(self.stat["DBSs_target_all"])/int(self.stat["seq_length"])*1000),
-                    value2str(float(self.stat["DBSs_target_DBD_sig"])/int(self.stat["seq_length"])*1000),
-                    value2str(float(self.stat["DBD_all"])/int(self.stat["seq_length"])*1000), str(len(self.sig_DBD)),
-                    self.topDBD[0], value2str(self.topDBD[1]), r_genes]
-        # try:
-        if os.path.isfile(pro_path):
-            with open(pro_path, 'r') as f:
-                new_exp = True
-                for line in f:
-                    line = line.strip()
-                    line = line.split("\t")
-                    if line[0] == exp:
-                        newlines.append(this_rna)
-                        new_exp = False
-                    elif line[0] == "Experiment":
-                        continue
-                    else:
-                        newlines.append(line)
-                if new_exp:
-                    newlines.append(this_rna)
-        else:
-            newlines.append(this_rna)
-
-        newlines.sort(key=lambda x: float(x[10]))
-        newlines = [["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
-                    "Norm_DBS", "Norm_DBS_on_sig_DBD",
-                    "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"]] + newlines
-
-        with open(pro_path, 'w') as f:
-            for lines in newlines:
-                print("\t".join(lines), file=f)
 
     def save_table(self, path, table, filename):
         """Save the summary rank into the table for heatmap"""
-        "lncRNA_target_ranktable.txt"
 
         table_path = os.path.join(path, filename)
         # self.ranktable = {}

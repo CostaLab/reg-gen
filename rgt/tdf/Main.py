@@ -20,7 +20,8 @@ from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
-                         integrate_stat, update_profile, merge_DBD_regions
+                         integrate_stat, update_profile, merge_DBD_regions,\
+                         save_profile
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -86,7 +87,8 @@ def main():
     parser_promotertest.add_argument('-protein_coding', type=str, default="F", metavar='  ', help="Apply filtering to get only protein coding genes.")
     parser_promotertest.add_argument('-known_only', type=str, default="F", metavar='  ', help="Apply filtering to get only known genes.")
     parser_promotertest.add_argument('-dump', action="store_true", default=False, help="Only dump the experimental file and leave the program.")
-    
+    parser_promotertest.add_argument('-rnaexp', type=str, default=None, metavar='  ',
+                                     help="Given a file with RNA name and the expression value")
 
     parser_promotertest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (Default: 20)")
     parser_promotertest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (Default: 20)")
@@ -158,6 +160,7 @@ def main():
     ##########################################################################
     parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
     parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
+    parser_updatehtml.add_argument('-exp', type=str, metavar='  ', help='Define file with expression data.')
 
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
@@ -233,8 +236,9 @@ def main():
         elif args.mode == "updatehtml":
             for item in os.listdir(args.path):
                 pro = os.path.join(args.path, item, "profile.txt")
-                if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item))
-            revise_index(root=args.path, show_RNA_ass_gene=True)
+                if os.path.isfile(pro): update_profile(dirpath=os.path.join(args.path, item),
+                                                       expression=args.exp)
+            revise_index(root=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=True)
             sys.exit(0)
         
@@ -349,7 +353,7 @@ def main():
                                 scoreh=args.scoreh, filter_havana=args.filter_havana, 
                                 protein_coding=args.protein_coding, known_only=args.known_only)
         if args.dump: sys.exit(0)
-        promoter.get_rna_region_str(rna=args.r)
+        promoter.get_rna_region_str(rna=args.r, expfile=args.rnaexp)
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
@@ -365,9 +369,10 @@ def main():
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
         
-        if len(promoter.rbss) == 0:  no_binding_response(args, promoter.rna_regions,
-                                                         promoter.rna_name, promoter.organism)
-
+        if len(promoter.rbss) == 0:
+            no_binding_response(args=args, rna_regions=promoter.rna_regions,
+                                rna_name=promoter.rna_name, organism=promoter.organism,
+                                stat=promoter.stat, expression=promoter.rna_expression)
         promoter.dbd_regions(output=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
@@ -408,8 +413,11 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
-        promoter.save_profile(output=args.o, bed=args.bed, geneset=args.de)
-        revise_index(root=os.path.dirname(os.path.dirname(args.o)), show_RNA_ass_gene=promoter.rna_regions)
+        save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
+                     organism=promoter.organism, output=args.o, bed=args.bed,
+                     geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
+                     sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
+        revise_index(root=os.path.dirname(os.path.dirname(args.o)))
         try: os.remove(os.path.join(args.o, "de.fa"))
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))
@@ -540,8 +548,13 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
 
         output_summary(summary, args.o, "summary.txt")
-        randomtest.save_profile(output=args.o, bed=args.bed)
-        list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=False)
+        # save_profile(output=args.o, bed=args.bed)
+        save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
+                     organism=randomtest.organism, output=args.o, bed=args.bed,
+                     stat=randomtest.stat, topDBD=randomtest.topDBD,
+                     sig_DBD=randomtest.data["region"]["sig_region"],
+                     expression=randomtest.rna_expression)
+        list_all_index(path=os.path.dirname(args.o))
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))

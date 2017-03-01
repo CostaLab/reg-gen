@@ -216,6 +216,8 @@ if __name__ == "__main__":
     parser_bed2fasta.add_argument('-order', action="store_true", default=False, help="Make ranking number as sequence name")
     parser_bed2fasta.add_argument('-block', action="store_true", default=False,
                                   help="Read blocks")
+    parser_bed2fasta.add_argument('-score', action="store_true", default=False,
+                                  help="Load the score column in BED into FASTA")
 
     ############### BED filtered by gene name ################################
     parser_bed_filter = subparsers.add_parser('bed_filter',
@@ -225,6 +227,7 @@ if __name__ == "__main__":
     parser_bed_filter.add_argument('-gene', type=str, default=False, help="Define file for the gene list")
     parser_bed_filter.add_argument('-min', type=int, default=False, help="Define minimal length")
     parser_bed_filter.add_argument('-max', type=int, default=False, help="Define maximal length")
+    parser_bed_filter.add_argument('-score', action="store_true", default=False, help="Add the score from gene list to BED file")
 
     ############### BED remove if overlap ################################
     parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
@@ -271,7 +274,7 @@ if __name__ == "__main__":
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
-                       help="[BED] Divide the BEd files by the expression.")
+                       help="[BED] Divide the BED files by the expression.")
     parser_divideBED.add_argument('-bed', metavar='   ', type=str, help="Input BED file")
     parser_divideBED.add_argument('-t', metavar='table', type=str, help="Input expression table (Gene name should match the region name.")
     parser_divideBED.add_argument('-o1', metavar='output1', type=str, help="Output first BED file")
@@ -625,24 +628,13 @@ if __name__ == "__main__":
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
         if args.l:
-            bed.extend(left=args.len)
+            bed.extend(left=args.len, right=0)
         if args.r:
-            bed.extend(right=args.len)
+            bed.extend(left=0, right=args.len)
         if args.up:
             bed.extend_upstream(length=args.len)
         if args.down:
             bed.extend_downstream(length= args.len)
-
-
-        # for region in bed:
-        #     if args.oz:
-        #         if region.initial == region.final:
-        #             region.final += args.l
-        #     else:
-        #         if args.both:
-        #             region.initial -= args.l
-        #         else: pass
-        #         region.final += args.l
 
         bed.write_bed(args.o)
 
@@ -764,7 +756,11 @@ if __name__ == "__main__":
                 #print("*** using block information in BED file")
                 writelines = []
                 for exon in target:
-                    writelines.append("> "+" ".join([exon.name, exon.toString(), exon.orientation]))
+                    if not args.score:
+                        writelines.append("> "+" ".join([exon.name, exon.toString(), exon.orientation]))
+                    else:
+                        writelines.append("> " + " ".join([exon.name, exon.toString(), exon.orientation]) +
+                                          " score="+str(exon.data.split()[0]))
                     if exon.orientation == "+":
                         s = get_sequence(sequence=args.genome, ch=exon.chrom, 
                                          ss=exon.initial, es=exon.final, 
@@ -789,11 +785,19 @@ if __name__ == "__main__":
                 if ".fa" not in args.o:
                     with open(os.path.join(args.o, name + ".fa"), "w") as f:
                         if not r.orientation: r.orientation = "."
-                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        if not args.score:
+                            print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        else:
+                            print("> " + name + " " + r.toString() + " " + r.orientation +
+                                  " score=" + str(r.data.split()[0]), file=f)
                         for seq in ss: print(seq, file=f)
                 elif ".fa" in args.o:
                     if not r.orientation: r.orientation = "."
-                    print("> " + name + " " + r.toString() + " " + r.orientation, file=fasta)
+                    if not args.score:
+                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                    else:
+                        print("> " + name + " " + r.toString() + " " + r.orientation +
+                              " score=" + str(r.data.split()[0]), file=f)
                     for seq in ss: print(seq, file=fasta)
         if ".fa" in args.o:
             fasta.close()
@@ -812,8 +816,13 @@ if __name__ == "__main__":
             #     print(str(len(genes))+" genes are loaded.")
             if os.path.isfile(args.gene):
                 gg = GeneSet("genes")
-                gg.read(args.gene)
-                bed = bed.by_names(gg.genes)
+                if args.score:
+                    gg.read_expression(args.gene)
+                else:
+                    gg.read(args.gene)
+                # print(len(gg))
+                bed = bed.by_names(gg, load_score=args.score)
+                # print(len(bed))
             else:
                 genes = [ x.upper() for x in args.gene.split(",") ]
                 bed = bed.by_names(genes)
