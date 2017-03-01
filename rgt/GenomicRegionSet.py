@@ -2379,7 +2379,7 @@ class GenomicRegionSet:
             z.add(GenomicRegion(s.chrom, s.initial, s.final, n, s.orientation, s.data, s.proximity))
         return z
 
-    def by_names(self, names):
+    def by_names(self, names, load_score=False):
         """Subset the GenomicRegionSet by the given list of names.
 
         *Keyword arguments:*
@@ -2396,6 +2396,9 @@ class GenomicRegionSet:
         targets = [ x.upper() for x in targets ]
         for gr in self:
             if gr.name.upper() in targets:
+                if load_score:
+                    d = gr.data.split()
+                    gr.data = "\t".join([str(names.values[gr.name.upper()])] + d[1:])
                 z.add(gr)
         return z
 

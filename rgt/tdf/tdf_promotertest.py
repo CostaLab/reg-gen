@@ -147,8 +147,8 @@ class PromoterTest:
                 if len(unmap_gs) > 0:
                     print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
 
-                # if "ENSG" in self.ensembl2symbol.keys()[0]: self.ensembl2symbol = None
                 self.de_gene.genes = de_ensembl
+                # print(de_ensembl[0:5])
                 # print("After fixing")
                 de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
                                                                 gene_set=self.de_gene,
@@ -216,11 +216,22 @@ class PromoterTest:
             self.stat["target_regions"] = str(len(self.de_regions))
             self.stat["background_regions"] = str(len(self.nde_regions))
 
-    def get_rna_region_str(self, rna):
+    def get_rna_region_str(self, rna, expfile):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
+
+        if len(self.rna_regions[0]) == 5:
+            self.rna_expression = float(self.rna_regions[0][-1])
+        elif expfile:
+            with open(expfile) as f:
+                for line in f:
+                    l = line.strip().split()
+                    if self.rna_name == l[0].partition(".")[0]:
+                        self.rna_expression = l[1]
+        else:
+            self.rna_expression = "n.a."
 
     def connect_rna(self, rna, temp):
         d = connect_rna(rna, temp, self.rna_name)
@@ -418,6 +429,8 @@ class PromoterTest:
     def dbd_regions(self, output):
         dbd_regions(exons=self.rna_regions, sig_region=self.sig_DBD,
                     rna_name=self.rna_name, output=output)
+        # if len(self.rna_regions[0]) == 4:
+        #     self.stat["expression"] = str(self.rna_regions[0][3])
         self.stat["DBD_all"] = str(len(self.rbss))
         self.stat["DBD_sig"] = str(len(self.sig_DBD))
 
@@ -912,12 +925,11 @@ class PromoterTest:
                 score_header = [self.de_gene.cond[0]]
             else:
                 if "(" in self.scores[0]:
-                    scs = self.scores[0].replace("(", "")
-                    scs = scs.replace(")", "")
-                    scs = scs.split(",")
+                    # scs = self.scores[0].replace("(", "")
+                    # scs = scs.replace(")", "")
+                    # scs = scs.split(",")
                     # score_header = ["Score"] * len(scs)
                     score_header = ["Fold_change", "Filtered"]
-
                 else:
                     score_header = ["Fold Change Score"]
             header_listp = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage"]
@@ -954,19 +966,20 @@ class PromoterTest:
         if self.scores:
             multiple_scores = False
             if isinstance(self.scores[0], str):
+                new_scores = []
                 if "(" in self.scores[0]:
                     def ranking(scores):
                         rank_score = len(self.de_regions) - rank_array(scores)
                         return rank_score
 
                     multiple_scores = True
-                    scs = []
+                    # scs = []
                     for s in self.scores:
                         s = s.replace("(", "")
                         s = s.replace(")", "")
                         s = s.split(",")
-                        scs.append([float(ss) for ss in s])
-                    ar = numpy.array(scs)
+                        new_scores.append([float(ss) for ss in s])
+                    ar = numpy.array(new_scores)
                     # ar.transpose()
                     # print(ar)
                     score_ar = ar.tolist()
@@ -975,9 +988,10 @@ class PromoterTest:
                     rank_sum = numpy.sum(rank_score, axis=0).tolist()
                     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
                     rank_score = rank_score.tolist()
+                    scores = new_scores
 
                 else:
-                    new_scores = []
+
                     for s in self.scores:
                         if s == "Inf" or s == "inf":
                             new_scores.append(float("inf"))
@@ -1282,7 +1296,6 @@ class PromoterTest:
 
     def save_table(self, path, table, filename):
         """Save the summary rank into the table for heatmap"""
-        "lncRNA_target_ranktable.txt"
 
         table_path = os.path.join(path, filename)
         # self.ranktable = {}
