@@ -681,3 +681,11 @@ class RNADNABindingSet:
                 except: 
                     try: rd = con.next()
                     except: con_loop = False
+
+    def overlap_rbss(self, rbss):
+        z = RNADNABindingSet(self.name)
+        for rd in self.sequences:
+            for rbs in rbss:
+                if rd.rna.overlap(rbs):
+                    z.add(rd)
+        return z

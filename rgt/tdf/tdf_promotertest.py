@@ -1,6 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 import os
+import sys
 import time
 import shutil
 import natsort
@@ -28,7 +29,7 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
     get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name
+    split_gene_name, region_link_internet
 
 
 # Color code for all analysis
@@ -222,7 +223,7 @@ class PromoterTest:
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
 
-        if len(self.rna_regions[0]) == 5:
+        if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
         elif expfile:
             with open(expfile) as f:
@@ -491,10 +492,10 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
-        # rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
-        #                   edgecolor="none", label="Target promoters")
-        # rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
-        #                    edgecolor="none", label="Non-target promoters")
+        rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
+                          edgecolor="none", label="Target promoters")
+        rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
+                           edgecolor="none", label="Non-target promoters")
 
         # Legend
         tr_legend, = plt.plot([1, 1], color=target_color, linewidth=6, alpha=1)
@@ -550,15 +551,6 @@ class PromoterTest:
         self.link_d["All promoters"] = "promoters.html"
         self.link_d["Sig promoters"] = "spromoters.html"
         self.link_d["Parameters"] = "parameters.html"
-
-        if self.organism == "hg19":
-            self.ani = "human"
-        elif self.organism == "hg38":
-            self.ani = "human"
-        elif self.organism == "mm9":
-            self.ani = "mouse"
-        else:
-            self.ani = None
 
         #############################################################
         # Index main page
@@ -634,7 +626,7 @@ class PromoterTest:
                            "style=\"border-right:1pt solid gray\""]
 
         type_list = 'ssssssssssssssssssss'
-        col_size_list = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50, 50]
+        col_size_list = [20] * 20
         data_table = []
         rank = 0
         self.topDBD = ["-", 1]
@@ -678,10 +670,10 @@ class PromoterTest:
                             p_hit]
 
             data_table.append(new_row)
-        data_table = sorted(data_table, key=lambda x: x[7])
+        # data_table = sorted(data_table, key=lambda x: x[-1])
+        # data_table = sorted(data_table, key=lambda x: float(x[-1]))
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titles, border_list=border_list, sortable=True)
-
         html.add_heading("Notes")
         html.add_list(["DBD stands for functional DNA Binding Domain on RNA.",
                        "RBS stands for RNA Binding Site on RNA.",
@@ -778,31 +770,27 @@ class PromoterTest:
                         rank_score = rank_score.tolist()
 
                     else:
-                        try:
-                            new_scores = []
-                            for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                        # try:
+                        new_scores = []
+                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                            try:
                                 try:
-                                    try:
-                                        s = self.de_gene.values[promoter.name]
-                                    except:
-                                        s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
+                                    s = self.de_gene.values[promoter.name]
                                 except:
-                                    s = new_scores.append(abs(float(s)))
-                                if s == "Inf" or s == "inf":
-                                    new_scores.append(float("inf"))
-                                elif s == "-Inf" or s == "-inf":
-                                    new_scores.append(-float("inf"))
-                                else:
-                                    new_scores.append(abs(float(s)))
+                                    s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
+                            except:
+                                s = new_scores.append(abs(float(s)))
+                            if s == "Inf" or s == "inf":
+                                new_scores.append(float("inf"))
+                            elif s == "-Inf" or s == "-inf":
+                                new_scores.append(-float("inf"))
+                            else:
+                                try: new_scores.append(abs(float(s)))
+                                except: new_scores.append(0)
 
-                            scores = new_scores
-                            rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
-                            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-                        except:
-                            scores = [float(i) for i in self.scores]
-                            rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
-                            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-
+                        scores = new_scores
+                        rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
+                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
                 else:
                     scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
                     rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
@@ -813,26 +801,15 @@ class PromoterTest:
 
             for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
                 # Add information
-                if self.ani:
-                    pr = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism + "&position=" + promoter.chrom + "%3A" + str(
-                        promoter.initial) + "-" + str(
-                        promoter.final) + '" style="text-align:left">' + promoter.toString(space=True) + '</a>'
-
-                elif self.organism == "tair10":
-                    pr = "".join(['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
-                                  promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
-                                  '" target="_blank">', promoter.toString(space=True), '</a>'])
-                else:
-                    pr = promoter.toString(space=True)
-
+                region_link = region_link_internet(self.organism, promoter)
                 try:
-                    newline = [str(i + 1), pr,
+                    newline = [str(i + 1), region_link,
                                split_gene_name(gene_name=self.ensembl2symbol[promoter.name], org=self.organism),
                                str(len(self.promoter["de"]["rd"][promoter.toString()])),
                                value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                ]
                 except:
-                    newline = [str(i + 1), pr,
+                    newline = [str(i + 1), region_link,
                                split_gene_name(gene_name=promoter.name, org=self.organism),
                                str(len(self.promoter["de"]["rd"][promoter.toString()])),
                                value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
@@ -1019,20 +996,7 @@ class PromoterTest:
                 dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + '" style="text-align:left">' + \
                            str(self.promoter["de"]["dbs"][promoter.toString()]) + '</a>'
 
-            if self.ani:
-                region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
-                                       "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
-                                       str(promoter.final), '" style="text-align:left" target="_blank">',
-                                       promoter.toString(space=True), '</a>'])
-            else:
-                if self.organism == "tair10":
-                    region_link = "".join(
-                        ['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
-                         promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
-                         '" target="_blank">',
-                         promoter.toString(space=True), '</a>'])
-                else:
-                    region_link = promoter.toString(space=True)
+            region_link = region_link_internet(self.organism, promoter)
 
             try:
                 gn = self.ensembl2symbol[promoter.name]
@@ -1066,6 +1030,7 @@ class PromoterTest:
             data_table.append(newline)
 
         # print(data_table)
+        data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
                              header_titles=header_titlesp, border_list=None, sortable=True)
         html.add_heading("Notes")
@@ -1106,14 +1071,11 @@ class PromoterTest:
                     for rbsm in self.sig_DBD:
                         # rbsm = rbsm.partition(":")[2].split("-")
                         if rd.rna.overlap(rbsm):
-                            rbs = "<font color=\"red\">" + rd.rna.str_rna(pa=False) + "</font>"
+                            rbs = "<font color=\"red\">" + rbs + "</font>"
 
-                    data_table.append([str(j + 1),
-                                       rbs,
-                                       rd.dna.toString(space=True),
-                                       rd.dna.orientation,
-                                       rd.score,
-                                       rd.motif, rd.orient])
+                    data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
+
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      header_titles=header_titles, sortable=True)
         html.add_fixed_rank_sortable()
@@ -1122,35 +1084,35 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # spromoters_dbds.html
-        sig_promoter_count = {}
-        for i, promoter in enumerate(self.de_regions):
-            if self.promoter["de"]["dbs"][promoter.toString()] == 0:
-                continue
-            else:
-                c = 0
-                overlapping = False
-
-                for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
-                    for rbsm in self.sig_DBD:
-                        if rd.rna.overlap(rbsm):
-                            overlapping = True
-                    # if overlapping:
-                    # data_table.append([str(j + 1),
-                    #                    rd.rna.str_rna(pa=False),
-                    #                    rd.dna.toString(space=True),
-                    #                    rd.dna.orientation,
-                    #                    rd.score,
-                    #                    rd.motif, rd.orient])
-                    c += 1
-                if overlapping:
-                    # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
-                    # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
-                    #                        self.organism + "&position=" + promoter.chrom +
-                    #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
-                    #                        '" style="margin-left:50">' +
-                    #                        promoter.toString(space=True) + '</a>'])
-                    # sig_promoter_count[promoter] = len(data_table)
-                    sig_promoter_count[promoter] = c
+        # sig_promoter_count = {}
+        # for i, promoter in enumerate(self.de_regions):
+        #     if self.promoter["de"]["dbs"][promoter.toString()] == 0:
+        #         continue
+        #     else:
+        #         c = 0
+        #         overlapping = False
+        #
+        #         for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
+        #             for rbsm in self.sig_DBD:
+        #                 if rd.rna.overlap(rbsm):
+        #                     overlapping = True
+        #             # if overlapping:
+        #             # data_table.append([str(j + 1),
+        #             #                    rd.rna.str_rna(pa=False),
+        #             #                    rd.dna.toString(space=True),
+        #             #                    rd.dna.orientation,
+        #             #                    rd.score,
+        #             #                    rd.motif, rd.orient])
+        #             c += 1
+        #         if overlapping:
+        #             # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
+        #             # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
+        #             #                        self.organism + "&position=" + promoter.chrom +
+        #             #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
+        #             #                        '" style="margin-left:50">' +
+        #             #                        promoter.toString(space=True) + '</a>'])
+        #             # sig_promoter_count[promoter] = len(data_table)
+        #             sig_promoter_count[promoter] = c
         #             html.add_zebra_table(header_list, col_size_list, type_list, data_table,
         #                                  align=align, cell_align="left",
         #                                  header_titles=header_titles, sortable=True)
@@ -1159,11 +1121,26 @@ class PromoterTest:
 
         ##############################################################################################
         # spromoters.html    for significant promoters
+        spromoters = GenomicRegionSet("sig_promoters")
+        self.promoter["de"]["sig_dbs"] = {}
+        self.promoter["de"]["sig_dbs_coverage"] = {}
+        for promoter in self.de_regions:
+            # for rd in self.promoter["de"]["rd"][promoter.toString()]:
+            #     if rd.rna
+            sig_bindings = self.promoter["de"]["rd"][promoter.toString()].overlap_rbss(rbss=self.sig_DBD)
+            dbs = sig_bindings.get_dbs()
+            if len(dbs) > 0:
+                spromoters.add(promoter)
+                # m_dbs = dbs.merge(w_return=True)
+                self.promoter["de"]["sig_dbs"][promoter.toString()] = len(dbs)
+                # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+                self.promoter["de"]["sig_dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
+
         html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         # Select promoters in sig DBD
-        spromoters = sig_promoter_count.keys()
+        # spromoters = self.promoter["de"]["sig_dbs"].keys()
         if len(spromoters) == 0:
             html.add_heading("There is no significant DBD.")
         else:
@@ -1176,44 +1153,21 @@ class PromoterTest:
             # Iterate by each gene promoter
 
             # Calculate the ranking
-            rank_count = len(spromoters) - rank_array([sig_promoter_count[p] for p in spromoters])
+            rank_count = len(spromoters) - rank_array([self.promoter["de"]["sig_dbs"][p.toString()] for p in spromoters])
             rank_coverage = len(spromoters) - rank_array(
-                [self.promoter["de"]["dbs_coverage"][p.toString()] for p in spromoters])
+                [self.promoter["de"]["sig_dbs_coverage"][p.toString()] for p in spromoters])
 
             if self.scores:
-                multiple_scores = False
                 sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
                 for p in spromoters:
-
                     try: gene_sym = self.ensembl2symbol[p.name].upper()
                     except: gene_sym = p.name.upper()
                     try: sscores.append(self.de_gene.values[gene_sym.upper()])
                     except: sscores.append(0)
 
                 if isinstance(sscores[0], str):
-                    if "(" in sscores[0]:
-                        def ranking(scores):
-                            rank_score = len(spromoters) - rank_array(scores)
-                            return rank_score
 
-                        multiple_scores = True
-                        scs = []
-
-                        for s in sscores:
-                            s = s.replace("(", "")
-                            s = s.replace(")", "")
-                            s = s.split(",")
-                            scs.append([float(ss) for ss in s])
-                        ar = numpy.array(scs)
-                        score_ar = ar.tolist()
-                        rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
-                        rank_score = rank_score.transpose()
-                        rank_sum = numpy.sum(rank_score, axis=0).tolist()
-                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
-                        rank_score = rank_score.tolist()
-
-                    else:
                         new_scores = []
                         for s in sscores:
                             if s == "Inf" or s == "inf":
@@ -1237,36 +1191,24 @@ class PromoterTest:
                 rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
 
             for i, promoter in enumerate(spromoters):
-                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + \
-                           '" style="text-align:left">' + str(sig_promoter_count[promoter]) + '</a>'
-
-                if self.ani:
-                    region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
-                                           "&position=", promoter.chrom, "%3A", str(promoter.initial), "-",
-                                           str(promoter.final), '" style="text-align:left" target="_blank">',
-                                           promoter.toString(space=True), '</a>'])
-                else:
-                    if self.organism == "tair10":
-                        region_link = "".join(
-                            ['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
-                             promoter.chrom, "%3A", str(promoter.initial), "..", str(promoter.final),
-                             '" target="_blank">',
-                             promoter.toString(space=True), '</a>'])
-                    else:
-                        region_link = promoter.toString(space=True)
                 try:
                     gn = self.ensembl2symbol[promoter.name]
-                    if not gn: gn = promoter.name
                 except:
                     gn = promoter.name
+                dbssount = '<a href="promoters_dbds.html#' + promoter.toString() + \
+                           '" style="text-align:left">' + \
+                           str(self.promoter["de"]["sig_dbs"][promoter.toString()]) + '</a>'
+
+                region_link = region_link_internet(self.organism, promoter)
+
                 self.ranktable[gn] = str(int(rank_sum[i]))
-                self.dbstable[gn] = str(sig_promoter_count[promoter])
+                self.dbstable[gn] = str(self.promoter["de"]["sig_dbs"][promoter.toString()])
 
                 newline = [str(i + 1),
                            region_link,
                            split_gene_name(gene_name=gn, org=self.organism),
                            dbssount,
-                           value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
+                           value2str(self.promoter["de"]["sig_dbs_coverage"][promoter.toString()])
                            ]
                 if self.scores:
                     if multiple_scores:
@@ -1279,11 +1221,11 @@ class PromoterTest:
                     else:
                         newline += [value2str(scores[i])]
 
-                newline += ["<i>" + str(int(rank_sum[i])) + "</i>"]
+                newline += [str(int(rank_sum[i]))]
                 # print(newline)
                 data_table.append(newline)
 
-            # print(data_table)
+            data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
                                  header_titles=header_titlesp, border_list=None, sortable=True)
             html.add_heading("Notes")

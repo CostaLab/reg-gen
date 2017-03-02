@@ -20,7 +20,8 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import get_rna_region_str, connect_rna,\
     dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, rna_associated_gene, find_triplex, random_each
+    split_gene_name, rna_associated_gene, find_triplex, random_each,\
+    region_link_internet
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -57,7 +58,7 @@ class RandomTest:
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
         self.rna_regions = get_rna_region_str(rna)
-        if len(self.rna_regions[0]) == 5:
+        if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
         else:
             self.rna_expression = "n.a."
@@ -328,13 +329,6 @@ class RandomTest:
         link_ds["Sig Target Regions"] = "starget_regions.html"
         link_ds["Parameters"] = "parameters.html"
 
-        if self.organism == "hg19":
-            self.ani = "human"
-        elif self.organism == "hg38":
-            self.ani = "human"
-        elif self.organism == "mm9":
-            self.ani = "mouse"
-
         ##################################################
         # index.html
 
@@ -554,74 +548,50 @@ class RandomTest:
 
         ##############################################################################################
         # starget_regions.html    for significant target regions
-        sig_target_count = {}
+
+        stargets = GenomicRegionSet("sig_targets")
+        sig_dbs = {}
+        sig_dbs_coverage = {}
         for i, r in enumerate(self.dna_region):
-            # print(self.region_dbs)
-            if len(self.region_dbs[r.toString()]) == 0:
-                continue
-            else:
-                c = 0
-                overlapping = False
-                for j, rd in enumerate(self.region_dbs[r.toString()]):
-                    for rbsm in self.data["region"]["sig_region"]:
-                        if rd.rna.overlap(rbsm):
-                            overlapping = True
-                    c += 1
-                if overlapping:
-                    sig_target_count[r] = c
+            sig_bindings = self.region_dbs[r.toString()].overlap_rbss(rbss=self.data["region"]["sig_region"])
+            dbs = sig_bindings.get_dbs()
+            if len(dbs) > 0:
+                stargets.add(r)
+                # m_dbs = dbs.merge(w_return=True)
+                sig_dbs[r] = len(dbs)
+                # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+                sig_dbs_coverage[r] = float(dbs.total_coverage()) / len(r)
 
         html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         # Select promoters in sig DBD
-        stargets = sig_target_count.keys()
         if len(self.data["region"]["sig_region"]) == 0:
             html.add_heading("There is no significant DBD.")
         else:
             html.add_heading("Target regions bound by significant DBD")
             data_table = []
             # Calculate the ranking
-            rank_count = len(sig_target_count.keys()) - rank_array([sig_target_count[p] for p in sig_target_count.keys()])
-            rank_coverage = len(sig_target_count.keys()) - rank_array(
-                [self.region_coverage[p.toString()] for p in sig_target_count.keys()])
+            rank_count = len(stargets) - rank_array([sig_dbs[p] for p in stargets])
+            rank_coverage = len(stargets) - rank_array([sig_dbs_coverage[p] for p in stargets])
             if score:
-                score_list = [float(p.data.split("\t")[0]) for p in sig_target_count.keys()]
-                rank_score = len(sig_target_count.keys()) - rank_array([abs(s) for s in score_list])
+                score_list = [float(p.data.split("\t")[0]) for p in stargets]
+                rank_score = len(stargets) - rank_array([abs(s) for s in score_list])
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
                 sum_rank = rank_array(rank_sum)  # method='min'
             else:
                 rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
                 sum_rank = rank_array(rank_sum)
 
-            for i, region in enumerate(sig_target_count.keys()):
+            for i, region in enumerate(stargets):
                 dbssount = '<a href="region_dbs.html#' + region.toString() + \
-                           '" style="text-align:left">' + str(sig_target_count[region]) + '</a>'
+                           '" style="text-align:left">' + str(sig_dbs[region]) + '</a>'
 
-                if self.ani:
-                    region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', self.organism,
-                                           "&position=", region.chrom, "%3A", str(region.initial), "-",
-                                           str(region.final), '" style="text-align:left" target="_blank">',
-                                           region.toString(space=True), '</a>'])
-                else:
-                    if self.organism == "tair10":
-                        region_link = "".join(
-                            ['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
-                             region.chrom, "%3A", str(region.initial), "..", str(region.final),
-                             '" target="_blank">',
-                             region.toString(space=True), '</a>'])
-                    else:
-                        region_link = region.toString(space=True)
-                # try:
-                #     gn = self.ensembl2symbol[region.name]
-                #     if not gn: gn = region.name
-                # except:
-                #     gn = region.name
-                # self.ranktable[gn] = str(int(rank_sum[i]))
-                # self.dbstable[gn] = str(sig_target_count[region])
+                region_link = region_link_internet(self.organism, region)
 
                 newline = [str(i + 1), region_link,
                            split_gene_name(gene_name=region.name, org=self.organism),
-                           dbssount, value2str(self.region_coverage[region.toString()]) ]
+                           dbssount, value2str(sig_dbs_coverage[region]) ]
                 if score:
                     dbs_score = value2str(score_list[i])
                     # region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, str(sum_rank[i])])
@@ -662,21 +632,22 @@ class RandomTest:
                 html.add_heading("Associated gene: " + split_gene_name(gene_name=region.name, org=self.organism),
                                  idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + region.chrom + "%3A" + str(region.initial) + "-" + str(
-                    region.final) +
-                                       '" style="margin-left:50">' +
+                                       "&position=" + region.chrom + "%3A" + str(region.initial) +
+                                       "-" + str(region.final) + '" style="margin-left:50">' +
                                        region.toString(space=True) + '</a>'])
                 data_table = []
                 for rd in self.region_dbs[region.toString()]:
-                    data_table.append([rd.rna.str_rna(pa=False),
+                    rbs = rd.rna.str_rna(pa=False)
+                    for rbsm in self.data["region"]["sig_region"]:
+                        # rbsm = rbsm.partition(":")[2].split("-")
+                        if rd.rna.overlap(rbsm):
+                            rbs = "<font color=\"red\">" + rbs + "</font>"
+                    data_table.append([rbs,
                                        '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
                                        "&position=" + rd.dna.chrom + "%3A" + str(rd.dna.initial) + "-" + str(
                                            rd.dna.final) +
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
-                                       rd.dna.orientation,
-                                       rd.score,
-                                       rd.motif,
-                                       rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      auto_width=True)
         html.write(os.path.join(directory, "region_dbs.html"))

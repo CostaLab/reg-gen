@@ -504,10 +504,12 @@ def main():
         
         print2(summary, "Step 3: Generating plot and output HTML")
         randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
-        
-        os.remove(os.path.join(args.o,"rna_temp.fa"))
-        try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
-        except: pass
+
+        os.remove(os.path.join(args.o, "rna_temp.fa"))
+        try:
+            os.remove(os.path.join(args.o, "rna_temp.fa.fai"))
+        except:
+            pass
         
 
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,

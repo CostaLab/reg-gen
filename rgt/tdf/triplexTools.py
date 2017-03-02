@@ -171,7 +171,16 @@ def list_all_index(path, link_d=None):
         #     continue
     rank_dbd = len(data_table) - rank_array([x[10] for x in data_table])
     rank_dbs = len(data_table) - rank_array([x[7] for x in data_table])
-    rank_exp = len(data_table) - rank_array([x[6] for x in data_table])
+    new_scores = []
+    for s in [x[6] for x in data_table]:
+        if s == "Inf" or s == "inf":
+            new_scores.append(float("inf"))
+        elif s == "-Inf" or s == "-inf":
+            new_scores.append(-float("inf"))
+        else:
+            try: new_scores.append(abs(float(s)))
+            except: new_scores.append(0)
+    rank_exp = len(data_table) - rank_array(new_scores)
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
 
     for i, d in enumerate(data_table):
@@ -246,12 +255,9 @@ def update_profile(dirpath, expression, name_list=None):
                         if l[0] == "name":
                             each_name = l[1]
                             each_tag = l[1].split("_")[-1]
-                        if l[0] == "genome":
-                            each_organism = l[1]
-                        if l[0] == "DBD_sig":
-                            each_DBD_sig = l[1]
-                        if l[0] == "p_value":
-                            each_p_value = l[1]
+                        if l[0] == "genome": each_organism = l[1]
+                        if l[0] == "DBD_sig": each_DBD_sig = l[1]
+                        if l[0] == "p_value": each_p_value = l[1]
                 with open(summary) as g:
                     for line in g:
                         if "rgt-TDF" in line and " -de " in line:
@@ -428,7 +434,9 @@ def generate_rna_exp_pv_table(root, multi_corr=True):
 
 
 def value2str(value):
-    if (isinstance(value,str)): return value
+    if (isinstance(value,str)):
+        try: value = float(value)
+        except: return value
     if value == 0: return "0"
     if(isinstance(value,int)): return str(value)
     elif(isinstance(value,float)):
@@ -602,6 +610,31 @@ def read_ac(path, cut_off, rnalen):
                     i += 1
     return access
 
+def region_link_internet(organism, region):
+    ani = None
+    if organism == "hg19":
+        ani = "human"
+    elif organism == "hg38":
+        ani = "human"
+    elif organism == "mm9":
+        ani = "mouse"
+    if ani:
+        region_link = "".join(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=', organism,
+                               "&position=", region.chrom, "%3A", str(region.initial), "-",
+                               str(region.final), '" style="text-align:left" target="_blank">',
+                               region.toString(space=True), '</a>'])
+    else:
+        if organism == "tair10":
+            region_link = "".join(
+                ['<a href="http://tairvm17.tacc.utexas.edu/cgi-bin/gb2/gbrowse/arabidopsis/?name=',
+                 region.chrom, "%3A", str(region.initial), "..", str(region.final),
+                 '" target="_blank">',
+                 region.toString(space=True), '</a>'])
+        else:
+            region_link = region.toString(space=True)
+    return region_link
+
+
 def split_gene_name(gene_name, org):
     
     if gene_name == None:
@@ -626,51 +659,27 @@ def split_gene_name(gene_name, org):
              "&db="+org+"&singleSearch=knownCanonical&position="
         p2 = '" style="text-align:left" target="_blank">'
         p3 = '</a>'
-        
-        #print(gene_name)
+
         if ":" in gene_name:
             genes = gene_name.split(":")
             genes = list(set(genes))
-            # dlist = []
-            # glist = []
             result = []
+            c = 0
             for i, g in enumerate(genes):
                 if "(" in g:
                     d = g.partition('(')[2].partition(')')[0]
-                    # dlist.append(int(d))
                     g = g.partition('(')[0]
-                    # glist.append(g)
-                    result.append(p1+g+p2+g+p3+"("+d+")")
-
+                    if "-" in d:
+                        result.insert(0, p1+g+p2+g+p3+"("+d+")")
+                    else:
+                        result.append(p1+g+p2+g+p3+"("+d+")")
                 else:
-                    # dlist.append(0)
-                    # glist.append(g)
-                    result.append(p1 + g + p2 + g + p3)
-                    # if i == 0:
-                    #     result = p1+g+p2+g+p3
-                    # else:
-                    #     result += ","+p1+g+p2+g+p3
-            result = ",".join(result)
-            # if dlist:
-            # i = dlist.index(min(dlist))
-            # if dlist[i] < 0:
-            #     ds = str(dlist[i])
-            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-            #     try:
-            #         j = dlist.index(max(dlist))
-            #         if dlist[j] < 0: rds = str(dlist[j])
-            #         else:
-            #             rds = "+"+ str(dlist[j])
-            #             result += ","+p1+glist[j]+p2+glist[j]+p3+"("+rds+")"
-            #     except:
-            #         pass
-            # elif dlist[i] > 0:
-            #     ds = "+"+str(dlist[i])
-            #     result = p1+glist[i]+p2+glist[i]+p3+"("+ds+")"
-            # else:
-            #     result = p1 + glist[i] + p2 + glist[i] + p3
+                    c += 1
+                    if c < 6:
+                        result.append(p1 + g + p2 + g + p3)
 
-                    
+            result = ",".join(result)
+
         elif gene_name == ".":
             result = "none"
 
@@ -880,7 +889,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         return
     #print(self.rna_regions)
     if not exons:
-        return
+        pass
     else:
         dbd = GenomicRegionSet("DBD")
         dbdmap = {}
@@ -995,12 +1004,12 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
                         cf += l
                         
                     loop = False
-    if not out_file:        
-        dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
-    else:
-        # print(dbd)
-        # print(dbd.sequences[0])
-        dbd.write_bed(filename=output+".bed")
+        if not out_file:
+            dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
+        else:
+            # print(dbd)
+            # print(dbd.sequences[0])
+            dbd.write_bed(filename=output+".bed")
     # FASTA
     if fasta:
         #print(dbdmap)
@@ -1012,17 +1021,11 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
             fasta_f = output+".fa"
 
         with open(fasta_f, 'w') as fasta:
-            
             for rbs in sig_region:
-                try: info = dbdmap[str(rbs)]
-                except: 
-                    continue
-                fasta.write(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final)+ " "+ info +"\n")
-                #print(seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final))
-                if dbdmap[str(rbs)][-1] == "-":
-                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial-1), rbs.final-1)+"\n" )
-                else: 
-                    fasta.write(seq.fetch(rbs.chrom, max(0, rbs.initial+1), rbs.final+1)+"\n" )
+                print(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final), file=fasta)
+                s = seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)
+                for ss in [s[i:i + 80] for i in range(0, len(s), 80)]:
+                    print(ss, file=fasta)
 
 def connect_rna(rna, temp, rna_name):
     """Generate FASTA file merging all exons and return the number of exons and sequence length"""
