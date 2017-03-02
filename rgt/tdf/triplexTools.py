@@ -148,9 +148,9 @@ def list_all_index(path, link_d=None):
                         '<a href="' + os.path.join(exp, "index.html") + \
                         '">' + exp + "</a>", profile[exp][0]]
         new_line.append(profile[exp][12])
-        new_line += [ profile[exp][1], #5exon
-                      profile[exp][2], #6length
-                      profile[exp][13],
+        new_line += [ profile[exp][1], #4exon
+                      profile[exp][2], #5length
+                      profile[exp][13],#exp
                       profile[exp][6],
                       profile[exp][7],
                       profile[exp][8],
@@ -165,23 +165,11 @@ def list_all_index(path, link_d=None):
         new_line += [ profile[exp][4], profile[exp][5] ]
 
         data_table.append(new_line)
-        # except:
-        #     if exp != "Experiment":
-        #         print("Error in loading profile: " + exp)
-        #     continue
-    rank_dbd = len(data_table) - rank_array([x[10] for x in data_table])
+
+    rank_dbd = len(data_table) - rank_array([x[9] for x in data_table])
     rank_dbs = len(data_table) - rank_array([x[7] for x in data_table])
-    new_scores = []
-    for s in [x[6] for x in data_table]:
-        if s == "Inf" or s == "inf":
-            new_scores.append(float("inf"))
-        elif s == "-Inf" or s == "-inf":
-            new_scores.append(-float("inf"))
-        else:
-            try: new_scores.append(abs(float(s)))
-            except: new_scores.append(0)
-    rank_exp = len(data_table) - rank_array(new_scores)
-    print([rank_dbd, rank_dbs, rank_exp])
+    rank_exp = len(data_table) - rank_array([x[6] for x in data_table])
+    # print([rank_dbd, rank_dbs, rank_exp])
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
 
     for i, d in enumerate(data_table):
