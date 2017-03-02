@@ -124,7 +124,7 @@ def list_all_index(path, link_d=None):
     c = 0
 
     header_list = ["No.", "Experiments", "RNA", "Closest genes",
-                   "Exon", "Length", "Expression",
+                   "Exon", "Length", "Expression*",
                    "Norm DBS*", "Norm DBS on sig DBD",
                    "Norm DBD*",  "No sig. DBD", "Top DBD",
                    "p-value", "Organism", "Target region",
@@ -181,6 +181,7 @@ def list_all_index(path, link_d=None):
             try: new_scores.append(abs(float(s)))
             except: new_scores.append(0)
     rank_exp = len(data_table) - rank_array(new_scores)
+    print([rank_dbd, rank_dbs, rank_exp])
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
 
     for i, d in enumerate(data_table):

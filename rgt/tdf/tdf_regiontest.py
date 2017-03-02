@@ -501,10 +501,13 @@ class RandomTest:
         rank_coverage = len(self.dna_region) - rank_array([self.region_coverage[p.toString()] for p in self.dna_region])
 
         if score:
-            score_list = [float(p.data.split("\t")[0]) for p in self.dna_region]
-            rank_score = len(self.dna_region) - rank_array([abs(s) for s in score_list])
-            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-            # sum_rank = rank_array(rank_sum)  # method='min'
+            try:
+                score_list = [float(p.data.split("\t")[0]) for p in self.dna_region]
+                rank_score = len(self.dna_region) - rank_array([abs(s) for s in score_list])
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # sum_rank = rank_array(rank_sum)  # method='min'
+            except ImportError:
+                print("There is no score in BED file, please don't use '-score' argument.")
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
             sum_rank = rank_array(rank_sum)
