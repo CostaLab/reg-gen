@@ -166,16 +166,17 @@ def list_all_index(path, link_d=None):
 
         data_table.append(new_line)
 
-    rank_dbd = len(data_table) - rank_array([x[9] for x in data_table])
-    rank_dbs = len(data_table) - rank_array([x[7] for x in data_table])
-    rank_exp = len(data_table) - rank_array([x[6] for x in data_table])
-    # print([rank_dbd, rank_dbs, rank_exp])
+    rank_dbd = len(data_table) - rank_array([float(x[9]) for x in data_table])
+    rank_dbs = len(data_table) - rank_array([float(x[7]) for x in data_table])
+    rank_exp = len(data_table) - rank_array([float(x[6]) for x in data_table])
+    # print(zip(rank_dbd, rank_dbs, rank_exp))
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
+    # print(rank_sum)
 
     for i, d in enumerate(data_table):
         d += [str(rank_sum[i])]
         # print(d)
-    data_table = sorted(data_table, key=lambda x: x[-1])
+    data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
     html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                          align=10, cell_align="left", sortable=True)
 
