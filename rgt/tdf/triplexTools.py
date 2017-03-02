@@ -166,21 +166,24 @@ def list_all_index(path, link_d=None):
 
         data_table.append(new_line)
 
-    rank_dbd = len(data_table) - rank_array([float(x[9]) for x in data_table])
-    rank_dbs = len(data_table) - rank_array([float(x[7]) for x in data_table])
-    rank_exp = len(data_table) - rank_array([float(x[6]) for x in data_table])
+    rank_dbd = len(data_table) - rank_array([x[9] for x in data_table])
+    rank_dbs = len(data_table) - rank_array([x[7] for x in data_table])
+    rank_exp = len(data_table) - rank_array([x[6] for x in data_table])
     # print(min(rank_dbd))
     # print(min(rank_dbs))
     # print(min(rank_exp))
     # print(zip(rank_dbd, rank_dbs, rank_exp))
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
     # print(rank_sum)
-
+    nd = []
     for i, d in enumerate(data_table):
-        d += [str(rank_sum[i])]
+        nd.append(d + [str(rank_sum[i])])
+
+    # data_table = [ d.append(str(rank_sum[i])) for i, d in enumerate(data_table)]
+
         # print(d)
     # data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
-    html.add_zebra_table(header_list, col_size_list, type_list, data_table,
+    html.add_zebra_table(header_list, col_size_list, type_list, nd,
                          align=10, cell_align="left", sortable=True)
 
     html.add_fixed_rank_sortable()
@@ -872,7 +875,10 @@ def rna_associated_gene(rna_regions, name, organism):
         return "."
 
 def rank_array(a):
-    a = numpy.array(a)
+    try:
+        a = numpy.array(a)
+    except:
+        a = numpy.array([float(b) for b in a])
     sa = numpy.searchsorted(numpy.sort(a), a)
     return sa
 
