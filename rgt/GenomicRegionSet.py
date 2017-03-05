@@ -962,8 +962,10 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-
-        return self.intersect_c(y, mode, rm_duplicates)
+        if sys.platform == "darwin":
+            return self.intersect_python(y, mode, rm_duplicates)
+        else:
+            return self.intersect_c(y, mode, rm_duplicates)
 
 
     def intersect_python(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
@@ -1709,7 +1711,11 @@ class GenomicRegionSet:
             intersect         -5-             -4-    2
             similarity: (5+4+2)/[(8+10+4)+(10+10)-(5+4+2)] = 11/31
         """
-        return self.jaccard_c(query)
+
+        if sys.platform == "darwin":
+            return self.jaccard_python(query)
+        else:
+            return self.jaccard_c(query)
 
     def jaccard_python(self, query):
         a = copy.deepcopy(self)

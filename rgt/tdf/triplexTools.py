@@ -147,8 +147,8 @@ def list_all_index(path, link_d=None):
             new_line = [str(c),
                         '<a href="' + os.path.join(exp, "index.html") + \
                         '">' + exp + "</a>", profile[exp][0]]
-        new_line.append(profile[exp][12])
-        new_line += [ profile[exp][1], #4exon
+        new_line += [ profile[exp][12],
+                      profile[exp][1], #4exon
                       profile[exp][2], #5length
                       profile[exp][13],#exp
                       profile[exp][6],
@@ -166,22 +166,12 @@ def list_all_index(path, link_d=None):
 
         data_table.append(new_line)
 
-    rank_dbd = len(data_table) - rank_array([x[9] for x in data_table])
-    rank_dbs = len(data_table) - rank_array([x[7] for x in data_table])
-    rank_exp = len(data_table) - rank_array([x[6] for x in data_table])
-    # print(min(rank_dbd))
-    # print(min(rank_dbs))
-    # print(min(rank_exp))
-    # print(zip(rank_dbd, rank_dbs, rank_exp))
+    rank_dbd = len(data_table) - rank_array([float(x[9]) for x in data_table])
+    rank_dbs = len(data_table) - rank_array([float(x[7]) for x in data_table])
+    rank_exp = len(data_table) - rank_array([float(x[6]) for x in data_table])
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
-    # print(rank_sum)
-    nd = []
-    for i, d in enumerate(data_table):
-        nd.append(d + [str(rank_sum[i])])
+    nd = [ d + [str(rank_sum[i])] for i, d in enumerate(data_table) ]
 
-    # data_table = [ d.append(str(rank_sum[i])) for i, d in enumerate(data_table)]
-
-        # print(d)
     # data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
     html.add_zebra_table(header_list, col_size_list, type_list, nd,
                          align=10, cell_align="left", sortable=True)
@@ -855,18 +845,13 @@ def rna_associated_gene(rna_regions, name, organism):
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
         asso_genes = g.gene_association(organism=organism, promoterLength=1000, show_dis=True)
-        #print(name)
-        #print( [ a.name for a in asso_genes ] )
-        #print( [ a.proximity for a in asso_genes ])
+
         genes = asso_genes[0].name.split(":")
-        #proxs = asso_genes[0].proximity.split(":")
         closest_genes = []
         for n in genes:
             if name not in n: closest_genes.append(n)
         closest_genes = set(closest_genes)
-        #print(closest_genes)
-        #for n in proxs:
-        #    if name not in n: closest_genes.append(n)
+
         if len(closest_genes) == 0:
             return "."
         else:
@@ -905,8 +890,6 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
 
                         l = abs(exon[2] - exon[1])
                         tail = cf + l
-                        #print("cf:   " + str(cf))
-                        #print("tail: " + str(tail) )
 
                         if cf <= rbs.initial <=  tail:
                             dbdstart = exon[2] - rbs.initial + cf
