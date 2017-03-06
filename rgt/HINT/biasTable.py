@@ -13,6 +13,7 @@ from math import floor
 # Internal
 from rgt.Util import ErrorHandler
 from rgt.Util import AuxiliaryFunctions
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 # External
 from pysam import __version__ as ps_version
@@ -34,10 +35,23 @@ class BiasTable:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, output_loc=None):
+    def __init__(self, original_regions=None, dnase_file_name=None, genome_file_name=None,
+                 k_nb=None, forward_shift=None, reverse_shift=None, estimate_bias_type=None, output_loc=None):
         """ 
         Initializes BiasTable.
         """
+        self.regions = GenomicRegionSet("Bias Regions")
+        if original_regions != None:
+            if original_regions.split(".")[-1] == "bed":
+                self.regions.read_bed(original_regions)
+            if original_regions.split(".")[-1] == "fa":
+                self.regions.read_sequence(original_regions)
+        self.dnase_file_name = dnase_file_name
+        self.genome_file_name = genome_file_name
+        self.k_nb = k_nb
+        self.forward_shift = forward_shift
+        self.reverse_shift = reverse_shift
+        self.estimate_bias_type = estimate_bias_type
         self.output_loc = output_loc
 
     def load_table(self, table_file_name_F, table_file_name_R):
@@ -74,12 +88,20 @@ class BiasTable:
             f.write(t + "\t" + str(table[1][t]) + "\n")
         f.close()
 
-    def estimate_table(self, regions, dnase_file_name, genome_file_name, k_nb, forward_shift, reverse_shift):
+    def estimate_table(self):
+        bias_table = None
+        if self.estimate_bias_type == "FRE":
+            bias_table = self.estimate_table_fre()
+        elif self.estimate_bias_type == "PWM":
+            bias_table = self.estimate_table_pwm()
+        return bias_table
+
+    def estimate_table_fre(self):
         """ 
-        Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
+        Estimates bias based on HS regions or whole genome, DNase-seq signal and genomic sequences.
 
         Keyword arguments:
-        regions -- DNase-seq HS regions.
+        regions -- background regions.
         dnase_file_name -- DNase-seq file name.
         genome_file_name -- Genome to fetch genomic sequences from.
         
@@ -92,9 +114,9 @@ class BiasTable:
         pseudocount = 1.0
 
         # Initializing bam and fasta
-        if (dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
-        bamFile = Samfile(dnase_file_name, "rb")
-        fastaFile = Fastafile(genome_file_name)
+        if (self.dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
+        bamFile = Samfile(self.dnase_file_name, "rb")
+        fastaFile = Fastafile(self.genome_file_name)
 
         # Initializing dictionaries
         obsDictF = dict()
@@ -107,7 +129,7 @@ class BiasTable:
         ct_kmers = 0
 
         # Iterating on HS regions
-        for region in regions:
+        for region in self.regions:
 
             # Initialization
             prevPos = -1
@@ -119,12 +141,12 @@ class BiasTable:
 
                 # Calculating positions
                 if (not r.is_reverse):
-                    cut_site = r.pos + forward_shift - 1
-                    p1 = cut_site - int(floor(k_nb / 2))
+                    cut_site = r.pos + self.forward_shift - 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
                 else:
-                    cut_site = r.aend + reverse_shift + 1
-                    p1 = cut_site - int(floor(k_nb / 2))
-                p2 = p1 + k_nb
+                    cut_site = r.aend + self.reverse_shift + 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
+                p2 = p1 + self.k_nb
 
                 # Verifying PCR artifacts
                 if (p1 == prevPos):
@@ -164,17 +186,17 @@ class BiasTable:
             currRevComp = AuxiliaryFunctions.revcomp(currStr)
 
             # Iterating on each sequence position
-            for i in range(0, len(currStr) - k_nb):
+            for i in range(0, len(currStr) - self.k_nb):
                 ct_kmers += 1
                 # Counting k-mer in dictionary
-                s = currStr[i:i + k_nb]
+                s = currStr[i:i + self.k_nb]
                 try:
                     expDictF[s] += 1
                 except Exception:
                     expDictF[s] = 1
 
                 # Counting k-mer in dictionary for reverse complement
-                s = currRevComp[i:i + k_nb]
+                s = currRevComp[i:i + self.k_nb]
                 try:
                     expDictR[s] += 1
                 except Exception:
@@ -186,7 +208,7 @@ class BiasTable:
 
         # Creating bias dictionary
         alphabet = ["A", "C", "G", "T"]
-        kmerComb = ["".join(e) for e in product(alphabet, repeat=k_nb)]
+        kmerComb = ["".join(e) for e in product(alphabet, repeat=self.k_nb)]
         bias_table_F = dict([(e, 0.0) for e in kmerComb])
         bias_table_R = dict([(e, 0.0) for e in kmerComb])
         for kmer in kmerComb:
@@ -225,12 +247,12 @@ class BiasTable:
             score *= pwm[letter][position]
         return score
 
-    def estimate_table_pwm(self, regions, dnase_file_name, genome_file_name, k_nb, forward_shift, reverse_shift):
+    def estimate_table_pwm(self):
         """
-        Estimates bias based on HS regions, DNase-seq signal and genomic sequences.
+        Estimates bias based on HS regions or whole genome, DNase-seq signal and genomic sequences.
 
         Keyword arguments:
-        regions -- DNase-seq HS regions.
+        regions -- background regions.
         atac_file_name -- DNase-seq file name.
         genome_file_name -- Genome to fetch genomic sequences from.
 
@@ -239,17 +261,21 @@ class BiasTable:
         """
 
         # Initializing bam and fasta
-        if (dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
-        bamFile = Samfile(dnase_file_name, "rb")
-        fastaFile = Fastafile(genome_file_name)
+        if (self.dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
+        bamFile = Samfile(self.dnase_file_name, "rb")
+        fastaFile = Fastafile(self.genome_file_name)
 
-        obsSeqsF = []
-        obsSeqsR = []
-        expSeqsF = []
-        expSeqsR = []
+        obs_f_pwm_dict = dict([("A", [0.0] * self.k_nb), ("C", [0.0] * self.k_nb),
+                        ("G", [0.0] * self.k_nb), ("T", [0.0] * self.k_nb), ("N", [0.0] * self.k_nb)])
+        exp_f_pwm_dict = dict([("A", [0.0] * self.k_nb), ("C", [0.0] * self.k_nb),
+                        ("G", [0.0] * self.k_nb), ("T", [0.0] * self.k_nb), ("N", [0.0] * self.k_nb)])
+        obs_r_pwm_dict = dict([("A", [0.0] * self.k_nb), ("C", [0.0] * self.k_nb),
+                        ("G", [0.0] * self.k_nb), ("T", [0.0] * self.k_nb), ("N", [0.0] * self.k_nb)])
+        exp_r_pwm_dict = dict([("A", [0.0] * self.k_nb), ("C", [0.0] * self.k_nb),
+                        ("G", [0.0] * self.k_nb), ("T", [0.0] * self.k_nb), ("N", [0.0] * self.k_nb)])
 
         # Iterating on HS regions
-        for region in regions:
+        for region in self.regions:
             # Evaluating observed frequencies
             # Fetching reads
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
@@ -257,12 +283,12 @@ class BiasTable:
                 # if(not r.is_reverse): p1 = r.pos - (k_nb/2) - 1 + shift
                 # else: p1 = r.aend - (k_nb/2) + 1 - shift
                 if (not r.is_reverse):
-                    cut_site = r.pos + forward_shift - 1
-                    p1 = cut_site - int(floor(k_nb / 2))
+                    cut_site = r.pos + self.forward_shift - 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
                 else:
-                    cut_site = r.aend + reverse_shift + 1
-                    p1 = cut_site - int(floor(k_nb / 2))
-                p2 = p1 + k_nb
+                    cut_site = r.aend + self.reverse_shift + 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
+                p2 = p1 + self.k_nb
 
                 # Fetching k-mer
                 try:
@@ -272,11 +298,12 @@ class BiasTable:
                 if (r.is_reverse): currStr = AuxiliaryFunctions.revcomp(currStr)
 
                 # Counting k-mer in dictionary
-                if 'N' not in currStr:
-                    if (not r.is_reverse):
-                        obsSeqsF.append(Seq(currStr))
-                    else:
-                        obsSeqsR.append(Seq(currStr))
+                if (not r.is_reverse):
+                    for i in range(0, len(currStr)):
+                        obs_f_pwm_dict[currStr[i]][i] += 1
+                else:
+                    for i in range(0, len(currStr)):
+                        obs_r_pwm_dict[currStr[i]][i] += 1
 
             # Evaluating expected frequencies
             # Fetching whole sequence
@@ -284,98 +311,84 @@ class BiasTable:
                 currStr = str(fastaFile.fetch(region.chrom, region.initial, region.final)).upper()
             except Exception:
                 continue
-            currRevComp = AuxiliaryFunctions.revcomp(currStr)
 
             # Iterating on each sequence position
-            for i in range(0, len(currStr) - k_nb):
-                s = currStr[i:i + k_nb]
-                if 'N' not in currStr:
-                    # Counting k-mer in dictionary
-                    expSeqsF.append(Seq(s))
+            s = None
+            for i in range(0, len(currStr) - self.k_nb):
+                # Counting k-mer in dictionary
+                s = currStr[i:i + self.k_nb]
+                for i in range(0, len(s)):
+                    exp_f_pwm_dict[s[i]][i] += 1
 
-                    # Counting k-mer in dictionary for reverse complement
-                    s = currRevComp[i:i + k_nb]
-                    expSeqsR.append(Seq(s))
+                # Counting k-mer in dictionary for reverse complement
+                    s = AuxiliaryFunctions.revcomp(s)
+                for i in range(0, len(s)):
+                    exp_r_pwm_dict[s[i]][i] += 1
 
         # Closing files
         bamFile.close()
         fastaFile.close()
 
-        obsMotifsF = motifs.create(obsSeqsF)
-        obsMotifsR = motifs.create(obsSeqsR)
-        expMotifsF = motifs.create(expSeqsF)
-        expMotifsR = motifs.create(expSeqsR)
-
-        obsPwmF = obsMotifsF.pwm
-        obsPwmR = obsMotifsR.pwm
-        expPwmF = expMotifsF.pwm
-        expPwmR = expMotifsR.pwm
-
-        # Output logos
-        logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_f.pdf".format(str(k_nb), str(forward_shift)))
-        logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_r.pdf".format(str(k_nb), str(forward_shift)))
-        logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_f.pdf".format(str(k_nb), str(forward_shift)))
-        logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_r.pdf".format(str(k_nb), str(forward_shift)))
-        obsMotifsF.weblogo(logo_obs_f, format="pdf", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        obsMotifsR.weblogo(logo_obs_r, format="pdf", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
-        expMotifsF.weblogo(logo_exp_f, format="pdf", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
-        expMotifsR.weblogo(logo_exp_r, format="pdf", stack_width="large", color_scheme="color_classic",
-                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
-
         # Output pwms
-        pwm_data_list = [obsPwmF, obsPwmR, expPwmF, expPwmR]
+        pwm_dict_list = [obs_f_pwm_dict, obs_r_pwm_dict, exp_f_pwm_dict, exp_r_pwm_dict]
         pwm_file_list = []
         pwm_obs_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_f.pwm".format(str(k_nb), str(forward_shift)))
+                                       "obs_{}_{}_f.pwm".format(str(self.k_nb), str(self.forward_shift)))
         pwm_obs_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_r.pwm".format(str(k_nb), str(forward_shift)))
+                                       "obs_{}_{}_r.pwm".format(str(self.k_nb), str(self.forward_shift)))
         pwm_exp_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_f.pwm".format(str(k_nb), str(forward_shift)))
+                                       "exp_{}_{}_f.pwm".format(str(self.k_nb), str(self.forward_shift)))
         pwm_exp_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_r.pwm".format(str(k_nb), str(forward_shift)))
+                                       "exp_{}_{}_r.pwm".format(str(self.k_nb), str(self.forward_shift)))
 
         pwm_file_list.append(pwm_obs_f)
         pwm_file_list.append(pwm_obs_r)
         pwm_file_list.append(pwm_exp_f)
         pwm_file_list.append(pwm_exp_r)
 
-        for i in range(len(pwm_data_list)):
-            with open(pwm_file_list[i], "w") as f:
-                f.write(str(pwm_data_list[i]))
+        for i in range(len(pwm_dict_list)):
+            with open(pwm_file_list[i], "w") as pwm_file:
+                for e in ["A", "C", "G", "T"]:
+                    pwm_file.write(" ".join([str(int(f)) for f in pwm_dict_list[i][e]]) + "\n")
+
+        motif_obs_f = motifs.read(open(pwm_obs_f), "pfm")
+        motif_obs_r = motifs.read(open(pwm_obs_r), "pfm")
+        motif_exp_f = motifs.read(open(pwm_exp_f), "pfm")
+        motif_exp_r = motifs.read(open(pwm_exp_r), "pfm")
+
+        # Output logos
+        logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
+                                       "obs_{}_{}_f.pdf".format(str(self.k_nb), str(self.forward_shift)))
+        logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
+                                       "obs_{}_{}_r.pdf".format(str(self.k_nb), str(self.forward_shift)))
+        logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
+                                       "exp_{}_{}_f.pdf".format(str(self.k_nb), str(self.forward_shift)))
+        logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
+                                       "exp_{}_{}_r.pdf".format(str(self.k_nb), str(self.forward_shift)))
+        motif_obs_f.weblogo(logo_obs_f, format="pdf", stack_width="large", color_scheme="color_classic",
+                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
+        motif_obs_r.weblogo(logo_obs_r, format="pdf", stack_width="large", color_scheme="color_classic",
+                           yaxis_scale=0.2, yaxis_tic_interval=0.1)
+        motif_exp_f.weblogo(logo_exp_f, format="pdf", stack_width="large", color_scheme="color_classic",
+                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
+        motif_exp_r.weblogo(logo_exp_r, format="pdf", stack_width="large", color_scheme="color_classic",
+                           yaxis_scale=0.02, yaxis_tic_interval=0.01)
+
+
 
         # Creating bias dictionary
+        print(motif_exp_r.pwm)
         alphabet = ["A", "C", "G", "T"]
-        k_mer_comb = ["".join(e) for e in product(alphabet, repeat=k_nb)]
+        k_mer_comb = ["".join(e) for e in product(alphabet, repeat=self.k_nb)]
         bias_table_F = dict([(e, 0.0) for e in k_mer_comb])
         bias_table_R = dict([(e, 0.0) for e in k_mer_comb])
         for k_mer in k_mer_comb:
-            obsF = self.get_pwm_score(k_mer, obsPwmF, k_nb)
-            expF = self.get_pwm_score(k_mer, expPwmF, k_nb)
+            obsF = self.get_pwm_score(k_mer, motif_obs_f.pwm, self.k_nb)
+            expF = self.get_pwm_score(k_mer, motif_exp_f.pwm, self.k_nb)
             bias_table_F[k_mer] = round(obsF / expF, 6)
-            obsR = self.get_pwm_score(k_mer, obsPwmR, k_nb)
-            expR = self.get_pwm_score(k_mer, expPwmR, k_nb)
+            obsR = self.get_pwm_score(k_mer, motif_obs_r.pwm, self.k_nb)
+            expR = self.get_pwm_score(k_mer, motif_exp_r.pwm, self.k_nb)
             bias_table_R[k_mer] = round(obsR / expR, 6)
 
         # Return
         return [bias_table_F, bias_table_R]
-
-# if __name__ == "__main__":
-#  import sys
-#  from rgt.GenomicRegionSet import *
-#  bam_file=sys.argv[1]
-#  fasta_file=sys.argv[2]
-#  bed_file=sys.argv[3]
-#  kmer=int(sys.argv[4])
-#  shift=int(sys.argv[5])
-#  out=sys.argv[6]
-#  regions=GenomicRegionSet("regions")
-#  regions.read_bed(bed_file)
-#  table=BiasTable(regions=regions,dnase_file_name=bam_file,genome_file_name=fasta_file,k_nb=kmer,shift=shift)
-#  table.write_tables(out)

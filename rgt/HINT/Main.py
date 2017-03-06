@@ -127,6 +127,9 @@ def main():
                       metavar="STRING", default=None,
                       help=("The regions that used to estimate the bias table "
                             "should be bed file containing HS regions or FASTA file containing naked DNA"))
+    parser.add_option("--bias-bam-file", dest="bias_bam_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."))
     parser.add_option("--estimate-bias-type", dest="estimate_bias_type", type="string",
                       metavar="STRING", default=None,
                       help=("The methods that used to estimate the bias table "
@@ -173,6 +176,9 @@ def main():
                       action="store_true", default=False,
                       help=("If used, it will print the line plot of raw signal and bias corrected"
                             "signal for the particular motif."))
+    parser.add_option("--plot-bam-file", dest="plot_bam_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."))
     parser.add_option("--window-size", dest="window_size", type="int", metavar="INT", default=50)
     parser.add_option("--motif-file", dest="motif_file", type="string", metavar="STRING",
                       default=None,
@@ -194,7 +200,7 @@ def main():
                       action="store_true", default=False,
                       help=("If used, HINT will train a hidden Markov model (HMM) based on "
                             "the annotation data"))
-    parser.add_option("--bam-file", dest="bam_file", type="string", metavar="STRING",
+    parser.add_option("--training-bam-file", dest="training_bam_file", type="string", metavar="STRING",
                       default=None,
                       help=("A bam file containing all the DNase-seq reads."))
     parser.add_option("--annotate-file", dest="annotate_file", type="string", metavar="STRING",
@@ -394,7 +400,7 @@ def main():
 
     # IF HINT is required to output the line plot and motif logo
     if options.print_line_plot:
-        plot = Plot(options.bam_file, options.motif_file, options.motif_name, options.window_size,
+        plot = Plot(options.plot_bam_file, options.motif_file, options.motif_name, options.window_size,
                     atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
                     atac_initial_clip, options.organism, options.bias_table,
                     atac_bias_correction_k, options.protection_score, options.strands_specific,
@@ -420,7 +426,8 @@ def main():
 
     # If HINT is required to train a hidden Markov model (HMM)
     if options.train_hmm:
-        train_hmm_model = TrainHMM(options.bam_file, options.annotate_file, options.print_bed_file,
+        train_hmm_model = TrainHMM(options.bias_bam_file, options.training_bam_file,
+                                   options.annotate_file, options.print_bed_file,
                                    options.output_location, options.model_fname,
                                    options.print_raw_signal, options.print_bc_signal,
                                    options.print_norm_signal, options.print_slope_signal,
@@ -429,7 +436,7 @@ def main():
                                    options.estimate_bias_correction, options.estimate_bias_type,
                                    options.bias_table,
                                    options.original_regions, options.organism,
-                                   atac_bias_correction_k)
+                                   atac_bias_correction_k, options.strands_specific)
         train_hmm_model.train()
         return
 
@@ -552,12 +559,11 @@ def main():
             else:
                 my_k_nb = dnase_bias_correction_k
                 my_shift = dnase_downstream_ext
-            group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
-                                                          dnase_file_name=group.dnase_file.file_name,
-                                                          genome_file_name=genome_data.get_genome(),
-                                                          k_nb=my_k_nb, shift=my_shift,
-                                                          forward_shift=atac_forward_shift,
-                                                          reverse_shift=atac_reverse_shift)
+            group.bias_table = BiasTable(original_regions=options.original_regions,
+                                         dnase_file_name=options.bam_file,
+                                         genome_file_name=genome_data.get_genome(), k_nb=options.k_nb,
+                                         forward_shift=options.atac_forward_shift, reverse_shift=options.atac_reverse_shift,
+                                         estimate_bias_type=options.estimate_bias_type, output_loc=options.output_locaiton)
         bias_correction = True
 
     elif (options.default_bias_correction):

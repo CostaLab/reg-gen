@@ -25,11 +25,11 @@ class Plot:
     """
 
     """
-    def __init__(self, bam_file, motif_file, motif_name, window_size,
+    def __init__(self, plot_bam_file, motif_file, motif_name, window_size,
                  atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
                  initial_clip, organism, bias_table, k_nb, protection_score,
                  strands_specific, output_loc):
-        self.bam_file = bam_file
+        self.bam_file = plot_bam_file
         self.motif_file = motif_file
         self.motif_name = motif_name
         self.window_size = window_size
@@ -244,7 +244,7 @@ class Plot:
         output_file.close()
 
         if self.strands_specific:
-            fig, (ax1, ax2, ax3) = plt.subplots(3, figsize=(12.0, 10.0))
+            fig, (ax1, ax2, ax4, ax5, ax3) = plt.subplots(5, figsize=(12.0, 15.0))
         else:
             fig, (ax1, ax2) = plt.subplots(2)
         x = np.linspace(-50, 49, num=self.window_size)
@@ -280,14 +280,19 @@ class Plot:
             ax2.plot(x, mean_raw_signal, color='red', label='Uncorrected')
             ax2.plot(x, mean_bc_signal, color='green', label='Corrected')
         else:
-            mean_raw_signal_f = self.standardize(mean_raw_signal_f)
-            mean_raw_signal_r = self.standardize(mean_raw_signal_r)
-            mean_bc_signal_f = self.standardize(mean_bc_signal_f)
-            mean_bc_signal_r = self.standardize(mean_bc_signal_r)
-            ax2.plot(x, mean_raw_signal_f, color='red', label='Forward')
-            ax2.plot(x, mean_raw_signal_r, color='green', label='Reverse')
-            ax3.plot(x, mean_bc_signal_f, color='red', label='Forward')
-            ax3.plot(x, mean_bc_signal_r, color='green', label='Reverse')
+            ax2.plot(x, self.standardize(mean_raw_signal_f), color='red', label='Forward')
+            ax2.plot(x, self.standardize(mean_raw_signal_r), color='green', label='Reverse')
+            ax4.plot(x, self.standardize(np.subtract(mean_raw_signal_f, mean_raw_signal_r)), color='red',
+                     label='Forward-Reverse')
+            ax4.plot(x, self.standardize(np.abs(np.subtract(mean_raw_signal_f, mean_raw_signal_r))),
+                     color='blue', label='abs(Forward-Reverse)')
+            ax5.plot(x, self.standardize(np.subtract(mean_bc_signal_f, mean_bc_signal_r)), color='red',
+                     label='Forward-Reverse')
+            ax5.plot(x, self.standardize(np.abs(np.subtract(mean_bc_signal_f, mean_bc_signal_r))),
+                     color='blue', label='abs(Forward-Reverse)')
+            ax3.plot(x, self.standardize(mean_bc_signal_f), color='red', label='Forward')
+            ax3.plot(x, self.standardize(mean_bc_signal_r), color='green', label='Reverse')
+
 
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
@@ -311,6 +316,38 @@ class Plot:
             ax2.spines['bottom'].set_position(('outward', 5))
             ax2.set_ylabel("Average ATAC-seq \n Uncorrected Signal", rotation=90, fontweight='bold')
             ax2.legend(loc="lower right", frameon=False)
+
+            ax4.xaxis.set_ticks_position('bottom')
+            ax4.yaxis.set_ticks_position('left')
+            ax4.spines['top'].set_visible(False)
+            ax4.spines['right'].set_visible(False)
+            ax4.spines['left'].set_position(('outward', 15))
+            ax4.tick_params(direction='out')
+            ax4.set_xticks([-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 49])
+            ax4.set_xticklabels(['-50', '-40', '-30', '-20', '-10', '0', '10', '20', '30', '40', '49'])
+            ax4.set_yticks([0, 1])
+            ax4.set_yticklabels([str(0), str(1)], rotation=90)
+            ax4.set_xlim(-50, 49)
+            ax4.set_ylim([0, 1])
+            ax4.spines['bottom'].set_position(('outward', 5))
+            ax4.set_ylabel("Average ATAC-seq \n Uncorrected Signal", rotation=90, fontweight='bold')
+            ax4.legend(loc="lower right", frameon=False)
+
+            ax5.xaxis.set_ticks_position('bottom')
+            ax5.yaxis.set_ticks_position('left')
+            ax5.spines['top'].set_visible(False)
+            ax5.spines['right'].set_visible(False)
+            ax5.spines['left'].set_position(('outward', 15))
+            ax5.tick_params(direction='out')
+            ax5.set_xticks([-50, -40, -30, -20, -10, 0, 10, 20, 30, 40, 49])
+            ax5.set_xticklabels(['-50', '-40', '-30', '-20', '-10', '0', '10', '20', '30', '40', '49'])
+            ax5.set_yticks([0, 1])
+            ax5.set_yticklabels([str(0), str(1)], rotation=90)
+            ax5.set_xlim(-50, 49)
+            ax5.set_ylim([0, 1])
+            ax5.spines['bottom'].set_position(('outward', 5))
+            ax5.set_ylabel("Average ATAC-seq \n Corrected Signal", rotation=90, fontweight='bold')
+            ax5.legend(loc="lower right", frameon=False)
 
             ax3.xaxis.set_ticks_position('bottom')
             ax3.yaxis.set_ticks_position('left')
