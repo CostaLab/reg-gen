@@ -174,7 +174,7 @@ def list_all_index(path, link_d=None):
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
     nd = [ d + [str(rank_sum[i])] for i, d in enumerate(data_table) ]
 
-    # data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
+    data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
     html.add_zebra_table(header_list, col_size_list, type_list, nd,
                          align=10, cell_align="left", sortable=True)
 
