@@ -157,11 +157,11 @@ def list_all_index(path, link_d=None):
                       profile[exp][10] #10 Top DBD
                       ]
 
-        if float(profile[exp][10]) < 0.05:
+        if float(profile[exp][11]) < 0.05:
             new_line += ["<font color=\"red\">" + \
-                         profile[exp][10] + "</font>"]
+                         profile[exp][11] + "</font>"]
         else:
-            new_line += [profile[exp][10]]
+            new_line += [profile[exp][11]]
         new_line += [ profile[exp][4], profile[exp][5] ]
 
         data_table.append(new_line)
