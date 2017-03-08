@@ -328,10 +328,10 @@ class PromoterTest:
 
         for promoter in self.de_regions:
             dbs = self.promoter["de"]["rd"][promoter.toString()].get_dbs()
-            # m_dbs = dbs.merge(w_return=True)
+            m_dbs = dbs.merge(w_return=True)
             self.promoter["de"]["dbs"][promoter.toString()] = len(dbs)
             # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
+            self.promoter["de"]["dbs_coverage"][promoter.toString()] = float(m_dbs.total_coverage()) / len(promoter)
 
         ######################
         # nDE

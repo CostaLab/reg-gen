@@ -560,10 +560,10 @@ class RandomTest:
             dbs = sig_bindings.get_dbs()
             if len(dbs) > 0:
                 stargets.add(r)
-                # m_dbs = dbs.merge(w_return=True)
+                m_dbs = dbs.merge(w_return=True)
                 sig_dbs[r] = len(dbs)
                 # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-                sig_dbs_coverage[r] = float(dbs.total_coverage()) / len(r)
+                sig_dbs_coverage[r] = float(m_dbs.total_coverage()) / len(r)
 
         html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
