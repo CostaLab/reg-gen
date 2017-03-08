@@ -125,7 +125,7 @@ def list_all_index(path, link_d=None):
 
     header_list = ["No.", "Experiments", "RNA", "Closest genes",
                    "Exon", "Length", "Expression*",
-                   "Norm DBS*", "Norm DBS on sig DBD",
+                   "Norm DBS*",
                    "Norm DBD*",  "No sig. DBD", "Top DBD",
                    "p-value", "Organism", "Target region",
                    "Rank*"]
@@ -147,28 +147,30 @@ def list_all_index(path, link_d=None):
             new_line = [str(c),
                         '<a href="' + os.path.join(exp, "index.html") + \
                         '">' + exp + "</a>", profile[exp][0]]
-        new_line += [ profile[exp][12],
-                      profile[exp][1], #4exon
-                      profile[exp][2], #5length
-                      profile[exp][13],#exp
-                      profile[exp][6],
-                      profile[exp][7],
-                      profile[exp][8],
-                      profile[exp][9],
-                      profile[exp][10] ]
+        new_line += [ profile[exp][12],#3 close genes
+                      profile[exp][1], #4 exon
+                      profile[exp][2], #5 length
+                      profile[exp][13],#6 exp
+                      profile[exp][6], #7 norm DBS
+                      profile[exp][8], #8 norm DBD
+                      profile[exp][9], #9 sig DBD
+                      profile[exp][10] #10 Top DBD
+                      ]
 
-        if float(profile[exp][11]) < 0.05:
+        if float(profile[exp][10]) < 0.05:
             new_line += ["<font color=\"red\">" + \
-                         profile[exp][11] + "</font>"]
+                         profile[exp][10] + "</font>"]
         else:
-            new_line += [profile[exp][11]]
+            new_line += [profile[exp][10]]
         new_line += [ profile[exp][4], profile[exp][5] ]
 
         data_table.append(new_line)
 
-    rank_dbd = len(data_table) - rank_array([float(x[9]) for x in data_table])
+    rank_dbd = len(data_table) - rank_array([float(x[8]) for x in data_table])
     rank_dbs = len(data_table) - rank_array([float(x[7]) for x in data_table])
-    rank_exp = len(data_table) - rank_array([float(x[6]) for x in data_table])
+
+    rank_exp = len(data_table) - rank_array([0 if x[6] == "n.a." else float(x[6]) for x in data_table ])
+
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
     nd = [ d + [str(rank_sum[i])] for i, d in enumerate(data_table) ]
 

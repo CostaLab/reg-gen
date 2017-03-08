@@ -75,7 +75,7 @@ def main():
     parser_promotertest.add_argument('-score', action="store_true", help="Load score column from input gene list or BED file for analysis.")
     parser_promotertest.add_argument('-scoreh', action="store_true", help="Use the header of scores from the given gene list or BED file.")
     parser_promotertest.add_argument('-a', type=float, default=0.05, metavar='  ', help="Define significance level for rejection null hypothesis (Default: 0.05)")
-    parser_promotertest.add_argument('-ccf', type=int, default=40, metavar='  ', help="Define the cut off value for promoter counts (Default: 40)")
+    parser_promotertest.add_argument('-ccf', type=int, default=100, metavar='  ', help="Define the cut off value for promoter counts (Default: 40)")
     parser_promotertest.add_argument('-rt', action="store_true", default=False, help="Remove temporary files (fa, txp...etc)")
     parser_promotertest.add_argument('-log', action="store_true", default=False, help="Set the plots in log scale")
     parser_promotertest.add_argument('-ac', type=str, default=False, metavar='  ', help="Input file for RNA accecibility ")

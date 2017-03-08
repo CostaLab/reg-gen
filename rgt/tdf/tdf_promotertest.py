@@ -548,8 +548,8 @@ class PromoterTest:
         html_header = "Promoter Test: " + dir_name
         self.link_d = OrderedDict()
         self.link_d["RNA"] = "index.html"
-        self.link_d["All promoters"] = "promoters.html"
         self.link_d["Sig promoters"] = "spromoters.html"
+        self.link_d["All promoters"] = "promoters.html"
         self.link_d["Parameters"] = "parameters.html"
 
         #############################################################
@@ -902,10 +902,6 @@ class PromoterTest:
                 score_header = [self.de_gene.cond[0]]
             else:
                 if "(" in self.scores[0]:
-                    # scs = self.scores[0].replace("(", "")
-                    # scs = scs.replace(")", "")
-                    # scs = scs.split(",")
-                    # score_header = ["Score"] * len(scs)
                     score_header = ["Fold_change", "Filtered"]
                 else:
                     score_header = ["Fold Change Score"]
@@ -1016,11 +1012,7 @@ class PromoterTest:
 
             if self.scores:
                 if multiple_scores:
-                    # print(score_ar)
-                    # print(len(score_ar))
                     for j in range(len(score_ar[0])):
-                        # print(score_ar[j][i])
-                        # print(score_ar[i][j])
                         newline += [value2str(score_ar[i][j])]
                 else:
                     newline += [value2str(scores[i])]
@@ -1080,44 +1072,6 @@ class PromoterTest:
                                      header_titles=header_titles, sortable=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "promoters_dbds.html"))
-
-        ############################
-        # Subpages for promoter centered page
-        # spromoters_dbds.html
-        # sig_promoter_count = {}
-        # for i, promoter in enumerate(self.de_regions):
-        #     if self.promoter["de"]["dbs"][promoter.toString()] == 0:
-        #         continue
-        #     else:
-        #         c = 0
-        #         overlapping = False
-        #
-        #         for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
-        #             for rbsm in self.sig_DBD:
-        #                 if rd.rna.overlap(rbsm):
-        #                     overlapping = True
-        #             # if overlapping:
-        #             # data_table.append([str(j + 1),
-        #             #                    rd.rna.str_rna(pa=False),
-        #             #                    rd.dna.toString(space=True),
-        #             #                    rd.dna.orientation,
-        #             #                    rd.score,
-        #             #                    rd.motif, rd.orient])
-        #             c += 1
-        #         if overlapping:
-        #             # html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
-        #             # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' +
-        #             #                        self.organism + "&position=" + promoter.chrom +
-        #             #                        "%3A" + str(promoter.initial) + "-" + str(promoter.final) +
-        #             #                        '" style="margin-left:50">' +
-        #             #                        promoter.toString(space=True) + '</a>'])
-        #             # sig_promoter_count[promoter] = len(data_table)
-        #             sig_promoter_count[promoter] = c
-        #             html.add_zebra_table(header_list, col_size_list, type_list, data_table,
-        #                                  align=align, cell_align="left",
-        #                                  header_titles=header_titles, sortable=True)
-        # html.add_fixed_rank_sortable()
-        # html.write(os.path.join(directory, "spromoters_dbds.html"))
 
         ##############################################################################################
         # spromoters.html    for significant promoters

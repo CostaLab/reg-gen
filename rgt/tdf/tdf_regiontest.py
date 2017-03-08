@@ -325,8 +325,8 @@ class RandomTest:
         html_header = "Genomic Region Test: " + dir_name
         link_ds = OrderedDict()
         link_ds["RNA"] = "index.html"
-        link_ds["Target Regions"] = "target_regions.html"
         link_ds["Sig Target Regions"] = "starget_regions.html"
+        link_ds["Target Regions"] = "target_regions.html"
         link_ds["Parameters"] = "parameters.html"
 
         ##################################################
