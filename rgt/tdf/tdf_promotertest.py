@@ -1203,9 +1203,9 @@ class PromoterTest:
             for i, line in enumerate(f):
                 line = line.strip().split()
                 if i == 0:
-                    if not line:
-                        break
-                        exist = False
+                    # if not line:
+                    #     break
+                    #     exist = False
                     if self.rna_name in line:
                         # lncRNA exists
                         exist = True
@@ -1218,17 +1218,17 @@ class PromoterTest:
 
                 else:
                     if exist and ind_rna:
-                        try:
-                            line[ind_rna + 1] = table[line[0]]
-                            rank_table.append(line)
-                        except:
-                            rank_table.append(line)
+                        # try:
+                        line[ind_rna + 1] = table[line[0]]
+                        rank_table.append(line)
+                        # except:
+                        #     rank_table.append(line)
                     else:
-                        try:
-                            line.append(table[line[0]])
-                            rank_table.append(line)
-                        except:
-                            rank_table.append(line)
+                        # try:
+                        line.append(table[line[0]])
+                        rank_table.append(line)
+                        # except:
+                        #     rank_table.append(line)
             f.close()
 
         else:
