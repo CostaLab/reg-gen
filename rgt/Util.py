@@ -78,7 +78,7 @@ class GenomeData(ConfigurationFile):
     
     def get_gene_regions(self):
         """Returns the current path to the gene_regions BED file."""
-        return self.genes_refseq
+        return self.genes_gencode
 
     def get_genes_gencode(self):
         """Returns the current path to the gene_regions BED file."""
