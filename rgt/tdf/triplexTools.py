@@ -498,13 +498,9 @@ def get_sequence(dir, filename, regions, genome_path):
     genome = pysam.Fastafile(genome_path)
     with open(os.path.join(dir, filename), 'w') as output:
         for region in regions:
-            print(">"+ region.toString(), file=output)
-            # if region.orientation == "-":
-            #     seq = Seq(genome.fetch(region.chrom, max(0, region.initial), region.final), IUPAC.unambiguous_dna)
-            #     seq = seq.reverse_complement()
-            #     print(seq, file=output)
-            # else:
-            print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
+            if "_" not in region.chrom:
+                print(">"+ region.toString(), file=output)
+                print(genome.fetch(region.chrom, max(0, region.initial), region.final), file=output)
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
@@ -994,7 +990,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         else:
             # print(dbd)
             # print(dbd.sequences[0])
-            dbd.write_bed(filename=output+".bed")
+            dbd.write_bed(filename=output)
     # FASTA
     if fasta:
         #print(dbdmap)

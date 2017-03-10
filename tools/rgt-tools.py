@@ -228,6 +228,8 @@ if __name__ == "__main__":
     parser_bed_filter.add_argument('-min', type=int, default=False, help="Define minimal length")
     parser_bed_filter.add_argument('-max', type=int, default=False, help="Define maximal length")
     parser_bed_filter.add_argument('-score', action="store_true", default=False, help="Add the score from gene list to BED file")
+    parser_bed_filter.add_argument('-background', action="store_true", default=False,
+                                   help="Get the genes not in the given gene list.")
 
     ############### BED remove if overlap ################################
     parser_bedro = subparsers.add_parser('bed_remove_if_overlap', 
@@ -270,6 +272,11 @@ if __name__ == "__main__":
     parser_beddis.add_argument('-o', metavar='output', type=str, help="Output table.")
     parser_beddis.add_argument('-t', metavar="target", type=str,
                                help="Define the target BED file to define the distance.")
+
+    ############### BED standardize chromosome ################################
+    parser_bedschrom = subparsers.add_parser('bed_standard_chrom',
+                                            help="[BED] Standardize the chromosomes.")
+    parser_bedschrom.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -668,9 +675,7 @@ if __name__ == "__main__":
         if args.i.endswith(".bed"):
             gene.read_bed(args.i)
             promoter = GenomicRegionSet("promoter")
-
             promoterLength = int(args.l)
-
             for s in gene:
                 if s.orientation == "+": 
                     s.initial, s.final = max(s.initial-promoterLength, 0), s.initial
@@ -810,10 +815,6 @@ if __name__ == "__main__":
         bed.read_bed(args.i)
 
         if args.gene:
-            # with open(args.gene) as f:
-            #     genes = f.read().splitlines()
-            #     genes = map(lambda x: x.split("\t")[0].upper(), genes)
-            #     print(str(len(genes))+" genes are loaded.")
             if os.path.isfile(args.gene):
                 gg = GeneSet("genes")
                 if args.score:
@@ -821,11 +822,17 @@ if __name__ == "__main__":
                 else:
                     gg.read(args.gene)
                 # print(len(gg))
-                bed = bed.by_names(gg, load_score=args.score)
+                if not args.background:
+                    bed = bed.by_names(gg, load_score=args.score)
+                else:
+                    bed = bed.by_names(gg, load_score=args.score, background=True)
                 # print(len(bed))
             else:
                 genes = [ x.upper() for x in args.gene.split(",") ]
-                bed = bed.by_names(genes)
+                if not args.background:
+                    bed = bed.by_names(genes, load_score=args.score)
+                else:
+                    bed = bed.by_names(genes, load_score=args.score, background=True)
 
         if isinstance(args.min, int ) and not args.max:
             bed = bed.filter_by_size(minimum=args.min)
@@ -1086,7 +1093,16 @@ if __name__ == "__main__":
         with open(args.o, "w") as f:
             for line in res_dis:
                 print("\t".join(line), file=f)
-        
+
+
+    ############### BED standardize chromsomes ###########################
+    #
+    elif args.mode == "bed_standard_chrom":
+        print(tag + ": [BED] Standardize chomosomes")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        nbed = bed.standard_chrom()
+        nbed.write_bed(args.i)
 
     ############### BAM filtering by BED ###########################
     #

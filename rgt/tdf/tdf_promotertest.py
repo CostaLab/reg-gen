@@ -56,7 +56,7 @@ class PromoterTest:
         self.motif = OrderedDict()
         self.sig_DBD = []
         self.stat = OrderedDict(name=rna_name, genome=self.gtf)
-
+        ####################################################################################
         # Input BED files
         if bed and bg:
             self.de_regions = GenomicRegionSet("de genes")
@@ -66,18 +66,20 @@ class PromoterTest:
 
             # score
             if score:
-                self.scores = []
-                for promoter in self.de_regions:
-                    if promoter.data: self.scores.append(promoter.data.split("\t")[0])
-                    else: self.scores = None
+                self.scores = self.de_regions.get_score_dict()
+                # for promoter in self.de_regions:
+                #     if promoter.data: self.scores.append(promoter.data.split("\t")[0])
+                #     else: self.scores = None
+                # self.score_dict = self.de_regions.get_score_dict()
 
-            try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
-            except: pass
+            # try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
+            # except: pass
             self.nde_regions.read_bed(bg)
-            try: self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
-            except: pass
+            # try: self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
+            # except: pass
             self.nde_regions.remove_duplicates()
 
+        ####################################################################################
         # Input DE gene list
         else:
             if gtf:
@@ -100,28 +102,6 @@ class PromoterTest:
             except:
 
                 t1 = time.time()
-                # Setting annotationSet
-                if filter_havana== "T":
-                    filter_havana = True
-                else:
-                    filter_havana = False
-                if protein_coding == "T":
-                    protein_coding = True
-                else:
-                    protein_coding = False
-                if known_only == "T":
-                    known_only = True
-                else:
-                    known_only = False
-
-                ann = AnnotationSet(gene_source=self.gtf, alias_source=organism,
-                                    filter_havana=filter_havana,
-                                    protein_coding=protein_coding,
-                                    known_only=known_only)
-
-                t2 = time.time()
-                print("\t" + str(datetime.timedelta(seconds=round(t2 - t1))))
-
                 ######################################################
                 # DE gene regions
                 self.de_gene = GeneSet("de genes")
@@ -142,65 +122,110 @@ class PromoterTest:
                     sys.exit(1)
 
                 print2(summary, "   \t" + str(len(self.de_gene)) + "\tinput genes ")
-                # Generate a dict for ID transfer
-                de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
-                print2(summary, "   \t" + str(len(de_ensembl)) + "\tgenes are mapped to Ensembl ID")
-                if len(unmap_gs) > 0:
-                    print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
 
-                self.de_gene.genes = de_ensembl
-                # print(de_ensembl[0:5])
-                # print("After fixing")
-                de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
-                                                                gene_set=self.de_gene,
-                                                                unmaplist=True, variants=False)
-                # print(len(unmapped_gene_list))
-                print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
-                if len(unmapped_gene_list) > 0:
-                    print2(summary, "   \t" + str(len(unmapped_gene_list)) + "\tunmapped promoters: " + ",".join(
-                        unmapped_gene_list))
+                if "REFSEQ" not in self.gtf.upper():
 
-                if score: self.scores = []
+                    # Setting annotationSet
+                    if filter_havana== "T":
+                        filter_havana = True
+                    else:
+                        filter_havana = False
+                    if protein_coding == "T":
+                        protein_coding = True
+                    else:
+                        protein_coding = False
+                    if known_only == "T":
+                        known_only = True
+                    else:
+                        known_only = False
+
+                    ann = AnnotationSet(gene_source=self.gtf, alias_source=organism,
+                                        filter_havana=filter_havana,
+                                        protein_coding=protein_coding,
+                                        known_only=known_only)
+
+                    t2 = time.time()
+                    print("\t" + str(datetime.timedelta(seconds=round(t2 - t1))))
+
+
+                    # Generate a dict for ID transfer
+                    de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
+                    print2(summary, "   \t" + str(len(de_ensembl)) + "\tgenes are mapped to Ensembl ID")
+                    if len(unmap_gs) > 0:
+                        print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
+
+                    self.de_gene.genes = de_ensembl
+                    de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
+                                                                    gene_set=self.de_gene,
+                                                                    unmaplist=True, variants=False)
+                    print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
+                    if len(unmapped_gene_list) > 0:
+                        print2(summary, "   \t" + str(len(unmapped_gene_list)) + "\tunmapped promoters: " + ",".join(
+                            unmapped_gene_list))
+
+                    ######################################################
+                    # NonDE gene regions
+
+                    nde_ensembl = [g for g in ann.symbol_dict.keys() if g not in de_ensembl]
+                    print2(summary, "   \t" + str(len(nde_ensembl)) + "\tnon-target genes")
+                    self.nde_gene = GeneSet("nde genes")
+                    self.nde_gene.genes = nde_ensembl
+
+                    # Get promoters from nonDE gene
+                    nde_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
+                                                                     gene_set=self.nde_gene,
+                                                                     unmaplist=True)
+                    print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
+
+                    if score:
+
+                        self.scores = {}
+                        for p in de_prom:
+                            # d = c.split("\t")
+                            p.data = self.de_gene.values[self.ensembl2symbol[p.name]]
+                        self.scores = de_prom.get_score_dict()
+
+                else:
+                ## Refseq
+                    print("   \t" + "Loading from RefSeq annotation")
+                    genes = GenomicRegionSet("genes")
+                    genes.read_bed(genome.get_genes_refseq())
+                    de_genes = genes.by_names(self.de_gene, load_score=score)
+                    self.de_gene = de_genes.get_GeneSet()
+                    de_prom = de_genes.get_promoters(length=promoterLength)
+                    nde_genes = genes.by_names(self.de_gene, load_score=score, background=True)
+                    self.nde_gene = nde_genes.get_GeneSet()
+                    nde_prom = nde_genes.get_promoters(length=promoterLength)
+                    self.ensembl2symbol = None
+                    if score: self.scores = de_genes.get_score_dict()
 
                 de_prom.merge(namedistinct=True, strand_specific=True)
                 print2(summary, "   \t" + str(len(de_prom)) + "\tmerged promoters ")
 
                 print2(summary, "   \t" + str(len(de_prom)) + "\tunique target promoters are loaded")
-                for promoter in de_prom:
-                    # if self.ensembl2symbol:
-                    try:
-                        gene_sym = self.ensembl2symbol[promoter.name]
-                    except:
-                        gene_sym = promoter.name
 
-                    if score:
-                        try:
-                            try:
-                                s = self.de_gene.values[promoter.name]
-                            except:
-                                s = self.de_gene.values[gene_sym.upper()]
-                        except:
-                            try:
-                                print("Warning: " + promoter.name + "\tcannot be mapped to get its score.")
-                            except:
-                                print("Warning: " + gene_sym + "\tcannot be mapped to get its score.")
-                            s = "0"
-                        self.scores.append(s)
+                # for promoter in de_prom:
+                #     # if self.ensembl2symbol:
+                #     try:
+                #         gene_sym = self.ensembl2symbol[promoter.name]
+                #     except:
+                #         gene_sym = promoter.name
+                #
+                #     if score:
+                #         try:
+                #             try:
+                #                 s = self.de_gene.values[promoter.name]
+                #             except:
+                #                 s = self.de_gene.values[gene_sym.upper()]
+                #         except:
+                #             try:
+                #                 print("Warning: " + promoter.name + "\tcannot be mapped to get its score.")
+                #             except:
+                #                 print("Warning: " + gene_sym + "\tcannot be mapped to get its score.")
+                #             s = 0
+                #         self.scores[promoter.toString()] = s
 
                 self.de_regions = de_prom
-
-                ######################################################
-                # NonDE gene regions
-                nde_ensembl = [g for g in ann.symbol_dict.keys() if g not in de_ensembl]
-                print2(summary, "   \t" + str(len(nde_ensembl)) + "\tnon-target genes")
-                self.nde_gene = GeneSet("nde genes")
-                self.nde_gene.genes = nde_ensembl
-
-                # Get promoters from nonDE gene
-                nde_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
-                                                                 gene_set=self.nde_gene,
-                                                                 unmaplist=True)
-                print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
 
                 nde_prom.merge(namedistinct=True)
                 print2(summary, "   \t" + str(len(nde_prom)) + "\tmerged non-target promoters")
@@ -373,8 +398,10 @@ class PromoterTest:
         os.remove(os.path.join(temp, "nde.txp"))
 
         if obedp:
-            # try:
-            output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
+            try:
+                output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
+            except:
+                output = self.de_regions
             output.write_bed(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
 
             self.txp_de.write_bed(filename=os.path.join(temp, obedp + "_target_promoters_dbs.bed"),
@@ -706,15 +733,15 @@ class PromoterTest:
             if self.scoreh and self.de_gene:
                 score_header = [self.de_gene.cond[0]]
             else:
-                if "(" in self.scores[0]:
-                    scs = self.scores[0].replace("(", "")
-                    scs = scs.replace(")", "")
-                    scs = scs.split(",")
-                    # score_header = ["Score"] * len(scs)
-                    score_header = ["Fold_change", "Filtered"]
-
-                else:
-                    score_header = ["Fold Change Score"]
+                # if "(" in self.scores.values()[0]:
+                #     # scs = self.scores[0].replace("(", "")
+                #     # scs = scs.replace(")", "")
+                #     # scs = scs.split(",")
+                #     # score_header = ["Score"] * len(scs)
+                #     score_header = ["Fold_change", "Filtered"]
+                #
+                # else:
+                score_header = ["Fold Change Score"]
 
             header_list = ["#", "Promoter", "Gene", "DBSs counts", "DBS coverage"]
             header_list += score_header
@@ -745,56 +772,61 @@ class PromoterTest:
                 [self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.txp_de.merged_dict[rbsm]])
 
             if self.scores:
-                multiple_scores = False
-                if isinstance(self.scores[0], str):
-                    if "(" in self.scores[0]:
-                        def ranking(scores):
-                            rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
-                            return rank_score
-
-                        multiple_scores = True
-                        scs = []
-                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
-                            s = self.de_gene.values[promoter.name.upper()].replace("(", "")
-                            s = s.replace(")", "")
-                            s = s.split(",")
-                            scs.append([float(ss) for ss in s])
-                        ar = numpy.array(scs)
-                        # ar.transpose()
-                        # print(ar)
-                        score_ar = ar.tolist()
-                        rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
-                        rank_score = rank_score.transpose()
-                        rank_sum = numpy.sum(rank_score, axis=0).tolist()
-                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
-                        rank_score = rank_score.tolist()
-
-                    else:
-                        # try:
-                        new_scores = []
-                        for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
-                            try:
-                                try:
-                                    s = self.de_gene.values[promoter.name]
-                                except:
-                                    s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
-                            except:
-                                s = new_scores.append(abs(float(s)))
-                            if s == "Inf" or s == "inf":
-                                new_scores.append(float("inf"))
-                            elif s == "-Inf" or s == "-inf":
-                                new_scores.append(-float("inf"))
-                            else:
-                                try: new_scores.append(abs(float(s)))
-                                except: new_scores.append(0)
-
-                        scores = new_scores
-                        rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
-                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-                else:
-                    scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
-                    rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
-                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # multiple_scores = False
+                # if isinstance(self.scores[0], str):
+                #     if "(" in self.scores[0]:
+                #         def ranking(scores):
+                #             rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
+                #             return rank_score
+                #
+                #         multiple_scores = True
+                #         scs = []
+                #         for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                #             s = self.de_gene.values[promoter.name.upper()].replace("(", "")
+                #             s = s.replace(")", "")
+                #             s = s.split(",")
+                #             scs.append([float(ss) for ss in s])
+                #         ar = numpy.array(scs)
+                #         # ar.transpose()
+                #         # print(ar)
+                #         score_ar = ar.tolist()
+                #         rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
+                #         rank_score = rank_score.transpose()
+                #         rank_sum = numpy.sum(rank_score, axis=0).tolist()
+                #         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
+                #         rank_score = rank_score.tolist()
+                #
+                #     else:
+                #         # try:
+                #         new_scores = []
+                #         for i, promoter in enumerate(self.txp_de.merged_dict[rbsm]):
+                #             try:
+                #                 try:
+                #                     try:
+                #                         s = self.de_gene.values[promoter.name]
+                #                     except:
+                #                         s = self.de_gene.values[self.ensembl2symbol[promoter.name].upper()]
+                #                 except:
+                #                     new_scores.append(abs(float(s)))
+                #             except:
+                #                 new_scores.append(abs(self.score_dict[promoter.name]))
+                #             if s == "Inf" or s == "inf":
+                #                 new_scores.append(float("inf"))
+                #             elif s == "-Inf" or s == "-inf":
+                #                 new_scores.append(float("inf"))
+                #             else:
+                #                 try: new_scores.append(abs(float(s)))
+                #                 except: new_scores.append(0)
+                #
+                #         scores = new_scores
+                #         rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
+                #         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # else:
+                #     scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
+                #     rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
+                #     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array([self.scores[p.toString()] for p in self.txp_de.merged_dict[rbsm] ])
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
             else:
                 rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
@@ -815,13 +847,12 @@ class PromoterTest:
                                value2str(self.promoter["de"]["dbs_coverage"][promoter.toString()])
                                ]
                 if self.scores:
-                    if multiple_scores:
-
-                        for j in range(len(score_ar[0])):
-
-                            newline += [value2str(score_ar[i][j])]
-                    else:
-                        newline += [value2str(scores[i])]
+                    # if multiple_scores:
+                    #     for j in range(len(score_ar[0])):
+                    #
+                    #         newline += [value2str(score_ar[i][j])]
+                    # else:
+                    newline += [value2str(abs(self.scores[promoter.toString()]))]
 
                 newline += ["<i>" + str(int(rank_sum[i])) + "</i>"]
                 # print(newline)
@@ -901,10 +932,10 @@ class PromoterTest:
             if self.scoreh and self.de_gene:
                 score_header = [self.de_gene.cond[0]]
             else:
-                if "(" in self.scores[0]:
-                    score_header = ["Fold_change", "Filtered"]
-                else:
-                    score_header = ["Fold Change Score"]
+                # if "(" in self.scores.values()[0]:
+                #     score_header = ["Fold_change", "Filtered"]
+                # else:
+                score_header = ["Fold Change Score"]
             header_listp = ["#", "Promoter", "Gene", "DBSs Count", "DBS coverage"]
             header_listp += score_header
             header_listp += ["Sum of Ranks"]
@@ -937,49 +968,51 @@ class PromoterTest:
             [self.promoter["de"]["dbs_coverage"][p.toString()] for p in self.de_regions])
 
         if self.scores:
-            multiple_scores = False
-            if isinstance(self.scores[0], str):
-                new_scores = []
-                if "(" in self.scores[0]:
-                    def ranking(scores):
-                        rank_score = len(self.de_regions) - rank_array(scores)
-                        return rank_score
+            # multiple_scores = False
+            # if isinstance(self.scores[0], str):
+            #     new_scores = []
+            #     if "(" in self.scores[0]:
+            #         def ranking(scores):
+            #             rank_score = len(self.de_regions) - rank_array(scores)
+            #             return rank_score
+            #
+            #         multiple_scores = True
+            #         # scs = []
+            #         for s in self.scores:
+            #             s = s.replace("(", "")
+            #             s = s.replace(")", "")
+            #             s = s.split(",")
+            #             new_scores.append([float(ss) for ss in s])
+            #         ar = numpy.array(new_scores)
+            #         # ar.transpose()
+            #         # print(ar)
+            #         score_ar = ar.tolist()
+            #         rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
+            #         rank_score = rank_score.transpose()
+            #         rank_sum = numpy.sum(rank_score, axis=0).tolist()
+            #         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
+            #         rank_score = rank_score.tolist()
+            #         scores = new_scores
+            #
+            #     else:
+            #
+            #         for s in self.scores:
+            #             if s == "Inf" or s == "inf":
+            #                 new_scores.append(float("inf"))
+            #             elif s == "-Inf" or s == "-inf":
+            #                 new_scores.append(-float("inf"))
+            #             else:
+            #                 new_scores.append(abs(float(s)))
+            #
+            #         scores = new_scores
+            #         rank_score = len(self.de_regions) - rank_array(scores)
+            #         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+            # else:
+            #     rank_score = len(self.de_regions) - rank_array(scores)
+            #     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
-                    multiple_scores = True
-                    # scs = []
-                    for s in self.scores:
-                        s = s.replace("(", "")
-                        s = s.replace(")", "")
-                        s = s.split(",")
-                        new_scores.append([float(ss) for ss in s])
-                    ar = numpy.array(new_scores)
-                    # ar.transpose()
-                    # print(ar)
-                    score_ar = ar.tolist()
-                    rank_score = numpy.apply_along_axis(ranking, axis=0, arr=ar)
-                    rank_score = rank_score.transpose()
-                    rank_sum = numpy.sum(rank_score, axis=0).tolist()
-                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_sum)]
-                    rank_score = rank_score.tolist()
-                    scores = new_scores
-
-                else:
-
-                    for s in self.scores:
-                        if s == "Inf" or s == "inf":
-                            new_scores.append(float("inf"))
-                        elif s == "-Inf" or s == "-inf":
-                            new_scores.append(-float("inf"))
-                        else:
-                            new_scores.append(abs(float(s)))
-
-                    scores = new_scores
-                    rank_score = len(self.de_regions) - rank_array(scores)
-                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-
-            else:
-                rank_score = len(self.de_regions) - rank_array(scores)
-                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+            rank_score = len(self.de_regions) - rank_array([self.scores[p.toString()] for p in self.de_regions])
+            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
@@ -1011,11 +1044,11 @@ class PromoterTest:
                        ]
 
             if self.scores:
-                if multiple_scores:
-                    for j in range(len(score_ar[0])):
-                        newline += [value2str(score_ar[i][j])]
-                else:
-                    newline += [value2str(scores[i])]
+                # if multiple_scores:
+                #     for j in range(len(score_ar[0])):
+                #         newline += [value2str(abs(score_ar[i][j]))]
+                # else:
+                newline += [value2str(abs(self.scores[promoter.toString()]))]
 
             newline += ["<i>" + str(int(rank_sum[i])) + "</i>"]
             # print(newline)
@@ -1085,10 +1118,10 @@ class PromoterTest:
             dbs = sig_bindings.get_dbs()
             if len(dbs) > 0:
                 spromoters.add(promoter)
-                # m_dbs = dbs.merge(w_return=True)
+                m_dbs = dbs.merge(w_return=True)
                 self.promoter["de"]["sig_dbs"][promoter.toString()] = len(dbs)
                 # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
-                self.promoter["de"]["sig_dbs_coverage"][promoter.toString()] = float(dbs.total_coverage()) / len(promoter)
+                self.promoter["de"]["sig_dbs_coverage"][promoter.toString()] = float(m_dbs.total_coverage()) / len(promoter)
 
         html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
@@ -1112,34 +1145,34 @@ class PromoterTest:
                 [self.promoter["de"]["sig_dbs_coverage"][p.toString()] for p in spromoters])
 
             if self.scores:
-                sscores = []
+                # sscores = []
                 # de_genes_str = [g.name for g in self.de_gene.genes]
-                for p in spromoters:
-                    try: gene_sym = self.ensembl2symbol[p.name].upper()
-                    except: gene_sym = p.name.upper()
-                    try: sscores.append(self.de_gene.values[gene_sym.upper()])
-                    except: sscores.append(0)
-
-                if isinstance(sscores[0], str):
-
-                        new_scores = []
-                        for s in sscores:
-                            if s == "Inf" or s == "inf":
-                                new_scores.append(float("inf"))
-                            elif s == "-Inf" or s == "-inf":
-                                new_scores.append(-float("inf"))
-                            elif isinstance(s, str):
-                                new_scores.append(s)
-                            else:
-                                new_scores.append(abs(float(s)))
-
-                        scores = new_scores
-                        rank_score = len(spromoters) - rank_array(scores)
-                        rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-
-                else:
-                    rank_score = len(spromoters) - rank_array(sscores)
-                    rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # for p in spromoters:
+                #     try: gene_sym = self.ensembl2symbol[p.name].upper()
+                #     except: gene_sym = p.name.upper()
+                #     try: sscores.append(self.de_gene.values[gene_sym.upper()])
+                #     except: sscores.append(0)
+                #
+                # if isinstance(sscores[0], str):
+                #
+                #         new_scores = []
+                #         for s in sscores:
+                #             if s == "Inf" or s == "inf":
+                #                 new_scores.append(float("inf"))
+                #             elif s == "-Inf" or s == "-inf":
+                #                 new_scores.append(-float("inf"))
+                #             elif isinstance(s, str):
+                #                 new_scores.append(s)
+                #             else:
+                #                 new_scores.append(abs(float(s)))
+                #
+                #         scores = new_scores
+                #         rank_score = len(spromoters) - rank_array(scores)
+                #         rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                #
+                # else:
+                rank_score = len(spromoters) - rank_array([self.scores[p.toString()] for p in spromoters ] )
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
             else:
                 rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
@@ -1165,15 +1198,15 @@ class PromoterTest:
                            value2str(self.promoter["de"]["sig_dbs_coverage"][promoter.toString()])
                            ]
                 if self.scores:
-                    if multiple_scores:
-                        # print(score_ar)
-                        # print(len(score_ar))
-                        for j in range(len(score_ar[0])):
-                            # print(score_ar[j][i])
-                            # print(score_ar[i][j])
-                            newline += [value2str(score_ar[i][j])]
-                    else:
-                        newline += [value2str(scores[i])]
+                    # if multiple_scores:
+                    #     # print(score_ar)
+                    #     # print(len(score_ar))
+                    #     for j in range(len(score_ar[0])):
+                    #         # print(score_ar[j][i])
+                    #         # print(score_ar[i][j])
+                    #         newline += [value2str(score_ar[i][j])]
+                    # else:
+                    newline += [value2str(self.scores[promoter.toString()])]
 
                 newline += [str(int(rank_sum[i]))]
                 # print(newline)

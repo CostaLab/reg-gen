@@ -245,9 +245,13 @@ def main():
         ####################################################################################
         ######### get_dbss
         elif args.mode == "get_dbss":
+
             get_dbss(input_BED=args.i,output_BED=args.dbs,rna_fasta=args.r,output_rbss=args.rbs,
                      organism=args.organism,l=args.l,e=args.e,c=args.c,
                      fr=args.fr,fm=args.fm,of=args.of,mf=args.mf,rm=args.rm,temp=dir)
+            os.remove("dna_targeted_region.fa")
+            os.remove("dna_targeted_region.txp")
+            os.remove("rna_temp.fa")
             sys.exit(0)
 
 
@@ -401,10 +405,10 @@ def main():
 
         promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
         promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
-        promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable, 
-                                filename="lncRNA_target_ranktable.txt")
-        promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable, 
-                                filename="lncRNA_target_dbstable.txt")
+        # promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable,
+        #                         filename="lncRNA_target_ranktable.txt")
+        # promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable,
+        #                         filename="lncRNA_target_dbstable.txt")
 
         #promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
 

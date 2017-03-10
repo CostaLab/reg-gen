@@ -235,7 +235,8 @@ genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
 data_config_file.write("genome: "+path.join(genome_dir,"genome_mm9.fa\n"))
 data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm9\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_mm9.bed\n"))
+data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_mm9.bed\n"))
+data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_mm9.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM1.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
 genome = "mm10"
@@ -243,7 +244,8 @@ genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
 data_config_file.write("genome: "+path.join(genome_dir,"genome_mm10.fa\n"))
 data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm10\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_mm10.bed\n"))
+data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_mm10.bed\n"))
+data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_mm10.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM11.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
 genome = "hg19"
@@ -251,7 +253,8 @@ genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
 data_config_file.write("genome: "+path.join(genome_dir,"genome_hg19.fa\n"))
 data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg19\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg19.bed\n"))
+data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg19.bed\n"))
+data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg19.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v19.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
 genome = "hg38"
@@ -259,7 +262,8 @@ genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
 data_config_file.write("genome: "+path.join(genome_dir,"genome_hg38.fa\n"))
 data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg38\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_hg38.bed\n"))
+data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg38.bed\n"))
+data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg38.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v24.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
 genome = "zv9"
@@ -339,10 +343,10 @@ Copy Files Dictionary:
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
 "lib": ["libtriplexator.so", "librgt.so"],
-"hg19": ["genes_hg19.bed","chrom.sizes.hg19","alias_human.txt"],
-"hg38": ["genes_hg38.bed","chrom.sizes.hg38","alias_human.txt"],
-"mm9": ["genes_mm9.bed","chrom.sizes.mm9","alias_mouse.txt"],
-"mm10": ["genes_mm10.bed","chrom.sizes.mm10","alias_mouse.txt"],
+"hg19": ["genes_Gencode_hg19.bed","chrom.sizes.hg19","alias_human.txt","genes_RefSeq_hg19.bed"],
+"hg38": ["genes_Gencode_hg38.bed","chrom.sizes.hg38","alias_human.txt","genes_RefSeq_hg38.bed"],
+"mm9": ["genes_Gencode_mm9.bed","chrom.sizes.mm9","alias_mouse.txt","genes_RefSeq_mm9.bed"],
+"mm10": ["genes_Gencode_mm10.bed","chrom.sizes.mm10","alias_mouse.txt","genes_RefSeq_mm10.bed"],
 "zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
 "zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
 "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.hmm", "atac_bc.hmm", "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm", "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],

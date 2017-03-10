@@ -38,6 +38,11 @@ class GeneSet:
         """Iterate this GeneSet."""
         return iter(self.genes)
 
+    def add(self, gene_name, value=None):
+        self.genes.append(gene_name)
+        if value:
+            self.values[gene_name] = value
+
     def read(self, geneListFile, score=False):
         """Read genes from the file.
 
