@@ -127,8 +127,8 @@ def list_all_index(path, link_d=None):
     header_list = ["No.", "Experiments", "RNA", "Closest genes",
                    "Exon", "Length", "Expression*",
                    "Norm DBS*",
-                   "Norm DBD*",  "No sig. DBD", "Top DBD",
-                   "p-value", "Organism", "Target region",
+                   "Norm DBD*",  "No sig. DBD",
+                   "Organism", "Target region",
                    "Rank*"]
 
     profile_f = open(os.path.join(path, "profile.txt"), 'r')
