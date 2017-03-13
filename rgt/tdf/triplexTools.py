@@ -165,8 +165,8 @@ def list_all_index(path, link_d=None):
             # sig_list.append(True)
         else:
             new_line += [profile[exp][11]]
-            new_line += [0,  # 7 norm DBS
-                         0,  # 8 norm DBD
+            new_line += [str(0),  # 7 norm DBS
+                         str(0),  # 8 norm DBD
                          profile[exp][9],  # 9 sig DBD
                          profile[exp][10],  # 10 Top DBD
                          profile[exp][11]]
