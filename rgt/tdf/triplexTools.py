@@ -140,6 +140,8 @@ def list_all_index(path, link_d=None):
         elif len(line) > 5: profile[line[0]] = line[1:]
     profile_f.close()
 
+    # sig_list = []
+
     for i, exp in enumerate(profile.keys()):
         c += 1
         if profile[exp][10] == "-":
@@ -160,14 +162,18 @@ def list_all_index(path, link_d=None):
                           profile[exp][10], #10 Top DBD
                           "<font color=\"red\">" + \
                           profile[exp][11] + "</font>"]
+            # sig_list.append(True)
         else:
+            new_line += [profile[exp][11]]
             new_line += [0,  # 7 norm DBS
                          0,  # 8 norm DBD
                          profile[exp][9],  # 9 sig DBD
                          profile[exp][10],  # 10 Top DBD
                          profile[exp][11]]
+            # sig_list.append(False)
 
         new_line += [ profile[exp][4], profile[exp][5] ]
+
         data_table.append(new_line)
 
     rank_dbd = len(data_table) - rank_array([float(x[8]) for x in data_table])
