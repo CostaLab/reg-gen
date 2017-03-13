@@ -151,20 +151,23 @@ def list_all_index(path, link_d=None):
         new_line += [ profile[exp][12],#3 close genes
                       profile[exp][1], #4 exon
                       profile[exp][2], #5 length
-                      profile[exp][13],#6 exp
-                      profile[exp][6], #7 norm DBS
-                      profile[exp][8], #8 norm DBD
-                      profile[exp][9], #9 sig DBD
-                      profile[exp][10] #10 Top DBD
-                      ]
+                      profile[exp][13] ]#6 exp
 
         if float(profile[exp][11]) < 0.05:
-            new_line += ["<font color=\"red\">" + \
-                         profile[exp][11] + "</font>"]
+            new_line += [ profile[exp][6], #7 norm DBS
+                          profile[exp][8], #8 norm DBD
+                          profile[exp][9], #9 sig DBD
+                          profile[exp][10], #10 Top DBD
+                          "<font color=\"red\">" + \
+                          profile[exp][11] + "</font>"]
         else:
-            new_line += [profile[exp][11]]
-        new_line += [ profile[exp][4], profile[exp][5] ]
+            new_line += [0,  # 7 norm DBS
+                         0,  # 8 norm DBD
+                         profile[exp][9],  # 9 sig DBD
+                         profile[exp][10],  # 10 Top DBD
+                         profile[exp][11]]
 
+        new_line += [ profile[exp][4], profile[exp][5] ]
         data_table.append(new_line)
 
     rank_dbd = len(data_table) - rank_array([float(x[8]) for x in data_table])
@@ -173,6 +176,7 @@ def list_all_index(path, link_d=None):
     rank_exp = len(data_table) - rank_array([0 if x[6] == "n.a." else float(x[6]) for x in data_table ])
 
     rank_sum = [x + y + z for x, y, z  in zip(rank_dbd, rank_dbs, rank_exp)]
+
     nd = [ d + [str(rank_sum[i])] for i, d in enumerate(data_table) ]
 
     nd = natsort_ob.natsorted(nd, key=lambda x: x[-1])
