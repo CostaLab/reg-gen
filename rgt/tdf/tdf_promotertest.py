@@ -184,6 +184,8 @@ class PromoterTest:
                             # d = c.split("\t")
                             p.data = self.de_gene.values[self.ensembl2symbol[p.name]]
                         self.scores = de_prom.get_score_dict()
+                        # print(self.scores.keys()[:5])
+                        # print(self.scores.values()[:5])
 
                 else:
                 ## Refseq
@@ -193,13 +195,23 @@ class PromoterTest:
                     de_genes = genes.by_names(self.de_gene, load_score=score)
                     self.de_gene = de_genes.get_GeneSet()
                     de_prom = de_genes.get_promoters(length=promoterLength)
+                    de_prom.merge(namedistinct=True, strand_specific=True)
                     nde_genes = genes.by_names(self.de_gene, load_score=score, background=True)
+
                     self.nde_gene = nde_genes.get_GeneSet()
                     nde_prom = nde_genes.get_promoters(length=promoterLength)
+                    nde_genes.merge(namedistinct=True, strand_specific=True)
                     self.ensembl2symbol = None
-                    if score: self.scores = de_genes.get_score_dict()
+                    if score:
+                        self.scores = {}
+                        for p in de_prom:
+                            p.data = str(self.de_gene.values[p.name])
+                        self.scores = de_prom.get_score_dict()
+                        # self.scores = de_genes.get_score_dict()
+                        print(self.scores.keys()[:5])
+                        print(self.scores.values()[:5])
 
-                de_prom.merge(namedistinct=True, strand_specific=True)
+                # de_prom.merge(namedistinct=True, strand_specific=True)
                 print2(summary, "   \t" + str(len(de_prom)) + "\tmerged promoters ")
 
                 print2(summary, "   \t" + str(len(de_prom)) + "\tunique target promoters are loaded")

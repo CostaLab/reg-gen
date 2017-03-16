@@ -494,14 +494,19 @@ def main():
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
         # print(args.par)
+        if len(randomtest.rbss) == 0:
+            # no_binding_code()
+            no_binding_response(args=args, rna_regions=randomtest.rna_regions,
+                                rna_name=randomtest.rna_name, organism=randomtest.organism,
+                                stat=randomtest.stat, expression=randomtest.rna_expression)
+
         print2(summary, "Step 2: Randomization and counting number of binding sites")
 
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
                                filter_bed=args.f, alpha=args.a)
         
-        if len(randomtest.rbss) == 0: 
-            no_binding_code()
+
 
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))

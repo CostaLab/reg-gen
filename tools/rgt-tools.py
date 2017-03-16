@@ -27,7 +27,10 @@ tag = "RGT-tools"
 def get_sequence(sequence, ch, ss, es, reverse=False, complement=False, rna=False, ex=0, strand=None):
     import pysam
     sequence = pysam.Fastafile(sequence)
-    seq = sequence.fetch(ch, max(0, ss-ex), es+ex )
+    if not ch:
+        seq = sequence.fetch(max(0, ss - ex), es + ex)
+    else:
+        seq = sequence.fetch(ch, max(0, ss-ex), es + ex)
     seq = seq.upper()
 
     if strand == "-" and not reverse and not complement:
@@ -252,6 +255,13 @@ if __name__ == "__main__":
                                              help="[BED] Calculate the average size.")
     parser_bedaversize.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
+    ############### BED complementary regions from Genome ############################
+    parser_bedcomplement = subparsers.add_parser('bed_complement',
+                                               help="[BED] Get the complementary regions from genome.")
+    parser_bedcomplement.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedcomplement.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedcomplement.add_argument('-organism', type=str, help="Define the organism (necessary if input is a gene list)")
+
     ############### BED detect polyA reads within the regions ################################
     parser_bedpolya = subparsers.add_parser('bed_polya',
                                                help="[BED] Detect polyA reads within the regions.")
@@ -318,6 +328,7 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
 
     ############### GENOME get sequence ####################################################
+    # python /projects/reg-gen/tools/rgt-tools.py getseq -d /data/rgt
     parser_getseq = subparsers.add_parser('getseq', 
                        help="[FASTA] Get sequence from genome FASTA")
     parser_getseq.add_argument('-b', metavar='bed', type=str, default=None, help="Input BED file")
@@ -954,6 +965,18 @@ if __name__ == "__main__":
         print("Size variance:\t" + str(bed.size_variance()))
         print()
 
+
+    ############### BED complement ###########################
+    elif args.mode == "bed_complement":
+        print(tag + ": [BED] Get complementary regions from genome")
+        bed = GenomicRegionSet("bed")
+        bed.read_bed(args.i)
+        genome = GenomicRegionSet(args.organism)
+        genome.get_genome_data(organism=args.organism, chrom_X=True, chrom_Y=False, chrom_M=False)
+        res = genome.subtract(bed)
+        res.write_bed(args.o)
+        print()
+
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
@@ -1334,32 +1357,39 @@ if __name__ == "__main__":
 
         else:
             if args.p:
-                print(args.p)
-                args.ch = args.p.partition(":")[0]
-                args.ss = int(args.p.partition(":")[2].partition("-")[0])
-                args.es = int(args.p.partition(":")[2].partition("-")[2])
+                # print(args.p)
+                if ":" not in args.p:
+                    args.ch = None
+                    args.ss = int(args.p.split("-")[0])
+                    args.es = int(args.p.split("-")[1])
+                else:
+                # print(args.p.partition(":")[2])
+                    args.ch = args.p.partition(":")[0]
+                    args.ss = int(args.p.partition(":")[2].split("-")[0])
+                    args.es = int(args.p.partition(":")[2].split("-")[1])
+                    print([args.ch, args.ss, args.es])
             if args.s == "both":
                 seq1 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="+",
-                                    reverse=False, complement=False, rna=args.rna, ex=args.ex)
+                                    reverse=args.reverse, complement=False, rna=args.rna, ex=args.ex)
                 seq2 = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand="-",
-                                    reverse=False, complement=True, rna=args.rna, ex=args.ex)
+                                    reverse=args.reverse, complement=True, rna=args.rna, ex=args.ex)
                 print("5'- " + seq1 + " -3'")
                 print("3'- " + seq2 + " -5'")
-            elif args.s == "+" and not args.re:
+            elif args.s == "+" and not args.reverse:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
+                                   reverse=args.reverse, complement=args.complement, rna=args.rna, ex=args.ex)
                 print("5'- " + seq + " -3'")
-            elif args.s == "+" and args.re:
+            elif args.s == "+" and args.reverse:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
+                                   reverse=args.reverse, complement=args.complement, rna=args.rna, ex=args.ex)
                 print("3'- " + seq + " -5'")
-            elif args.s == "-" and not args.re:
+            elif args.s == "-" and not args.reverse:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
+                                   reverse=args.reverse, complement=args.complement, rna=args.rna, ex=args.ex)
                 print("3'- "+seq+" -5'")
-            elif args.s == "-" and args.re:
+            elif args.s == "-" and args.reverse:
                 seq = get_sequence(sequence=args.d, ch=args.ch, ss=args.ss, es=args.es, strand=args.s,
-                                   reverse=args.re, complement=args.c, rna=args.rna, ex=args.ex)
+                                   reverse=args.reverse, complement=args.complement, rna=args.rna, ex=args.ex)
                 print("5'- " + seq + " -3'")
             
         print()
