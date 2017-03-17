@@ -61,12 +61,12 @@ class Motif:
         # Evaluating threshold
         try:
             if pseudocounts != 0.1 or precision != 10000:
-                main_error_handler.throw_warning("DEFAULT_WARNING",
-                                                 add_msg="Parameters not matching pre-computed Fpr data. "
-                                                         "Recalculating (might take a while)..")
                 raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
+            main_error_handler.throw_warning("DEFAULT_WARNING",
+                                             add_msg="Parameters not matching pre-computed Fpr data. "
+                                                     "Recalculating (might take a while)..")
             try:
                 distribution = self.pssm.distribution(background=background, precision=precision)
             except Exception:
