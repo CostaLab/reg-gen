@@ -61,9 +61,10 @@ class Motif:
         # Evaluating threshold
         try:
             if pseudocounts != 0.1 or precision != 10000:
-                # FIXME: brittle, we can improve this
-                # Induce Exception
-                1/0
+                main_error_handler.throw_warning("DEFAULT_WARNING",
+                                                 add_msg="Parameters not matching pre-computed Fpr data. "
+                                                         "Recalculating (might take a while)..")
+                raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
             try:
