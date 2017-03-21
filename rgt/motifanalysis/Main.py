@@ -91,7 +91,7 @@ def main():
         sys.exit(0)
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     ###################################################################################################
     # Redirecting to Specific Functions
@@ -103,7 +103,7 @@ def main():
     elif sys.argv[1] == "--enrichment":
         main_enrichment()
     else:
-        main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
+        err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
     print("Completed in", time.time() - start, "seconds")
 
@@ -120,7 +120,7 @@ def main_matching():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
     usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
@@ -185,8 +185,8 @@ def main_matching():
     options, arguments = parser.parse_args()
 
     if not options.input_matrix and len(arguments) == 0:
-        main_error_handler.throw_error("ME_FEW_ARG", add_msg="You must either specify an experimental matrix, "
-                                                             "or at least a valid input file.")
+        err.throw_error("ME_FEW_ARG", add_msg="You must either specify an experimental matrix, "
+                                              "or at least a valid input file.")
 
     # Additional Parameters
     matching_folder_name = "match_result"
@@ -212,7 +212,7 @@ def main_matching():
         if not os.path.isdir(output_location):
             os.makedirs(output_location)
     except Exception:
-        main_error_handler.throw_error("MM_OUT_FOLDER_CREATION")
+        err.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -229,7 +229,7 @@ def main_matching():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Regions
@@ -279,7 +279,7 @@ def main_matching():
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
         except Exception:
-            main_error_handler.throw_error("MM_WRONG_EXPMAT")
+            err.throw_error("MM_WRONG_EXPMAT")
     elif arguments:
         # get input files, if available
         for input_filename in arguments:
@@ -291,8 +291,8 @@ def main_matching():
             genomic_regions_dict[name] = regions
 
     if not genomic_regions_dict:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
-                                                                "or at least a valid input file.")
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
 
     max_region_len = 0
     max_region = None
@@ -351,7 +351,7 @@ def main_matching():
                     " ".join(["bedToBigBed", rand_bed_file_name, chrom_sizes_file, rand_bb_file_name, "-verbose=0"]))
                 os.remove(rand_bed_file_name)
             except Exception:
-                main_error_handler.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
+                err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
     ###################################################################################################
     # Creating PWMs
@@ -438,7 +438,7 @@ def main_enrichment():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
     usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
@@ -533,7 +533,7 @@ def main_enrichment():
         if not os.path.isdir(output_location):
             os.makedirs(output_location)
     except Exception:
-        main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
+        err.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Output folder
     if options.match_location:
@@ -545,7 +545,7 @@ def main_enrichment():
         if not os.path.isdir(match_location):
             os.makedirs(match_location)
     except Exception:
-        main_error_handler.throw_error("ME_MATCH_NOTFOUND")
+        err.throw_error("ME_MATCH_NOTFOUND")
 
     # Background folder
     if options.background_path:
@@ -554,7 +554,7 @@ def main_enrichment():
         background_path = match_location
 
     if not os.path.isdir(background_path):
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="Must specify an existing Background directory.")
+        err.throw_error("DEFAULT_ERROR", add_msg="Must specify an existing Background directory.")
 
     background_name = options.background_prefix
 
@@ -573,7 +573,7 @@ def main_enrichment():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     # Default image data
     image_data = ImageData()
@@ -607,7 +607,7 @@ def main_enrichment():
             del exp_matrix
 
         except Exception:
-            main_error_handler.throw_error("MM_WRONG_EXPMAT")
+            err.throw_error("MM_WRONG_EXPMAT")
     elif arguments:
         # get input files, if available
         for input_filename in arguments:
@@ -618,13 +618,12 @@ def main_enrichment():
             try:
                 regions.read_bed(os.path.abspath(input_filename))
             except:
-                main_error_handler.throw_error("DEFAULT_ERROR",
-                                               add_msg="Input file {} could not be loaded.".format(input_filename))
+                err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
 
     if not genomic_regions_dict:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
-                                                                "or at least an input file, or both")
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -668,10 +667,10 @@ def main_enrichment():
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
                     else:
-                        main_error_handler.throw_warning("ME_MANY_GENESETS")
+                        err.throw_warning("ME_MANY_GENESETS")
 
             if not flag_foundgeneset:
-                main_error_handler.throw_warning("ME_FEW_GENESETS")
+                err.throw_warning("ME_FEW_GENESETS")
 
             # Update input list
             input_list.append(curr_input)
@@ -714,7 +713,7 @@ def main_enrichment():
 
     # Grouping motif file names by the number of processes requested
     if options.processes <= 0:
-        main_error_handler.throw_error("ME_LOW_NPROC")
+        err.throw_error("ME_LOW_NPROC")
     elif options.processes == 1:
         motif_names_grouped = [[e] for e in motif_names]
     else:
@@ -733,14 +732,14 @@ def main_enrichment():
     try:
         background_region_file_name = background_region_glob[0]
     except Exception:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="Background file not found")
+        err.throw_error("DEFAULT_ERROR", add_msg="Background file not found")
 
     # Verifying background region MPBS file exists
     background_region_mpbs_glob = glob(os.path.join(background_path, background_name + "_mpbs.*"))
     try:
         background_mpbs_file_name = background_region_mpbs_glob[0]
     except Exception:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file not found")
+        err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file not found")
 
     # Converting regions bigbed file
     background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
@@ -748,7 +747,7 @@ def main_enrichment():
         background_region_bed_name = os.path.join(background_path, background_name + ".bed")
         os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
     elif background_region_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="Background neither BED nor BigBed")
+        err.throw_error("DEFAULT_ERROR", add_msg="Background neither BED nor BigBed")
 
     # Converting mpbs bigbed file
     background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
@@ -756,7 +755,7 @@ def main_enrichment():
         background_mpbs_bed_name = os.path.join(background_path, background_name + "_mpbs.bed")
         os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
     elif background_mpbs_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="Background mpbs neither BED nor BigBed")
+        err.throw_error("DEFAULT_ERROR", add_msg="Background mpbs neither BED nor BigBed")
 
     # Evaluating background statistics
     bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
@@ -811,7 +810,7 @@ def main_enrichment():
             try:
                 curr_mpbs_file_name = curr_mpbs_glob[0]
             except Exception:
-                pass  # TODO main_error_handler.throw_error("ME_RAND_NOTFOUND")
+                pass  # TODO err.throw_error("ME_RAND_NOTFOUND")
 
             # Converting ev mpbs bigbed file
             curr_mpbs_bed_name = ".".join(curr_mpbs_file_name.split(".")[:-1]) + ".bed"
@@ -820,7 +819,7 @@ def main_enrichment():
                 os.system(" ".join(["bigBedToBed", curr_mpbs_file_name, curr_mpbs_bed_name]))
                 to_remove_list.append(curr_mpbs_bed_name)
             elif curr_mpbs_file_name.split(".")[-1] != "bed":
-                pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+                pass  # XXX TODO err.throw_error("ME_RAND_NOT_BED_BB")
 
             ###################################################################################################
             # Gene Evidence Statistics
