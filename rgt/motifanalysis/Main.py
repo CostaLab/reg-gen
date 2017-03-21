@@ -219,7 +219,7 @@ def main_matching():
     group = OptionGroup(parser, "Output options",
                         "Where to put the output files and how to post-process them.")
     group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                     help="Path where the output MPBS files will be written. Defaults to 'match_result' in the "
+                     help="Path where the output MPBS files will be written. Defaults to 'match' in the "
                           "current directory.")
     group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                      help="If this option is used, all bed files will be written as bigbed.")
@@ -237,7 +237,7 @@ def main_matching():
                                               "or at least a valid input file.")
 
     # Additional Parameters
-    matching_folder_name = "match_result"
+    matching_folder_name = "match"
     random_region_name = "random_regions"
 
     # we take care of conflicting parameters before going into the core of the method
@@ -521,13 +521,13 @@ def main_enrichment():
                       help="Only use the motifs contained within this file (one for each line).")
     parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
                       help="Directory where the matching output containing the MPBS files resides. "
-                           "Defaults to 'match_result' in the current directory.")
+                           "Defaults to 'match' in the current directory.")
     parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
                       help="If an experimental matrix is provided, the input arguments will be ignored.")
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                      help="Path where the output MPBS files will be written. Defaults to 'enrichment_result' in the "
+                      help="Path where the output MPBS files will be written. Defaults to 'enrichment' in the "
                            "current directory.")
     parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
                       help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
@@ -542,8 +542,8 @@ def main_enrichment():
     options, arguments = parser.parse_args()
 
     # Additional Parameters
-    matching_folder_name = "match_result"
-    enrichment_folder_name = "enrichment_result"
+    matching_folder_name = "match"
+    enrichment_folder_name = "enrichment"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -586,6 +586,10 @@ def main_enrichment():
         match_location = options.match_location
     else:
         match_location = os.path.join(os.getcwd(), matching_folder_name)
+
+    # TODO: to investigate further why we have problems here
+    if output_location == match_location:
+        err.throw_error("DEFAULT_ERROR", add_msg="Output location must differ from matching location.")
 
     try:
         if not os.path.isdir(match_location):
