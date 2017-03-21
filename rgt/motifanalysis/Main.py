@@ -860,7 +860,7 @@ def main_enrichment():
                 curr_mpbs_bed_name = ensure_is_bed(curr_mpbs_file_name)
 
                 # at the end of calculations, we'll remove all the temporary bed files we created
-                to_remove_list.append(curr_mpbs_file_name)
+                to_remove_list.append(curr_mpbs_bed_name)
             elif is_bed(curr_mpbs_file_name):
                 curr_mpbs_bed_name = curr_mpbs_file_name
             else:
