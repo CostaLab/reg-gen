@@ -854,7 +854,8 @@ def main_enrichment():
             except Exception:
                 err.throw_warning("DEFAULT_ERROR", add_msg="File {} does not have a matching MPBS file. "
                                                            "Ignoring.".format(original_name))
-                continue # skip to next genomic region set
+                # skip to next genomic region set
+                continue
 
             if is_bb(curr_mpbs_file_name):
                 curr_mpbs_bed_name = ensure_is_bed(curr_mpbs_file_name)
