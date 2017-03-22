@@ -575,26 +575,21 @@ def main_enrichment():
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
 
+    # if the output folder doesn't exist, we create it
     try:
         if not os.path.isdir(output_location):
             os.makedirs(output_location)
     except Exception:
         err.throw_error("ME_OUT_FOLDER_CREATION")
 
-    # Output folder
+    # Matching folder
     if options.match_location:
         match_location = options.match_location
     else:
         match_location = os.path.join(os.getcwd(), matching_folder_name)
 
-    # TODO: to investigate further why we have problems here
-    if output_location == match_location:
-        err.throw_error("DEFAULT_ERROR", add_msg="Output location must differ from matching location.")
-
-    try:
-        if not os.path.isdir(match_location):
-            os.makedirs(match_location)
-    except Exception:
+    # the matching directory must exist, for obvious reasons
+    if not os.path.isdir(match_location):
         err.throw_error("ME_MATCH_NOTFOUND")
 
     # Background file must exist
