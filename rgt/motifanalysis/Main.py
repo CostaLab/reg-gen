@@ -47,6 +47,54 @@ Authors: Eduardo G. Gusmao, Fabio Ticconi
 """
 
 
+def is_bed(filename):
+    _, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bed":
+        return True
+
+    return False
+
+
+def is_bb(filename):
+    _, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bb":
+        return True
+
+    return False
+
+
+def ensure_is_bed(filename):
+    path, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bb":
+        # convert BB to BED
+        bed_filename = os.path.join(path + ".bed")
+        os.system(" ".join(["bigBedToBed", filename, bed_filename]))
+
+        return bed_filename
+    elif ext.lower() == ".bed":
+        return filename
+    else:
+        raise ValueError("{} is neither a BED nor a BB".format(filename))
+
+
+def ensure_is_bb(filename, chrom_sizes_filename):
+    path, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bed":
+        # convert BED to BB
+        bb_filename = os.path.join(path + ".bb")
+        os.system(" ".join(["bedToBigBed", filename, chrom_sizes_filename, bb_filename, "-verbose=0"]))
+
+        return bb_filename
+    elif ext.lower() == ".bb":
+        return filename
+    else:
+        raise ValueError("{} is neither a BED nor a BB".format(filename))
+
+
 def main():
     start = time.time()
     """
@@ -91,7 +139,7 @@ def main():
         sys.exit(0)
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     ###################################################################################################
     # Redirecting to Specific Functions
@@ -103,7 +151,7 @@ def main():
     elif sys.argv[1] == "--enrichment":
         main_enrichment()
     else:
-        main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
+        err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
     print("Completed in", time.time() - start, "seconds")
 
@@ -120,7 +168,7 @@ def main_matching():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
     usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
@@ -139,7 +187,7 @@ def main_matching():
                       help="Score distribution precision for determining false positive rate cutoff.")
     parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=0.1,
                       help="Pseudocounts to be added to raw counts of each PFM.")
-    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT", default=0,
+    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT",
                       help="If set, a random regions file will be created (eg, for later enrichment analysis). "
                            "The number of coordinates will be equal to this value times the size of the input regions. "
                            "We advise you use a value of at least 10.")
@@ -152,17 +200,17 @@ def main_matching():
     parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
     parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
-                      help="If an experimental matrix is passed, the input arguments will be ignored.")
+                      help="If an experimental matrix is provided, the input arguments will be ignored.")
 
     # Promoter-matching options
     group = OptionGroup(parser, "Promoter-regions matching options",
                         "Takes a list of genes, extracts their promoter regions and performs motif matching on these. "
-                        "If a genes file is provided, the input regions/matrix will be ignored.")
+                        "If a genes file is provided, the input files and experimental matrix will be ignored.")
     group.add_option("--gene-list", dest="promoter_genes_filename", type="string", metavar="PATH",
                      help="List of genes (one per line) to get the promoter regions from.")
     group.add_option("--make-background", dest="promoter_make_background", action="store_true", default=False,
                      help="If set, it will perform motif matching on the 'background regions', composed of "
-                          "the promoters of all available genes.")
+                          "the promoters of all available genes. It doesn't require --gene-list.")
     group.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
                      help="Length of the promoter region (in bp) to be extracted from each gene.")
     parser.add_option_group(group)
@@ -171,7 +219,8 @@ def main_matching():
     group = OptionGroup(parser, "Output options",
                         "Where to put the output files and how to post-process them.")
     group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                     default=os.getcwd(), help="Path where the output files will be written.")
+                     help="Path where the output MPBS files will be written. Defaults to 'match' in the "
+                          "current directory.")
     group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                      help="If this option is used, all bed files will be written as bigbed.")
     group.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
@@ -183,14 +232,18 @@ def main_matching():
     # Processing Options
     options, arguments = parser.parse_args()
 
+    if not options.input_matrix and len(arguments) == 0:
+        err.throw_error("ME_FEW_ARG", add_msg="You must either specify an experimental matrix, "
+                                              "or at least a valid input file.")
+
     # Additional Parameters
-    matching_folder_name = "match_result"
+    matching_folder_name = "match"
     random_region_name = "random_regions"
 
     # we take care of conflicting parameters before going into the core of the method
     if options.promoter_genes_filename:
         # disable random regions and input matrix
-        options.rand_proportion = 0
+        options.rand_proportion = None
         options.input_matrix = None
 
     ###################################################################################################
@@ -198,12 +251,16 @@ def main_matching():
     ###################################################################################################
 
     # Output folder
-    matching_output_location = os.path.join(options.output_location, matching_folder_name)
+    if options.output_location:
+        output_location = options.output_location
+    else:
+        output_location = os.path.join(os.getcwd(), matching_folder_name)
+
     try:
-        if not os.path.isdir(matching_output_location):
-            os.makedirs(matching_output_location)
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
     except Exception:
-        main_error_handler.throw_error("MM_OUT_FOLDER_CREATION")
+        err.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -220,7 +277,7 @@ def main_matching():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Regions
@@ -241,7 +298,7 @@ def main_matching():
         target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
-        output_file_name = os.path.join(matching_output_location, target_regions.name + ".bed")
+        output_file_name = os.path.join(output_location, target_regions.name + ".bed")
         target_regions.write_bed(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
@@ -256,7 +313,7 @@ def main_matching():
                                                           promoterLength=options.promoter_length)
             background_regions.name = "background_regions"
             background_regions.sort()
-            output_file_name = os.path.join(matching_output_location, background_regions.name + ".bed")
+            output_file_name = os.path.join(output_location, background_regions.name + ".bed")
             background_regions.write_bed(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
@@ -270,16 +327,11 @@ def main_matching():
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
         except Exception:
-            main_error_handler.throw_error("MM_WRONG_EXPMAT")
-
-    # Reading input regions files, if available
-    if arguments:
+            err.throw_error("MM_WRONG_EXPMAT")
+    elif arguments:
+        # get input files, if available
         for input_filename in arguments:
             name, _ = os.path.splitext(os.path.basename(input_filename))
-
-            if name in genomic_regions_dict:
-                main_error_handler.throw_error("DEFAULT_ERROR",
-                                               add_msg="region file named {} has already been loaded".format(name))
 
             regions = GenomicRegionSet(name)
             regions.read_bed(os.path.abspath(input_filename))
@@ -287,8 +339,8 @@ def main_matching():
             genomic_regions_dict[name] = regions
 
     if not genomic_regions_dict:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
-                                                                "or at least an input file, or both")
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
 
     max_region_len = 0
     max_region = None
@@ -312,14 +364,14 @@ def main_matching():
             curr_len = len(curr_genomic_region)
             if curr_len > max_region_len:
                 max_region_len = curr_len
-                max_region = genomic_regions_dict[k] # FIXME why not curr_genomic_region?
+                max_region = curr_genomic_region
 
     ###################################################################################################
     # Creating random regions
     ###################################################################################################
 
     # if a random proportion is set, create random regions
-    if options.rand_proportion > 0:
+    if options.rand_proportion:
 
         # Create random coordinates and name it random_regions
         rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
@@ -330,7 +382,7 @@ def main_matching():
         regions_to_match.append(rand_region)
 
         # Writing random regions
-        output_file_name = os.path.join(matching_output_location, random_region_name)
+        output_file_name = os.path.join(output_location, random_region_name)
         rand_bed_file_name = output_file_name + ".bed"
         rand_region.write_bed(rand_bed_file_name)
 
@@ -340,14 +392,14 @@ def main_matching():
             # Fetching file with chromosome sizes
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
-            # Converting to big bed
-            rand_bb_file_name = output_file_name + ".bb"
             try:
-                os.system(
-                    " ".join(["bedToBigBed", rand_bed_file_name, chrom_sizes_file, rand_bb_file_name, "-verbose=0"]))
+                # Converting to big bed
+                ensure_is_bb(rand_bed_file_name, chrom_sizes_file)
+
+                # removing previously-created BED file
                 os.remove(rand_bed_file_name)
             except Exception:
-                main_error_handler.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
+                err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
     ###################################################################################################
     # Creating PWMs
@@ -392,7 +444,7 @@ def main_matching():
     for genomic_region_set in regions_to_match:
 
         # Initializing output bed file
-        output_file_name = os.path.join(matching_output_location, genomic_region_set.name + "_mpbs")
+        output_file_name = os.path.join(output_location, genomic_region_set.name + "_mpbs")
         bed_file_name = output_file_name + ".bed"
         output_file = open(bed_file_name, "w")
 
@@ -414,10 +466,12 @@ def main_matching():
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
             # Converting to big bed
+            # FIXME: sorting should be performed in memory, before even writing the BED file
             sort_file_name = output_file_name + "_sort.bed"
-            bb_file_name = output_file_name + ".bb"
             os.system("sort -k1,1 -k2,2n " + bed_file_name + " > " + sort_file_name)
-            os.system(" ".join(["bedToBigBed", sort_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+            ensure_is_bb(sort_file_name, chrom_sizes_file)
+
+            # removing temporary files
             os.remove(bed_file_name)
             os.remove(sort_file_name)
 
@@ -434,10 +488,10 @@ def main_enrichment():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <input_path>"
+    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -458,21 +512,23 @@ def main_enrichment():
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-    parser.add_option("--background-prefix", dest="background_prefix", type="string", metavar="STRING",
-                      default="background_regions",
-                      help="By default we shall look for the following files to use as background: "
-                           "background_regions.bed and background_regions_mpbs.bed. "
-                           "If you created random regions during matching, or are using a different name for "
-                           "the background files, set the prefix accordingly.")
+    parser.add_option("--background-file", dest="background_file", type="string", metavar="PATH",
+                      help="Path to BED file to be used as background. The corresponding MPBS file is expected to have "
+                           " a 'mpbs' suffix appended. For example, 'background.bed' should have a corresponding "
+                           "'background_mpbs.bed'. The MPBS file is first searched in the matching location, and if "
+                           "not found is searched in the same directory as the background file.")
     parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
+    parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
+                      help="Directory where the matching output containing the MPBS files resides. "
+                           "Defaults to 'match' in the current directory.")
     parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
-                      help="If an experimental matrix is NOT passed, then all files within the input path will "
-                           "be considered for enrichment.")
+                      help="If an experimental matrix is provided, the input arguments will be ignored.")
 
     # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
-                      help="Path where the output files will be written. Default is the input PATH.")
+    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
+                      help="Path where the output MPBS files will be written. Defaults to 'enrichment' in the "
+                           "current directory.")
     parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
                       help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
                            "this option are print. Use 1.0 to print all MPBSs.")
@@ -485,15 +541,9 @@ def main_enrichment():
     # Processing Options
     options, arguments = parser.parse_args()
 
-    if len(arguments) != 1:
-        parser.print_help()
-        sys.exit(1)
-
-    input_location = arguments[0]
-
     # Additional Parameters
-    matching_folder_name = "match_result"
-    enrichment_folder_name = "enrichment_result"
+    matching_folder_name = "match"
+    enrichment_folder_name = "enrichment"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -521,17 +571,71 @@ def main_enrichment():
 
     # Output folder
     if options.output_location:
-        output_location = options.output_location  # Output location was given
+        output_location = options.output_location
     else:
-        output_location = input_location
+        output_location = os.path.join(os.getcwd(), enrichment_folder_name)
 
     try:
-        output_location_results = os.path.join(output_location, enrichment_folder_name)
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("ME_OUT_FOLDER_CREATION")
 
-        if not os.path.isdir(output_location_results):
-            os.makedirs(output_location_results)
-    except IOError:
-        main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
+    # Output folder
+    if options.match_location:
+        match_location = options.match_location
+    else:
+        match_location = os.path.join(os.getcwd(), matching_folder_name)
+
+    # TODO: to investigate further why we have problems here
+    if output_location == match_location:
+        err.throw_error("DEFAULT_ERROR", add_msg="Output location must differ from matching location.")
+
+    try:
+        if not os.path.isdir(match_location):
+            os.makedirs(match_location)
+    except Exception:
+        err.throw_error("ME_MATCH_NOTFOUND")
+
+    # Background file must exist
+    background_filename = background_original_filename = options.background_file
+    if not background_filename:
+        err.throw_error("DEFAULT_ERROR", add_msg="Must provide a background file.")
+    elif not os.path.isfile(background_filename):
+        err.throw_error("DEFAULT_ERROR", add_msg="Background file does not exist or is not readable.")
+    elif is_bb(background_filename):
+        background_filename = ensure_is_bed(background_filename)
+    elif is_bed(background_filename):
+        pass
+    else:
+        err.throw_error("DEFAULT_ERROR", add_msg="Background file must be in either BED or BigBed format.")
+
+    # Background MPBS file must exist
+    path, ext = os.path.splitext(background_filename)
+
+    # first we check at matching folder location
+    background_mpbs_filename = os.path.join(match_location, os.path.basename(path) + "_mpbs" + ext)
+
+    if not os.path.isfile(background_mpbs_filename):
+        # if not found, we search at background file location
+        background_mpbs_filename = os.path.join(path + "_mpbs" + ext)
+
+        if not os.path.isfile(background_mpbs_filename):
+            err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file does not exist or is not readable. "
+                                                     "It must be located at either the matching location, or in the "
+                                                     "same directory of the Background BED/BigBed file. "
+                                                     "Note: it must be consistent with the background file, ie "
+                                                     "if the background is BED, the MPBS must be a BED file too. Same "
+                                                     "for BigBed.")
+
+    background_mpbs_original_filename = background_mpbs_filename
+
+    if is_bb(background_mpbs_filename):
+        background_mpbs_filename = ensure_is_bed(background_mpbs_filename)
+    elif is_bed(background_mpbs_filename):
+        pass
+    else:
+        err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file must be in either BED or BigBed format.")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -548,7 +652,7 @@ def main_enrichment():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     # Default image data
     image_data = ImageData()
@@ -582,38 +686,23 @@ def main_enrichment():
             del exp_matrix
 
         except Exception:
-            main_error_handler.throw_error("MM_WRONG_EXPMAT")
-    else:
-        # if no input matrix is provided, we directly get the files in the input folder
-        input_files = glob(os.path.join(input_location, matching_folder_name, "*"))
-
-        # filter out mpbs and background file
-        def filter_fun(filename):
-            filename = os.path.basename(filename)
-            if filename.endswith("_mpbs.bed") or filename.endswith("_mpbs.bb"):
-                return False
-            if filename.startswith(options.background_prefix):
-                return False
-            if filename.endswith(".bb") or filename.endswith(".bed"):
-                return True
-            return False
-
-        for input_filename in filter(filter_fun, input_files):
-
+            err.throw_error("MM_WRONG_EXPMAT")
+    elif arguments:
+        # get input files, if available
+        for input_filename in arguments:
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
-            if name in genomic_regions_dict:
-                main_error_handler.throw_error("DEFAULT_ERROR",
-                                               add_msg="region file named {} has already been loaded".format(name))
-
             regions = GenomicRegionSet(name)
-            regions.read_bed(os.path.abspath(input_filename))
 
+            try:
+                regions.read_bed(os.path.abspath(input_filename))
+            except:
+                err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
 
-        if not genomic_regions_dict:
-            main_error_handler.throw_error("DEFAULT_ERROR", add_msg="you must specify either an experimental matrix, "
-                                                                    "or at least an input file, or both")
+    if not genomic_regions_dict:
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -657,10 +746,10 @@ def main_enrichment():
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
                     else:
-                        main_error_handler.throw_warning("ME_MANY_GENESETS")
+                        err.throw_warning("ME_MANY_GENESETS")
 
             if not flag_foundgeneset:
-                main_error_handler.throw_warning("ME_FEW_GENESETS")
+                err.throw_warning("ME_FEW_GENESETS")
 
             # Update input list
             input_list.append(curr_input)
@@ -703,7 +792,7 @@ def main_enrichment():
 
     # Grouping motif file names by the number of processes requested
     if options.processes <= 0:
-        main_error_handler.throw_error("ME_LOW_NPROC")
+        err.throw_error("ME_LOW_NPROC")
     elif options.processes == 1:
         motif_names_grouped = [[e] for e in motif_names]
     else:
@@ -714,47 +803,15 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
-    background_name = options.background_prefix
-
-    # Verifying background region file exists
-    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_name + ".*"))
-    try:
-        background_region_file_name = background_region_glob[0]
-    except Exception:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background not found")
-
-    # Verifying background region MPBS file exists
-    background_region_mpbs_glob = glob(os.path.join(input_location, matching_folder_name, background_name + "_mpbs.*"))
-    try:
-        background_mpbs_file_name = background_region_mpbs_glob[0]
-    except Exception:
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs not found")
-
-    # Converting regions bigbed file
-    background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
-    if background_region_file_name.split(".")[-1] == "bb":
-        background_region_bed_name = os.path.join(output_location_results, background_name + ".bed")
-        os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
-    elif background_region_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background neither BED nor BigBed")
-
-    # Converting mpbs bigbed file
-    background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
-    if background_mpbs_file_name.split(".")[-1] == "bb":
-        background_mpbs_bed_name = os.path.join(output_location_results, background_name + "_mpbs.bed")
-        os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
-    elif background_mpbs_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("DEFAULT_ERROR", add_msg="background mpbs neither BED nor BigBed")
-
     # Evaluating background statistics
-    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
-                                           output_location_results, return_geneset=False)
+    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_filename, background_mpbs_filename,
+                                           return_geneset=False)
 
-    # Removing bed files if bb exist
-    if background_region_file_name.split(".")[-1] == "bb":
-        os.remove(background_region_bed_name)
-    if background_mpbs_file_name.split(".")[-1] == "bb":
-        os.remove(background_mpbs_bed_name)
+    # removing temporary BED files if the originals were BBs
+    if is_bb(background_original_filename):
+        os.remove(background_filename)
+    if is_bb(background_mpbs_original_filename):
+        os.remove(background_mpbs_filename)
 
     ###################################################################################################
     # Enrichment Statistics
@@ -788,28 +845,33 @@ def main_enrichment():
 
             # Creating output folder
             if curr_input.gene_set:
-                curr_output_folder_name = os.path.join(output_location_results,
-                                                       grs.name + "__" + curr_input.gene_set.name)
+                curr_output_folder_name = os.path.join(output_location, grs.name + "__" + curr_input.gene_set.name)
             else:
-                curr_output_folder_name = os.path.join(output_location_results, grs.name)
+                curr_output_folder_name = os.path.join(output_location, grs.name)
             if not os.path.isdir(curr_output_folder_name):
                 os.makedirs(curr_output_folder_name)
 
             # Verifying if MPBS file exists
-            curr_mpbs_glob = glob(os.path.join(input_location, matching_folder_name, original_name + "_mpbs.*"))
+            curr_mpbs_glob = glob(os.path.join(match_location, original_name + "_mpbs.*"))
             try:
                 curr_mpbs_file_name = curr_mpbs_glob[0]
             except Exception:
-                pass  # TODO main_error_handler.throw_error("ME_RAND_NOTFOUND")
+                err.throw_warning("DEFAULT_ERROR", add_msg="File {} does not have a matching MPBS file. "
+                                                           "Ignoring.".format(original_name))
+                # skip to next genomic region set
+                continue
 
-            # Converting ev mpbs bigbed file
-            curr_mpbs_bed_name = ".".join(curr_mpbs_file_name.split(".")[:-1]) + ".bed"
-            if curr_mpbs_file_name.split(".")[-1] == "bb":
-                curr_mpbs_bed_name = os.path.join(curr_output_folder_name, original_name + "_mpbs.bed")
-                os.system(" ".join(["bigBedToBed", curr_mpbs_file_name, curr_mpbs_bed_name]))
+            if is_bb(curr_mpbs_file_name):
+                curr_mpbs_bed_name = ensure_is_bed(curr_mpbs_file_name)
+
+                # at the end of calculations, we'll remove all the temporary bed files we created
                 to_remove_list.append(curr_mpbs_bed_name)
-            elif curr_mpbs_file_name.split(".")[-1] != "bed":
-                pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+            elif is_bed(curr_mpbs_file_name):
+                curr_mpbs_bed_name = curr_mpbs_file_name
+            else:
+                err.throw_warning("DEFAULT_ERROR", add_msg="The matching MPBS file for {} is neither in BED nor BigBed "
+                                                           "format. Ignoring.".format(original_name))
+                continue
 
             ###################################################################################################
             # Gene Evidence Statistics
@@ -835,13 +897,11 @@ def main_enrichment():
                 output_file.close()
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    bb_file_name = output_file_name + ".bb"
                     try:
-                        os.system(
-                            " ".join(["bedToBigBed", output_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                        ensure_is_bb(output_file_name, chrom_sizes_file)
                         os.remove(output_file_name)
                     except Exception:
-                        pass  # WARNING
+                        pass  # TODO: warning?
 
                 # Writing ev and nev regions to temporary bed files in order to evaluate statistics
                 ev_regions_file_name = os.path.join(curr_output_folder_name, "ev_regions.bed")
@@ -869,13 +929,11 @@ def main_enrichment():
                 nev_mpbs_file = open(nev_mpbs_file_name_temp, "w")
                 curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             curr_output_folder_name,
                                                                              return_geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
                 curr_c_dict, curr_d_dict, nev_genelist_dict = get_fisher_dict(motif_names_grouped,
                                                                               nev_regions_file_name, curr_mpbs_bed_name,
-                                                                              curr_output_folder_name,
                                                                               return_geneset=True,
                                                                               output_mpbs_file=nev_mpbs_file,
                                                                               color=nev_color)
@@ -952,27 +1010,23 @@ def main_enrichment():
                 # Sorting ev and nev mpbs
                 output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
                 output_file_name_nev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bed")
-                os.system(
-                    "sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)  # Sorting ev file
-                os.system(
-                    "sort -k1,1 -k2,2n " + nev_mpbs_file_name_thresh + " > " + output_file_name_nev_bed)  # Sorting nev file
+
+                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
+                os.system("sort -k1,1 -k2,2n " + nev_mpbs_file_name_thresh + " > " + output_file_name_nev_bed)
 
                 # Converting ev and nev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bb")
-                    output_file_name_nev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bb")
                     try:
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_ev_bed, chrom_sizes_file, output_file_name_ev_bb,
-                             "-verbose=0"]))
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_nev_bed, chrom_sizes_file, output_file_name_nev_bb,
-                             "-verbose=0"]))
+                        # create big bed files
+                        ensure_is_bb(output_file_name_ev_bed,  chrom_sizes_file)
+                        ensure_is_bb(output_file_name_nev_bed, chrom_sizes_file)
+
+                        # temporary BED files to be removed later
                         to_remove_list.append(output_file_name_ev_bed)
                         to_remove_list.append(output_file_name_nev_bed)
                     except Exception:
-                        pass  # WARNING
+                        pass  # TODO: warning?
 
                 # Printing statistics text
                 output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest + ".txt")
@@ -984,7 +1038,7 @@ def main_enrichment():
 
                 # unless explicitly forbidden, we copy the logo images locally
                 if not options.no_copy_logos:
-                    logo_dir_path = os.path.join(output_location_results, "logos")
+                    logo_dir_path = os.path.join(output_location, "logos")
                     try:
                         os.stat(logo_dir_path)
                     except:
@@ -1014,7 +1068,7 @@ def main_enrichment():
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                fig_path = os.path.join(output_location_results, "fig")
+                fig_path = os.path.join(output_location, "fig")
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
@@ -1045,7 +1099,6 @@ def main_enrichment():
                 ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
                 curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             curr_output_folder_name,
                                                                              return_geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
@@ -1115,17 +1168,17 @@ def main_enrichment():
 
                 # Sorting ev mpbs
                 output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
-                os.system(
-                    "sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)  # Sorting ev file
+                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
 
                 # Converting ev and nev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bb")
+
                     try:
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_ev_bed, chrom_sizes_file, output_file_name_ev_bb,
-                             "-verbose=0"]))
+                        # create big bed file
+                        ensure_is_bb(output_file_name_ev_bed, chrom_sizes_file)
+
+                        # temporary BED file to be removed later
                         to_remove_list.append(output_file_name_ev_bed)
                     except Exception:
                         pass  # WARNING
@@ -1140,7 +1193,7 @@ def main_enrichment():
 
             # unless explicitly forbidden, we copy the logo images locally
             if not options.no_copy_logos:
-                logo_dir_path = os.path.join(output_location_results, "logos")
+                logo_dir_path = os.path.join(output_location, "logos")
                 try:
                     os.stat(logo_dir_path)
                 except:
@@ -1169,7 +1222,7 @@ def main_enrichment():
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            fig_path = os.path.join(output_location_results, "fig")
+            fig_path = os.path.join(output_location, "fig")
             html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading(
