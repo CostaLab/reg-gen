@@ -26,7 +26,7 @@ from evidence import Evidence
 from plot import Plot
 
 # External
-import os
+import numpy as np
 from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
@@ -437,7 +437,7 @@ def main():
                                    options.bias_table,
                                    options.original_regions, options.organism,
                                    atac_bias_correction_k, options.strands_specific)
-        train_hmm_model.train()
+        train_hmm_model.train_subtract()
         return
 
     ########################################################################################################
@@ -726,6 +726,18 @@ def main():
                                                                               options.print_bc_signal,
                                                                               options.print_norm_signal,
                                                                               options.print_slope_signal)
+                        signal_forward, _, signal_reverse, _ = group.dnase_file.get_signal_per_strand(ref=r.chrom,
+                                                                                                start=r.initial,
+                                                                                                end=r.final,
+                                                                                                downstream_ext=atac_downstream_ext,
+                                                                                                upstream_ext=atac_upstream_ext,
+                                                                                                forward_shift=atac_forward_shift,
+                                                                                                reverse_shift=atac_reverse_shift,
+                                                                                                initial_clip=atac_initial_clip,
+                                                                                                genome_file_name=genome_data.get_genome()
+                                                                                                )
+                        subtrac_signal = np.subtract(signal_forward, signal_reverse)
+                        subtrac_slope = group.dnase_file.slope(subtrac_signal, group.dnase_file.sg_coefs)
                     else:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                               dnase_downstream_ext, dnase_upstream_ext,
@@ -747,7 +759,7 @@ def main():
 
                 # Formatting sequence
                 try:
-                    input_sequence = array([dnase_norm, dnase_slope]).T
+                    input_sequence = array([dnase_norm, dnase_slope, subtrac_signal, subtrac_slope]).T
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom,
@@ -873,9 +885,7 @@ def main():
                         current_hmm = group.hmm[i]
                     else:
                         current_hmm = group.hmm
-                    if (
-                            isnan(sum(
-                                input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                    if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try:
                         posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
@@ -985,5 +995,6 @@ def main():
         ###################################################################################################
 
         # Creating output file
-        output_file_name = options.output_location + options.output_fname + ".bed"
+        output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
+        #output_file_name = options.output_location + options.output_fname + ".bed"
         footprints.write_bed(output_file_name)

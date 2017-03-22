@@ -113,6 +113,74 @@ class TrainHMM:
 
         return states, norm_signal, slope_signal
 
+    def read_states_signals_strand(self):
+        # Read states from the annotation file
+        states = ""
+        with open(self.annotate_fname) as annotate_file:
+            for line in annotate_file:
+                if len(line) < 2 or "#" in line or "=" in line:
+                    continue
+                ll = line.strip().split(" ")
+                for state in ll[1:-1]:
+                    states += state
+
+        # If need to estimate bias table
+        genome_data = GenomeData(self.organism)
+        table = None
+        if self.estimate_bias_correction:
+
+            bias_table = BiasTable(original_regions=self.original_regions, dnase_file_name=self.bias_bam_file,
+                                   genome_file_name=genome_data.get_genome(), k_nb=self.k_nb,
+                                   forward_shift=self.atac_forward_shift, reverse_shift=self.atac_reverse_shift,
+                                   estimate_bias_type=self.estimate_bias_type, output_loc=self.output_locaiton)
+
+
+            table = bias_table.estimate_table()
+
+            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.atac_forward_shift))
+            bias_table.write_tables(bias_fname, table)
+
+        # If the bias table is provided
+        if self.bias_table:
+            bias_table = BiasTable(output_loc=self.output_locaiton)
+            bias_table_list = self.bias_table.split(",")
+            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                          table_file_name_R=bias_table_list[1])
+
+        # Get the normalization and slope signal from the raw bam file
+        raw_signal = GenomicSignal(self.training_bam_file)
+        raw_signal.load_sg_coefs(slope_window_size=9)
+        sum_signal, sum_slope = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
+                                                          downstream_ext=self.atac_downstream_ext,
+                                                          upstream_ext=self.atac_upstream_ext,
+                                                          forward_shift=self.atac_forward_shift,
+                                                          reverse_shift=self.atac_reverse_shift,
+                                                          initial_clip=self.atac_initial_clip,
+                                                          bias_table=table,
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          print_raw_signal=self.print_raw_signal,
+                                                          print_bc_signal=self.print_bc_signal,
+                                                          print_norm_signal=self.print_norm_signal,
+                                                          print_slope_signal=self.print_slope_signal)
+        if self.print_bed_file:
+            self.output_bed_file(states)
+
+        signal_forward, _, signal_reverse, _ = raw_signal.get_signal_per_strand(ref=self.chrom, start=self.start, end=self.end,
+                                                          downstream_ext=self.atac_downstream_ext,
+                                                          upstream_ext=self.atac_upstream_ext,
+                                                          forward_shift=self.atac_forward_shift,
+                                                          reverse_shift=self.atac_reverse_shift,
+                                                          initial_clip=self.atac_initial_clip,
+                                                          genome_file_name=genome_data.get_genome(),
+                                                          print_raw_signal=self.print_raw_signal,
+                                                          print_bc_signal=self.print_bc_signal,
+                                                          print_norm_signal=self.print_norm_signal,
+                                                          print_slope_signal=self.print_slope_signal)
+        subtrac_signal = np.subtract(signal_forward, signal_reverse)
+        subtrac_slope = raw_signal.slope(subtrac_signal, raw_signal.sg_coefs)
+
+        return states, sum_signal, sum_slope, subtrac_signal, subtrac_slope
+
     def train(self):
         # Estimate the HMM parameters using the maximum likelihood method.
         states, norm_signal, slope_signal = self.read_states_signals()
@@ -164,6 +232,81 @@ class TrainHMM:
             # Compute covariance matrix of norm and slope signal
             covs_list = list()
             covs_matrix = np.cov(norm, slope)
+            for j in range(hmm_model.dim):
+                for k in range(hmm_model.dim):
+                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
+            hmm_model.covs.append(covs_list)
+
+        if self.estimate_bias_correction:
+            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.atac_forward_shift))
+        else:
+            model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
+        hmm_model.save_hmm(model_fname)
+
+    def train_subtract(self):
+        # Estimate the HMM parameters using the maximum likelihood method.
+        states, sum_signal, sum_slope, subtrac_signal, subtrac_slope = self.read_states_signals_strand()
+        hmm_model = HMM()
+
+        hmm_model.dim = 4
+        # States number
+        state_list = [int(state) for state in list(states)]
+        hmm_model.states = len(np.unique(np.array(state_list)))
+
+        # Initial state probabilities vector
+        init_state = state_list[0]
+        hmm_model.pi = [0.0] * hmm_model.states
+        hmm_model.pi[init_state] = 1.0
+
+        # Transition
+        trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
+        for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
+            trans_matrix[x, y] = c
+
+        for i in range(hmm_model.states):
+            trans_list = list()
+            for j in range(hmm_model.states):
+                trans_list.append(trans_matrix[i][j])
+            trans_sum = sum(trans_list) * 1.0
+            prob_list = [e / trans_sum for e in trans_list]
+
+            # make sure that the sum of this line converge to 1
+            total_prob = sum(prob_list)
+            if total_prob != 1.0:
+                prob_list[0] += (1.0 - total_prob)
+
+            hmm_model.A.append(prob_list)
+
+        # Emission
+        for i in range(hmm_model.states):
+            state_sum = list()
+            state_slope_sum = list()
+            state_subtrac = list()
+            state_slope_subtrac = list()
+            for j in range(len(state_list)):
+                if state_list[j] == i:
+                    state_sum.append(sum_signal[j])
+                    state_slope_sum.append(sum_slope[j])
+                    state_subtrac.append(subtrac_signal[j])
+                    state_slope_subtrac.append(subtrac_slope[j])
+            # Compute the mean of norm and slope signal
+            means_list = list()
+            means_list.append(np.mean(state_sum))
+            means_list.append(np.mean(state_slope_sum))
+            means_list.append(np.mean(state_subtrac))
+            means_list.append(np.mean(state_slope_subtrac))
+            hmm_model.means.append(means_list)
+
+
+            # Compute covariance matrix of norm, slope and subtrac signal
+            signal = list()
+            signal.append(state_sum)
+            signal.append(state_slope_sum)
+            signal.append(state_subtrac)
+            signal.append(state_slope_subtrac)
+
+            covs_list = list()
+            covs_matrix = np.cov(np.array(signal))
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
                     covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
