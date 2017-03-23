@@ -541,7 +541,7 @@ def main_enrichment():
         print(usage_message)
         sys.exit(1)
 
-    background_filename = arguments[1]
+    background_filename = arguments[0]
     input_files = arguments[1:]  # empty list if no input files
 
     # Additional Parameters
@@ -885,6 +885,8 @@ def main_enrichment():
                 for gr in grs:
                     if gr.name == ".":
                         curr_name = "."
+                    elif not gr.proximity:
+                        curr_name = ":".join([e if e[0] != "." else e[1:] for e in gr.name.split(":")])
                     else:
                         curr_gene_list = [e if e[0] != "." else e[1:] for e in gr.name.split(":")]
                         curr_prox_list = gr.proximity.split(":")
@@ -1070,7 +1072,7 @@ def main_enrichment():
                     "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
                 html.add_heading(
-                    "* This gene test considered regions associated to the gene list given against regions not associated to the gene list",
+                    "* This gene test considered regions associated to the given gene list against regions not associated to the gene list",
                     align="center", bold=False, size=3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
                 html.write(output_file_name_html)
@@ -1225,13 +1227,13 @@ def main_enrichment():
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
                 html.add_heading(
-                    "* This test considered regions associated to the gene list given against background regions",
+                    "* This test considered regions associated to the given gene list against background regions",
                     align="center", bold=False, size=3)
             else:
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using all input regions",
                     align="center", bold=False)
-                html.add_heading("* This test considered all regions against background regions",
+                html.add_heading("* This test considered all input regions against background regions",
                                  align="center", bold=False, size=3)
 
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
