@@ -82,9 +82,9 @@ class RandomTest:
         self.stat["DBSs_target_all"] = str(len(self.txp))
         txp.remove_duplicates()
         self.rbss = txp.merged_dict.keys()
-        if len(self.rbss) == 0:
-            print("ERROR: No potential binding event. Please change the parameters.")
-            sys.exit(1)
+        # if len(self.rbss) == 0:
+        #     print("ERROR: No potential binding event. Please change the parameters.")
+        #     sys.exit(1)
 
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
                             temp=temp, organism=self.organism, remove_temp=remove_temp,

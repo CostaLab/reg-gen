@@ -7,12 +7,13 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 from __future__ import print_function
 import os
+import sys
 import pysam
 import tempfile
 import subprocess
 import numpy as np
 from sys import platform
-from rgt.GenomicRegionSet import *
+# from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ODIN.gc_content import get_gc_context
 
 
@@ -581,21 +582,34 @@ class CoverageSet:
         
         """
         if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
+            # self.coverage = []
+            # # mp_input = []
+            # for gr in self.genomicRegions:
+            #     # print(gr)
+            #     steps = int(abs(gr.final-gr.initial)/stepsize)
+            #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
+            #     # print(" ".join(cmd))
+            #     try:
+            #         output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+            #         # print(output)
+            #         ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+            #         self.coverage.append( np.array(ds) )
+            #     except:
+            #         continue
+
+            import pyBigWig
             self.coverage = []
-            # mp_input = []
+            bwf = pyBigWig.open(bigwig_file)
+            # print("1")
+            steps = int(len(self.genomicRegions[0])/stepsize)
             for gr in self.genomicRegions:
-                # print(gr)
-                steps = int(abs(gr.final-gr.initial)/stepsize)
-                cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
-                # print(" ".join(cmd))
-                try:
-                    output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
-                    # print(output)
-                    ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
-                    self.coverage.append( np.array(ds) )
-                except:
-                    continue
-        
+                ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
+                ds = [ x if x else 0 for x in ds ]
+                self.coverage.append( np.array(ds) )
+                # print(np.array(ds))
+            # print("2")
+            bwf.close()
+
         ### Linux platform
         else:
             # print("\tUsing ngslib on linux system...")
@@ -610,18 +624,7 @@ class CoverageSet:
                 self.coverage.append( np.array(ds) )
             bwf.close()
 
-            # import pyBigWig
-            # self.coverage = []
-            # bwf = pyBigWig.open(bigwig_file)
-            # # print("1")
-            # steps = int(len(self.genomicRegions[0])/stepsize)
-            # for gr in self.genomicRegions:
-            #     ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
-            #     ds = [ x if x else 0 for x in ds ]
-            #     self.coverage.append( np.array(ds) )
-            #     # print(np.array(ds))
-            # # print("2")
-            # bwf.close()
+
 
 
         

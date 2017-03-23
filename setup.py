@@ -69,8 +69,10 @@ Tools Dictionary Standard:
 """
 if platform.startswith("darwin"):
     bin_dir = "mac"
+    libRGT = "librgt_mac.so"
 else:
     bin_dir = "linux"
+    libRGT = "librgt_linux.so"
 
 tools_dictionary = {
 "core": (
@@ -282,6 +284,7 @@ data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv
 data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
@@ -304,7 +307,7 @@ data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
-data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/librgt.so") + "\n")
+data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/"+libRGT) + "\n")
 
 data_config_file.close()
 
@@ -342,7 +345,7 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
 ".": ["setupGenomicData.py","setupLogoData.py"],
-"lib": ["libtriplexator.so", "librgt.so"],
+"lib": ["libtriplexator.so", libRGT],
 "hg19": ["genes_Gencode_hg19.bed","chrom.sizes.hg19","alias_human.txt","genes_RefSeq_hg19.bed"],
 "hg38": ["genes_Gencode_hg38.bed","chrom.sizes.hg38","alias_human.txt","genes_RefSeq_hg38.bed"],
 "mm9": ["genes_Gencode_mm9.bed","chrom.sizes.mm9","alias_mouse.txt","genes_RefSeq_mm9.bed"],

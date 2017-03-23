@@ -36,13 +36,6 @@ from rgt.helper import pretty
 # Local test
 dir = os.getcwd()
 
-
-
-
-
-        
-
-
 ###########################################################################################
 #                    Venn Diagram
 ###########################################################################################
@@ -124,5 +117,3 @@ class Venn:
             fig_venn = venn3(subsets = (len(s100),len(s010),len(s110),len(s001),len(s101),len(s011),len(s111)),
                              set_labels = labels)
             return f
-
-#    def venn_table(self, directory, title, labels):

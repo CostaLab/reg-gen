@@ -10,20 +10,19 @@ GenomicRegionSet represent a list of GenomicRegions.
 # Python
 from __future__ import print_function
 from __future__ import division
+import os
 import sys
-import copy
 import random
 from ctypes import *
 from scipy import stats
 from copy import deepcopy
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 # Internal
-from rgt.GenomicRegion import GenomicRegion
 from rgt.SequenceSet import *
-from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
 from rgt.GeneSet import GeneSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
 
-import os
 
 ###############################################################################
 # Class

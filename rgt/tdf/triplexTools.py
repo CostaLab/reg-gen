@@ -127,8 +127,8 @@ def list_all_index(path, link_d=None):
     header_list = ["No.", "Experiments", "RNA", "Closest genes",
                    "Exon", "Length", "Expression*",
                    "Norm DBS*",
-                   "Norm DBD*",  "No sig. DBD", "Top DBD",
-                   "p-value", "Organism", "Target region",
+                   "Norm DBD*",  "No sig. DBD",
+                   "Organism", "Target region",
                    "Rank*"]
 
     profile_f = open(os.path.join(path, "profile.txt"), 'r')
@@ -158,18 +158,17 @@ def list_all_index(path, link_d=None):
         if float(profile[exp][11]) < 0.05:
             new_line += [ profile[exp][6], #7 norm DBS
                           profile[exp][8], #8 norm DBD
-                          profile[exp][9], #9 sig DBD
-                          profile[exp][10], #10 Top DBD
-                          "<font color=\"red\">" + \
-                          profile[exp][11] + "</font>"]
+                          profile[exp][9]] #9 sig DBD
+                          # profile[exp][10], #10 Top DBD
+                          # "<font color=\"red\">" + \
+                          # profile[exp][11] + "</font>"]
             # sig_list.append(True)
         else:
-            new_line += [profile[exp][11]]
             new_line += [str(0),  # 7 norm DBS
                          str(0),  # 8 norm DBD
-                         profile[exp][9],  # 9 sig DBD
-                         profile[exp][10],  # 10 Top DBD
-                         profile[exp][11]]
+                         profile[exp][9]]  # 9 sig DBD
+                         # profile[exp][10],  # 10 Top DBD
+                         # profile[exp][11]]
             # sig_list.append(False)
 
         new_line += [ profile[exp][4], profile[exp][5] ]
@@ -1123,13 +1122,13 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
 
     pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
     exp = os.path.basename(args.o)
-    if args.de:
-        tar = args.de
-    else:
+    try:
+        if args.de:
+            tar = args.de
+        else:
+            tar = args.bed
+    except:
         tar = args.bed
-    # stat = {}
-    # stat["exons"] =
-    # stat["seq_length"] =
     stat["DBD_all"] = 0
     stat["DBSs_target_all"] = 0
     stat["DBSs_target_DBD_sig"] = 0
@@ -1139,42 +1138,6 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
                  geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[],
                  expression=expression)
 
-    # if args.de:
-    #     tar_reg = os.path.basename(args.de)
-    # else:
-    #     tar_reg = os.path.basename(args.bed)
-    # r_genes = rna_associated_gene(rna_regions=rna_regions, name=rna_name, organism=organism)
-    # newlines = []
-    # if os.path.isfile(pro_path):
-    #     with open(pro_path, 'r') as f:
-    #         new_exp = True
-    #         for line in f:
-    #             line = line.strip()
-    #             line = line.split("\t")
-    #             if line[0] == exp:
-    #                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-    #                                  args.organism, tar_reg, "0","0","0","0",
-    #                                  "-", "1.0", r_genes])
-    #                 new_exp = False
-    #             else:
-    #                 newlines.append(line)
-    #         if new_exp:
-    #             newlines.append([exp, args.rn, args.o.split("_")[-1],
-    #                              args.organism, tar_reg, "0","0","0","0",
-    #                              "-", "1.0", r_genes])
-    # else:
-    #     newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region",
-    #                      "Norm_DBS", "Norm_DBS_on_sig_DBD",
-    #                      "Norm_DBD", "No_sig_DBDs", "Top_DBD", "p-value", "closest_genes"])
-    #     newlines.append([exp, args.rn, args.o.split("_")[-1],
-    #                      args.organism, tar_reg, "0","0","0","0",
-    #                      "-", "1.0", r_genes])
-    # with open(pro_path, 'w') as f:
-    #     for lines in newlines:
-    #         print("\t".join(lines), file=f)
-
-    # shutil.rmtree(args.o)
-    # list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=promoter.rna_regions)
     revise_index(root=os.path.dirname(os.path.dirname(args.o)))
     shutil.rmtree(args.o)
     sys.exit(1)

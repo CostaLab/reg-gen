@@ -13,7 +13,7 @@ import os
 import sys
 import sets
 import glob
-import sets 
+import sets
 from copy import deepcopy
 
 # Internal

@@ -9,10 +9,10 @@ The Util classes contains many utilities needed by other classes such as the pat
 from __future__ import print_function
 import os
 import sys
-import ConfigParser
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
+import ConfigParser
 import traceback
+from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
