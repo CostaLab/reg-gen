@@ -491,7 +491,7 @@ def main_enrichment():
     err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
+    usage_message = "%prog --matching [options] <background_bed_file> [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -512,11 +512,6 @@ def main_enrichment():
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-    parser.add_option("--background-file", dest="background_file", type="string", metavar="PATH",
-                      help="Path to BED file to be used as background. The corresponding MPBS file is expected to have "
-                           " a 'mpbs' suffix appended. For example, 'background.bed' should have a corresponding "
-                           "'background_mpbs.bed'. The MPBS file is first searched in the matching location, and if "
-                           "not found is searched in the same directory as the background file.")
     parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
     parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
@@ -540,6 +535,13 @@ def main_enrichment():
 
     # Processing Options
     options, arguments = parser.parse_args()
+
+    if len(arguments) < 1:
+        print(usage_message)
+        sys.exit(1)
+
+    background_filename = arguments[1]
+    input_files = arguments[1:]  # empty list if no input files
 
     # Additional Parameters
     matching_folder_name = "match"
@@ -593,10 +595,8 @@ def main_enrichment():
         err.throw_error("ME_MATCH_NOTFOUND")
 
     # Background file must exist
-    background_filename = background_original_filename = options.background_file
-    if not background_filename:
-        err.throw_error("DEFAULT_ERROR", add_msg="Must provide a background file.")
-    elif not os.path.isfile(background_filename):
+    background_original_filename = background_filename
+    if not os.path.isfile(background_filename):
         err.throw_error("DEFAULT_ERROR", add_msg="Background file does not exist or is not readable.")
     elif is_bb(background_filename):
         background_filename = ensure_is_bed(background_filename)
@@ -682,9 +682,9 @@ def main_enrichment():
 
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
-    elif arguments:
+    elif input_files:
         # get input files, if available
-        for input_filename in arguments:
+        for input_filename in input_files:
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
