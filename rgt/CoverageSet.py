@@ -194,7 +194,8 @@ class CoverageSet:
         """Compute number of reads and number of mapped reads for CoverageSet"""
         # XXX ToDo add number of mapped reads in all cases
         # try:
-        if '0.9.0' in pysam.__version__ or '0.9.1' in pysam.__version__:
+        from distutils.version import LooseVersion
+        if LooseVersion("0.9.0") <= LooseVersion(pysam.__version__):
             a = pysam.idxstats(bamFile)
             mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
             unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
