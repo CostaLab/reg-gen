@@ -10,20 +10,19 @@ GenomicRegionSet represent a list of GenomicRegions.
 # Python
 from __future__ import print_function
 from __future__ import division
+import os
 import sys
-import copy
 import random
 from ctypes import *
 from scipy import stats
 from copy import deepcopy
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 # Internal
-from rgt.GenomicRegion import GenomicRegion
 from rgt.SequenceSet import *
-from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
 from rgt.GeneSet import GeneSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
 
-import os
 
 ###############################################################################
 # Class
@@ -962,7 +961,9 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-
+        # if sys.platform == "darwin":
+        #     return self.intersect_python(y, mode, rm_duplicates)
+        # else:
         return self.intersect_c(y, mode, rm_duplicates)
 
 
@@ -1709,6 +1710,10 @@ class GenomicRegionSet:
             intersect         -5-             -4-    2
             similarity: (5+4+2)/[(8+10+4)+(10+10)-(5+4+2)] = 11/31
         """
+
+        # if sys.platform == "darwin":
+        #     return self.jaccard_python(query)
+        # else:
         return self.jaccard_c(query)
 
     def jaccard_python(self, query):
@@ -2379,7 +2384,7 @@ class GenomicRegionSet:
             z.add(GenomicRegion(s.chrom, s.initial, s.final, n, s.orientation, s.data, s.proximity))
         return z
 
-    def by_names(self, names):
+    def by_names(self, names, load_score=False, background=False):
         """Subset the GenomicRegionSet by the given list of names.
 
         *Keyword arguments:*
@@ -2395,7 +2400,13 @@ class GenomicRegionSet:
         elif isinstance(names.genes, list): targets = names.genes
         targets = [ x.upper() for x in targets ]
         for gr in self:
-            if gr.name.upper() in targets:
+
+            if gr.name.upper() in targets and not background:
+                if load_score:
+                    d = gr.data.split()
+                    gr.data = "\t".join([str(names.values[gr.name.upper()])] + d[1:])
+                z.add(gr)
+            elif gr.name.upper() not in targets and background:
                 z.add(gr)
         return z
 
@@ -2749,3 +2760,40 @@ class GenomicRegionSet:
         for k in genes.values():
             zz.add(k)
         return zz
+
+
+    def get_score_dict(self):
+        """Get a dictionary of scores"""
+        d = {}
+        for r in self:
+            if r.data:
+                d[r.toString()] = float(r.data.split("\t")[0])
+            else:
+                continue
+        return d
+
+
+    def standard_chrom(self):
+        """Remove the random chromosomes and leave only the standard chromosomes, e.g. chr1-22, chrX"""
+        z = GenomicRegionSet(self.name)
+        for r in self:
+            if "_" not in r.chrom:
+                z.add(r)
+        return z
+
+
+    def get_promoters(self, length=1000):
+        promoters = GenomicRegionSet("promoters")
+        for s in self:
+            if s.orientation == "+":
+                s.initial, s.final = max(s.initial - length, 0), s.initial
+            else:
+                s.initial, s.final = s.final, s.final + length
+            promoters.add(s)
+        return promoters
+
+    def get_GeneSet(self):
+        genes = GeneSet(self.name)
+        for r in self:
+            genes.add(gene_name=r.name, value=float(r.data.split("\t")[0]))
+        return genes
