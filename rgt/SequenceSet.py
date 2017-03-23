@@ -1,4 +1,3 @@
-
 # Python Libraries
 from __future__ import print_function
 import os
@@ -7,7 +6,7 @@ import copy
 
 # Distal Libraries
 from Util import SequenceType
-#from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
@@ -18,7 +17,6 @@ Sequence describes the sequence with ATCG as alphabets as well as its types.
 
 """
 class Sequence():
-
 
     def __init__(self, seq, strand, name=None):
         """*Keyword arguments:*
