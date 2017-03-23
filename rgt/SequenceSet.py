@@ -6,7 +6,6 @@ import copy
 
 # Distal Libraries
 from Util import SequenceType
-from rgt.GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
@@ -192,6 +191,7 @@ class SequenceSet:
         """
 
         # Read BED into GenomicRegionSet
+        from rgt.GenomicRegionSet import GenomicRegionSet
         bed = GenomicRegionSet(os.path.basename(bedfile))
         bed.read_bed(bedfile)
         self.read_genomic_set(bed, genome_file_dir)

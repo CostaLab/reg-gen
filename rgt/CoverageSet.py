@@ -6,13 +6,14 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 """
 
 from __future__ import print_function
-# import os
+import os
+import sys
 import pysam
 import tempfile
 import subprocess
 import numpy as np
 from sys import platform
-from rgt.GenomicRegionSet import *
+# from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ODIN.gc_content import get_gc_context
 
 

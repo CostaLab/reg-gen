@@ -307,7 +307,7 @@ data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
-data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib"+libRGT) + "\n")
+data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/"+libRGT) + "\n")
 
 data_config_file.close()
 
