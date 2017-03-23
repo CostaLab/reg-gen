@@ -526,12 +526,13 @@ def main_enrichment():
                            "current directory.")
     parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
                       help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
-                           "this option are print. Use 1.0 to print all MPBSs.")
+                           "this option are printed. Use 1.0 to print all MPBSs.")
     parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                       help="If this option is used, all bed files will be written as bigbed.")
     parser.add_option("--no-copy-logos", dest="no_copy_logos", action="store_true", default=False,
-                      help="If set, the logos to be showed on the enrichment statistics page will NOT be copied "
-                           "to a local directory. Instead we'll use their absolute path to your rgtdata directory.")
+                      help="If set, the logos to be showed on the enrichment statistics page will NOT be "
+                           "copied to a local directory; instead, the HTML result file will contain absolute "
+                           "paths to the logos in your rgtdata folder.")
 
     # Processing Options
     options, arguments = parser.parse_args()
