@@ -17,7 +17,7 @@ if not sys.version_info[0] == 2:
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 
-Authors: Eduardo G. Gusmao, Manuel Allhoff, Joseph C.C. Kuo, Fabio Ticconi, Ivan G. Costa.
+Authors: Manuel Allhoff, Ivan G. Costa, Eduardo G. Gusmao, Joseph C.C. Kuo, Fabio Ticconi.
 
 Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
