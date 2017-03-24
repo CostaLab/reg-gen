@@ -14,10 +14,9 @@ from collections import *
 # Internal
 from rgt.GenomicRegionSet import *
 from rgt.GeneSet import *
-from rgt.helper import pretty
+# from rgt.helper import pretty
 
 # External
-import numpy
 
 possible_types=["genes","regions","reads"]
 

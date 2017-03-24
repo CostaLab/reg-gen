@@ -601,8 +601,9 @@ class CoverageSet:
             self.coverage = []
             bwf = pyBigWig.open(bigwig_file)
             # print("1")
-            steps = int(len(self.genomicRegions[0])/stepsize)
+
             for gr in self.genomicRegions:
+                steps = int(len(gr) / stepsize)
                 ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
                 ds = [ x if x else 0 for x in ds ]
                 self.coverage.append( np.array(ds) )

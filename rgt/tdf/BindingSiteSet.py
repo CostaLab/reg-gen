@@ -3,8 +3,6 @@ import os
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 
-# Test
-from rgt.Util import SequenceType
 ####################################################################################
 ####################################################################################
 

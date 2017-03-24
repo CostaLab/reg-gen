@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import re
 import time
+import numpy
 import pickle
 import fnmatch
 import urllib2
