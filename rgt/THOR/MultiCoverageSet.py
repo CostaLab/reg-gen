@@ -175,7 +175,7 @@ class MultiCoverageSet(DualCoverageSet):
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
-                 folder_report=None, report=None, save_input=False):
+                 folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         self.genomicRegions = regions
         self.binsize = binsize
@@ -210,7 +210,8 @@ class MultiCoverageSet(DualCoverageSet):
             
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
-        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report)
+        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report,
+                                      m_threshold, a_threshold)
         
         if output_bw:
             self._output_bw(name, chrom_sizes, save_wig, save_input) 
@@ -287,7 +288,7 @@ class MultiCoverageSet(DualCoverageSet):
             print('TMM normalization: nothing trimmed...', file=sys.stderr)
             return np.asarray(m_values), np.asarray(a_values)
     
-    def _norm_TMM(self, overall_coverage):
+    def _norm_TMM(self, overall_coverage, m_threshold, a_threshold):
         """Normalize with TMM approach, based on PePr"""
         scaling_factors_ip = []
         for j, cond_max in enumerate([self.dim_1, self.dim_2]):
@@ -311,7 +312,7 @@ class MultiCoverageSet(DualCoverageSet):
                 m_values = np.log(ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * ref)
                 try:
-                    m_values, a_values = self._trim4TMM(m_values, a_values)
+                    m_values, a_values = self._trim4TMM(m_values, a_values, m_threshold, a_threshold)
                     f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
                     scaling_factors_ip.append(f)
                 except:
@@ -320,7 +321,8 @@ class MultiCoverageSet(DualCoverageSet):
                 
         return scaling_factors_ip
     
-    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset, report):
+    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset, report,
+                                 m_threshold, a_threshold):
         """Normalize signal"""
         
         if VERBOSE:
@@ -333,10 +335,10 @@ class MultiCoverageSet(DualCoverageSet):
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)
                 norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
-                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage)
+                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage,m_threshold, a_threshold)
             else:
                 print('Use global TMM approach ', file=sys.stderr)
-                scaling_factors_ip = self._norm_TMM(self.overall_coverage) #TMM approach
+                scaling_factors_ip = self._norm_TMM(self.overall_coverage, m_threshold, a_threshold) #TMM approach
         
         for i in range(len(scaling_factors_ip)):
             self.covs[i].scale(scaling_factors_ip[i]) 

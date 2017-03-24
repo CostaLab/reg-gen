@@ -4,8 +4,6 @@ from __future__ import division
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import GenomeData, OverlapType, Html
-from rgt.CoverageSet import *
 from shared_function import *
 
 # Local test

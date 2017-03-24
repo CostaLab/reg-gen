@@ -39,7 +39,7 @@ class Motif:
         """
 
         # Initializing error handler
-        main_error_handler = ErrorHandler()       
+        err = ErrorHandler()
  
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
@@ -61,15 +61,15 @@ class Motif:
         # Evaluating threshold
         try:
             if pseudocounts != 0.1 or precision != 10000:
-                # FIXME: brittle, we can improve this
-                # Induce Exception
-                1/0
+                raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
+            err.throw_warning("DEFAULT_WARNING", add_msg="Parameters not matching pre-computed Fpr data. "
+                                                         "Recalculating (might take a while)..")
             try:
                 distribution = self.pssm.distribution(background=background, precision=precision)
             except Exception:
-                main_error_handler.throw_error("MM_PSEUDOCOUNT_0")
+                err.throw_error("MM_PSEUDOCOUNT_0")
             self.threshold = distribution.threshold_fpr(fpr)
 
         # Evaluating if motif is palindromic

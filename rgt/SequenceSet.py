@@ -1,4 +1,3 @@
-
 # Python Libraries
 from __future__ import print_function
 import os
@@ -7,7 +6,6 @@ import copy
 
 # Distal Libraries
 from Util import SequenceType
-#from rgt.GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################
@@ -18,7 +16,6 @@ Sequence describes the sequence with ATCG as alphabets as well as its types.
 
 """
 class Sequence():
-
 
     def __init__(self, seq, strand, name=None):
         """*Keyword arguments:*
@@ -144,7 +141,8 @@ class SequenceSet:
                     try: strand = line[line.index("strand")+7]
                     except: strand = "+"
                 else:
-                    seq = seq + line
+                    try: seq = seq + line
+                    except: seq = line
                     pre_seq = True
             self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
@@ -193,6 +191,7 @@ class SequenceSet:
         """
 
         # Read BED into GenomicRegionSet
+        from rgt.GenomicRegionSet import GenomicRegionSet
         bed = GenomicRegionSet(os.path.basename(bedfile))
         bed.read_bed(bedfile)
         self.read_genomic_set(bed, genome_file_dir)

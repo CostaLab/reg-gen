@@ -38,7 +38,12 @@ class GeneSet:
         """Iterate this GeneSet."""
         return iter(self.genes)
 
-    def read(self, geneListFile):
+    def add(self, gene_name, value=None):
+        self.genes.append(gene_name)
+        if value:
+            self.values[gene_name] = value
+
+    def read(self, geneListFile, score=False):
         """Read genes from the file.
 
         *Keyword arguments:*
@@ -46,18 +51,22 @@ class GeneSet:
             - geneListFile -- Path to the file which contains a list of genes.
         """
         with open(geneListFile) as f:
-            for line in f:            
+            for line in f:
                 line = line.strip()
                 if line:
                     l = line.split()
                     if l[0] != "":
                         if "." in l[0]:
-                            self.genes.append(l[0].upper())
+                            # gene_name = l[0].upper()
+                            gene_name = l[0].partition(".")[0].upper()
                             # self.genes.append(l[0].partition(".")[0].upper())
                         elif "," in l[0]:
-                            self.genes.append(l[0].partition(",")[0].upper())
+                            gene_name = l[0].partition(",")[0].upper()
                         else:
-                            self.genes.append(l[0].upper())
+                            gene_name = l[0].upper()
+                        self.genes.append(gene_name)
+                        if score:
+                            self.values[gene_name] = l[1]
             
     def read_expression(self, geneListFile, header=False, valuestr=False):
         """Read gene expression data.
@@ -107,7 +116,7 @@ class GeneSet:
         """
         genome = GenomeData(organism=organism)
         self.genes = []
-        f = open(genome.get_association_file())
+        f = open(genome.get_gene_regions())
         for l in f.readlines():
             l = l.strip("\n")
             l = l.split("\t")

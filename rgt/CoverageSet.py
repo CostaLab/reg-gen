@@ -7,12 +7,13 @@ CoverageSet represents the coverage data of a GenomicRegionSet.
 
 from __future__ import print_function
 import os
+import sys
 import pysam
 import tempfile
 import subprocess
 import numpy as np
 from sys import platform
-from rgt.GenomicRegionSet import *
+# from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.ODIN.gc_content import get_gc_context
 
 
@@ -194,7 +195,8 @@ class CoverageSet:
         """Compute number of reads and number of mapped reads for CoverageSet"""
         # XXX ToDo add number of mapped reads in all cases
         # try:
-        if '0.9.0' in pysam.__version__ or '0.9.1' in pysam.__version__:
+        from distutils.version import LooseVersion
+        if LooseVersion("0.9.0") <= LooseVersion(pysam.__version__):
             a = pysam.idxstats(bamFile)
             mapped_reads = sum([int(el.split('\t')[2]) for el in a.split('\n')[:len(a.split('\n'))-1]])
             unmapped_read = sum([int(el.split('\t')[3]) for el in a.split('\n')[:len(a.split('\n'))-1]])
@@ -233,11 +235,14 @@ class CoverageSet:
         for i,region in enumerate(self.genomicRegions):
             
             try:
+                bin_start = max(0, region.initial-readSize)
+                bin_end = region.final+readSize
+
                 if not strand_specific:
-                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                    for r in bam.fetch(region.chrom,bin_start,bin_end):
                         cov[i] += 1
                 else:
-                    for r in bam.fetch(region.chrom,region.initial-readSize,region.final+readSize):
+                    for r in bam.fetch(region.chrom,bin_start,bin_end):
                         # print(region.orientation)
                         # print(r.is_reverse)
                         if region.orientation == "+" and not r.is_reverse: cov[i] += 1
@@ -360,58 +365,59 @@ class CoverageSet:
             positions = []
             j = 0
             read_length = -1
-            # try:
-            for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
-                if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
-                j += 1
-                read_length = read.rlen
-                if not read.is_unmapped:
-                    # pos = read.pos - extension_size if read.is_reverse else read.pos
-                    # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
-                    pos = read.pos - extension_size if read.is_reverse else read.pos
-                    pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+            try:
+                for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
+                    if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
+                    j += 1
+                    read_length = read.rlen
+                    if not read.is_unmapped:
+                        # pos = read.pos - extension_size if read.is_reverse else read.pos
+                        # pos_help = read.pos - read.qlen if read.is_reverse else read.pos
+                        pos = read.pos - extension_size if read.is_reverse else read.pos
+                        pos_help = read.pos - read.qlen if read.is_reverse else read.pos
 
-                    within_gap = False
-                    if no_gaps:
-                        blocks = read.get_blocks()
-                        if len(blocks) > 1:
-                            # print(read.is_reverse)
-                            # print(read.pos)
-                            # print(blocks)
-                            for b_ind in range(len(blocks) - 1):
-                                # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
-                                if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
-                                    within_gap = True
+                        within_gap = False
+                        if no_gaps:
+                            blocks = read.get_blocks()
+                            if len(blocks) > 1:
+                                # print(read.is_reverse)
+                                # print(read.pos)
+                                # print(blocks)
+                                for b_ind in range(len(blocks) - 1):
+                                    # print([blocks[b_ind][1], read.pos, blocks[b_ind+1][0]])
+                                    if blocks[b_ind][1] <= read.pos < blocks[b_ind+1][0]:
+                                        within_gap = True
 
-
-                    #if position in mask region, then ignore
-                    if mask:
-                        while next_it and c_help not in chrom_regions: #do not consider this deadzone
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help): #deadzones behind, go further
-                            while next_it and c_help != region.chrom: #get right chromosome
+                        #if position in mask region, then ignore
+                        if mask:
+                            while next_it and c_help not in chrom_regions: #do not consider this deadzone
                                 c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
-                            c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
-                        if next_it and s_help <= pos_help and c_help == region.chrom:
-                            continue #pos in mask region
-                    if within_gap: continue
-                    else: positions.append(pos)
+                            # deadzones behind, go further
+                            if c_help != -1 and chrom_regions.index(region.chrom) >= chrom_regions.index(c_help):
+                                while next_it and c_help != region.chrom: #get right chromosome
+                                    c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            while next_it and e_help <= pos_help and c_help == region.chrom: #check right position
+                                c_help, s_help, e_help, next_it = self._get_bedinfo(f.readline())
+                            if next_it and s_help <= pos_help and c_help == region.chrom:
+                                continue #pos in mask region
+                        if within_gap: continue
+                        else: positions.append(pos)
 
-                    if get_strand_info:
-                        if pos not in strand_info:
-                            strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
-                    if get_sense_info:
-                        if pos not in sense_info:
-                            if paired_reads and not read.is_read1:
-                                continue
-                            else:
-                                if region.orientation == "+":
-                                    sense_info[pos] = (1,0) if read.is_reverse else (0,1)
-                                elif region.orientation == "-":
-                                    sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
-            # except ValueError:
-                # pass
+                        if get_strand_info:
+                            if pos not in strand_info:
+                                strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
+                        if get_sense_info:
+                            if pos not in sense_info:
+                                if paired_reads and not read.is_read1:
+                                    continue
+                                else:
+                                    if region.orientation == "+":
+                                        sense_info[pos] = (1,0) if read.is_reverse else (0,1)
+                                    elif region.orientation == "-":
+                                        sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
+            except ValueError as e:
+                print("warning: {}".format(e))
+                pass
 
             # if maxdup == -1: # No limit
             # elif maxdup == 0: # Remove all duplicates
@@ -468,7 +474,7 @@ class CoverageSet:
             if not log_aver:
                 self.coverage.append(np.array(cov))
             else:
-                ov = [x + 1 for x in cov]
+                cov = [x + 1 for x in cov]
                 self.coverage.append(np.log(np.array(cov)))
 
             if get_strand_info:
@@ -575,48 +581,56 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
-            self.coverage = []
-            # mp_input = []
-            for gr in self.genomicRegions:
-                # print(gr)
-                steps = int(abs(gr.final-gr.initial)/stepsize)
-                cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
-                # print(" ".join(cmd))
-                try:
-                    output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
-                    # print(output)
-                    ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
-                    self.coverage.append( np.array(ds) )
-                except:
-                    continue
-        
-        ### Linux platform
-        else:
-            # print("\tUsing ngslib on linux system...")
+        try:
             from ngslib import BigWigFile
             self.coverage = []
             bwf = BigWigFile(bigwig_file)
 
             for gr in self.genomicRegions:
-                depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
-                                             max(1,int(gr.final+stepsize/2)))
-                ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-                self.coverage.append( np.array(ds) )
+                depth = bwf.pileup(gr.chrom, max(0, int(gr.initial - stepsize / 2)),
+                                   max(1, int(gr.final + stepsize / 2)))
+                ds = [depth[d] for d in range(0, gr.final - gr.initial, stepsize)]
+                self.coverage.append(np.array(ds))
             bwf.close()
 
-            # import pyBigWig
+        except ImportError, e:
+            # pass  # module doesn't exist, deal with it.
+        # if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
             # self.coverage = []
-            # bwf = pyBigWig.open(bigwig_file)
-            # # print("1")
-            # steps = int(len(self.genomicRegions[0])/stepsize)
+            # # mp_input = []
             # for gr in self.genomicRegions:
-            #     ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
-            #     ds = [ x if x else 0 for x in ds ]
-            #     self.coverage.append( np.array(ds) )
-            #     # print(np.array(ds))
-            # # print("2")
-            # bwf.close()
+            #     # print(gr)
+            #     steps = int(abs(gr.final-gr.initial)/stepsize)
+            #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
+            #     # print(" ".join(cmd))
+            #     try:
+            #         output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
+            #         # print(output)
+            #         ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
+            #         self.coverage.append( np.array(ds) )
+            #     except:
+            #         continue
+
+            import pyBigWig
+            self.coverage = []
+            bwf = pyBigWig.open(bigwig_file)
+            # print("1")
+
+            for gr in self.genomicRegions:
+                steps = int(len(gr) / stepsize)
+                ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
+                ds = [ x if x else 0 for x in ds ]
+                self.coverage.append( np.array(ds) )
+                # print(np.array(ds))
+            # print("2")
+            bwf.close()
+
+        ### Linux platform
+        # else:
+            # print("\tUsing ngslib on linux system...")
+
+
+
 
 
         

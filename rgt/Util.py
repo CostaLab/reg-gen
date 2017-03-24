@@ -9,10 +9,10 @@ The Util classes contains many utilities needed by other classes such as the pat
 from __future__ import print_function
 import os
 import sys
-import ConfigParser
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 import shutil
+import ConfigParser
 import traceback
+from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
@@ -57,17 +57,12 @@ class GenomeData(ConfigurationFile):
         self.organism = organism
         self.genome = self.config.get(organism,'genome')
         self.chromosome_sizes = self.config.get(organism,'chromosome_sizes')
-        self.gene_regions = self.config.get(organism,'gene_regions')
+        # self.gene_regions = self.config.get(organism,'gene_regions')
+        self.genes_gencode = self.config.get(organism, 'genes_Gencode')
+        self.genes_refseq = self.config.get(organism, 'genes_RefSeq')
         self.annotation = self.config.get(organism,'annotation')
         self.annotation_dump_dir = os.path.dirname(self.annotation)
         self.gene_alias = self.config.get(organism,'gene_alias')
-
-        # self.genome = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','genome'))
-        # self.chromosome_sizes = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','chromosome_sizes'))
-        # self.gene_regions = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','association_file'))
-        # self.annotation = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gencode_annotation'))
-        # self.annotation_dump_dir = os.path.join(self.data_dir,self.organism)
-        # self.gene_alias = os.path.join(self.data_dir,self.organism,self.config.get('GenomeData','gene_alias'))
 
     def get_organism(self):
         """Returns the current organism."""
@@ -83,7 +78,15 @@ class GenomeData(ConfigurationFile):
     
     def get_gene_regions(self):
         """Returns the current path to the gene_regions BED file."""
-        return self.gene_regions
+        return self.genes_gencode
+
+    def get_genes_gencode(self):
+        """Returns the current path to the gene_regions BED file."""
+        return self.genes_gencode
+
+    def get_genes_refseq(self):
+        """Returns the current path to the gene_regions BED file."""
+        return self.genes_refseq
 
     def get_annotation(self):
         """
@@ -976,7 +979,7 @@ class AuxiliaryFunctions:
         return min(max(score,0),1000)
 
     @staticmethod
-    def overlap(t1, t2):
+    def overlap(t1, t2, strand_specific=False):
         """Checks if one interval contains any overlap with another interval.
 
         *Keyword arguments:*
@@ -989,9 +992,17 @@ class AuxiliaryFunctions:
             - 1 -- if i1 is after i2.
             - 0 -- if there is any overlap.
         """
-        if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
-        if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
-        return 0 # interval1 overlaps interval2
+        if strand_specific:
+            if (t1[1] <= t2[0]): return -1  # interval1 is before interval2
+            if (t2[1] <= t1[0]): return 1  # interval1 is after interval2
+            if t1[4] == t2[2]:
+                return 0  # interval1 overlaps interval2
+            else:
+                return 2  # interval1 overlaps interval2 on the opposite strand
+        else:
+            if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
+            if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
+            return 0 # interval1 overlaps interval2
 
     @staticmethod
     def revcomp(s):

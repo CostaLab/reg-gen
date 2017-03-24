@@ -8,7 +8,7 @@ mkdir -p $DIR
 
 ################################################################
 # THOR
-
+#
  echo "**********************************************"
  echo "Testing THOR"
  mkdir -p ${DIR}/THOR
@@ -26,7 +26,7 @@ mkdir -p $DIR
 
  # Run test script
  cd THOR_example_data/
- rgt-THOR THOR.config
+ rgt-THOR THOR.config --a_threshold 80
  echo "********* THOR test completed ****************"
 
 ################################################################
@@ -43,8 +43,7 @@ mkdir -p $DIR
  	echo "$file found."
  else
  	echo "$file not found."
- 	# curl http://costalab.org/files/tdf/TDF_examples.zip | tar xz
-     wget -qO- -O TDF_examples.zip http://costalab.org/files/tdf/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
+    wget -qO- -O TDF_examples.zip http://costalab.org/files/tdf/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
  fi
 
  # Run test script
@@ -52,7 +51,7 @@ mkdir -p $DIR
  rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -rt -o promoter_test/
 
  cd ${DIR}/TDF/TDF_examples/TERC_hg19/
- rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -o genomic_region_test/ -n 10
+ rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10
 
  echo "********* TDF test completed ****************"
 

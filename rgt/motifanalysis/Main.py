@@ -6,12 +6,11 @@
 from __future__ import print_function
 import os
 import sys
-import warnings
 from glob import glob
 import time
 from random import seed
-
-warnings.filterwarnings("ignore")
+from optparse import OptionGroup
+from shutil import copy
 
 # Internal
 from rgt import __version__
@@ -23,10 +22,12 @@ from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
 from Util import Input, Result
+from rgt.AnnotationSet import AnnotationSet
 
 # External
 from pysam import Fastafile
 from fisher import pvalue
+
 
 """
 Contains functions to common motif analyses.
@@ -42,8 +43,56 @@ Dependencies:
 - bedToBigBed and bigbedToBed scripts in $PATH (if the option is used)
 - bedTools (deprecate this option)
 
-Authors: Eduardo G. Gusmao.
+Authors: Eduardo G. Gusmao, Fabio Ticconi
 """
+
+
+def is_bed(filename):
+    _, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bed":
+        return True
+
+    return False
+
+
+def is_bb(filename):
+    _, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bb":
+        return True
+
+    return False
+
+
+def ensure_is_bed(filename):
+    path, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bb":
+        # convert BB to BED
+        bed_filename = os.path.join(path + ".bed")
+        os.system(" ".join(["bigBedToBed", filename, bed_filename]))
+
+        return bed_filename
+    elif ext.lower() == ".bed":
+        return filename
+    else:
+        raise ValueError("{} is neither a BED nor a BB".format(filename))
+
+
+def ensure_is_bb(filename, chrom_sizes_filename):
+    path, ext = os.path.splitext(filename)
+
+    if ext.lower() == ".bed":
+        # convert BED to BB
+        bb_filename = os.path.join(path + ".bb")
+        os.system(" ".join(["bedToBigBed", filename, chrom_sizes_filename, bb_filename, "-verbose=0"]))
+
+        return bb_filename
+    elif ext.lower() == ".bb":
+        return filename
+    else:
+        raise ValueError("{} is neither a BED nor a BB".format(filename))
 
 
 def main():
@@ -90,7 +139,7 @@ def main():
         sys.exit(0)
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     ###################################################################################################
     # Redirecting to Specific Functions
@@ -102,9 +151,10 @@ def main():
     elif sys.argv[1] == "--enrichment":
         main_enrichment()
     else:
-        main_error_handler.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
+        err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
     print("Completed in", time.time() - start, "seconds")
+
 
 def main_matching():
     """
@@ -118,10 +168,10 @@ def main_matching():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] <experiment_matrix>"
+    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -137,53 +187,80 @@ def main_matching():
                       help="Score distribution precision for determining false positive rate cutoff.")
     parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=0.1,
                       help="Pseudocounts to be added to raw counts of each PFM.")
-    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT", default=10.0,
-                      help="If random coordinates need to be created (for further motif enrichment),"
-                           "then it will be created a number of coordinates that equals this"
-                           "parameter x the number of input regions (in case of multiple regions, the"
-                           "larger is considered). If zero (0) is passed, then no random coordinates are created.")
+    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT",
+                      help="If set, a random regions file will be created (eg, for later enrichment analysis). "
+                           "The number of coordinates will be equal to this value times the size of the input regions. "
+                           "We advise you use a value of at least 10.")
     parser.add_option("--norm-threshold", dest="norm_threshold", action="store_true", default=False,
-                      help="If this option is used, the thresholds for all PWMs will be normalized by their length."
-                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr."
-                           "Then, all thresholds are divided by the length of the motif. The final threshold"
-                           "consists of the average between all normalized motif thresholds. This single threshold"
+                      help="If this option is used, the thresholds for all PWMs will be normalized by their length. "
+                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr. "
+                           "Then, all thresholds are divided by the length of the motif. The final threshold "
+                           "consists of the average between all normalized motif thresholds. This single threshold "
                            "will be applied to all motifs.")
-    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
-                      help="Bed file containing the genomic regions to use as background."
-                           "If set, --rand-proportion has no effect.")
-    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
-    # TODO: allow a more complex file type, specifying both motif name and database maybe?
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+                      help="If an experimental matrix is provided, the input arguments will be ignored.")
 
-    # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                      default=os.getcwd(), help="Path where the output files will be written.")
-    parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
-                      help="If this option is used, all bed files will be written as bigbed.")
-    parser.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
-                      help="In order to print bigbed files the scores need to be normalized between 0 and 1000."
-                           "Don't use this option if real bitscores should be printed in the resulting bed file."
-                           "Without this option, bigbed files will never be created.")
+    # Promoter-matching options
+    group = OptionGroup(parser, "Promoter-regions matching options",
+                        "Takes a list of genes, extracts their promoter regions and performs motif matching on these. "
+                        "If a genes file is provided, the input files and experimental matrix will be ignored.")
+    group.add_option("--gene-list", dest="promoter_genes_filename", type="string", metavar="PATH",
+                     help="List of genes (one per line) to get the promoter regions from.")
+    group.add_option("--make-background", dest="promoter_make_background", action="store_true", default=False,
+                     help="If set, it will perform motif matching on the 'background regions', composed of "
+                          "the promoters of all available genes. It doesn't require --gene-list.")
+    group.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
+                     help="Length of the promoter region (in bp) to be extracted from each gene.")
+    parser.add_option_group(group)
+
+    # Output options
+    group = OptionGroup(parser, "Output options",
+                        "Where to put the output files and how to post-process them.")
+    group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
+                     help="Path where the output MPBS files will be written. Defaults to 'match' in the "
+                          "current directory.")
+    group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
+                     help="If this option is used, all bed files will be written as bigbed.")
+    group.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
+                     help="In order to print bigbed files the scores need to be normalized between 0 and 1000. "
+                          "Don't use this option if real bitscores should be printed in the resulting bed file. "
+                          "Without this option, bigbed files will never be created.")
+    parser.add_option_group(group)
 
     # Processing Options
     options, arguments = parser.parse_args()
 
+    if not options.input_matrix and len(arguments) == 0:
+        err.throw_error("ME_FEW_ARG", add_msg="You must either specify an experimental matrix, "
+                                              "or at least a valid input file.")
+
     # Additional Parameters
-    matching_folder_name = "Match"
+    matching_folder_name = "match"
     random_region_name = "random_regions"
-    background_regions_name = "background_regions"
+
+    # we take care of conflicting parameters before going into the core of the method
+    if options.promoter_genes_filename:
+        # disable random regions and input matrix
+        options.rand_proportion = None
+        options.input_matrix = None
 
     ###################################################################################################
     # Initializations
     ###################################################################################################
 
     # Output folder
-    matching_output_location = os.path.join(options.output_location, matching_folder_name)
+    if options.output_location:
+        output_location = options.output_location
+    else:
+        output_location = os.path.join(os.getcwd(), matching_folder_name)
+
     try:
-        if not os.path.isdir(matching_output_location):
-            os.makedirs(matching_output_location)
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
     except Exception:
-        main_error_handler.throw_error("MM_OUT_FOLDER_CREATION")
+        err.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -200,45 +277,79 @@ def main_matching():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     ###################################################################################################
-    # Reading Input Matrix
+    # Reading Input Regions
     ###################################################################################################
 
-    # Reading arguments
-    try:
-        input_matrix = arguments[0]
-        if len(arguments) > 1:
-            main_error_handler.throw_warning("MM_MANY_ARG")
-    except Exception:
-        main_error_handler.throw_error("MM_NO_ARGUMENT")
+    genomic_regions_dict = {}
 
-    # Create experimental matrix
-    try:
-        exp_matrix = ExperimentalMatrix()
-        exp_matrix.read(input_matrix)
-    except Exception:
-        main_error_handler.throw_error("MM_WRONG_EXPMAT")
+    # get promoter regions from list of genes (both target and background)
+    # TODO: should be more clever, allow precomputed regions etc
+    if options.promoter_genes_filename:
+        annotation = AnnotationSet(options.organism, alias_source=options.organism,
+                                   protein_coding=True, known_only=True)
 
-    ###################################################################################################
-    # Reading Regions
-    ###################################################################################################
+        target_genes = GeneSet("target_genes")
+        target_genes.read(options.promoter_genes_filename)
 
-    # Initialization
+        # TODO what do we do with unmapped genes? maybe just print them out
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
+        target_regions.name = "target_regions"
+        target_regions.sort()
+        output_file_name = os.path.join(output_location, target_regions.name + ".bed")
+        target_regions.write_bed(output_file_name)
+
+        genomic_regions_dict[target_regions.name] = target_regions
+
+        if options.promoter_make_background:
+            # background is made of all genes minus the target genes
+            background_genes = GeneSet("background_genes")
+            background_genes.get_all_genes(organism=options.organism)
+            background_genes.subtract(target_genes)
+
+            background_regions = annotation.get_promoters(gene_set=background_genes,
+                                                          promoterLength=options.promoter_length)
+            background_regions.name = "background_regions"
+            background_regions.sort()
+            output_file_name = os.path.join(output_location, background_regions.name + ".bed")
+            background_regions.write_bed(output_file_name)
+
+            genomic_regions_dict[background_regions.name] = background_regions
+
+    # get experimental matrix, if available
+    if options.input_matrix:
+        try:
+            exp_matrix = ExperimentalMatrix()
+            exp_matrix.read(options.input_matrix)
+
+            # if the matrix is present, the (empty) dictionary is overwritten
+            genomic_regions_dict = exp_matrix.objectsDict
+        except Exception:
+            err.throw_error("MM_WRONG_EXPMAT")
+    elif arguments:
+        # get input files, if available
+        for input_filename in arguments:
+            name, _ = os.path.splitext(os.path.basename(input_filename))
+
+            regions = GenomicRegionSet(name)
+            regions.read_bed(os.path.abspath(input_filename))
+
+            genomic_regions_dict[name] = regions
+
+    if not genomic_regions_dict:
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
+
     max_region_len = 0
     max_region = None
     regions_to_match = []
 
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception:
-        main_error_handler.throw_error("MM_WRONG_EXPMAT")
-
     # Iterating on experimental matrix objects
-    for k in exp_matrix_objects_dict.keys():
+    for k in genomic_regions_dict.keys():
 
-        curr_genomic_region = exp_matrix_objects_dict[k]
+        curr_genomic_region = genomic_regions_dict[k]
 
         # If the object is a GenomicRegionSet
         if isinstance(curr_genomic_region, GenomicRegionSet):
@@ -253,29 +364,14 @@ def main_matching():
             curr_len = len(curr_genomic_region)
             if curr_len > max_region_len:
                 max_region_len = curr_len
-                max_region = exp_matrix_objects_dict[k]
+                max_region = curr_genomic_region
 
     ###################################################################################################
-    # Creating background regions
+    # Creating random regions
     ###################################################################################################
 
-    # if a background file is provided, use it
-    if options.background_bed:
-
-        # TODO: should also accept big bed
-
-        bg_regions = GenomicRegionSet(background_regions_name)
-
-        try:
-            bg_regions.read_bed(os.path.abspath(options.background_bed))
-        except Exception:
-            # FIXME: add another error type, requires some fixing around
-            main_error_handler.throw_error("DEFAULT_ERROR")
-
-        regions_to_match.append(bg_regions)
-
-    # otherwise if a random proportion is set, create random regions
-    elif options.rand_proportion > 0:
+    # if a random proportion is set, create random regions
+    if options.rand_proportion:
 
         # Create random coordinates and name it random_regions
         rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
@@ -286,7 +382,7 @@ def main_matching():
         regions_to_match.append(rand_region)
 
         # Writing random regions
-        output_file_name = os.path.join(matching_output_location, random_region_name)
+        output_file_name = os.path.join(output_location, random_region_name)
         rand_bed_file_name = output_file_name + ".bed"
         rand_region.write_bed(rand_bed_file_name)
 
@@ -296,19 +392,14 @@ def main_matching():
             # Fetching file with chromosome sizes
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
-            # Converting to big bed
-            rand_bb_file_name = output_file_name + ".bb"
             try:
-                os.system(
-                    " ".join(["bedToBigBed", rand_bed_file_name, chrom_sizes_file, rand_bb_file_name, "-verbose=0"]))
+                # Converting to big bed
+                ensure_is_bb(rand_bed_file_name, chrom_sizes_file)
+
+                # removing previously-created BED file
                 os.remove(rand_bed_file_name)
             except Exception:
-                main_error_handler.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
-    else:
-        # FIXME: not very neat
-        main_error_handler.throw_warning("DEFAULT_WARNING", add_msg="No background was selected")
-
-    # if neither case was selected, we just do the motif matching over the input regions, without background
+                err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
     ###################################################################################################
     # Creating PWMs
@@ -353,7 +444,7 @@ def main_matching():
     for genomic_region_set in regions_to_match:
 
         # Initializing output bed file
-        output_file_name = os.path.join(matching_output_location, genomic_region_set.name + "_mpbs")
+        output_file_name = os.path.join(output_location, genomic_region_set.name + "_mpbs")
         bed_file_name = output_file_name + ".bed"
         output_file = open(bed_file_name, "w")
 
@@ -363,13 +454,8 @@ def main_matching():
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            # Splitting the sequence in smaller sequences to remove the "N" regions
-            sequence_list = filter(None, sequence.split("N"))
-
-            # Perform motif matching for each motif in each sequence
-            for seq in sequence_list:
-                for motif in motif_list:
-                    match_single(motif, seq, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
+            for motif in motif_list:
+                match_single(motif, sequence, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
 
         # Closing file
         output_file.close()
@@ -380,10 +466,12 @@ def main_matching():
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
             # Converting to big bed
+            # FIXME: sorting should be performed in memory, before even writing the BED file
             sort_file_name = output_file_name + "_sort.bed"
-            bb_file_name = output_file_name + ".bb"
             os.system("sort -k1,1 -k2,2n " + bed_file_name + " > " + sort_file_name)
-            os.system(" ".join(["bedToBigBed", sort_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+            ensure_is_bb(sort_file_name, chrom_sizes_file)
+
+            # removing temporary files
             os.remove(bed_file_name)
             os.remove(sort_file_name)
 
@@ -400,10 +488,10 @@ def main_enrichment():
     ###################################################################################################
 
     # Initializing Error Handler
-    main_error_handler = ErrorHandler()
+    err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --enrichment [options] <experiment_matrix> <input_path>"
+    usage_message = "%prog --matching [options] <background_bed_file> [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -424,27 +512,41 @@ def main_enrichment():
                       help="Alpha value for multiple test.")
     parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
                       help="Number of processes for multi-CPU based machines.")
-    parser.add_option("--background-bed", dest="background_bed", type="string", metavar="STRING",
-                      help="Bed file containing the genomic regions to use as background."
-                           "If set, the random regions files will be ignored.")
-    parser.add_option("--selected-motifs", dest="selected_motifs_filename", type="string", metavar="STRING",
+    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
+    parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
+                      help="Directory where the matching output containing the MPBS files resides. "
+                           "Defaults to 'match' in the current directory.")
+    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
+                      help="If an experimental matrix is provided, the input arguments will be ignored.")
+
     # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=None,
-                      help="Path where the output files will be written. Default is the input PATH.")
+    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
+                      help="Path where the output MPBS files will be written. Defaults to 'enrichment' in the "
+                           "current directory.")
     parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
                       help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
-                           "this option are print. Use 1.0 to print all MPBSs.")
+                           "this option are printed. Use 1.0 to print all MPBSs.")
     parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
                       help="If this option is used, all bed files will be written as bigbed.")
+    parser.add_option("--no-copy-logos", dest="no_copy_logos", action="store_true", default=False,
+                      help="If set, the logos to be showed on the enrichment statistics page will NOT be "
+                           "copied to a local directory; instead, the HTML result file will contain absolute "
+                           "paths to the logos in your rgtdata folder.")
 
     # Processing Options
     options, arguments = parser.parse_args()
 
+    if len(arguments) < 1:
+        print(usage_message)
+        sys.exit(1)
+
+    background_filename = arguments[0]
+    input_files = arguments[1:]  # empty list if no input files
+
     # Additional Parameters
-    matching_folder_name = "Match"
-    random_region_name = "random_regions"
-    background_region_name = "background_regions"
+    matching_folder_name = "match"
+    enrichment_folder_name = "enrichment"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
     # output_mpbs_filtered = "mpbs"
@@ -472,16 +574,64 @@ def main_enrichment():
 
     # Output folder
     if options.output_location:
-        output_location = options.output_location  # Output location was given
+        output_location = options.output_location
     else:
-        output_location = arguments[1]  # Output location is the same as the match folder location
+        output_location = os.path.join(os.getcwd(), enrichment_folder_name)
+
+    # if the output folder doesn't exist, we create it
     try:
-        matrix_name_without_ext = ".".join(arguments[0].split(".")[:-1])
-        output_location_results = os.path.join(output_location, os.path.basename(matrix_name_without_ext))
-        if not os.path.isdir(output_location_results):
-            os.makedirs(output_location_results)
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
     except Exception:
-        main_error_handler.throw_error("ME_OUT_FOLDER_CREATION")
+        err.throw_error("ME_OUT_FOLDER_CREATION")
+
+    # Matching folder
+    if options.match_location:
+        match_location = options.match_location
+    else:
+        match_location = os.path.join(os.getcwd(), matching_folder_name)
+
+    # the matching directory must exist, for obvious reasons
+    if not os.path.isdir(match_location):
+        err.throw_error("ME_MATCH_NOTFOUND")
+
+    # Background file must exist
+    background_original_filename = background_filename
+    if not os.path.isfile(background_filename):
+        err.throw_error("DEFAULT_ERROR", add_msg="Background file does not exist or is not readable.")
+    elif is_bb(background_filename):
+        background_filename = ensure_is_bed(background_filename)
+    elif is_bed(background_filename):
+        pass
+    else:
+        err.throw_error("DEFAULT_ERROR", add_msg="Background file must be in either BED or BigBed format.")
+
+    # Background MPBS file must exist
+    path, ext = os.path.splitext(background_filename)
+
+    # first we check at matching folder location
+    background_mpbs_filename = os.path.join(match_location, os.path.basename(path) + "_mpbs" + ext)
+
+    if not os.path.isfile(background_mpbs_filename):
+        # if not found, we search at background file location
+        background_mpbs_filename = os.path.join(path + "_mpbs" + ext)
+
+        if not os.path.isfile(background_mpbs_filename):
+            err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file does not exist or is not readable. "
+                                                     "It must be located at either the matching location, or in the "
+                                                     "same directory of the Background BED/BigBed file. "
+                                                     "Note: it must be consistent with the background file, ie "
+                                                     "if the background is BED, the MPBS must be a BED file too. Same "
+                                                     "for BigBed.")
+
+    background_mpbs_original_filename = background_mpbs_filename
+
+    if is_bb(background_mpbs_filename):
+        background_mpbs_filename = ensure_is_bed(background_mpbs_filename)
+    elif is_bed(background_mpbs_filename):
+        pass
+    else:
+        err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file must be in either BED or BigBed format.")
 
     # Default genomic data
     genome_data = GenomeData(options.organism)
@@ -498,30 +648,57 @@ def main_enrichment():
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
-            main_error_handler.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
 
     # Default image data
     image_data = ImageData()
+
+    genomic_regions_dict = {}
+    exp_matrix_fields_dict = {}
+
+    # will be set if genelists are used in the experimental matrix
+    flag_gene = False
 
     ###################################################################################################
     # Reading Input Matrix
     ###################################################################################################
 
-    # Reading arguments
-    try:
-        input_matrix = arguments[0]
-        input_location = arguments[1]
-        if len(arguments) > 2:
-            main_error_handler.throw_warning("ME_MANY_ARG")
-    except Exception:
-        main_error_handler.throw_error("ME_FEW_ARG")
+    # get experimental matrix, if available
+    if options.input_matrix:
+        try:
+            exp_matrix = ExperimentalMatrix()
+            exp_matrix.read(options.input_matrix)
 
-    # Create experimental matrix
-    try:
-        exp_matrix = ExperimentalMatrix()
-        exp_matrix.read(input_matrix)
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
+            # if the matrix is present, the (empty) dictionary is overwritten
+            genomic_regions_dict = exp_matrix.objectsDict
+
+            # Reading dictionary grouped by fields (only for gene association)
+            try:
+                exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
+                flag_gene = True
+            except KeyError:
+                flag_gene = False
+
+            del exp_matrix
+
+        except Exception:
+            err.throw_error("MM_WRONG_EXPMAT")
+    elif input_files:
+        # get input files, if available
+        for input_filename in input_files:
+            name, _ = os.path.splitext(os.path.basename(input_filename))
+
+            regions = GenomicRegionSet(name)
+
+            try:
+                regions.read_bed(os.path.abspath(input_filename))
+            except:
+                err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
+            genomic_regions_dict[name] = regions
+
+    if not genomic_regions_dict:
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
+                                                 "or at least a valid input file.")
 
     ###################################################################################################
     # Reading Regions & Gene Lists
@@ -529,19 +706,6 @@ def main_enrichment():
 
     # Initializations
     input_list = []
-
-    # Reading dictionary grouped by fields
-    flag_gene = True
-    try:
-        exp_matrix_fields_dict = exp_matrix.fieldsDict[gene_column_name]
-    except Exception:
-        flag_gene = False
-
-    # Reading dictionary of objects
-    try:
-        exp_matrix_objects_dict = exp_matrix.objectsDict
-    except Exception:
-        main_error_handler.throw_error("ME_WRONG_EXPMAT")
 
     if flag_gene:  # Genelist and full site analysis will be performed
 
@@ -551,13 +715,14 @@ def main_enrichment():
             # Create input which will contain all regions associated with such gene group
             curr_input = Input(None, [])
 
-            # This flag will be used to see if there are two gene files associated with the same gene label on genegroup column
+            # This flag will be used to see if there are two gene files associated with
+            # the same gene label on genegroup column
             flag_foundgeneset = False
 
-            # Iterating on experimental matrix objects
+            # Iterating over the genomic regions
             for k in exp_matrix_fields_dict[g]:
 
-                curr_object = exp_matrix_objects_dict[k]
+                curr_object = genomic_regions_dict[k]
 
                 # If the current object is a GenomicRegionSet
                 if isinstance(curr_object, GenomicRegionSet):
@@ -571,15 +736,16 @@ def main_enrichment():
                 if isinstance(curr_object, GeneSet):
 
                     # Updating Input object
-                    curr_object.name = g  # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    # The name in gene_group column will be used. The 'name' column for genes are not used.
+                    curr_object.name = g
                     if not flag_foundgeneset:
                         curr_input.gene_set = curr_object
                         flag_foundgeneset = True
                     else:
-                        main_error_handler.throw_warning("ME_MANY_GENESETS")
+                        err.throw_warning("ME_MANY_GENESETS")
 
             if not flag_foundgeneset:
-                main_error_handler.throw_warning("ME_FEW_GENESETS")
+                err.throw_warning("ME_FEW_GENESETS")
 
             # Update input list
             input_list.append(curr_input)
@@ -590,9 +756,9 @@ def main_enrichment():
         single_input = Input(None, [])
 
         # Iterating on experimental matrix objects
-        for k in exp_matrix_objects_dict.keys():
+        for k in genomic_regions_dict.keys():
 
-            curr_object = exp_matrix_objects_dict[k]
+            curr_object = genomic_regions_dict[k]
 
             # If the current object is a GenomicRegionSet
             if isinstance(curr_object, GenomicRegionSet):
@@ -622,7 +788,7 @@ def main_enrichment():
 
     # Grouping motif file names by the number of processes requested
     if options.processes <= 0:
-        main_error_handler.throw_error("ME_LOW_NPROC")
+        err.throw_error("ME_LOW_NPROC")
     elif options.processes == 1:
         motif_names_grouped = [[e] for e in motif_names]
     else:
@@ -633,54 +799,15 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
-    # FIXME: this is brittle. The files to use as background, both normal regions and mpbs, should be
-    # passed as arguments, not globbed - in both the "given" and the "random" cases
-
-    # if the background is not defined, we expect random regions instead
-    if not options.background_bed:
-        background_region_name = random_region_name
-
-        # Verifying background region file exists
-        background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + ".*"))
-        try:
-            background_region_file_name = background_region_glob[0]
-        except Exception:
-            main_error_handler.throw_error("ME_RAND_NOTFOUND")
-    else:
-        background_region_file_name = os.path.abspath(options.background_bed)
-
-    # Verifying background region MPBS file exists
-    background_region_glob = glob(os.path.join(input_location, matching_folder_name, background_region_name + "_mpbs.*"))
-    try:
-        background_mpbs_file_name = background_region_glob[0]
-    except Exception:
-        pass  # XXX TODO main_error_handler.throw_error("ME_RANDMPBS_NOTFOUND")
-
-    # Converting regions bigbed file
-    background_region_bed_name = ".".join(background_region_file_name.split(".")[:-1]) + ".bed"
-    if background_region_file_name.split(".")[-1] == "bb":
-        background_region_bed_name = os.path.join(output_location_results, background_region_name + ".bed")
-        os.system(" ".join(["bigBedToBed", background_region_file_name, background_region_bed_name]))
-    elif background_region_file_name.split(".")[-1] != "bed":
-        main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
-
-    # Converting mpbs bigbed file
-    background_mpbs_bed_name = ".".join(background_mpbs_file_name.split(".")[:-1]) + ".bed"
-    if background_mpbs_file_name.split(".")[-1] == "bb":
-        background_mpbs_bed_name = os.path.join(output_location_results, background_region_name + "_mpbs.bed")
-        os.system(" ".join(["bigBedToBed", background_mpbs_file_name, background_mpbs_bed_name]))
-    elif background_mpbs_file_name.split(".")[-1] != "bed":
-        pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
-
     # Evaluating background statistics
-    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_region_bed_name, background_mpbs_bed_name,
-                                           output_location_results, return_geneset=False)
+    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_filename, background_mpbs_filename,
+                                           return_geneset=False)
 
-    # Removing bed files if bb exist
-    if background_region_file_name.split(".")[-1] == "bb":
-        os.remove(background_region_bed_name)
-    if background_mpbs_file_name.split(".")[-1] == "bb":
-        os.remove(background_mpbs_bed_name)
+    # removing temporary BED files if the originals were BBs
+    if is_bb(background_original_filename):
+        os.remove(background_filename)
+    if is_bb(background_mpbs_original_filename):
+        os.remove(background_mpbs_filename)
 
     ###################################################################################################
     # Enrichment Statistics
@@ -689,7 +816,7 @@ def main_enrichment():
     # Creating link dictionary for HTML file
     genetest_link_dict = dict()
     sitetest_link_dict = dict()
-    link_location = "file://" + os.path.abspath(output_location_results)
+    link_location = "../"
     for curr_input in input_list:
         for grs in curr_input.region_list:
             if curr_input.gene_set:
@@ -714,28 +841,33 @@ def main_enrichment():
 
             # Creating output folder
             if curr_input.gene_set:
-                curr_output_folder_name = os.path.join(output_location_results,
-                                                       grs.name + "__" + curr_input.gene_set.name)
+                curr_output_folder_name = os.path.join(output_location, grs.name + "__" + curr_input.gene_set.name)
             else:
-                curr_output_folder_name = os.path.join(output_location_results, grs.name)
+                curr_output_folder_name = os.path.join(output_location, grs.name)
             if not os.path.isdir(curr_output_folder_name):
                 os.makedirs(curr_output_folder_name)
 
             # Verifying if MPBS file exists
-            curr_mpbs_glob = glob(os.path.join(input_location, matching_folder_name, original_name + "_mpbs.*"))
+            curr_mpbs_glob = glob(os.path.join(match_location, original_name + "_mpbs.*"))
             try:
                 curr_mpbs_file_name = curr_mpbs_glob[0]
             except Exception:
-                pass  # TODO main_error_handler.throw_error("ME_RAND_NOTFOUND")
+                err.throw_warning("DEFAULT_ERROR", add_msg="File {} does not have a matching MPBS file. "
+                                                           "Ignoring.".format(original_name))
+                # skip to next genomic region set
+                continue
 
-            # Converting ev mpbs bigbed file
-            curr_mpbs_bed_name = ".".join(curr_mpbs_file_name.split(".")[:-1]) + ".bed"
-            if curr_mpbs_file_name.split(".")[-1] == "bb":
-                curr_mpbs_bed_name = os.path.join(curr_output_folder_name, original_name + "_mpbs.bed")
-                os.system(" ".join(["bigBedToBed", curr_mpbs_file_name, curr_mpbs_bed_name]))
+            if is_bb(curr_mpbs_file_name):
+                curr_mpbs_bed_name = ensure_is_bed(curr_mpbs_file_name)
+
+                # at the end of calculations, we'll remove all the temporary bed files we created
                 to_remove_list.append(curr_mpbs_bed_name)
-            elif curr_mpbs_file_name.split(".")[-1] != "bed":
-                pass  # XXX TODO main_error_handler.throw_error("ME_RAND_NOT_BED_BB")
+            elif is_bed(curr_mpbs_file_name):
+                curr_mpbs_bed_name = curr_mpbs_file_name
+            else:
+                err.throw_warning("DEFAULT_ERROR", add_msg="The matching MPBS file for {} is neither in BED nor BigBed "
+                                                           "format. Ignoring.".format(original_name))
+                continue
 
             ###################################################################################################
             # Gene Evidence Statistics
@@ -753,6 +885,8 @@ def main_enrichment():
                 for gr in grs:
                     if gr.name == ".":
                         curr_name = "."
+                    elif not gr.proximity:
+                        curr_name = ":".join([e if e[0] != "." else e[1:] for e in gr.name.split(":")])
                     else:
                         curr_gene_list = [e if e[0] != "." else e[1:] for e in gr.name.split(":")]
                         curr_prox_list = gr.proximity.split(":")
@@ -761,13 +895,11 @@ def main_enrichment():
                 output_file.close()
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    bb_file_name = output_file_name + ".bb"
                     try:
-                        os.system(
-                            " ".join(["bedToBigBed", output_file_name, chrom_sizes_file, bb_file_name, "-verbose=0"]))
+                        ensure_is_bb(output_file_name, chrom_sizes_file)
                         os.remove(output_file_name)
                     except Exception:
-                        pass  # WARNING
+                        pass  # TODO: warning?
 
                 # Writing ev and nev regions to temporary bed files in order to evaluate statistics
                 ev_regions_file_name = os.path.join(curr_output_folder_name, "ev_regions.bed")
@@ -795,13 +927,11 @@ def main_enrichment():
                 nev_mpbs_file = open(nev_mpbs_file_name_temp, "w")
                 curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             curr_output_folder_name,
                                                                              return_geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
                 curr_c_dict, curr_d_dict, nev_genelist_dict = get_fisher_dict(motif_names_grouped,
                                                                               nev_regions_file_name, curr_mpbs_bed_name,
-                                                                              curr_output_folder_name,
                                                                               return_geneset=True,
                                                                               output_mpbs_file=nev_mpbs_file,
                                                                               color=nev_color)
@@ -830,7 +960,7 @@ def main_enrichment():
                     result_list.append(r)
 
                 # Performing multiple test correction
-                multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+                multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                                  alpha=options.multiple_test_alpha,
                                                                                  method='indep')
                 corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
@@ -878,27 +1008,23 @@ def main_enrichment():
                 # Sorting ev and nev mpbs
                 output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
                 output_file_name_nev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bed")
-                os.system(
-                    "sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)  # Sorting ev file
-                os.system(
-                    "sort -k1,1 -k2,2n " + nev_mpbs_file_name_thresh + " > " + output_file_name_nev_bed)  # Sorting nev file
+
+                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
+                os.system("sort -k1,1 -k2,2n " + nev_mpbs_file_name_thresh + " > " + output_file_name_nev_bed)
 
                 # Converting ev and nev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bb")
-                    output_file_name_nev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bb")
                     try:
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_ev_bed, chrom_sizes_file, output_file_name_ev_bb,
-                             "-verbose=0"]))
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_nev_bed, chrom_sizes_file, output_file_name_nev_bb,
-                             "-verbose=0"]))
+                        # create big bed files
+                        ensure_is_bb(output_file_name_ev_bed,  chrom_sizes_file)
+                        ensure_is_bb(output_file_name_nev_bed, chrom_sizes_file)
+
+                        # temporary BED files to be removed later
                         to_remove_list.append(output_file_name_ev_bed)
                         to_remove_list.append(output_file_name_nev_bed)
                     except Exception:
-                        pass  # WARNING
+                        pass  # TODO: warning?
 
                 # Printing statistics text
                 output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest + ".txt")
@@ -908,28 +1034,45 @@ def main_enrichment():
                     output_file.write(str(r) + "\n")
                 output_file.close()
 
+                # unless explicitly forbidden, we copy the logo images locally
+                if not options.no_copy_logos:
+                    logo_dir_path = os.path.join(output_location, "logos")
+                    try:
+                        os.stat(logo_dir_path)
+                    except:
+                        os.mkdir(logo_dir_path)
+
                 # Printing statistics html - Creating data table
                 data_table = []
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                     for rep in motif_data.get_logo_list():
                         logo_file_name = os.path.join(rep, r.name + ".png")
+
                         if os.path.isfile(logo_file_name):
+                            if not options.no_copy_logos:
+                                copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+
+                                # use relative paths in the html
+                                # FIXME can we do it in a better way? (inside the Html class)
+                                logo_file_name = os.path.join("..", "logos", r.name + ".png")
+
                             curr_motif_tuple = [logo_file_name, logo_width]
                             break
-                    curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                    curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                     data_table.append(
                         [r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                          str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                html = Html("Motif Enrichment Analysis", genetest_link_dict)
+                fig_path = os.path.join(output_location, "fig")
+                html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
                 html.add_heading(
-                    "* This gene test considered regions associated to the gene list given against regions not associated to the gene list",
+                    "* This gene test considered regions associated to the given gene list against regions not associated to the gene list",
                     align="center", bold=False, size=3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
                 html.write(output_file_name_html)
@@ -954,7 +1097,6 @@ def main_enrichment():
                 ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
                 curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             curr_output_folder_name,
                                                                              return_geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
@@ -985,7 +1127,7 @@ def main_enrichment():
                 result_list.append(r)
 
             # Performing multiple test correction
-            multuple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
+            multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
                                                                              alpha=options.multiple_test_alpha,
                                                                              method='indep')
             corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
@@ -1024,17 +1166,17 @@ def main_enrichment():
 
                 # Sorting ev mpbs
                 output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
-                os.system(
-                    "sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)  # Sorting ev file
+                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
 
                 # Converting ev and nev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
-                    output_file_name_ev_bb = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bb")
+
                     try:
-                        os.system(" ".join(
-                            ["bedToBigBed", output_file_name_ev_bed, chrom_sizes_file, output_file_name_ev_bb,
-                             "-verbose=0"]))
+                        # create big bed file
+                        ensure_is_bb(output_file_name_ev_bed, chrom_sizes_file)
+
+                        # temporary BED file to be removed later
                         to_remove_list.append(output_file_name_ev_bed)
                     except Exception:
                         pass  # WARNING
@@ -1047,34 +1189,51 @@ def main_enrichment():
                 output_file.write(str(r) + "\n")
             output_file.close()
 
+            # unless explicitly forbidden, we copy the logo images locally
+            if not options.no_copy_logos:
+                logo_dir_path = os.path.join(output_location, "logos")
+                try:
+                    os.stat(logo_dir_path)
+                except:
+                    os.mkdir(logo_dir_path)
+
             # Printing statistics html - Creating data table
             data_table = []
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                 for rep in motif_data.get_logo_list():
                     logo_file_name = os.path.join(rep, r.name + ".png")
+
                     if os.path.isfile(logo_file_name):
+                        if not options.no_copy_logos:
+                            copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+
+                            # use relative paths in the html
+                            # FIXME can we do it in a better way? (inside the Html class)
+                            logo_file_name = os.path.join("..", "logos", r.name + ".png")
+
                         curr_motif_tuple = [logo_file_name, logo_width]
                         break
-                curr_gene_tuple = ["View", gprofiler_link + ",".join(r.genes.genes)]
+                curr_gene_tuple = ["View", gprofiler_link + "+".join(r.genes.genes)]
                 data_table.append([r.name, curr_motif_tuple, str(r.p_value), str(r.corr_p_value), str(r.a), str(r.b),
                                    str(r.c), str(r.d), str(r.percent), str(r.back_percent), curr_gene_tuple])
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            html = Html("Motif Enrichment Analysis", sitetest_link_dict)
+            fig_path = os.path.join(output_location, "fig")
+            html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
                     align="center", bold=False)
                 html.add_heading(
-                    "* This test considered regions associated to the gene list given against background regions",
+                    "* This test considered regions associated to the given gene list against background regions",
                     align="center", bold=False, size=3)
             else:
                 html.add_heading(
                     "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using all input regions",
                     align="center", bold=False)
-                html.add_heading("* This test considered all regions against background regions",
+                html.add_heading("* This test considered all input regions against background regions",
                                  align="center", bold=False, size=3)
 
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")

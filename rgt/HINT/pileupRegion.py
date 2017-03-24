@@ -1,14 +1,15 @@
-
 ###################################################################################################
 # Libraries
 ###################################################################################################
 
 # Python
 import warnings
+
 warnings.filterwarnings("ignore")
 
 # Internal
-from .. Util import ErrorHandler
+from ..Util import ErrorHandler
+
 
 ###################################################################################################
 # Classes
@@ -30,7 +31,7 @@ class PileupRegion:
     It loads self.vector with such alignment based on self.ext.
     """
 
-    def __init__(self,start,end,downstream_ext,upstream_ext,forward_shift,reverse_shift):
+    def __init__(self, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift):
         """ 
         Initializes PileupRegion.
 
@@ -40,14 +41,18 @@ class PileupRegion:
         length -- Length of this PileupRegion (integer).
         downstream_ext -- Number of bps to extend towards the downstream region (right for forward strand and left for reverse strand).
         upstream_ext -- Number of bps to extend towards the upstream region (left for forward strand and right for reverse strand).
-        forward_shift -- Number of bps to shift the reads aligned to the forward strand. Can be a positive number for a shift towards the downstream region (towards the inside of the aligned read) and a negative number for a shift towards the upstream region.
-        reverse_shift -- Number of bps to shift the reads aligned to the reverse strand. Can be a positive number for a shift towards the upstream region and a negative number for a shift towards the downstream region (towards the inside of the aligned read).
+        forward_shift -- Number of bps to shift the reads aligned to the forward strand.
+        Can be a positive number for a shift towards the downstream region
+        (towards the inside of the aligned read) and a negative number for a shift towards the upstream region.
+        reverse_shift -- Number of bps to shift the reads aligned to the reverse strand.
+        Can be a positive number for a shift towards the upstream region and a negative number for a shift towards the downstream region
+        (towards the inside of the aligned read).
         vector -- Pileup vector. Each extended fragment will contribute with +1 to each
                   position of this vector, in which the length equals self.length (list).
         """
         self.start = start
         self.end = end
-        self.length = end-start
+        self.length = end - start
         self.downstream_ext = downstream_ext
         self.upstream_ext = upstream_ext
         self.forward_shift = forward_shift
@@ -56,13 +61,21 @@ class PileupRegion:
 
     def __call__(self, alignment):
         try:
-            if(not alignment.is_reverse):
-                for i in range(max(alignment.pos+self.forward_shift-self.upstream_ext,self.start),min(alignment.pos+self.forward_shift+self.downstream_ext,self.end-1)):
-                    self.vector[i-self.start] += 1.0 
+            if (not alignment.is_reverse):
+                cut_site = alignment.pos + self.forward_shift
+                if cut_site >= self.start and cut_site < self.end:
+                    self.vector[cut_site - self.start] += 1.0
+                #for i in range(max(alignment.pos + self.forward_shift - self.upstream_ext, self.start),
+                #               min(alignment.pos + self.forward_shift + self.downstream_ext, self.end - 1)):
             else:
-                for i in range(max(alignment.aend+self.reverse_shift-self.downstream_ext,self.start),min(alignment.aend+self.reverse_shift+self.upstream_ext,self.end-1)):
-                    self.vector[i-self.start] += 1.0
-        except Exception: pass
+                cut_site = alignment.aend + self.reverse_shift - 1
+                if cut_site >= self.start and cut_site < self.end:
+                    self.vector[cut_site - self.start] += 1.0
+                #for i in range(max(alignment.aend + self.reverse_shift - self.downstream_ext, self.start),
+                #               min(alignment.aend + self.reverse_shift + self.upstream_ext, self.end - 1)):
+                #    self.vector[i - self.start] += 1.0
+        except Exception:
+            pass
 
     """
     def __call__(self, alignment):
@@ -79,7 +92,7 @@ class PileupRegion:
 
         try:
             # Forward strand update
-            if(not alignment.is_reverse):
+            if not alignment.is_reverse:
                 for i in range(max(alignment.pos,self.start),min(alignment.pos+self.ext,self.end-1)):
                     self.vector[i-self.start] += 1.0 
             # Reverse strand update
@@ -98,4 +111,3 @@ class PileupRegion:
                     self.vector[i-self.start] += 1.0
         except Exception: pass
     """
-

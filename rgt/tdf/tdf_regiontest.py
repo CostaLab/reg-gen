@@ -1,6 +1,8 @@
 # Python Libraries
 from __future__ import print_function
 import os
+import sys
+import natsort
 import multiprocessing
 from collections import *
 
@@ -15,10 +17,11 @@ from matplotlib.ticker import MaxNLocator
 # Distal Libraries
 from rgt.SequenceSet import SequenceSet
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import SequenceType, Html, GenomeData
+from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import get_rna_region_str, connect_rna,\
     dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, rna_associated_gene, find_triplex, random_each
+    split_gene_name, rna_associated_gene, find_triplex, random_each,\
+    region_link_internet
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -44,46 +47,54 @@ class RandomTest:
         # DNA: GenomicRegionSet
         self.dna_region = GenomicRegionSet(name="target")
         self.dna_region.read_bed(dna_region)
-        self.dna_region = self.dna_region.gene_association(organism=self.organism)
+        self.dna_region = self.dna_region.gene_association(organism=self.organism, show_dis=True)
+
         self.topDBD = []
+        self.stat = OrderedDict(name=rna_name, genome=organism)
+        self.stat["target_regions"] = str(len(self.dna_region))
+
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
-
         self.rna_regions = get_rna_region_str(rna)
+        if self.rna_regions and len(self.rna_regions[0]) == 5:
+            self.rna_expression = float(self.rna_regions[0][-1])
+        else:
+            self.rna_expression = "n.a."
 
     def connect_rna(self, rna, temp):
-        connect_rna(rna, temp, self.rna_name)
+        d = connect_rna(rna, temp, self.rna_name)
+        self.stat["exons"] = str(d[0])
+        self.stat["seq_length"] = str(d[1])
+        self.rna_len = d[1]
 
-        rnas = SequenceSet(name="rna", seq_type=SequenceType.RNA)
-        rnas.read_fasta(os.path.join(temp, "rna_temp.fa"))
-        if not self.rna_name: self.rna_name = rnas[0].name
-        self.rna_len = rnas.total_len()
-
-    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, tp, obed=False):
+    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
         self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
 
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                           temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                           temp=temp, organism=self.organism, remove_temp=remove_temp,
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                            prefix="targeted_region", dna_fine_posi=False)
         txp.merge_rbs(rm_duplicate=True, region_set=self.dna_region, asgene_organism=self.organism, cutoff=cutoff)
         self.txp = txp
+        self.stat["DBSs_target_all"] = str(len(self.txp))
         txp.remove_duplicates()
         self.rbss = txp.merged_dict.keys()
-        if len(self.rbss) == 0:
-            print("ERROR: No potential binding event. Please change the parameters.")
-            sys.exit(1)
+        # if len(self.rbss) == 0:
+        #     print("ERROR: No potential binding event. Please change the parameters.")
+        #     sys.exit(1)
 
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
-                            temp=temp, organism=self.organism, remove_temp=remove_temp, tp=tp,
+                            temp=temp, organism=self.organism, remove_temp=remove_temp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
                             prefix="dbs", dna_fine_posi=True)
         txpf.remove_duplicates()
         txpf.merge_rbs(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
+
+        self.stat["DBSs_target_all"] = str(len(self.txpf))
 
         self.counts_tr = OrderedDict()
         self.counts_dbs = OrderedDict()
@@ -103,16 +114,25 @@ class RandomTest:
             self.region_dbsm[region.toString()] = self.region_dbs[region.toString()].get_dbs().merge(w_return=True)
             self.region_coverage[region.toString()] = float(self.region_dbsm[region.toString()].total_coverage()) / len \
                 (region)
+        self.stat["target_regions"] = str(len(self.dna_region))
 
         if obed:
-            btr = self.txp.get_dbs()
-            btr = btr.gene_association(organism=self.organism)
-            btr.write_bed(os.path.join(temp, obed+ "_target_region_dbs.bed"))
-            dbss = txpf.get_dbs()
-            # dbss = dbss.gene_association(organism=self.organism)
-            dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
+            # btr = self.txp.get_dbs()
+            # btr = btr.gene_association(organism=self.organism, show_dis=True)
+            # btr.write_bed(os.path.join(temp, obed + "_target_region_dbs.bed"))
+            # dbss = txpf.get_dbs()
+            # dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, tp, filter_bed, alpha):
+            # output = self.dna_region.gene_association(organism=self.organism, show_dis=True)
+
+            self.txp.write_bed(filename=os.path.join(temp, obed + "_target_region_dbs.bed"),
+                               dbd_tag=False,
+                               remove_duplicates=False, associated=self.organism)
+            self.txpf.write_bed(filename=os.path.join(temp, obed + "_dbss.bed"),
+                                remove_duplicates=False)
+
+
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
         """Perform randomization for the given times"""
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats - 1, num=41)).tolist()
@@ -124,11 +144,11 @@ class RandomTest:
             mp_input.append([str(i), os.path.join(temp, "rna_temp.fa"), self.dna_region,
                              temp, self.organism, self.rbss, str(marks.count(i)),
                              str(l), str(e), str(c), str(fr), str(fm), str(of), str(mf), str(rm),
-                             filter_bed, self.genome_path, tp, par])
+                             filter_bed, self.genome_path, par])
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count())
+        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-2)
         mp_output = pool.map(random_each, mp_input)
         # print(mp_output)
         pool.close()
@@ -189,13 +209,33 @@ class RandomTest:
                     self.data["dbs"]["sig_boolean"].append(True)
                 else:
                     self.data["dbs"]["sig_boolean"].append(False)
+            try:
+                self.stat["p_value"] = str(min(self.data["region"]["p"]))
+            except:
+                self.stat["p_value"] = "1"
 
         self.region_matrix = numpy.array(self.region_matrix)
+
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
+
+        counts_dbss = [v[i] for v in dbss_counts]
+        self.stat["DBSs_random_ave"] = numpy.mean(counts_dbss)
+        try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
+        except: self.stat["p_value"] = "1"
 
     def dbd_regions(self, sig_region, output):
         """Generate the BED file of significant DBD regions and FASTA file of the sequences"""
         dbd_regions(exons=self.rna_regions, sig_region=sig_region, rna_name=self.rna_name, output=output)
+
+        self.stat["DBD_all"] = str(len(self.rbss))
+        self.stat["DBD_sig"] = str(len(self.data["region"]["sig_region"]))
+
+        sigDBD = GenomicRegionSet("DBD_sig")
+        sigDBD.sequences = self.data["region"]["sig_region"]
+        rbss = self.txp.get_rbs()
+        overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+        self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
@@ -285,15 +325,9 @@ class RandomTest:
         html_header = "Genomic Region Test: " + dir_name
         link_ds = OrderedDict()
         link_ds["RNA"] = "index.html"
-        link_ds["Target regions"] = "target_regions.html"
+        link_ds["Sig Target Regions"] = "starget_regions.html"
+        link_ds["Target Regions"] = "target_regions.html"
         link_ds["Parameters"] = "parameters.html"
-
-        if self.organism == "hg19":
-            self.ani = "human"
-        elif self.organism == "hg38":
-            self.ani = "human"
-        elif self.organism == "mm9":
-            self.ani = "mouse"
 
         ##################################################
         # index.html
@@ -379,6 +413,7 @@ class RandomTest:
                              p_dbs]
             data_table.append(new_line)
 
+        data_table = natsort.natsorted(data_table, key=lambda x: x[6])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, border_list=border_list, sortable=True)
 
@@ -466,9 +501,13 @@ class RandomTest:
         rank_coverage = len(self.dna_region) - rank_array([self.region_coverage[p.toString()] for p in self.dna_region])
 
         if score:
-            rank_score = len(self.dna_region) - rank_array([float(p.data.split("\t")[0]) for p in self.dna_region])
-            rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-            sum_rank = rank_array(rank_sum)  # method='min'
+            try:
+                score_list = [float(p.data.split("\t")[0]) for p in self.dna_region]
+                rank_score = len(self.dna_region) - rank_array([abs(s) for s in score_list])
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # sum_rank = rank_array(rank_sum)  # method='min'
+            except ImportError:
+                print("There is no score in BED file, please don't use '-score' argument.")
         else:
             rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
             sum_rank = rank_array(rank_sum)
@@ -476,6 +515,7 @@ class RandomTest:
         for i, region in enumerate(self.dna_region):
             dbs_counts = str(len(self.region_dbs[region.toString()]))
             dbs_cover = value2str(self.region_coverage[region.toString()])
+
             newline = [str(i + 1),
                        '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
                        "&position=" + region.chrom + "%3A" + str(region.initial) + "-" + str(region.final) +
@@ -484,20 +524,19 @@ class RandomTest:
                        '<a href="region_dbs.html#' + region.toString() +
                        '" style="text-align:left">' + dbs_counts + '</a>',
                        dbs_cover]
-            if score:
-                dbs_score = str(region.data.split("\t")[0])
-                newline += [dbs_score,
-                            str(int(rank_sum[i] + 3))]
-            else:
-                ranking = str(int(rank_sum[i] + 2))
-                newline += [ranking]
 
+            if score:
+                dbs_score = value2str(score_list[i])
+                region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, str(rank_sum[i])])
+                newline.append(dbs_score)
+                newline.append(str(rank_sum[i]))
+            else:
+                region.data = "\t".join([dbs_counts, dbs_cover, str(rank_sum[i])])
+                newline.append(str(rank_sum[i]))
             data_table.append(newline)
-            if score:
-                region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, ranking])
-            else:
-                region.data = "\t".join([dbs_counts, dbs_cover, ranking])
 
+        data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
+        # data_table = sorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, header_titles=header_titles, sortable=True)
         html.add_heading("Notes")
@@ -507,6 +546,79 @@ class RandomTest:
 
         self.dna_region.sort_score()
         self.dna_region.write_bed(os.path.join(directory, obed + "_target_regions.bed"))
+
+
+
+        ##############################################################################################
+        # starget_regions.html    for significant target regions
+
+        stargets = GenomicRegionSet("sig_targets")
+        sig_dbs = {}
+        sig_dbs_coverage = {}
+        for i, r in enumerate(self.dna_region):
+            sig_bindings = self.region_dbs[r.toString()].overlap_rbss(rbss=self.data["region"]["sig_region"])
+            dbs = sig_bindings.get_dbs()
+            if len(dbs) > 0:
+                stargets.add(r)
+                m_dbs = dbs.merge(w_return=True)
+                sig_dbs[r] = len(dbs)
+                # self.promoter["de"]["merged_dbs"][promoter.toString()] = len(m_dbs)
+                sig_dbs_coverage[r] = float(m_dbs.total_coverage()) / len(r)
+
+        html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+
+        # Select promoters in sig DBD
+        if len(self.data["region"]["sig_region"]) == 0:
+            html.add_heading("There is no significant DBD.")
+        else:
+            html.add_heading("Target regions bound by significant DBD")
+            data_table = []
+            # Calculate the ranking
+            rank_count = len(stargets) - rank_array([sig_dbs[p] for p in stargets])
+            rank_coverage = len(stargets) - rank_array([sig_dbs_coverage[p] for p in stargets])
+            if score:
+                score_list = [float(p.data.split("\t")[0]) for p in stargets]
+                rank_score = len(stargets) - rank_array([abs(s) for s in score_list])
+                rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                sum_rank = rank_array(rank_sum)  # method='min'
+            else:
+                rank_sum = [x + y for x, y in zip(rank_count, rank_coverage)]
+                sum_rank = rank_array(rank_sum)
+
+            for i, region in enumerate(stargets):
+                dbssount = '<a href="region_dbs.html#' + region.toString() + \
+                           '" style="text-align:left">' + str(sig_dbs[region]) + '</a>'
+
+                region_link = region_link_internet(self.organism, region)
+
+                newline = [str(i + 1), region_link,
+                           split_gene_name(gene_name=region.name, org=self.organism),
+                           dbssount, value2str(sig_dbs_coverage[region]) ]
+                if score:
+                    dbs_score = value2str(score_list[i])
+                    # region.data = "\t".join([dbs_counts, dbs_cover, dbs_score, str(sum_rank[i])])
+                    newline.append(dbs_score)
+                    newline.append(str(rank_sum[i]))
+                    # print([dbs_score, str(sum_rank[i])])
+                else:
+                    # region.data = "\t".join([dbs_counts, dbs_cover, str(sum_rank[i])])
+                    newline.append(str(rank_sum[i]))
+
+                # newline += ["<i>" + str(rank_sum[i]) + "</i>"]
+                # print(newline)
+                data_table.append(newline)
+
+            # print(data_table)
+            # data_table = sorted(data_table, key=lambda x: x[-1])
+            data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
+                                 header_titles=header_titles, border_list=None, sortable=True)
+            html.add_heading("Notes")
+            html.add_list(["DBS stands for DNA Binding Site on DNA.",
+                           "DBS coverage is the proportion of the region where has potential to form triple helices with the given RNA."])
+            html.add_fixed_rank_sortable()
+            html.write(os.path.join(directory, "starget_regions.html"))
 
         ############################
         # Subpages for targeted region centered page
@@ -523,21 +635,22 @@ class RandomTest:
                 html.add_heading("Associated gene: " + split_gene_name(gene_name=region.name, org=self.organism),
                                  idtag=region.toString())
                 html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + region.chrom + "%3A" + str(region.initial) + "-" + str(
-                    region.final) +
-                                       '" style="margin-left:50">' +
+                                       "&position=" + region.chrom + "%3A" + str(region.initial) +
+                                       "-" + str(region.final) + '" style="margin-left:50">' +
                                        region.toString(space=True) + '</a>'])
                 data_table = []
                 for rd in self.region_dbs[region.toString()]:
-                    data_table.append([rd.rna.str_rna(pa=False),
+                    rbs = rd.rna.str_rna(pa=False)
+                    for rbsm in self.data["region"]["sig_region"]:
+                        # rbsm = rbsm.partition(":")[2].split("-")
+                        if rd.rna.overlap(rbsm):
+                            rbs = "<font color=\"red\">" + rbs + "</font>"
+                    data_table.append([rbs,
                                        '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
                                        "&position=" + rd.dna.chrom + "%3A" + str(rd.dna.initial) + "-" + str(
                                            rd.dna.final) +
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
-                                       rd.dna.orientation,
-                                       rd.score,
-                                       rd.motif,
-                                       rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      auto_width=True)
         html.write(os.path.join(directory, "region_dbs.html"))
@@ -576,50 +689,3 @@ class RandomTest:
                              auto_width=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))
-
-    def save_profile(self, output, bed):
-        """Save some statistics for comparison with other results"""
-        pro_path = os.path.join(os.path.dirname(output), "profile.txt")
-        exp = os.path.basename(output)
-        # tag = os.path.basename(os.path.dirname(rnafile))
-        tar_reg = os.path.basename(bed)
-        # RNA name with region
-        if self.rna_regions:
-            trans = "Transcript:"
-            for r in self.rna_regions:
-                trans += r[0] + ":" + str(r[1]) + "-" + str(r[2])
-            rna = '<p title="' + trans + '">' + self.rna_name + "<p>"
-        else:
-            rna = self.rna_name
-        # RNA associated genes
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions, name=self.rna_name, organism=self.organism)
-        newlines = []
-        # try:
-        if os.path.isfile(pro_path):
-            with open(pro_path, 'r') as f:
-                new_exp = True
-                for line in f:
-                    line = line.strip()
-                    line = line.split("\t")
-                    if line[0] == exp:
-                        newlines.append([exp, rna, output.split("_")[-1],
-                                         self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                                         self.topDBD[0], value2str(self.topDBD[1]), r_genes])
-                        new_exp = False
-                    else:
-                        newlines.append(line)
-                if new_exp:
-                    newlines.append([exp, rna, output.split("_")[-1],
-                                     self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                                     self.topDBD[0], value2str(self.topDBD[1]), r_genes])
-        else:
-            newlines.append(["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                             "Top_DBD", "p-value", "closest_genes"])
-            newlines.append([exp, rna, output.split("_")[-1],
-                             self.organism, tar_reg, str(len(self.data["region"]["sig_region"])),
-                             self.topDBD[0], value2str(self.topDBD[1]), r_genes])
-
-        with open(pro_path, 'w') as f:
-            for lines in newlines:
-                print("\t".join(lines), file=f)
-

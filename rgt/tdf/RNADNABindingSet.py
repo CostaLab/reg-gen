@@ -49,7 +49,7 @@ class RNADNABinding:
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
         self.motif = rna.motif
-        #self.strand = dna.orientation
+        self.strand = dna.orientation
         self.orient = rna.orientation
         self.score = score
         self.err_rate = err_rate
@@ -546,21 +546,23 @@ class RNADNABindingSet:
 
     def write_txp(self, filename):
         """Write RNADNABindingSet into the file"""
-        try: os.stat(os.path.dirname(filename))
-        except: os.mkdir(os.path.dirname(filename))   
+        d = os.path.dirname(filename)
+        if d:
+            try: os.stat(d)
+            except: os.mkdir(d)
         with open(filename, "w") as f:
             print("# RNA-ID\tRBS-start\tRBS-end\tDNA-ID\tDBS-start\tDBS-end\tScore\tError-rate\tErrors\
                    \tMotif\tStrand\tOrientation\tGuanine-rate", file=f)
             for rd in self:
-                print(str(rd), file=f) 
+                print(str(rd), file=f)
 
-    def write_bed(self, filename, remove_duplicates=False, convert_dict=None, associated=False):
+    def write_bed(self, filename, dbd_tag=True, remove_duplicates=False, convert_dict=None, associated=False):
         """Write BED file for all the DNA Binding sites
         filename: define the output filename
         remove_duplicates: remove all exact duplicates
         convert_dict: given a dictionary to change the region name
         """
-        dbss = self.get_dbs(dbd_tag=True)
+        dbss = self.get_dbs(dbd_tag=dbd_tag)
         if remove_duplicates:
             dbss.remove_duplicates()
         if convert_dict:
@@ -679,3 +681,11 @@ class RNADNABindingSet:
                 except: 
                     try: rd = con.next()
                     except: con_loop = False
+
+    def overlap_rbss(self, rbss):
+        z = RNADNABindingSet(self.name)
+        for rd in self.sequences:
+            for rbs in rbss:
+                if rd.rna.overlap(rbs):
+                    z.add(rd)
+        return z

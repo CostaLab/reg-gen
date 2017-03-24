@@ -1,16 +1,24 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
-import time, datetime
-import multiprocessing.pool
-import urllib2
 import re
+import time
+import numpy
+import pickle
+import fnmatch
+import urllib2
+import datetime
+from shutil import copyfile
+import multiprocessing.pool
 import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 # Local Libraries
 # Distal Libraries
-from rgt.ExperimentalMatrix import *
+from rgt.Util import Html
 from rgt.CoverageSet import *
+from rgt.ExperimentalMatrix import *
+from rgt.AnnotationSet import AnnotationSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
 
 # Local test
@@ -544,6 +552,103 @@ def annotation_dump(organism):
     return beds, bednames, annotation
 
 
+
+def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
+    """Output the file in the defined folder """
+    pd = os.path.normpath(os.path.join(dir, directory, folder))
+    try:
+        os.stat(os.path.dirname(pd))
+    except:
+        os.mkdir(os.path.dirname(pd))
+    try:
+        os.stat(pd)
+    except:
+        os.mkdir(pd)
+
+        # Saving
+    if not extra:
+        f.savefig(os.path.join(pd, filename), facecolor='w', edgecolor='w',
+                  bbox_inches='tight', dpi=400)
+    else:
+        f.savefig(os.path.join(pd, filename), facecolor='w', edgecolor='w',
+                  bbox_extra_artists=(extra), bbox_inches='tight', dpi=400)
+
+    if pdf:
+        try:
+            pp = PdfPages(os.path.join(pd, filename) + '.pdf')
+            pp.savefig(f, bbox_extra_artists=(extra), bbox_inches='tight')
+            pp.close()
+        except:
+            print("ERROR: Problem in PDF conversion. Skipped.")
+    if show:
+        plt.show()
+
+
+def output_parameters(parameter, directory, folder, filename):
+    pd = os.path.join(dir, directory, folder)
+    try:
+        os.stat(os.path.dirname(pd))
+    except:
+        os.mkdir(os.path.dirname(pd))
+    try:
+        os.stat(pd)
+    except:
+        os.mkdir(pd)
+    if parameter:
+        with open(os.path.join(pd, "parameters.txt"), 'w') as f:
+            for s in parameter:
+                print(s, file=f)
+
+
+def copy_em(em, directory, folder, filename="experimental_matrix.txt"):
+    copyfile(em, os.path.join(dir, directory, folder, filename))
+
+
+def list_all_index(path):
+    """Creat an 'index.html' in the defined directory """
+    dirname = os.path.basename(path)
+    parentdir = os.path.basename(os.path.dirname(path))
+
+    # link_d = {"List":"index.html"}
+    link_d = {}
+    ####
+    for root, dirnames, filenames in os.walk(os.path.dirname(path)):
+        for filename in fnmatch.filter(filenames, 'index.html'):
+            if root.split('/')[-2] == parentdir:
+                link_d[root.split('/')[-1]] = "../" + root.split('/')[-1] + "/index.html"
+    link_d = OrderedDict(sorted(link_d.items(), key=lambda (key, value): key))
+
+    ###
+
+    html = Html(name="Directory: " + dirname, links_dict=link_d,
+                fig_dir=os.path.join(path, "style"), fig_rpath="./style", RGT_header=False, other_logo="viz")
+    header_list = ["No.", "Experiments"]
+    html.add_heading("All experiments in: " + dirname + "/")
+    data_table = []
+    type_list = 'ssss'
+    col_size_list = [10, 10, 10]
+    c = 0
+    for root, dirnames, filenames in os.walk(path):
+        # roots = root.split('/')
+        for filename in fnmatch.filter(filenames, '*.html'):
+            if filename == 'index.html' and root.split('/')[-1] != dirname:
+                # print(root)
+                c += 1
+                data_table.append([str(c),
+                                   '<a href="' + os.path.join(root.split('/')[-1], filename) + '"><font size="4">' +
+                                   root.split('/')[-1] + "</a>"])
+                # print(link_d[roots[-1]])
+    html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=50, cell_align="left", sortable=True)
+    html.add_fixed_rank_sortable()
+    html.write(os.path.join(path, "index.html"))
+
+
+def check_dir(path):
+    """Check the availability of the given directory and creat it"""
+    try:
+        os.stat(path)
+    except:
+        os.mkdir(path)
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False
