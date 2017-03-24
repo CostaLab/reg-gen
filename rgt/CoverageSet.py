@@ -581,7 +581,21 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
+        try:
+            from ngslib import BigWigFile
+            self.coverage = []
+            bwf = BigWigFile(bigwig_file)
+
+            for gr in self.genomicRegions:
+                depth = bwf.pileup(gr.chrom, max(0, int(gr.initial - stepsize / 2)),
+                                   max(1, int(gr.final + stepsize / 2)))
+                ds = [depth[d] for d in range(0, gr.final - gr.initial, stepsize)]
+                self.coverage.append(np.array(ds))
+            bwf.close()
+
+        except ImportError, e:
+            # pass  # module doesn't exist, deal with it.
+        # if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
             # self.coverage = []
             # # mp_input = []
             # for gr in self.genomicRegions:
@@ -612,18 +626,9 @@ class CoverageSet:
             bwf.close()
 
         ### Linux platform
-        else:
+        # else:
             # print("\tUsing ngslib on linux system...")
-            from ngslib import BigWigFile
-            self.coverage = []
-            bwf = BigWigFile(bigwig_file)
 
-            for gr in self.genomicRegions:
-                depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
-                                             max(1,int(gr.final+stepsize/2)))
-                ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-                self.coverage.append( np.array(ds) )
-            bwf.close()
 
 
 
