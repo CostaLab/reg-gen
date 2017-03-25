@@ -139,7 +139,7 @@ def main():
                             "estimates (FAST HINT-BC). Please set the correct --default-bias-type "
                             "option that matches your experimental settings."))
     parser.add_option("--default-bias-type", dest="default_bias_type", type="string",
-                      metavar="STRING", default="SH",
+                      metavar="STRING", default="DH",
                       help=("Type of protocol used to generate the DNase-seq or ATAC-seq data. "
                             "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
                             "(DNase-seq double-hit protocol) and 'ATAC' (ATAC-seq data)."))
