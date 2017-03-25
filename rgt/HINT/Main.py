@@ -902,7 +902,7 @@ def main():
                     # Formatting results
                     start_pos = 0
                     flag_start = False
-                    for k in range(r.initial, r.final):
+                    for k in range(r.initial, rr.initial + len(posterior_list)):
                         curr_index = k - r.initial
                         if (flag_start):
                             if (posterior_list[curr_index] != fp_state_nb):
