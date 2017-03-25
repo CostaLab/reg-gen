@@ -54,7 +54,7 @@ class GenomicSignal:
 
         Keyword arguments:
         slope_window_size -- Window size of Savitzky-Golay coefficients.
-        
+
         Return:
         None -- It updates self.sg_coefs.
         """
@@ -62,7 +62,7 @@ class GenomicSignal:
 
     def get_tag_count(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                       initial_clip=1000):
-        """ 
+        """
         Gets the tag count associated with self.bam based on start, end and ext.
 
         Keyword arguments:
@@ -74,7 +74,7 @@ class GenomicSignal:
         forward_shift -- Number of bps to shift the reads aligned to the forward strand. Can be a positive number for a shift towards the downstream region (towards the inside of the aligned read) and a negative number for a shift towards the upstream region.
         reverse_shift -- Number of bps to shift the reads aligned to the reverse strand. Can be a positive number for a shift towards the upstream region and a negative number for a shift towards the downstream region (towards the inside of the aligned read).
         initial_clip -- Signal will be initially clipped at this level to avoid outliers.
-        
+
         Return:
         tag_count -- Total signal.
         """
@@ -106,7 +106,7 @@ class GenomicSignal:
                    bias_table=None, genome_file_name=None, print_raw_signal=False,
                    print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
                    strands_specific=False):
-        """ 
+        """
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
         and slope evaluation procedures.
@@ -130,7 +130,7 @@ class GenomicSignal:
         reverse_shift -- Number of bps to shift the reads aligned to the reverse strand.
         Can be a positive number for a shift towards the upstream region and a negative number
         for a shift towards the downstream region (towards the inside of the aligned read).
-        
+
         Return:
         hon_signal -- Normalized signal.
         slopehon_signal -- Slope signal.
@@ -167,10 +167,10 @@ class GenomicSignal:
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
         # Hon normalization on slope signal (between-dataset slope smoothing)
-        # abs_seq = array([abs(e) for e in slope_signal])
-        # perc = scoreatpercentile(abs_seq, per_slope)
-        # std = abs_seq.std()
-        # slopehon_signal = self.hon_norm(slope_signal, perc, std)
+        abs_seq = array([abs(e) for e in slope_signal])
+        perc = scoreatpercentile(abs_seq, per_slope)
+        std = abs_seq.std()
+        slopehon_signal = self.hon_norm(slope_signal, perc, std)
 
         # Writing signal
         if (print_raw_signal):
@@ -195,11 +195,11 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return hon_signal, slope_signal
+        return hon_signal, slopehon_signal
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
                         forward_shift, reverse_shift, strands_specific):
-        """ 
+        """
         Performs bias correction.
 
         Keyword arguments:
@@ -237,17 +237,17 @@ class GenomicSignal:
                 cut_site = read.pos + forward_shift
                 if cut_site >= start and cut_site < end:
                     nf[cut_site - p1_w] += 1.0
-                #for i in range(max(read.pos + forward_shift, start), min(read.pos + forward_shift + 1, end - 1)):
-                #    nf[i - start] += 1.0
+                    # for i in range(max(read.pos + forward_shift, start), min(read.pos + forward_shift + 1, end - 1)):
+                    #    nf[i - start] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
                 if cut_site >= start and cut_site < end:
                     nr[cut_site - p1_w] += 1.0
-                #for i in range(max(read.aend + reverse_shift - 1, start), min(read.aend + reverse_shift, end - 1)):
-                #    nr[i - start] += 1.0
+                    # for i in range(max(read.aend + reverse_shift - 1, start), min(read.aend + reverse_shift, end - 1)):
+                    #    nr[i - start] += 1.0
 
-            #if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
-            #if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
+                    # if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
+                    # if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
 
         # Smoothed counts
         Nf = []
@@ -270,7 +270,7 @@ class GenomicSignal:
         # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
 
         # Iterating on sequence to create signal
@@ -329,7 +329,7 @@ class GenomicSignal:
             return bias_fixed_signal_forward, bias_fixed_signal_reverse
 
     def hon_norm(self, sequence, mean, std):
-        """ 
+        """
         Normalizes a sequence according to hon's criterion using mean and std.
         This represents a between-dataset normalization.
 
@@ -337,7 +337,7 @@ class GenomicSignal:
         sequence -- Input sequence.
         mean -- Global mean.
         std -- Global std.
-        
+
         Return:
         norm_seq -- Normalized sequence.
         """
@@ -351,13 +351,13 @@ class GenomicSignal:
             return sequence
 
     def boyle_norm(self, sequence):
-        """ 
+        """
         Normalizes a sequence according to Boyle's criterion.
         This represents a within-dataset normalization.
 
         Keyword arguments:
         sequence -- Input sequence.
-        
+
         Return:
         norm_seq -- Normalized sequence.
         """
@@ -369,7 +369,7 @@ class GenomicSignal:
             return norm_seq
 
     def savitzky_golay_coefficients(self, window_size, order, deriv):
-        """ 
+        """
         Evaluate the Savitzky-Golay coefficients in order to evaluate the slope of the signal.
         It uses a window_size (of the interpolation), order (of the polynomial), deriv (derivative needed).
 
@@ -377,7 +377,7 @@ class GenomicSignal:
         window_size -- Size of the window for function interpolation.
         order -- Order of polynomial.
         deriv -- Derivative.
-        
+
         Return:
         m[::-1] -- The Savitzky-Golay coefficients.
         """
@@ -401,13 +401,13 @@ class GenomicSignal:
         return m[::-1]
 
     def slope(self, sequence, sg_coefs):
-        """ 
+        """
         Evaluates the slope of sequence given the sg_coefs loaded.
 
         Keyword arguments:
         sequence -- Input sequence.
         sg_coefs -- Savitzky-Golay coefficients.
-        
+
         Return:
         slope_seq -- Slope sequence.
         """
@@ -416,7 +416,7 @@ class GenomicSignal:
 
         return slope_seq
 
-    def get_signal_per_strand(self,ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+    def get_signal_per_strand(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                               initial_clip=1000, per_norm=98, per_slope=98,
                               bias_table=None, genome_file_name=None, print_raw_signal=False,
                               print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
@@ -471,8 +471,10 @@ class GenomicSignal:
         bc_signal_forward = None
         bc_signal_reverse = None
         if bias_table:
-            bc_signal_forward, bc_signal_reverse = self.bias_correction(raw_signal_forward, bias_table, genome_file_name,
-                                                     ref, start, end, forward_shift, reverse_shift, strands_specific)
+            bc_signal_forward, bc_signal_reverse = self.bias_correction(raw_signal_forward, bias_table,
+                                                                        genome_file_name,
+                                                                        ref, start, end, forward_shift, reverse_shift,
+                                                                        strands_specific)
         else:
             bc_signal_forward = clip_signal_forward
             bc_signal_reverse = clip_signal_reverse
@@ -496,6 +498,3 @@ class GenomicSignal:
 
         # Returning normalized and slope sequences
         return hon_signal_forward, slope_signal_forward, hon_signal_reverse, slope_signal_reverse
-
-
-

@@ -56,7 +56,7 @@ def main():
     Main function that performs footprint analysis.
 
     Keyword arguments: None
-        
+
     Return: None
     """
 
@@ -139,7 +139,7 @@ def main():
                             "estimates (FAST HINT-BC). Please set the correct --default-bias-type "
                             "option that matches your experimental settings."))
     parser.add_option("--default-bias-type", dest="default_bias_type", type="string",
-                      metavar="STRING", default="SH",
+                      metavar="STRING", default="DH",
                       help=("Type of protocol used to generate the DNase-seq or ATAC-seq data. "
                             "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
                             "(DNase-seq double-hit protocol) and 'ATAC' (ATAC-seq data)."))
@@ -181,10 +181,10 @@ def main():
     parser.add_option("--motif-name", dest="motif_name", type="string", metavar="STRING",
                       default=None)
     parser.add_option("--protection-score", dest="protection_score",
-                      action="store_true",default=False,
+                      action="store_true", default=False,
                       help=("If used, it will print the protection score"))
     parser.add_option("--strands-specific", dest="strands_specific",
-                      action="store_true",default=False,
+                      action="store_true", default=False,
                       help=("A boolean indicating if DNaseI digestion site "
                             "counts should be aggregated across strands. "
                             "default: False"))
@@ -320,9 +320,9 @@ def main():
     parser.add_option("--atac-upstream-ext", dest="atac_upstream_ext", type="int",
                       metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--atac-forward-shift", dest="atac_forward_shift", type="int",
-                      metavar="INT", default=4, help=SUPPRESS_HELP)
+                      metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--atac-reverse-shift", dest="atac_reverse_shift", type="int",
-                      metavar="INT", default=-5, help=SUPPRESS_HELP)
+                      metavar="INT", default=-4, help=SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
 
@@ -495,6 +495,15 @@ def main():
         except Exception:
             fields_dict["data"][e] = []
 
+    # Fetching chromosome sizes
+    chrom_sizes_file_name = genome_data.get_chromosome_sizes()
+    chrom_sizes_file = open(chrom_sizes_file_name, "r")
+    chrom_sizes_dict = dict()
+    for chrom_sizes_entry_line in chrom_sizes_file:
+        chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
+        chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
+    chrom_sizes_file.close()
+
     # Fetching files per group
     group_list = []
     for g in fields_dict["group"].keys():
@@ -543,21 +552,26 @@ def main():
         bias_correction = True
 
     elif (options.estimate_bias_correction):
-
         for group in group_list:
             if (group.histone_only): continue
             if (group.is_atac):
                 my_k_nb = atac_bias_correction_k
                 my_shift = atac_downstream_ext
+                group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
+                                                              dnase_file_name=group.dnase_file.file_name,
+                                                              genome_file_name=genome_data.get_genome(),
+                                                              k_nb=my_k_nb,
+                                                              forward_shift=atac_forward_shift,
+                                                              reverse_shift=atac_reverse_shift)
             else:
                 my_k_nb = dnase_bias_correction_k
                 my_shift = dnase_downstream_ext
-            group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
-                                                          dnase_file_name=group.dnase_file.file_name,
-                                                          genome_file_name=genome_data.get_genome(),
-                                                          k_nb=my_k_nb, shift=my_shift,
-                                                          forward_shift=atac_forward_shift,
-                                                          reverse_shift=atac_reverse_shift)
+                group.bias_table = BiasTable().estimate_table(regions=group.original_regions,
+                                                              dnase_file_name=group.dnase_file.file_name,
+                                                              genome_file_name=genome_data.get_genome(),
+                                                              k_nb=my_k_nb,
+                                                              forward_shift=dnase_forward_shift,
+                                                              reverse_shift=dnase_reverse_shift)
         bias_correction = True
 
     elif (options.default_bias_correction):
@@ -578,7 +592,6 @@ def main():
             group.bias_table = BiasTable().load_table(table_file_name_F=my_table_file_F,
                                                       table_file_name_R=my_table_file_R)
         bias_correction = True
-
     ###################################################################################################
     # Creating HMMs
     ###################################################################################################
@@ -765,7 +778,7 @@ def main():
                 start_pos = 0
                 flag_start = False
                 fp_state_nb = 4
-                for k in range(r.initial, r.final):
+                for k in range(r.initial, r.initial + len(posterior_list)):
                     curr_index = k - r.initial
                     if (flag_start):
                         if (posterior_list[curr_index] != fp_state_nb):
@@ -889,7 +902,7 @@ def main():
                     # Formatting results
                     start_pos = 0
                     flag_start = False
-                    for k in range(r.initial, r.final):
+                    for k in range(r.initial, r.initial + len(posterior_list)):
                         curr_index = k - r.initial
                         if (flag_start):
                             if (posterior_list[curr_index] != fp_state_nb):
@@ -945,23 +958,14 @@ def main():
         footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
 
         # Extending footprints
-        #for f in footprints.sequences:
-        #    if (f.final - f.initial < fp_limit):
-        #        f.initial = max(0, f.initial - fp_ext)
-        #        f.final = f.final + fp_ext
-        #    if (f.final - f.initial > 2*fp_limit):
-        #        mid = (f.initial + f.final) / 2
-        #        f.initial = max(mid - fp_limit, 0)
-        #        f.final = f.final + fp_limit
-
-        # Fetching chromosome sizes
-        chrom_sizes_file_name = genome_data.get_chromosome_sizes()
-        chrom_sizes_file = open(chrom_sizes_file_name, "r")
-        chrom_sizes_dict = dict()
-        for chrom_sizes_entry_line in chrom_sizes_file:
-            chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
-            chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
-        chrom_sizes_file.close()
+        for f in footprints.sequences:
+            if (f.final - f.initial < fp_limit):
+                f.initial = max(0, f.initial - fp_ext)
+                f.final = f.final + fp_ext
+            if (f.final - f.initial > 2 * fp_limit):
+                mid = (f.initial + f.final) / 2
+                f.initial = max(mid - fp_limit, 0)
+                f.final = f.final + fp_limit
 
         # Evaluating TC
         for f in footprints.sequences:
@@ -979,5 +983,6 @@ def main():
         ###################################################################################################
 
         # Creating output file
-        output_file_name = options.output_location + options.output_fname + ".bed"
+        # output_file_name = options.output_location + options.output_fname + ".bed"
+        output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
         footprints.write_bed(output_file_name)
