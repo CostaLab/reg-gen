@@ -581,7 +581,21 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
+        try:
+            from ngslib import BigWigFile
+            self.coverage = []
+            bwf = BigWigFile(bigwig_file)
+
+            for gr in self.genomicRegions:
+                depth = bwf.pileup(gr.chrom, max(0, int(gr.initial - stepsize / 2)),
+                                   max(1, int(gr.final + stepsize / 2)))
+                ds = [depth[d] for d in range(0, gr.final - gr.initial, stepsize)]
+                self.coverage.append(np.array(ds))
+            bwf.close()
+
+        except ImportError, e:
+            # pass  # module doesn't exist, deal with it.
+        # if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
             # self.coverage = []
             # # mp_input = []
             # for gr in self.genomicRegions:
@@ -601,8 +615,9 @@ class CoverageSet:
             self.coverage = []
             bwf = pyBigWig.open(bigwig_file)
             # print("1")
-            steps = int(len(self.genomicRegions[0])/stepsize)
+
             for gr in self.genomicRegions:
+                steps = int(len(gr) / stepsize)
                 ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
                 ds = [ x if x else 0 for x in ds ]
                 self.coverage.append( np.array(ds) )
@@ -611,18 +626,9 @@ class CoverageSet:
             bwf.close()
 
         ### Linux platform
-        else:
+        # else:
             # print("\tUsing ngslib on linux system...")
-            from ngslib import BigWigFile
-            self.coverage = []
-            bwf = BigWigFile(bigwig_file)
 
-            for gr in self.genomicRegions:
-                depth = bwf.pileup(gr.chrom, max(0,int(gr.initial-stepsize/2)), 
-                                             max(1,int(gr.final+stepsize/2)))
-                ds = [depth[d] for d in range(0, gr.final-gr.initial, stepsize)]
-                self.coverage.append( np.array(ds) )
-            bwf.close()
 
 
 

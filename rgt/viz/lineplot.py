@@ -2,6 +2,7 @@
 from __future__ import print_function
 from __future__ import division
 import time
+import numpy
 # import multiprocessing.pool
 import matplotlib.pyplot as plt
 
