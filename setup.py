@@ -123,7 +123,7 @@ tools_dictionary = {
 "TDF": (
     "rgt-TDF",
     "rgt.tdf.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5"],
+    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5", "natsort"],
     []
 )
 }
