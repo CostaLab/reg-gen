@@ -77,7 +77,7 @@ tools_dictionary = {
 "core": (
     None,
     None,
-    ["ngslib;platform_system==Linux", "cython", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
+    ["ngslib;platform_system=='Linux'", "cython", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
      "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
      "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
