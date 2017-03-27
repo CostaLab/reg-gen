@@ -5,9 +5,8 @@ RGT is an open source python library for analysis of regulatory
 genomics. RGT is programmed in an oriented object fashion and its core
 classes provide functionality for handling regulatory genomics data.
 
-This library has been used for implementation of several tools as
-ChIP-Seq differential peak callers
-(`ODIN <http://www.regulatory-genomics.org/odin-2/>`__ and
+This library has been used for implementation of several tools such as
+ChIP-Seq differential peak caller
 `THOR <http://www.regulatory-genomics.org/thor-2/>`__), DNase-Seq
 footprinting method
 (`HINT <http://www.regulatory-genomics.org/hint/>`__) and the

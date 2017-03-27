@@ -22,14 +22,10 @@ Create *.data file for each row in M.
 
 """
 from __future__ import print_function
-import sys
 from optparse import OptionParser
-import os.path
-from rgt.GenomicRegionSet import *
 from rgt.ExperimentalMatrix import *
-import scipy.stats
-from rgt.Util import GenomeData
 import numpy as np
+
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -80,17 +76,12 @@ def mode_3(exp_matrix, thresh, type_file):
     
     for regions in exp_matrix.get_regionsets():
         for region in regions:
-            if type_file=="ODIN":
-                aux=(region.data).split("\t")
-                aux=aux[-1].split(",")
-                score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(region.data[-1])
-            elif type_file=="THOR":
+            if type_file=="THOR":
                 aux=(region.data).split(";")
                 score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = float(aux[-1])
             else:
                 score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
-    
-    
+
     for i, region in enumerate(exp_matrix.get_regionsets()):
         f = open("region_" + str(region.name) + ".data", 'w')
         region_set = GenomicRegionSet("")
@@ -129,14 +120,8 @@ def mode_4(exp_matrix,thresh,type_file,geneexp_file):
     score = {}
     for regions in exp_matrix.get_regionsets():
         for region in regions:
-            if type_file=="ODIN":
-              aux=(region.data).split("\t")
-              aux=aux[-1].split(";")
-              score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = aux[-1]
-            else:
               score[(region.chrom + ':' + str(region.initial) + '-' + str(region.final))] = region.data
-    
-    
+
     for region in exp_matrix.get_regionsets():
         f = open("region_" + str(region.name) + ".data", 'w')
         
@@ -144,11 +129,6 @@ def mode_4(exp_matrix,thresh,type_file,geneexp_file):
         _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association_old(region.fileName, gene_set.genes, gene_file, genome_file, threshDist=thresh)
 
         print(mappedGenes)
-
-        #region.filter_by_gene_association(organism=organism,threshDist=thresh)
-        # _, _, mappedGenes, _, gene_peaks_mapping
-
-         
         
         avg_score = {} #score per peak
         genes = {}
@@ -188,7 +168,7 @@ if __name__ == '__main__':
     parser = HelpfulOptionParser(usage=__doc__)
     parser.add_option("--mode", "-m", dest="mode", default=1, help="choose mode", type="int")
     parser.add_option("--distance", "-d", dest="distance", default=50000, help="distance from peak to gene", type="int")
-    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed file (<bed>, <ODIN>, <THOR>)", type="str")
+    parser.add_option("--type", "-t", dest="type", default="bed", help="type of bed file (<bed>, <THOR>)", type="str")
     parser.add_option("--metric", dest="metric", default="max", help="metric to merge peaks' scores (mean, max)", type="str")
     (options, args) = parser.parse_args()
      
@@ -198,17 +178,6 @@ if __name__ == '__main__':
         
     path_exp_matrix = args[0]
     path_annotation = args[1]
-    
-    #options.mode = 3
-    #options.distance = 50000
-    #options.type='THOR'
-    #options.metric = 'max'
-    #path_exp_matrix = '/home/manuel/workspace/cluster_p/hematology/exp/exp12_peak_gene_assignment/assign_peaks_mm.expmatrix'
-    #path_annotation = '/home/manuel/rgtdata/mm9/'
-
-    #path_exp_matrix = '/home/manuel/workspace/cluster_p/luscher/ribosylation/exp/exp03_gene_association/assign_peaks_hg.expmatrix'
-    #path_annotation = '/home/manuel/rgtdata/hg19/'
-    #options.type='ODIN'
     
     genome_file = os.path.join(path_annotation, "chrom.sizes")
     gene_file = os.path.join(path_annotation, "association_file.bed")
