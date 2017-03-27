@@ -73,49 +73,57 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
 
+common_deps = ["ngslib;platform_system=='Linux'",
+               "cython",
+               "numpy>=1.4.0",
+               "scipy>=0.7.0",
+               "pysam>=0.8.2",
+               "pyBigWig",
+               "PyVCF"]
+
 tools_dictionary = {
 "core": (
     None,
     None,
-    ["ngslib;platform_system=='Linux'", "cython", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
-    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
-     "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
+    [],
+    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed",
+     "data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge",
      "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "Biopython>=1.64", "pysam>=0.7.5", "fisher>=0.1.4"],
-    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed"]
+    ["Biopython>=1.64", "fisher>=0.1.4", "MOODS==1.9.3"],
+    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed"]
 ),
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "scikit-learn>=0.14", "hmmlearn<0.2.0", "pysam>=0.7.5"],
+    ["scikit-learn>=0.14", "hmmlearn<0.2.0"],
     []
 ),
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["cython", "numpy>=1.10.4", "scipy>=0.7.0", "scikit-learn>=0.17.1", "pysam>=0.8.2", "hmmlearn<0.2.0", "mpmath"],
-    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge","data/bin/"+bin_dir+"/bedGraphToBigWig"]
+    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "mpmath"],
+    ["data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge", "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "filterVCF": (
     "rgt-filterVCF",
     "rgt.filterVCF.filterVCF:main",
-    ["cython", "PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
+    [],
     []
 ),
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.8.2", "matplotlib_venn", "pyBigWig"],
+    ["matplotlib>=1.1.0", "matplotlib_venn"],
     []
 ),
 "TDF": (
     "rgt-TDF",
     "rgt.tdf.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.8.2", "natsort"],
+    ["matplotlib>=1.1.0", "natsort"],
     []
 )
 }
@@ -177,9 +185,9 @@ parser.add_option(param_rgt_data_location_name, type="string", metavar="STRING",
 param_rgt_tool_name = "--rgt-tool"
 parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
                   help=("The tool which will be installed. If this argument is not used, "
-                        "then the complete package is installed. The current available options"
-                        "are: "+", ".join(tools_dictionary.keys())+"; where 'core' means that"
-                        "only the RGT python library will be installed with no further command-line"
+                        "then the complete package is installed. The current available options "
+                        "are: "+", ".join(tools_dictionary.keys())+"; where 'core' means that "
+                        "only the RGT python library will be installed with no further command-line "
                         "tools. You can also provide multiple tools in a list separated by comma."),
                   dest="param_rgt_tool", default=",".join(tools_dictionary.keys()))
 
@@ -209,7 +217,7 @@ for tool_option in options.param_rgt_tool:
         current_entry_points["console_scripts"].append(" = ".join(tools_dictionary[tool_option][:2]))
 
 # Defining install requirements
-current_install_requires = []
+current_install_requires = common_deps
 for tool_option in options.param_rgt_tool:
     current_install_requires += tools_dictionary[tool_option][2]
 
@@ -415,6 +423,7 @@ setup(name="RGT",
       entry_points=current_entry_points,
       install_requires=current_install_requires,
       scripts=external_scripts,
+      dependency_links=["https://github.com/fabioticconi/MOODS/tarball/pypi-ready#egg=MOODS-1.9.3"],
       url="http://www.regulatory-genomics.org",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
