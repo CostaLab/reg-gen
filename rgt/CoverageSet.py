@@ -602,10 +602,6 @@ class CoverageSet:
                 self.coverage.append( np.array(ds) )
             bwf.close()
 
-
-
-
-        
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.
         
@@ -622,8 +618,6 @@ class CoverageSet:
             cov.coverage_from_bigwig(bigwig_file=bwpath,stepsize=stepsize)
             self.coverage += cov.coverage
 
-
-            
     def count_unique_reads(self, bamFile):
         """Count the number of unique reads on for class variable <genomicRegions>.
         
@@ -647,68 +641,7 @@ class CoverageSet:
         reads = list(set(reads))
         return len(reads)
 
-    def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
 
-        class help_content():
-            def __init__(self):
-                self.content = [[] for _ in range(101)]
-                self.g_gc = []
-                self.g = -1
-
-            def add(self, d, c):
-                self.content[int(c * 100)].append(round(float(d), 2))
-
-            def _compute(self):
-                for l in self.content:
-                    r = sum(l) / float(len(l)) if len(l) > 0 else 0
-                    self.g_gc.append(r)
-
-                self.g = sum(self.g_gc) / float(len(self.g_gc))
-
-            def _map(self, x):
-                return self.g_gc[x]
-
-        # chromosomes = []
-        # get first chromosome, typically chr1
-        # for s in FastaReader(genome_path):
-        #    chromosomes.append(s.name)
-        tmp = chrom_sizes_dict.keys()
-        # tmp = map(lambda x: x.replace('chr',''), chromosomes)
-        tmp.sort()
-        genome_fasta = pysam.Fastafile(genome_path)
-        genome = genome_fasta.fetch(reference=tmp[0])
-
-        content = help_content()
-        gc_content_cov = []
-
-        for cov in cov_list:
-            cur_gc_value = []
-
-            for i in range(len(cov)):
-                s = i * stepsize
-                e = i * stepsize + binsize
-                seq = genome[s: e + 1]
-                seq = seq.upper()
-                count = seq.count("C") + seq.count("G")
-                if len(seq) > 0:
-                    gc_content = float(count) / len(seq)
-                    # print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
-                    content.add(cov[i], gc_content)
-                    cur_gc_value.append(int(gc_content * 100))
-                else:
-                    #                print("Bins exceed genome (%s - %s), add pseudo counts" %(s, e), file=sys.stderr)
-                    #                     content.add(cov[i], 0.5)
-                    cur_gc_value.append(0)
-
-            gc_content_cov.append(cur_gc_value)
-
-        content._compute()
-        r = []
-        for l in gc_content_cov:
-            tmp = map(content._map, l)
-            r.append(tmp)
-
-        return r, content.g, content.g_gc
 
     def norm_gc_content(self, cov, genome_path, chrom_sizes):
         chrom_sizes_dict = {}
@@ -720,7 +653,7 @@ class CoverageSet:
                 c, e = line[0], int(line[1])
                 chrom_sizes_dict[c] = e
 
-        gc_cov, gc_avg, _ = self.get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
+        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
 
         import warnings  # todo: ugly, why do warnings occur?
         warnings.filterwarnings("ignore")
@@ -733,3 +666,66 @@ class CoverageSet:
             self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
             self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0))  # neg. values to 0
             self.coverage[i] = self.coverage[i].astype(int)
+
+def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
+    """Get GC content"""
+    class help_content():
+        def __init__(self):
+            self.content = [[] for _ in range(101)]
+            self.g_gc = []
+            self.g = -1
+
+        def add(self, d, c):
+            self.content[int(c * 100)].append(round(float(d), 2))
+
+        def _compute(self):
+            for l in self.content:
+                r = sum(l) / float(len(l)) if len(l) > 0 else 0
+                self.g_gc.append(r)
+
+            self.g = sum(self.g_gc) / float(len(self.g_gc))
+
+        def _map(self, x):
+            return self.g_gc[x]
+
+    # chromosomes = []
+    # get first chromosome, typically chr1
+    # for s in FastaReader(genome_path):
+    #    chromosomes.append(s.name)
+    tmp = chrom_sizes_dict.keys()
+    # tmp = map(lambda x: x.replace('chr',''), chromosomes)
+    tmp.sort()
+    genome_fasta = pysam.Fastafile(genome_path)
+    genome = genome_fasta.fetch(reference=tmp[0])
+
+    content = help_content()
+    gc_content_cov = []
+
+    for cov in cov_list:
+        cur_gc_value = []
+
+        for i in range(len(cov)):
+            s = i * stepsize
+            e = i * stepsize + binsize
+            seq = genome[s: e + 1]
+            seq = seq.upper()
+            count = seq.count("C") + seq.count("G")
+            if len(seq) > 0:
+                gc_content = float(count) / len(seq)
+                # print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
+                content.add(cov[i], gc_content)
+                cur_gc_value.append(int(gc_content * 100))
+            else:
+                #                print("Bins exceed genome (%s - %s), add pseudo counts" %(s, e), file=sys.stderr)
+                #                     content.add(cov[i], 0.5)
+                cur_gc_value.append(0)
+
+        gc_content_cov.append(cur_gc_value)
+
+    content._compute()
+    r = []
+    for l in gc_content_cov:
+        tmp = map(content._map, l)
+        r.append(tmp)
+
+    return r, content.g, content.g_gc

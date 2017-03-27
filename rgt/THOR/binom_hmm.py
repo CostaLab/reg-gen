@@ -23,16 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
+import sys
+import string
+import numpy as np
 from scipy.stats import binom
 from hmmlearn.hmm import _BaseHMM
-import string , numpy as np
-from time import time
-from math import fabs
-#from help_hmm import _init, _add_pseudo_counts, _valid_posteriors
-# import cProfile
-from help_hmm import _valid_posteriors, _count
-import sys
-from rgt.ODIN.help_hmm import _add_pseudo_counts
+from help_hmm import _valid_posteriors
 
 def get_init_parameters(s1, s2, **info):
     n_ = np.array([info['count'], info['count']])
@@ -126,12 +122,21 @@ class BinomialHMM(_BaseHMM):
             params)
         
         posteriors = _valid_posteriors(posteriors, obs, self.dim)
-        self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
-    
-    
+        self._help_accumulate_sufficient_statistics(obs, stats, posteriors)
+
+    def _add_pseudo_counts(arr):
+        if type(arr) is np.ndarray:
+            tmp = np.array([1e-323 if x < 1e-323 else x for x in arr], np.float64)
+            # tmp2 = np.array([1.0 - 1.0e-5 if x == 1.0 else x for x in tmp], np.float64)
+            return tmp
+        else:
+            tmp = 1e-323 if arr < 1e-323 else arr
+            # tmp2 = 1.0 - 1.0e-10 if tmp == 1.0 else tmp
+            return tmp
+
     def _help_do_mstep(self, stats):
         for i in range(self.n_features):
-            self.p[i] = stats['post_emission'][i] / (self.n[i] * _add_pseudo_counts(stats['post']))
+            self.p[i] = stats['post_emission'][i] / (self.n[i] * self._add_pseudo_counts(stats['post']))
             print('help_m_step', i, stats['post_emission'][i], stats['post'], self.p[i], file=sys.stderr)
         
     def _do_mstep(self, stats, params):

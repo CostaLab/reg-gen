@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-import sys
+# import sys
 
 def get_data_block(filepath, feature):
     with open(filepath) as file:
