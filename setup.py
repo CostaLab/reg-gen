@@ -78,7 +78,7 @@ tools_dictionary = {
 "core": (
     None,
     None,
-    ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
+    ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5","pyBigWig"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
      "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
      "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
@@ -117,8 +117,8 @@ tools_dictionary = {
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn","pyBigWig"],
-    ["data/bin/"+bin_dir+"/bigWigSummary"]
+    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn"],
+    []
 ),
 "TDF": (
     "rgt-TDF",
