@@ -1,7 +1,4 @@
 """
-ODIN detects differential peaks in multiple ChIP-seq profiles associated
-with two distinct biological conditions.
-
 Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
 This program is free software: you can redistribute it and/or modify
@@ -20,11 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 @author: Manuel Allhoff
 """
 
+from __future__ import print_function
 import sys
 import numpy as np
 from os import path
 from random import sample
-from __future__ import print_function
 from rgt.CoverageSet import CoverageSet
 from rgt.CoverageSet import get_gc_context
 from normalize import get_normalization_factor

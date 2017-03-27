@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-ODIN detects differential peaks in multiple ChIP-seq profiles associated
-with two distinct biological conditions.
-
 Copyright (C) 2014-2016 Manuel Allhoff (allhoff@aices.rwth-aachen.de)
 
 This program is free software: you can redistribute it and/or modify
