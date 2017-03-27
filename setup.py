@@ -109,13 +109,13 @@ tools_dictionary = {
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.7.5", "matplotlib_venn", "pyBigWig"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.8.2", "matplotlib_venn", "pyBigWig"],
     []
 ),
 "TDF": (
     "rgt-TDF",
     "rgt.tdf.Main:main",
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.7.5", "natsort"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.8.2", "natsort"],
     []
 )
 }
