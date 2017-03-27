@@ -69,17 +69,15 @@ Tools Dictionary Standard:
 if platform.startswith("darwin"):
     bin_dir = "mac"
     libRGT = "librgt_mac.so"
-    platform_deps = []
 else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
-    platform_deps = ["ngslib"]
 
 tools_dictionary = {
 "core": (
     None,
     None,
-    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"] + platform_deps,
+    ["ngslib;platform_system==Linux", "cython", "numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
      "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
      "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
@@ -87,38 +85,38 @@ tools_dictionary = {
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "Biopython>=1.64", "pysam>=0.7.5", "fisher>=0.1.4"],
     ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed"]
 ),
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn<0.2.0","pysam>=0.7.5"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "scikit-learn>=0.14", "hmmlearn<0.2.0", "pysam>=0.7.5"],
     []
 ),
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "mpmath"],
+    ["cython", "numpy>=1.10.4", "scipy>=0.7.0", "scikit-learn>=0.17.1", "pysam>=0.8.2", "hmmlearn<0.2.0", "mpmath"],
     ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "filterVCF": (
     "rgt-filterVCF",
     "rgt.filterVCF.filterVCF:main",
-    ["PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
+    ["cython", "PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
     []
 ),
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn","pyBigWig"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.7.5", "matplotlib_venn", "pyBigWig"],
     ["data/bin/"+bin_dir+"/bigWigSummary"]
 ),
 "TDF": (
     "rgt-TDF",
     "rgt.tdf.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5", "natsort"],
+    ["cython", "numpy>=1.4.0", "scipy>=0.7.0", "matplotlib>=1.1.0", "pysam>=0.7.5", "natsort"],
     []
 )
 }
@@ -213,7 +211,8 @@ for tool_option in options.param_rgt_tool:
 
 # Defining install requirements
 current_install_requires = []
-for tool_option in options.param_rgt_tool: current_install_requires += tools_dictionary[tool_option][2]
+for tool_option in options.param_rgt_tool:
+    current_install_requires += tools_dictionary[tool_option][2]
 
 ###################################################################################################
 # Creating Data Path
