@@ -98,8 +98,7 @@ tools_dictionary = {
     "rgt-THOR",
     "rgt.THOR.THOR:main",
     ["cython", "numpy>=1.10.4", "scipy>=0.7.0", "scikit-learn>=0.17.1", "pysam>=0.8.2", "hmmlearn<0.2.0", "mpmath"],
-    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
-    "data/bin/"+bin_dir+"/bedGraphToBigWig"]
+    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge","data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "filterVCF": (
     "rgt-filterVCF",
