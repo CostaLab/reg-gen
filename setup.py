@@ -93,7 +93,7 @@ tools_dictionary = {
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
-    ["Biopython>=1.64", "fisher>=0.1.4", "MOODS==1.9.3"],
+    ["Biopython>=1.64", "fisher>=0.1.4"],
     ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed"]
 ),
 "hint": (
@@ -423,7 +423,6 @@ setup(name="RGT",
       entry_points=current_entry_points,
       install_requires=current_install_requires,
       scripts=external_scripts,
-      dependency_links=["https://github.com/fabioticconi/MOODS/tarball/pypi-ready#egg=MOODS-1.9.3"],
       url="http://www.regulatory-genomics.org",
       download_url="https://github.com/CostaLab/reg-gen/archive/{0}.zip".format(current_version),
       platforms=supported_platforms)
