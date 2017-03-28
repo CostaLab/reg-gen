@@ -37,7 +37,7 @@ to manual installation:
 ::
 
     cd reg-gen
-    sudo python setup.py install --user
+    python setup.py install --user
 
 Detailed installation instructions and basic problem solving can be
 found at:
