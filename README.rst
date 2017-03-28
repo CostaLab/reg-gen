@@ -23,6 +23,12 @@ The quickest and easiest way to get RGT is to to use pip:
     pip install --user RGT
 
 This will install the full RGT suite with all dependencies.
+If you have errors, this is usually due to three dependencies
+that you can install beforehand:
+
+::
+
+    pip install --user cython numpy scipy
 
 Alternatively, you can clone this repository:
 
