@@ -20,7 +20,7 @@ The quickest and easiest way to get RGT is to to use pip:
 
 ::
 
-    pip install RGT
+    pip install --user RGT
 
 This will install the full RGT suite with all dependencies.
 
@@ -37,7 +37,7 @@ to manual installation:
 ::
 
     cd reg-gen
-    sudo python setup.py install
+    sudo python setup.py install --user
 
 Detailed installation instructions and basic problem solving can be
 found at:
