@@ -12,37 +12,32 @@ conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function
-from optparse import OptionParser, OptionGroup
-from rgt.CoverageSet import CoverageSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ODIN.get_extension_size import get_extension_size
-from os.path import splitext, basename
 import sys
-from MultiCoverageSet import MultiCoverageSet
-from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
-from math import log, log10
-import multiprocessing
-from input_parser import input_parser
-import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-import matplotlib.pyplot as plt
-from random import sample
-from scipy.optimize import curve_fit
-import numpy as np
-from numpy import linspace
-from math import fabs
-from rgt.THOR.postprocessing import merge_delete, filter_by_pvalue_strand_lag, filter_deadzones
-from rgt.THOR.neg_bin import NegBin
-from operator import add
-from numpy import percentile
-from norm_genelevel import norm_gene_level
-from datetime import datetime
-from rgt.ODIN.dpc_help import which
 import pysam
 import os.path
 import tempfile
+import numpy as np
+from math import fabs
+from numpy import linspace
+from math import log, log10
+from operator import add
+from rgt.Util import which
 from rgt import __version__
+from datetime import datetime
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from os.path import splitext, basename
+
+# import multiprocessing
+from input_parser import input_parser
+import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+from rgt.THOR.postprocessing import merge_delete, filter_deadzones
+from MultiCoverageSet import MultiCoverageSet
+from optparse import OptionParser, OptionGroup
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.THOR.get_extension_size import get_extension_size
+from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
 
 FOLDER_REPORT = None
 
@@ -668,4 +663,3 @@ def input(laptop):
         options.exts_inputs = []
     
     return options, bamfiles, genome, chrom_sizes, dims, inputs, __version__
-

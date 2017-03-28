@@ -196,3 +196,4 @@ class GenomicRegion:
                 return self.initial - y.final
         else:
             return None
+

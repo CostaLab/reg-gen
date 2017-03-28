@@ -12,9 +12,6 @@ import pysam
 import tempfile
 import subprocess
 import numpy as np
-from sys import platform
-# from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ODIN.gc_content import get_gc_context
 
 
 class CoverageSet:
@@ -594,46 +591,17 @@ class CoverageSet:
             bwf.close()
 
         except ImportError, e:
-            # pass  # module doesn't exist, deal with it.
-        # if platform == "darwin" or "http://" in bigwig_file or "https://" in bigwig_file or "ftp://" in bigwig_file:
-            # self.coverage = []
-            # # mp_input = []
-            # for gr in self.genomicRegions:
-            #     # print(gr)
-            #     steps = int(abs(gr.final-gr.initial)/stepsize)
-            #     cmd = ["bigWigSummary",bigwig_file,gr.chrom,str(gr.initial-stepsize),str(gr.final-stepsize),str(steps)]
-            #     # print(" ".join(cmd))
-            #     try:
-            #         output = subprocess.check_output(cmd, shell=False, stderr=subprocess.STDOUT)
-            #         # print(output)
-            #         ds = [0 if "n/a" in x else float(x) for x in output.strip().split()]
-            #         self.coverage.append( np.array(ds) )
-            #     except:
-            #         continue
-
             import pyBigWig
             self.coverage = []
             bwf = pyBigWig.open(bigwig_file)
-            # print("1")
 
             for gr in self.genomicRegions:
                 steps = int(len(gr) / stepsize)
                 ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
                 ds = [ x if x else 0 for x in ds ]
                 self.coverage.append( np.array(ds) )
-                # print(np.array(ds))
-            # print("2")
             bwf.close()
 
-        ### Linux platform
-        # else:
-            # print("\tUsing ngslib on linux system...")
-
-
-
-
-
-        
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.
         
@@ -650,30 +618,6 @@ class CoverageSet:
             cov.coverage_from_bigwig(bigwig_file=bwpath,stepsize=stepsize)
             self.coverage += cov.coverage
 
-    def norm_gc_content(self, cov, genome_path, chrom_sizes):
-        chrom_sizes_dict = {}
-        
-        with open(chrom_sizes) as f:
-            for line in f:
-                line = line.strip()
-                line = line.split('\t')
-                c, e = line[0], int(line[1])
-                chrom_sizes_dict[c] = e
-        
-        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
-        
-        import warnings #todo: ugly, why do warnings occur?
-        warnings.filterwarnings("ignore")
-        
-        for i in range(len(self.coverage)):
-            assert len(self.coverage[i]) == len(gc_cov[i])
-            self.coverage[i] = np.array(self.coverage[i])
-            gc_cov[i] = np.array(gc_cov[i])
-            gc_cov[i][gc_cov[i] < 10*-300] = gc_avg #sometimes zeros occur, do not consider
-            self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
-            self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0)) #neg. values to 0
-            self.coverage[i] = self.coverage[i].astype(int)
-            
     def count_unique_reads(self, bamFile):
         """Count the number of unique reads on for class variable <genomicRegions>.
         
@@ -696,3 +640,92 @@ class CoverageSet:
 
         reads = list(set(reads))
         return len(reads)
+
+
+
+    def norm_gc_content(self, cov, genome_path, chrom_sizes):
+        chrom_sizes_dict = {}
+
+        with open(chrom_sizes) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                c, e = line[0], int(line[1])
+                chrom_sizes_dict[c] = e
+
+        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
+
+        import warnings  # todo: ugly, why do warnings occur?
+        warnings.filterwarnings("ignore")
+
+        for i in range(len(self.coverage)):
+            assert len(self.coverage[i]) == len(gc_cov[i])
+            self.coverage[i] = np.array(self.coverage[i])
+            gc_cov[i] = np.array(gc_cov[i])
+            gc_cov[i][gc_cov[i] < 10 * -300] = gc_avg  # sometimes zeros occur, do not consider
+            self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
+            self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0))  # neg. values to 0
+            self.coverage[i] = self.coverage[i].astype(int)
+
+def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
+    """Get GC content"""
+    class help_content():
+        def __init__(self):
+            self.content = [[] for _ in range(101)]
+            self.g_gc = []
+            self.g = -1
+
+        def add(self, d, c):
+            self.content[int(c * 100)].append(round(float(d), 2))
+
+        def _compute(self):
+            for l in self.content:
+                r = sum(l) / float(len(l)) if len(l) > 0 else 0
+                self.g_gc.append(r)
+
+            self.g = sum(self.g_gc) / float(len(self.g_gc))
+
+        def _map(self, x):
+            return self.g_gc[x]
+
+    # chromosomes = []
+    # get first chromosome, typically chr1
+    # for s in FastaReader(genome_path):
+    #    chromosomes.append(s.name)
+    tmp = chrom_sizes_dict.keys()
+    # tmp = map(lambda x: x.replace('chr',''), chromosomes)
+    tmp.sort()
+    genome_fasta = pysam.Fastafile(genome_path)
+    genome = genome_fasta.fetch(reference=tmp[0])
+
+    content = help_content()
+    gc_content_cov = []
+
+    for cov in cov_list:
+        cur_gc_value = []
+
+        for i in range(len(cov)):
+            s = i * stepsize
+            e = i * stepsize + binsize
+            seq = genome[s: e + 1]
+            seq = seq.upper()
+            count = seq.count("C") + seq.count("G")
+            if len(seq) > 0:
+                gc_content = float(count) / len(seq)
+                # print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
+                content.add(cov[i], gc_content)
+                cur_gc_value.append(int(gc_content * 100))
+            else:
+                #                print("Bins exceed genome (%s - %s), add pseudo counts" %(s, e), file=sys.stderr)
+                #                     content.add(cov[i], 0.5)
+                cur_gc_value.append(0)
+
+        gc_content_cov.append(cur_gc_value)
+
+    content._compute()
+    r = []
+    for l in gc_content_cov:
+        tmp = map(content._map, l)
+        r.append(tmp)
+
+    return r, content.g, content.g_gc

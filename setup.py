@@ -23,7 +23,6 @@ Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 """
 
-
 def read(*names, **kwargs):
     with io.open(
         os.path.join(os.path.dirname(__file__), *names),
@@ -74,64 +73,65 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
 
+common_deps = ["ngslib;platform_system=='Linux'",
+               "cython",
+               "numpy>=1.4.0",
+               "scipy>=0.7.0",
+               "pysam>=0.8.2",
+               "pyBigWig",
+               "PyVCF"]
+
 tools_dictionary = {
 "core": (
     None,
     None,
-    ["numpy>=1.4.0", "scipy>=0.7.0", "pysam>=0.7.5"],
-    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed",
-     "data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
-     "data/bin/"+bin_dir+"/bedGraphToBigWig","data/bin/"+bin_dir+"/bigWigSummary"]
+    [],
+    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed",
+     "data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge",
+     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "motifanalysis": (
     "rgt-motifanalysis",
     "rgt.motifanalysis.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","Biopython>=1.64","pysam>=0.7.5","fisher>=0.1.4"],
-    ["data/bin/"+bin_dir+"/bedToBigBed","data/bin/"+bin_dir+"/bigBedToBed"]
-), 
+    ["Biopython>=1.64", "fisher>=0.1.4"],
+    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed"]
+),
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn<0.2.0","pysam>=0.7.5"],
+    ["scikit-learn>=0.14", "hmmlearn<0.2.0"],
     []
-), 
-"ODIN": (
-    "rgt-ODIN",
-    "rgt.ODIN.ODIN:main",
-    ["hmmlearn<0.2.0", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/"+bin_dir+"/wigToBigWig"]
-), 
+),
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
-    ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
-    "data/bin/"+bin_dir+"/bedGraphToBigWig"]
-),                 
+    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "mpmath"],
+    ["data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge", "data/bin/"+bin_dir+"/bedGraphToBigWig"]
+),
 "filterVCF": (
     "rgt-filterVCF",
     "rgt.filterVCF.filterVCF:main",
-    ["PyVCF", "numpy>=1.4.0", "scipy>=0.7.0"],
+    [],
     []
 ),
 "viz": (
     "rgt-viz",
     "rgt.viz.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5","matplotlib_venn","pyBigWig"],
-    ["data/bin/"+bin_dir+"/bigWigSummary"]
+    ["matplotlib>=1.1.0", "matplotlib_venn"],
+    []
 ),
 "TDF": (
     "rgt-TDF",
     "rgt.tdf.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","matplotlib>=1.1.0", "pysam>=0.7.5"],
+    ["matplotlib>=1.1.0", "natsort"],
     []
 )
 }
 
-
 ###################################################################################################
 # Auxiliary Functions/Classes
 ###################################################################################################
+
 
 # PassThroughOptionParser Class
 class PassThroughOptionParser(OptionParser):
@@ -145,9 +145,10 @@ class PassThroughOptionParser(OptionParser):
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
-                OptionParser._process_args(self,largs,rargs,values)
+                OptionParser._process_args(self, largs, rargs, values)
             except (BadOptionError,AmbiguousOptionError), e:
                 largs.append(e.opt_str)
+
 
 # recursive_chown_chmod Function
 def recursive_chown_chmod(path_to_walk, uid, gid, file_permission, path_permission):
@@ -172,37 +173,39 @@ usage_message = "python setup.py install [python options] [RGT options]"
 version_message = "Regulatory Genomics Toolbox (RGT). Version: "+str(current_version)
 
 # Initializing Option Parser
-parser = PassThroughOptionParser(usage = usage_message, version = version_message)
+parser = PassThroughOptionParser(usage=usage_message, version=version_message)
 
 # Parameter: RGT Data Location
 param_rgt_data_location_name = "--rgt-data-path"
-parser.add_option(param_rgt_data_location_name, type = "string", metavar="STRING",
-                  help = "Path containing data used by RGT tool.",
-                  dest = "param_rgt_data_location", default = path.join(getenv('HOME'),rgt_data_base_name))
+parser.add_option(param_rgt_data_location_name, type="string", metavar="STRING",
+                  help="Path containing data used by RGT tool.",
+                  dest="param_rgt_data_location", default=path.join(getenv('HOME'),rgt_data_base_name))
 
 # Parameter: Tool
 param_rgt_tool_name = "--rgt-tool"
-parser.add_option(param_rgt_tool_name, type = "string", metavar="STRING",
-                  help = ("The tool which will be installed. If this argument is not used, "
-                          "then the complete package is installed. The current available options"
-                          "are: "+", ".join(tools_dictionary.keys())+"; where 'core' means that"
-                          "only the RGT python library will be installed with no further command-line"
-                          "tools. You can also provide multiple tools in a list separated by comma."), 
-                  dest = "param_rgt_tool", default = ",".join(tools_dictionary.keys()))
+parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
+                  help=("The tool which will be installed. If this argument is not used, "
+                        "then the complete package is installed. The current available options "
+                        "are: "+", ".join(tools_dictionary.keys())+"; where 'core' means that "
+                        "only the RGT python library will be installed with no further command-line "
+                        "tools. You can also provide multiple tools in a list separated by comma."),
+                  dest="param_rgt_tool", default=",".join(tools_dictionary.keys()))
 
 # Processing Options
 options, arguments = parser.parse_args()
-if(path.basename(options.param_rgt_data_location) != rgt_data_base_name):
+if path.basename(options.param_rgt_data_location) != rgt_data_base_name:
     options.param_rgt_data_location = path.join(options.param_rgt_data_location,rgt_data_base_name)
-if(options.param_rgt_data_location[0] == "~"):
+if options.param_rgt_data_location[0] == "~":
     options.param_rgt_data_location = path.join(getenv('HOME'),options.param_rgt_data_location[2:])
 options.param_rgt_tool = options.param_rgt_tool.split(",")
 
 # Manually Removing Additional Options from sys.argv
 new_sys_argv = []
 for e in sys.argv:
-    if(param_rgt_data_location_name == e[:len(param_rgt_data_location_name)]): continue
-    elif(param_rgt_tool_name == e[:len(param_rgt_tool_name)]): continue
+    if param_rgt_data_location_name == e[:len(param_rgt_data_location_name)]:
+        continue
+    elif param_rgt_tool_name == e[:len(param_rgt_tool_name)]:
+        continue
     new_sys_argv.append(e)
 
 sys.argv = new_sys_argv
@@ -210,12 +213,13 @@ sys.argv = new_sys_argv
 # Defining entry points
 current_entry_points = {"console_scripts" : []}
 for tool_option in options.param_rgt_tool:
-    if(tool_option != "core"):
+    if tool_option != "core":
         current_entry_points["console_scripts"].append(" = ".join(tools_dictionary[tool_option][:2]))
 
 # Defining install requirements
-current_install_requires = []
-for tool_option in options.param_rgt_tool: current_install_requires += tools_dictionary[tool_option][2]
+current_install_requires = common_deps
+for tool_option in options.param_rgt_tool:
+    current_install_requires += tools_dictionary[tool_option][2]
 
 ###################################################################################################
 # Creating Data Path
@@ -357,10 +361,10 @@ copy_files_dictionary = {
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
-    copy_dest_path = path.join(options.param_rgt_data_location,copy_folder)
+    copy_dest_path = path.join(options.param_rgt_data_location, copy_folder)
     if not path.exists(copy_dest_path): makedirs(copy_dest_path)
     for copy_file in copy_files_dictionary[copy_folder]:
-        copy_source_file = path.join(script_dir,"data",copy_folder,copy_file)
+        copy_source_file = path.join(script_dir,"data", copy_folder, copy_file)
         copy_dest_file = path.join(copy_dest_path,copy_file)
         if os.path.isfile(copy_source_file):
             copy(copy_source_file, copy_dest_file)
@@ -390,16 +394,17 @@ license_type = "GPL"
 package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
 
 # External scripts
-external_scripts=[]
+external_scripts = []
 for tool_option in options.param_rgt_tool:
-    for e in tools_dictionary[tool_option][3]: external_scripts.append(e)
+    for e in tools_dictionary[tool_option][3]:
+        external_scripts.append(e)
 
 # Fetching Additional Structural Files
 readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.rst")
 
 # Fetching Long Description
-readme_file = open(readme_file_name,"r")
-long_description = readme_file.read() + "nn"
+readme_file = open(readme_file_name, "r")
+long_description = readme_file.read()
 readme_file.close()
 
 # Setup Function
@@ -435,7 +440,7 @@ current_user = getenv("SUDO_USER")
 default_file_permission = 0644
 default_path_permission = 0755
 
-if(current_user):
+if current_user:
     current_user_uid = getpwnam(current_user).pw_uid
     current_user_gid = getpwnam(current_user).pw_gid
     recursive_chown_chmod(options.param_rgt_data_location,current_user_uid,current_user_gid,default_file_permission,default_path_permission)

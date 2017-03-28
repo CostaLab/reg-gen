@@ -30,7 +30,7 @@ from postprocessing import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
 from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
-import os.path
+# import os.path
 
 TEST = False #enable to test THOR locally
 

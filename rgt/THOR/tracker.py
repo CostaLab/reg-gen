@@ -28,7 +28,7 @@ import numpy as np
 from rgt.Util import Html, ConfigurationFile
 from collections import OrderedDict
 from os import path
-import sys
+# import sys
 from datetime import datetime
 
 class Tracker:

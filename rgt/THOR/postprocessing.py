@@ -26,7 +26,7 @@ from __future__ import print_function
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 import sys
-import re
+# import re
 from scipy.stats.mstats import zscore
 from rgt.motifanalysis.Statistics import multiple_test_correction
 import numpy as np
