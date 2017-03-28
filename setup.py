@@ -404,7 +404,7 @@ readme_file_name = path.join(path.dirname(path.abspath(__file__)), "README.rst")
 
 # Fetching Long Description
 readme_file = open(readme_file_name, "r")
-long_description = readme_file.read() + "nn"
+long_description = readme_file.read()
 readme_file.close()
 
 # Setup Function
