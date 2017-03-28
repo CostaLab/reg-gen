@@ -22,7 +22,7 @@ Tools
 * `TDF <http://www.regulatory-genomics.org/tdf/>`__: DNA/RNA triplex domain finder
 
 Installation
-==================
+============
 
 The quickest and easiest way to get RGT is to to use pip:
 
