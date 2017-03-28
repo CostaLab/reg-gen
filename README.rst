@@ -13,7 +13,7 @@ Tools
 * `THOR <http://www.regulatory-genomics.org/thor-2/>`__: ChIP-Seq differential peak caller, replaces
   `ODIN <http://www.regulatory-genomics.org/odin-2/>`__
 
-* `Motif Analysis <http://www.regulatory-genomics.org/motifanalysis/>`__: TBFS match and enrichment
+* `Motif Analysis <http://www.regulatory-genomics.org/motif-analysis/>`__: TBFS match and enrichment
 
 * `HINT <http://www.regulatory-genomics.org/hint/>`__: DNase-Seq footprinting method
 
