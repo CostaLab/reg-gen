@@ -18,6 +18,7 @@ from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeDat
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.GenomicRegion import GenomicRegion
 from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
@@ -549,7 +550,6 @@ def main_enrichment():
     enrichment_folder_name = "enrichment"
     gene_column_name = "genegroup"
     output_association_name = "coord_association"
-    # output_mpbs_filtered = "mpbs"
     output_mpbs_filtered_ev = "mpbs_ev"
     output_mpbs_filtered_nev = "mpbs_nev"
     output_stat_genetest = "genetest_statistics"
@@ -790,15 +790,23 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
+    background = GenomicRegionSet("background")
+    background.read_bed(background_filename)
+    background_mpbs = GenomicRegionSet("background_mpbs")
+    background_mpbs.read_bed(background_mpbs_filename)
+
     # Evaluating background statistics
-    bg_c_dict, bg_d_dict, _ = get_fisher_dict(motif_names, background_filename, background_mpbs_filename,
-                                              geneset=False)
+    bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background, background_mpbs)
 
     # removing temporary BED files if the originals were BBs
     if is_bb(background_original_filename):
         os.remove(background_filename)
     if is_bb(background_mpbs_original_filename):
         os.remove(background_mpbs_filename)
+
+    # scheduling region sets for garbage collection
+    del background
+    del background_mpbs
 
     ###################################################################################################
     # Enrichment Statistics
@@ -860,6 +868,10 @@ def main_enrichment():
                                                            "format. Ignoring.".format(original_name))
                 continue
 
+            curr_mpbs = GenomicRegionSet("curr_mpbs")
+            curr_mpbs.read_bed(curr_mpbs_bed_name)
+            curr_mpbs.sort()
+
             ###################################################################################################
             # Gene Evidence Statistics
             ###################################################################################################
@@ -892,57 +904,37 @@ def main_enrichment():
                     except Exception:
                         pass  # TODO: warning?
 
-                # Writing ev and nev regions to temporary bed files in order to evaluate statistics
-                ev_regions_file_name = os.path.join(curr_output_folder_name, "ev_regions.bed")
-                nev_regions_file_name = os.path.join(curr_output_folder_name, "nev_regions.bed")
-                output_file_ev = open(ev_regions_file_name, "w")
-                output_file_nev = open(nev_regions_file_name, "w")
+                # Writing ev and nev regions
+                ev_regions = GenomicRegionSet("ev_regions")
+                nev_regions = GenomicRegionSet("nev_regions")
+
                 for gr in grs:
                     if len([e for e in gr.name.split(":") if e[0] != "."]) > 0:
-                        output_file_ev.write("\t".join([str(e) for e in
-                                                        [gr.chrom, gr.initial, gr.final, gr.name, gr.data,
-                                                         gr.orientation]]) + "\n")
+                        ev_regions.add(GenomicRegion(gr.chrom, gr.initial, gr.final,
+                                                     name=gr.name, orientation=gr.orientation, data=gr.data))
                     else:
-                        output_file_nev.write("\t".join([str(e) for e in
-                                                         [gr.chrom, gr.initial, gr.final, gr.name, gr.data,
-                                                          gr.orientation]]) + "\n")
-                output_file_ev.close()
-                output_file_nev.close()
-                to_remove_list.append(ev_regions_file_name)
-                to_remove_list.append(nev_regions_file_name)
+                        nev_regions.add(GenomicRegion(gr.chrom, gr.initial, gr.final,
+                                                      name=gr.name, orientation=gr.orientation, data=gr.data))
 
                 # Calculating statistics
-                ev_mpbs_file_name_temp = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + "_temp.bed")
-                nev_mpbs_file_name_temp = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + "_temp.bed")
-                ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
-                nev_mpbs_file = open(nev_mpbs_file_name_temp, "w")
-                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names, ev_regions_file_name,
-                                                                             curr_mpbs_bed_name,
-                                                                             geneset=True,
-                                                                             output_mpbs_file=ev_mpbs_file,
-                                                                             color=ev_color)
-                curr_c_dict, curr_d_dict, nev_genelist_dict = get_fisher_dict(motif_names,
-                                                                              nev_regions_file_name, curr_mpbs_bed_name,
-                                                                              geneset=True,
-                                                                              output_mpbs_file=nev_mpbs_file,
-                                                                              color=nev_color)
-                ev_mpbs_file.close()
-                nev_mpbs_file.close()
-                to_remove_list.append(ev_mpbs_file_name_temp)
-                to_remove_list.append(nev_mpbs_file_name_temp)
+                a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, ev_regions, curr_mpbs,
+                                                                              gene_set=True, mpbs_set=True)
+
+                c_dict, d_dict, _, nev_mpbs_dict = get_fisher_dict(motif_names, nev_regions, curr_mpbs,
+                                                                   gene_set=True, mpbs_set=True)
 
                 # Performing fisher test
                 result_list = []
                 for k in motif_names:
                     r = Result()
                     r.name = k
-                    r.a = curr_a_dict[k]
-                    r.b = curr_b_dict[k]
-                    r.c = curr_c_dict[k]
-                    r.d = curr_d_dict[k]
+                    r.a = a_dict[k]
+                    r.b = b_dict[k]
+                    r.c = c_dict[k]
+                    r.d = d_dict[k]
                     r.percent = float(r.a) / float(r.a + r.b)
                     r.back_percent = float(r.c) / float(r.c + r.d)
-                    r.genes = ev_genelist_dict[k]
+                    r.genes = ev_genes_dict[k]
                     try:
                         p = pvalue(r.a, r.b, r.c, r.d)
                         r.p_value = p.right_tail
@@ -972,48 +964,46 @@ def main_enrichment():
                     r.percent = str(round(r.percent, 4) * 100) + "%"
                     r.back_percent = str(round(r.back_percent, 4) * 100) + "%"
 
-                # Printing ev and nev mpbs
-                ev_mpbs_file = open(ev_mpbs_file_name_temp, "r")
-                nev_mpbs_file = open(nev_mpbs_file_name_temp, "r")
-                ev_mpbs_file_name_thresh = os.path.join(curr_output_folder_name,
-                                                        output_mpbs_filtered_ev + "_thresh.bed")
-                nev_mpbs_file_name_thresh = os.path.join(curr_output_folder_name,
-                                                         output_mpbs_filtered_nev + "_thresh.bed")
-                output_file_ev = open(ev_mpbs_file_name_thresh, "w")
-                output_file_nev = open(nev_mpbs_file_name_thresh, "w")
-                for line in ev_mpbs_file:
-                    ll = line.strip().split("\t")
-                    if corr_pvalue_dict[ll[3]] > options.print_thresh:
-                        continue
-                    output_file_ev.write(line)
-                for line in nev_mpbs_file:
-                    ll = line.strip().split("\t")
-                    if corr_pvalue_dict[ll[3]] > options.print_thresh:
-                        continue
-                    output_file_nev.write(line)
-                output_file_ev.close()
-                output_file_nev.close()
-                to_remove_list.append(ev_mpbs_file_name_thresh)
-                to_remove_list.append(nev_mpbs_file_name_thresh)
+                # filtering out MPBS with low corr. p-value
+                ev_mpbs_grs_filtered = GenomicRegionSet("ev_mpbs_filtered")
+                for m, ev_mpbs_grs in ev_mpbs_dict.items():
+                    for region in ev_mpbs_grs:
+                        if corr_pvalue_dict[m] <= options.print_thresh:
+                            region.data = "\t".join([region.initial, region.final, ev_color])
+                            ev_mpbs_grs_filtered.add(region)
+                del ev_mpbs_dict
 
-                # Sorting ev and nev mpbs
-                output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
-                output_file_name_nev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bed")
+                nev_mpbs_grs_filtered = GenomicRegionSet("nev_mpbs_filtered")
+                for m, nev_mpbs_grs in nev_mpbs_dict.items():
+                    for region in nev_mpbs_grs:
+                        if corr_pvalue_dict[m] <= options.print_thresh:
+                            region.data = "\t".join([region.initial, region.final, nev_color])
+                            nev_mpbs_grs_filtered.add(region)
+                del nev_mpbs_dict
 
-                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
-                os.system("sort -k1,1 -k2,2n " + nev_mpbs_file_name_thresh + " > " + output_file_name_nev_bed)
+                output_mpbs_filtered_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
+                output_mpbs_filtered_nev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + ".bed")
+
+                # sorting and saving to BED
+                ev_mpbs_grs_filtered.sort()
+                ev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_ev_bed)
+                del ev_mpbs_grs_filtered
+
+                nev_mpbs_grs_filtered.sort()
+                nev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_nev_bed)
+                del nev_mpbs_grs_filtered
 
                 # Converting ev and nev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     try:
                         # create big bed files
-                        ensure_is_bb(output_file_name_ev_bed,  chrom_sizes_file)
-                        ensure_is_bb(output_file_name_nev_bed, chrom_sizes_file)
+                        ensure_is_bb(output_mpbs_filtered_ev_bed,  chrom_sizes_file)
+                        ensure_is_bb(output_mpbs_filtered_nev_bed, chrom_sizes_file)
 
                         # temporary BED files to be removed later
-                        to_remove_list.append(output_file_name_ev_bed)
-                        to_remove_list.append(output_file_name_nev_bed)
+                        to_remove_list.append(output_mpbs_filtered_ev_bed)
+                        to_remove_list.append(output_mpbs_filtered_nev_bed)
                     except Exception:
                         pass  # TODO: warning?
 
@@ -1059,12 +1049,13 @@ def main_enrichment():
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
                 fig_path = os.path.join(output_location, "fig")
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
-                html.add_heading(
-                    "Results for <b>" + original_name + "</b> region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
-                    align="center", bold=False)
-                html.add_heading(
-                    "* This gene test considered regions associated to the given gene list against regions not associated to the gene list",
-                    align="center", bold=False, size=3)
+                html.add_heading("Results for <b>" + original_name + "</b> "
+                                 "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
+                                 "</b>",
+                                 align="center", bold=False)
+                html.add_heading("* This gene test considered regions associated to the given "
+                                 "gene list against regions not associated to the gene list",
+                                 align="center", bold=False, size=3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
                 html.write(output_file_name_html)
 
@@ -1074,25 +1065,9 @@ def main_enrichment():
                 grs = grs.gene_association(None, options.organism, options.promoter_length,
                                            options.maximum_association_length)
 
-                # If there is no gene list, then the current evidence set consists of all coordinates
-                ev_regions_file_name = os.path.join(curr_output_folder_name, "ev_regions.bed")
-                output_file_ev = open(ev_regions_file_name, "w")
-                for gr in grs:
-                    output_file_ev.write("\t".join([str(e) for e in [gr.chrom, gr.initial, gr.final,
-                                                                     gr.name, gr.data, gr.orientation]]) + "\n")
-                output_file_ev.close()
-                to_remove_list.append(ev_regions_file_name)
-
                 # Calculating statistics
-                ev_mpbs_file_name_temp = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + "_temp.bed")
-                ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
-                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names, ev_regions_file_name,
-                                                                             curr_mpbs_bed_name,
-                                                                             geneset=True,
-                                                                             output_mpbs_file=ev_mpbs_file,
-                                                                             color=ev_color)
-                ev_mpbs_file.close()
-                to_remove_list.append(ev_mpbs_file_name_temp)
+                a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
+                                                                              gene_set=True, mpbs_set=True)
 
             ###################################################################################################
             # Final wrap-up
@@ -1103,13 +1078,13 @@ def main_enrichment():
             for k in motif_names:
                 r = Result()
                 r.name = k
-                r.a = curr_a_dict[k]
-                r.b = curr_b_dict[k]
+                r.a = a_dict[k]
+                r.b = b_dict[k]
                 r.c = bg_c_dict[k]
                 r.d = bg_d_dict[k]
                 r.percent = float(r.a) / float(r.a + r.b)
                 r.back_percent = float(r.c) / float(r.c + r.d)
-                r.genes = ev_genelist_dict[k]
+                r.genes = ev_genes_dict[k]
                 try:
                     p = pvalue(r.a, r.b, r.c, r.d)
                     r.p_value = p.right_tail
@@ -1142,33 +1117,32 @@ def main_enrichment():
             # Printing ev if it was not already print in geneset
             if not curr_input.gene_set:
 
-                # Printing ev and nev mpbs
-                ev_mpbs_file = open(ev_mpbs_file_name_temp, "r")
-                ev_mpbs_file_name_thresh = os.path.join(curr_output_folder_name,
-                                                        output_mpbs_filtered_ev + "_thresh.bed")
-                output_file_ev = open(ev_mpbs_file_name_thresh, "w")
-                for line in ev_mpbs_file:
-                    ll = line.strip().split("\t")
-                    if corr_pvalue_dict[ll[3]] > options.print_thresh:
-                        continue
-                    output_file_ev.write(line)
-                output_file_ev.close()
-                to_remove_list.append(ev_mpbs_file_name_thresh)
+                # filtering out MPBS with low corr. p-value,
+                ev_mpbs_grs_filtered = GenomicRegionSet("ev_mpbs_filtered")
 
-                # Sorting ev mpbs
-                output_file_name_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
-                os.system("sort -k1,1 -k2,2n " + ev_mpbs_file_name_thresh + " > " + output_file_name_ev_bed)
+                for m, ev_mpbs_grs in ev_mpbs_dict.items():
+                    for region in ev_mpbs_grs:
+                        if corr_pvalue_dict[m] <= options.print_thresh:
+                            ev_mpbs_grs_filtered.add(region)
+                del ev_mpbs_dict
 
-                # Converting ev and nev mpbs to bigbed
+                output_mpbs_filtered_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
+
+                # sorting and saving to BED
+                ev_mpbs_grs_filtered.sort()
+                ev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_ev_bed)
+                del ev_mpbs_grs_filtered
+
+                # Converting ev mpbs to bigbed
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
 
                     try:
                         # create big bed file
-                        ensure_is_bb(output_file_name_ev_bed, chrom_sizes_file)
+                        ensure_is_bb(output_mpbs_filtered_ev_bed, chrom_sizes_file)
 
                         # temporary BED file to be removed later
-                        to_remove_list.append(output_file_name_ev_bed)
+                        to_remove_list.append(output_mpbs_filtered_ev_bed)
                     except Exception:
                         pass  # WARNING
 
@@ -1214,16 +1188,14 @@ def main_enrichment():
             fig_path = os.path.join(output_location, "fig")
             html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
-                html.add_heading(
-                    "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name + "</b>",
-                    align="center", bold=False)
-                html.add_heading(
-                    "* This test considered regions associated to the given gene list against background regions",
-                    align="center", bold=False, size=3)
+                html.add_heading("Results for <b>" + original_name +
+                                 "</b> region <b>Site Test*</b> using genes from <b>" + curr_input.gene_set.name +
+                                 "</b>", align="center", bold=False)
+                html.add_heading("* This test considered regions associated to the given gene list "
+                                 "against background regions", align="center", bold=False, size=3)
             else:
-                html.add_heading(
-                    "Results for <b>" + original_name + "</b> region <b>Site Test*</b> using all input regions",
-                    align="center", bold=False)
+                html.add_heading("Results for <b>" + original_name +
+                                 "</b> region <b>Site Test*</b> using all input regions", align="center", bold=False)
                 html.add_heading("* This test considered all input regions against background regions",
                                  align="center", bold=False, size=3)
 
@@ -1231,8 +1203,8 @@ def main_enrichment():
             html.write(output_file_name_html)
 
             # Removing files
-            for e in to_remove_list:
-                os.remove(e)
+            # for e in to_remove_list:
+            #     os.remove(e)
 
     ###################################################################################################
     # Heatmap
