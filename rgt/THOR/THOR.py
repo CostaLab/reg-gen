@@ -61,7 +61,8 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
                               scaling_factors_ip = options.scaling_factors_ip, save_wig=options.save_wig,
                               housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report,
                               chrom_sizes_dict=region_giver.get_chrom_dict(),end=True, counter=0, output_bw=False,
-                              save_input=options.save_input, m_threshold=options.m_threshold, a_threshold=options.a_threshold)
+                              save_input=options.save_input, m_threshold=options.m_threshold, a_threshold=options.a_threshold,
+                              rmdup=options.rmdup)
         if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
             tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
             tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
@@ -104,7 +105,8 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
                               housekeeping_genes=options.housekeeping_genes, test=TEST, report=False,
                               chrom_sizes_dict=region_giver.get_chrom_dict(),gc_content_cov=exp_data.gc_content_cov,
                               avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist,
-                              end=end, counter=i, m_threshold=options.m_threshold, a_threshold=options.a_threshold)
+                              end=end, counter=i, m_threshold=options.m_threshold, a_threshold=options.a_threshold,
+                              rmdup=options.rmdup)
         if exp_data.no_data:
             continue
         
