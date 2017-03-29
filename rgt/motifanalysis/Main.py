@@ -96,6 +96,13 @@ def ensure_is_bb(filename, chrom_sizes_filename):
         raise ValueError("{} is neither a BED nor a BB".format(filename))
 
 
+def write_bed_color(region_set, filename, color):
+    with open(filename, 'w') as f:
+        for s in region_set:
+            append = "\t".join([str(s.initial), str(s.final), color])
+            print(str(s) + append, file=f)
+
+
 def main():
     start = time.time()
     """
@@ -969,7 +976,6 @@ def main_enrichment():
                 for m, ev_mpbs_grs in ev_mpbs_dict.items():
                     for region in ev_mpbs_grs:
                         if corr_pvalue_dict[m] <= options.print_thresh:
-                            region.data = "\t".join([str(region.initial), str(region.final), ev_color])
                             ev_mpbs_grs_filtered.add(region)
                 del ev_mpbs_dict
 
@@ -977,7 +983,6 @@ def main_enrichment():
                 for m, nev_mpbs_grs in nev_mpbs_dict.items():
                     for region in nev_mpbs_grs:
                         if corr_pvalue_dict[m] <= options.print_thresh:
-                            region.data = "\t".join([str(region.initial), str(region.final), nev_color])
                             nev_mpbs_grs_filtered.add(region)
                 del nev_mpbs_dict
 
@@ -986,11 +991,11 @@ def main_enrichment():
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
-                ev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_ev_bed)
+                write_bed_color(ev_mpbs_grs_filtered, output_mpbs_filtered_ev_bed, ev_color)
                 del ev_mpbs_grs_filtered
 
                 nev_mpbs_grs_filtered.sort()
-                nev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_nev_bed)
+                write_bed_color(nev_mpbs_grs_filtered, output_mpbs_filtered_nev_bed, nev_color)
                 del nev_mpbs_grs_filtered
 
                 # Converting ev and nev mpbs to bigbed
@@ -1130,7 +1135,7 @@ def main_enrichment():
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
-                ev_mpbs_grs_filtered.write_bed(output_mpbs_filtered_ev_bed)
+                write_bed_color(ev_mpbs_grs_filtered, output_mpbs_filtered_ev_bed, ev_color)
                 del ev_mpbs_grs_filtered
 
                 # Converting ev mpbs to bigbed
