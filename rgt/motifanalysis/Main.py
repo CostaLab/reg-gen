@@ -969,7 +969,7 @@ def main_enrichment():
                 for m, ev_mpbs_grs in ev_mpbs_dict.items():
                     for region in ev_mpbs_grs:
                         if corr_pvalue_dict[m] <= options.print_thresh:
-                            region.data = "\t".join([region.initial, region.final, ev_color])
+                            region.data = "\t".join([str(region.initial), str(region.final), ev_color])
                             ev_mpbs_grs_filtered.add(region)
                 del ev_mpbs_dict
 
@@ -977,7 +977,7 @@ def main_enrichment():
                 for m, nev_mpbs_grs in nev_mpbs_dict.items():
                     for region in nev_mpbs_grs:
                         if corr_pvalue_dict[m] <= options.print_thresh:
-                            region.data = "\t".join([region.initial, region.final, nev_color])
+                            region.data = "\t".join([str(region.initial), str(region.final), nev_color])
                             nev_mpbs_grs_filtered.add(region)
                 del nev_mpbs_dict
 
