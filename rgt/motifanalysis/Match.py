@@ -104,7 +104,7 @@ def match_single(motif, sequence, genomic_region, unique_threshold=None, normali
                 else:
                     norm_score = score
 
-            grs.add(GenomicRegion(genomic_region.chrom, str(p1), str(p2),
+            grs.add(GenomicRegion(genomic_region.chrom, int(p1), int(p2),
                                   name=motif.name, orientation=strand, data=str(norm_score)))
 
     if sort:
