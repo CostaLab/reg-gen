@@ -444,9 +444,10 @@ def main_matching():
     for genomic_region_set in regions_to_match:
 
         # Initializing output bed file
-        output_file_name = os.path.join(output_location, genomic_region_set.name + "_mpbs")
-        bed_file_name = output_file_name + ".bed"
-        output_file = open(bed_file_name, "w")
+        output_bed_file = os.path.join(output_location, genomic_region_set.name + "_mpbs.bed")
+
+        # GenomicRegionSet where all found MPBS regions are added
+        output_grs = GenomicRegionSet("output")
 
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
@@ -455,10 +456,13 @@ def main_matching():
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
             for motif in motif_list:
-                match_single(motif, sequence, genomic_region, output_file, unique_threshold, options.normalize_bitscore)
+                grs = match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore)
+                output_grs.combine(grs, change_name=False)
 
-        # Closing file
-        output_file.close()
+        output_grs.sort()
+
+        # writing sorted regions to BED file
+        output_grs.write_bed(output_bed_file)
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
@@ -466,14 +470,10 @@ def main_matching():
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
             # Converting to big bed
-            # FIXME: sorting should be performed in memory, before even writing the BED file
-            sort_file_name = output_file_name + "_sort.bed"
-            os.system("sort -k1,1 -k2,2n " + bed_file_name + " > " + sort_file_name)
-            ensure_is_bb(sort_file_name, chrom_sizes_file)
+            ensure_is_bb(output_bed_file, chrom_sizes_file)
 
-            # removing temporary files
-            os.remove(bed_file_name)
-            os.remove(sort_file_name)
+            # removing BED file
+            os.remove(output_bed_file)
 
 
 def main_enrichment():
