@@ -415,7 +415,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
                test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95):
+               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
     """Initialize the MultiCoverageSet"""
     regionset = regions
     regionset.sequences.sort()
@@ -428,7 +428,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
     
-    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=False,\
+    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=rmdup,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
@@ -480,6 +480,7 @@ def input(laptop):
         options.version = None
         options.outputdir = None #'/home/manuel/test/'
         options.report = False
+        options.rmdup = False
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
@@ -540,6 +541,8 @@ def input(laptop):
                          help="Define the M threshold of percentile for training TMM. [default: %default]")
         group.add_option("--a_threshold", default=95, dest="a_threshold", type="int",
                          help="Define the A threshold of percentile for training TMM. [default: %default]")
+        group.add_option("--rmdup", default=False, dest="rmdup", action="store_true",
+                         help="Remove the duplicate reads [default: %default]")
         parser.add_option_group(group)
         
         ##deprecated options
