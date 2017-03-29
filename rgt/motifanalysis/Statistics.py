@@ -12,7 +12,7 @@ from rgt.Util import OverlapType
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 # External
-from numpy import asarray, argsort, sum, arange, nonzero, minimum, maximum, int64, any, nan, inf, abs
+from numpy import asarray, argsort, sum, arange, nonzero, minimum
 
 ###################################################################################################
 # Functions
@@ -96,7 +96,10 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
     mpbs_set -- TODO
 
     Return:
-    [a, b, gene_set, mpbs_set] -- TODO
+    a -- TODO
+    b -- TODO
+    gene_set -- TODO
+    mpbs_set -- TODO
     """
 
     # Fetching motif
@@ -154,7 +157,7 @@ def get_fisher_dict(motif_names, regions, mpbs, gene_set=False, mpbs_set=False):
     res1_dict -- TODO
     res2_dict -- TODO
     geneset_dict -- TODO
-    mpbs_set -- TODO
+    mpbs_dict -- TODO
     """
 
     # Calculating statistics for EV
