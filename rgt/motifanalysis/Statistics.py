@@ -84,7 +84,7 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
     return reject[sortrevind], pvals_corrected[sortrevind]
 
 
-def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
+def fisher_table(motif_name, regions, mpbs, geneset, output_mpbs_file):
     """
     TODO
 
@@ -92,7 +92,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
     m -- TODO
     region_file_name -- TODO
     mpbs_file_name -- TODO
-    return_geneset -- TODO
+    geneset -- TODO
     output_mpbs_file -- TODO
 
     Return:
@@ -106,7 +106,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
     return_vec = []
 
     # Fetching motif
-    mpbs_motif = GenomicRegionSet(name="grep_motif")
+    mpbs_motif = GenomicRegionSet(name="mpbs_motif")
     for region in mpbs.sequences:
         if motif_name in region.name:
             mpbs_motif.add(region)
@@ -123,7 +123,7 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
         return_vec.append(len(subtract_overlap))
 
         # Fetching genes
-        if return_geneset:
+        if geneset:
             gene_set = GeneSet(motif_name)
             for genomic_region in intersect_original.sequences:
                 if genomic_region.name:
@@ -132,6 +132,9 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
                         gene_set.genes.append(g)
             gene_set.genes = list(set(gene_set.genes))  # Keep only unique genes
             return_vec.append(gene_set)
+        else:
+            # size of return vector must be consistent
+            return_vec.append(None)
 
         # Fetching mpbs
         if output_mpbs_file:
@@ -139,23 +142,26 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
             fetch_mpbs = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True)
             for region in fetch_mpbs.sequences:
                 s = []
-                s.extend([region.chrom, str(region.initial), str(region.final), region.name, str(region.data), region.orientation])
+                s.extend([region.chrom, str(region.initial), str(region.final),
+                          region.name, str(region.data), region.orientation])
                 mpbs_list.append(s)
             return_vec.append(mpbs_list)
+        else:
+            # size of return vector must be consistent
+            # (this is less problematic than the previous one, but still a good idea to do it)
+            return_vec.append(None)
 
     else:
         return_vec.append(0)
         return_vec.append(len(regions))
-        gene_set = GeneSet(motif_name)
-        return_vec.append(gene_set)
-        mpbs_list = []
-        return_vec.append(mpbs_list)
+        return_vec.append(GeneSet(motif_name))
+        return_vec.append([])
 
     # Return
     return return_vec
 
 
-def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, return_geneset=False,
+def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, geneset=False,
                     output_mpbs_file=None, color="0,130,0"):
     """
     TODO
@@ -165,7 +171,7 @@ def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, return_genese
     region_file_name -- TODO
     mpbs_file_name -- TODO
     temp_file_path -- TODO
-    return_geneset -- TODO
+    geneset -- TODO
     output_mpbs_file -- TODO
 
     Return:
@@ -181,35 +187,30 @@ def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, return_genese
     mpbs.read_bed(mpbs_file_name)
 
     # Sort region and mpbs bed files
-    regions.sort()
-    mpbs.sort()
+    if not regions.sorted:
+        regions.sort()
+    if not mpbs.sorted:
+        mpbs.sort()
 
     # Calculating statistics for EV
     res1_dict = dict()
     res2_dict = dict()
 
-    if return_geneset:
-        geneset_dict = dict()
+    geneset_dict = dict()
 
-    for mpbs_name_group in motif_names:
+    for motif in motif_names:
+        table = fisher_table(motif, regions, mpbs, geneset, output_mpbs_file)
 
-        # Creating data input
-        curr_data_input = [[m, regions, mpbs, return_geneset, output_mpbs_file] for m in mpbs_name_group]
+        res1_dict[motif] = table[0]
+        res2_dict[motif] = table[1]
 
-        # Evaluating fisher table with multiprocessing
-        curr_res = [fisher_table(x) for x in curr_data_input]
-        for i in range(0, len(mpbs_name_group)):
-            res1_dict[mpbs_name_group[i]] = curr_res[i][0]
-            res2_dict[mpbs_name_group[i]] = curr_res[i][1]
-            if return_geneset:
-                geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
-            if output_mpbs_file:
-                for vec in curr_res[i][3]:
-                    output_mpbs_file.write("\t".join(vec + [vec[1], vec[2], color]) + "\n")
+        if geneset:
+            geneset_dict[motif] = table[2]
+
+        if output_mpbs_file:
+            for vec in table[3]:
+                output_mpbs_file.write("\t".join(vec + [vec[1], vec[2], color]) + "\n")
 
     # Return
-    if return_geneset:
-        return res1_dict, res2_dict, geneset_dict
-
-    return res1_dict, res2_dict
+    return res1_dict, res2_dict, geneset_dict
 

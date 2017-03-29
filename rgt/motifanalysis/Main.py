@@ -456,7 +456,9 @@ def main_matching():
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
             for motif in motif_list:
-                grs = match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore)
+                grs = match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore,
+                                   # supposedly, python sort implementation works best with partially sorted sets
+                                   sort=True)
                 output_grs.combine(grs, change_name=False)
 
         output_grs.sort()
@@ -510,8 +512,6 @@ def main_enrichment():
                            "be considered associated with the latter.")
     parser.add_option("--multiple-test-alpha", dest="multiple_test_alpha", type="float", metavar="FLOAT", default=0.05,
                       help="Alpha value for multiple test.")
-    parser.add_option("--processes", dest="processes", type="int", metavar="INT", default=1,
-                      help="Number of processes for multi-CPU based machines.")
     parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
                       help="Only use the motifs contained within this file (one for each line).")
     parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
@@ -784,24 +784,15 @@ def main_enrichment():
             # add those to our list
             if not selected_motifs or motif_name in selected_motifs:
                 motif_names.append(motif_name)
-    motif_names = sorted(motif_names)
-
-    # Grouping motif file names by the number of processes requested
-    if options.processes <= 0:
-        err.throw_error("ME_LOW_NPROC")
-    elif options.processes == 1:
-        motif_names_grouped = [[e] for e in motif_names]
-    else:
-        motif_names_grouped = map(None, *(iter(motif_names),) * options.processes)
-    motif_names_grouped = [[e2 for e2 in e1 if e2 is not None] for e1 in motif_names_grouped]
+    motif_names.sort()
 
     ###################################################################################################
     # Background Statistics
     ###################################################################################################
 
     # Evaluating background statistics
-    bg_c_dict, bg_d_dict = get_fisher_dict(motif_names_grouped, background_filename, background_mpbs_filename,
-                                           return_geneset=False)
+    bg_c_dict, bg_d_dict, _ = get_fisher_dict(motif_names, background_filename, background_mpbs_filename,
+                                              geneset=False)
 
     # removing temporary BED files if the originals were BBs
     if is_bb(background_original_filename):
@@ -925,14 +916,14 @@ def main_enrichment():
                 nev_mpbs_file_name_temp = os.path.join(curr_output_folder_name, output_mpbs_filtered_nev + "_temp.bed")
                 ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
                 nev_mpbs_file = open(nev_mpbs_file_name_temp, "w")
-                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
+                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             return_geneset=True,
+                                                                             geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
-                curr_c_dict, curr_d_dict, nev_genelist_dict = get_fisher_dict(motif_names_grouped,
+                curr_c_dict, curr_d_dict, nev_genelist_dict = get_fisher_dict(motif_names,
                                                                               nev_regions_file_name, curr_mpbs_bed_name,
-                                                                              return_geneset=True,
+                                                                              geneset=True,
                                                                               output_mpbs_file=nev_mpbs_file,
                                                                               color=nev_color)
                 ev_mpbs_file.close()
@@ -1095,9 +1086,9 @@ def main_enrichment():
                 # Calculating statistics
                 ev_mpbs_file_name_temp = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + "_temp.bed")
                 ev_mpbs_file = open(ev_mpbs_file_name_temp, "w")
-                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names_grouped, ev_regions_file_name,
+                curr_a_dict, curr_b_dict, ev_genelist_dict = get_fisher_dict(motif_names, ev_regions_file_name,
                                                                              curr_mpbs_bed_name,
-                                                                             return_geneset=True,
+                                                                             geneset=True,
                                                                              output_mpbs_file=ev_mpbs_file,
                                                                              color=ev_color)
                 ev_mpbs_file.close()
