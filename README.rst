@@ -7,9 +7,6 @@ classes provide functionality for handling regulatory genomics data.
 
 The toolbox is made of a `core library <http://www.regulatory-genomics.org/rgt/>`__ and several tools:
 
-Tools
-=====
-
 * `THOR <http://www.regulatory-genomics.org/thor-2/>`__: ChIP-Seq differential peak caller, replaces
   `ODIN <http://www.regulatory-genomics.org/odin-2/>`__
 

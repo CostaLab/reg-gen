@@ -105,7 +105,7 @@ tools_dictionary = {
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "mpmath"],
+    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "mpmath", "HTSeq"],
     ["data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge", "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "filterVCF": (

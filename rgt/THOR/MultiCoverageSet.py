@@ -21,24 +21,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from rgt.CoverageSet import CoverageSet, get_gc_context
-import numpy as np
-from random import sample
-# from rgt.ODIN.gc_content import get_gc_context
 import sys
-from rgt.THOR.normalize import get_normalization_factor
-from math import fabs
-from rgt.THOR.DualCoverageSet import DualCoverageSet
-# from rgt.GenomicRegionSet import GenomicRegionSet
-# from copy import deepcopy
 import gc
-# from math import fabs
+from random import sample
+import numpy as np
+from normalize import get_normalization_factor
+from DualCoverageSet import DualCoverageSet
 from norm_genelevel import norm_gene_level
+from rgt.CoverageSet import CoverageSet, get_gc_context
 
 EPSILON = 1**-320
 ROUND_PRECISION = 3
 DEBUG = None
 VERBOSE = None
+
 
 class MultiCoverageSet(DualCoverageSet):
     def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
