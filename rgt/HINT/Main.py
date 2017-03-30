@@ -346,6 +346,9 @@ def main():
 
     # Processing Options
     options, arguments = parser.parse_args()
+    if len(arguments) < 1:
+        print(usage_message)
+        exit(1)
     # if(not arguments or len(arguments) > 1): error_handler.throw_error("FP_WRONG_ARGUMENT")
 
     # General hidden options ###############################################################
