@@ -101,7 +101,7 @@ mkdir -p ${DIR}/motifanalysis
 
 cd ${DIR}/motifanalysis
 
-url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_Test.tar.gz"
+url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_FullSiteTest.tar.gz"
 
 # Download the data
 file="${DIR}/motifanalysis/RGT_MotifAnalysis_Test/input_matrix.txt"
@@ -110,14 +110,14 @@ then
     echo "$file found."
 else
     echo "$file not found."
-    wget -qO- -O RGT_MotifAnalysis_Test.tar.gz $url && tar xvfz RGT_MotifAnalysis_Test.tar.gz && rm RGT_MotifAnalysis_Test.tar.gz
+    wget -qO- -O RGT_MotifAnalysis_FullSiteTest.tar.gz $url && tar xvfz RGT_MotifAnalysis_FullSiteTest.tar.gz && rm RGT_MotifAnalysis_FullSiteTest.tar.gz
 fi
 
 # Run test script
-cd RGT_MotifAnalysis_Test
+cd RGT_MotifAnalysis_FullSiteTest
 echo "Running matching.."
-rgt-motifanalysis --matching --input-matrix input_matrix.txt --rand-proportion 1
+rgt-motifanalysis --matching input/regions_K562.bed input/background.bed
 echo "Running enrichment.."
-rgt-motifanalysis --enrichment --input-matrix input_matrix.txt match/random_regions.bed
+rgt-motifanalysis --enrichment input/background.bed input/regions_K562.bed
 
 echo "********* Motif Analysis test completed ****************"
