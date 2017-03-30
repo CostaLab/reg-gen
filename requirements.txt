@@ -5,3 +5,4 @@ pysam
 pyBigWig
 pyVCF
 fisher
+HTSeq
