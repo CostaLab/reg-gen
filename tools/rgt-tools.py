@@ -1289,7 +1289,7 @@ if __name__ == "__main__":
         bed.read_bed(args.i)
         print("Number of input peaks:\t"+str(len(bed)))
 
-        if args.rn and args.g:
+        if args.rename and args.g:
             bed2 = bed.gene_association(organism=args.g, strand_specific=True)
         else:
             bed2 = bed

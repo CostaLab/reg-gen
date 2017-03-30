@@ -92,3 +92,32 @@ cd ${DIR}/viz/viz_examples/
 sh scripts.sh
 
 echo "********* viz test completed ****************"
+
+################################################################
+# Motif Analysis
+echo "**********************************************"
+echo "Testing Motif Analysis"
+mkdir -p ${DIR}/motifanalysis
+
+cd ${DIR}/motifanalysis
+
+url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_Test.tar.gz"
+
+# Download the data
+file="${DIR}/motifanalysis/RGT_MotifAnalysis_Test/input_matrix.txt"
+if [ -f "$file" ]
+then
+    echo "$file found."
+else
+    echo "$file not found."
+    wget -qO- -O RGT_MotifAnalysis_Test.tar.gz $url && tar xvfz RGT_MotifAnalysis_Test.tar.gz && rm RGT_MotifAnalysis_Test.tar.gz
+fi
+
+# Run test script
+cd RGT_MotifAnalysis_Test
+echo "Running matching.."
+rgt-motifanalysis --matching --input-matrix input_matrix.txt --rand-proportion 1
+echo "Running enrichment.."
+rgt-motifanalysis --enrichment --input-matrix input_matrix.txt match/random_regions.bed
+
+echo "********* Motif Analysis test completed ****************"

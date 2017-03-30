@@ -12,37 +12,32 @@ conditions. Please see LICENSE file for details.
 """
 
 from __future__ import print_function
-from optparse import OptionParser, OptionGroup
-from rgt.CoverageSet import CoverageSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ODIN.get_extension_size import get_extension_size
-from os.path import splitext, basename
 import sys
-from MultiCoverageSet import MultiCoverageSet
-from rgt.ODIN.get_fast_gen_pvalue import get_log_pvalue_new
-from math import log, log10
-import multiprocessing
-from input_parser import input_parser
-import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-import matplotlib.pyplot as plt
-from random import sample
-from scipy.optimize import curve_fit
-import numpy as np
-from numpy import linspace
-from math import fabs
-from rgt.THOR.postprocessing import merge_delete, filter_by_pvalue_strand_lag, filter_deadzones
-from rgt.THOR.neg_bin import NegBin
-from operator import add
-from numpy import percentile
-from norm_genelevel import norm_gene_level
-from datetime import datetime
-from rgt.ODIN.dpc_help import which
 import pysam
 import os.path
 import tempfile
+import numpy as np
+from math import fabs
+from numpy import linspace
+from math import log, log10
+from operator import add
+from rgt.Util import which
 from rgt import __version__
+from datetime import datetime
+import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
+from os.path import splitext, basename
+
+# import multiprocessing
+from input_parser import input_parser
+import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+from rgt.THOR.postprocessing import merge_delete, filter_deadzones
+from MultiCoverageSet import MultiCoverageSet
+from optparse import OptionParser, OptionGroup
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.THOR.get_extension_size import get_extension_size
+from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
 
 FOLDER_REPORT = None
 
@@ -420,7 +415,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
                test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95):
+               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
     """Initialize the MultiCoverageSet"""
     regionset = regions
     regionset.sequences.sort()
@@ -433,7 +428,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
     
-    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=False,\
+    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=rmdup,\
                                   path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
                                   chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
                                   norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
@@ -485,6 +480,7 @@ def input(laptop):
         options.version = None
         options.outputdir = None #'/home/manuel/test/'
         options.report = False
+        options.rmdup = False
     else:
         parser.add_option("-n", "--name", default=None, dest="name", type="string",\
                           help="Experiment's name and prefix for all files that are created.")
@@ -545,6 +541,8 @@ def input(laptop):
                          help="Define the M threshold of percentile for training TMM. [default: %default]")
         group.add_option("--a_threshold", default=95, dest="a_threshold", type="int",
                          help="Define the A threshold of percentile for training TMM. [default: %default]")
+        group.add_option("--rmdup", default=False, dest="rmdup", action="store_true",
+                         help="Remove the duplicate reads [default: %default]")
         parser.add_option_group(group)
         
         ##deprecated options
@@ -668,4 +666,3 @@ def input(laptop):
         options.exts_inputs = []
     
     return options, bamfiles, genome, chrom_sizes, dims, inputs, __version__
-

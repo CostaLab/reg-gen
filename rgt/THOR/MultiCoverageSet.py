@@ -21,18 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from rgt.CoverageSet import CoverageSet
+from rgt.CoverageSet import CoverageSet, get_gc_context
 import numpy as np
 from random import sample
-from rgt.ODIN.gc_content import get_gc_context
+# from rgt.ODIN.gc_content import get_gc_context
 import sys
-from rgt.ODIN.normalize import get_normalization_factor
+from rgt.THOR.normalize import get_normalization_factor
 from math import fabs
-from rgt.ODIN.DualCoverageSet import DualCoverageSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from copy import deepcopy
+from rgt.THOR.DualCoverageSet import DualCoverageSet
+# from rgt.GenomicRegionSet import GenomicRegionSet
+# from copy import deepcopy
 import gc
-from math import fabs
+# from math import fabs
 from norm_genelevel import norm_gene_level
 
 EPSILON = 1**-320

@@ -12,7 +12,7 @@ from rgt.Util import OverlapType
 from rgt.GenomicRegionSet import GenomicRegionSet
 
 # External
-from numpy import asarray, argsort, sum, arange, nonzero, minimum, maximum, int64, any, nan, inf, abs
+from numpy import asarray, argsort, sum, arange, nonzero, minimum
 
 ###################################################################################################
 # Functions
@@ -84,29 +84,26 @@ def multiple_test_correction(pvals, alpha=0.05, method='indep'):
     return reject[sortrevind], pvals_corrected[sortrevind]
 
 
-def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
+def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
     """
     TODO
 
     Keyword arguments:
-    m -- TODO
-    region_file_name -- TODO
-    mpbs_file_name -- TODO
-    return_geneset -- TODO
-    output_mpbs_file -- TODO
+    motif_name -- TODO
+    regions -- TODO
+    mpbs -- TODO
+    gene_set -- TODO
+    mpbs_set -- TODO
 
     Return:
     a -- TODO
     b -- TODO
     gene_set -- TODO
-    mpbs_list -- TODO
+    mpbs_set -- TODO
     """
 
-    # Initialization
-    return_vec = []
-
     # Fetching motif
-    mpbs_motif = GenomicRegionSet(name="grep_motif")
+    mpbs_motif = GenomicRegionSet(name="mpbs_motif")
     for region in mpbs.sequences:
         if motif_name in region.name:
             mpbs_motif.add(region)
@@ -118,98 +115,72 @@ def fisher_table((motif_name, regions, mpbs, return_geneset, output_mpbs_file)):
         # regions which are not overlapping with regions from mpbs_motif
         subtract_overlap = regions.subtract(mpbs_motif, whole_region=True)
 
-        # Counting the number of regions
-        return_vec.append(len(intersect_original))
-        return_vec.append(len(subtract_overlap))
-
         # Fetching genes
-        if return_geneset:
-            gene_set = GeneSet(motif_name)
+        if gene_set:
+            gene_set_res = GeneSet(motif_name)
             for genomic_region in intersect_original.sequences:
                 if genomic_region.name:
                     gene_list = [e if e[0] != "." else e[1:] for e in genomic_region.name.split(":")]
                     for g in gene_list:
-                        gene_set.genes.append(g)
-            gene_set.genes = list(set(gene_set.genes))  # Keep only unique genes
-            return_vec.append(gene_set)
+                        gene_set_res.genes.append(g)
+            gene_set_res.genes = list(set(gene_set_res.genes))  # Keep only unique genes
+        else:
+            gene_set_res = None
 
         # Fetching mpbs
-        if output_mpbs_file:
-            mpbs_list = []
-            fetch_mpbs = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True)
-            for region in fetch_mpbs.sequences:
-                s = []
-                s.extend([region.chrom, str(region.initial), str(region.final), region.name, str(region.data), region.orientation])
-                mpbs_list.append(s)
-            return_vec.append(mpbs_list)
+        if mpbs_set:
+            mpbs_set_res = mpbs_motif.intersect(regions, mode=OverlapType.ORIGINAL, rm_duplicates=True)
+        else:
+            mpbs_set_res = None
+
+        return len(intersect_original), len(subtract_overlap), gene_set_res, mpbs_set_res
 
     else:
-        return_vec.append(0)
-        return_vec.append(len(regions))
-        gene_set = GeneSet(motif_name)
-        return_vec.append(gene_set)
-        mpbs_list = []
-        return_vec.append(mpbs_list)
+        gene_set_res = GeneSet(motif_name) if gene_set else None
+        mpbs_set_res = GenomicRegionSet(mpbs_motif.name) if mpbs_set else None
 
-    # Return
-    return return_vec
+        return 0, len(regions), gene_set_res, mpbs_set_res
 
 
-def get_fisher_dict(motif_names, region_file_name, mpbs_file_name, return_geneset=False,
-                    output_mpbs_file=None, color="0,130,0"):
+def get_fisher_dict(motif_names, regions, mpbs, gene_set=False, mpbs_set=False):
     """
     TODO
 
     Keyword arguments:
     motif_names -- TODO
-    region_file_name -- TODO
-    mpbs_file_name -- TODO
-    temp_file_path -- TODO
-    return_geneset -- TODO
-    output_mpbs_file -- TODO
+    regions -- TODO
+    mpbs -- TODO
+    gene_set -- TODO
+    mpbs_set -- TODO
 
     Return:
     res1_dict -- TODO
     res2_dict -- TODO
     geneset_dict -- TODO
+    mpbs_dict -- TODO
     """
-
-    # Initialization
-    regions = GenomicRegionSet(name="regions")
-    regions.read_bed(region_file_name)
-    mpbs = GenomicRegionSet(name="mpbs")
-    mpbs.read_bed(mpbs_file_name)
-
-    # Sort region and mpbs bed files
-    regions.sort()
-    mpbs.sort()
 
     # Calculating statistics for EV
     res1_dict = dict()
     res2_dict = dict()
 
-    if return_geneset:
-        geneset_dict = dict()
+    geneset_dict = dict()
+    mpbs_dict = dict()
 
-    for mpbs_name_group in motif_names:
+    for motif in motif_names:
+        table = fisher_table(motif, regions, mpbs, gene_set=gene_set, mpbs_set=mpbs_set)
 
-        # Creating data input
-        curr_data_input = [[m, regions, mpbs, return_geneset, output_mpbs_file] for m in mpbs_name_group]
+        # number of input regions intersecting mpbs regions
+        res1_dict[motif] = table[0]
+        # number of input regions NOT intersecting mpbs regions
+        res2_dict[motif] = table[1]
 
-        # Evaluating fisher table with multiprocessing
-        curr_res = [fisher_table(x) for x in curr_data_input]
-        for i in range(0, len(mpbs_name_group)):
-            res1_dict[mpbs_name_group[i]] = curr_res[i][0]
-            res2_dict[mpbs_name_group[i]] = curr_res[i][1]
-            if return_geneset:
-                geneset_dict[mpbs_name_group[i]] = curr_res[i][2]
-            if output_mpbs_file:
-                for vec in curr_res[i][3]:
-                    output_mpbs_file.write("\t".join(vec + [vec[1], vec[2], color]) + "\n")
+        if gene_set:
+            geneset_dict[motif] = table[2]
+
+        # GenomicRegionSet of mpbs regions intersecting input regions
+        if mpbs_set:
+            mpbs_dict[motif] = table[3]
 
     # Return
-    if return_geneset:
-        return res1_dict, res2_dict, geneset_dict
-
-    return res1_dict, res2_dict
-
+    return res1_dict, res2_dict, geneset_dict, mpbs_dict
