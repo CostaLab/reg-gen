@@ -17,20 +17,18 @@ import pysam
 import os.path
 import tempfile
 import numpy as np
-from math import fabs
+from math import fabs,log
 from numpy import linspace
-from math import log, log10
 from operator import add
-from rgt.Util import which
-from rgt import __version__
 from datetime import datetime
 from scipy.optimize import curve_fit
 from os.path import splitext, basename
+import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+
 
 # import multiprocessing
 from input_parser import input_parser
-import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 # import mpl.pyplot as plt
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
@@ -38,6 +36,8 @@ from optparse import OptionParser, OptionGroup
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.THOR.get_extension_size import get_extension_size
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
+from rgt.Util import which
+from rgt import __version__
 
 FOLDER_REPORT = None
 
