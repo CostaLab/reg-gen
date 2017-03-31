@@ -14,7 +14,7 @@ from shutil import copy
 
 # Internal
 from rgt import __version__
-from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
+from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -22,7 +22,7 @@ from rgt.GenomicRegion import GenomicRegion
 from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
-from Util import Input, Result, npath
+from Util import Input, Result
 from rgt.AnnotationSet import AnnotationSet
 
 # External
