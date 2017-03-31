@@ -23,13 +23,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-# import sys
+from rgt.Util import npath
+
 
 def get_data_block(filepath, feature):
-    with open(filepath) as file:
+    with open(filepath) as f:
         data = []
         read = False
-        for line in file:
+        for line in f:
             line = line.strip()
             if line.startswith("#") and line == "#" + str(feature):
                 read = True
@@ -45,31 +46,34 @@ def get_data_block(filepath, feature):
     else:
         return data
 
+
 def input_parser(filepath):
-    dim_1, dim_2 = 0, 0
-    
     bamfiles_1 = get_data_block(filepath, "rep1")
+    bamfiles_1 = map(npath, bamfiles_1)
+
     bamfiles_2 = get_data_block(filepath, "rep2")
-    #regions = get_data_block(filepath, "regions")
-    genome = get_data_block(filepath, "genome")
-    chrom_sizes = get_data_block(filepath, "chrom_sizes")
+    bamfiles_2 = map(npath, bamfiles_2)
+
+    genome = npath(get_data_block(filepath, "genome"))
+    chrom_sizes = npath(get_data_block(filepath, "chrom_sizes"))
+
     inputs1 = get_data_block(filepath, "inputs1")
+    inputs1 = map(npath, inputs1)
+
     inputs2 = get_data_block(filepath, "inputs2")
-        
+    inputs2 = map(npath, inputs2)
+
     dims = [len(bamfiles_1), len(bamfiles_2)]
     
     if not inputs1 and not inputs2:
         inputs = None
     else:
         inputs = inputs1 + inputs2
+
     if not genome:
         genome = None
-    #if not regions:
-    #    regions = None
     
     return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
 
-if __name__ == '__main__':
-    print(input_parser('/home/manuel/blueprint.h3k4me1.cluster.config')[1])
 
 

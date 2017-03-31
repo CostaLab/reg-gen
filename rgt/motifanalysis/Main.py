@@ -22,7 +22,7 @@ from rgt.GenomicRegion import GenomicRegion
 from Motif import Motif, Thresholds
 from Match import match_single
 from Statistics import multiple_test_correction, get_fisher_dict
-from Util import Input, Result
+from Util import Input, Result, npath
 from rgt.AnnotationSet import AnnotationSet
 
 # External
@@ -46,10 +46,6 @@ Dependencies:
 
 Authors: Eduardo G. Gusmao, Fabio Ticconi
 """
-
-
-def get_path(filename):
-    return os.path.abspath(filename)
 
 
 def is_bed(filename):
@@ -266,7 +262,7 @@ def main_matching():
     if options.output_location:
         output_location = options.output_location
     else:
-        output_location = get_path(matching_folder_name)
+        output_location = npath(matching_folder_name)
 
     try:
         if not os.path.isdir(output_location):
@@ -310,7 +306,7 @@ def main_matching():
         target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
-        output_file_name = get_path(os.path.join(output_location, target_regions.name + ".bed"))
+        output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
         target_regions.write_bed(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
@@ -325,7 +321,7 @@ def main_matching():
                                                           promoterLength=options.promoter_length)
             background_regions.name = "background_regions"
             background_regions.sort()
-            output_file_name = get_path(os.path.join(output_location, background_regions.name + ".bed"))
+            output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
             background_regions.write_bed(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
@@ -346,7 +342,7 @@ def main_matching():
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
-            regions.read_bed(get_path(input_filename))
+            regions.read_bed(npath(input_filename))
 
             genomic_regions_dict[name] = regions
 
@@ -394,7 +390,7 @@ def main_matching():
         regions_to_match.append(rand_region)
 
         # Writing random regions
-        output_file_name = get_path(os.path.join(output_location, random_region_name))
+        output_file_name = npath(os.path.join(output_location, random_region_name))
         rand_bed_file_name = output_file_name + ".bed"
         rand_region.write_bed(rand_bed_file_name)
 
@@ -426,7 +422,7 @@ def main_matching():
     # Fetching list with all motif file names
     motif_file_names = []
     for motif_repository in motif_data.get_pwm_list():
-        for motif_file_name in glob(get_path(os.path.join(motif_repository, "*.pwm"))):
+        for motif_file_name in glob(npath(os.path.join(motif_repository, "*.pwm"))):
             motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
             # if the user has given a list of motifs to use, we only
             # add those to our list
@@ -855,7 +851,7 @@ def main_enrichment():
             else:
                 curr_output_folder_name = os.path.join(output_location, grs.name)
 
-            curr_output_folder_name = get_path(curr_output_folder_name)
+            curr_output_folder_name = npath(curr_output_folder_name)
 
             if not os.path.isdir(curr_output_folder_name):
                 os.makedirs(curr_output_folder_name)
@@ -863,7 +859,7 @@ def main_enrichment():
             # Verifying if MPBS file exists
             curr_mpbs_glob = glob(os.path.join(match_location, original_name + "_mpbs.*"))
             try:
-                curr_mpbs_file_name = get_path(curr_mpbs_glob[0])
+                curr_mpbs_file_name = npath(curr_mpbs_glob[0])
             except Exception:
                 err.throw_warning("DEFAULT_ERROR", add_msg="File {} does not have a matching MPBS file. "
                                                            "Ignoring.".format(original_name))
@@ -897,7 +893,7 @@ def main_enrichment():
                                            options.maximum_association_length)
 
                 # Writing gene-coordinate association
-                output_file_name = get_path(os.path.join(curr_output_folder_name, output_association_name + ".bed"))
+                output_file_name = npath(os.path.join(curr_output_folder_name, output_association_name + ".bed"))
                 output_file = open(output_file_name, "w")
                 for gr in grs:
                     if gr.name == ".":
@@ -998,11 +994,11 @@ def main_enrichment():
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
-                write_bed_color(ev_mpbs_grs_filtered, get_path(output_mpbs_filtered_ev_bed), ev_color)
+                write_bed_color(ev_mpbs_grs_filtered, npath(output_mpbs_filtered_ev_bed), ev_color)
                 del ev_mpbs_grs_filtered
 
                 nev_mpbs_grs_filtered.sort()
-                write_bed_color(nev_mpbs_grs_filtered, get_path(output_mpbs_filtered_nev_bed), nev_color)
+                write_bed_color(nev_mpbs_grs_filtered, npath(output_mpbs_filtered_nev_bed), nev_color)
                 del nev_mpbs_grs_filtered
 
                 # Converting ev and nev mpbs to bigbed
@@ -1021,7 +1017,7 @@ def main_enrichment():
 
                 # Printing statistics text
                 output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest + ".txt")
-                output_file = open(get_path(output_file_name_stat_text), "w")
+                output_file = open(npath(output_file_name_stat_text), "w")
                 output_file.write(results_header_text + "\n")
                 for r in result_list:
                     output_file.write(str(r) + "\n")
@@ -1029,7 +1025,7 @@ def main_enrichment():
 
                 # unless explicitly forbidden, we copy the logo images locally
                 if not options.no_copy_logos:
-                    logo_dir_path = get_path(os.path.join(output_location, "logos"))
+                    logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
                     except:
@@ -1040,11 +1036,11 @@ def main_enrichment():
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                     for rep in motif_data.get_logo_list():
-                        logo_file_name = get_path(os.path.join(rep, r.name + ".png"))
+                        logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
                             if not options.no_copy_logos:
-                                copy(logo_file_name, get_path(os.path.join(logo_dir_path, r.name + ".png")))
+                                copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                                 # use relative paths in the html
                                 # FIXME can we do it in a better way? (inside the Html class)
@@ -1059,7 +1055,7 @@ def main_enrichment():
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                fig_path = get_path(os.path.join(output_location, "fig"))
+                fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
                                  "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
@@ -1069,7 +1065,7 @@ def main_enrichment():
                                  "gene list against regions not associated to the gene list",
                                  align="center", bold=False, size=3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
-                html.write(get_path(output_file_name_html))
+                html.write(npath(output_file_name_html))
 
             else:
 
@@ -1139,7 +1135,7 @@ def main_enrichment():
                 del ev_mpbs_dict
 
                 output_mpbs_filtered_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
-                output_mpbs_filtered_ev_bed = get_path(output_mpbs_filtered_ev_bed)
+                output_mpbs_filtered_ev_bed = npath(output_mpbs_filtered_ev_bed)
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
@@ -1161,7 +1157,7 @@ def main_enrichment():
 
             # Printing statistics text
             output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_fulltest + ".txt")
-            output_file = open(get_path(output_file_name_stat_text), "w")
+            output_file = open(npath(output_file_name_stat_text), "w")
             output_file.write(results_header_text + "\n")
             for r in result_list:
                 output_file.write(str(r) + "\n")
@@ -1169,7 +1165,7 @@ def main_enrichment():
 
             # unless explicitly forbidden, we copy the logo images locally
             if not options.no_copy_logos:
-                logo_dir_path = get_path(os.path.join(output_location, "logos"))
+                logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
                 except:
@@ -1180,11 +1176,11 @@ def main_enrichment():
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                 for rep in motif_data.get_logo_list():
-                    logo_file_name = get_path(os.path.join(rep, r.name + ".png"))
+                    logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
                         if not options.no_copy_logos:
-                            copy(logo_file_name, get_path(os.path.join(logo_dir_path, r.name + ".png")))
+                            copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                             # use relative paths in the html
                             # FIXME can we do it in a better way? (inside the Html class)
@@ -1198,7 +1194,7 @@ def main_enrichment():
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            fig_path = get_path(os.path.join(output_location, "fig"))
+            fig_path = npath(os.path.join(output_location, "fig"))
             html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading("Results for <b>" + original_name +
@@ -1213,7 +1209,7 @@ def main_enrichment():
                                  align="center", bold=False, size=3)
 
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
-            html.write(get_path(output_file_name_html))
+            html.write(npath(output_file_name_html))
 
             # Removing files
             for e in to_remove_list:
