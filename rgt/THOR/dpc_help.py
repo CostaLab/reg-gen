@@ -53,8 +53,10 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
             c = " ".join(t)
             os.system(c)
             #print(c, file=sys.stderr)
-            
-            t = ['bedGraphToBigWig', tmp_path, chrom_sizes, options.name + '-s%s-rep%s.bw' %(sig, rep)]
+
+            os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + tmp_path+ ' > ' + tmp_path +'.sort')
+
+            t = ['bedGraphToBigWig', tmp_path +'.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' %(sig, rep)]
             c = " ".join(t)
             os.system(c)
             #print(c, file=sys.stderr)
@@ -93,7 +95,7 @@ def _write_emp_func_data(data, name):
 
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
-    
+
     maxs = [] #max for x (mean), max for y (var)
     for i in range(2): 
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
@@ -487,7 +489,7 @@ def input(laptop):
                            help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
         parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
                           help="Store files in output directory. [default: %default]")
-        parser.add_option("--report", dest="report", default=False, action="store_true", \
+        parser.add_option("--report", dest="report", default=True, action="store_true", \
                           help="Generate HTML report about experiment. [default: %default]")
         parser.add_option("--deadzones", dest="deadzones", default=None, \
                           help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
