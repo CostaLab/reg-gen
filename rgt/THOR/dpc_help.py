@@ -17,15 +17,15 @@ import pysam
 import os.path
 import tempfile
 import numpy as np
-from math import fabs,log
+from math import fabs,log, ceil
 from numpy import linspace
 from operator import add
 from datetime import datetime
 from scipy.optimize import curve_fit
 from os.path import splitext, basename
 import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg', warn=False)           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+import matplotlib.pyplot as plt
 
 # import multiprocessing
 from input_parser import input_parser
@@ -94,16 +94,13 @@ def _write_emp_func_data(data, name):
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
     
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    
     maxs = [] #max for x (mean), max for y (var)
     for i in range(2): 
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
         maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
 
     for i in range(2):
-        x = linspace(0, max(plot_data[i][0]), max(plot_data[i][0])+1)
+        x = linspace(0, max(plot_data[i][0]), int(ceil(max(plot_data[i][0]))))
         y = _func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
         
         for j in range(2):
@@ -111,20 +108,20 @@ def _plot_func(plot_data, outputdir):
             #and save datapoints to files
             ext = 'original'
             if j == 1:
-                mpl.plt.xlim([0, maxs[0]])
-                mpl.plt.ylim([0, maxs[1]])
+                plt.xlim([0, maxs[0]])
+                plt.ylim([0, maxs[1]])
                 ext = 'norm'
-            ax = mpl.plt.subplot(111)
-            mpl.plt.plot(x, y, 'r', label = 'fitted polynomial') #plot polynom
-            mpl.plt.scatter(plot_data[i][0], plot_data[i][1], label = 'empirical datapoints') #plot datapoints
+            ax = plt.subplot(111)
+            plt.plot(x, y, 'r', label = 'fitted polynomial') #plot polynom
+            plt.scatter(plot_data[i][0], plot_data[i][1], label = 'empirical datapoints') #plot datapoints
             ax.legend()
-            mpl.plt.xlabel('mean')
-            mpl.plt.ylabel('variance')
-            mpl.plt.title('Estimated Mean-Variance Function')
+            plt.xlabel('mean')
+            plt.ylabel('variance')
+            plt.title('Estimated Mean-Variance Function')
             name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
             _write_emp_func_data(plot_data[i], name)
-            mpl.plt.savefig(FOLDER_REPORT_PICS + name + '.png')
-            mpl.plt.close()
+            plt.savefig(FOLDER_REPORT_PICS + name + '.png')
+            plt.close()
 
 def _get_data_rep(overall_coverage, name, debug, sample_size):
     """Return list of (mean, var) points for samples 0 and 1"""
@@ -368,15 +365,15 @@ def _output_ext_data(ext_data_list, bamfiles):
     for i, ext_data in enumerate(ext_data_list):
         d1 = map(lambda x: x[0], ext_data)
         d2 = map(lambda x: x[1], ext_data)
-        ax = mpl.plt.subplot(111)
-        mpl.plt.xlabel('shift')
-        mpl.plt.ylabel('convolution')
-        mpl.plt.title('Fragment Size Estimation')
-        mpl.plt.plot(d2, d1, label=names[i])
+        ax = plt.subplot(111)
+        plt.xlabel('shift')
+        plt.ylabel('convolution')
+        plt.title('Fragment Size Estimation')
+        plt.plot(d2, d1, label=names[i])
     
     ax.legend()
-    mpl.plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
-    mpl.plt.close()
+    plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
+    plt.close()
     
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
     """Compute Extension sizes for bamfiles and input files"""
