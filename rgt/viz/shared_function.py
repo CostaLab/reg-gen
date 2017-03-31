@@ -454,7 +454,6 @@ def mp_count_intersect(inputs):
             # except:
             #    self_frequency[ty][q.name] = [c[2]]
 
-    # qname, nalist, qlen_dict[ty][q.name], counts[ty][r.name][q.name], self_frequency[ty][q.name].append(c[2])
     return output
 
 
