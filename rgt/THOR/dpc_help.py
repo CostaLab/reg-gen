@@ -24,7 +24,7 @@ from datetime import datetime
 from scipy.optimize import curve_fit
 from os.path import splitext, basename
 import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+mpl.use('Agg', warn=False)           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 
 
 # import multiprocessing

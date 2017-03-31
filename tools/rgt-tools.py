@@ -9,7 +9,7 @@ import pysam
 import numpy
 import argparse
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 from os.path import expanduser
 home = expanduser("~")
