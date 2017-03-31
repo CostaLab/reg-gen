@@ -11,7 +11,7 @@ import argparse
 import datetime
 import subprocess
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 
 # Local Libraries
 # Distal Libraries

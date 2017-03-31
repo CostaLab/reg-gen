@@ -9,7 +9,7 @@ import getpass
 import argparse
 import datetime
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
 from boxplot import Boxplot

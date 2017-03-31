@@ -17,27 +17,27 @@ import pysam
 import os.path
 import tempfile
 import numpy as np
-from math import fabs
+from math import fabs,log, ceil
 from numpy import linspace
-from math import log, log10
 from operator import add
-from rgt.Util import which
-from rgt import __version__
 from datetime import datetime
-import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from os.path import splitext, basename
+import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+import matplotlib.pyplot as plt
 
 # import multiprocessing
 from input_parser import input_parser
-import matplotlib as mpl #necessary to plot without x11 server (for cluster)
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+# import mpl.pyplot as plt
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
 from optparse import OptionParser, OptionGroup
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.THOR.get_extension_size import get_extension_size
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
+from rgt.Util import which
+from rgt import __version__
 
 FOLDER_REPORT = None
 
@@ -94,16 +94,13 @@ def _write_emp_func_data(data, name):
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
     
-    import warnings
-    warnings.filterwarnings("ignore", category=DeprecationWarning)
-    
     maxs = [] #max for x (mean), max for y (var)
     for i in range(2): 
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
         maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
 
     for i in range(2):
-        x = linspace(0, max(plot_data[i][0]), max(plot_data[i][0])+1)
+        x = linspace(0, max(plot_data[i][0]), int(ceil(max(plot_data[i][0]))))
         y = _func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
         
         for j in range(2):
