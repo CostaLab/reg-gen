@@ -19,7 +19,7 @@ import os.path
 import numpy as np
 from math import fabs, log, ceil
 from operator import add
-from os.path import splitext, basename, abspath
+from os.path import splitext, basename
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
 
@@ -30,7 +30,7 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.THOR.get_extension_size import get_extension_size
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
 from input_parser import input_parser
-from rgt.Util import which
+from rgt.Util import which, npath
 from rgt import __version__
 
 # External
@@ -50,7 +50,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
         rep = i if i < dims[0] else i - dims[0]
         sig = 1 if i < dims[0] else 2
 
-        temp_bed = abspath(options.name + '-s%s-rep%s_temp.bed' % (sig, rep))
+        temp_bed = npath(options.name + '-s%s-rep%s_temp.bed' % (sig, rep))
 
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
@@ -549,7 +549,7 @@ def handle_input():
     if len(args) != 1:
         parser.error("Please give config file")
 
-    config_path = abspath(args[0])
+    config_path = npath(args[0])
 
     if not os.path.isfile(config_path):
         parser.error("Config file %s does not exist!" % config_path)
@@ -600,7 +600,7 @@ def handle_input():
               file=sys.stderr)
 
     if options.outputdir:
-        options.outputdir = abspath(options.outputdir)
+        options.outputdir = npath(options.outputdir)
         if os.path.isdir(options.outputdir) and sum(
                 map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
             parser.error("Output directory exists and contains files with names starting with your chosen experiment "

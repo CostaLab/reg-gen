@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from os.path import abspath
+from rgt.Util import npath
 
 
 def get_data_block(filepath, feature):
@@ -49,19 +49,19 @@ def get_data_block(filepath, feature):
 
 def input_parser(filepath):
     bamfiles_1 = get_data_block(filepath, "rep1")
-    bamfiles_1 = map(abspath, bamfiles_1)
+    bamfiles_1 = map(npath, bamfiles_1)
 
     bamfiles_2 = get_data_block(filepath, "rep2")
-    bamfiles_2 = map(abspath, bamfiles_2)
+    bamfiles_2 = map(npath, bamfiles_2)
 
-    genome = abspath(get_data_block(filepath, "genome"))
-    chrom_sizes = abspath(get_data_block(filepath, "chrom_sizes"))
+    genome = npath(get_data_block(filepath, "genome"))
+    chrom_sizes = npath(get_data_block(filepath, "chrom_sizes"))
 
     inputs1 = get_data_block(filepath, "inputs1")
-    inputs1 = map(abspath, inputs1)
+    inputs1 = map(npath, inputs1)
 
     inputs2 = get_data_block(filepath, "inputs2")
-    inputs2 = map(abspath, inputs2)
+    inputs2 = map(npath, inputs2)
 
     dims = [len(bamfiles_1), len(bamfiles_2)]
     

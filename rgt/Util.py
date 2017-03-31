@@ -14,6 +14,12 @@ import ConfigParser
 import traceback
 from optparse import OptionParser,BadOptionError,AmbiguousOptionError
 
+
+def npath(filename):
+    """Returns a normalised, absolute version of the path, with expanded user directory."""
+    return os.path.abspath(os.path.expanduser(filename))
+
+
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
 
