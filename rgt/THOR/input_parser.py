@@ -54,8 +54,16 @@ def input_parser(filepath):
     bamfiles_2 = get_data_block(filepath, "rep2")
     bamfiles_2 = map(npath, bamfiles_2)
 
-    genome = npath(get_data_block(filepath, "genome"))
+    # genome is optional, so if we get an empty list
+    # we set it to None, otherwise we normalise the path
+    genome = get_data_block(filepath, "genome")
+    genome = npath(genome) if genome else None
+
+    # the chrom sizes are not optional, but right now it's undefined
+    # what happens if the user doesn't specify them, or specifies more
+    # than one. So we just relay whatever we got from the file.
     chrom_sizes = npath(get_data_block(filepath, "chrom_sizes"))
+    chrom_sizes = npath(chrom_sizes) if chrom_sizes else chrom_sizes
 
     inputs1 = get_data_block(filepath, "inputs1")
     inputs1 = map(npath, inputs1)
@@ -70,9 +78,6 @@ def input_parser(filepath):
     else:
         inputs = inputs1 + inputs2
 
-    if not genome:
-        genome = None
-    
     return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
 
 
