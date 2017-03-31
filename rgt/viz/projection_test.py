@@ -3,6 +3,8 @@ from __future__ import print_function
 from __future__ import division
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
+import numpy
+
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html

@@ -641,14 +641,14 @@ def main():
 
         
         ################### Venn Diagram ##########################################
-        if args.mode=='venn':
-            print("\n################# Venn Diagram ###############")
-            if not os.path.exists(os.path.join(args.o, args.t)):
-                os.makedirs(os.path.join(args.o, args.t))
-            sets = [s for s in [args.s1, args.s2, args.s3, args.s4] if s ]
-            venn = Venn(sets=sets, organism=args.organism)
-            f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
-            output(f=f, directory = args.o, folder = args.t, filename="venn", pdf=True)
+        # if args.mode=='venn':
+        #     print("\n################# Venn Diagram ###############")
+        #     if not os.path.exists(os.path.join(args.o, args.t)):
+        #         os.makedirs(os.path.join(args.o, args.t))
+        #     sets = [s for s in [args.s1, args.s2, args.s3, args.s4] if s ]
+        #     venn = Venn(sets=sets, organism=args.organism)
+        #     f = venn.venn_diagram(directory=args.o, title=args.t,labels = [args.l1, args.l2, args.l3, args.l4])
+        #     output(f=f, directory = args.o, folder = args.t, filename="venn", pdf=True)
 
         ################### Integration ##########################################
         if args.mode=='integration':

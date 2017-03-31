@@ -1,11 +1,21 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
+import os
+import numpy
+from collections import OrderedDict
+from matplotlib import pyplot as plt
 from scipy.stats import mstats, mannwhitneyu
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # Local Libraries
 # Distal Libraries
-from shared_function import *
+from rgt.Util import Html
+from rgt.CoverageSet import CoverageSet
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.ExperimentalMatrix import ExperimentalMatrix
+from shared_function import output_array, gen_tags, tag_from_r, colormap, multiple_correction,\
+                            value2str
+
 
 ###########################################################################################
 #                    Boxplot

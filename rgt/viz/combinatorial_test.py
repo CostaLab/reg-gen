@@ -1,3 +1,12 @@
+import sys
+import copy
+import itertools
+from collections import OrderedDict
+from rgt.Util import OverlapType
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.ExperimentalMatrix import ExperimentalMatrix
+
+
 
 ###########################################################################################
 #                    Combinatorial test
@@ -16,9 +25,9 @@ class Combinatorial:
             for rs in self.regions:
                 ty = self.EM.get_type(rs.name, groupby)
                 try:
-                    grouped_regions[ty].append(rs)
+                    self.grouped_regions[ty].append(rs)
                 except:
-                    grouped_regions[ty] = [rs]
+                    self.grouped_regions[ty] = [rs]
         else:
             print("** Please define grouping column '-g'")
             sys.exit(1)

@@ -23,10 +23,9 @@ from operator import add
 from datetime import datetime
 from scipy.optimize import curve_fit
 from os.path import splitext, basename
-import matplotlib as mpl #necessary to plot without x11 server (for cluster)
+import matplotlib as mpl
 mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 import matplotlib.pyplot as plt
-
 # import multiprocessing
 from input_parser import input_parser
 # import mpl.pyplot as plt
@@ -41,6 +40,7 @@ from rgt import __version__
 
 FOLDER_REPORT = None
 
+
 def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
     for i in range(len(bamfiles)):
         rep = i if i < dims[0] else i - dims[0]
@@ -52,19 +52,15 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
             t = ['bigWigMerge'] + files + [tmp_path]
             c = " ".join(t)
             os.system(c)
-            #print(c, file=sys.stderr)
 
             os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + tmp_path+ ' > ' + tmp_path +'.sort')
 
             t = ['bedGraphToBigWig', tmp_path +'.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' %(sig, rep)]
             c = " ".join(t)
             os.system(c)
-            #print(c, file=sys.stderr)
-            
-            t = ['rm'] + files
-            c = " ".join(t)
-            os.system(c)
-            #print(c, file=sys.stderr)
+
+            for f in files:
+                os.remove(f)
         else:
             ftarget = [options.name + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
             for i in range(len(ftarget)):
@@ -72,7 +68,8 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
                 c = " ".join(c)
                 os.system(c)
                 #print(c, file=sys.stderr)
-            
+
+
 def _func_quad_2p(x, a, c):
     """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
     x may be an array or a single float"""
@@ -85,6 +82,7 @@ def _func_quad_2p(x, a, c):
     else:
         return max(x, fabs(a) * x**2 + x + fabs(c))
 
+
 def _write_emp_func_data(data, name):
     """Write mean and variance data"""
     assert len(data[0]) == len(data[1])
@@ -92,6 +90,7 @@ def _write_emp_func_data(data, name):
     for i in range(len(data[0])):
         print(data[0][i], data[1][i], sep='\t', file=f)
     f.close()
+
 
 def _plot_func(plot_data, outputdir):
     """Plot estimated and empirical function"""
@@ -136,14 +135,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         r = np.random.randint(cov.shape[1], size=sample_size)
         r.sort()
         cov = cov[:,r]
-        
-        #f = open(name + str(i) + '.data', 'w')
-        #m = list(np.asarray(cov).reshape(-1))
-        #for j in range(len(m)):
-        #    print(m[j], file=f)
-        #f.close()
-        #sys.exit()
-        
+
         m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
         n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
         assert len(m) == len(n)
@@ -195,7 +187,6 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
     if report:
         _plot_func(plot_data, outputdir)
     
-    
     if poisson:
         print("Use Poisson distribution as emission", file=sys.stderr)
         p[0] = 0
@@ -203,8 +194,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
         res = [np.array([0, 0]), np.array([0, 0])]
     
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
-    
-    
+
     
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     print("Computing info...", file=sys.stderr)
@@ -222,9 +212,11 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     f.close()
     g.close()
 
+
 def _compute_pvalue((x, y, side, distr)):
     a, b = int(np.mean(x)), int(np.mean(y))
     return -get_log_pvalue_new(a, b, side, distr)
+
 
 def _get_log_ratio(l1, l2):
     l1, l2 = float(np.sum(np.array(l1))), float(np.sum(np.array(l2)))
@@ -285,8 +277,8 @@ def _merge_consecutive_bins(tmp_peaks, distr):
 def _get_covs(DCS, i, as_list=False):
     """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
     if not as_list:
-        cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
-        cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
+        cov1 = int(np.mean(DCS.overall_coverage[0][:, DCS.indices_of_interest[i]]))
+        cov2 = int(np.mean(DCS.overall_coverage[1][:, DCS.indices_of_interest[i]]))
     else:
         cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
         cov1 = map(lambda x: x[0], np.asarray((cov1)))
@@ -294,6 +286,7 @@ def _get_covs(DCS, i, as_list=False):
         cov2 = map(lambda x: x[0], np.asarray((cov2)))
     
     return cov1, cov2
+
 
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
@@ -331,7 +324,6 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
             tmp.append(tmp_peaks[j])
     tmp_peaks = tmp
 
-    
     pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr) #merge consecutive peaks and compute p-value
     regions = merge_delete(exts, merge, peaks, pvalues) #postprocessing, returns GenomicRegionSet with merged regions
     if deadzones:
@@ -376,7 +368,8 @@ def _output_ext_data(ext_data_list, bamfiles):
     ax.legend()
     plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
     plt.close()
-    
+
+
 def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
     """Compute Extension sizes for bamfiles and input files"""
     start = 0
@@ -400,6 +393,7 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
 
     return exts, exts_inputs
 
+
 def get_all_chrom(bamfiles):
     chrom = set()
     for bamfile in bamfiles:
@@ -409,6 +403,7 @@ def get_all_chrom(bamfiles):
             if c not in chrom:
                 chrom.add(c)
     return chrom
+
 
 def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
                inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
@@ -443,11 +438,14 @@ class HelpfulOptionParser(OptionParser):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
+
 def _callback_list(option, opt, value, parser):
     setattr(parser.values, option.dest, map(lambda x: int(x), value.split(',')))
 
+
 def _callback_list_float(option, opt, value, parser):
     setattr(parser.values, option.dest, map(lambda x: float(x), value.split(',')))
+
 
 def input(laptop):
     parser = HelpfulOptionParser(usage=__doc__)
@@ -557,7 +555,6 @@ def input(laptop):
         #                  help="HMM with 3 free parameters[default: %default]")
         
 	(options, args) = parser.parse_args()
-    
     options.save_wig = False
     options.exts_inputs = None
     options.verbose = False
