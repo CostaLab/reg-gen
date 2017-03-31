@@ -11,32 +11,36 @@ software, and you are welcome to redistribute it under certain
 conditions. Please see LICENSE file for details.
 """
 
+# Python
 from __future__ import print_function
 import sys
 import pysam
 import os.path
-import tempfile
 import numpy as np
-from math import fabs,log, ceil
-from numpy import linspace
+from math import fabs, log, ceil
 from operator import add
+from os.path import splitext, basename, abspath
+from optparse import OptionParser, OptionGroup
 from datetime import datetime
-from scipy.optimize import curve_fit
-from os.path import splitext, basename
-import matplotlib as mpl
-mpl.use('Agg')           #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
-import matplotlib.pyplot as plt
-# import multiprocessing
-from input_parser import input_parser
-# import mpl.pyplot as plt
+
+# Internal
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
-from optparse import OptionParser, OptionGroup
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.THOR.get_extension_size import get_extension_size
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
+from input_parser import input_parser
 from rgt.Util import which
 from rgt import __version__
+
+# External
+from numpy import linspace
+from scipy.optimize import curve_fit
+import matplotlib as mpl
+#see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 
 FOLDER_REPORT = None
 
@@ -45,29 +49,32 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
     for i in range(len(bamfiles)):
         rep = i if i < dims[0] else i - dims[0]
         sig = 1 if i < dims[0] else 2
-        _, tmp_path = tempfile.mkstemp()
+
+        temp_bed = abspath(options.name + '-s%s-rep%s_temp.bed' % (sig, rep))
+
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
             files = filter(lambda x: os.path.isfile(x), files)
-            t = ['bigWigMerge'] + files + [tmp_path]
+            t = ['bigWigMerge'] + files + [temp_bed]
             c = " ".join(t)
             os.system(c)
 
-            os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + tmp_path+ ' > ' + tmp_path +'.sort')
+            os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + temp_bed + ' > ' + temp_bed +'.sort')
 
-            t = ['bedGraphToBigWig', tmp_path +'.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' %(sig, rep)]
+            t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' % (sig, rep)]
             c = " ".join(t)
             os.system(c)
 
-            for f in files:
-                os.remove(f)
+            # for f in files:
+            #     os.remove(f)
+            # os.remove(temp_bed)
+            # os.remove(temp_bed + ".sort")
         else:
             ftarget = [options.name + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
             for i in range(len(ftarget)):
                 c = ['mv', files[i], ftarget[i]]
                 c = " ".join(c)
                 os.system(c)
-                #print(c, file=sys.stderr)
 
 
 def _func_quad_2p(x, a, c):
@@ -124,6 +131,7 @@ def _plot_func(plot_data, outputdir):
             plt.savefig(FOLDER_REPORT_PICS + name + '.png')
             plt.close()
 
+
 def _get_data_rep(overall_coverage, name, debug, sample_size):
     """Return list of (mean, var) points for samples 0 and 1"""
     data_rep = []
@@ -131,7 +139,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
         h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
         cov = cov[:,h] #remove 0-columns
-	
+
         r = np.random.randint(cov.shape[1], size=sample_size)
         r.sort()
         cov = cov[:,r]
@@ -153,7 +161,8 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)]
     
     return data_rep
-    
+
+
 def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
@@ -236,6 +245,7 @@ def _get_log_ratio(l1, l2):
             return sys.maxint
     else:
         return sys.maxint
+
 
 def _merge_consecutive_bins(tmp_peaks, distr):
     """Merge consecutive peaks and compute p-value. Return list 
@@ -422,13 +432,17 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
         
     exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
     
-    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path, binsize=binsize, stepsize=stepsize,rmdup=rmdup,\
-                                  path_bamfiles = bamfiles, path_inputs = inputs, exts = exts, exts_inputs = exts_inputs, factors_inputs = factors_inputs, \
-                                  chrom_sizes=chrom_sizes, verbose=verbose, no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug, \
-                                  norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip, save_wig=save_wig, strand_cov=True,
-                                  housekeeping_genes=housekeeping_genes, tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content, \
-                                  gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw, folder_report = FOLDER_REPORT, report=report,
-                                  save_input=save_input, m_threshold=m_threshold, a_threshold=a_threshold)
+    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path,
+                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, path_bamfiles=bamfiles,
+                                     path_inputs=inputs, exts=exts, exts_inputs=exts_inputs,
+                                     factors_inputs=factors_inputs, chrom_sizes=chrom_sizes, verbose=verbose,
+                                     no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug,
+                                     norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip,
+                                     save_wig=save_wig, strand_cov=True, housekeeping_genes=housekeeping_genes,
+                                     tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content,
+                                     gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw,
+                                     folder_report=FOLDER_REPORT, report=report, save_input=save_input,
+                                     m_threshold=m_threshold, a_threshold=a_threshold)
     return multi_cov_set
 
 
@@ -447,218 +461,188 @@ def _callback_list_float(option, opt, value, parser):
     setattr(parser.values, option.dest, map(lambda x: float(x), value.split(',')))
 
 
-def input(laptop):
+def handle_input():
     parser = HelpfulOptionParser(usage=__doc__)
-    if laptop:
-        print("---------- TEST MODE ----------", file=sys.stderr)
-        (options, args) = parser.parse_args()
-        config_path = '/home/manuel/workspace/eclipse/office_share/blueprint/playground/input_test'
-        args.append('')
-        args[0] = config_path
-        #config_path = '/home/manuel/workspace/eclipse/office_share/simulator/test.config'
-        bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-        options.regions = '/home/manuel/r.bed'
-        options.exts = [200, 200, 200, 200, 200]
-        options.exts_inputs = [200, 200, 200, 200, 200]
-        options.pcutoff = 1
-        options.name='test'
-        options.merge=True
-        options.stepsize=50
-        options.binsize=100
-        options.save_wig = False
-        options.par = 70
-        options.factors_inputs = None
-        options.verbose = True
-        options.no_gc_content = False
-        options.debug = True
-        options.norm_regions = None #'/home/manuel/data/testdata/norm_regions.bed'
-        options.scaling_factors_ip = False
-        options.housekeeping_genes = False
-        options.version = None
-        options.outputdir = None #'/home/manuel/test/'
-        options.report = False
-        options.rmdup = False
-    else:
-        parser.add_option("-n", "--name", default=None, dest="name", type="string",\
-                          help="Experiment's name and prefix for all files that are created.")
-        parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true", \
-                          help="Merge peaks which have a distance less than the estimated mean fragment size (recommended for histone data). [default: do not merge]")
-        parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",\
-                           help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
-        parser.add_option("--output-dir", dest="outputdir", default=None, type="string", \
-                          help="Store files in output directory. [default: %default]")
-        parser.add_option("--report", dest="report", default=True, action="store_true", \
-                          help="Generate HTML report about experiment. [default: %default]")
-        parser.add_option("--deadzones", dest="deadzones", default=None, \
-                          help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
-        parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true", \
-                          help="Do not use multipe test correction for p-values (Benjamini/Hochberg). [default: %default]")
-        parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",\
-                          help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. [default: %default]")
-        parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,\
-                          help="Read's extension size for BAM files (comma separated list for each BAM file in config file).\
-                          If option is not chosen, estimate extension sizes. [default: %default]")
-        parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback", callback=_callback_list_float,\
-                          help="Normalization factors for input-DNA (comma separated list for each BAM file in config file).\
-                          If option is not chosen, estimate factors. [default: %default]")
-        parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback', callback=_callback_list_float,\
-                          help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for each BAM file in config file. If option is not chosen, follow normalization strategy (TMM or HK approach) [default: %default]")
-        parser.add_option("--save-input", dest="save_input", default=False, action="store_true", \
-                          help="Save input-DNA file if available. [default: %default]")
-        parser.add_option("--version", dest="version", default=False, action="store_true",\
-                           help="Show script's version.")
-        
-        group = OptionGroup(parser, "Advanced options")
-        group.add_option("--regions", dest="regions", default=None, type="string",\
-                           help="Define regions (BED format) to restrict the analysis, that is, where to train the HMM and search for DPs.\
-                           It is faster, but less precise.")
-        group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",\
-                          help="Size of underlying bins for creating the signal. [default: %default]")
-        group.add_option("-s", "--step", dest="stepsize", default=50, type="int",\
-                          help="Stepsize with which the window consecutively slides across the genome to create the signal. [default: %default]")
-        group.add_option("--debug", default=False, dest="debug", action="store_true", \
-                          help="Output debug information. Warning: space consuming! [default: %default]")
-        group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true", \
-                          help="Do not normalize towards GC content. [default: %default]")
-        group.add_option("--norm-regions", default=None, dest="norm_regions", type="str", \
-                          help="Restrict normalization to particular regions (BED format). [default: %default]")
-        group.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",\
-                          help="Fold change parameter to define training set (t_1, see paper). [default: %default]")
-        group.add_option("-t", "--threshold", dest="threshold", default=95, type="float",\
-                          help="Minimum signal support for differential peaks to define training set as percentage (t_2, see paper). [default: %default]")
-        group.add_option("--size", dest="size_ts", default=10000, type="int",\
-                          help="Number of bins the HMM's training set constists of. [default: %default]")
-        group.add_option("--par", dest="par", default=1, type="int",\
-                          help="Percentile for p-value postprocessing filter. [default: %default]")
-        group.add_option("--poisson", default=False, dest="poisson", action="store_true", \
-                          help="Use binomial distribution as emmission. [default: %default]")
-        group.add_option("--single-strand", default=False, dest="singlestrand", action="store_true", \
-                         help="Allow single strand BAM file as input. [default: %default]")
-        group.add_option("--m_threshold", default=80, dest="m_threshold", type="int",
-                         help="Define the M threshold of percentile for training TMM. [default: %default]")
-        group.add_option("--a_threshold", default=95, dest="a_threshold", type="int",
-                         help="Define the A threshold of percentile for training TMM. [default: %default]")
-        group.add_option("--rmdup", default=False, dest="rmdup", action="store_true",
-                         help="Remove the duplicate reads [default: %default]")
-        parser.add_option_group(group)
-        
-        ##deprecated options
-        #parser.add_option("--distr", dest="distr", default="negbin", type="str",\
-        #                  help="HMM's emission distribution (negbin, binom). [default: %default]")
-        #parser.add_option("--save-wig", dest="save_wig", default=False, action="store_true", help="save bw as well as wig files. Warning: space consuming! [default: %default]")
-        #parser.add_option("--norm-regions", default=None, dest="norm_regions", type="str", help="Define regions <BED> that are used for normalization [default: %default]")
-        #parser.add_option("--ext-inputs", default=None, dest="exts_inputs", type="str", action='callback', callback=_callback_list,\
-        #                  help="Read's extension size for input files. If option is not chosen, estimate extension sizes. [default: %default]")
-        #parser.add_option("-v", "--verbose", default=False, dest="verbose", action="store_true", \
-        #                  help="Output among others initial state distribution, putative differential peaks, genomic signal and histograms (original and smoothed). [default: %default]")
-        #group.add_option("--three-parameter", default=False, dest="hmm_free_para", action="store_true", \
-        #                  help="HMM with 3 free parameters[default: %default]")
-        
-	(options, args) = parser.parse_args()
+
+    parser.add_option("-n", "--name", default=None, dest="name", type="string",
+                      help="Experiment's name and prefix for all files that are created.")
+    parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true",
+                      help="Merge peaks which have a distance less than the estimated mean fragment size "
+                           "(recommended for histone data). [default: do not merge]")
+    parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",
+                      help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
+    parser.add_option("--output-dir", dest="outputdir", default=None, type="string",
+                      help="Store files in output directory. [default: %default]")
+    parser.add_option("--report", dest="report", default=True, action="store_true",
+                      help="Generate HTML report about experiment. [default: %default]")
+    parser.add_option("--deadzones", dest="deadzones", default=None,
+                      help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
+    parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true",
+                      help="Do not use multipe test correction for p-values (Benjamini/Hochberg). [default: %default]")
+    parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",
+                      help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. "
+                           "[default: %default]")
+    parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,
+                      help="Read's extension size for BAM files (comma separated list for each BAM file in config "
+                           "file). If option is not chosen, estimate extension sizes. [default: %default]")
+    parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback",
+                      callback=_callback_list_float,
+                      help="Normalization factors for input-DNA (comma separated list for each BAM file in config "
+                           "file). If option is not chosen, estimate factors. [default: %default]")
+    parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback',
+                      callback=_callback_list_float,
+                      help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for "
+                           "each BAM file in config file. If option is not chosen, follow normalization strategy "
+                           "(TMM or HK approach) [default: %default]")
+    parser.add_option("--save-input", dest="save_input", default=False, action="store_true",
+                      help="Save input-DNA file if available. [default: %default]")
+    parser.add_option("--version", dest="version", default=False, action="store_true",
+                      help="Show script's version.")
+
+    group = OptionGroup(parser, "Advanced options")
+    group.add_option("--regions", dest="regions", default=None, type="string",
+                     help="Define regions (BED format) to restrict the analysis, that is, where to train the HMM and "
+                          "search for DPs. It is faster, but less precise.")
+    group.add_option("-b", "--binsize", dest="binsize", default=100, type="int",
+                     help="Size of underlying bins for creating the signal. [default: %default]")
+    group.add_option("-s", "--step", dest="stepsize", default=50, type="int",
+                     help="Stepsize with which the window consecutively slides across the genome to create the "
+                          "signal. [default: %default]")
+    group.add_option("--debug", default=False, dest="debug", action="store_true",
+                     help="Output debug information. Warning: space consuming! [default: %default]")
+    group.add_option("--no-gc-content", dest="no_gc_content", default=False, action="store_true",
+                     help="Do not normalize towards GC content. [default: %default]")
+    group.add_option("--norm-regions", default=None, dest="norm_regions", type="str",
+                     help="Restrict normalization to particular regions (BED format). [default: %default]")
+    group.add_option("-f", "--foldchange", dest="foldchange", default=1.6, type="float",
+                     help="Fold change parameter to define training set (t_1, see paper). [default: %default]")
+    group.add_option("-t", "--threshold", dest="threshold", default=95, type="float",
+                     help="Minimum signal support for differential peaks to define training set as percentage "
+                          "(t_2, see paper). [default: %default]")
+    group.add_option("--size", dest="size_ts", default=10000, type="int",
+                     help="Number of bins the HMM's training set constists of. [default: %default]")
+    group.add_option("--par", dest="par", default=1, type="int",
+                     help="Percentile for p-value postprocessing filter. [default: %default]")
+    group.add_option("--poisson", default=False, dest="poisson", action="store_true",
+                     help="Use binomial distribution as emmission. [default: %default]")
+    group.add_option("--single-strand", default=False, dest="singlestrand", action="store_true",
+                     help="Allow single strand BAM file as input. [default: %default]")
+    group.add_option("--m_threshold", default=80, dest="m_threshold", type="int",
+                     help="Define the M threshold of percentile for training TMM. [default: %default]")
+    group.add_option("--a_threshold", default=95, dest="a_threshold", type="int",
+                     help="Define the A threshold of percentile for training TMM. [default: %default]")
+    group.add_option("--rmdup", default=False, dest="rmdup", action="store_true",
+                     help="Remove the duplicate reads [default: %default]")
+    parser.add_option_group(group)
+
+    (options, args) = parser.parse_args()
     options.save_wig = False
     options.exts_inputs = None
     options.verbose = False
     options.hmm_free_para = False
-    
+
     if options.version:
         print("")
         print(__version__)
         sys.exit()
-    
+
     if len(args) != 1:
         parser.error("Please give config file")
-        
-    config_path = args[0]
+
+    config_path = abspath(args[0])
 
     if not os.path.isfile(config_path):
-        parser.error("Config file %s does not exist!" %config_path)
+        parser.error("Config file %s does not exist!" % config_path)
 
     bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
-    
+
     if not genome:
         options.no_gc_content = True
-    
+
     if options.exts and len(options.exts) != len(bamfiles):
         parser.error("Number of Extension Sizes must equal number of bamfiles")
-    
+
     if options.exts_inputs and len(options.exts_inputs) != len(inputs):
         parser.error("Number of Input Extension Sizes must equal number of input bamfiles")
-    
+
     if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
         parser.error("Number of scaling factors for IP must equal number of bamfiles")
 
     for bamfile in bamfiles:
         if not os.path.isfile(bamfile):
-            parser.error("BAM file %s does not exist!" %bamfile)
+            parser.error("BAM file %s does not exist!" % bamfile)
 
     if not inputs and options.factors_inputs:
         print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)
         options.factors_inputs = None
-    
+
     if options.factors_inputs and len(options.factors_inputs) != len(bamfiles):
         parser.error("factors for input-DNA must equal number of BAM files!")
-    
+
     if inputs:
         for bamfile in inputs:
             if not os.path.isfile(bamfile):
-                parser.error("BAM file %s does not exist!" %bamfile)
-    
+                parser.error("BAM file %s does not exist!" % bamfile)
+
     if options.regions:
         if not os.path.isfile(options.regions):
-            parser.error("Region file %s does not exist!" %options.regions)
-    
+            parser.error("Region file %s does not exist!" % options.regions)
+
     if genome and not os.path.isfile(genome):
-        parser.error("Genome file %s does not exist!" %genome)
-    
+        parser.error("Genome file %s does not exist!" % genome)
+
     if options.name is None:
-        d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_"). replace(".", "_").split("_")
-        options.name = "THOR-exp" + "-" + "_".join(d[:len(d)-1])
-    
+        d = str(datetime.now()).replace("-", "_").replace(":", "_").replace(" ", "_").replace(".", "_").split("_")
+        options.name = "THOR-exp" + "-" + "_".join(d[:len(d) - 1])
+
     if not which("wigToBigWig") or not which("bedGraphToBigWig") or not which("bigWigMerge"):
-        print("Warning: wigToBigWig, bigWigMerge or bedGraphToBigWig not found! Signal will not be stored!", file=sys.stderr)
+        print("Warning: wigToBigWig, bigWigMerge or bedGraphToBigWig not found! Signal will not be stored!",
+              file=sys.stderr)
 
     if options.outputdir:
-        options.outputdir = os.path.expanduser(options.outputdir) #replace ~ with home path
-        if os.path.isdir(options.outputdir) and sum(map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
-            parser.error("Output directory exists and contains files with names starting with your chosen experiment name! Do nothing to prevent file overwriting!")
+        options.outputdir = abspath(options.outputdir)
+        if os.path.isdir(options.outputdir) and sum(
+                map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
+            parser.error("Output directory exists and contains files with names starting with your chosen experiment "
+                         "name! Do nothing to prevent file overwriting!")
         if not os.path.exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:
-        options.outputdir = os.getcwd() 
-    
+        options.outputdir = os.getcwd()
+
     options.name = os.path.join(options.outputdir, options.name)
-    
-    
+
     if os.path.isdir(os.path.join(options.outputdir, 'report/')):
-        parser.error("Folder 'report' already exits in output directory! Do nothing to prevent file overwriting! Please rename report folder or change working directory of THOR with the option --output-dir")
-       
+        parser.error("Folder 'report' already exits in output directory! Do nothing to prevent file overwriting! "
+                     "Please rename report folder or change working directory of THOR with the option --output-dir")
+
     if options.report:
         os.mkdir(os.path.join(options.outputdir, 'report/'))
         os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
         os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
-    
+
     global FOLDER_REPORT
     global FOLDER_REPORT_PICS
     global FOLDER_REPORT_DATA
     global OUTPUTDIR
     global NAME
-    
+
     FOLDER_REPORT = os.path.join(options.outputdir, 'report/')
     FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report/pics/')
     FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report/pics/data/')
     OUTPUTDIR = options.outputdir
     NAME = options.name
-    
+
     if not inputs:
         print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)
-    
+
     if not genome:
-        print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr) 
-    
+        print("Warning: Do not compute GC-content, as there is no genome file", file=sys.stderr)
+
     if options.exts is None:
         options.exts = []
-    
+
     if options.exts_inputs is None:
         options.exts_inputs = []
-    
-    return options, bamfiles, genome, chrom_sizes, dims, inputs, __version__
+
+    return options, bamfiles, genome, chrom_sizes, dims, inputs
