@@ -65,10 +65,10 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
             c = " ".join(t)
             os.system(c)
 
-            # for f in files:
-            #     os.remove(f)
-            # os.remove(temp_bed)
-            # os.remove(temp_bed + ".sort")
+            for f in files:
+                os.remove(f)
+            os.remove(temp_bed)
+            os.remove(temp_bed + ".sort")
         else:
             ftarget = [options.name + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
             for i in range(len(ftarget)):
