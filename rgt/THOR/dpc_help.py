@@ -617,9 +617,9 @@ def handle_input():
                      "Please rename report folder or change working directory of THOR with the option --output-dir")
 
     if options.report:
-        os.mkdir(os.path.join(options.outputdir, 'report/'))
-        os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
-        os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
+        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name)+"/"))
+        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/'))
+        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/data/'))
 
     global FOLDER_REPORT
     global FOLDER_REPORT_PICS
@@ -627,9 +627,9 @@ def handle_input():
     global OUTPUTDIR
     global NAME
 
-    FOLDER_REPORT = os.path.join(options.outputdir, 'report/')
-    FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report/pics/')
-    FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report/pics/data/')
+    FOLDER_REPORT = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name)+"/")
+    FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/')
+    FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/data/')
     OUTPUTDIR = options.outputdir
     NAME = options.name
 
