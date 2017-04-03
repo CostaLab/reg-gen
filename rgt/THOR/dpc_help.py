@@ -16,11 +16,10 @@ from __future__ import print_function
 import os
 import sys
 import pysam
-import os.path
 import numpy as np
 from math import fabs, log, ceil
 from operator import add
-from os.path import splitext, basename
+from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
 
@@ -55,7 +54,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
 
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
-            files = filter(lambda x: os.path.isfile(x), files)
+            files = filter(lambda x: isfile(x), files)
             t = ['bigWigMerge'] + files + [temp_bed]
             c = " ".join(t)
             os.system(c)
@@ -552,7 +551,7 @@ def handle_input():
 
     config_path = npath(args[0])
 
-    if not os.path.isfile(config_path):
+    if not isfile(config_path):
         parser.error("Config file %s does not exist!" % config_path)
 
     bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
@@ -570,7 +569,7 @@ def handle_input():
         parser.error("Number of scaling factors for IP must equal number of bamfiles")
 
     for bamfile in bamfiles:
-        if not os.path.isfile(bamfile):
+        if not isfile(bamfile):
             parser.error("BAM file %s does not exist!" % bamfile)
 
     if not inputs and options.factors_inputs:
@@ -582,14 +581,14 @@ def handle_input():
 
     if inputs:
         for bamfile in inputs:
-            if not os.path.isfile(bamfile):
+            if not isfile(bamfile):
                 parser.error("BAM file %s does not exist!" % bamfile)
 
     if options.regions:
-        if not os.path.isfile(options.regions):
+        if not isfile(options.regions):
             parser.error("Region file %s does not exist!" % options.regions)
 
-    if genome and not os.path.isfile(genome):
+    if genome and not isfile(genome):
         parser.error("Genome file %s does not exist!" % genome)
 
     if options.name is None:
@@ -602,26 +601,26 @@ def handle_input():
 
     if options.outputdir:
         options.outputdir = npath(options.outputdir)
-        if os.path.isdir(options.outputdir) and sum(
+        if isdir(options.outputdir) and sum(
                 map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
             parser.error("Output directory exists and contains files with names starting with your chosen experiment "
                          "name! Do nothing to prevent file overwriting!")
-        if not os.path.exists(options.outputdir):
+        if not exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:
         options.outputdir = os.getcwd()
 
-    options.name = os.path.join(options.outputdir, options.name)
+    options.name = join(options.outputdir, options.name)
 
-    if os.path.isdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name))):
-        parser.error("Folder 'report_"+os.path.basename(options.name)+"' already exits in output directory!" 
+    if isdir(join(options.outputdir, 'report_'+basename(options.name))):
+        parser.error("Folder 'report_"+basename(options.name)+"' already exits in output directory!" 
                      "Do nothing to prevent file overwriting! "
                      "Please rename report folder or change working directory of THOR with the option --output-dir")
 
     if options.report:
-        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name)+"/"))
-        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/'))
-        os.mkdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/data/'))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name)+"/"))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/'))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/data/'))
 
     global FOLDER_REPORT
     global FOLDER_REPORT_PICS
@@ -629,9 +628,9 @@ def handle_input():
     global OUTPUTDIR
     global NAME
 
-    FOLDER_REPORT = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name)+"/")
-    FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/')
-    FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report_'+os.path.basename(options.name), 'pics/data/')
+    FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
+    FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
+    FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
     OUTPUTDIR = options.outputdir
     NAME = options.name
 
