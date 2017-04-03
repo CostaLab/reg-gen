@@ -38,12 +38,13 @@ class RegionGiver:
             print("Call DPs on specified regions.", file=sys.stderr)
             with open(regions) as f:
                 for line in f:
-                    line = line.strip()
-                    line = line.split('\t')
-                    c, s, e = line[0], int(line[1]), int(line[2])
-            #if c in contained_chrom:                
-                    self.regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                    self.chrom_sizes_dict[c] = e
+                    if line:
+                        line = line.strip()
+                        line = line.split()
+                        c, s, e = line[0], int(line[1]), int(line[2])
+                #if c in contained_chrom:
+                        self.regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+                        self.chrom_sizes_dict[c] = e
         else:
             print("Call DPs on whole genome.", file=sys.stderr)
             with open(chrom_sizes) as f:
