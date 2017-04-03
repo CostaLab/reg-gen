@@ -13,6 +13,7 @@ conditions. Please see LICENSE file for details.
 
 # Python
 from __future__ import print_function
+import os
 import sys
 import pysam
 import os.path
