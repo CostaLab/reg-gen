@@ -612,8 +612,9 @@ def handle_input():
 
     options.name = os.path.join(options.outputdir, options.name)
 
-    if os.path.isdir(os.path.join(options.outputdir, 'report/')):
-        parser.error("Folder 'report' already exits in output directory! Do nothing to prevent file overwriting! "
+    if os.path.isdir(os.path.join(options.outputdir, 'report_'+os.path.basename(options.name))):
+        parser.error("Folder 'report_"+os.path.basename(options.name)+"' already exits in output directory!" 
+                     "Do nothing to prevent file overwriting! "
                      "Please rename report folder or change working directory of THOR with the option --output-dir")
 
     if options.report:
