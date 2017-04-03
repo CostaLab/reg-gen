@@ -105,8 +105,6 @@ def _plot_func(plot_data, outputdir):
     maxs = [] #max for x (mean), max for y (var)
     for i in range(2): 
         tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
-        print(tmp)
-        print(np.percentile(tmp, 90))
         maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
 
     for i in range(2):
@@ -475,8 +473,8 @@ def handle_input():
                       help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
     parser.add_option("--output-dir", dest="outputdir", default=None, type="string",
                       help="Store files in output directory. [default: %default]")
-    parser.add_option("--no-report", dest="report", default=True, action="store_false",
-                      help="Not generate HTML report about experiment. [default: False]")
+    parser.add_option("--report", dest="report", default=False, action="store_true",
+                      help="Generate HTML report about experiment. [default: %default]")
     parser.add_option("--deadzones", dest="deadzones", default=None,
                       help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
     parser.add_option("--no-correction", default=False, dest="no_correction", action="store_true",
