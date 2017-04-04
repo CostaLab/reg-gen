@@ -130,16 +130,12 @@ class CoverageSet:
                             print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
                                   j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
                         
-    def write_wig(self, filename, end):
+    def write_wig(self, filename):
         """Output coverage in wig format. 
         
         *Keyword arguments:*
         
-        - filename -- filepath
-        - end -- boolean
-        
-        .. warning:: Parameter end is deprecated! Please do not use it.
-        
+        - filename -- filepath        
         """
         f = open(filename, 'w')
         i = 0

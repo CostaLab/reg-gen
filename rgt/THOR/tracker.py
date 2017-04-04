@@ -25,14 +25,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import re
 import numpy as np
-from rgt.Util import Html, ConfigurationFile
+from rgt.Util import Html
 from collections import OrderedDict
 from os import path
 # import sys
 from datetime import datetime
 
+
 class Tracker:
     data = []
+
     def __init__(self, p, bamfiles, genome, chrom_sizes, dims, inputs, options, version):
         self.file = open(p, 'w')
         self.bamfiles = bamfiles
@@ -74,8 +76,7 @@ class Tracker:
                 
             text = " ".join(new)
         self.data.append((header, text))
-    
-    
+
     def _read_hk(self, p):
         d = []
         if path.isfile(p):
@@ -186,6 +187,7 @@ class Tracker:
     def make_html(self):
         html_header = "THOR"
         from rgt.THOR.dpc_help import FOLDER_REPORT
+
         #Links
         links_dict = OrderedDict()
         links_dict['Experimental Configuration'] = 'index.html#extinfo'
@@ -196,69 +198,71 @@ class Tracker:
         p = path.join(FOLDER_REPORT, 'pics/fragment_size_estimate.png')
         if path.isfile(p):
             links_dict['Fragment Size Estimate'] = 'index.html#fsestimate'
-        
+
         p = path.join(FOLDER_REPORT, 'pics/data/sample.data')
         if path.isfile(p):
             links_dict['Housekeeping Gene Normalization'] = 'index.html#norm'
         
         links_dict['References'] = 'index.html#ref'
         links_dict['Contact'] = 'index.html#contact'
-        
-        config_class = ConfigurationFile()
-        html = Html(name=html_header, links_dict=links_dict, fig_rpath= config_class.data_dir + '/fig/')
+
+        # copy basic rgt logo, style etc to local directory inside report
+        fig_path = path.join(FOLDER_REPORT, "fig")
+        html = Html(name=html_header, links_dict=links_dict, fig_dir=fig_path, fig_rpath="fig")
         
         try:
-            html.add_heading("Experimental Configuration", idtag = 'extinfo')
+            html.add_heading("Experimental Configuration", idtag='extinfo')
             self.make_ext_config(html)
         except:
             pass
-        
-        html.add_heading("Pre- and post-processing Features", idtag = 'prepostinfo')
+
+        html.add_heading("Pre- and post-processing Features", idtag='prepostinfo')
         self.make_pre_post(html)
         
         try:
-            html.add_heading("Sample Information", idtag = 'sampleinfo')
+            html.add_heading("Sample Information", idtag='sampleinfo')
             self.make_ext_scaling_table(html)
         except:
             pass
-        
+
         #Run Info
         try:
-            html.add_heading("HMM Information", idtag = 'hmminfo')
+            html.add_heading("HMM Information", idtag='hmminfo')
             self.make_hmm(html)
         except:
             pass
-        
+
         #Mean Variance Function
         try:
-            p = path.join(FOLDER_REPORT, "pics/mean_variance_func_cond_0_original.png")
+            p = path.join(FOLDER_REPORT, 'pics/mean_variance_func_cond_0_original.png')
             if path.isfile(p):
                 html.add_heading("Mean Variance Function", idtag='mvfunction')
-                html.add_figure(p, align="left", width="45%", more_images=[path.join(FOLDER_REPORT, 'pics/mean_variance_func_cond_1_original.png')])
+                html.add_figure(path.relpath(p, FOLDER_REPORT), align="left", width="45%",
+                                more_images=['pics/mean_variance_func_cond_1_original.png'])
                 info = "THOR uses a polynomial function to empirically describe the relationship between mean and variance in the data.\
                 The data the plot is based on can be found at report/pics/data for further downstream analysis."
                 self._write_text(html, info)
         except:
             pass
-        
+
         #Fragment Size Estimate
         try:
             p = path.join(FOLDER_REPORT, 'pics/fragment_size_estimate.png')
             if path.isfile(p):
-                html.add_heading("Fragment Size Estimate", idtag = 'fsestimate')
-                html.add_figure(p, align="left", width="45%")
+                html.add_heading("Fragment Size Estimate", idtag='fsestimate')
+                html.add_figure(path.relpath(p, FOLDER_REPORT), align="left", width="45%")
                 info = "THOR estimates the fragmentation sizes of each sample's reads. Here, the cross-correlation function [1] is shown. Their maxima give the\
                 fragmentation extension sizes.<br> The data the plot is based on can be found at report/pics/data for further downstream analysis."
                 self._write_text(html, info)
         except:
             pass
-        
+
         #HK normalization
         try:
             p = path.join(FOLDER_REPORT, 'pics/data/gene.data')
             if path.isfile(p):
                 d = self._read_hk(p)
-                html.add_heading("Housekeeping Gene Normalization", idtag = 'norm')
+                html.add_heading("Housekeeping Gene Normalization", idtag='norm')
                 html.add_zebra_table(header_list=['gene', 'quality q'], col_size_list=[1,150], type_list='s'*len(d), data_table=d)
                 info = "For active histone marks, housekeeping genes given by [4] can be used for normalization [1]. Here, the genes for the experiments are\
                 evaluated. For each gene i, we estimate the normalization factors with gene i and without gene i and compute the sums of squared deviations q.\
@@ -276,8 +280,8 @@ class Tracker:
                 self._write_text(html, info)
         except:
             pass
-        
-        html.add_heading("References", idtag = 'ref')
+
+        html.add_heading("References", idtag='ref')
         info = "[1] M. Allhoff, J. F. Pires, K. Ser&eacute;, M. Zenke, and I. G. Costa. Differential Peak Calling of ChIP-Seq \
         Signals with Replicates with THOR. <i>submitted.</i> <br>\
         [2] A. Mammana, M. Vingron, and H.-R. Chung. Inferring nucleosome positions with their histone mark annotation from chip data. \
@@ -287,9 +291,8 @@ class Tracker:
         [4] E. Eisenberg and E. Y. Levanon. Human housekeeping genes, revisited. Trends in genetics: TIG, 29(10):569-574, 2013."
         self._write_text(html, info)
         
-        html.add_heading("Contact", idtag = 'contact')
+        html.add_heading("Contact", idtag='contact')
         info = "If you have any questions, please don't hesitate to contact us: allhoff@aices.rwth-aachen.de"
         self._write_text(html, info)
         
         html.write(path.join(FOLDER_REPORT, "index.html"))
-        

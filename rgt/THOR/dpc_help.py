@@ -215,8 +215,8 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
-        print(chrom, start, end, states[i], cov1, cov2, sep = '\t', file=g)
-        print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep = '\t', file=f)
+        print(chrom, start, end, states[i], cov1, cov2, sep='\t', file=g)
+        print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep='\t', file=f)
 
     f.close()
     g.close()
