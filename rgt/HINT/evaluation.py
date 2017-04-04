@@ -13,12 +13,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pylab
 
-from pysam import Samfile
 
 # Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import OverlapType
-from ..Util import GenomeData
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.
@@ -59,12 +57,16 @@ class Evaluation:
         # Evaluate Statistics
         fpr = dict()
         tpr = dict()
-        roc_auc = dict()
         roc_auc_1 = dict()
-        roc_auc_2 = dict()
+        roc_auc_10 = dict()
+        roc_auc_50 = dict()
+        roc_auc_100 = dict()
         recall = dict()
         precision = dict()
-        prc_auc = dict()
+        prc_auc_1 = dict()
+        prc_auc_10 = dict()
+        prc_auc_50 = dict()
+        prc_auc_100 = dict()
 
         if "SEG" in self.footprint_type:
             mpbs_regions = GenomicRegionSet("TFBS")
@@ -90,6 +92,7 @@ class Evaluation:
                 # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
                 increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
                 intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
+                num_intersect_regions = len(intersect_regions)
                 for region in iter(intersect_regions):
                     region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
@@ -102,33 +105,37 @@ class Evaluation:
 
                 increased_score_mpbs_regions.sort_score()
 
-                fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(increased_score_mpbs_regions)
-                recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(increased_score_mpbs_regions)
+                fpr[i], tpr[i], roc_auc_1[i], roc_auc_10[i], roc_auc_50[i], roc_auc_100[i] = self.roc_curve(
+                    increased_score_mpbs_regions, num_intersect_regions)
+                recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = self.precision_recall_curve(
+                    increased_score_mpbs_regions, num_intersect_regions)
             elif self.footprint_type[i] == "SC":
                 footprints_regions.sort_score()
-                fpr[i], tpr[i], roc_auc[i], roc_auc_1[i], roc_auc_2[i] = self.roc_curve(footprints_regions)
-                recall[i], precision[i], prc_auc[i] = self.precision_recall_curve(footprints_regions)
+                fpr[i], tpr[i], roc_auc_1[i], roc_auc_10[i], roc_auc_50[i], roc_auc_100[i] = self.roc_curve(footprints_regions)
+                recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = self.precision_recall_curve(footprints_regions)
 
         # Output the statistics results into text
         stats_fname = self.output_location + self.tf_name + "_stats.txt"
-        stats_header = ["METHOD", "AUC_100", "AUC_10", "AUC_1", "AUPR"]
+        stats_header = ["METHOD", "AUC_100", "AUC_50", "AUC_10", "AUC_1", "AUPR_100", "AUPR_50", "AUPR_10", "AUPR_1"]
         with open(stats_fname, "w") as stats_file:
             stats_file.write("\t".join(stats_header) + "\n")
             for i in range(len(self.footprint_name)):
-                stats_file.write(self.footprint_name[i] + "\t" + str(roc_auc[i]) + "\t" + str(roc_auc_1[i]) + "\t"
-                                 + str(roc_auc_2[i]) + "\t" + str(prc_auc[i]) + "\n")
+                stats_file.write(self.footprint_name[i] + "\t" +
+                                 str(roc_auc_100[i]) + "\t" + str(roc_auc_50[i]) + "\t" + str(roc_auc_10[i]) + "\t" +
+                                 str(roc_auc_1[i]) + "\t" + str(prc_auc_100[i]) + "\t" + str(prc_auc_50[i]) + "\t" +
+                                 str(prc_auc_10[i])+ "\t" + str(prc_auc_1[i]) + "\n")
 
         # Output the curves
         if self.print_roc_curve:
             label_x = "False Positive Rate"
             label_y = "True Positive Rate"
             curve_name = "ROC"
-            self.plot_curve(fpr, tpr, roc_auc, label_x, label_y, self.tf_name, curve_name)
+            self.plot_curve(fpr, tpr, roc_auc_100, label_x, label_y, self.tf_name, curve_name)
         if self.print_pr_curve:
             label_x = "Recall"
             label_y = "Precision"
             curve_name = "PRC"
-            self.plot_curve(recall, precision, prc_auc, label_x, label_y, self.tf_name, curve_name)
+            self.plot_curve(recall, precision, prc_auc_100, label_x, label_y, self.tf_name, curve_name)
 
         self.output_points(self.tf_name, fpr, tpr, recall, precision)
 
@@ -178,11 +185,12 @@ class Evaluation:
         figure_name = self.output_location + tf_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
 
-    def roc_curve(self, sort_score_regions):
+    def roc_curve(self, sort_score_regions, num_intersect_regions):
         count_x = 0
         count_y = 0
         fpr = [count_x]
         tpr = [count_y]
+
         for region in iter(sort_score_regions):
             if str(region.name).split(":")[-1] == "Y":
                 count_y += 1
@@ -195,33 +203,54 @@ class Evaluation:
         fpr = [e * (1.0 / count_x) for e in fpr]
         tpr = [e * (1.0 / count_y) for e in tpr]
 
-        # Evaluating 100% AUC
-        roc_auc = metrics.auc(fpr, tpr)
+        model_fpr = fpr[num_intersect_regions - 1]
+        model_tpr = tpr[num_intersect_regions - 1]
+        if model_fpr != 1:
+            a = (1-model_tpr)/(1-model_fpr)
+            b = 1- a
+            for i in range(num_intersect_regions, len(tpr), 1):
+                tpr[i] = a * fpr[i] + b
 
-        # Evaluating 10% AUC
-        fpr_auc = 0.1
+        # Evaluating 100% AUC
+        roc_auc_100 = metrics.auc(fpr, tpr)
+
+        # Evaluating 1% AUC
+        fpr_auc = 0.01
         fpr_1 = list()
         tpr_1 = list()
         for idx in range(0, len(fpr)):
             if (fpr[idx] > fpr_auc): break
             fpr_1.append(fpr[idx])
             tpr_1.append(tpr[idx])
-        roc_auc_1 = metrics.auc(self.standardize(fpr_1), tpr_1)
+        if (len(fpr_1) < 2): roc_auc_1 = 0  # At least 2 points are needed to compute area under curve
+        else: roc_auc_1 = metrics.auc(self.standardize(fpr_1), tpr_1)
 
-        # Evaluating 1% AUC
-        fpr_auc = 0.01
-        fpr_2 = list()
-        tpr_2 = list()
+        # Evaluating 10% AUC
+        fpr_auc = 0.1
+        fpr_10 = list()
+        tpr_10 = list()
         for idx in range(0, len(fpr)):
-            if (fpr[idx] > fpr_auc):
-                break
-            fpr_2.append(fpr[idx])
-            tpr_2.append(tpr[idx])
-        roc_auc_2 = metrics.auc(self.standardize(fpr_2), tpr_2)
+             if (fpr[idx] > fpr_auc):break
+             fpr_10.append(fpr[idx])
+             tpr_10.append(tpr[idx])
+        if (len(fpr_10) < 2): roc_auc_10 = 0  # At least 2 points are needed to compute area under curve
+        else: roc_auc_10 = metrics.auc(self.standardize(fpr_10), tpr_10)
 
-        return fpr, tpr, roc_auc, roc_auc_1, roc_auc_2
+        # Evaluating 10% AUC
+        fpr_auc = 0.5
+        fpr_50 = list()
+        tpr_50 = list()
+        for idx in range(0, len(fpr)):
+             if (fpr[idx] > fpr_auc):break
+             fpr_50.append(fpr[idx])
+             tpr_50.append(tpr[idx])
+        if (len(fpr_50) < 2): roc_auc_50 = 0  # At least 2 points are needed to compute area under curve
+        else: roc_auc_50 = metrics.auc(self.standardize(fpr_50), tpr_50)
 
-    def precision_recall_curve(self, sort_score_regions):
+
+        return fpr, tpr, roc_auc_1, roc_auc_10, roc_auc_50, roc_auc_100
+
+    def precision_recall_curve(self, sort_score_regions, num_intersect_regions):
         count_x = 0
         count_y = 0
         precision = [0.0]
@@ -237,16 +266,58 @@ class Evaluation:
                 recall.append(count_y)
 
         recall = [e * (1.0 / count_y) for e in recall]
+
+        model_recall = recall[num_intersect_regions - 1]
+        model_precision = precision[num_intersect_regions - 1]
+        if model_recall != 1:
+            for i in range(num_intersect_regions, len(recall), 1):
+                precision[i] =(model_precision/(model_recall - 1)) * recall[i] + model_precision/(1-model_recall)
         precision.append(0.0)
         recall.append(1.0)
-        auc = (abs(trapz(recall, precision)))
 
-        return recall, precision, auc
+        # Evaluating 100% AUPR
+        pr_auc_100 = (abs(trapz(recall, precision)))
+
+        # Evaluating 1% AUPR
+        recall_auc = 0.01
+        recall_1 = list()
+        precision_1 = list()
+        for idx in range(0, len(recall)):
+            if (recall[idx] > recall_auc): break
+            recall_1.append(recall[idx])
+            precision_1.append(precision[idx])
+        if (len(recall_1) < 2): pr_auc_1 = 0 # At least 2 points are needed to compute area under curve
+        else:pr_auc_1 = metrics.auc(self.standardize(recall_1), precision_1)
+
+        # Evaluating 10% AUPR
+        recall_auc = 0.1
+        recall_10 = list()
+        precision_10 = list()
+        for idx in range(0, len(recall)):
+            if (recall[idx] > recall_auc): break
+            recall_10.append(recall[idx])
+            precision_10.append(precision[idx])
+        if (len(recall_10) < 2): pr_auc_10 = 0 # At least 2 points are needed to compute area under curve
+        else: pr_auc_10 = metrics.auc(self.standardize(recall_10), precision_10)
+
+        # Evaluating 50% AUPR
+        recall_auc = 0.5
+        recall_50 = list()
+        precision_50 = list()
+        for idx in range(0, len(recall)):
+            if (recall[idx] > recall_auc): break
+            recall_50.append(recall[idx])
+            precision_50.append(precision[idx])
+        if (len(recall_50) < 2): pr_auc_50 = 0 # At least 2 points are needed to compute area under curve
+        else: pr_auc_50 = metrics.auc(self.standardize(recall_50), precision_50)
+
+        return recall, precision, pr_auc_1, pr_auc_10, pr_auc_50, pr_auc_100
 
     def standardize(self, vector):
         maxN = max(vector)
         minN = min(vector)
-        return [(e - minN) / (maxN - minN) for e in vector]
+        if maxN == minN: return vector
+        else: return [(e - minN) / (maxN - minN) for e in vector]
 
     def optimize_roc_points(self, fpr, tpr, max_points=1000):
         new_fpr = dict()

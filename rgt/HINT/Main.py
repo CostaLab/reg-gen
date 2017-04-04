@@ -153,6 +153,15 @@ def main():
                       help=("Path where the output files will be written."))
     parser.add_option("--output-fname", dest="output_fname", type="string", metavar="STRING",
                       default=None)
+    parser.add_option("--print-signal", dest="print_signal",
+                      action="store_true", default=False,
+                      help=("If used, it will print some signals from DNase-seq ir ATAC-seq data"))
+    parser.add_option("--reads-file", dest="reads_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bam file containing all the DNase-seq reads."))
+    parser.add_option("--regions-file", dest="regions_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bed file containing all the interested regions."))
     parser.add_option("--print-raw-signal", dest="print_raw_signal", type="string", metavar="STRING",
                       default=None,
                       help=("If used, it will print the base overlap (raw) signals from DNase-seq "
@@ -170,6 +179,11 @@ def main():
     parser.add_option("--print-slope-signal", dest="print_slope_signal", type="string", metavar="STRING",
                       default=None,
                       help=("If used, it will print the slope signals from DNase-seq "
+                            " or ATAC-seq data. The option should equal the file name."
+                            "The extension must be (.wig)."))
+    parser.add_option("--print-diff-signal", dest="print_diff_signal", type="string", metavar="STRING",
+                      default=None,
+                      help=("If used, it will print the different signals from DNase-seq "
                             " or ATAC-seq data. The option should equal the file name."
                             "The extension must be (.wig)."))
     parser.add_option("--print-line-plot", dest="print_line_plot",
@@ -397,7 +411,41 @@ def main():
     ########################################################################################
 
     ##########################################################################################
+    # IF HINT is required to output the signal from DNase-seq or ATAC-seq data
+    if options.print_signal:
+        # Output wig signal
+        if (options.print_raw_signal):
+            system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_raw_signal)
+        if (options.print_bc_signal):
+            system("touch " + options.print_bc_signal + " | echo -n "" > " + options.print_bc_signal)
+        if (options.print_norm_signal):
+            system("touch " + options.print_norm_signal + " | echo -n "" > " + options.print_norm_signal)
+        if (options.print_slope_signal):
+            system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_slope_signal)
+        if (options.print_diff_signal):
+            system("touch " + options.print_diff_signal + " | echo -n "" > " + options.print_diff_signal)
+        signal = GenomicSignal(options.reads_file)
+        signal.load_sg_coefs(slope_window_size=9)
+        regions = GenomicRegionSet("Interested regions")
+        regions.read_bed(options.regions_file)
+        regions.extend(int(region_total_ext / 2), int(region_total_ext / 2))  # Extending
+        regions.merge()  # Sort & Merge
 
+        genome_data = GenomeData(options.organism)
+        for region in regions:
+            hon_signal, slope_signal, diff_signal = signal.get_signal_per_strand(ref=region.chrom, start=region.initial,
+                                                                                 end=region.final,
+                                                                                 downstream_ext=atac_downstream_ext,
+                                                                                 upstream_ext=atac_upstream_ext,
+                                                                                 forward_shift=atac_forward_shift,
+                                                                                 reverse_shift=atac_reverse_shift,
+                                                                                 genome_file_name=genome_data.get_genome(),
+                                                                                 print_raw_signal=options.print_raw_signal,
+                                                                                 print_bc_signal=options.print_bc_signal,
+                                                                                 print_norm_signal=options.print_norm_signal,
+                                                                                 print_slope_signal=options.print_slope_signal,
+                                                                                 print_diff_signal=options.print_diff_signal)
+        return
     # IF HINT is required to output the line plot and motif logo
     if options.print_line_plot:
         plot = Plot(options.plot_bam_file, options.motif_file, options.motif_name, options.window_size,
@@ -441,15 +489,7 @@ def main():
         return
 
     ########################################################################################################
-    # Output wig signal
-    if (options.print_raw_signal):
-        system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_raw_signal)
-    if (options.print_bc_signal):
-        system("touch " + options.print_bc_signal + " | echo -n "" > " + options.print_bc_signal)
-    if (options.print_norm_signal):
-        system("touch " + options.print_norm_signal + " | echo -n "" > " + options.print_norm_signal)
-    if (options.print_slope_signal):
-        system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_slope_signal)
+
 
     # Global class initialization
     genome_data = GenomeData(options.organism)
