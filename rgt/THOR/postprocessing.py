@@ -116,7 +116,7 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
     """Filter DPs by strang lag and pvalue"""
     if not singlestrand:
         zscore_ratios = zscore(ratios)
-        ratios_pass = np.where(np.bitwise_and(zscore_ratios>-2, zscore_ratios<2) == True, True, False)
+        ratios_pass = np.where(np.bitwise_and(zscore_ratios > -2, zscore_ratios < 2) == True, True, False)
     if not no_correction:
         pv_pass = [True] * len(pvalues)
         pvalues = map(lambda x: 10**-x, pvalues)
@@ -126,7 +126,7 @@ def filter_by_pvalue_strand_lag(ratios, pcutoff, pvalues, output, no_correction,
         
         pv_pass, pvalues = multiple_test_correction(pvalues, alpha=pcutoff)
     else:
-        pv_pass = np.where(np.asarray(pvalues) >= -np.log10(pcutoff), True, False)
+        pv_pass = np.where(np.asarray(pvalues) >= -log10(pcutoff), True, False)
     
     if not singlestrand:
         filter_pass = np.bitwise_and(ratios_pass, pv_pass)

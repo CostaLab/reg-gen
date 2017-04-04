@@ -195,11 +195,11 @@ class Tracker:
         links_dict['HMM Information'] = 'index.html#hmminfo'
         links_dict['Mean Variance Function Estimate'] = 'index.html#mvfunction'
         
-        p = 'pics/fragment_size_estimate.png'
+        p = path.join(FOLDER_REPORT, 'pics/fragment_size_estimate.png')
         if path.isfile(p):
             links_dict['Fragment Size Estimate'] = 'index.html#fsestimate'
-        
-        p = 'pics/data/sample.data'
+
+        p = path.join(FOLDER_REPORT, 'pics/data/sample.data')
         if path.isfile(p):
             links_dict['Housekeeping Gene Normalization'] = 'index.html#norm'
         
@@ -207,60 +207,61 @@ class Tracker:
         links_dict['Contact'] = 'index.html#contact'
         
         config_class = ConfigurationFile()
-        html = Html(name=html_header, links_dict=links_dict, fig_rpath= config_class.data_dir + '/fig/')
+        html = Html(name=html_header, links_dict=links_dict, fig_rpath=config_class.data_dir + '/fig/')
         
         try:
-            html.add_heading("Experimental Configuration", idtag = 'extinfo')
+            html.add_heading("Experimental Configuration", idtag='extinfo')
             self.make_ext_config(html)
         except:
             pass
-        
-        html.add_heading("Pre- and post-processing Features", idtag = 'prepostinfo')
+
+        html.add_heading("Pre- and post-processing Features", idtag='prepostinfo')
         self.make_pre_post(html)
         
         try:
-            html.add_heading("Sample Information", idtag = 'sampleinfo')
+            html.add_heading("Sample Information", idtag='sampleinfo')
             self.make_ext_scaling_table(html)
         except:
             pass
-        
+
         #Run Info
         try:
-            html.add_heading("HMM Information", idtag = 'hmminfo')
+            html.add_heading("HMM Information", idtag='hmminfo')
             self.make_hmm(html)
         except:
             pass
-        
+
         #Mean Variance Function
         try:
-            p = "pics/mean_variance_func_cond_0_original.png"
+            p = path.join(FOLDER_REPORT, 'pics/mean_variance_func_cond_0_original.png')
             if path.isfile(p):
                 html.add_heading("Mean Variance Function", idtag='mvfunction')
-                html.add_figure(p, align="left", width="45%", more_images=['pics/mean_variance_func_cond_1_original.png'])
+                html.add_figure(path.relpath(p, FOLDER_REPORT), align="left", width="45%",
+                                more_images=['pics/mean_variance_func_cond_1_original.png'])
                 info = "THOR uses a polynomial function to empirically describe the relationship between mean and variance in the data.\
                 The data the plot is based on can be found at report/pics/data for further downstream analysis."
                 self._write_text(html, info)
         except:
             pass
-        
+
         #Fragment Size Estimate
         try:
-            p = 'pics/fragment_size_estimate.png'
+            p = path.join(FOLDER_REPORT, 'pics/fragment_size_estimate.png')
             if path.isfile(p):
-                html.add_heading("Fragment Size Estimate", idtag = 'fsestimate')
-                html.add_figure(p, align="left", width="45%")
+                html.add_heading("Fragment Size Estimate", idtag='fsestimate')
+                html.add_figure(path.relpath(p, FOLDER_REPORT), align="left", width="45%")
                 info = "THOR estimates the fragmentation sizes of each sample's reads. Here, the cross-correlation function [1] is shown. Their maxima give the\
                 fragmentation extension sizes.<br> The data the plot is based on can be found at report/pics/data for further downstream analysis."
                 self._write_text(html, info)
         except:
             pass
-        
+
         #HK normalization
         try:
-            p = 'pics/data/gene.data'
+            p = path.join(FOLDER_REPORT, 'pics/data/gene.data')
             if path.isfile(p):
                 d = self._read_hk(p)
-                html.add_heading("Housekeeping Gene Normalization", idtag = 'norm')
+                html.add_heading("Housekeeping Gene Normalization", idtag='norm')
                 html.add_zebra_table(header_list=['gene', 'quality q'], col_size_list=[1,150], type_list='s'*len(d), data_table=d)
                 info = "For active histone marks, housekeeping genes given by [4] can be used for normalization [1]. Here, the genes for the experiments are\
                 evaluated. For each gene i, we estimate the normalization factors with gene i and without gene i and compute the sums of squared deviations q.\
@@ -268,7 +269,7 @@ class Tracker:
                 use other genes or regions for normalization.<br> The data the plot is based on can be found at report/pics/data for further downstream analysis."
                 self._write_text(html, info)
                 
-            p = 'pics/data/sample.data'
+            p = path.join(FOLDER_REPORT, 'pics/data/sample.data')
             if path.isfile(p):
                 d = self._read_hk(p)
                 html.add_zebra_table(header_list=['sample', 'quality p'], col_size_list=[1,150], type_list='s'*len(d), data_table=d)
@@ -278,8 +279,8 @@ class Tracker:
                 self._write_text(html, info)
         except:
             pass
-        
-        html.add_heading("References", idtag = 'ref')
+
+        html.add_heading("References", idtag='ref')
         info = "[1] M. Allhoff, J. F. Pires, K. Ser&eacute;, M. Zenke, and I. G. Costa. Differential Peak Calling of ChIP-Seq \
         Signals with Replicates with THOR. <i>submitted.</i> <br>\
         [2] A. Mammana, M. Vingron, and H.-R. Chung. Inferring nucleosome positions with their histone mark annotation from chip data. \
@@ -289,7 +290,7 @@ class Tracker:
         [4] E. Eisenberg and E. Y. Levanon. Human housekeeping genes, revisited. Trends in genetics: TIG, 29(10):569-574, 2013."
         self._write_text(html, info)
         
-        html.add_heading("Contact", idtag = 'contact')
+        html.add_heading("Contact", idtag='contact')
         info = "If you have any questions, please don't hesitate to contact us: allhoff@aices.rwth-aachen.de"
         self._write_text(html, info)
         
