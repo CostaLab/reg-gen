@@ -89,9 +89,9 @@ class GenomicSignal:
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
         # Std-based clipping
-        # mean = raw_signal.mean()
-        # std = raw_signal.std()
-        # clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+        mean = raw_signal.mean()
+        std = raw_signal.std()
+        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Tag count
         try:
@@ -342,13 +342,19 @@ class GenomicSignal:
         norm_seq -- Normalized sequence.
         """
 
-        if std != 0:
-            norm_seq = []
-            for e in sequence:
-                norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
-            return norm_seq
-        else:
-            return sequence
+        #if std != 0:
+        #    norm_seq = []
+        #    for e in sequence:
+        #        norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+        #    return norm_seq
+        #else:
+        #    return sequence
+        norm_seq = []
+        for e in sequence:
+            if(e == 0.0): norm_seq.append(0.0)
+            elif(e > 0.0): norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
+            else: norm_seq.append(-1.0/(1.0+(exp(-(-e-mean)/std))))
+        return norm_seq
 
     def boyle_norm(self, sequence):
         """
