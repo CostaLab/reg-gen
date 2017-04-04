@@ -95,7 +95,7 @@ class GenomicSignal:
 
         # Tag count
         try:
-            tag_count = sum(raw_signal)
+            tag_count = sum(clip_signal)
         except Exception:
             tag_count = 0
 
