@@ -13,13 +13,13 @@ conditions. Please see LICENSE file for details.
 
 # Python
 from __future__ import print_function
+import os
 import sys
 import pysam
-import os.path
 import numpy as np
 from math import fabs, log, ceil
 from operator import add
-from os.path import splitext, basename
+from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
 
@@ -54,7 +54,7 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
 
         files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
         if len(no_bw_files) > len(bamfiles):
-            files = filter(lambda x: os.path.isfile(x), files)
+            files = filter(lambda x: isfile(x), files)
             t = ['bigWigMerge'] + files + [temp_bed]
             c = " ".join(t)
             os.system(c)
@@ -215,8 +215,8 @@ def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
-        print(chrom, start, end, states[i], cov1, cov2, sep = '\t', file=g)
-        print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep = '\t', file=f)
+        print(chrom, start, end, states[i], cov1, cov2, sep='\t', file=g)
+        print(chrom, start, end, max(p3, max(p1,p2)), p1, p2, p3, cov1, cov2, sep='\t', file=f)
 
     f.close()
     g.close()
@@ -473,7 +473,7 @@ def handle_input():
                       help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
     parser.add_option("--output-dir", dest="outputdir", default=None, type="string",
                       help="Store files in output directory. [default: %default]")
-    parser.add_option("--report", dest="report", default=True, action="store_true",
+    parser.add_option("--report", dest="report", default=False, action="store_true",
                       help="Generate HTML report about experiment. [default: %default]")
     parser.add_option("--deadzones", dest="deadzones", default=None,
                       help="Define blacklisted genomic regions avoided for analysis (BED format). [default: %default]")
@@ -551,7 +551,7 @@ def handle_input():
 
     config_path = npath(args[0])
 
-    if not os.path.isfile(config_path):
+    if not isfile(config_path):
         parser.error("Config file %s does not exist!" % config_path)
 
     bamfiles, genome, chrom_sizes, inputs, dims = input_parser(config_path)
@@ -569,7 +569,7 @@ def handle_input():
         parser.error("Number of scaling factors for IP must equal number of bamfiles")
 
     for bamfile in bamfiles:
-        if not os.path.isfile(bamfile):
+        if not isfile(bamfile):
             parser.error("BAM file %s does not exist!" % bamfile)
 
     if not inputs and options.factors_inputs:
@@ -581,14 +581,14 @@ def handle_input():
 
     if inputs:
         for bamfile in inputs:
-            if not os.path.isfile(bamfile):
+            if not isfile(bamfile):
                 parser.error("BAM file %s does not exist!" % bamfile)
 
     if options.regions:
-        if not os.path.isfile(options.regions):
+        if not isfile(options.regions):
             parser.error("Region file %s does not exist!" % options.regions)
 
-    if genome and not os.path.isfile(genome):
+    if genome and not isfile(genome):
         parser.error("Genome file %s does not exist!" % genome)
 
     if options.name is None:
@@ -601,25 +601,26 @@ def handle_input():
 
     if options.outputdir:
         options.outputdir = npath(options.outputdir)
-        if os.path.isdir(options.outputdir) and sum(
+        if isdir(options.outputdir) and sum(
                 map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
             parser.error("Output directory exists and contains files with names starting with your chosen experiment "
                          "name! Do nothing to prevent file overwriting!")
-        if not os.path.exists(options.outputdir):
+        if not exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:
         options.outputdir = os.getcwd()
 
-    options.name = os.path.join(options.outputdir, options.name)
+    options.name = join(options.outputdir, options.name)
 
-    if os.path.isdir(os.path.join(options.outputdir, 'report/')):
-        parser.error("Folder 'report' already exits in output directory! Do nothing to prevent file overwriting! "
+    if isdir(join(options.outputdir, 'report_'+basename(options.name))):
+        parser.error("Folder 'report_"+basename(options.name)+"' already exits in output directory!" 
+                     "Do nothing to prevent file overwriting! "
                      "Please rename report folder or change working directory of THOR with the option --output-dir")
 
     if options.report:
-        os.mkdir(os.path.join(options.outputdir, 'report/'))
-        os.mkdir(os.path.join(options.outputdir, 'report/pics/'))
-        os.mkdir(os.path.join(options.outputdir, 'report/pics/data/'))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name)+"/"))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/'))
+        os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/data/'))
 
     global FOLDER_REPORT
     global FOLDER_REPORT_PICS
@@ -627,9 +628,9 @@ def handle_input():
     global OUTPUTDIR
     global NAME
 
-    FOLDER_REPORT = os.path.join(options.outputdir, 'report/')
-    FOLDER_REPORT_PICS = os.path.join(options.outputdir, 'report/pics/')
-    FOLDER_REPORT_DATA = os.path.join(options.outputdir, 'report/pics/data/')
+    FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
+    FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
+    FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
     OUTPUTDIR = options.outputdir
     NAME = options.name
 

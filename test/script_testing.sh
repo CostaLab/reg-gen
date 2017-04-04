@@ -26,8 +26,8 @@ mkdir -p $DIR
 
  # Run test script
  cd THOR_example_data/
- rm -rf report sample-*
- rgt-THOR THOR.config --a_threshold 80 -n sample
+ rm -rf report_* sample-*
+ rgt-THOR THOR.config --a_threshold 80 -n sample --report
  echo "********* THOR test completed ****************"
 
 ################################################################

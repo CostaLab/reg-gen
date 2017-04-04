@@ -9,8 +9,6 @@ from __future__ import print_function
 import os
 import sys
 import pysam
-import tempfile
-import subprocess
 import numpy as np
 
 
@@ -132,16 +130,12 @@ class CoverageSet:
                             print(region.chrom, j * self.stepsize + ((self.binsize-self.stepsize)/2) + region.initial, \
                                   j * self.stepsize + ((self.binsize+self.stepsize)/2) + region.initial, c[j], sep='\t', file=f)
                         
-    def write_wig(self, filename, end):
+    def write_wig(self, filename):
         """Output coverage in wig format. 
         
         *Keyword arguments:*
         
-        - filename -- filepath
-        - end -- boolean
-        
-        .. warning:: Parameter end is deprecated! Please do not use it.
-        
+        - filename -- filepath        
         """
         f = open(filename, 'w')
         i = 0
@@ -172,21 +166,15 @@ class CoverageSet:
         .. note:: The <save_wig> option may cause large output files 
         
         """
-        
-        if save_wig:
-            tmp_path = filename + '.wig'
-            self.write_wig(tmp_path)
-            t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
-            c = " ".join(t)
-            os.system(c)
-        else:
-            _, tmp_path = tempfile.mkstemp()
-            self.write_wig(tmp_path, end)
-            t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename] #TODO: something is wrong here, call only wigToBigWig
-            c = " ".join(t)
-            #print(c, file=sys.stderr)
-            os.system(c)
-            #os.remove(tmp_path)
+
+        tmp_path = filename + '.wig'
+        self.write_wig(tmp_path)
+        t = ['wigToBigWig', "-clip", tmp_path, chrom_file, filename]
+        c = " ".join(t)
+        os.system(c)
+
+        if not save_wig:
+            os.remove(tmp_path)
     
     def _init_read_number(self, bamFile):
         """Compute number of reads and number of mapped reads for CoverageSet"""
