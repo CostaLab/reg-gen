@@ -14,7 +14,7 @@ from shutil import copy
 
 # Internal
 from rgt import __version__
-from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html
+from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -66,7 +66,7 @@ def is_bb(filename):
     return False
 
 
-def ensure_is_bed(filename):
+def bb_to_bed(filename):
     path, ext = os.path.splitext(filename)
 
     if ext.lower() == ".bb":
@@ -81,7 +81,7 @@ def ensure_is_bed(filename):
         raise ValueError("{} is neither a BED nor a BB".format(filename))
 
 
-def ensure_is_bb(filename, chrom_sizes_filename):
+def bed_to_bb(filename, chrom_sizes_filename):
     path, ext = os.path.splitext(filename)
 
     if ext.lower() == ".bed":
@@ -262,7 +262,7 @@ def main_matching():
     if options.output_location:
         output_location = options.output_location
     else:
-        output_location = os.path.join(os.getcwd(), matching_folder_name)
+        output_location = npath(matching_folder_name)
 
     try:
         if not os.path.isdir(output_location):
@@ -306,7 +306,7 @@ def main_matching():
         target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
-        output_file_name = os.path.join(output_location, target_regions.name + ".bed")
+        output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
         target_regions.write_bed(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
@@ -321,7 +321,7 @@ def main_matching():
                                                           promoterLength=options.promoter_length)
             background_regions.name = "background_regions"
             background_regions.sort()
-            output_file_name = os.path.join(output_location, background_regions.name + ".bed")
+            output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
             background_regions.write_bed(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
@@ -342,7 +342,7 @@ def main_matching():
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
-            regions.read_bed(os.path.abspath(input_filename))
+            regions.read_bed(npath(input_filename))
 
             genomic_regions_dict[name] = regions
 
@@ -390,7 +390,7 @@ def main_matching():
         regions_to_match.append(rand_region)
 
         # Writing random regions
-        output_file_name = os.path.join(output_location, random_region_name)
+        output_file_name = npath(os.path.join(output_location, random_region_name))
         rand_bed_file_name = output_file_name + ".bed"
         rand_region.write_bed(rand_bed_file_name)
 
@@ -402,7 +402,7 @@ def main_matching():
 
             try:
                 # Converting to big bed
-                ensure_is_bb(rand_bed_file_name, chrom_sizes_file)
+                bed_to_bb(rand_bed_file_name, chrom_sizes_file)
 
                 # removing previously-created BED file
                 os.remove(rand_bed_file_name)
@@ -422,7 +422,7 @@ def main_matching():
     # Fetching list with all motif file names
     motif_file_names = []
     for motif_repository in motif_data.get_pwm_list():
-        for motif_file_name in glob(os.path.join(motif_repository, "*.pwm")):
+        for motif_file_name in glob(npath(os.path.join(motif_repository, "*.pwm"))):
             motif_name = os.path.basename(os.path.splitext(motif_file_name)[0])
             # if the user has given a list of motifs to use, we only
             # add those to our list
@@ -480,7 +480,7 @@ def main_matching():
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
             # Converting to big bed
-            ensure_is_bb(output_bed_file, chrom_sizes_file)
+            bed_to_bb(output_bed_file, chrom_sizes_file)
 
             # removing BED file
             os.remove(output_bed_file)
@@ -607,7 +607,7 @@ def main_enrichment():
     if not os.path.isfile(background_filename):
         err.throw_error("DEFAULT_ERROR", add_msg="Background file does not exist or is not readable.")
     elif is_bb(background_filename):
-        background_filename = ensure_is_bed(background_filename)
+        background_filename = bb_to_bed(background_filename)
     elif is_bed(background_filename):
         pass
     else:
@@ -634,7 +634,7 @@ def main_enrichment():
     background_mpbs_original_filename = background_mpbs_filename
 
     if is_bb(background_mpbs_filename):
-        background_mpbs_filename = ensure_is_bed(background_mpbs_filename)
+        background_mpbs_filename = bb_to_bed(background_mpbs_filename)
     elif is_bed(background_mpbs_filename):
         pass
     else:
@@ -850,13 +850,16 @@ def main_enrichment():
                 curr_output_folder_name = os.path.join(output_location, grs.name + "__" + curr_input.gene_set.name)
             else:
                 curr_output_folder_name = os.path.join(output_location, grs.name)
+
+            curr_output_folder_name = npath(curr_output_folder_name)
+
             if not os.path.isdir(curr_output_folder_name):
                 os.makedirs(curr_output_folder_name)
 
             # Verifying if MPBS file exists
             curr_mpbs_glob = glob(os.path.join(match_location, original_name + "_mpbs.*"))
             try:
-                curr_mpbs_file_name = curr_mpbs_glob[0]
+                curr_mpbs_file_name = npath(curr_mpbs_glob[0])
             except Exception:
                 err.throw_warning("DEFAULT_ERROR", add_msg="File {} does not have a matching MPBS file. "
                                                            "Ignoring.".format(original_name))
@@ -864,7 +867,7 @@ def main_enrichment():
                 continue
 
             if is_bb(curr_mpbs_file_name):
-                curr_mpbs_bed_name = ensure_is_bed(curr_mpbs_file_name)
+                curr_mpbs_bed_name = bb_to_bed(curr_mpbs_file_name)
 
                 # at the end of calculations, we'll remove all the temporary bed files we created
                 to_remove_list.append(curr_mpbs_bed_name)
@@ -890,7 +893,7 @@ def main_enrichment():
                                            options.maximum_association_length)
 
                 # Writing gene-coordinate association
-                output_file_name = os.path.join(curr_output_folder_name, output_association_name + ".bed")
+                output_file_name = npath(os.path.join(curr_output_folder_name, output_association_name + ".bed"))
                 output_file = open(output_file_name, "w")
                 for gr in grs:
                     if gr.name == ".":
@@ -906,7 +909,7 @@ def main_enrichment():
                 if options.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     try:
-                        ensure_is_bb(output_file_name, chrom_sizes_file)
+                        bed_to_bb(output_file_name, chrom_sizes_file)
                         os.remove(output_file_name)
                     except Exception:
                         pass  # TODO: warning?
@@ -991,11 +994,11 @@ def main_enrichment():
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
-                write_bed_color(ev_mpbs_grs_filtered, output_mpbs_filtered_ev_bed, ev_color)
+                write_bed_color(ev_mpbs_grs_filtered, npath(output_mpbs_filtered_ev_bed), ev_color)
                 del ev_mpbs_grs_filtered
 
                 nev_mpbs_grs_filtered.sort()
-                write_bed_color(nev_mpbs_grs_filtered, output_mpbs_filtered_nev_bed, nev_color)
+                write_bed_color(nev_mpbs_grs_filtered, npath(output_mpbs_filtered_nev_bed), nev_color)
                 del nev_mpbs_grs_filtered
 
                 # Converting ev and nev mpbs to bigbed
@@ -1003,8 +1006,8 @@ def main_enrichment():
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     try:
                         # create big bed files
-                        ensure_is_bb(output_mpbs_filtered_ev_bed,  chrom_sizes_file)
-                        ensure_is_bb(output_mpbs_filtered_nev_bed, chrom_sizes_file)
+                        bed_to_bb(output_mpbs_filtered_ev_bed, chrom_sizes_file)
+                        bed_to_bb(output_mpbs_filtered_nev_bed, chrom_sizes_file)
 
                         # temporary BED files to be removed later
                         to_remove_list.append(output_mpbs_filtered_ev_bed)
@@ -1014,7 +1017,7 @@ def main_enrichment():
 
                 # Printing statistics text
                 output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_genetest + ".txt")
-                output_file = open(output_file_name_stat_text, "w")
+                output_file = open(npath(output_file_name_stat_text), "w")
                 output_file.write(results_header_text + "\n")
                 for r in result_list:
                     output_file.write(str(r) + "\n")
@@ -1022,7 +1025,7 @@ def main_enrichment():
 
                 # unless explicitly forbidden, we copy the logo images locally
                 if not options.no_copy_logos:
-                    logo_dir_path = os.path.join(output_location, "logos")
+                    logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
                     except:
@@ -1033,11 +1036,11 @@ def main_enrichment():
                 for r in result_list:
                     curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                     for rep in motif_data.get_logo_list():
-                        logo_file_name = os.path.join(rep, r.name + ".png")
+                        logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
                             if not options.no_copy_logos:
-                                copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+                                copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                                 # use relative paths in the html
                                 # FIXME can we do it in a better way? (inside the Html class)
@@ -1052,7 +1055,7 @@ def main_enrichment():
 
                 # Printing statistics html - Writing to HTML
                 output_file_name_html = os.path.join(curr_output_folder_name, output_stat_genetest + ".html")
-                fig_path = os.path.join(output_location, "fig")
+                fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
                                  "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
@@ -1062,7 +1065,7 @@ def main_enrichment():
                                  "gene list against regions not associated to the gene list",
                                  align="center", bold=False, size=3)
                 html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
-                html.write(output_file_name_html)
+                html.write(npath(output_file_name_html))
 
             else:
 
@@ -1132,6 +1135,7 @@ def main_enrichment():
                 del ev_mpbs_dict
 
                 output_mpbs_filtered_ev_bed = os.path.join(curr_output_folder_name, output_mpbs_filtered_ev + ".bed")
+                output_mpbs_filtered_ev_bed = npath(output_mpbs_filtered_ev_bed)
 
                 # sorting and saving to BED
                 ev_mpbs_grs_filtered.sort()
@@ -1144,7 +1148,7 @@ def main_enrichment():
 
                     try:
                         # create big bed file
-                        ensure_is_bb(output_mpbs_filtered_ev_bed, chrom_sizes_file)
+                        bed_to_bb(output_mpbs_filtered_ev_bed, chrom_sizes_file)
 
                         # temporary BED file to be removed later
                         to_remove_list.append(output_mpbs_filtered_ev_bed)
@@ -1153,7 +1157,7 @@ def main_enrichment():
 
             # Printing statistics text
             output_file_name_stat_text = os.path.join(curr_output_folder_name, output_stat_fulltest + ".txt")
-            output_file = open(output_file_name_stat_text, "w")
+            output_file = open(npath(output_file_name_stat_text), "w")
             output_file.write(results_header_text + "\n")
             for r in result_list:
                 output_file.write(str(r) + "\n")
@@ -1161,7 +1165,7 @@ def main_enrichment():
 
             # unless explicitly forbidden, we copy the logo images locally
             if not options.no_copy_logos:
-                logo_dir_path = os.path.join(output_location, "logos")
+                logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
                 except:
@@ -1172,11 +1176,11 @@ def main_enrichment():
             for r in result_list:
                 curr_motif_tuple = [image_data.get_default_motif_logo(), logo_width]
                 for rep in motif_data.get_logo_list():
-                    logo_file_name = os.path.join(rep, r.name + ".png")
+                    logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
                         if not options.no_copy_logos:
-                            copy(logo_file_name, os.path.join(logo_dir_path, r.name + ".png"))
+                            copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                             # use relative paths in the html
                             # FIXME can we do it in a better way? (inside the Html class)
@@ -1190,7 +1194,7 @@ def main_enrichment():
 
             # Printing statistics html
             output_file_name_html = os.path.join(curr_output_folder_name, output_stat_fulltest + ".html")
-            fig_path = os.path.join(output_location, "fig")
+            fig_path = npath(os.path.join(output_location, "fig"))
             html = Html("Motif Enrichment Analysis", sitetest_link_dict, fig_dir=fig_path)
             if curr_input.gene_set:
                 html.add_heading("Results for <b>" + original_name +
@@ -1205,11 +1209,11 @@ def main_enrichment():
                                  align="center", bold=False, size=3)
 
             html.add_zebra_table(html_header, html_col_size, html_type_list, data_table, align="center")
-            html.write(output_file_name_html)
+            html.write(npath(output_file_name_html))
 
             # Removing files
-            # for e in to_remove_list:
-            #     os.remove(e)
+            for e in to_remove_list:
+                os.remove(e)
 
     ###################################################################################################
     # Heatmap

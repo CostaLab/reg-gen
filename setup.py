@@ -66,20 +66,25 @@ Tools Dictionary Standard:
   * All programs should start with "rgt-" followed by the program name.
   * The main function called within the script must be termed "main".
 """
+
+# TODO: sometime in the future, we should use environment markers for platform-specific dependencies.
+# We currently can't, because the change is recent and many people have older python versions.
+# We don't like crashes at installation time..
+
+common_deps = ["cython",
+               "numpy>=1.4.0",
+               "scipy>=0.7.0",
+               "pysam>=0.8.2",
+               "pyBigWig",
+               "PyVCF"]
+
 if platform.startswith("darwin"):
     bin_dir = "mac"
     libRGT = "librgt_mac.so"
 else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
-
-common_deps = ["ngslib;platform_system=='Linux'",
-               "cython",
-               "numpy>=1.4.0",
-               "scipy>=0.7.0",
-               "pysam>=0.8.2",
-               "pyBigWig",
-               "PyVCF"]
+    common_deps.append("ngslib")
 
 tools_dictionary = {
 "core": (
@@ -105,7 +110,7 @@ tools_dictionary = {
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "mpmath", "HTSeq"],
+    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
     ["data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge", "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),
 "filterVCF": (

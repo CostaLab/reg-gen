@@ -9,7 +9,7 @@ import getpass
 import argparse
 import datetime
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
 from boxplot import Boxplot
@@ -19,7 +19,7 @@ from projection_test import Projection
 from intersection_test import Intersect
 from shared_function import check_dir, print2, output_parameters,\
                             copy_em, list_all_index, output
-
+from plotTools import Venn
 dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix

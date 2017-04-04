@@ -1,37 +1,8 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
-import sys
-import os
-import time, datetime, argparse
-from collections import *
-import copy
-import itertools
-import pickle
-import multiprocessing
-import multiprocessing.pool
-import urllib2
-import re
-import numpy
-from scipy.stats import mstats, wilcoxon, mannwhitneyu, rankdata
-import matplotlib.pyplot as plt
-import matplotlib.ticker as mtick
-from matplotlib import cm
-from matplotlib.backends.backend_pdf import PdfPages
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from matplotlib_venn import venn2, venn3
-
-# Local Libraries
-# Distal Libraries
-from rgt.GenomicRegion import *
-from rgt.GenomicRegionSet import *
-from rgt.ExperimentalMatrix import *
-from rgt.AnnotationSet import *
-from rgt.Util import GenomeData, OverlapType, Html
-from rgt.CoverageSet import *
 from shared_function import *
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.helper import pretty
+
 
 # Local test
 dir = os.getcwd()

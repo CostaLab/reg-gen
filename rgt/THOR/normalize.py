@@ -31,8 +31,6 @@ from HTSeq import GenomicPosition, GenomicArray, GenomicInterval
 from math import fabs
 import pysam, sys, operator, os.path
 from itertools import chain
-import cProfile
-from time import time
 
 
 class HelpfulOptionParser(OptionParser):
@@ -124,21 +122,6 @@ def _get_overrun(chrom, i, end, step_width, count_list, feature_len):
     return overrun
 
 
-def write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width):
-    """Write countstable to file"""
-    with open(filename, 'w') as f:
-        for chrom in chromosomes:
-            if not chrom_len.has_key(chrom):
-                print("Warning: %s not found, ignore" % chrom, file=sys.stderr)
-            else:
-                assert chrom_len[chrom] / step_width + 1 == len(
-                    countstable[chrom])  # maybe errorprone if chrom len is 100000
-                for i in range(0, chrom_len[chrom] / step_width + 1):
-                    start = i * step_width
-                    end = min((i + 1) * step_width, chrom_len[chrom])
-                    print(chrom, start, end, countstable[chrom][i], sep='\t', file=f)
-
-
 def write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename):
     """Write p,q-list to file"""
     if pq_list:
@@ -178,16 +161,6 @@ def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
 
     return result
 
-
-# def get_normalization_factor_directly(counts_dict_x, counts_dict_y, zero_counts):
-#     counts_dict_x = counts_dict_x[:197196432] #only chr1
-#     counts_dict_y = counts_dict_y[:197196432]
-#     count_list = zip(counts_dict_x, counts_dict_y)
-#     count_list = map(lambda x: [float(x[0]), float(x[1])], count_list)
-#
-#     pq_list, max_index, max_value, factor1, factor2 = _get_lists(count_list, zero_counts)
-#
-#     return factor1
 
 def _get_lists(count_list, zero_counts, two_sample=False):
     if two_sample:
@@ -272,7 +245,6 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
 
     if debug:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
-    # write_bedgraph(chrom_len, chromosomes, countstable, filename, step_width)
 
     # print("norm sums 1 : ", sum([i for (i,j) in pq_list]), file=sys.stderr)
     # print("norm sums 2 : ", sum([j for (i,j) in pq_list]), file=sys.stderr)
@@ -293,44 +265,3 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
             return 1, factor1
     else:
         return -1, factor1
-
-
-def test_run():
-    p1 = '/home/manuel/data/testdata/PU1_CDP.chr1-2.bam'
-    p2 = '/home/manuel/data/testdata/PU1_Input4mix.chr1-2.bam'
-
-    #     p1 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/MPP_WT_H3K27ac_1.bam'
-    #     p2 = '/home/manuel/workspace/cluster_p/dendriticcells/local/zenke_histones/bam/CDP_WT_H3K27ac_1.bam'
-
-    chrom_sizes_dict = {'chr1': 197195432, 'chr2': 181748087, 'chr3': 159599783, 'chr4': 155630120,
-                        'chr5': 152537259, 'chr6': 149517037, 'chr7': 152524553, 'chr8': 131738871,
-                        'chr9': 124076172, 'chr10': 129993255, 'chr11': 121843856, 'chr12': 121257530,
-                        'chr13': 120284312, 'chr14': 125194864, 'chr15': 103494974, 'chr16': 98319150,
-                        'chr17': 95272651, 'chr18': 90772031, 'chr19': 61342430, 'chrX': 166650296,
-                        'chrY': 15902555}  # , 'chrM': 16299}
-
-    chrom_sizes_dict_mm10_enseml = {'chr1': 197195432, 'chr2': 181748087, 'chr3': 159599783, 'chr4': 155630120,
-                                    'chr5': 152537259, 'chr6': 149517037, 'chr7': 152524553, 'chr8': 131738871,
-                                    'chr9': 124076172, 'chr10': 129993255, 'chr11': 121843856, 'chr12': 121257530,
-                                    'chr13': 120284312, 'chr14': 125194864, 'chr15': 103494974, 'chr16': 98319150,
-                                    'chr17': 95272651, 'chr18': 90772031, 'chr19': 61342430, 'chrX': 166650296,
-                                    'chrY': 15902555}  # , 'chrM': 16299}
-
-    chrom_sizes_dict_mm10_enseml = {'10': 130694993}
-
-    print('run')
-
-    p1 = '/home/manuel/Downloads/odin/TC1-H3K4-A-D1.GRCm38.p3.q30_chr10.bam'
-    p2 = '/home/manuel/Downloads/odin/TC1-I-A-D5.GRCm38.p3.q30_chr10.bam'
-
-    a = get_normalization_factor(p1, p2, step_width=1000, zero_counts=0, \
-                                 filename='test', debug=False, chrom_sizes_dict=chrom_sizes_dict_mm10_enseml,
-                                 two_sample=False)
-    print(a)
-
-
-if __name__ == '__main__':
-    # cProfile.run("test_run()")
-    a = time()
-    test_run()
-    print(time() - a)
