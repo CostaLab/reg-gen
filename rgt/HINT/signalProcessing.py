@@ -324,7 +324,7 @@ class GenomicSignal:
         # Termination
         fastaFile.close()
         if not strands_specific:
-            return bias_fixed_signal
+            return bias_corrected_signal
         else:
             return bias_fixed_signal_forward, bias_fixed_signal_reverse
 
