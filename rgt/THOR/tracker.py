@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import re
 import numpy as np
-from rgt.Util import Html, ConfigurationFile
+from rgt.Util import Html
 from collections import OrderedDict
 from os import path
 # import sys
@@ -205,9 +205,10 @@ class Tracker:
         
         links_dict['References'] = 'index.html#ref'
         links_dict['Contact'] = 'index.html#contact'
-        
-        config_class = ConfigurationFile()
-        html = Html(name=html_header, links_dict=links_dict, fig_rpath=config_class.data_dir + '/fig/')
+
+        # copy basic rgt logo, style etc to local directory inside report
+        fig_path = path.join(FOLDER_REPORT, "fig")
+        html = Html(name=html_header, links_dict=links_dict, fig_dir=fig_path, fig_rpath="fig")
         
         try:
             html.add_heading("Experimental Configuration", idtag='extinfo')
