@@ -201,10 +201,10 @@ def main():
     parser.add_option("--motif-name", dest="motif_name", type="string", metavar="STRING",
                       default=None)
     parser.add_option("--protection-score", dest="protection_score",
-                      action="store_true",default=False,
+                      action="store_true", default=False,
                       help=("If used, it will print the protection score"))
     parser.add_option("--strands-specific", dest="strands_specific",
-                      action="store_true",default=False,
+                      action="store_true", default=False,
                       help=("A boolean indicating if DNaseI digestion site "
                             "counts should be aggregated across strands. "
                             "default: False"))
@@ -217,6 +217,13 @@ def main():
     parser.add_option("--training-bam-file", dest="training_bam_file", type="string", metavar="STRING",
                       default=None,
                       help=("A bam file containing all the DNase-seq reads."))
+    parser.add_option("--training-chrom", dest="training_chrom", type="string", metavar="STRING",
+                      default="chr1",
+                      help=("The name of chromosome used to train HMM"))
+    parser.add_option("--training-chrom-start", dest="training_chrom_start", type="int", metavar="INT",
+                      default=211428000)
+    parser.add_option("--training-chrom-end", dest="training_chrom_end", type="int", metavar="INT",
+                      default=211438000)
     parser.add_option("--annotate-file", dest="annotate_file", type="string", metavar="STRING",
                       default=None,
                       help=("A annotate file containing all the states."))
@@ -328,7 +335,7 @@ def main():
 
     # ATAC Hidden Options
     parser.add_option("--atac-initial-clip", dest="atac_initial_clip", type="int",
-                      metavar="INT", default=1000, help=SUPPRESS_HELP)
+                      metavar="INT", default=50, help=SUPPRESS_HELP)
     parser.add_option("--atac-sg-window-size", dest="atac_sg_window_size", type="int",
                       metavar="INT", default=9, help=SUPPRESS_HELP)
     parser.add_option("--atac-norm-per", dest="atac_norm_per", type="float",
@@ -340,9 +347,9 @@ def main():
     parser.add_option("--atac-upstream-ext", dest="atac_upstream_ext", type="int",
                       metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--atac-forward-shift", dest="atac_forward_shift", type="int",
-                      metavar="INT", default=4, help=SUPPRESS_HELP)
+                      metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--atac-reverse-shift", dest="atac_reverse_shift", type="int",
-                      metavar="INT", default=-5, help=SUPPRESS_HELP)
+                      metavar="INT", default=-4, help=SUPPRESS_HELP)
     parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
 
@@ -433,18 +440,18 @@ def main():
 
         genome_data = GenomeData(options.organism)
         for region in regions:
-            hon_signal, slope_signal, diff_signal = signal.get_signal_per_strand(ref=region.chrom, start=region.initial,
-                                                                                 end=region.final,
-                                                                                 downstream_ext=atac_downstream_ext,
-                                                                                 upstream_ext=atac_upstream_ext,
-                                                                                 forward_shift=atac_forward_shift,
-                                                                                 reverse_shift=atac_reverse_shift,
-                                                                                 genome_file_name=genome_data.get_genome(),
-                                                                                 print_raw_signal=options.print_raw_signal,
-                                                                                 print_bc_signal=options.print_bc_signal,
-                                                                                 print_norm_signal=options.print_norm_signal,
-                                                                                 print_slope_signal=options.print_slope_signal,
-                                                                                 print_diff_signal=options.print_diff_signal)
+            hon_signal, slope_signal, diff_signal = signal.get_signal1(ref=region.chrom, start=region.initial,
+                                                                       end=region.final,
+                                                                       downstream_ext=atac_downstream_ext,
+                                                                       upstream_ext=atac_upstream_ext,
+                                                                       forward_shift=atac_forward_shift,
+                                                                       reverse_shift=atac_reverse_shift,
+                                                                       genome_file_name=genome_data.get_genome(),
+                                                                       print_raw_signal=options.print_raw_signal,
+                                                                       print_bc_signal=options.print_bc_signal,
+                                                                       print_norm_signal=options.print_norm_signal,
+                                                                       print_slope_signal=options.print_slope_signal,
+                                                                       print_diff_signal=options.print_diff_signal)
         return
     # IF HINT is required to output the line plot and motif logo
     if options.print_line_plot:
@@ -479,13 +486,16 @@ def main():
                                    options.output_location, options.model_fname,
                                    options.print_raw_signal, options.print_bc_signal,
                                    options.print_norm_signal, options.print_slope_signal,
+                                   options.print_diff_signal,
                                    atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                                    atac_forward_shift, atac_reverse_shift,
                                    options.estimate_bias_correction, options.estimate_bias_type,
                                    options.bias_table,
                                    options.original_regions, options.organism,
-                                   atac_bias_correction_k, options.strands_specific)
-        train_hmm_model.train_subtract()
+                                   atac_bias_correction_k, options.strands_specific,
+                                   options.training_chrom, options.training_chrom_start,
+                                   options.training_chrom_end)
+        train_hmm_model.train1()
         return
 
     ########################################################################################################
@@ -602,8 +612,10 @@ def main():
             group.bias_table = BiasTable(original_regions=options.original_regions,
                                          dnase_file_name=options.bam_file,
                                          genome_file_name=genome_data.get_genome(), k_nb=options.k_nb,
-                                         forward_shift=options.atac_forward_shift, reverse_shift=options.atac_reverse_shift,
-                                         estimate_bias_type=options.estimate_bias_type, output_loc=options.output_locaiton)
+                                         forward_shift=options.atac_forward_shift,
+                                         reverse_shift=options.atac_reverse_shift,
+                                         estimate_bias_type=options.estimate_bias_type,
+                                         output_loc=options.output_locaiton)
         bias_correction = True
 
     elif (options.default_bias_correction):
@@ -755,29 +767,21 @@ def main():
                 # Fetching DNase signal
                 try:
                     if (group.is_atac):
-                        dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
-                                                                              atac_downstream_ext, atac_upstream_ext,
-                                                                              atac_forward_shift, atac_reverse_shift,
-                                                                              atac_initial_clip, atac_norm_per,
-                                                                              atac_slope_per,
-                                                                              group.bias_table,
-                                                                              genome_data.get_genome(),
-                                                                              options.print_raw_signal,
-                                                                              options.print_bc_signal,
-                                                                              options.print_norm_signal,
-                                                                              options.print_slope_signal)
-                        signal_forward, _, signal_reverse, _ = group.dnase_file.get_signal_per_strand(ref=r.chrom,
-                                                                                                start=r.initial,
-                                                                                                end=r.final,
-                                                                                                downstream_ext=atac_downstream_ext,
-                                                                                                upstream_ext=atac_upstream_ext,
-                                                                                                forward_shift=atac_forward_shift,
-                                                                                                reverse_shift=atac_reverse_shift,
-                                                                                                initial_clip=atac_initial_clip,
-                                                                                                genome_file_name=genome_data.get_genome()
-                                                                                                )
-                        subtrac_signal = np.subtract(signal_forward, signal_reverse)
-                        subtrac_slope = group.dnase_file.slope(subtrac_signal, group.dnase_file.sg_coefs)
+                        dnase_norm, dnase_slope, diff_signal = group.dnase_file.get_signal1(r.chrom, r.initial, r.final,
+                                                                                            atac_downstream_ext,
+                                                                                            atac_upstream_ext,
+                                                                                            atac_forward_shift,
+                                                                                            atac_reverse_shift,
+                                                                                            atac_initial_clip,
+                                                                                            atac_norm_per,
+                                                                                            atac_slope_per,
+                                                                                            group.bias_table,
+                                                                                            genome_data.get_genome(),
+                                                                                            options.print_raw_signal,
+                                                                                            options.print_bc_signal,
+                                                                                            options.print_norm_signal,
+                                                                                            options.print_slope_signal,
+                                                                                            options.print_diff_signal)
                     else:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                               dnase_downstream_ext, dnase_upstream_ext,
@@ -799,7 +803,7 @@ def main():
 
                 # Formatting sequence
                 try:
-                    input_sequence = array([dnase_norm, dnase_slope, subtrac_signal, subtrac_slope]).T
+                    input_sequence = array([dnase_norm, dnase_slope, diff_signal]).T
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom,
@@ -925,7 +929,8 @@ def main():
                         current_hmm = group.hmm[i]
                     else:
                         current_hmm = group.hmm
-                    if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                    if (
+                    isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try:
                         posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
@@ -1001,7 +1006,7 @@ def main():
         footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
 
         # Extending footprints
-        #for f in footprints.sequences:
+        # for f in footprints.sequences:
         #    if (f.final - f.initial < fp_limit):
         #        f.initial = max(0, f.initial - fp_ext)
         #        f.final = f.final + fp_ext
@@ -1036,5 +1041,5 @@ def main():
 
         # Creating output file
         output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
-        #output_file_name = options.output_location + options.output_fname + ".bed"
+        # output_file_name = options.output_location + options.output_fname + ".bed"
         footprints.write_bed(output_file_name)

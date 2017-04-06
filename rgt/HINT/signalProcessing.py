@@ -104,8 +104,7 @@ class GenomicSignal:
     def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                    initial_clip=1000, per_norm=98, per_slope=98,
                    bias_table=None, genome_file_name=None, print_raw_signal=False,
-                   print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
-                   strands_specific=False):
+                   print_bc_signal=False, print_norm_signal=False, print_slope_signal=False):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -153,7 +152,7 @@ class GenomicSignal:
 
         # Cleavage bias correction
         bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name,
-                                                     ref, start, end, forward_shift, reverse_shift, strands_specific)
+                                                     ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bias_corrected_signal))
@@ -197,8 +196,7 @@ class GenomicSignal:
         # Returning normalized and slope sequences
         return hon_signal, slope_signal
 
-    def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift, strands_specific=False):
+    def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end, forward_shift, reverse_shift):
         """ 
         Performs bias correction.
 
@@ -237,17 +235,10 @@ class GenomicSignal:
                 cut_site = read.pos + forward_shift
                 if cut_site >= start and cut_site < end:
                     nf[cut_site - p1_w] += 1.0
-                #for i in range(max(read.pos + forward_shift, start), min(read.pos + forward_shift + 1, end - 1)):
-                #    nf[i - start] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
                 if cut_site >= start and cut_site < end:
                     nr[cut_site - p1_w] += 1.0
-                #for i in range(max(read.aend + reverse_shift - 1, start), min(read.aend + reverse_shift, end - 1)):
-                #    nr[i - start] += 1.0
-
-            #if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
-            #if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
 
         # Smoothed counts
         Nf = []
@@ -270,7 +261,7 @@ class GenomicSignal:
         # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
         # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
 
         # Iterating on sequence to create signal
@@ -294,15 +285,11 @@ class GenomicSignal:
         fLast = af[0]
         rLast = ar[0]
         bias_corrected_signal = []
-        bias_corrected_signal_forward = []
-        bias_corrected_signal_reverse = []
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
             zf = log(nf[i] + 1) - log(nhatf + 1)
             zr = log(nr[i] + 1) - log(nhatr + 1)
-            bias_corrected_signal_forward.append(zf)
-            bias_corrected_signal_reverse.append(zr)
             bias_corrected_signal.append(zf + zr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
@@ -311,22 +298,13 @@ class GenomicSignal:
             rSum += ar[i + (window / 2)]
             rLast = ar[i - (window / 2) + 1]
 
-        # Fixing the negative number in bias corrected signal
-        min_value = abs(min(bias_corrected_signal_forward))
-        bias_fixed_signal_forward = [e + min_value for e in bias_corrected_signal_forward]
-
-        min_value = abs(min(bias_corrected_signal_reverse))
-        bias_fixed_signal_reverse = [e + min_value for e in bias_corrected_signal_reverse]
-
-        min_value = abs(min(bias_corrected_signal))
-        bias_fixed_signal = [e + min_value for e in bias_corrected_signal]
+        for i in range(len(bias_corrected_signal)):
+            if bias_corrected_signal[i] < 0: bias_corrected_signal[i] = 0.0
+        # bias_fixed_signal = [e + min_value for e in bias_corrected_signal]
 
         # Termination
         fastaFile.close()
-        if not strands_specific:
-            return bias_fixed_signal
-        else:
-            return bias_fixed_signal_forward, bias_fixed_signal_reverse
+        return bias_corrected_signal
 
     def hon_norm(self, sequence, mean, std):
         """ 
@@ -416,11 +394,11 @@ class GenomicSignal:
 
         return slope_seq
 
-    def get_signal_per_strand(self,ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
-                              initial_clip=1000, per_norm=98, per_slope=98,
-                              bias_table=None, genome_file_name=None, print_raw_signal=False,
-                              print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
-                              print_diff_signal=False, strands_specific=True):
+    def get_signal1(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                    initial_clip=1000, per_norm=98, per_slope=98,
+                    bias_table=None, genome_file_name=None, print_raw_signal=False,
+                    print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
+                    print_diff_signal=False):
         """
 
         :param ref: Chromosome name.
@@ -467,18 +445,19 @@ class GenomicSignal:
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal.tolist()]
 
         # Cleavage bias correction
-        bc_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
+        bc_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift,
+                                         reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bc_signal))
 
         # Hon normalization (between-dataset normalization)
-        perc = scoreatpercentile(boyle_signal, per_norm)
-        std = boyle_signal.std()
-        hon_signal = self.hon_norm(boyle_signal, perc, std)
+        # perc = scoreatpercentile(boyle_signal, per_norm)
+        # std = boyle_signal.std()
+        # hon_signal = self.hon_norm(boyle_signal, perc, std)
 
         # Slope signal
-        slope_signal = self.slope(hon_signal, self.sg_coefs)
+        slope_signal = self.slope(boyle_signal, self.sg_coefs)
 
         # Writing signal
         if (print_raw_signal):
@@ -494,7 +473,7 @@ class GenomicSignal:
         if (print_norm_signal):
             signal_file = open(print_norm_signal, "a")
             signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(hon_signal)]) + "\n")
+                [str(e) for e in nan_to_num(boyle_signal)]) + "\n")
             signal_file.close()
         if (print_slope_signal):
             signal_file = open(print_slope_signal, "a")
@@ -506,8 +485,6 @@ class GenomicSignal:
             signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
                 [str(e) for e in nan_to_num(diff_signal)]) + "\n")
             signal_file.close()
+
         # Returning normalized and slope sequences
-        return hon_signal, slope_signal, diff_signal
-
-
-
+        return boyle_signal, slope_signal, diff_signal

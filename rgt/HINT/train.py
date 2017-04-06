@@ -28,11 +28,11 @@ class TrainHMM:
 
     def __init__(self, bias_bam_file, training_bam_file, annotate_file, print_bed_file,
                  output_locaiton, output_fname,
-                 print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal,
+                 print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal, print_diff_signal,
                  atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
                  atac_forward_shift, atac_reverse_shift,
                  estimate_bias_correction, estimate_bias_type,
-                 bias_table, original_regions, organism, k_nb, strands_specific):
+                 bias_table, original_regions, organism, k_nb, strands_specific, chrom, start, end):
         self.bias_bam_file = bias_bam_file
         self.training_bam_file = training_bam_file
         self.annotate_fname = annotate_file
@@ -43,6 +43,7 @@ class TrainHMM:
         self.print_bc_signal = print_bc_signal
         self.print_norm_signal = print_norm_signal
         self.print_slope_signal = print_slope_signal
+        self.print_diff_signal = print_diff_signal
         self.atac_initial_clip = atac_initial_clip
         self.atac_downstream_ext = atac_downstream_ext
         self.atac_upstream_ext = atac_upstream_ext
@@ -55,9 +56,9 @@ class TrainHMM:
         self.organism = organism
         self.k_nb = k_nb
         self.strands_specific = strands_specific
-        self.chrom = "chr1"
-        self.start = 211428000
-        self.end = 211438000
+        self.chrom = chrom
+        self.start = start
+        self.end = end
 
     def read_states_signals(self):
         # Read states from the annotation file
@@ -96,97 +97,31 @@ class TrainHMM:
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.training_bam_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
-        norm_signal, slope_signal = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
-                                                          downstream_ext=self.atac_downstream_ext,
-                                                          upstream_ext=self.atac_upstream_ext,
-                                                          forward_shift=self.atac_forward_shift,
-                                                          reverse_shift=self.atac_reverse_shift,
-                                                          initial_clip=self.atac_initial_clip,
-                                                          bias_table=table,
-                                                          genome_file_name=genome_data.get_genome(),
-                                                          print_raw_signal=self.print_raw_signal,
-                                                          print_bc_signal=self.print_bc_signal,
-                                                          print_norm_signal=self.print_norm_signal,
-                                                          print_slope_signal=self.print_slope_signal)
+        norm_signal, slope_signal, diff_signal = raw_signal.get_signal1(
+                                                    ref=self.chrom, start=self.start, end=self.end,
+                                                    downstream_ext=self.atac_downstream_ext,
+                                                    upstream_ext=self.atac_upstream_ext,
+                                                    forward_shift=self.atac_forward_shift,
+                                                    reverse_shift=self.atac_reverse_shift,
+                                                    initial_clip=self.atac_initial_clip,
+                                                    bias_table=table,
+                                                    genome_file_name=genome_data.get_genome(),
+                                                    print_raw_signal=self.print_raw_signal,
+                                                    print_bc_signal=self.print_bc_signal,
+                                                    print_norm_signal=self.print_norm_signal,
+                                                    print_slope_signal=self.print_slope_signal,
+                                                    print_diff_signal=self.print_diff_signal)
         if self.print_bed_file:
             self.output_bed_file(states)
 
-        return states, norm_signal, slope_signal
-
-    def read_states_signals_strand(self):
-        # Read states from the annotation file
-        states = ""
-        with open(self.annotate_fname) as annotate_file:
-            for line in annotate_file:
-                if len(line) < 2 or "#" in line or "=" in line:
-                    continue
-                ll = line.strip().split(" ")
-                for state in ll[1:-1]:
-                    states += state
-
-        # If need to estimate bias table
-        genome_data = GenomeData(self.organism)
-        table = None
-        if self.estimate_bias_correction:
-
-            bias_table = BiasTable(original_regions=self.original_regions, dnase_file_name=self.bias_bam_file,
-                                   genome_file_name=genome_data.get_genome(), k_nb=self.k_nb,
-                                   forward_shift=self.atac_forward_shift, reverse_shift=self.atac_reverse_shift,
-                                   estimate_bias_type=self.estimate_bias_type, output_loc=self.output_locaiton)
-
-
-            table = bias_table.estimate_table()
-
-            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.atac_forward_shift))
-            bias_table.write_tables(bias_fname, table)
-
-        # If the bias table is provided
-        if self.bias_table:
-            bias_table = BiasTable(output_loc=self.output_locaiton)
-            bias_table_list = self.bias_table.split(",")
-            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
-                                          table_file_name_R=bias_table_list[1])
-
-        # Get the normalization and slope signal from the raw bam file
-        raw_signal = GenomicSignal(self.training_bam_file)
-        raw_signal.load_sg_coefs(slope_window_size=9)
-        sum_signal, sum_slope = raw_signal.get_signal(ref=self.chrom, start=self.start, end=self.end,
-                                                          downstream_ext=self.atac_downstream_ext,
-                                                          upstream_ext=self.atac_upstream_ext,
-                                                          forward_shift=self.atac_forward_shift,
-                                                          reverse_shift=self.atac_reverse_shift,
-                                                          initial_clip=self.atac_initial_clip,
-                                                          bias_table=table,
-                                                          genome_file_name=genome_data.get_genome(),
-                                                          print_raw_signal=self.print_raw_signal,
-                                                          print_bc_signal=self.print_bc_signal,
-                                                          print_norm_signal=self.print_norm_signal,
-                                                          print_slope_signal=self.print_slope_signal)
-        if self.print_bed_file:
-            self.output_bed_file(states)
-
-        signal_forward, _, signal_reverse, _ = raw_signal.get_signal_per_strand(ref=self.chrom, start=self.start, end=self.end,
-                                                          downstream_ext=self.atac_downstream_ext,
-                                                          upstream_ext=self.atac_upstream_ext,
-                                                          forward_shift=self.atac_forward_shift,
-                                                          reverse_shift=self.atac_reverse_shift,
-                                                          initial_clip=self.atac_initial_clip,
-                                                          genome_file_name=genome_data.get_genome(),
-                                                          print_raw_signal=self.print_raw_signal,
-                                                          print_bc_signal=self.print_bc_signal,
-                                                          print_norm_signal=self.print_norm_signal,
-                                                          print_slope_signal=self.print_slope_signal)
-        subtrac_signal = np.subtract(signal_forward, signal_reverse)
-        subtrac_slope = raw_signal.slope(subtrac_signal, raw_signal.sg_coefs)
-
-        return states, sum_signal, sum_slope, subtrac_signal, subtrac_slope
+        return states, norm_signal, slope_signal, diff_signal
 
     def train(self):
         # Estimate the HMM parameters using the maximum likelihood method.
-        states, norm_signal, slope_signal = self.read_states_signals()
+        states, norm_signal, slope_signal, diff_signal = self.read_states_signals()
         hmm_model = HMM()
 
-        hmm_model.dim = 2
+        hmm_model.dim = 3
         # States number
         state_list = [int(state) for state in list(states)]
         hmm_model.states = len(np.unique(np.array(state_list)))
@@ -243,12 +178,12 @@ class TrainHMM:
             model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
         hmm_model.save_hmm(model_fname)
 
-    def train_subtract(self):
+    def train1(self):
         # Estimate the HMM parameters using the maximum likelihood method.
-        states, sum_signal, sum_slope, subtrac_signal, subtrac_slope = self.read_states_signals_strand()
+        states, norm_signal, slope_signal, diff_signal = self.read_states_signals()
         hmm_model = HMM()
 
-        hmm_model.dim = 4
+        hmm_model.dim = 3
         # States number
         state_list = [int(state) for state in list(states)]
         hmm_model.states = len(np.unique(np.array(state_list)))
@@ -279,31 +214,26 @@ class TrainHMM:
 
         # Emission
         for i in range(hmm_model.states):
-            state_sum = list()
-            state_slope_sum = list()
-            state_subtrac = list()
-            state_slope_subtrac = list()
+            state_norm = list()
+            state_slope = list()
+            state_diff = list()
             for j in range(len(state_list)):
                 if state_list[j] == i:
-                    state_sum.append(sum_signal[j])
-                    state_slope_sum.append(sum_slope[j])
-                    state_subtrac.append(subtrac_signal[j])
-                    state_slope_subtrac.append(subtrac_slope[j])
+                    state_norm.append(norm_signal[j])
+                    state_slope.append(slope_signal[j])
+                    state_diff.append(diff_signal[j])
             # Compute the mean of norm and slope signal
             means_list = list()
-            means_list.append(np.mean(state_sum))
-            means_list.append(np.mean(state_slope_sum))
-            means_list.append(np.mean(state_subtrac))
-            means_list.append(np.mean(state_slope_subtrac))
+            means_list.append(np.mean(state_norm))
+            means_list.append(np.mean(state_slope))
+            means_list.append(np.mean(state_diff))
             hmm_model.means.append(means_list)
-
 
             # Compute covariance matrix of norm, slope and subtrac signal
             signal = list()
-            signal.append(state_sum)
-            signal.append(state_slope_sum)
-            signal.append(state_subtrac)
-            signal.append(state_slope_subtrac)
+            signal.append(state_norm)
+            signal.append(state_slope)
+            signal.append(state_diff)
 
             covs_list = list()
             covs_matrix = np.cov(np.array(signal))
