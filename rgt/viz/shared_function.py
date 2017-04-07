@@ -11,6 +11,8 @@ import datetime
 from shutil import copyfile
 import multiprocessing.pool
 import matplotlib.pyplot as plt
+import matplotlib.colors as colormat
+import matplotlib.cm as cmx
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Local Libraries
@@ -121,7 +123,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
 
     else:
         if annotation:
-            colors = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
+            color_res = plt.cm.Set3(numpy.linspace(0, 1, len(annotation))).tolist()
         else:
             # colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             # colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
@@ -139,8 +141,15 @@ def colormap(exps, colorby, definedinEM, annotation=None):
                 n = len(exps.fieldsDict[colorby].keys())
             # print(n)
             # colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
-            colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
-    return colors
+            # print(len(plt.cm.Set1().tolist()))
+            # color_res = [ plt.cm.Set1(i) for i in range(n) ]
+            # np.linspace(0, 1, 9)
+            set1 = plt.get_cmap('Set1')
+            cNorm = colormat.Normalize(vmin=0, vmax=n)
+            scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
+            color_res = [ scalarMap.to_rgba(d) for d in range(n) ]
+            # print(color_res)
+    return color_res
 
 
 def colormaps(exps, colorby, definedinEM):
@@ -163,7 +172,7 @@ def colormaps(exps, colorby, definedinEM):
             n = len(exps.fieldsDict["factor"].keys())
         else:
             n = len(exps.fieldsDict[colorby].keys())
-        colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
+        colors = plt.cm.Set1(numpy.linspace(0, n-1, n)).tolist()
 
 
         # if len(exps.get_regionsnames()) < 20:

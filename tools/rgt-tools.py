@@ -388,8 +388,12 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-p', metavar='position', type=int, help="The start position")
     parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
-
-
+    ############### TXP to BED #############################################
+    # python rgt-convertor.py txp2bed -i -o
+    parser_txp2bed = subparsers.add_parser('txp2bed',
+                                           help="[BED] Convert TXP file into BED format")
+    parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
+    parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ##########################################################################
     ##########################################################################
@@ -1558,3 +1562,14 @@ if __name__ == "__main__":
         else:
             print("5' - "+ seq.sequences[0].seq[start:end]+ " - 3'")
 
+
+
+    ############### FASTA slicing #######################################
+    elif args.mode == "txp2bed":
+        from rgt.tdf.RNADNABindingSet import RNADNABindingSet
+        txp = RNADNABindingSet("txp")
+        txp.read_txp(filename=args.i, dna_fine_posi=True)
+        tmp = os.path.join(os.path.dirname(args.o), "temp.bed")
+        txp.write_bed(filename=tmp)
+        os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
+        os.remove(tmp)
