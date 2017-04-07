@@ -323,7 +323,8 @@ class GenomicSignal:
         if std != 0:
             norm_seq = []
             for e in sequence:
-                norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+                if e == 0: norm_seq.append(e)
+                else: norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
             return norm_seq
         else:
             return sequence
@@ -452,12 +453,12 @@ class GenomicSignal:
         boyle_signal = array(self.boyle_norm(bc_signal))
 
         # Hon normalization (between-dataset normalization)
-        # perc = scoreatpercentile(boyle_signal, per_norm)
-        # std = boyle_signal.std()
-        # hon_signal = self.hon_norm(boyle_signal, perc, std)
+        perc = scoreatpercentile(boyle_signal, per_norm)
+        std = boyle_signal.std()
+        hon_signal = self.hon_norm(boyle_signal, perc, std)
 
         # Slope signal
-        slope_signal = self.slope(boyle_signal, self.sg_coefs)
+        slope_signal = self.slope(hon_signal, self.sg_coefs)
 
         # Writing signal
         if (print_raw_signal):
@@ -473,7 +474,7 @@ class GenomicSignal:
         if (print_norm_signal):
             signal_file = open(print_norm_signal, "a")
             signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(boyle_signal)]) + "\n")
+                [str(e) for e in nan_to_num(hon_signal)]) + "\n")
             signal_file.close()
         if (print_slope_signal):
             signal_file = open(print_slope_signal, "a")
@@ -487,4 +488,4 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return boyle_signal, slope_signal, diff_signal
+        return hon_signal, slope_signal, diff_signal
