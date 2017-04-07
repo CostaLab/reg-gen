@@ -135,3 +135,34 @@ echo "Running enrichment.."
 rgt-motifanalysis --enrichment input/background.bed input/regions_K562.bed
 
 echo "********* Motif Analysis test completed ****************"
+
+#################################################################
+# HINT
+echo "**********************************************"
+echo "Testing HINT"
+mkdir -p ${DIR}/HINT
+
+cd ${DIR}/HINT
+
+url="http://www.regulatory-genomics.org/wp-content/uploads/2017/04/RGT_HINT_Test.tar.gz"
+
+# Download the data
+file="${DIR}/HINT/HINT_Test/InputMatrix_HINT_DNase.txt"
+if [ -f "$file" ]
+then
+    echo "Test data exist."
+else
+    echo "Downloading test data."
+    wget -qO- -O RGT_HINT_Test.tar.gz $url && tar xvfz RGT_HINT_Test.tar.gz && rm RGT_HINT_Test.tar.gz
+fi
+
+# Run test script
+cd RGT_HINT_Test
+echo "Running HINT using DNase-seq and histone modification data.."
+rgt-hint --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINT_DNase+Histone.txt
+echo "Running HINT using only DNase-seq data.."
+rgt-hint --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINT_DNase.txt
+echo "Running HINT-BC using only DNase-seq data.."
+rgt-hint --default-bias-correction --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINTBC_DNase.txt
+
+echo "********* HINT test completed ****************"
