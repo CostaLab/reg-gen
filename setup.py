@@ -104,7 +104,7 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["scikit-learn>=0.14", "hmmlearn<0.2.0"],
+    ["scikit-learn>=0.14", "hmmlearn<0.2.0", "pyx<=0.12.1"],
     []
 ),
 "THOR": (
