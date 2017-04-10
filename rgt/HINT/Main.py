@@ -26,7 +26,7 @@ from evidence import Evidence
 from plot import Plot
 
 # External
-import numpy as np
+import os
 from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
