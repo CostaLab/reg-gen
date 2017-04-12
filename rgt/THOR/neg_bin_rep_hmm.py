@@ -61,7 +61,6 @@ def get_init_parameters(s0, s1, s2, **info):
         mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
 
-    print([var,mu])
     alpha = (var - mu) / np.square(mu)
     alpha[alpha < 0] = 0.001
     
