@@ -61,10 +61,15 @@ def get_init_parameters(s0, s1, s2, **info):
         mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
 
-    print([var,mu])
     alpha = (var - mu) / np.square(mu)
+    # np.nan_to_num(alpha)
+    print(alpha)
+    alpha[np.isnan(alpha)] = 0.001
+    print(alpha)
+    # np.where(alpha < 0, 0.001)
     alpha[alpha < 0] = 0.001
-    
+    print(alpha)
+
     for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])
         low = min(el[1,1], el[0,2]) + 0.5 * fabs(el[1,1] - el[0,2])
