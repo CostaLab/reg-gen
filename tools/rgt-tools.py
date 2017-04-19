@@ -288,6 +288,14 @@ if __name__ == "__main__":
                                             help="[BED] Standardize the chromosomes.")
     parser_bedschrom.add_argument('-i', metavar='input', type=str, help="Input BED file")
 
+    ############### BED add overlapping region name ################################
+    parser_adddata = subparsers.add_parser('bed_add_data',
+                                             help="[BED] Add overlapping region name")
+    parser_adddata.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_adddata.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_adddata.add_argument('-t', metavar='target', type=str, help="Target BED file")
+
+
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
@@ -1130,6 +1138,30 @@ if __name__ == "__main__":
         bed.read_bed(args.i)
         nbed = bed.standard_chrom()
         nbed.write_bed(args.i)
+
+
+    ############### BED add overlapping region name ###########################
+    #
+    elif args.mode == "bed_add_data":
+        print(tag + ": [BED] Add overlapping region name")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        target = GenomicRegionSet(args.t)
+        target.read_bed(args.t)
+        overlap_regions = target.intersect(bed, mode=OverlapType.ORIGINAL)
+        with open(args.i) as fin:
+            with open(args.o, "w") as fout:
+                for line in fin:
+                    if line.startswith("chr"):
+                        line = line.strip()
+                        l = line.split()
+                        overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
+                        if len(overlapping) > 0:
+                            print(line + "\t" + overlapping.sequences[0].name, file=fout)
+                        else:
+                            print(line + "\t.", file=fout)
+
+
 
     ############### BAM filtering by BED ###########################
     #
