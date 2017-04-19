@@ -462,73 +462,92 @@ class RNADNABindingSet:
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass
 
-    def read_txp(self, filename, dna_fine_posi=False, shift=None):
+    def read_txp(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
         
         with open(filename) as f:
             for line in f:
                 # skip the comment line
-                if line.startswith("TFO:") or line.startswith("TTS:") or line.startswith("    ") or line.startswith("#"):
-                    continue
-                if "\tchrM:" in line: continue # skip chromosome Mitocondria
-                line = line.strip("\n")
-                line = line.split("\t")
-                
-                if len(line) < 10: 
-                    #print(line)
-                    continue # skip the unimportant lines in txp
-
-                if len(line) == 12:
-                    line.insert(8,"_")
-                # Format of each line in txp
-                #     [0] Sequence-ID   
-                #     [1] TFO start   
-                #     [2] TFO end 
-                #     [3] Duplex-ID   
-                #     [4] TTS start   
-                #     [5] TTS end 
-                #     [6] Score   
-                #     [7] Error-rate  
-                #     [8] Errors  
-                #     [9] Motif   
-                #     [10] Strand  
-                #     [11] Orientation 
-                #     [12] Guanine-rate
-
-                # RNA binding site
-                if not self.name: self.name = line[0]
-                
-                if shift:
-                    rna_start, rna_end = int(line[1])+shift, int(line[2])+shift
+                if seq:
+                    if seq > 0:
+                        binding.append(line.strip())
+                    else:
+                        load_binding_site = True
                 else:
-                    rna_start, rna_end = int(line[1]), int(line[2])
-                
-                if rna_start > rna_end: rna_start, rna_end =  rna_end, rna_start
+                    if line.startswith("TFO:") or line.startswith("TTS:") or \
+                            line.startswith("    ") or line.startswith("#"):
+                        continue
+                    else:
+                        load_binding_site = True
 
-                rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6], 
-                                  errors_bp=line[8], motif=line[9], orientation=line[11], 
-                                  guanine_rate=line[12])
-                # DNA binding site
-                rg = line[3].split(":")[1].split("-")
-                try: rg.remove("")
-                except: pass
-                
-                if dna_fine_posi:
-                    dna_start = int(rg[0]) + int(line[4])
-                    dna_end = int(rg[0]) + int(line[5])
-                    dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end, 
-                                        name=line[3], orientation=line[10],
-                                        data=[line[6], line[9], line[11]]) # score, motif, orientation
+                if load_binding_site:
+                    if "\tchrM:" in line: continue # skip chromosome Mitocondria
+                    line = line.strip("\n")
+                    line = line.split("\t")
 
-                else:
-                    try:
-                        dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]), 
+
+                    if len(line) < 10:
+                        #print(line)
+                        continue # skip the unimportant lines in txp
+
+                    if len(line) == 12:
+                        line.insert(8,"_")
+                    # Format of each line in txp
+                    #     [0] Sequence-ID
+                    #     [1] TFO start
+                    #     [2] TFO end
+                    #     [3] Duplex-ID
+                    #     [4] TTS start
+                    #     [5] TTS end
+                    #     [6] Score
+                    #     [7] Error-rate
+                    #     [8] Errors
+                    #     [9] Motif
+                    #     [10] Strand
+                    #     [11] Orientation
+                    #     [12] Guanine-rate
+
+                    # RNA binding site
+                    if not self.name: self.name = line[0]
+
+                    if shift:
+                        rna_start, rna_end = int(line[1])+shift, int(line[2])+shift
+                    else:
+                        rna_start, rna_end = int(line[1]), int(line[2])
+
+                    if rna_start > rna_end: rna_start, rna_end =  rna_end, rna_start
+
+                    rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6],
+                                      errors_bp=line[8], motif=line[9], orientation=line[11],
+                                      guanine_rate=line[12])
+                    # DNA binding site
+                    rg = line[3].split(":")[1].split("-")
+                    try: rg.remove("")
+                    except: pass
+
+                    if dna_fine_posi:
+                        dna_start = int(rg[0]) + int(line[4])
+                        dna_end = int(rg[0]) + int(line[5])
+                        dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end,
                                             name=line[3], orientation=line[10],
-                                            data=[line[6], line[9], line[11]])
-                    except:
-                        print(line)
+                                            data=[line[6], line[9], line[11]]) # score, motif, orientation
+
+                    else:
+                        try:
+                            dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
+                                                name=line[3], orientation=line[10],
+                                                data=[line[6], line[9], line[11]])
+                        except:
+                            print(line)
                 # Map RNA binding site to DNA binding site
-                self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
+                if seq:
+                    if seq > 0:
+                        cont_seq -= 1
+                    else:
+                        binding = []
+                        cont_seq = 4
+                else:
+                    self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
 
     def map_promoter_name(self, promoters):
         """Give each DNA region the corresponding name from the given promoter"""
