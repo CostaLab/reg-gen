@@ -634,10 +634,10 @@ class RandomTest:
             else:
                 html.add_heading("Associated gene: " + split_gene_name(gene_name=region.name, org=self.organism),
                                  idtag=region.toString())
-                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + region.chrom + "%3A" + str(region.initial) +
-                                       "-" + str(region.final) + '" style="margin-left:50">' +
-                                       region.toString(space=True) + '</a>'])
+                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
+                #                        "&position=" + region.chrom + "%3A" + str(region.initial) +
+                #                        "-" + str(region.final) + '" style="margin-left:50">' +
+                #                        region.toString(space=True) + '</a>'])
                 data_table = []
                 for rd in self.region_dbs[region.toString()]:
                     rbs = rd.rna.str_rna(pa=False)

@@ -513,7 +513,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=False):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -523,6 +523,11 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
                     output=os.path.join(temp, "dna_"+prefix+".txp"), 
                     l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par)
+    # Autobinding
+    if autobinding:
+        run_triplexator(ss=rna_fasta, ds=os.path.join(temp, "dna_" + prefix + ".fa"),
+                        output=os.path.join(temp, "autobinding_" + prefix + ".txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par + "_auto-binding-file")
     # Read txp
     txp = RNADNABindingSet("dna")
     txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
@@ -533,6 +538,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
         os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
 
     return txp
+
 
 def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
     """Perform Triplexator"""

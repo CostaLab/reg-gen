@@ -1096,11 +1096,11 @@ class PromoterTest:
                 except:
                     gn = promoter.name
                 html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
-                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
-                    promoter.final) +
-                                       '" style="margin-left:50">' +
-                                       promoter.toString(space=True) + '</a>'])
+                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
+                #                        "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
+                #     promoter.final) +
+                #                        '" style="margin-left:50">' +
+                #                        promoter.toString(space=True) + '</a>'])
                 data_table = []
 
                 for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
