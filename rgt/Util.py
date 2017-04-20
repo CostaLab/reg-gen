@@ -538,17 +538,19 @@ class Html:
             os.stat(target_dir)
         except:
             os.mkdir(target_dir)
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery_metadata(), dst=os.path.join(target_dir,"jquery.metadata.js"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(),
+                        dst=os.path.join(target_dir,"rgt_logo.gif"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(),
+                        dst=os.path.join(target_dir,"style.css"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(),
+                        dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
         if self.other_logo:
             if self.other_logo == "TDF":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(), dst=os.path.join(target_dir,"tdf_logo.png"))
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(),
+                                dst=os.path.join(target_dir,"tdf_logo.png"))
             if self.other_logo == "viz":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(), dst=os.path.join(target_dir,"viz_logo.png"))
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(),
+                                dst=os.path.join(target_dir,"viz_logo.png"))
           
     def create_header(self, relative_dir=None, RGT_name=True, other_logo=None):
         """Creates default document header.
@@ -563,13 +565,9 @@ class Html:
         self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>') 
             
         if relative_dir:
-            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
-            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
         else:
-            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
-            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
         
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
@@ -627,15 +625,6 @@ class Html:
                                  "\">"+\
                                  "<font size='1'>"+k+"</font>"+"</a>")
 
-        #self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
-        #self.document.append("  <tr>")
-        #self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-        #link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>" for k in self.links_dict.keys()])
-        #self.document.append(link_str)
-        #self.document.append("    </b></font></td>")
-        #self.document.append("  </tr>")
-        #self.document.append("</table>")
-
     def create_footer(self):
         """Adds footer."""
         self.document.append("<br><br>")
@@ -646,7 +635,7 @@ class Html:
         self.document.append("</body>")
         self.document.append("</html>")
 
-    def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True, idtag=None):
+    def add_heading(self, heading, align=50, color="black", face="Arial", size=5, bold=True, idtag=None):
         """Creates a heading.
         
         *Keyword arguments:*
@@ -660,26 +649,21 @@ class Html:
             - idtag -- Add ID tag in the heading element (default = None).
         """
 
-        if idtag:
-            idstr = ' id="'+idtag+'"'
-        else:
-            idstr = ""
-
+        if idtag: idstr = ' id="'+idtag+'"'
+        else: idstr = ""
         # Creating header
         content_str = ""
         if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\""+idstr+">"
         elif(isinstance(align,str)): content_str += "<p align=\""+align+"\""+idstr+">"
         else: pass # ERROR
         content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\""+idstr+">"
-        if(bold): content_str += "<b>"
+        if bold: content_str += "<b>"
         self.document.append(content_str)
-
         # Printing heading name
         self.document.append(heading)
-
         # Creating footing
         end_str = ""
-        if(bold): end_str += "</b>"
+        if bold: end_str += "</b>"
         end_str += "</font></p>"
         self.document.append(end_str)
 
@@ -708,7 +692,6 @@ class Html:
             - border_list -- Table borders (default = None).
             - sortable -- Whether it is a sortable table (default = False).
         """
-        #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
         
         if not border_list:
             border_list = [""] * len(data_table[0])
