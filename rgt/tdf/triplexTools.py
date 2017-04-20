@@ -147,9 +147,7 @@ def list_all_index(path, link_d=None):
         if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
         else:
-            new_line = [str(c),
-                        '<a href="' + os.path.join(exp, "index.html") + \
-                        '">' + exp + "</a>", profile[exp][0]]
+            new_line = [str(c), '<a href="' + os.path.join(exp, "index.html") + '">' + exp + "</a>", profile[exp][0]]
         new_line += [ profile[exp][12],#3 close genes
                       profile[exp][1], #4 exon
                       profile[exp][2], #5 length
@@ -656,7 +654,7 @@ def split_gene_name(gene_name, org):
             return gene_name
     else:    
         p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
-             "&db="+org+"&singleSearch=knownCanonical&position="
+             "&db="+org+"&singleSearch=knownCanonical&g="
         p2 = '" style="text-align:left" target="_blank">'
         p3 = '</a>'
 

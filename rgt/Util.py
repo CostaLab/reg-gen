@@ -649,8 +649,11 @@ class Html:
             - idtag -- Add ID tag in the heading element (default = None).
         """
 
-        if idtag: idstr = ' id="'+idtag+'"'
-        else: idstr = ""
+        if idtag:
+            idstr = ' id="'+idtag+'"'
+        else:
+            idstr = ""
+
         # Creating header
         content_str = ""
         if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\""+idstr+">"
@@ -659,15 +662,17 @@ class Html:
         content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\""+idstr+">"
         if bold: content_str += "<b>"
         self.document.append(content_str)
+
         # Printing heading name
         self.document.append(heading)
+
         # Creating footing
         end_str = ""
         if bold: end_str += "</b>"
         end_str += "</font></p>"
         self.document.append(end_str)
 
-    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
+    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50,
                         cell_align = 'center', auto_width=False, colorcode=None, header_titles=None,
                         border_list=None, sortable=False):
         """Creates a zebra table.
@@ -692,6 +697,7 @@ class Html:
             - border_list -- Table borders (default = None).
             - sortable -- Whether it is a sortable table (default = False).
         """
+        #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
         
         if not border_list:
             border_list = [""] * len(data_table[0])
