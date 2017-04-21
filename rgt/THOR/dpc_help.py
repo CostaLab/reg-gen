@@ -246,41 +246,41 @@ def _get_log_ratio(l1, l2):
     else:
         return sys.maxint
 
-
 def _merge_consecutive_bins(tmp_peaks, distr):
-    """Merge consecutive peaks and compute p-value. Return list 
+    """Merge consecutive peaks and compute p-value. Return list
     <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
     peaks = []
     pvalues = []
     i, j, = 0, 0
-    
+    merge = False
+
     while i < len(tmp_peaks):
         j+=1
         c, s, e, c1, c2, strand, strand_pos, strand_neg = tmp_peaks[i]
         v1 = c1
         v2 = c2
-        
+
         tmp_pos = [strand_pos]
         tmp_neg = [strand_neg]
         #merge bins
-        while i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
+        while merge and i+1 < len(tmp_peaks) and e == tmp_peaks[i+1][1] and strand == tmp_peaks[i+1][5]:
             e = tmp_peaks[i+1][2]
             v1 = map(add, v1, tmp_peaks[i+1][3])
             v2 = map(add, v2, tmp_peaks[i+1][4])
             tmp_pos.append(tmp_peaks[i+1][6])
             tmp_neg.append(tmp_peaks[i+1][7])
             i += 1
-        
+
         side = 'l' if strand == '+' else 'r'
         pvalues.append((v1, v2, side, distr))
-        
+
         ratio = _get_log_ratio(tmp_pos, tmp_neg)
         peaks.append((c, s, e, v1, v2, strand, ratio))
         i += 1
-    
+
     pvalues = map(_compute_pvalue, pvalues)
     assert len(pvalues) == len(peaks)
-    
+
     return pvalues, peaks
     
 
