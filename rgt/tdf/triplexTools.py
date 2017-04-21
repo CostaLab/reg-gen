@@ -640,9 +640,9 @@ def split_gene_name(gene_name, org):
     if gene_name[0:2] == "chr":
         return gene_name
 
-    if org=="hg19": ani = "human"
-    elif org=="hg38": ani = "human"
-    elif org=="mm9": ani = "mouse"
+    if org=="hg19": ani = "Homo_sapiens"
+    elif org=="hg38": ani = "Homo_sapiens"
+    elif org=="mm9": ani = "Mus_musculus"
     else: ani = None
 
     if not ani:
@@ -653,9 +653,9 @@ def split_gene_name(gene_name, org):
         else:
             return gene_name
     else:    
-        p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
-             "&db="+org+"&singleSearch=knownCanonical&g="
-        p2 = '" style="text-align:left" target="_blank">'
+        p1 = '<a href="http://www.ensembl.org/'+ani+\
+             "/Gene/Summary?g="
+        p2 = '" target="_blank">'
         p3 = '</a>'
 
         if ":" in gene_name:

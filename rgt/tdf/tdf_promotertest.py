@@ -349,7 +349,7 @@ class PromoterTest:
         ####################
         # DE
         self.txp_def = RNADNABindingSet("DE")
-        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
+        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True, seq=False)
         self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True,
                                name_replace=self.de_regions)  # asgene_organism=self.organism
         print("\t\t" + str(len(self.txp_def)) + "\tBinding sites on de promoters")
@@ -726,7 +726,7 @@ class PromoterTest:
                 svg = '<object type="image/svg+xml" data="' + f + '">Your browser does not support SVG</object>'
                 new_row = [dbd, svg]
                 data_table.append(new_row)
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left", clean=True)
 
         ####
         html.add_fixed_rank_sortable()
@@ -871,7 +871,7 @@ class PromoterTest:
                 data_table.append(newline)
             data_table = sorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titles, sortable=True, border_list=None)
+                                 header_titles=header_titles, sortable=True, border_list=None, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
 
@@ -919,7 +919,7 @@ class PromoterTest:
                       ["Output format", "-of", str(self.triplexator_p[5])],
                       ["Merge features", "-mf", str(self.triplexator_p[6])]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
+                             auto_width=True, clean=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))
 
@@ -1069,7 +1069,7 @@ class PromoterTest:
         # print(data_table)
         data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             header_titles=header_titlesp, border_list=None, sortable=True)
+                             header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
         html.add_heading("Notes")
         html.add_list(["DBS stands for DNA Binding Site on DNA.",
                        "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
@@ -1114,7 +1114,7 @@ class PromoterTest:
                                        rd.dna.orientation, rd.score, rd.motif, rd.orient])
 
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     header_titles=header_titles, sortable=True)
+                                     header_titles=header_titles, sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "promoters_dbds.html"))
 
@@ -1226,7 +1226,7 @@ class PromoterTest:
 
             data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titlesp, border_list=None, sortable=True)
+                                 header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
             html.add_list(["DBS stands for DNA Binding Site on DNA.",
                            "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])

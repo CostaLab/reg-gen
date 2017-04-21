@@ -459,7 +459,7 @@ class RandomTest:
                                    ])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 auto_width=True, header_titles=header_titles, sortable=True)
+                                 auto_width=True, header_titles=header_titles, sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbd_region.html"))
 
@@ -538,7 +538,7 @@ class RandomTest:
         data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         # data_table = sorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True, header_titles=header_titles, sortable=True)
+                             auto_width=True, header_titles=header_titles, sortable=True, clean=True)
         html.add_heading("Notes")
         html.add_list(["All target regions without any bindings are ignored."])
         html.add_fixed_rank_sortable()
@@ -613,7 +613,7 @@ class RandomTest:
             # data_table = sorted(data_table, key=lambda x: x[-1])
             data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titles, border_list=None, sortable=True)
+                                 header_titles=header_titles, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
             html.add_list(["DBS stands for DNA Binding Site on DNA.",
                            "DBS coverage is the proportion of the region where has potential to form triple helices with the given RNA."])
@@ -652,7 +652,7 @@ class RandomTest:
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
                                        rd.dna.orientation, rd.score, rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     auto_width=True)
+                                     auto_width=True, clean=True)
         html.write(os.path.join(directory, "region_dbs.html"))
 
         ###############################################################################33
@@ -686,6 +686,6 @@ class RandomTest:
                       ["Output format", "-of", str(self.triplexator_p[5])],
                       ["Merge features", "-mf", str(self.triplexator_p[6])]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
+                             auto_width=True, clean=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))
