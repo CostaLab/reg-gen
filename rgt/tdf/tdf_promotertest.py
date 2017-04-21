@@ -349,7 +349,7 @@ class PromoterTest:
         ####################
         # DE
         self.txp_def = RNADNABindingSet("DE")
-        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True, seq=False)
+        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True, seq=True)
         self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True,
                                name_replace=self.de_regions)  # asgene_organism=self.organism
         print("\t\t" + str(len(self.txp_def)) + "\tBinding sites on de promoters")
@@ -1079,10 +1079,10 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # promoters_dbds.html
-        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
         header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
                          "Score of binding event", "Motif of binding by triple helix rule",
-                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel"]
+                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel", "Binding Sequence between DNA and RNA"]
         header_list = header_sub
         html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
@@ -1109,9 +1109,9 @@ class PromoterTest:
                         # rbsm = rbsm.partition(":")[2].split("-")
                         if rd.rna.overlap(rbsm):
                             rbs = "<font color=\"red\">" + rbs + "</font>"
-
+                    # print(rd.match)
                     data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
-                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient, "\n".join(rd.match)])
 
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      header_titles=header_titles, sortable=True, clean=True)

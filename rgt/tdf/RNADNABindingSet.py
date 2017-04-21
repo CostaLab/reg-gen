@@ -42,9 +42,9 @@ class RNADNABinding:
     """
 
     __slots__ = ['rna', 'dna', 'motif', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 
-                 'rna_seq', 'dna_seq', 'match' ]
+                 'match' ]
 
-    def __init__(self, rna, dna, score, err_rate, err, guan_rate, rna_seq=None, dna_seq=None, match=None):
+    def __init__(self, rna, dna, score, err_rate, err, guan_rate, match=None):
         """Initiation"""
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
@@ -55,8 +55,6 @@ class RNADNABinding:
         self.err_rate = err_rate
         self.err = err
         self.guan_rate = guan_rate
-        self.rna_seq = rna_seq
-        self.dna_seq = dna_seq
         self.match = match
     
     def __str__(self):
@@ -467,10 +465,11 @@ class RNADNABindingSet:
 
         with open(filename) as f:
             for line in f:
+                line = line.strip()
                 # skip the comment line
-                if line.strip() == "" or line.startswith("#"): continue
+                if line == "" or line.startswith("#"): continue
 
-                l = line.strip().split()
+                l = line.split()
                 # Load binding site
                 if len(line) == 12:
                     l.insert(8,"_")
@@ -529,26 +528,23 @@ class RNADNABindingSet:
                                                 data=[l[6], l[9], l[11]])
                         except:
                             print(l)
-
-
                     if seq:
-                        cont_seq = 4
+                        cont_seq = 5
                         binding = []
+                        rd = [l[6],l[7],l[8],l[12]]
+
                     else:
                         self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8],
                                                guan_rate=l[12]))
 
-                elif seq:
-                    if cont_seq > 0:
-                        # print(cont_seq)
-                        # print(l)
-                        binding.append(l)
+                if len(l) < 10 and seq:
+                    if cont_seq > 1:
+                        binding.append(line)
                         cont_seq -= 1
                     else:
-                        print(binding)
-                        self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8],
-                                               guan_rate=l[12]))
-
+                        # self.sequences[-1].match = binding
+                        self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
+                                               guan_rate=rd[3], match=binding))
 
 
     def map_promoter_name(self, promoters):
