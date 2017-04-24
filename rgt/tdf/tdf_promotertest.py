@@ -1111,7 +1111,8 @@ class PromoterTest:
                             rbs = "<font color=\"red\">" + rbs + "</font>"
                     # print(rd.match)
                     data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
-                                       rd.dna.orientation, rd.score, rd.motif, rd.orient, "\n".join(rd.match)])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient,
+                                       '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
 
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                                      header_titles=header_titles, sortable=True, clean=True)

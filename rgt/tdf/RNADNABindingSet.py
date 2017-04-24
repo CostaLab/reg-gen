@@ -538,12 +538,19 @@ class RNADNABindingSet:
                                                guan_rate=l[12]))
 
                 if len(l) < 10 and seq:
-                    if cont_seq > 0:
-                        binding.append(line)
+                    # print(cont_seq)
+                    if "TFO: " in line: b = line.replace("TFO: ", "")
+                    elif "TTS: " in line: b = line.replace("TTS: ", "")
+                    elif "|" in line: b = "    " + line
+                    else: b = line
+
+                    binding.append(b)
+                    if cont_seq > 1:
+                        # print(line)
                         cont_seq -= 1
                     else:
                         # self.sequences[-1].match = binding
-                        print(binding)
+                        # print(binding)
                         self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
                                                guan_rate=rd[3], match=binding))
 
