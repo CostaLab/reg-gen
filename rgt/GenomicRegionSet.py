@@ -1823,15 +1823,14 @@ class GenomicRegionSet:
         chromosome_file = open(genome.get_chromosome_sizes(),'r')
         for line in chromosome_file:
             if "random" not in line and "_" not in line:
-                if chrom_X == False and "chrX" in line: continue
-                if chrom_Y == False and "chrY" in line: continue
-                if chrom_M == False and "chrM" in line: continue
+                if not chrom_X and "chrX" in line: continue
+                if not chrom_Y and "chrY" in line: continue
+                if not chrom_M and "chrM" in line: continue
                 chrom_region = GenomicRegion(chrom=line.split("\t")[0],
                                              initial=0,
                                              final=int(line.split("\t")[1]))
                 self.add(chrom_region)
                 continue
-
         chromosome_file.close()
         
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
@@ -2642,13 +2641,13 @@ class GenomicRegionSet:
 
     def average_size(self):
         """Return the average size of the regions"""
-        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        size = [ len(r) for r in self.sequences ]
         return sum(size)/len(size)
 
     def size_variance(self):
         """Return the average size of the regions"""
         import numpy as np
-        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        size = [ len(r) for r in self.sequences ]
         return np.std(size)
 
     def filter_by_size(self, maximum=None, minimum=1 ):
@@ -2667,9 +2666,6 @@ class GenomicRegionSet:
         """Return a list of distances between the closest regions from two region sets."""
         if not self.sorted: self.sort()
         if not y.sorted: y.sort()
-
-
-
 
         last_j = len(y) - 1
         j = 0

@@ -790,3 +790,32 @@ class AnnotationSet:
 
         if gene_set: return result_grs, unmapped_gene_list
         else: return result_grs
+
+
+    def get_biotypes(self):
+        """Get the region sets of different Biotypes.
+
+        *Keyword arguments:*
+
+        *Return:*
+
+            - result_grs -- A list of GenomicRegionSets containing the regions for each Biotype.
+        """
+
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+
+        # Fetching exons
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("exon")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.TRANSCRIPT_ID]
+            result_grs.add(gr)
+
+        if gene_set: return result_grs, unmapped_gene_list
+        else: return result_grs

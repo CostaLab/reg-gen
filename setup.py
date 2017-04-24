@@ -250,6 +250,7 @@ data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_mm9
 data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_mm9.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM1.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
+data_config_file.write("repeat_maskers: "+path.join(genome_dir,"repeat_maskers\n\n"))
 genome = "mm10"
 genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
@@ -268,6 +269,7 @@ data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg1
 data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg19.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v19.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+data_config_file.write("repeat_maskers: "+path.join(genome_dir,"repeat_maskers\n\n"))
 genome = "hg38"
 genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")
@@ -277,6 +279,7 @@ data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg3
 data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg38.bed\n"))
 data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v24.annotation.gtf\n"))
 data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+data_config_file.write("repeat_maskers: "+path.join(genome_dir,"repeat_maskers\n\n"))
 genome = "zv9"
 genome_dir = path.join(options.param_rgt_data_location, genome)
 data_config_file.write("["+genome+"]\n")

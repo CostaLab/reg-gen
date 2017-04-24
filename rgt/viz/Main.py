@@ -17,6 +17,7 @@ from lineplot import Lineplot
 from jaccard_test import Jaccard
 from projection_test import Projection
 from intersection_test import Intersect
+from bed_profile import BED_profile
 from shared_function import check_dir, print2, output_parameters,\
                             copy_em, list_all_index, output
 from plotTools import Venn
@@ -52,7 +53,15 @@ def main():
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
-    
+
+    ################### BED profile ##########################################
+    parser_bedprofile = subparsers.add_parser('bed_profile',
+                                              help='BED profile analyzes the given BED file(s) by their length, distribution and composition of the sequences.')
+    parser_bedprofile.add_argument('-i', metaavar='  ', help="Input experimental matrix")
+    parser_bedprofile.add_argument('-o', metavar='  ', help=helpoutput)
+    parser_bedprofile.add_argument('-organism', metavar='  ', default='hg19',
+                                   help='Define the organism. (default: %(default)s)')
+
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
     parser_projection.add_argument('-r', metavar='  ', help=helpreference)
@@ -279,8 +288,20 @@ def main():
         ##### Main #####################################################################################
         #################################################################################################
 
+        if args.mode == 'bed_profile':
+        ################### BED profile ##########################################
+            # Fetching BED files from EM
+            print2(parameter, "\n############# BED profile #############")
+            print2(parameter, "\tInput Experiment Matrix:\t" + args.i)
+            print2(parameter, "\tOutput directory:\t" + os.path.basename(args.o))
+            print2(parameter, "\tOrganism:\t" + args.organism)
+
+            bed_profile = BED_profile(args.i, args.organism)
+
+
+
         ################### Projection test ##########################################
-        if args.mode == 'projection':
+        elif args.mode == 'projection':
             # Fetching reference and query EM
             print2(parameter, "\n############# Projection Test #############")
             print2(parameter, "\tReference:        "+args.r)
