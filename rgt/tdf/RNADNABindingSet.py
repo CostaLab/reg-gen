@@ -522,14 +522,14 @@ class RNADNABindingSet:
                                             data=[l[6], l[9], l[11]]) # score, motif, orientation
 
                     else:
-                        try:
-                            dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
-                                                name=l[3], orientation=l[10],
-                                                data=[l[6], l[9], l[11]])
-                        except:
-                            print(l)
+                        # try:
+                        dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
+                                            name=l[3], orientation=l[10],
+                                            data=[l[6], l[9], l[11]])
+                        # except:
+                        #     print(l)
                     if seq:
-                        cont_seq = 5
+                        cont_seq = 4
                         binding = []
                         rd = [l[6],l[7],l[8],l[12]]
 
@@ -538,11 +538,12 @@ class RNADNABindingSet:
                                                guan_rate=l[12]))
 
                 if len(l) < 10 and seq:
-                    if cont_seq > 1:
+                    if cont_seq > 0:
                         binding.append(line)
                         cont_seq -= 1
                     else:
                         # self.sequences[-1].match = binding
+                        print(binding)
                         self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
                                                guan_rate=rd[3], match=binding))
 
