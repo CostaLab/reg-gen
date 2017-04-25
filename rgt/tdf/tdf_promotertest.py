@@ -322,6 +322,7 @@ class PromoterTest:
                               region_set=self.de_regions, name_replace=self.de_regions)
 
         self.rbss = self.txp_de.merged_dict.keys()
+
         for rbs in self.rbss:
             # DE
             self.txp_de.merged_dict[rbs].remove_duplicates()
@@ -483,6 +484,17 @@ class PromoterTest:
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
 
+    def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
+        rna = os.path.join(output, "rna_temp.fa")
+        run_triplexator(ss=None, ds=None, autobinding=rna,
+                        output=os.path.join(output, "autobinding.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par="abo_0")
+        self.autobinding = RNADNABindingSet("autobinding")
+        self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
+        # self.sort_autobinding = self.autobings.sort_rd_by_rbs(rbss=self.rbss)
+        self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+
+
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
@@ -589,6 +601,7 @@ class PromoterTest:
         self.link_d["RNA"] = "index.html"
         self.link_d["Sig promoters"] = "spromoters.html"
         self.link_d["All promoters"] = "promoters.html"
+        self.link_d["Autobinding"] = "autobinding.html"
         self.link_d["Parameters"] = "parameters.html"
 
         #############################################################
@@ -643,25 +656,26 @@ class PromoterTest:
                            " style=\"border-right:1pt solid gray\"", "",
                            " style=\"border-right:1pt solid gray\""]
         else:
-            header_list = [["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None],
-                           [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>"]]
+            header_list = [["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, "Autobinding"],
+                           [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>", "Number"]]
             header_titles = [["Rank of the talbe",
                               "DNA Binding Domain which is the functional region on RNA.",
                               "Promoters of the differential expression genes.", None,
                               "Promoters of the non-differential expression genes.", None,
-                              "Statistics based on promoters", None],
+                              "Statistics based on promoters", None, "The RNA regions which bind to themselves"],
                              ["",
                               "",
                               "Number of target promoters which contain DBSs (DNA Binding Sites).",
                               "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
                               "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
                               "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
-                              "Odds Ratio", "P-value"]
+                              "Odds Ratio", "P-value", "Number"]
                              ]
             border_list = ["style=\"border-right:1pt solid gray\"",
                            "style=\"border-right:1pt solid gray\"", "",
                            "style=\"border-right:1pt solid gray\"", "",
                            "style=\"border-right:1pt solid gray\"", "",
+                           "style=\"border-right:1pt solid gray\"",
                            "style=\"border-right:1pt solid gray\""]
 
         type_list = 'ssssssssssssssssssss'
@@ -699,7 +713,9 @@ class PromoterTest:
                        value2str(self.frequency["promoters"]["nde"][rbs][0]),
                        value2str(self.frequency["promoters"]["nde"][rbs][1]),
                        value2str(self.oddsratio[rbs]),
-                       p_promoter]
+                       p_promoter,
+                       '<a href="autobinding.html">' +
+                       str(len(self.autobinding.merged_dict[rbs]))+ '</a>']
             if self.showdbs:
                 new_row += [value2str(self.frequency["hits"]["de"][rbs][0]),
                             value2str(self.frequency["hits"]["de"][rbs][1]),
@@ -874,6 +890,26 @@ class PromoterTest:
                                  header_titles=header_titles, sortable=True, border_list=None, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
+
+        ################################################################
+        ############# Autobinding
+        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+
+        html.add_heading("Autobinding")
+        header_list = ["#", "DBD", "RNA", "DNA", "Score", "Motif", "Orientation", "Sequence"]
+        t = []
+        for rbs in self.rbss:
+            for i, rd in enumerate(self.autobinding):
+                if rbs.overlap(rd.rna):
+                    t.append([str(i), rbs.str_rna(pa=False),
+                              str(rd.rna.initial) + "-" + str(rd.rna.final),
+                              str(rd.dna.initial) + "-" + str(rd.dna.final),
+                              rd.score, rd.motif, rd.orient, '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
+        html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
+                             header_titles=header_titles, sortable=True, clean=True)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "autobinding.html"))
 
         ################################################################
         ############# Parameters

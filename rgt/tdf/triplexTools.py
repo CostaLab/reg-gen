@@ -538,7 +538,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     return txp
 
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=None):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
@@ -547,8 +547,12 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
 
     arguments = ""
-    if ss: arguments += "-ss "+ss+" "
-    if ds: arguments += "-ds "+ds+" "
+    if not autobinding:
+        if ss: arguments += "-ss "+ss+" "
+        if ds: arguments += "-ds "+ds+" "
+    else:
+        arguments += "-as " + autobinding + " "
+
     if l: arguments += "-l "+str(l)+" "
     if e: arguments += "-e "+str(e)+" "
     if c: arguments += "-c "+str(c)+" "
@@ -566,12 +570,13 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     arguments += "-o "+ os.path.basename(output) + " -od " + os.path.dirname(output)
 
     arg_strings  = arguments.split(' ')
+    # print(arg_strings)
     arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
 
     arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
         arg_ptr[i + 1] = s
-    
+    # print(arg_ptr)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
     os.remove(os.path.join(output + ".summary"))
     os.remove(os.path.join(output + ".log"))

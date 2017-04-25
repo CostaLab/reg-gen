@@ -465,11 +465,13 @@ class RNADNABindingSet:
 
         with open(filename) as f:
             for line in f:
+                # print(line)
                 line = line.strip()
                 # skip the comment line
                 if line == "" or line.startswith("#"): continue
 
                 l = line.split()
+                # print(l)
                 # Load binding site
                 if len(line) == 12:
                     l.insert(8,"_")
@@ -509,23 +511,33 @@ class RNADNABindingSet:
                     rna = BindingSite(chrom=l[0], initial=rna_start, final=rna_end, score=l[6],
                                       errors_bp=l[8], motif=l[9], orientation=l[11],
                                       guanine_rate=l[12])
+                    # print(l)
                     # DNA binding site
-                    rg = l[3].split(":")[1].split("-")
-                    try: rg.remove("")
-                    except: pass
+                    if ":" in l[3]:
+                        rg = l[3].split(":")[1].split("-")
+                        if dna_fine_posi:
+                            dna_start = int(rg[0]) + int(l[4])
+                            dna_end = int(rg[0]) + int(l[5])
+                            dna = GenomicRegion(chrom=l[3].split(":")[0], initial=dna_start, final=dna_end,
+                                                name=l[3], orientation=l[10],
+                                                data=[l[6], l[9], l[11]])  # score, motif, orientation
 
-                    if dna_fine_posi:
-                        dna_start = int(rg[0]) + int(l[4])
-                        dna_end = int(rg[0]) + int(l[5])
-                        dna = GenomicRegion(chrom=l[3].split(":")[0], initial=dna_start, final=dna_end,
-                                            name=l[3], orientation=l[10],
-                                            data=[l[6], l[9], l[11]]) # score, motif, orientation
+                        else:
+                            # try:
+                            dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
+                                                name=l[3], orientation=l[10],
+                                                data=[l[6], l[9], l[11]])
 
                     else:
-                        # try:
-                        dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
+                        # rg = l[3].split("-")
+                        # print(rg)
+                        dna = GenomicRegion(chrom=l[3], initial=int(l[4]), final=int(l[5]),
                                             name=l[3], orientation=l[10],
                                             data=[l[6], l[9], l[11]])
+                        # try: rg.remove("")
+                    # except: pass
+
+
                         # except:
                         #     print(l)
                     if seq:
