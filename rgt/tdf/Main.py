@@ -360,7 +360,7 @@ def main():
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        
+
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -377,6 +377,8 @@ def main():
                                 rna_name=promoter.rna_name, organism=promoter.organism,
                                 stat=promoter.stat, expression=promoter.rna_expression)
         promoter.dbd_regions(output=args.o)
+        promoter.autobinding(output=args.o, l=args.l, e=args.e,
+                             c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
@@ -512,6 +514,8 @@ def main():
         
         print2(summary, "Step 3: Generating plot and output HTML")
         randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
+        randomtest.autobinding(output=args.o, l=args.l, e=args.e,
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
 
         os.remove(os.path.join(args.o, "rna_temp.fa"))
         try:
