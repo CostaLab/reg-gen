@@ -493,7 +493,29 @@ class PromoterTest:
         self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
         # self.sort_autobinding = self.autobings.sort_rd_by_rbs(rbss=self.rbss)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        self.autobinding.motif_statistics()
 
+    def dbs_motif(self, outdir):
+        self.txp_def.motif_statistics()
+        for i, mode in enumerate(self.txp_def.motifs.keys()):
+            for con in self.txp_def.motifs[mode].keys():
+                self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
+
+        # f, ax = plt.subplots(1, 1, dpi=300, figsize=(6, 6))
+        # labels = []
+        # sizes = []
+        # for i, mode in enumerate(self.txp_def.motifs.keys()):
+        #     for con in self.txp_def.motifs[mode].keys():
+        #         labels.append(mode+" "+con)
+        #         sizes.append(self.txp_def.motifs[mode][con])
+
+        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+
+        # ax.pie(sizes, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90)
+        # ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        # pp = PdfPages(os.path.join(outdir, "dbs_motif_piechart.pdf"))
+        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        # pp.close()
 
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS

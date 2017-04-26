@@ -64,7 +64,39 @@ class RNADNABinding:
 
     def __eq__(self, other):
         return (self.dna, self.rna) == (other.dna, other.rna)
-        
+
+    def motif_statistics(self):
+        if not self.match: return None
+        else:
+            res = {"MA": {"A": 0, "G": 0, "T": 0},
+                   "MP": {"C": 0, "G": 0, "T": 0},
+                   "RA": {"A": 0, "G": 0, "T": 0},
+                   "YP": {"C": 0, "G": 0, "T": 0}}
+            # res = numpy.array([[0,0,0],[0,0,0][0,0,0][0,0,0]])
+            if self.strand == "+":
+                rna = self.match[0].split()[1]
+                linking = self.match[1].strip()
+                # dnap = self.match[2].split()[1]
+                # dnan = self.match[3].split()[1]
+            elif self.strand == "-":
+                rna = self.match[3].split()[1]
+                linking = self.match[2].strip()
+                # dnap = self.match[0].split()[1]
+                # dnan = self.match[1].split()[1]
+
+            for i, bp in enumerate(linking):
+                if bp == "|":
+                    if rna[i].upper() == "A":
+                        res[self.motif+self.orient]["A"] += 1
+                    elif rna[i].upper() == "G":
+                        res[self.motif + self.orient]["G"] += 1
+                    elif rna[i].upper() == "T":
+                        res[self.motif + self.orient]["T"] += 1
+                    elif rna[i].upper() == "C":
+                        res[self.motif + self.orient]["C"] += 1
+            return res
+
+
 class RNADNABindingSet:
     """A framework to map DNA binding sites to corresponding RNA binding sites 
     
@@ -726,3 +758,15 @@ class RNADNABindingSet:
                 if rd.rna.overlap(rbs):
                     z.add(rd)
         return z
+
+    def motif_statistics(self):
+        self.motifs = {"MA": {"A": 0, "G": 0, "T": 0},
+                       "MP": {"C": 0, "G": 0, "T": 0},
+                       "RA": {"A": 0, "G": 0, "T": 0},
+                       "YP": {"C": 0, "G": 0, "T": 0}}
+        for s in self:
+            m = s.motif_statistics()
+            for mode in m.keys():
+                for com in m[mode].keys():
+                    self.motifs[mode][com] += m[mode][com]
+        # print(self.motifs)

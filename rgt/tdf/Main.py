@@ -379,6 +379,7 @@ def main():
         promoter.dbd_regions(output=args.o)
         promoter.autobinding(output=args.o, l=args.l, e=args.e,
                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        promoter.dbs_motif(outdir=args.o)
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass

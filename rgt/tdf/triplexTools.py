@@ -209,7 +209,9 @@ def revise_index(root):
 
 def update_profile(dirpath, expression, name_list=None):
     header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                   "Top_DBD", "p-value", "closest_genes"]
+                   "Top_DBD", "p-value", "closest_genes",
+                   "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
+                   "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
     profiles = []
     pro = os.path.join(dirpath, "profile.txt")
     if not os.path.isfile(pro):
@@ -254,13 +256,28 @@ def update_profile(dirpath, expression, name_list=None):
                         if l[0] == "genome": each_organism = l[1]
                         if l[0] == "DBD_sig": each_DBD_sig = l[1]
                         if l[0] == "p_value": each_p_value = l[1]
+                        if l[0] == "MA_A": MA_A = l[1]
+                        if l[0] == "MA_G": MA_G = l[1]
+                        if l[0] == "MA_T": MA_T = l[1]
+                        if l[0] == "MP_C": MP_C = l[1]
+                        if l[0] == "MP_G": MP_G = l[1]
+                        if l[0] == "MP_T": MP_T = l[1]
+                        if l[0] == "RA_A": RA_A = l[1]
+                        if l[0] == "RA_G": RA_G = l[1]
+                        if l[0] == "RA_T": RA_T = l[1]
+                        if l[0] == "YP_C": YP_C = l[1]
+                        if l[0] == "YP_G": YP_G = l[1]
+                        if l[0] == "YP_T": YP_T = l[1]
+
                 with open(summary) as g:
                     for line in g:
                         if "rgt-TDF" in line and " -de " in line:
                             l = line.strip().split()
                             each_target_region = os.path.basename(l[l.index("-de") + 1])
                 profiles.append([item,each_name,each_tag,each_organism,each_target_region,
-                                 each_DBD_sig,"n.a.",each_p_value,"-"])
+                                 each_DBD_sig,"n.a.",each_p_value,"-",
+                                 MA_A, MA_G, MA_T, MP_C, MP_G, MP_T,
+                                 RA_A, RA_G, RA_T, YP_C, YP_G, YP_T])
 
     with open(pro, "w") as f:
         print("\t".join(header_list), file=f)
@@ -1157,7 +1174,14 @@ def write_stat(stat, filename):
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
+                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+                  "MA_A", "MA_G", "MA_T",
+                  "MP_C", "MP_G", "MP_T",
+                  "RA_A", "RA_G", "RA_T",
+                  "YP_C", "YP_G", "YP_T"]
+    print(stat)
+
+
     with open(filename, "w") as f:
         for k in order_stat:
             try:
