@@ -334,6 +334,8 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
+    parser_thorsf.add_argument('-b', metavar='bin', type=str, help="Define bin size")
+    parser_thorsf.add_argument('-s', metavar='step', type=str, help="Define step size")
 
     ############### GENOME get sequence ####################################################
     # python /projects/reg-gen/tools/rgt-tools.py getseq -d /data/rgt
@@ -1349,7 +1351,7 @@ if __name__ == "__main__":
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
                 s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
-                length = abs(region.final - region.initial)
+                length = len(region)
                 nbins = length / args.s
                 ns1 = float(s1) / nbins
                 ns2 = float(s2) / nbins
