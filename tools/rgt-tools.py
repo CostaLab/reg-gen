@@ -1153,8 +1153,8 @@ if __name__ == "__main__":
             with open(args.o, "w") as fout:
                 for line in fin:
                     if line.startswith("chr"):
-
-                        l = line.strip().split()
+                        line = line.strip()
+                        l = line.split()
                         overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
                         if len(overlapping) > 0:
                             print(line + "\t" + overlapping.sequences[0].name, file=fout)
