@@ -1353,7 +1353,7 @@ if __name__ == "__main__":
                 ns1 = float(s1) / length
                 ns2 = float(s2) / length
                 data = "\t".join([l[0], str(s1), str(s2), str(length),
-                                  str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
+                                  str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
                 # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
                 # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
 
