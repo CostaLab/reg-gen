@@ -1350,8 +1350,9 @@ if __name__ == "__main__":
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
                 s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
                 length = abs(region.final - region.initial)
-                ns1 = float(s1) / length
-                ns2 = float(s2) / length
+                nbins = length / args.s
+                ns1 = float(s1) / nbins
+                ns2 = float(s2) / nbins
                 data = "\t".join([l[0], str(s1), str(s2), str(length),
                                   str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
                 # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
