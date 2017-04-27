@@ -208,7 +208,7 @@ def main():
                 base = os.path.basename(target)
                 h = os.path.join(target, "index.html")
                 stat = os.path.join(target, "statistics_" + base + ".txt")
-                fp = target + "/style"
+                fp = "./style"
                 html = Html(name=base, links_dict=link_d,
                             fig_rpath=fp,
                             RGT_header=False, other_logo="TDF")
@@ -231,7 +231,8 @@ def main():
                         else:
                             c += 1
                             l = line.strip().split()
-                            data_table.append([str(c), l[0], l[16],
+                            hh = "./"+l[0]+"/index.html"
+                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[16],
                                                l[2], l[3], l[17],
                                                l[13], l[12], l[7],
                                                l[1], l[4]])
@@ -265,7 +266,7 @@ def main():
                                 line = line.strip().split("\t")
                                 if line[0] == "name": continue
                                 nt += 1
-                                if float(line[12]) < 0.05: ns += 1
+                                if float(line[13]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
             # print(condition_list)
