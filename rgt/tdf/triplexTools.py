@@ -1146,8 +1146,8 @@ def get_rna_region_str(rna):
 def no_binding_response(args, rna_regions, rna_name, organism, stat, expression):
     print("*** Find no DBD having DBS with cutoff = "+str(args.ccf))
 
-    pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
-    exp = os.path.basename(args.o)
+    # pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
+    # exp = os.path.basename(args.o)
     try:
         if args.de:
             tar = args.de
@@ -1155,17 +1155,26 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
             tar = args.bed
     except:
         tar = args.bed
-    stat["DBD_all"] = 0
-    stat["DBSs_target_all"] = 0
-    stat["DBSs_target_DBD_sig"] = 0
 
-    save_profile(rna_regions=rna_regions, rna_name=rna_name,
-                 organism=organism, output=args.o, bed=args.bed,
-                 geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[],
-                 expression=expression)
+    # stat["DBD_all"] = 0
+    # stat["DBD_sig"] = 0
+    # stat["DBSs_target_all"] = 0
+    # stat["DBSs_target_DBD_sig"] = 0
+    # stat["DBSs_background_all"] = 0
+    # stat["DBSs_background_DBD_sig"] = 0
+    # stat["p_value"] = "-"
 
-    revise_index(root=os.path.dirname(os.path.dirname(args.o)))
-    shutil.rmtree(args.o)
+    # save_profile(rna_regions=rna_regions, rna_name=rna_name,
+    #              organism=organism, output=args.o, bed=args.bed,
+    #              geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[],
+    #              expression=expression)
+
+    # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
+    # shutil.rmtree(args.o)
+    for f in os.listdir(args.o):
+        os.remove(os.path.join(args.o, f))
+
+    write_stat(stat, os.path.join(args.o, "stat.txt"))
     sys.exit(1)
 
 def write_stat(stat, filename):

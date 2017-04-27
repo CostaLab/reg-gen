@@ -581,12 +581,16 @@ class RNADNABindingSet:
                         self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8],
                                                guan_rate=l[12]))
 
-                if len(l) < 10 and seq:
+                elif len(l) < 10 and seq:
                     # print(cont_seq)
-                    if "TFO: " in line: b = line.replace("TFO: ", "")
-                    elif "TTS: " in line: b = line.replace("TTS: ", "")
-                    elif "|" in line: b = "    " + line
-                    else: b = line
+                    if "TFO: " in line:
+                        b = line.replace("TFO: ", "")
+                    elif "TTS: " in line:
+                        b = line.replace("TTS: ", "")
+                    elif "|" in line:
+                        b = "    " + line
+                    else:
+                        b = line
 
                     binding.append(b)
                     if cont_seq > 1:

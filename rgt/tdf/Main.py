@@ -342,7 +342,7 @@ def main():
             n = args.o.count("/") - 3 + 1
             print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
 
-        args.r = os.path.normpath(os.path.join(dir,args.r))
+        args.r = os.path.normpath(os.path.join(dir, args.r))
         
         if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
         if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
@@ -371,15 +371,15 @@ def main():
         promoter.fisher_exact(alpha=args.a)
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        
-        if len(promoter.rbss) == 0:
-            no_binding_response(args=args, rna_regions=promoter.rna_regions,
-                                rna_name=promoter.rna_name, organism=promoter.organism,
-                                stat=promoter.stat, expression=promoter.rna_expression)
         promoter.dbd_regions(output=args.o)
         promoter.autobinding(output=args.o, l=args.l, e=args.e,
                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
         promoter.dbs_motif(outdir=args.o)
+        if len(promoter.rbss) == 0:
+            no_binding_response(args=args, rna_regions=promoter.rna_regions,
+                                rna_name=promoter.rna_name, organism=promoter.organism,
+                                stat=promoter.stat, expression=promoter.rna_expression)
+
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
@@ -419,11 +419,11 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
-        save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
-                     organism=promoter.organism, output=args.o, bed=args.bed,
-                     geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
-                     sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
-        revise_index(root=os.path.dirname(os.path.dirname(args.o)))
+        # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
+        #              organism=promoter.organism, output=args.o, bed=args.bed,
+        #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
+        #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
+        # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
         try: os.remove(os.path.join(args.o, "de.fa"))
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))

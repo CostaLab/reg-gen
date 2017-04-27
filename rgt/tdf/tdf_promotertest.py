@@ -55,7 +55,16 @@ class PromoterTest:
         self.scoreh = scoreh
         self.motif = OrderedDict()
         self.sig_DBD = []
-        self.stat = OrderedDict(name=rna_name, genome=self.gtf)
+        # self.stat = {name=rna_name, genome=self.gtf)
+        self.stat = { "name":rna_name, "genome":self.gtf, "exons":1, "seq_length": None,
+                      "target_regions": 0, "background_regions": 0,
+                      "DBD_all": 0, "DBD_sig": 0,
+                      "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
+                      "DBSs_background_all": 0, "DBSs_background_DBD_sig": 0, "p_value": "-",
+                      "MA_A": 0, "MA_G": 0, "MA_T": 0,
+                      "MP_C": 0, "MP_G": 0, "MP_T": 0,
+                      "RA_A": 0, "RA_G": 0, "RA_T": 0,
+                      "YP_C": 0, "YP_G": 0, "YP_T": 0 }
         ####################################################################################
         # Input BED files
         if bed and bg:
@@ -920,6 +929,7 @@ class PromoterTest:
 
         html.add_heading("Autobinding")
         header_list = ["#", "DBD", "RNA", "DNA", "Score", "Motif", "Orientation", "Sequence"]
+
         t = []
         for rbs in self.rbss:
             for i, rd in enumerate(self.autobinding):
@@ -929,7 +939,7 @@ class PromoterTest:
                               str(rd.dna.initial) + "-" + str(rd.dna.final),
                               rd.score, rd.motif, rd.orient, '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
         html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
-                             header_titles=header_titles, sortable=True, clean=True)
+                             sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "autobinding.html"))
 
