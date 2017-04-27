@@ -224,7 +224,7 @@ def main():
 
                 with open(stat) as f_stat:
                     for line in f_stat:
-                        if line.startswith("Experiment"):
+                        if line.startswith("name"):
                             continue
                         elif not line.strip():
                             continue
@@ -289,7 +289,7 @@ def main():
                                   sortable=True, clean=True)
             html.add_fixed_rank_sortable()
             html.write(os.path.join(args.path,"index.html"))
-            
+
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
             merge_DBD_regions(path=args.path)
