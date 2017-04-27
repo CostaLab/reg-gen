@@ -29,7 +29,7 @@ from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
     get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, region_link_internet
+    split_gene_name, region_link_internet, rna_associated_gene
 
 
 # Color code for all analysis
@@ -276,9 +276,12 @@ class PromoterTest:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
-
+        r_genes = rna_associated_gene(rna_regions=self.rna_regions,
+                                      name=self.rna_name, organism=self.organism)
+        self.stat["associated_gene"] = r_genes
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
+
         elif expfile:
             with open(expfile) as f:
                 for line in f:
@@ -287,6 +290,7 @@ class PromoterTest:
                         self.rna_expression = l[1]
         else:
             self.rna_expression = "n.a."
+        self.stat["expression"] = str(self.rna_expression)
 
     def connect_rna(self, rna, temp):
         d = connect_rna(rna, temp, self.rna_name)

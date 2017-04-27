@@ -1186,6 +1186,7 @@ def write_stat(stat, filename):
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
                   "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+                  "associated_gene", "expression",
                   "MA_A", "MA_G", "MA_T",
                   "MP_C", "MP_G", "MP_T",
                   "RA_A", "RA_G", "RA_T",
@@ -1204,6 +1205,7 @@ def integrate_stat(path):
                   "DBSs_target_all", "DBSs_target_DBD_sig",
                   "DBSs_background_all", "DBSs_background_DBD_sig",
                   "Norm_DBD", "Norm_DBS", "Norm_DBS_sig", "p_value",
+                  "associated_gene", "expression",
                   "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
                   "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
     # nested_dict = lambda: defaultdict(nested_dict)

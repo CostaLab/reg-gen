@@ -12,6 +12,8 @@ import datetime
 import subprocess
 import matplotlib
 matplotlib.use('Agg', warn=False)
+from collections import *
+import natsort as natsort_ob
 
 # Local Libraries
 # Distal Libraries
@@ -21,7 +23,7 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat, update_profile, merge_DBD_regions,\
-                         save_profile
+                         save_profile, rank_array
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -184,6 +186,7 @@ def main():
         ####################################################################################
         ######### Integration
         if args.mode == "integrate":
+
             targets = []
             for dirpath, dnames, fnames in os.walk(args.path):
                 for f in fnames:
@@ -191,54 +194,102 @@ def main():
                         targets.append(os.path.dirname(dirpath))
             targets = list(set(targets))
 
+            # Build tabs for each condition
+            link_d = OrderedDict()
+            for tar in sorted([os.path.basename(t) for t in targets]):
+                link_d[tar] = "../" + tar + "/index.html"
+
             # For each condition
             for target in targets:
                 # stat
                 integrate_stat(path=target)
+
                 # index.html
+                base = os.path.basename(target)
+                h = os.path.join(target, "index.html")
+                stat = os.path.join(target, "statistics_" + base + ".txt")
+                fp = target + "/style"
+                html = Html(name=base, links_dict=link_d,
+                            fig_rpath=fp,
+                            RGT_header=False, other_logo="TDF")
+                html.add_heading(base)
+                data_table = []
+                type_list = 'sssssssssssss'
+                col_size_list = [20] * 20
+                c = 0
+                header_list = ["No.", "RNA", "Closest genes",
+                               "Exon", "Length", "Expression*",
+                               "Norm DBS*", "Norm DBD*", "No sig. DBD",
+                               "Organism", "Target region", "Rank*"]
+
+                with open(stat) as f_stat:
+                    for line in f_stat:
+                        if line.startswith("Experiment"):
+                            continue
+                        elif not line.strip():
+                            continue
+                        else:
+                            c += 1
+                            l = line.strip().split()
+                            data_table.append([str(c), l[0], l[16],
+                                               l[2], l[3], l[17],
+                                               l[13], l[12], l[7],
+                                               l[1], l[4]])
+                rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
+                rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
+                rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else float(x[5]) for x in data_table])
+                rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+
+                nd = [d + [str(rank_sum[i])] for i, d in enumerate(data_table)]
+                nd = natsort_ob.natsorted(nd, key=lambda x: x[-1])
+                html.add_zebra_table(header_list, col_size_list, type_list, nd,
+                                     sortable=True, clean=True)
+                html.add_fixed_rank_sortable()
+                html.write(h)
 
 
-
+            # Project level index file
             condition_list = []  # name, link, no. tests, no. sig.
             for item in os.listdir(args.path):
                 if item == "style": continue
-                if os.path.isfile(os.path.join(args.path, item)): continue
+                if os.path.isfile(os.path.join(args.path, item)):
+                    continue
                 elif os.path.isdir(os.path.join(args.path, item)):
                     h = os.path.join(item, "index.html")
-                    pro = os.path.join(args.path, item, "profile.txt")
-                    if os.path.isfile(pro):
-                        integrate_stat(path=os.path.join(args.path, item))
+                    stat = os.path.join(args.path, item, "statistics_" + item + ".txt")
+                    if os.path.isfile(stat):
                         nt = 0
                         ns = 0
-                        with open(pro) as f:
+                        with open(stat) as f:
                             for line in f:
                                 line = line.strip().split("\t")
                                 if line[0] == "Experiment": continue
                                 nt += 1
-                                if float(line[7]) < 0.05: ns += 1
+                                if float(line[12]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
             # print(condition_list)
             link_d = {"List":"index.html"}
             fp = condition_list[0][0] + "/style"
-            html = Html(name="Directory: "+args.path, links_dict=link_d, 
-                        fig_rpath=fp, #fig_dir=fp, 
+            html = Html(name="Directory: " + args.path, links_dict=link_d,
+                        fig_rpath=fp,
                         RGT_header=False, other_logo="TDF")
             html.add_heading("All conditions in: "+args.path+"/")
             data_table = []
             type_list = 'sssssssssssss'
-            col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
+            col_size_list = [20] * 10
             c = 0
             header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
             for i, exp in enumerate(condition_list):
                 c += 1
-                data_table.append([str(c), 
+                data_table.append([str(c),
                                    '<a href="'+exp[1]+'">'+exp[0]+"</a>",
                                    exp[2], exp[3] ])
-            html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
-                                  align=10, cell_align="left", sortable=True)
+            html.add_zebra_table( header_list, col_size_list, type_list, data_table,
+                                  sortable=True, clean=True)
             html.add_fixed_rank_sortable()
             html.write(os.path.join(args.path,"index.html"))
+            
             gen_heatmap(path=args.path)
             generate_rna_exp_pv_table(root=args.path, multi_corr=False)
             merge_DBD_regions(path=args.path)
