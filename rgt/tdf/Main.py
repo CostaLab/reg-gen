@@ -210,7 +210,7 @@ def main():
                 stat = os.path.join(target, "statistics_" + base + ".txt")
                 fp = "./style"
                 html = Html(name=base, links_dict=link_d,
-                            fig_rpath=fp,
+                            fig_rpath=fp, homepage="../index.html",
                             RGT_header=False, other_logo="TDF")
                 html.add_heading(base)
                 data_table = []
@@ -219,7 +219,7 @@ def main():
                 c = 0
                 header_list = ["No.", "RNA", "Closest genes",
                                "Exon", "Length", "Expression*",
-                               "Norm DBS*", "Norm DBD*", "No sig. DBD",
+                               "Norm DBS*", "Norm DBD*", "Number sig_DBD",
                                "Organism", "Target region", "Rank*"]
 
                 with open(stat) as f_stat:
@@ -266,7 +266,7 @@ def main():
                                 line = line.strip().split("\t")
                                 if line[0] == "name": continue
                                 nt += 1
-                                if float(line[13]) < 0.05: ns += 1
+                                if float(line[15]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
             # print(condition_list)
