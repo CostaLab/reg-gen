@@ -549,14 +549,18 @@ class AnnotationSet:
         unmapped_gene_list = None
 
 
-        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set:
+            mapped_gene_list, unmapped_gene_list, maping_dict = self.fix_gene_names(gene_set, output_dict=True)
 
         # Fetching genes
 
         if not variants: target = "gene"
         else: target = "transcript"
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:target, self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:target}
+        if gene_set:
+            query_dictionary = {self.GeneField.FEATURE_TYPE:target,
+                                self.GeneField.GENE_ID:mapped_gene_list}
+        else:
+            query_dictionary = {self.GeneField.FEATURE_TYPE:target}
         
         query_annset = self.get(query_dictionary)
 
@@ -571,9 +575,14 @@ class AnnotationSet:
                 gr.initial = gr.final - 1
                 gr.final = gr.initial + promoterLength + 1
 
-            if gene_id: gr.name = e[self.GeneField.GENE_ID]
-            else: gr.name = e[self.GeneField.GENE_NAMES]
+            if gene_set:
+                gr.name = maping_dict[e[self.GeneField.GENE_ID]]
+            elif gene_id:
+                gr.name = e[self.GeneField.GENE_ID]
+            else:
+                gr.name = e[self.GeneField.GENE_NAMES]
             result_grs.add(gr)
+
         if unmaplist: return result_grs, unmapped_gene_list
         else: return result_grs
 

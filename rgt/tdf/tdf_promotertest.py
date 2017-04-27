@@ -167,6 +167,7 @@ class PromoterTest:
                     de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
                                                                     gene_set=self.de_gene,
                                                                     unmaplist=True, variants=False)
+
                     print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
                     if len(unmapped_gene_list) > 0:
                         print2(summary, "   \t" + str(len(unmapped_gene_list)) + "\tunmapped promoters: " + ",".join(
@@ -188,10 +189,17 @@ class PromoterTest:
 
                     if score:
 
-                        self.scores = {}
+                        # self.scores = {}
                         for p in de_prom:
                             # d = c.split("\t")
-                            p.data = self.de_gene.values[self.ensembl2symbol[p.name]]
+                            # print(p.name)
+                            # print(self.ensembl2symbol.items()[:4])
+                            # print(self.de_gene.values.items()[:4])
+                            # if p.name.startswith("EN"):
+                            #     p.data = self.de_gene.values[self.ensembl2symbol[p.name.upper()]]
+                            # else:
+                            if p.name in self.de_gene.genes:
+                                p.data = self.de_gene.values[p.name.upper()]
                         self.scores = de_prom.get_score_dict()
                         # print(self.scores.keys()[:5])
                         # print(self.scores.values()[:5])
@@ -884,6 +892,8 @@ class PromoterTest:
                 #     scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
                 #     rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
                 #     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                print(self.txp_de.merged_dict[rbsm])
+                print(self.scores.keys()[:10])
                 rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array([self.scores[p.toString()] for p in self.txp_de.merged_dict[rbsm] ])
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 

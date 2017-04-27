@@ -528,7 +528,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=False):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=False, seq=False):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -545,7 +545,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par + "_auto-binding-file")
     # Read txp
     txp = RNADNABindingSet("dna")
-    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
+    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
     txp.remove_duplicates()
 
     if remove_temp:
@@ -1172,14 +1172,15 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
     # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
     # shutil.rmtree(args.o)
     for f in os.listdir(args.o):
-        os.remove(os.path.join(args.o, f))
+        if os.path.isfile(os.path.join(args.o, f)):
+            os.remove(os.path.join(args.o, f))
 
     write_stat(stat, os.path.join(args.o, "stat.txt"))
     sys.exit(1)
 
 def write_stat(stat, filename):
     """Write the statistics into file"""
-    # print(stat)
+
     order_stat = ["name", "genome", "exons", "seq_length",
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
@@ -1190,13 +1191,9 @@ def write_stat(stat, filename):
                   "RA_A", "RA_G", "RA_T",
                   "YP_C", "YP_G", "YP_T"]
 
-    # print(stat)
     with open(filename, "w") as f:
         for k in order_stat:
-            # try:
             print("\t".join([k, str(stat[k])]), file=f)
-            # except:
-            #     continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
@@ -1205,7 +1202,8 @@ def integrate_stat(path):
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+                  "DBSs_background_all", "DBSs_background_DBD_sig",
+                  "Norm_DBD", "Norm_DBS", "Norm_DBS_sig", "p_value",
                   "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
                   "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
     # nested_dict = lambda: defaultdict(nested_dict)
@@ -1219,12 +1217,17 @@ def integrate_stat(path):
                 for line in f:
                     l = line.strip().split()
                     data[item][l[0]] = l[1]
+
+            data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["Norm_DBS_sig"] = value2str(float(data[item]["DBSs_target_DBD_sig"]) / int(data[item]["seq_length"]) * 1000)
+
     with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
         for item in data.keys():
-            print(item)
-            print([data[item][o] for o in order_stat])
+            # print(item)
+            # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
 def merge_DBD_regions(path):

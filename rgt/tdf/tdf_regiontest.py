@@ -98,8 +98,8 @@ class RandomTest:
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
                             temp=temp, organism=self.organism, remove_temp=remove_temp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
-                            prefix="dbs", dna_fine_posi=True)
-        txpf.remove_duplicates()
+                            prefix="dbs", dna_fine_posi=True, seq=True)
+        # txpf.remove_duplicates()
         txpf.merge_rbs(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
 
@@ -258,10 +258,10 @@ class RandomTest:
         self.autobinding.motif_statistics()
 
     def dbs_motif(self, outdir):
-        self.txp_def.motif_statistics()
-        for i, mode in enumerate(self.txp_def.motifs.keys()):
-            for con in self.txp_def.motifs[mode].keys():
-                self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
+        self.txpf.motif_statistics()
+        for i, mode in enumerate(self.txpf.motifs.keys()):
+            for con in self.txpf.motifs[mode].keys():
+                self.stat[mode+"_"+con] = str(self.txpf.motifs[mode][con])
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""

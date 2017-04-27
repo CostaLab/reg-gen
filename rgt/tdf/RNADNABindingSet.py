@@ -768,9 +768,10 @@ class RNADNABindingSet:
                        "MP": {"C": 0, "G": 0, "T": 0},
                        "RA": {"A": 0, "G": 0, "T": 0},
                        "YP": {"C": 0, "G": 0, "T": 0}}
-        for s in self:
-            m = s.motif_statistics()
-            for mode in m.keys():
-                for com in m[mode].keys():
-                    self.motifs[mode][com] += m[mode][com]
+        if len(self) > 0:
+            for s in self:
+                m = s.motif_statistics()
+                for mode in m.keys():
+                    for com in m[mode].keys():
+                        self.motifs[mode][com] += m[mode][com]
         # print(self.motifs)

@@ -191,11 +191,13 @@ def main():
                         targets.append(os.path.dirname(dirpath))
             targets = list(set(targets))
 
-
+            # For each condition
             for target in targets:
+                # stat
                 integrate_stat(path=target)
+                # index.html
 
-            # sys.exit()
+
 
             condition_list = []  # name, link, no. tests, no. sig.
             for item in os.listdir(args.path):
