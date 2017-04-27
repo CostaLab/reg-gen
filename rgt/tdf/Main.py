@@ -263,7 +263,7 @@ def main():
                         with open(stat) as f:
                             for line in f:
                                 line = line.strip().split("\t")
-                                if line[0] == "Experiment": continue
+                                if line[0] == "name": continue
                                 nt += 1
                                 if float(line[12]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
