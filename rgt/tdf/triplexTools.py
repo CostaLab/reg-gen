@@ -1179,8 +1179,6 @@ def write_stat(stat, filename):
                   "MP_C", "MP_G", "MP_T",
                   "RA_A", "RA_G", "RA_T",
                   "YP_C", "YP_G", "YP_T"]
-    print(stat)
-
 
     with open(filename, "w") as f:
         for k in order_stat:
