@@ -184,11 +184,24 @@ def main():
         ####################################################################################
         ######### Integration
         if args.mode == "integrate":
-            condition_list = [] # name, link, no. tests, no. sig.
+            targets = []
+            for dirpath, dnames, fnames in os.walk(args.path):
+                for f in fnames:
+                    if f == "stat.txt":
+                        targets.append(os.path.dirname(dirpath))
+            targets = list(set(targets))
+
+
+            for target in targets:
+                integrate_stat(path=target)
+
+            # sys.exit()
+
+            condition_list = []  # name, link, no. tests, no. sig.
             for item in os.listdir(args.path):
                 if item == "style": continue
-                if os.path.isfile(os.path.join(args.path,item)): continue
-                elif os.path.isdir(os.path.join(args.path,item)):
+                if os.path.isfile(os.path.join(args.path, item)): continue
+                elif os.path.isdir(os.path.join(args.path, item)):
                     h = os.path.join(item, "index.html")
                     pro = os.path.join(args.path, item, "profile.txt")
                     if os.path.isfile(pro):
@@ -451,21 +464,21 @@ def main():
                         line = line.split("\t")
                         if line[0] == exp:
                             newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
+                                             args.organism, tar_reg, "0",
                                              "-", "1.0", r_genes, "No triplex found" ])
                             new_exp = False
                         else:
                             newlines.append(line)
                     if new_exp:
                         newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg,"0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
+                                         args.organism, tar_reg,"0",
+                                         "-", "1.0", r_genes, "No triplex found" ])
             else:
-                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs",
                                  "Top_DBD", "p-value","closest_genes"])
                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
+                                 args.organism, tar_reg, "0",
+                                 "-", "1.0", r_genes, "No triplex found" ])
             with open(pro_path,'w') as f:
                 for lines in newlines:
                     print("\t".join(lines), file=f)
@@ -483,9 +496,9 @@ def main():
         print2(summary, "*** Output directoey: "+os.path.basename(args.o))
 
         args.r = os.path.normpath(os.path.join(dir,args.r))
-        
+
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
-        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
+        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed,
                                 organism=args.organism, showdbs=args.showdbs)
         randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
@@ -496,6 +509,9 @@ def main():
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
         # print(args.par)
+        randomtest.autobinding(output=args.o, l=args.l, e=args.e,
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        randomtest.dbs_motif(outdir=args.o)
         if len(randomtest.rbss) == 0:
             # no_binding_code()
             no_binding_response(args=args, rna_regions=randomtest.rna_regions,
@@ -503,42 +519,37 @@ def main():
                                 stat=randomtest.stat, expression=randomtest.rna_expression)
 
         print2(summary, "Step 2: Randomization and counting number of binding sites")
-
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
                                filter_bed=args.f, alpha=args.a)
-        
-
+        randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
 
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        
+
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
-        randomtest.autobinding(output=args.o, l=args.l, e=args.e,
-                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
 
         os.remove(os.path.join(args.o, "rna_temp.fa"))
         try:
             os.remove(os.path.join(args.o, "rna_temp.fa.fai"))
         except:
             pass
-        
+
 
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",
-                            sig_region=randomtest.data["region"]["sig_region"], 
+                            sig_region=randomtest.data["region"]["sig_region"],
                             linelabel="No. DBS", filename="lineplot_region.png")
 
         #randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
         #                    log=args.log, ylabel="Number of target regions with DBS", 
         #                    sig_region=randomtest.data["region"]["sig_region"],
         #                    linelabel="No. target regions", filename="lineplot_region.png")
-        
-        randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix, 
-                           sig_region=randomtest.data["region"]["sig_region"], 
+
+        randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix,
+                           sig_region=randomtest.data["region"]["sig_region"],
                            truecounts=[r[0] for r in randomtest.counts_tr.values()],
-                           sig_boolean=randomtest.data["region"]["sig_boolean"], 
+                           sig_boolean=randomtest.data["region"]["sig_boolean"],
                            ylabel="Number of target regions",
                            filename="boxplot_regions" )
         #if args.showdbs:
@@ -546,7 +557,7 @@ def main():
         #                        log=args.log, ylabel="Number of DBS on target regions",
         #                        sig_region=randomtest.data["dbs"]["sig_region"], 
         #                        linelabel="No. DBS", filename="lineplot_dbs.png")
-            
+
         #    randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
         #                       sig_region=randomtest.data["dbs"]["sig_region"], 
         #                       truecounts=randomtest.counts_dbs.values(),
@@ -554,7 +565,7 @@ def main():
         #                       ylabel="Number of DBS on target regions",
         #                       filename="boxplot_dbs" )
 
-        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
+        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a,
                             score=args.score, obed=obed)
 
         t3 = time.time()
@@ -564,12 +575,12 @@ def main():
 
         output_summary(summary, args.o, "summary.txt")
         # save_profile(output=args.o, bed=args.bed)
-        save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
-                     organism=randomtest.organism, output=args.o, bed=args.bed,
-                     stat=randomtest.stat, topDBD=randomtest.topDBD,
-                     sig_DBD=randomtest.data["region"]["sig_region"],
-                     expression=randomtest.rna_expression)
-        list_all_index(path=os.path.dirname(args.o))
+        # save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
+        #              organism=randomtest.organism, output=args.o, bed=args.bed,
+        #              stat=randomtest.stat, topDBD=randomtest.topDBD,
+        #              sig_DBD=randomtest.data["region"]["sig_region"],
+        #              expression=randomtest.rna_expression)
+        # list_all_index(path=os.path.dirname(args.o))
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))

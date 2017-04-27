@@ -52,7 +52,15 @@ class RandomTest:
 
         self.topDBD = []
         self.stat = OrderedDict(name=rna_name, genome=organism)
-        self.stat["target_regions"] = str(len(self.dna_region))
+        # self.stat["target_regions"] = str(len(self.dna_region))
+        self.stat = {"name": rna_name, "genome": organism, "exons": 1, "seq_length": None,
+                     "target_regions": str(len(self.dna_region)), "background_regions": str(len(self.dna_region)),
+                     "DBD_all": 0, "DBD_sig": 0, "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
+                     "DBSs_background_all": "-", "DBSs_background_DBD_sig": "-", "p_value": "-",
+                     "MA_A": 0, "MA_G": 0, "MA_T": 0,
+                     "MP_C": 0, "MP_G": 0, "MP_T": 0,
+                     "RA_A": 0, "RA_G": 0, "RA_T": 0,
+                     "YP_C": 0, "YP_G": 0, "YP_T": 0}
 
 
     def get_rna_region_str(self, rna):
@@ -135,6 +143,7 @@ class RandomTest:
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
         """Perform randomization for the given times"""
+
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats - 1, num=41)).tolist()
         print("random_test")
@@ -220,7 +229,7 @@ class RandomTest:
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
 
         counts_dbss = [v[i] for v in dbss_counts]
-        self.stat["DBSs_random_ave"] = numpy.mean(counts_dbss)
+        self.stat["DBSs_background_all"] = numpy.mean(counts_dbss)
         try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
         except: self.stat["p_value"] = "1"
 
@@ -246,7 +255,13 @@ class RandomTest:
         self.autobinding = RNADNABindingSet("autobinding")
         self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        self.autobinding.motif_statistics()
 
+    def dbs_motif(self, outdir):
+        self.txp_def.motif_statistics()
+        for i, mode in enumerate(self.txp_def.motifs.keys()):
+            for con in self.txp_def.motifs[mode].keys():
+                self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
@@ -688,8 +703,9 @@ class RandomTest:
                               str(rd.dna.initial) + "-" + str(rd.dna.final),
                               rd.score, rd.motif, rd.orient,
                               '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
-        html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
-                             header_titles=header_titles, sortable=True, clean=True)
+        if len(t) > 0:
+            html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
+                                 sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "autobinding.html"))
 

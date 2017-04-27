@@ -938,8 +938,9 @@ class PromoterTest:
                               str(rd.rna.initial) + "-" + str(rd.rna.final),
                               str(rd.dna.initial) + "-" + str(rd.dna.final),
                               rd.score, rd.motif, rd.orient, '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
-        html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
-                             sortable=True, clean=True)
+        if len(t) > 0:
+            html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
+                                 sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "autobinding.html"))
 

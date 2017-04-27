@@ -1179,6 +1179,7 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
 
 def write_stat(stat, filename):
     """Write the statistics into file"""
+    # print(stat)
     order_stat = ["name", "genome", "exons", "seq_length",
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
@@ -1189,12 +1190,13 @@ def write_stat(stat, filename):
                   "RA_A", "RA_G", "RA_T",
                   "YP_C", "YP_G", "YP_T"]
 
+    # print(stat)
     with open(filename, "w") as f:
         for k in order_stat:
-            try:
-                print("\t".join([k,stat[k]]), file=f)
-            except:
-                continue
+            # try:
+            print("\t".join([k, str(stat[k])]), file=f)
+            # except:
+            #     continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
@@ -1203,21 +1205,26 @@ def integrate_stat(path):
                   "target_regions", "background_regions",
                   "DBD_all", "DBD_sig",
                   "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
-    nested_dict = lambda: defaultdict(nested_dict)
-    data = nested_dict()
+                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+                  "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
+                  "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
+    # nested_dict = lambda: defaultdict(nested_dict)
+    data = {}
 
     for item in os.listdir(path):
         pro = os.path.join(path, item, "stat.txt")
         if os.path.isfile(pro):
+            data[item] = {}
             with open(pro) as f:
                 for line in f:
-                    l = line.split()
+                    l = line.strip().split()
                     data[item][l[0]] = l[1]
-    with open(os.path.join(path,"statistics_"+base+".txt"), "w") as g:
+    with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
         for item in data.keys():
+            print(item)
+            print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
 def merge_DBD_regions(path):
