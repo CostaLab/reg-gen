@@ -334,8 +334,8 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
-    parser_thorsf.add_argument('-b', metavar='bin', type=str, help="Define bin size")
-    parser_thorsf.add_argument('-s', metavar='step', type=str, help="Define step size")
+    parser_thorsf.add_argument('-b', metavar='bin', type=int, help="Define bin size")
+    parser_thorsf.add_argument('-s', metavar='step', type=int, help="Define step size")
 
     ############### GENOME get sequence ####################################################
     # python /projects/reg-gen/tools/rgt-tools.py getseq -d /data/rgt
