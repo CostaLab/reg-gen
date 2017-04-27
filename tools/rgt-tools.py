@@ -1159,7 +1159,7 @@ if __name__ == "__main__":
                         l = line.split()
                         overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
                         if len(overlapping) > 0:
-                            print(line + "\t" + overlapping.sequences[0].name, file=fout)
+                            print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
                         else:
                             print(line + "\t.", file=fout)
 
