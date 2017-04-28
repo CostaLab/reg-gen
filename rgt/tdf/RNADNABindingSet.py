@@ -503,10 +503,9 @@ class RNADNABindingSet:
                 if line == "" or line.startswith("#"): continue
 
                 l = line.split()
-                # print(l)
                 # Load binding site
-                if len(line) == 12:
-                    l.insert(8,"_")
+                if len(l) == 12:
+                    l.insert(8, "_")
                 if len(l) == 13:
                     if "\tchrM:" in line: continue # skip chromosome Mitocondria
                     #
@@ -582,6 +581,7 @@ class RNADNABindingSet:
                                                guan_rate=l[12]))
 
                 elif len(l) < 10 and seq:
+                    # print(l)
                     # print(cont_seq)
                     if "TFO: " in line:
                         b = line.replace("TFO: ", "")

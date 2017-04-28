@@ -363,7 +363,8 @@ class RandomTest:
         ##################################################
         # index.html
 
-        html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
+        html = Html(name=html_header, links_dict=link_ds,
+                    fig_dir=os.path.join(os.path.dirname(directory),"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         # Plots
         html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])

@@ -212,7 +212,7 @@ def main():
                 html = Html(name=base, links_dict=link_d,
                             fig_rpath=fp, homepage="../index.html",
                             RGT_header=False, other_logo="TDF")
-                html.add_heading(base)
+                html.add_heading(target)
                 data_table = []
                 type_list = 'sssssssssssss'
                 col_size_list = [20] * 20

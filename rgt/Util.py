@@ -519,7 +519,8 @@ class Html:
         
         # Initialize document
         if fig_dir:
-            self.copy_relevent_files(fig_dir)
+            if not os.path.isdir(fig_dir):
+                self.copy_relevent_files(fig_dir)
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         else:
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)

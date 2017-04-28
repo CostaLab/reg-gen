@@ -650,7 +650,8 @@ class PromoterTest:
         #############################################################
         # Index main page
         #############################################################
-        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+        html = Html(name=html_header, links_dict=self.link_d,
+                    fig_dir=os.path.join(os.path.dirname(directory), "style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
         html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
