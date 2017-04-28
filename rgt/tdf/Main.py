@@ -234,7 +234,7 @@ def main():
                             hh = "./"+l[0]+"/index.html"
                             data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[16],
                                                l[2], l[3], l[17],
-                                               l[14], l[13], l[7],
+                                               l[14], l[13], l[7],l[19],
                                                l[1], l[4]])
                 rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
                 rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
