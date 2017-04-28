@@ -232,17 +232,18 @@ def main():
                             c += 1
                             l = line.strip().split()
                             hh = "./"+l[0]+"/index.html"
-                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[13],
+                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[16],
                                                l[2], l[3], l[17],
                                                l[14], l[13], l[7],
                                                l[1], l[4]])
                 rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
                 rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
-                rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else float(x[5]) for x in data_table])
+                rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
                 rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
 
-                nd = [d + [str(rank_sum[i])] for i, d in enumerate(data_table)]
-                nd = natsort_ob.natsorted(nd, key=lambda x: x[-1])
+                for i, d in enumerate(data_table):
+                    d.append(str(rank_sum[i]))
+                nd = natsort_ob.natsorted(data_table, key=lambda x: x[-1])
                 html.add_zebra_table(header_list, col_size_list, type_list, nd,
                                      sortable=True, clean=True)
                 html.add_fixed_rank_sortable()
