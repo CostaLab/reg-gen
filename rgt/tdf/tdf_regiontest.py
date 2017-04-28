@@ -57,10 +57,11 @@ class RandomTest:
                      "target_regions": str(len(self.dna_region)), "background_regions": str(len(self.dna_region)),
                      "DBD_all": 0, "DBD_sig": 0, "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
                      "DBSs_background_all": "-", "DBSs_background_DBD_sig": "-", "p_value": "-",
-                     "MA_A": 0, "MA_G": 0, "MA_T": 0,
-                     "MP_C": 0, "MP_G": 0, "MP_T": 0,
-                     "RA_A": 0, "RA_G": 0, "RA_T": 0,
-                     "YP_C": 0, "YP_G": 0, "YP_T": 0}
+                     "loci": "-", "autobinding": 0,
+                     "Mix_Antiparallel_A": 0, "Mix_Antiparallel_G": 0, "Mix_Antiparallel_T": 0,
+                     "Mix_Parallel_C": 0, "Mix_Parallel_G": 0, "Mix_Parallel_T": 0,
+                     "Purine_Antiparallel_A": 0, "Purine_Antiparallel_G": 0, "Purine_Antiparallel_T": 0,
+                     "Pyrimidine_Parallel_C": 0, "Pyrimidine_Parallel_G": 0, "Pyrimidine_Parallel_T": 0}
 
 
     def get_rna_region_str(self, rna):
@@ -70,6 +71,8 @@ class RandomTest:
         r_genes = rna_associated_gene(rna_regions=self.rna_regions,
                                       name=self.rna_name, organism=self.organism)
         self.stat["associated_gene"] = r_genes
+        self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
+                            str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
         else:
@@ -258,6 +261,7 @@ class RandomTest:
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
         self.autobinding = RNADNABindingSet("autobinding")
         self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
+        self.stat["autobinding"] = len(self.autobinding)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         self.autobinding.motif_statistics()
 

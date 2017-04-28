@@ -34,6 +34,19 @@ target_color = "mediumblue"
 nontarget_color = "darkgrey"
 sig_color = "powderblue"
 
+
+
+order_stat = ["name", "genome", "exons", "seq_length",
+              "target_regions", "background_regions",
+              "DBD_all", "DBD_sig",
+              "DBSs_target_all", "DBSs_target_DBD_sig",
+              "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+              "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
+              "associated_gene", "expression", "loci", "autobinding",
+              "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
+              "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
+              "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
+              "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
 ####################################################################################
 ####################################################################################
 
@@ -210,8 +223,10 @@ def revise_index(root):
 def update_profile(dirpath, expression, name_list=None):
     header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
                    "Top_DBD", "p-value", "closest_genes",
-                   "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
-                   "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
+                   "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
+                   "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
+                   "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
+                   "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
     profiles = []
     pro = os.path.join(dirpath, "profile.txt")
     if not os.path.isfile(pro):
@@ -256,18 +271,18 @@ def update_profile(dirpath, expression, name_list=None):
                         if l[0] == "genome": each_organism = l[1]
                         if l[0] == "DBD_sig": each_DBD_sig = l[1]
                         if l[0] == "p_value": each_p_value = l[1]
-                        if l[0] == "MA_A": MA_A = l[1]
-                        if l[0] == "MA_G": MA_G = l[1]
-                        if l[0] == "MA_T": MA_T = l[1]
-                        if l[0] == "MP_C": MP_C = l[1]
-                        if l[0] == "MP_G": MP_G = l[1]
-                        if l[0] == "MP_T": MP_T = l[1]
-                        if l[0] == "RA_A": RA_A = l[1]
-                        if l[0] == "RA_G": RA_G = l[1]
-                        if l[0] == "RA_T": RA_T = l[1]
-                        if l[0] == "YP_C": YP_C = l[1]
-                        if l[0] == "YP_G": YP_G = l[1]
-                        if l[0] == "YP_T": YP_T = l[1]
+                        if l[0] == "Mix_Antiparallel_A": MA_A = l[1]
+                        if l[0] == "Mix_Antiparallel_G": MA_G = l[1]
+                        if l[0] == "Mix_Antiparallel_T": MA_T = l[1]
+                        if l[0] == "Mix_Parallel_C": MP_C = l[1]
+                        if l[0] == "Mix_Parallel_G": MP_G = l[1]
+                        if l[0] == "Mix_Parallel_T": MP_T = l[1]
+                        if l[0] == "Purine_Antiparallel_A": RA_A = l[1]
+                        if l[0] == "Purine_Antiparallel_G": RA_G = l[1]
+                        if l[0] == "Purine_Antiparallel_T": RA_T = l[1]
+                        if l[0] == "Pyrimidine_Parallel_C": YP_C = l[1]
+                        if l[0] == "Pyrimidine_Parallel_G": YP_G = l[1]
+                        if l[0] == "Pyrimidine_Parallel_T": YP_T = l[1]
 
                 with open(summary) as g:
                     for line in g:
@@ -912,7 +927,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         dbd = GenomicRegionSet("DBD")
         dbdmap = {}
         if len(exons) == 1:
-            print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
+            print("## Warning: If more than 1 exon, the DBD position may be problematic. ")
         for rbs in sig_region:
             loop = True
 
@@ -1148,13 +1163,13 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
 
     # pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
     # exp = os.path.basename(args.o)
-    try:
-        if args.de:
-            tar = args.de
-        else:
-            tar = args.bed
-    except:
-        tar = args.bed
+    # try:
+    #     if args.de:
+    #         tar = args.de
+    #     else:
+    #         tar = args.bed
+    # except:
+    #     tar = args.bed
 
     # stat["DBD_all"] = 0
     # stat["DBD_sig"] = 0
@@ -1181,34 +1196,17 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
 def write_stat(stat, filename):
     """Write the statistics into file"""
 
-    order_stat = ["name", "genome", "exons", "seq_length",
-                  "target_regions", "background_regions",
-                  "DBD_all", "DBD_sig",
-                  "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
-                  "associated_gene", "expression",
-                  "MA_A", "MA_G", "MA_T",
-                  "MP_C", "MP_G", "MP_T",
-                  "RA_A", "RA_G", "RA_T",
-                  "YP_C", "YP_G", "YP_T"]
-
     with open(filename, "w") as f:
         for k in order_stat:
-            print("\t".join([k, str(stat[k])]), file=f)
+            try:
+                print("\t".join([k, str(stat[k])]), file=f)
+            except:
+                continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
     base = os.path.basename(path)
-    order_stat = ["name", "genome", "exons", "seq_length",
-                  "target_regions", "background_regions",
-                  "DBD_all", "DBD_sig",
-                  "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig",
-                  "Norm_DBD", "Norm_DBS", "Norm_DBS_sig", "p_value",
-                  "associated_gene", "expression",
-                  "MA_A", "MA_G", "MA_T", "MP_C", "MP_G", "MP_T",
-                  "RA_A", "RA_G", "RA_T", "YP_C", "YP_G", "YP_T"]
-    # nested_dict = lambda: defaultdict(nested_dict)
+
     data = {}
 
     for item in os.listdir(path):

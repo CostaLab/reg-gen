@@ -219,7 +219,7 @@ def main():
                 c = 0
                 header_list = ["No.", "RNA", "Closest genes",
                                "Exon", "Length", "Expression*",
-                               "Norm DBS*", "Norm DBD*", "Number sig_DBD",
+                               "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
                                "Organism", "Target region", "Rank*"]
 
                 with open(stat) as f_stat:
@@ -232,8 +232,8 @@ def main():
                             c += 1
                             l = line.strip().split()
                             hh = "./"+l[0]+"/index.html"
-                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[16],
-                                               l[2], l[3], l[17],
+                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[13],
+                                               l[2], l[3], l[14],
                                                l[13], l[12], l[7],
                                                l[1], l[4]])
                 rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
@@ -269,27 +269,33 @@ def main():
                                 if float(line[15]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
-            # print(condition_list)
-            link_d = {"List":"index.html"}
-            fp = condition_list[0][0] + "/style"
-            html = Html(name="Directory: " + args.path, links_dict=link_d,
-                        fig_rpath=fp,
-                        RGT_header=False, other_logo="TDF")
-            html.add_heading("All conditions in: "+args.path+"/")
-            data_table = []
-            type_list = 'sssssssssssss'
-            col_size_list = [20] * 10
-            c = 0
-            header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
-            for i, exp in enumerate(condition_list):
-                c += 1
-                data_table.append([str(c),
-                                   '<a href="'+exp[1]+'">'+exp[0]+"</a>",
-                                   exp[2], exp[3] ])
-            html.add_zebra_table( header_list, col_size_list, type_list, data_table,
-                                  sortable=True, clean=True)
-            html.add_fixed_rank_sortable()
-            html.write(os.path.join(args.path,"index.html"))
+
+            if len(condition_list) > 0:
+                # print(condition_list)
+                link_d = {}
+                for item in os.listdir(os.path.dirname(args.path)):
+                    if os.path.isfile(os.path.dirname(args.path)+"/"+item+"/index.html"):
+                        link_d[item] = "../"+item+"/index.html"
+
+                fp = condition_list[0][0] + "/style"
+                html = Html(name="Directory: " + args.path, links_dict=link_d,
+                            fig_rpath=fp,
+                            RGT_header=False, other_logo="TDF")
+                html.add_heading("All conditions in: "+args.path+"/")
+                data_table = []
+                type_list = 'sssssssssssss'
+                col_size_list = [20] * 10
+                c = 0
+                header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
+                for i, exp in enumerate(condition_list):
+                    c += 1
+                    data_table.append([str(c),
+                                       '<a href="'+exp[1]+'">'+exp[0]+"</a>",
+                                       exp[2], exp[3] ])
+                html.add_zebra_table( header_list, col_size_list, type_list, data_table,
+                                      sortable=True, clean=True)
+                html.add_fixed_rank_sortable()
+                html.write(os.path.join(args.path,"index.html"))
 
             # gen_heatmap(path=args.path)
             # generate_rna_exp_pv_table(root=args.path, multi_corr=False)

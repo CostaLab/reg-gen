@@ -68,10 +68,10 @@ class RNADNABinding:
     def motif_statistics(self):
         if not self.match: return None
         else:
-            res = {"MA": {"A": 0, "G": 0, "T": 0},
-                   "MP": {"C": 0, "G": 0, "T": 0},
-                   "RA": {"A": 0, "G": 0, "T": 0},
-                   "YP": {"C": 0, "G": 0, "T": 0}}
+            res = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                   "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
+                   "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                   "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
             # res = numpy.array([[0,0,0],[0,0,0][0,0,0][0,0,0]])
             if self.strand == "+":
                 rna = self.match[0].split()[1]
@@ -84,16 +84,28 @@ class RNADNABinding:
                 # dnap = self.match[0].split()[1]
                 # dnan = self.match[1].split()[1]
 
+            if self.motif == "M":
+                motif = "Mix"
+            elif self.motif == "R":
+                motif = "Purine"
+            elif self.motif == "Y":
+                motif = "Pyrimidine"
+
+            if self.orient == "P":
+                orient = "Parallel"
+            elif self.orient == "A":
+                orient = "Antiparallel"
+
             for i, bp in enumerate(linking):
                 if bp == "|":
                     if rna[i].upper() == "A":
-                        res[self.motif+self.orient]["A"] += 1
+                        res[motif + "_" + orient]["A"] += 1
                     elif rna[i].upper() == "G":
-                        res[self.motif + self.orient]["G"] += 1
+                        res[motif + "_" + orient]["G"] += 1
                     elif rna[i].upper() == "T":
-                        res[self.motif + self.orient]["T"] += 1
+                        res[motif + "_" + orient]["T"] += 1
                     elif rna[i].upper() == "C":
-                        res[self.motif + self.orient]["C"] += 1
+                        res[motif + "_" + orient]["C"] += 1
             return res
 
 
@@ -764,10 +776,10 @@ class RNADNABindingSet:
         return z
 
     def motif_statistics(self):
-        self.motifs = {"MA": {"A": 0, "G": 0, "T": 0},
-                       "MP": {"C": 0, "G": 0, "T": 0},
-                       "RA": {"A": 0, "G": 0, "T": 0},
-                       "YP": {"C": 0, "G": 0, "T": 0}}
+        self.motifs = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                       "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
+                       "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                       "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
         if len(self) > 0:
             for s in self:
                 m = s.motif_statistics()
