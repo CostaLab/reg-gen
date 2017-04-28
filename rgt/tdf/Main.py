@@ -218,7 +218,7 @@ def main():
                 col_size_list = [20] * 20
                 c = 0
                 header_list = ["No.", "RNA", "Closest genes",
-                               "Exon", "Length", "Expression*",
+                               "Exon", "Length", "Score*",
                                "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
                                "Organism", "Target region", "Rank*"]
 
@@ -267,7 +267,7 @@ def main():
                                 line = line.strip().split("\t")
                                 if line[0] == "name": continue
                                 nt += 1
-                                if float(line[15]) < 0.05: ns += 1
+                                if float(line[12]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
 
