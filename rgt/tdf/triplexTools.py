@@ -36,7 +36,7 @@ sig_color = "powderblue"
 
 
 
-order_stat = ["name", "genome", "exons", "seq_length",
+order_stat = ["title", "name", "genome", "exons", "seq_length",
               "target_regions", "background_regions",
               "DBD_all", "DBD_sig",
               "DBSs_target_all", "DBSs_target_DBD_sig",
@@ -1221,6 +1221,7 @@ def integrate_stat(path):
             data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
             data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)
             data[item]["Norm_DBS_sig"] = value2str(float(data[item]["DBSs_target_DBD_sig"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["title"] = item
 
     with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)

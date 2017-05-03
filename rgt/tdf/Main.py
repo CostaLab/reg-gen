@@ -224,7 +224,7 @@ def main():
 
                 with open(stat) as f_stat:
                     for line in f_stat:
-                        if line.startswith("name"):
+                        if line.startswith("title"):
                             continue
                         elif not line.strip():
                             continue
@@ -232,10 +232,11 @@ def main():
                             c += 1
                             l = line.strip().split()
                             hh = "./"+l[0]+"/index.html"
-                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[16],
-                                               l[2], l[3], l[17],
-                                               l[14], l[13], l[7],l[19],
-                                               l[1], l[4]])
+                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[17],
+                                               l[3], l[4], l[18],
+                                               l[15], l[14], l[8],l[20],
+                                               l[2], l[5]])
+                # print(data_table)
                 rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
                 rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
                 rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
@@ -265,9 +266,9 @@ def main():
                         with open(stat) as f:
                             for line in f:
                                 line = line.strip().split("\t")
-                                if line[0] == "name": continue
+                                if line[0] == "title": continue
                                 nt += 1
-                                if float(line[12]) < 0.05: ns += 1
+                                if float(line[13]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
 
