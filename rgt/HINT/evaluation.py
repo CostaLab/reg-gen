@@ -92,7 +92,6 @@ class Evaluation:
                 # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
                 increased_score_mpbs_regions = GenomicRegionSet("Increased Regions")
                 intersect_regions = mpbs_regions.intersect(footprints_regions, mode=OverlapType.ORIGINAL)
-                num_intersect_regions = len(intersect_regions)
                 for region in iter(intersect_regions):
                     region.data = str(int(region.data) + max_score)
                     increased_score_mpbs_regions.add(region)
@@ -106,9 +105,9 @@ class Evaluation:
                 increased_score_mpbs_regions.sort_score()
 
                 fpr[i], tpr[i], roc_auc_1[i], roc_auc_10[i], roc_auc_50[i], roc_auc_100[i] = self.roc_curve(
-                    increased_score_mpbs_regions, num_intersect_regions)
+                    increased_score_mpbs_regions)
                 recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = self.precision_recall_curve(
-                    increased_score_mpbs_regions, num_intersect_regions)
+                    increased_score_mpbs_regions)
             elif self.footprint_type[i] == "SC":
                 footprints_regions.sort_score()
                 fpr[i], tpr[i], roc_auc_1[i], roc_auc_10[i], roc_auc_50[i], roc_auc_100[i] = self.roc_curve(footprints_regions)
@@ -185,7 +184,7 @@ class Evaluation:
         figure_name = self.output_location + tf_name + "_" + curve_name + ".png"
         fig.savefig(figure_name, format="png", dpi=300, bbox_inches='tight', bbox_extra_artists=[leg])
 
-    def roc_curve(self, sort_score_regions, num_intersect_regions):
+    def roc_curve(self, sort_score_regions):
         count_x = 0
         count_y = 0
         fpr = [count_x]
@@ -203,15 +202,6 @@ class Evaluation:
         fpr = [e * (1.0 / count_x) for e in fpr]
         tpr = [e * (1.0 / count_y) for e in tpr]
 
-        model_fpr = fpr[num_intersect_regions - 1]
-        model_tpr = tpr[num_intersect_regions - 1]
-        if model_fpr != 1:
-            a = (1-model_tpr)/(1-model_fpr)
-            b = 1- a
-            for i in range(num_intersect_regions, len(tpr), 1):
-                tpr[i] = a * fpr[i] + b
-
-        # Evaluating 100% AUC
         roc_auc_100 = metrics.auc(fpr, tpr)
 
         # Evaluating 1% AUC
@@ -250,7 +240,7 @@ class Evaluation:
 
         return fpr, tpr, roc_auc_1, roc_auc_10, roc_auc_50, roc_auc_100
 
-    def precision_recall_curve(self, sort_score_regions, num_intersect_regions):
+    def precision_recall_curve(self, sort_score_regions):
         count_x = 0
         count_y = 0
         precision = [0.0]
@@ -267,11 +257,6 @@ class Evaluation:
 
         recall = [e * (1.0 / count_y) for e in recall]
 
-        model_recall = recall[num_intersect_regions - 1]
-        model_precision = precision[num_intersect_regions - 1]
-        if model_recall != 1:
-            for i in range(num_intersect_regions, len(recall), 1):
-                precision[i] =(model_precision/(model_recall - 1)) * recall[i] + model_precision/(1-model_recall)
         precision.append(0.0)
         recall.append(1.0)
 

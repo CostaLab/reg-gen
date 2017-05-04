@@ -3,8 +3,7 @@
 ###################################################################################################
 
 # Python
-from os import remove, system, getcwd
-from sys import exit
+from os import system, getcwd
 from copy import deepcopy
 from optparse import SUPPRESS_HELP
 import warnings
@@ -30,6 +29,7 @@ import os
 from numpy import array, sum, isnan
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
+from sklearn.externals import joblib
 
 """
 HINT - HMM-based Identification of TF Footprints.
@@ -56,7 +56,7 @@ def main():
     Main function that performs footprint analysis.
 
     Keyword arguments: None
-        
+
     Return: None
     """
 
@@ -114,6 +114,8 @@ def main():
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
 
+    parser.add_option("--hmm-model", dest="hmm_model", type="string", metavar="STRING", default=None)
+    parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT")
     # Parameters Options
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
                       help=("Organism considered on the analysis. Check our full documentation for all available "
@@ -190,7 +192,10 @@ def main():
                       action="store_true", default=False,
                       help=("If used, it will print the line plot of raw signal and bias corrected"
                             "signal for the particular motif."))
-    parser.add_option("--plot-bam-file", dest="plot_bam_file", type="string", metavar="STRING",
+    parser.add_option("--atac-bam-file", dest="atac_bam_file", type="string", metavar="STRING",
+                      default=None,
+                      help=("A bam file containing all the ATAC-seq reads."))
+    parser.add_option("--dnase-bam-file", dest="dnase_bam_file", type="string", metavar="STRING",
                       default=None,
                       help=("A bam file containing all the DNase-seq reads."))
     parser.add_option("--window-size", dest="window_size", type="int", metavar="INT", default=50)
@@ -294,7 +299,7 @@ def main():
                       help=("motif predicted binding sites file"))
 
     # GENERAL Hidden Options
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=1000,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
                       help=SUPPRESS_HELP)
@@ -450,17 +455,18 @@ def main():
                                                                        print_raw_signal=options.print_raw_signal,
                                                                        print_bc_signal=options.print_bc_signal,
                                                                        print_norm_signal=options.print_norm_signal,
-                                                                       print_slope_signal=options.print_slope_signal,
-                                                                       print_diff_signal=options.print_diff_signal)
+                                                                       print_slope_signal=options.print_slope_signal)
         return
     # IF HINT is required to output the line plot and motif logo
     if options.print_line_plot:
-        plot = Plot(options.plot_bam_file, options.motif_file, options.motif_name, options.window_size,
-                    atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
-                    atac_initial_clip, options.organism, options.bias_table,
-                    atac_bias_correction_k, options.protection_score, options.strands_specific,
-                    options.output_location)
-        plot.line()
+        plot = Plot(atac_bam_file=options.atac_bam_file, dnase_bam_file=options.dnase_bam_file,
+                    motif_file=options.motif_file, motif_name=options.motif_name, window_size=options.window_size,
+                    atac_downstream_ext=atac_downstream_ext, atac_upstream_ext=atac_upstream_ext,
+                    atac_forward_shift=atac_forward_shift, atac_reverse_shift=atac_reverse_shift,
+                    initial_clip=atac_initial_clip, organism=options.organism, bias_table=options.bias_table,
+                    k_nb=atac_bias_correction_k, protection_score=options.protection_score,
+                    strands_specific=options.strands_specific, output_loc=options.output_location)
+        plot.line1()
         return
 
     # If HINT is required to create the validation data set
@@ -495,7 +501,7 @@ def main():
                                    atac_bias_correction_k, options.strands_specific,
                                    options.training_chrom, options.training_chrom_start,
                                    options.training_chrom_end)
-        train_hmm_model.train1()
+        train_hmm_model.train2()
         return
 
     ########################################################################################################
@@ -641,109 +647,115 @@ def main():
     # Creating HMMs
     ###################################################################################################
 
-    # Fetching HMM input
-    flag_multiple_hmms = False
-    if (options.hmm_file):  # Argument is passed
+    # # Fetching HMM input
+    # flag_multiple_hmms = False
+    # if (options.hmm_file):  # Argument is passed
+    #
+    #     hmm_group_list = options.hmm_file.split(";")
+    #     if (len(hmm_group_list) != len(group_list)): pass  # TODO ERROR
+    #     for g in range(0, len(group_list)):
+    #
+    #         group = group_list[g]
+    #
+    #         # Fetching list of HMM files
+    #         group.hmm = hmm_group_list[g].split(",")
+    #
+    #         # Verifying HMM application mode (one HMM or multiple HMM files)
+    #         if (len(group.hmm) == 1):
+    #             group.flag_multiple_hmms = False
+    #             group.hmm = group.hmm[0]
+    #         elif (len(group.hmm) == len(histone_file_name_list)):
+    #             flag_multiple_hmms = True
+    #         else:
+    #             error_handler.throw_error("FP_NB_HMMS")
+    #
+    # else:  # Argument was not passed
+    #
+    #     for group in group_list:
+    #
+    #         group.flag_multiple_hmms = False
+    #         if (group.dnase_only):
+    #             if (bias_correction):
+    #                 if (group.is_atac):
+    #                     group.hmm = hmm_data.get_default_hmm_atac_bc()
+    #                 else:
+    #                     group.hmm = hmm_data.get_default_hmm_dnase_bc()
+    #             else:
+    #                 if (group.is_atac):
+    #                     group.hmm = hmm_data.get_default_hmm_atac()
+    #                 else:
+    #                     group.hmm = hmm_data.get_default_hmm_dnase()
+    #         elif (group.histone_only):
+    #             group.hmm = hmm_data.get_default_hmm_histone()
+    #         else:
+    #             if (bias_correction):
+    #                 if (group.is_atac):
+    #                     group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
+    #                 else:
+    #                     group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
+    #             else:
+    #                 if (group.is_atac):
+    #                     group.hmm = hmm_data.get_default_hmm_atac_histone()
+    #                 else:
+    #                     group.hmm = hmm_data.get_default_hmm_dnase_histone()
+    #
+    # # Creating scikit HMM list
+    # for group in group_list:
+    #
+    #     if (group.flag_multiple_hmms):
+    #
+    #         hmm_list = []
+    #         for hmm_file_name in group.hmm:
+    #
+    #             try:
+    #                 hmm_scaffold = HMM()
+    #                 hmm_scaffold.load_hmm(hmm_file_name)
+    #                 if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+    #                     scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
+    #                                              transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+    #                     scikit_hmm.means_ = array(hmm_scaffold.means)
+    #                     scikit_hmm.covars_ = array(hmm_scaffold.covs)
+    #                 else:
+    #                     scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+    #                     scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+    #                     scikit_hmm.transmat_ = array(hmm_scaffold.A)
+    #                     scikit_hmm.means_ = array(hmm_scaffold.means)
+    #                     scikit_hmm.covars_ = array(hmm_scaffold.covs)
+    #
+    #             except Exception:
+    #                 error_handler.throw_error("FP_HMM_FILES")
+    #             hmm_list.append(scikit_hmm)
+    #
+    #         group.hmm = hmm_list
+    #
+    #     else:
+    #
+    #         scikit_hmm = None
+    #         try:
+    #             hmm_scaffold = HMM()
+    #             hmm_scaffold.load_hmm(group.hmm)
+    #             if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+    #                 scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
+    #                                          transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+    #                 scikit_hmm.means_ = array(hmm_scaffold.means)
+    #                 scikit_hmm.covars_ = array(hmm_scaffold.covs)
+    #             else:
+    #                 scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+    #                 scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+    #                 scikit_hmm.transmat_ = array(hmm_scaffold.A)
+    #                 scikit_hmm.means_ = array(hmm_scaffold.means)
+    #                 scikit_hmm.covars_ = array(hmm_scaffold.covs)
+    #
+    #
+    #         except Exception:
+    #             error_handler.throw_error("FP_HMM_FILES")
+    #         group.hmm = scikit_hmm
 
-        hmm_group_list = options.hmm_file.split(";")
-        if (len(hmm_group_list) != len(group_list)): pass  # TODO ERROR
-        for g in range(0, len(group_list)):
-
-            group = group_list[g]
-
-            # Fetching list of HMM files
-            group.hmm = hmm_group_list[g].split(",")
-
-            # Verifying HMM application mode (one HMM or multiple HMM files)
-            if (len(group.hmm) == 1):
-                group.flag_multiple_hmms = False
-                group.hmm = group.hmm[0]
-            elif (len(group.hmm) == len(histone_file_name_list)):
-                flag_multiple_hmms = True
-            else:
-                error_handler.throw_error("FP_NB_HMMS")
-
-    else:  # Argument was not passed
-
-        for group in group_list:
-
-            group.flag_multiple_hmms = False
-            if (group.dnase_only):
-                if (bias_correction):
-                    if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac_bc()
-                    else:
-                        group.hmm = hmm_data.get_default_hmm_dnase_bc()
-                else:
-                    if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac()
-                    else:
-                        group.hmm = hmm_data.get_default_hmm_dnase()
-            elif (group.histone_only):
-                group.hmm = hmm_data.get_default_hmm_histone()
-            else:
-                if (bias_correction):
-                    if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
-                    else:
-                        group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
-                else:
-                    if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac_histone()
-                    else:
-                        group.hmm = hmm_data.get_default_hmm_dnase_histone()
-
-    # Creating scikit HMM list
+    ##############################################################
+    # Test complex model
+    ##############################################################
     for group in group_list:
-
-        if (group.flag_multiple_hmms):
-
-            hmm_list = []
-            for hmm_file_name in group.hmm:
-
-                try:
-                    hmm_scaffold = HMM()
-                    hmm_scaffold.load_hmm(hmm_file_name)
-                    if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-                                                 transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                        scikit_hmm.means_ = array(hmm_scaffold.means)
-                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
-                    else:
-                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
-                        scikit_hmm.startprob_ = array(hmm_scaffold.pi)
-                        scikit_hmm.transmat_ = array(hmm_scaffold.A)
-                        scikit_hmm.means_ = array(hmm_scaffold.means)
-                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
-
-                except Exception:
-                    error_handler.throw_error("FP_HMM_FILES")
-                hmm_list.append(scikit_hmm)
-
-            group.hmm = hmm_list
-
-        else:
-
-            scikit_hmm = None
-            try:
-                hmm_scaffold = HMM()
-                hmm_scaffold.load_hmm(group.hmm)
-                if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-                                             transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                    scikit_hmm.means_ = array(hmm_scaffold.means)
-                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
-                else:
-                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
-                    scikit_hmm.startprob_ = array(hmm_scaffold.pi)
-                    scikit_hmm.transmat_ = array(hmm_scaffold.A)
-                    scikit_hmm.means_ = array(hmm_scaffold.means)
-                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
-
-
-            except Exception:
-                error_handler.throw_error("FP_HMM_FILES")
-            group.hmm = scikit_hmm
+        group.hmm = joblib.load(options.hmm_model)
 
     ###################################################################################################
     # Main Pipeline
@@ -767,21 +779,38 @@ def main():
                 # Fetching DNase signal
                 try:
                     if (group.is_atac):
-                        dnase_norm, dnase_slope, diff_signal = group.dnase_file.get_signal1(r.chrom, r.initial, r.final,
-                                                                                            atac_downstream_ext,
-                                                                                            atac_upstream_ext,
-                                                                                            atac_forward_shift,
-                                                                                            atac_reverse_shift,
-                                                                                            atac_initial_clip,
-                                                                                            atac_norm_per,
-                                                                                            atac_slope_per,
-                                                                                            group.bias_table,
-                                                                                            genome_data.get_genome(),
-                                                                                            options.print_raw_signal,
-                                                                                            options.print_bc_signal,
-                                                                                            options.print_norm_signal,
-                                                                                            options.print_slope_signal,
-                                                                                            options.print_diff_signal)
+                        if options.strands_specific:
+                            atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = group.dnase_file.get_signal1(r.chrom,
+                                                                                                            r.initial,
+                                                                                                            r.final,
+                                                                                                            atac_downstream_ext,
+                                                                                                            atac_upstream_ext,
+                                                                                                            atac_forward_shift,
+                                                                                                            atac_reverse_shift,
+                                                                                                            atac_initial_clip,
+                                                                                                            atac_norm_per,
+                                                                                                            atac_slope_per,
+                                                                                                            group.bias_table,
+                                                                                                            genome_data.get_genome(),
+                                                                                                            options.print_raw_signal,
+                                                                                                            options.print_bc_signal,
+                                                                                                            options.print_norm_signal,
+                                                                                                            options.print_slope_signal)
+                        else:
+                            atac_norm, atac_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
+                                                                                 atac_downstream_ext,
+                                                                                 atac_upstream_ext,
+                                                                                 atac_forward_shift,
+                                                                                 atac_reverse_shift,
+                                                                                 atac_initial_clip,
+                                                                                 atac_norm_per,
+                                                                                 atac_slope_per,
+                                                                                 group.bias_table,
+                                                                                 genome_data.get_genome(),
+                                                                                 options.print_raw_signal,
+                                                                                 options.print_bc_signal,
+                                                                                 options.print_norm_signal,
+                                                                                                            options.print_slope_signal)
                     else:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                               dnase_downstream_ext, dnase_upstream_ext,
@@ -803,7 +832,12 @@ def main():
 
                 # Formatting sequence
                 try:
-                    input_sequence = array([dnase_norm, dnase_slope, diff_signal]).T
+                    # input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
+                    if options.strands_specific:
+                        input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
+                        #input_sequence = array([array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T])
+                    else:
+                        input_sequence = array([atac_norm, atac_slope]).T
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom,
@@ -816,6 +850,7 @@ def main():
                 if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                 try:
                     posterior_list = group.hmm.predict(input_sequence)
+                    # posterior_list = array(group.hmm.predict(input_sequence))[0]
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom,
@@ -826,7 +861,8 @@ def main():
                 # Formatting results
                 start_pos = 0
                 flag_start = False
-                fp_state_nb = 4
+                # fp_state_nb = 4
+                fp_state_nb = int(options.fp_state)
                 for k in range(r.initial, r.final):
                     curr_index = k - r.initial
                     if (flag_start):
@@ -930,7 +966,8 @@ def main():
                     else:
                         current_hmm = group.hmm
                     if (
-                    isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                            isnan(sum(
+                                input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try:
                         posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
@@ -1006,14 +1043,11 @@ def main():
         footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
 
         # Extending footprints
-        # for f in footprints.sequences:
-        #    if (f.final - f.initial < fp_limit):
-        #        f.initial = max(0, f.initial - fp_ext)
-        #        f.final = f.final + fp_ext
-        #    if (f.final - f.initial > 2*fp_limit):
-        #        mid = (f.initial + f.final) / 2
-        #        f.initial = max(mid - fp_limit, 0)
-        #        f.final = f.final + fp_limit
+        for f in footprints.sequences:
+            if f.final - f.initial < fp_limit or f.final - f.initial > 2 * fp_limit:
+                mid = (f.initial + f.final) / 2
+                f.initial = max(0, mid - fp_ext)
+                f.final = mid + fp_ext
 
         # Fetching chromosome sizes
         chrom_sizes_file_name = genome_data.get_chromosome_sizes()
@@ -1041,5 +1075,4 @@ def main():
 
         # Creating output file
         output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
-        # output_file_name = options.output_location + options.output_fname + ".bed"
         footprints.write_bed(output_file_name)

@@ -7,6 +7,9 @@ import os
 import numpy as np
 from collections import Counter
 
+from sklearn.externals import joblib
+from hmmlearn import hmm
+
 # Internal
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
@@ -276,3 +279,10 @@ class TrainHMM:
                     start_postion = end_position
                     current_state = state_list[i]
                     is_print = False
+
+    def train2(self, observe_sequence):
+        model = hmm.GaussianHMM(n_components=9, covariance_type="full", n_iter=100)
+        model.fit(observe_sequence)
+        joblib.dump(model, "filename.pkl")
+
+

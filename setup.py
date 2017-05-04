@@ -92,19 +92,19 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn<0.2.0","pysam>=0.7.5"],
+    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn","pysam>=0.7.5"],
     []
 ), 
 "ODIN": (
     "rgt-ODIN",
     "rgt.ODIN.ODIN:main",
-    ["hmmlearn<0.2.0", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
+    ["hmmlearn", "scikit-learn", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
     ["data/bin/"+bin_dir+"/wigToBigWig"]
 ), 
 "THOR": (
     "rgt-THOR",
     "rgt.THOR.THOR:main",
-    ["hmmlearn<0.2.0", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
+    ["hmmlearn", "scikit-learn>=0.17.1", "numpy>=1.10.4", "scipy>=0.7.0", "pysam>=0.8.2", "HTSeq", "mpmath"],
     ["data/bin/"+bin_dir+"/wigToBigWig","data/bin/"+bin_dir+"/bigWigMerge",
     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
 ),                 
