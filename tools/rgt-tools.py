@@ -763,6 +763,10 @@ if __name__ == "__main__":
             fasta = open(args.o, "w")
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
+
+        for region in regions:
+            if "/" in region.name:
+                region.name = region.name.replace("/", "_")
         if args.block:
             regions.extract_blocks()
         if args.order:
@@ -1349,14 +1353,18 @@ if __name__ == "__main__":
             l = region.data.split()
             s = l[5].split(";")
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
+
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
                 s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
-                length = abs(region.final - region.initial)
-                nbins = length/args.s
-                ns1 = float(s1) / nbins
-                ns2 = float(s2) / nbins
-                data = "\t".join([l[0], str(s1), str(s2), str(length),
-                                  str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                # print([len(region), args.s])
+                if args.s:
+                    nbins = int(len(region)/args.s)
+                    ns1 = float(s1) / nbins
+                    ns2 = float(s2) / nbins
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
+                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                else:
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
                 # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
                 # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
 

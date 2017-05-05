@@ -63,12 +63,9 @@ def get_init_parameters(s0, s1, s2, **info):
 
     alpha = (var - mu) / np.square(mu)
     # np.nan_to_num(alpha)
-    print(alpha)
     alpha[np.isnan(alpha)] = 0.001
-    print(alpha)
     # np.where(alpha < 0, 0.001)
     alpha[alpha < 0] = 0.001
-    print(alpha)
 
     for el in [mu, alpha]:
         high = min(el[0,1], el[1,2]) + 0.5 * fabs(el[0,1] - el[1,2])

@@ -246,13 +246,12 @@ def _get_log_ratio(l1, l2):
     else:
         return sys.maxint
 
-def _merge_consecutive_bins(tmp_peaks, distr):
+def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     """Merge consecutive peaks and compute p-value. Return list
     <(chr, s, e, c1, c2, strand)> and <(pvalue)>"""
     peaks = []
     pvalues = []
     i, j, = 0, 0
-    merge = False
 
     while i < len(tmp_peaks):
         j+=1
@@ -298,7 +297,7 @@ def _get_covs(DCS, i, as_list=False):
     return cov1, cov2
 
 
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, p=70):
+def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
@@ -334,7 +333,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
             tmp.append(tmp_peaks[j])
     tmp_peaks = tmp
 
-    pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr) #merge consecutive peaks and compute p-value
+    pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr, merge_bin) #merge consecutive peaks and compute p-value
     regions = merge_delete(exts, merge, peaks, pvalues) #postprocessing, returns GenomicRegionSet with merged regions
     if deadzones:
         regions = filter_deadzones(deadzones, regions)
@@ -469,6 +468,9 @@ def handle_input():
     parser.add_option("-m", "--merge", default=False, dest="merge", action="store_true",
                       help="Merge peaks which have a distance less than the estimated mean fragment size "
                            "(recommended for histone data). [default: do not merge]")
+    parser.add_option("--merge-bin", default=True, dest="merge_bin", action="store_true",
+                      help="Merge the overlapping bin before filtering by p-value."
+                           "[default: %default]")
     parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",
                       help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
     parser.add_option("--output-dir", dest="outputdir", default=None, type="string",
