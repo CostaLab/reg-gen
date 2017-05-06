@@ -42,9 +42,9 @@ class RNADNABinding:
     """
 
     __slots__ = ['rna', 'dna', 'motif', 'orient', 'score', 'err_rate', 'err', 'guan_rate', 
-                 'rna_seq', 'dna_seq', 'match' ]
+                 'match' ]
 
-    def __init__(self, rna, dna, score, err_rate, err, guan_rate, rna_seq=None, dna_seq=None, match=None):
+    def __init__(self, rna, dna, score, err_rate, err, guan_rate, match=None):
         """Initiation"""
         self.rna = rna  # BindingSite
         self.dna = dna  # GenomicRegion
@@ -55,8 +55,6 @@ class RNADNABinding:
         self.err_rate = err_rate
         self.err = err
         self.guan_rate = guan_rate
-        self.rna_seq = rna_seq
-        self.dna_seq = dna_seq
         self.match = match
     
     def __str__(self):
@@ -66,7 +64,51 @@ class RNADNABinding:
 
     def __eq__(self, other):
         return (self.dna, self.rna) == (other.dna, other.rna)
-        
+
+    def motif_statistics(self):
+        if not self.match: return None
+        else:
+            res = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                   "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
+                   "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                   "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
+            # res = numpy.array([[0,0,0],[0,0,0][0,0,0][0,0,0]])
+            if self.strand == "+":
+                rna = self.match[0].split()[1]
+                linking = self.match[1].strip()
+                # dnap = self.match[2].split()[1]
+                # dnan = self.match[3].split()[1]
+            elif self.strand == "-":
+                rna = self.match[3].split()[1]
+                linking = self.match[2].strip()
+                # dnap = self.match[0].split()[1]
+                # dnan = self.match[1].split()[1]
+
+            if self.motif == "M":
+                motif = "Mix"
+            elif self.motif == "R":
+                motif = "Purine"
+            elif self.motif == "Y":
+                motif = "Pyrimidine"
+
+            if self.orient == "P":
+                orient = "Parallel"
+            elif self.orient == "A":
+                orient = "Antiparallel"
+
+            for i, bp in enumerate(linking):
+                if bp == "|":
+                    if rna[i].upper() == "A":
+                        res[motif + "_" + orient]["A"] += 1
+                    elif rna[i].upper() == "G":
+                        res[motif + "_" + orient]["G"] += 1
+                    elif rna[i].upper() == "T":
+                        res[motif + "_" + orient]["T"] += 1
+                    elif rna[i].upper() == "C":
+                        res[motif + "_" + orient]["C"] += 1
+            return res
+
+
 class RNADNABindingSet:
     """A framework to map DNA binding sites to corresponding RNA binding sites 
     
@@ -464,34 +506,26 @@ class RNADNABindingSet:
 
     def read_txp(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
-        
+
         with open(filename) as f:
             for line in f:
+                # print(line)
+                line = line.strip()
                 # skip the comment line
-                if seq:
-                    if seq > 0:
-                        binding.append(line.strip())
-                    else:
-                        load_binding_site = True
-                else:
-                    if line.startswith("TFO:") or line.startswith("TTS:") or \
-                            line.startswith("    ") or line.startswith("#"):
-                        continue
-                    else:
-                        load_binding_site = True
+                if line == "" or line.startswith("#"): continue
 
-                if load_binding_site:
+                l = line.split()
+                # Load binding site
+                if len(l) == 12:
+                    l.insert(8, "_")
+                if len(l) == 13:
                     if "\tchrM:" in line: continue # skip chromosome Mitocondria
-                    line = line.strip("\n")
-                    line = line.split("\t")
+                    #
+                    # if len(line) < 10:
+                    #     #print(line)
+                    #     continue # skip the unimportant lines in txp
+                    #
 
-
-                    if len(line) < 10:
-                        #print(line)
-                        continue # skip the unimportant lines in txp
-
-                    if len(line) == 12:
-                        line.insert(8,"_")
                     # Format of each line in txp
                     #     [0] Sequence-ID
                     #     [1] TFO start
@@ -508,46 +542,78 @@ class RNADNABindingSet:
                     #     [12] Guanine-rate
 
                     # RNA binding site
-                    if not self.name: self.name = line[0]
+                    if not self.name: self.name = l[0]
 
                     if shift:
-                        rna_start, rna_end = int(line[1])+shift, int(line[2])+shift
+                        rna_start, rna_end = int(l[1])+shift, int(l[2])+shift
                     else:
-                        rna_start, rna_end = int(line[1]), int(line[2])
+                        rna_start, rna_end = int(l[1]), int(l[2])
 
                     if rna_start > rna_end: rna_start, rna_end =  rna_end, rna_start
 
-                    rna = BindingSite(chrom=line[0], initial=rna_start, final=rna_end, score=line[6],
-                                      errors_bp=line[8], motif=line[9], orientation=line[11],
-                                      guanine_rate=line[12])
+                    rna = BindingSite(chrom=l[0], initial=rna_start, final=rna_end, score=l[6],
+                                      errors_bp=l[8], motif=l[9], orientation=l[11],
+                                      guanine_rate=l[12])
+                    # print(l)
                     # DNA binding site
-                    rg = line[3].split(":")[1].split("-")
-                    try: rg.remove("")
-                    except: pass
+                    if ":" in l[3]:
+                        rg = l[3].split(":")[1].split("-")
+                        if dna_fine_posi:
+                            dna_start = int(rg[0]) + int(l[4])
+                            dna_end = int(rg[0]) + int(l[5])
+                            dna = GenomicRegion(chrom=l[3].split(":")[0], initial=dna_start, final=dna_end,
+                                                name=l[3], orientation=l[10],
+                                                data=[l[6], l[9], l[11]])  # score, motif, orientation
 
-                    if dna_fine_posi:
-                        dna_start = int(rg[0]) + int(line[4])
-                        dna_end = int(rg[0]) + int(line[5])
-                        dna = GenomicRegion(chrom=line[3].split(":")[0], initial=dna_start, final=dna_end,
-                                            name=line[3], orientation=line[10],
-                                            data=[line[6], line[9], line[11]]) # score, motif, orientation
+                        else:
+                            # try:
+                            dna = GenomicRegion(chrom=l[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
+                                                name=l[3], orientation=l[10],
+                                                data=[l[6], l[9], l[11]])
 
                     else:
-                        try:
-                            dna = GenomicRegion(chrom=line[3].split(":")[0], initial=int(rg[0]), final=int(rg[1]),
-                                                name=line[3], orientation=line[10],
-                                                data=[line[6], line[9], line[11]])
-                        except:
-                            print(line)
-                # Map RNA binding site to DNA binding site
-                if seq:
-                    if seq > 0:
+                        # rg = l[3].split("-")
+                        # print(rg)
+                        dna = GenomicRegion(chrom=l[3], initial=int(l[4]), final=int(l[5]),
+                                            name=l[3], orientation=l[10],
+                                            data=[l[6], l[9], l[11]])
+                        # try: rg.remove("")
+                    # except: pass
+
+
+                        # except:
+                        #     print(l)
+                    if seq:
+                        cont_seq = 4
+                        binding = []
+                        rd = [l[6],l[7],l[8],l[12]]
+
+                    else:
+                        self.add(RNADNABinding(rna=rna, dna=dna, score=l[6], err_rate=l[7], err=l[8],
+                                               guan_rate=l[12]))
+
+                elif len(l) < 10 and seq:
+                    # print(l)
+                    # print(cont_seq)
+                    if "TFO: " in line:
+                        b = line.replace("TFO: ", "")
+                    elif "TTS: " in line:
+                        b = line.replace("TTS: ", "")
+                    elif "|" in line:
+                        b = "    " + line
+                    else:
+                        b = line
+
+                    binding.append(b)
+                    if cont_seq > 1:
+                        # print(line)
                         cont_seq -= 1
                     else:
-                        binding = []
-                        cont_seq = 4
-                else:
-                    self.add(RNADNABinding(rna=rna, dna=dna, score=line[6], err_rate=line[7], err=line[8], guan_rate=line[12]))
+                        # self.sequences[-1].match = binding
+                        # print(binding)
+                        self.add(RNADNABinding(rna=rna, dna=dna, score=rd[0], err_rate=rd[1], err=rd[2],
+                                               guan_rate=rd[3], match=binding))
+
 
     def map_promoter_name(self, promoters):
         """Give each DNA region the corresponding name from the given promoter"""
@@ -708,3 +774,16 @@ class RNADNABindingSet:
                 if rd.rna.overlap(rbs):
                     z.add(rd)
         return z
+
+    def motif_statistics(self):
+        self.motifs = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                       "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
+                       "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
+                       "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
+        if len(self) > 0:
+            for s in self:
+                m = s.motif_statistics()
+                for mode in m.keys():
+                    for com in m[mode].keys():
+                        self.motifs[mode][com] += m[mode][com]
+        # print(self.motifs)

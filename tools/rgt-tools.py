@@ -334,6 +334,9 @@ if __name__ == "__main__":
     parser_thorsf.add_argument('-rn', '--rename', action="store_true",
                                help="Rename the peak names by associated genes.")
     parser_thorsf.add_argument('-g', metavar='genome', type=str, help="Define the genome")
+    parser_thorsf.add_argument('-b', metavar='bin', type=int, help="Define the bin size")
+    parser_thorsf.add_argument('-s', metavar='step', type=int, help="Define the step size")
+
 
     ############### GENOME get sequence ####################################################
     # python /projects/reg-gen/tools/rgt-tools.py getseq -d /data/rgt
@@ -761,6 +764,10 @@ if __name__ == "__main__":
             fasta = open(args.o, "w")
         regions = GenomicRegionSet("regions")
         regions.read_bed(args.i)
+
+        for region in regions:
+            if "/" in region.name:
+                region.name = region.name.replace("/", "_")
         if args.block:
             regions.extract_blocks()
         if args.order:
@@ -1157,7 +1164,7 @@ if __name__ == "__main__":
                         l = line.split()
                         overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
                         if len(overlapping) > 0:
-                            print(line + "\t" + overlapping.sequences[0].name, file=fout)
+                            print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
                         else:
                             print(line + "\t.", file=fout)
 
@@ -1332,7 +1339,7 @@ if __name__ == "__main__":
 
         for region in bed2:
             data = region.data.split()
-            stat = data[5].split(";")
+            stat = data[4].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
@@ -1345,15 +1352,22 @@ if __name__ == "__main__":
 
         for region in bed2:
             l = region.data.split()
-            s = l[5].split(";")
+            s = l[4].split(";")
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
+
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
                 s2 = sum([int(x) for x in s[1].split(":")]) / len(s[1].split(":"))
-                length = abs(region.final - region.initial)
-                ns1 = float(s1) / length
-                ns2 = float(s2) / length
-                data = "\t".join([l[0], str(s1), str(s2), str(length),
-                                  str(ns1), str(ns2), str(ns1 + ns2), str(ns1 - ns2), s[2]])
+
+                # print([len(region), args.s])
+                if args.s:
+                    nbins = int(len(region)/args.s)
+                    ns1 = float(s1) / nbins
+                    ns2 = float(s2) / nbins
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)),
+                                      str(ns1), str(ns2), str(abs(ns1 + ns2)), str(abs(ns1 - ns2)), s[2]])
+                else:
+                    data = "\t".join([l[0], str(s1), str(s2), str(len(region)), s[2]])
+
                 # Chromosome	Start	End	Name	FC	Strand	Ave. Count 1	Ave. Count 2
                 # Length	Norm count 1	Norm count 2	Sum norm count	Diff norm count	P-value
 

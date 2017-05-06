@@ -12,6 +12,8 @@ import datetime
 import subprocess
 import matplotlib
 matplotlib.use('Agg', warn=False)
+from collections import *
+import natsort as natsort_ob
 
 # Local Libraries
 # Distal Libraries
@@ -21,7 +23,7 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat, update_profile, merge_DBD_regions,\
-                         save_profile
+                         save_profile, rank_array
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -184,49 +186,122 @@ def main():
         ####################################################################################
         ######### Integration
         if args.mode == "integrate":
-            condition_list = [] # name, link, no. tests, no. sig.
+
+            targets = []
+            for dirpath, dnames, fnames in os.walk(args.path):
+                for f in fnames:
+                    if f == "stat.txt":
+                        targets.append(os.path.dirname(dirpath))
+            targets = list(set(targets))
+
+            # Build tabs for each condition
+            link_d = OrderedDict()
+            for tar in sorted([os.path.basename(t) for t in targets]):
+                link_d[tar] = "../" + tar + "/index.html"
+
+            # For each condition
+            for target in targets:
+                # stat
+                integrate_stat(path=target)
+
+                # index.html
+                base = os.path.basename(target)
+                h = os.path.join(target, "index.html")
+                stat = os.path.join(target, "statistics_" + base + ".txt")
+                fp = "./style"
+                html = Html(name=base, links_dict=link_d,
+                            fig_rpath=fp, homepage="../index.html",
+                            RGT_header=False, other_logo="TDF")
+                html.add_heading(target)
+                data_table = []
+                type_list = 'sssssssssssss'
+                col_size_list = [20] * 20
+                c = 0
+                header_list = ["No.", "RNA", "Closest genes",
+                               "Exon", "Length", "Score*",
+                               "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
+                               "Organism", "Target region", "Rank*"]
+
+                with open(stat) as f_stat:
+                    for line in f_stat:
+                        if line.startswith("title"):
+                            continue
+                        elif not line.strip():
+                            continue
+                        else:
+                            c += 1
+                            l = line.strip().split()
+                            hh = "./"+l[0]+"/index.html"
+                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[17],
+                                               l[3], l[4], l[18],
+                                               l[15], l[14], l[8],l[20],
+                                               l[2], l[5]])
+                # print(data_table)
+                rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
+                rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
+                rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
+                rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+
+                for i, d in enumerate(data_table):
+                    d.append(str(rank_sum[i]))
+                nd = natsort_ob.natsorted(data_table, key=lambda x: x[-1])
+                html.add_zebra_table(header_list, col_size_list, type_list, nd,
+                                     sortable=True, clean=True)
+                html.add_fixed_rank_sortable()
+                html.write(h)
+
+
+            # Project level index file
+            condition_list = []  # name, link, no. tests, no. sig.
             for item in os.listdir(args.path):
                 if item == "style": continue
-                if os.path.isfile(os.path.join(args.path,item)): continue
-                elif os.path.isdir(os.path.join(args.path,item)):
+                if os.path.isfile(os.path.join(args.path, item)):
+                    continue
+                elif os.path.isdir(os.path.join(args.path, item)):
                     h = os.path.join(item, "index.html")
-                    pro = os.path.join(args.path, item, "profile.txt")
-                    if os.path.isfile(pro):
-                        integrate_stat(path=os.path.join(args.path, item))
+                    stat = os.path.join(args.path, item, "statistics_" + item + ".txt")
+                    if os.path.isfile(stat):
                         nt = 0
                         ns = 0
-                        with open(pro) as f:
+                        with open(stat) as f:
                             for line in f:
                                 line = line.strip().split("\t")
-                                if line[0] == "Experiment": continue
+                                if line[0] == "title": continue
                                 nt += 1
-                                if float(line[7]) < 0.05: ns += 1
+                                if float(line[13]) < 0.05: ns += 1
                         # print([item, h, str(nt), str(ns)])
                         condition_list.append( [item, h, str(nt), str(ns)] )
-            # print(condition_list)
-            link_d = {"List":"index.html"}
-            fp = condition_list[0][0] + "/style"
-            html = Html(name="Directory: "+args.path, links_dict=link_d, 
-                        fig_rpath=fp, #fig_dir=fp, 
-                        RGT_header=False, other_logo="TDF")
-            html.add_heading("All conditions in: "+args.path+"/")
-            data_table = []
-            type_list = 'sssssssssssss'
-            col_size_list = [20, 20, 20, 20, 20, 20, 20, 20, 20, 20, 20]
-            c = 0
-            header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
-            for i, exp in enumerate(condition_list):
-                c += 1
-                data_table.append([str(c), 
-                                   '<a href="'+exp[1]+'">'+exp[0]+"</a>",
-                                   exp[2], exp[3] ])
-            html.add_zebra_table( header_list, col_size_list, type_list, data_table, 
-                                  align=10, cell_align="left", sortable=True)
-            html.add_fixed_rank_sortable()
-            html.write(os.path.join(args.path,"index.html"))
-            gen_heatmap(path=args.path)
-            generate_rna_exp_pv_table(root=args.path, multi_corr=False)
-            merge_DBD_regions(path=args.path)
+
+            if len(condition_list) > 0:
+                # print(condition_list)
+                link_d = {}
+                for item in os.listdir(os.path.dirname(args.path)):
+                    if os.path.isfile(os.path.dirname(args.path)+"/"+item+"/index.html"):
+                        link_d[item] = "../"+item+"/index.html"
+
+                fp = condition_list[0][0] + "/style"
+                html = Html(name="Directory: " + args.path, links_dict=link_d,
+                            fig_rpath=fp,
+                            RGT_header=False, other_logo="TDF")
+                html.add_heading("All conditions in: "+args.path+"/")
+                data_table = []
+                type_list = 'sssssssssssss'
+                col_size_list = [20] * 10
+                c = 0
+                header_list = ["No.", "Conditions", "No. tests", "No. sig. tests" ]
+                for i, exp in enumerate(condition_list):
+                    c += 1
+                    data_table.append([str(c),
+                                       '<a href="'+exp[1]+'">'+exp[0]+"</a>",
+                                       exp[2], exp[3] ])
+                html.add_zebra_table( header_list, col_size_list, type_list, data_table,
+                                      sortable=True, clean=True)
+                html.add_fixed_rank_sortable()
+                html.write(os.path.join(args.path,"index.html"))
+
+            # gen_heatmap(path=args.path)
+            # generate_rna_exp_pv_table(root=args.path, multi_corr=False)
+            # merge_DBD_regions(path=args.path)
 
             sys.exit(0)
 
@@ -342,7 +417,7 @@ def main():
             n = args.o.count("/") - 3 + 1
             print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
 
-        args.r = os.path.normpath(os.path.join(dir,args.r))
+        args.r = os.path.normpath(os.path.join(dir, args.r))
         
         if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
         if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
@@ -360,7 +435,7 @@ def main():
         promoter.connect_rna(rna=args.r, temp=args.o)
         promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        
+
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
@@ -371,12 +446,15 @@ def main():
         promoter.fisher_exact(alpha=args.a)
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        
+        promoter.dbd_regions(output=args.o)
+        promoter.autobinding(output=args.o, l=args.l, e=args.e,
+                             c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        promoter.dbs_motif(outdir=args.o)
         if len(promoter.rbss) == 0:
             no_binding_response(args=args, rna_regions=promoter.rna_regions,
                                 rna_name=promoter.rna_name, organism=promoter.organism,
                                 stat=promoter.stat, expression=promoter.rna_expression)
-        promoter.dbd_regions(output=args.o)
+
         os.remove(os.path.join(args.o,"rna_temp.fa"))
         try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
         except: pass
@@ -416,11 +494,11 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
     
         output_summary(summary, args.o, "summary.txt")
-        save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
-                     organism=promoter.organism, output=args.o, bed=args.bed,
-                     geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
-                     sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
-        revise_index(root=os.path.dirname(os.path.dirname(args.o)))
+        # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
+        #              organism=promoter.organism, output=args.o, bed=args.bed,
+        #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
+        #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
+        # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
         try: os.remove(os.path.join(args.o, "de.fa"))
         except OSError: pass
         try: os.remove(os.path.join(args.o, "nde.fa"))
@@ -448,21 +526,21 @@ def main():
                         line = line.split("\t")
                         if line[0] == exp:
                             newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
+                                             args.organism, tar_reg, "0",
                                              "-", "1.0", r_genes, "No triplex found" ])
                             new_exp = False
                         else:
                             newlines.append(line)
                     if new_exp:
                         newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg,"0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
+                                         args.organism, tar_reg,"0",
+                                         "-", "1.0", r_genes, "No triplex found" ])
             else:
-                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs", 
+                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs",
                                  "Top_DBD", "p-value","closest_genes"])
                 newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0", 
-                                             "-", "1.0", r_genes, "No triplex found" ])
+                                 args.organism, tar_reg, "0",
+                                 "-", "1.0", r_genes, "No triplex found" ])
             with open(pro_path,'w') as f:
                 for lines in newlines:
                     print("\t".join(lines), file=f)
@@ -480,9 +558,9 @@ def main():
         print2(summary, "*** Output directoey: "+os.path.basename(args.o))
 
         args.r = os.path.normpath(os.path.join(dir,args.r))
-        
+
         print2(summary, "\nStep 1: Calculate the triplex forming sites on RNA and the given regions")
-        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed, 
+        randomtest = RandomTest(rna_fasta=args.r, rna_name=args.rn, dna_region=args.bed,
                                 organism=args.organism, showdbs=args.showdbs)
         randomtest.get_rna_region_str(rna=args.r)
         obed = os.path.basename(args.o)
@@ -493,6 +571,9 @@ def main():
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
         # print(args.par)
+        randomtest.autobinding(output=args.o, l=args.l, e=args.e,
+                               c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        randomtest.dbs_motif(outdir=args.o)
         if len(randomtest.rbss) == 0:
             # no_binding_code()
             no_binding_response(args=args, rna_regions=randomtest.rna_regions,
@@ -500,40 +581,37 @@ def main():
                                 stat=randomtest.stat, expression=randomtest.rna_expression)
 
         print2(summary, "Step 2: Randomization and counting number of binding sites")
-
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
                                filter_bed=args.f, alpha=args.a)
-        
-
+        randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
 
         t2 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        
+
         print2(summary, "Step 3: Generating plot and output HTML")
-        randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
 
         os.remove(os.path.join(args.o, "rna_temp.fa"))
         try:
             os.remove(os.path.join(args.o, "rna_temp.fa.fai"))
         except:
             pass
-        
+
 
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",
-                            sig_region=randomtest.data["region"]["sig_region"], 
+                            sig_region=randomtest.data["region"]["sig_region"],
                             linelabel="No. DBS", filename="lineplot_region.png")
 
         #randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
         #                    log=args.log, ylabel="Number of target regions with DBS", 
         #                    sig_region=randomtest.data["region"]["sig_region"],
         #                    linelabel="No. target regions", filename="lineplot_region.png")
-        
-        randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix, 
-                           sig_region=randomtest.data["region"]["sig_region"], 
+
+        randomtest.boxplot(dir=args.o, matrix=randomtest.region_matrix,
+                           sig_region=randomtest.data["region"]["sig_region"],
                            truecounts=[r[0] for r in randomtest.counts_tr.values()],
-                           sig_boolean=randomtest.data["region"]["sig_boolean"], 
+                           sig_boolean=randomtest.data["region"]["sig_boolean"],
                            ylabel="Number of target regions",
                            filename="boxplot_regions" )
         #if args.showdbs:
@@ -541,7 +619,7 @@ def main():
         #                        log=args.log, ylabel="Number of DBS on target regions",
         #                        sig_region=randomtest.data["dbs"]["sig_region"], 
         #                        linelabel="No. DBS", filename="lineplot_dbs.png")
-            
+
         #    randomtest.boxplot(dir=args.o, matrix=randomtest.dbss_matrix, 
         #                       sig_region=randomtest.data["dbs"]["sig_region"], 
         #                       truecounts=randomtest.counts_dbs.values(),
@@ -549,7 +627,7 @@ def main():
         #                       ylabel="Number of DBS on target regions",
         #                       filename="boxplot_dbs" )
 
-        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a, 
+        randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a,
                             score=args.score, obed=obed)
 
         t3 = time.time()
@@ -559,12 +637,12 @@ def main():
 
         output_summary(summary, args.o, "summary.txt")
         # save_profile(output=args.o, bed=args.bed)
-        save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
-                     organism=randomtest.organism, output=args.o, bed=args.bed,
-                     stat=randomtest.stat, topDBD=randomtest.topDBD,
-                     sig_DBD=randomtest.data["region"]["sig_region"],
-                     expression=randomtest.rna_expression)
-        list_all_index(path=os.path.dirname(args.o))
+        # save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
+        #              organism=randomtest.organism, output=args.o, bed=args.bed,
+        #              stat=randomtest.stat, topDBD=randomtest.topDBD,
+        #              sig_DBD=randomtest.data["region"]["sig_region"],
+        #              expression=randomtest.rna_expression)
+        # list_all_index(path=os.path.dirname(args.o))
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
                 os.remove(os.path.join(args.o, f))

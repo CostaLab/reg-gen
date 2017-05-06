@@ -34,6 +34,19 @@ target_color = "mediumblue"
 nontarget_color = "darkgrey"
 sig_color = "powderblue"
 
+
+
+order_stat = ["title", "name", "genome", "exons", "seq_length",
+              "target_regions", "background_regions",
+              "DBD_all", "DBD_sig",
+              "DBSs_target_all", "DBSs_target_DBD_sig",
+              "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+              "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
+              "associated_gene", "expression", "loci", "autobinding",
+              "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
+              "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
+              "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
+              "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
 ####################################################################################
 ####################################################################################
 
@@ -147,9 +160,7 @@ def list_all_index(path, link_d=None):
         if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
         else:
-            new_line = [str(c),
-                        '<a href="' + os.path.join(exp, "index.html") + \
-                        '">' + exp + "</a>", profile[exp][0]]
+            new_line = [str(c), '<a href="' + os.path.join(exp, "index.html") + '">' + exp + "</a>", profile[exp][0]]
         new_line += [ profile[exp][12],#3 close genes
                       profile[exp][1], #4 exon
                       profile[exp][2], #5 length
@@ -211,7 +222,11 @@ def revise_index(root):
 
 def update_profile(dirpath, expression, name_list=None):
     header_list = ["Experiment", "RNA_names", "Tag", "Organism", "Target_region", "No_sig_DBDs",
-                   "Top_DBD", "p-value", "closest_genes"]
+                   "Top_DBD", "p-value", "closest_genes",
+                   "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
+                   "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
+                   "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
+                   "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
     profiles = []
     pro = os.path.join(dirpath, "profile.txt")
     if not os.path.isfile(pro):
@@ -256,13 +271,28 @@ def update_profile(dirpath, expression, name_list=None):
                         if l[0] == "genome": each_organism = l[1]
                         if l[0] == "DBD_sig": each_DBD_sig = l[1]
                         if l[0] == "p_value": each_p_value = l[1]
+                        if l[0] == "Mix_Antiparallel_A": MA_A = l[1]
+                        if l[0] == "Mix_Antiparallel_G": MA_G = l[1]
+                        if l[0] == "Mix_Antiparallel_T": MA_T = l[1]
+                        if l[0] == "Mix_Parallel_C": MP_C = l[1]
+                        if l[0] == "Mix_Parallel_G": MP_G = l[1]
+                        if l[0] == "Mix_Parallel_T": MP_T = l[1]
+                        if l[0] == "Purine_Antiparallel_A": RA_A = l[1]
+                        if l[0] == "Purine_Antiparallel_G": RA_G = l[1]
+                        if l[0] == "Purine_Antiparallel_T": RA_T = l[1]
+                        if l[0] == "Pyrimidine_Parallel_C": YP_C = l[1]
+                        if l[0] == "Pyrimidine_Parallel_G": YP_G = l[1]
+                        if l[0] == "Pyrimidine_Parallel_T": YP_T = l[1]
+
                 with open(summary) as g:
                     for line in g:
                         if "rgt-TDF" in line and " -de " in line:
                             l = line.strip().split()
                             each_target_region = os.path.basename(l[l.index("-de") + 1])
                 profiles.append([item,each_name,each_tag,each_organism,each_target_region,
-                                 each_DBD_sig,"n.a.",each_p_value,"-"])
+                                 each_DBD_sig,"n.a.",each_p_value,"-",
+                                 MA_A, MA_G, MA_T, MP_C, MP_G, MP_T,
+                                 RA_A, RA_G, RA_T, YP_C, YP_G, YP_T])
 
     with open(pro, "w") as f:
         print("\t".join(header_list), file=f)
@@ -513,7 +543,7 @@ def get_sequence(dir, filename, regions, genome_path):
 
 
 def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, genome_path, prefix="", remove_temp=False, 
-                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=False):
+                 c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=False, seq=False):
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
@@ -530,7 +560,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, rm=rm, par=par + "_auto-binding-file")
     # Read txp
     txp = RNADNABindingSet("dna")
-    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi)
+    txp.read_txp(os.path.join(temp, "dna_"+prefix+".txp"), dna_fine_posi=dna_fine_posi, seq=True)
     txp.remove_duplicates()
 
     if remove_temp:
@@ -540,7 +570,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     return txp
 
 
-def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par=""):
+def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of=None, mf=None, rm=None, par="", autobinding=None):
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
@@ -549,8 +579,12 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
 
     arguments = ""
-    if ss: arguments += "-ss "+ss+" "
-    if ds: arguments += "-ds "+ds+" "
+    if not autobinding:
+        if ss: arguments += "-ss "+ss+" "
+        if ds: arguments += "-ds "+ds+" "
+    else:
+        arguments += "-as " + autobinding + " "
+
     if l: arguments += "-l "+str(l)+" "
     if e: arguments += "-e "+str(e)+" "
     if c: arguments += "-c "+str(c)+" "
@@ -568,12 +602,13 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     arguments += "-o "+ os.path.basename(output) + " -od " + os.path.dirname(output)
 
     arg_strings  = arguments.split(' ')
+    # print(arg_strings)
     arg_ptr      = (c_char_p * (len(arg_strings) + 1))()
 
     arg_ptr[0] = "triplexator"  # to simulate calling from cmd line
     for i, s in enumerate(arg_strings):
         arg_ptr[i + 1] = s
-    
+    # print(arg_ptr)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
     os.remove(os.path.join(output + ".summary"))
     os.remove(os.path.join(output + ".log"))
@@ -642,9 +677,9 @@ def split_gene_name(gene_name, org):
     if gene_name[0:2] == "chr":
         return gene_name
 
-    if org=="hg19": ani = "human"
-    elif org=="hg38": ani = "human"
-    elif org=="mm9": ani = "mouse"
+    if org=="hg19": ani = "Homo_sapiens"
+    elif org=="hg38": ani = "Homo_sapiens"
+    elif org=="mm9": ani = "Mus_musculus"
     else: ani = None
 
     if not ani:
@@ -655,9 +690,9 @@ def split_gene_name(gene_name, org):
         else:
             return gene_name
     else:    
-        p1 = '<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?org='+ani+\
-             "&db="+org+"&singleSearch=knownCanonical&position="
-        p2 = '" style="text-align:left" target="_blank">'
+        p1 = '<a href="http://www.ensembl.org/'+ani+\
+             "/Gene/Summary?g="
+        p2 = '" target="_blank">'
         p3 = '</a>'
 
         if ":" in gene_name:
@@ -892,7 +927,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         dbd = GenomicRegionSet("DBD")
         dbdmap = {}
         if len(exons) == 1:
-            print("## Warning: No information of exons in the given RNA sequence, the DBD position may be problematic. ")
+            print("## Warning: If more than 1 exon, the DBD position may be problematic. ")
         for rbs in sig_region:
             loop = True
 
@@ -1126,64 +1161,74 @@ def get_rna_region_str(rna):
 def no_binding_response(args, rna_regions, rna_name, organism, stat, expression):
     print("*** Find no DBD having DBS with cutoff = "+str(args.ccf))
 
-    pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
-    exp = os.path.basename(args.o)
-    try:
-        if args.de:
-            tar = args.de
-        else:
-            tar = args.bed
-    except:
-        tar = args.bed
-    stat["DBD_all"] = 0
-    stat["DBSs_target_all"] = 0
-    stat["DBSs_target_DBD_sig"] = 0
+    # pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
+    # exp = os.path.basename(args.o)
+    # try:
+    #     if args.de:
+    #         tar = args.de
+    #     else:
+    #         tar = args.bed
+    # except:
+    #     tar = args.bed
 
-    save_profile(rna_regions=rna_regions, rna_name=rna_name,
-                 organism=organism, output=args.o, bed=args.bed,
-                 geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[],
-                 expression=expression)
+    # stat["DBD_all"] = 0
+    # stat["DBD_sig"] = 0
+    # stat["DBSs_target_all"] = 0
+    # stat["DBSs_target_DBD_sig"] = 0
+    # stat["DBSs_background_all"] = 0
+    # stat["DBSs_background_DBD_sig"] = 0
+    # stat["p_value"] = "-"
 
-    revise_index(root=os.path.dirname(os.path.dirname(args.o)))
-    shutil.rmtree(args.o)
+    # save_profile(rna_regions=rna_regions, rna_name=rna_name,
+    #              organism=organism, output=args.o, bed=args.bed,
+    #              geneset=tar, stat=stat, topDBD=["-", 1], sig_DBD=[],
+    #              expression=expression)
+
+    # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
+    # shutil.rmtree(args.o)
+    for f in os.listdir(args.o):
+        if os.path.isfile(os.path.join(args.o, f)):
+            os.remove(os.path.join(args.o, f))
+
+    write_stat(stat, os.path.join(args.o, "stat.txt"))
     sys.exit(1)
 
 def write_stat(stat, filename):
     """Write the statistics into file"""
-    order_stat = ["name", "genome", "exons", "seq_length",
-                  "target_regions", "background_regions",
-                  "DBD_all", "DBD_sig",
-                  "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
+
     with open(filename, "w") as f:
         for k in order_stat:
             try:
-                print("\t".join([k,stat[k]]), file=f)
+                print("\t".join([k, str(stat[k])]), file=f)
             except:
                 continue
 
 def integrate_stat(path):
     """Integrate all statistics within a directory"""
     base = os.path.basename(path)
-    order_stat = ["name", "genome", "exons", "seq_length",
-                  "target_regions", "background_regions",
-                  "DBD_all", "DBD_sig",
-                  "DBSs_target_all", "DBSs_target_DBD_sig",
-                  "DBSs_background_all", "DBSs_background_DBD_sig", "p_value"]
-    nested_dict = lambda: defaultdict(nested_dict)
-    data = nested_dict()
+
+    data = {}
 
     for item in os.listdir(path):
         pro = os.path.join(path, item, "stat.txt")
         if os.path.isfile(pro):
+            data[item] = {}
             with open(pro) as f:
                 for line in f:
-                    l = line.split()
+                    l = line.strip().split()
                     data[item][l[0]] = l[1]
-    with open(os.path.join(path,"statistics_"+base+".txt"), "w") as g:
+
+            data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["Norm_DBS_sig"] = value2str(float(data[item]["DBSs_target_DBD_sig"]) / int(data[item]["seq_length"]) * 1000)
+            data[item]["title"] = item
+
+    with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
         for item in data.keys():
+            # print(item)
+            # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
 def merge_DBD_regions(path):

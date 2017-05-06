@@ -132,7 +132,7 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
                                                            distr=distr, merge=options.merge, exts=exp_data.exts,
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
-                                                           deadzones=options.deadzones)
+                                                           merge_bin=options.merge_bin, deadzones=options.deadzones)
 
         output += inst_output
         pvalues += inst_pvalues
