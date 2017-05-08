@@ -52,15 +52,17 @@ def main():
     helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
+    subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
     ################### BED profile ##########################################
     parser_bedprofile = subparsers.add_parser('bed_profile',
                                               help='BED profile analyzes the given BED file(s) by their length, distribution and composition of the sequences.')
-    parser_bedprofile.add_argument('-i', metaavar='  ', help="Input experimental matrix")
+    parser_bedprofile.add_argument('-i', metavar='  ', help="Input experimental matrix or Input BED file or Input directory which contains BED files")
     parser_bedprofile.add_argument('-o', metavar='  ', help=helpoutput)
-    parser_bedprofile.add_argument('-organism', metavar='  ', default='hg19',
-                                   help='Define the organism. (default: %(default)s)')
+    parser_bedprofile.add_argument('-t', metavar='  ', default='bed_profile', help=helptitle)
+    parser_bedprofile.add_argument('-organism', metavar='  ', default=None, help='Define the organism. (default: %(default)s)')
+    parser_bedprofile.add_argument('-biotype', metavar='  ', default=False, help='Define the directory for biotype BED files.')
+    parser_bedprofile.add_argument('-repeats', metavar='  ', default=False, help='Define the directory for repeats BED files.')
 
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
@@ -290,13 +292,26 @@ def main():
 
         if args.mode == 'bed_profile':
         ################### BED profile ##########################################
-            # Fetching BED files from EM
             print2(parameter, "\n############# BED profile #############")
-            print2(parameter, "\tInput Experiment Matrix:\t" + args.i)
-            print2(parameter, "\tOutput directory:\t" + os.path.basename(args.o))
-            print2(parameter, "\tOrganism:\t" + args.organism)
+            print2(parameter, "\tInput path:\t" + args.i)
+            print2(parameter, "\tOutput path:\t" + os.path.join(args.o, args.t))
+            if not args.organism:
+                print("Please define organism...")
+                sys.exit(1)
+            else:
+                print2(parameter, "\tOrganism:\t" + args.organism)
 
-            bed_profile = BED_profile(args.i, args.organism)
+            bed_profile = BED_profile(args.i, args.organism, args)
+            bed_profile.cal_statistics()
+            bed_profile.plot_distribution_length(outdir=os.path.join(args.o, args.t))
+            if args.biotype:
+                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype")
+            if args.repeats:
+                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats")
+            bed_profile.save_pdf(filename=os.path.join(args.o, args.t, "figure_bed_profile.pdf"))
+
+
+
 
 
 

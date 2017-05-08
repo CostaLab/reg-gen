@@ -2644,6 +2644,16 @@ class GenomicRegionSet:
         size = [ len(r) for r in self.sequences ]
         return sum(size)/len(size)
 
+    def max_size(self):
+        """Return the maximum size of the regions"""
+        size = [ len(r) for r in self.sequences ]
+        return max(size)
+
+    def min_size(self):
+        """Return the minimum size of the regions"""
+        size = [ len(r) for r in self.sequences ]
+        return min(size)
+
     def size_variance(self):
         """Return the average size of the regions"""
         import numpy as np
