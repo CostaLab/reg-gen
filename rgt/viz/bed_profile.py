@@ -52,7 +52,7 @@ class BED_profile:
         self.stats = OrderedDict()
         self.ind_col = {}
         # self.fig_size = (6, 6)
-        size_panel = 6
+        size_panel = 8
         rows = len(self.beds)
         cols = 1
         if args.biotype:
@@ -60,6 +60,9 @@ class BED_profile:
             cols += 1
         if args.repeats:
             self.ind_col["Repeats"] = cols
+            cols += 1
+        if args.genposi:
+            self.ind_col["Genetic position"] = cols
             cols += 1
         self.fig_f, self.fig_axs = plt.subplots(rows, cols, dpi=300, figsize=(cols*size_panel, rows*size_panel))
         # print(len(self.fig_axs))
@@ -90,7 +93,7 @@ class BED_profile:
                 except:
                     ax = self.fig_axs
 
-            ax.hist(dis, bins=500)
+            ax.hist(dis, bins=200, color="cornflowerblue", linewidth=0)
             ax.set_title(self.bednames[i])
             ax.set_xlabel("Length (bp)")
             ax.set_ylabel("Frequency")
@@ -112,7 +115,7 @@ class BED_profile:
     #         ax.set_xlabel("Length (bp)")
     #         ax.set_ylabel("Frequency")
 
-    def plot_ref(self, ref_dir, tag):
+    def plot_ref(self, ref_dir, tag, other=False):
         if os.path.isdir(ref_dir):
             refs = []
             refs_names = []
@@ -121,16 +124,26 @@ class BED_profile:
                     name = os.path.basename(f).replace(".bed", "")
                     bed = GenomicRegionSet(name)
                     bed.read_bed(os.path.join(ref_dir, f))
+                    # bed.merge()
                     refs.append(bed)
                     refs_names.append(name)
         else:
             print("*** Error: Not a valid directory: "+ref_dir)
             sys.exit(1)
+        if other:
+            refs_names.append("others")
 
         for i, bed in enumerate(self.beds):
             overlapping_counts = []
             for j, ref in enumerate(refs):
                 overlapping_counts.append(bed.count_by_regionset(ref))
+            if other:
+                # b = bed
+                # for r in refs:
+                #     b = b.subtract(r, whole_region=True)
+                # overlapping_counts.append(len(b))
+                overlapping_counts.append(max(0, len(bed) - sum(overlapping_counts)))
+
             # Plot
             try:
                 ax = self.fig_axs[i, self.ind_col[tag]]
@@ -140,11 +153,12 @@ class BED_profile:
                 except:
                     ax = self.fig_axs
 
-            ax.bar(left=range(len(overlapping_counts)), height=overlapping_counts)
+            ax.bar(left=range(len(overlapping_counts)), height=overlapping_counts, color="cornflowerblue", linewidth=0)
             ax.set_title(self.bednames[i])
             ax.set_ylabel("Number")
-            ax.set_xticks(range(len(overlapping_counts)))
+            ax.set_xticks([x + 0.4 for x in range(len(overlapping_counts))])
             ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
+
         ax.set_xlabel(tag)
 
 
@@ -188,6 +202,6 @@ class BED_profile:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                              border_list=None, sortable=True, clean=True)
-        html.add_figure("figure_"+title+".png", align="center")
+        html.add_figure("figure_"+title+".png", align=50)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))

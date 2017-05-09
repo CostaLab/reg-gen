@@ -63,6 +63,9 @@ def main():
     parser_bedprofile.add_argument('-organism', metavar='  ', default=None, help='Define the organism. (default: %(default)s)')
     parser_bedprofile.add_argument('-biotype', metavar='  ', default=False, help='Define the directory for biotype BED files.')
     parser_bedprofile.add_argument('-repeats', metavar='  ', default=False, help='Define the directory for repeats BED files.')
+    parser_bedprofile.add_argument('-genposi', metavar='  ', default=False, help='Define the directory for the generic position BED files. (exons, introns, and intergenic regions)')
+    parser_bedprofile.add_argument('-labels', metavar='  ', help='Define the labels for more BED sets')
+    parser_bedprofile.add_argument('-dirs', metavar='  ', help='Define the directories for more BED sets corresponding to the labels')
 
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
@@ -305,9 +308,12 @@ def main():
             bed_profile.cal_statistics()
             bed_profile.plot_distribution_length(outdir=os.path.join(args.o, args.t))
             if args.biotype:
-                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype")
+                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True)
             if args.repeats:
-                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats")
+                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True)
+            if args.genposi:
+                bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False)
+
             bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
             bed_profile.gen_html(args.o, args.t)
 
