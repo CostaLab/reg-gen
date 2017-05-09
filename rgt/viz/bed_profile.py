@@ -141,7 +141,7 @@ class BED_profile:
                     ax = self.fig_axs
 
             ax.bar(left=range(len(overlapping_counts)), height=overlapping_counts)
-
+            ax.set_title(self.bednames[i])
             ax.set_ylabel("Number")
             ax.set_xticks(range(len(overlapping_counts)))
             ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
@@ -150,8 +150,44 @@ class BED_profile:
 
 
 
-    def save_pdf(self, filename):
-
-        pp = PdfPages(filename)
+    def save_fig(self, filename):
+        self.fig_f.savefig(filename+".png", facecolor='w', edgecolor='w',
+                  bbox_inches='tight', dpi=400)
+        pp = PdfPages(filename+".pdf")
         pp.savefig(self.fig_f, bbox_inches='tight')
         pp.close()
+
+
+    def gen_html(self, directory, title):
+        dir_name = os.path.basename(directory)
+        # check_dir(directory)
+        html_header = dir_name + " / " + title
+        link_d = OrderedDict()
+        link_d["BED profile"] = "index.html"
+        link_d["Parameters"] = "parameters.html"
+
+
+        html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory, "style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
+
+        type_list = 's'*10
+        col_size_list = [10] * 10
+
+        data_table = []
+        header_list = ["No", "BED File", "Number", "Ave. Len.", "s.d. Len.", "Min", "Max", "Internal overlap"]
+        c = 0
+        for bed in self.bednames:
+            c += 1
+            data_table.append([ str(c), bed,
+                                str(self.stats[bed]["Number of regions"]),
+                                str(self.stats[bed]["Average length"]),
+                                str(self.stats[bed]["s.d. of length"]),
+                                str(self.stats[bed]["min"]),
+                                str(self.stats[bed]["max"]),
+                                str(self.stats[bed]["Internal overlaps"])])
+
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table,
+                             border_list=None, sortable=True, clean=True)
+        html.add_figure("figure_"+title+".png", align="center")
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, title, "index.html"))

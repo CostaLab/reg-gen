@@ -308,7 +308,8 @@ def main():
                 bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype")
             if args.repeats:
                 bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats")
-            bed_profile.save_pdf(filename=os.path.join(args.o, args.t, "figure_bed_profile.pdf"))
+            bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
+            bed_profile.gen_html(args.o, args.t)
 
 
 
