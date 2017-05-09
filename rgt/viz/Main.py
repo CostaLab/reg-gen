@@ -526,9 +526,9 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
-            if args.scol and args.srow:
-                print("** Err: -scol and -srow cannot be used simutaneously.")
-                sys.exit(1)
+            # if args.scol and args.srow:
+            #     print("** Err: -scol and -srow cannot be used simutaneously.")
+            #     sys.exit(1)
 
             print("\n################ Lineplot #################")
             # Read experimental matrix

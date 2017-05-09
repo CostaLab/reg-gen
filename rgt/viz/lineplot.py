@@ -415,7 +415,7 @@ class Lineplot:
                                 plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
                                          horizontalalignment='center', verticalalignment='top')
                                 plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
-                                print(self.data[s][g][c][d])
+                                # print(self.data[s][g][c][d])
                                 for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
                                     # print(y)
                                     ymax1 = numpy.amax(y)
@@ -447,7 +447,7 @@ class Lineplot:
 
 
                 ax.locator_params(axis='x', nbins=4)
-                ax.locator_params(axis='y', nbins=2)
+                ax.locator_params(axis='y', nbins=3)
                 # try:
                 #
                 # except:
@@ -476,16 +476,20 @@ class Lineplot:
                     except: axx = axs
 
                 if self.df:
-                    if scol:
+                    if scol and not srow:
                         ymin = yaxmin[i] - abs(yaxmin[i] * 0.2)
                         ymax = yaxmax[i] + abs(yaxmax[i] * 0.2)
-                    elif srow:
+                    elif srow and not scol:
                         ymin = sx_ymin[it] - abs(sx_ymin[it] * 0.2)
                         ymax = sx_ymax[it] + abs(sx_ymax[it] * 0.2)
+                    elif scol and srow:
+                        ymin = min(yaxmin[i], sx_ymin[it]) - abs(min(yaxmin[i], sx_ymin[it]) * 0.2)
+                        ymax = max(yaxmax[i], sx_ymax[it]) + abs(max(yaxmax[i], sx_ymax[it]) * 0.2)
 
                 else:
-                    if scol: ymax = yaxmax[i] * 1.2
-                    elif srow: ymax = sx_ymax[it] * 1.2
+                    if scol and not srow: ymax = yaxmax[i] * 1.2
+                    elif srow and not scol: ymax = sx_ymax[it] * 1.2
+                    elif scol and srow: ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
                     else:
                         ymax = axx.get_ylim()[1]
                     if self.sense: ymin = -ymax

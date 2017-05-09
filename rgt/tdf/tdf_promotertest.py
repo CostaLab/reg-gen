@@ -277,11 +277,16 @@ class PromoterTest:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions,
-                                      name=self.rna_name, organism=self.organism)
-        self.stat["associated_gene"] = r_genes
-        self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
-                            str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        print(self.rna_regions)
+        if self.rna_regions:
+            r_genes = rna_associated_gene(rna_regions=self.rna_regions,
+                                          name=self.rna_name, organism=self.organism)
+            self.stat["associated_gene"] = r_genes
+            self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
+                                str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        else:
+            self.stat["associated_gene"] = "."
+            self.stat["loci"] = "-"
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
 
