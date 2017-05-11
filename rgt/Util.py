@@ -69,6 +69,12 @@ class GenomeData(ConfigurationFile):
         self.annotation = self.config.get(organism,'annotation')
         self.annotation_dump_dir = os.path.dirname(self.annotation)
         self.gene_alias = self.config.get(organism,'gene_alias')
+        if organism in ["hg19", "hg38", "mm9"]:
+            self.repeat_maskers = self.config.get(organism, 'repeat_maskers')
+        else:
+            self.repeat_maskers = None
+
+
 
     def get_organism(self):
         """Returns the current organism."""
@@ -107,6 +113,13 @@ class GenomeData(ConfigurationFile):
     def get_gene_alias(self):
         """Returns the current path to the gene alias txt file."""
         return self.gene_alias
+
+    def get_repeat_maskers(self):
+        """Returns the current path to directory for repeat maskers."""
+        if self.repeat_maskers:
+            return self.repeat_maskers
+        else:
+            print("*** There is no repeat masker data for "+self.organism)
 
 
 

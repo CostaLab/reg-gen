@@ -17,6 +17,7 @@ from lineplot import Lineplot
 from jaccard_test import Jaccard
 from projection_test import Projection
 from intersection_test import Intersect
+from bed_profile import BED_profile
 from shared_function import check_dir, print2, output_parameters,\
                             copy_em, list_all_index, output
 from plotTools import Venn
@@ -51,8 +52,23 @@ def main():
     helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
-    
+    subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
+
+    ################### BED profile ##########################################
+    parser_bedprofile = subparsers.add_parser('bed_profile',
+                                              help='BED profile analyzes the given BED file(s) by their length, distribution and composition of the sequences.')
+    parser_bedprofile.add_argument('-i', metavar='  ', help="Input experimental matrix or Input BED file or Input directory which contains BED files")
+    parser_bedprofile.add_argument('-o', metavar='  ', help=helpoutput)
+    parser_bedprofile.add_argument('-t', metavar='  ', default='bed_profile', help=helptitle)
+    parser_bedprofile.add_argument('-organism', metavar='  ', default=None, help='Define the organism. (default: %(default)s)')
+    parser_bedprofile.add_argument('-biotype', metavar='  ', default=False, help='Define the directory for biotype BED files.')
+    parser_bedprofile.add_argument('-repeats', metavar='  ', default=False, help='Define the directory for repeats BED files.')
+    parser_bedprofile.add_argument('-genposi', metavar='  ', default=False, help='Define the directory for the generic position BED files. (exons, introns, and intergenic regions)')
+    parser_bedprofile.add_argument('-labels', metavar='  ', default=None, help='Define the labels for more BED sets')
+    parser_bedprofile.add_argument('-sources', metavar='  ', default=None, help='Define the directories for more BED sets corresponding to the labels')
+    parser_bedprofile.add_argument('-strand', metavar='  ', default=None,
+                                   help='Define whether to perform strand-specific comparison for each reference corresponding to the labels')
+
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
     parser_projection.add_argument('-r', metavar='  ', help=helpreference)
@@ -279,8 +295,55 @@ def main():
         ##### Main #####################################################################################
         #################################################################################################
 
+        if args.mode == 'bed_profile':
+        ################### BED profile ##########################################
+            print2(parameter, "\n############# BED profile #############")
+            print2(parameter, "\tInput path:\t" + args.i)
+            print2(parameter, "\tOutput path:\t" + os.path.join(args.o, args.t))
+            if not args.organism:
+                print("Please define organism...")
+                sys.exit(1)
+            else:
+                print2(parameter, "\tOrganism:\t" + args.organism)
+
+            if args.labels:
+                args.labels = args.labels.split(",")
+                args.sources = args.sources.split(",")
+                if not args.sources:
+                    print("Please define the sources files corresponding to the the labels.")
+                    sys.exit(1)
+                elif len(args.labels) != len(args.sources):
+                    print("The number of labels doesn't match the number of sources.")
+                    sys.exit(1)
+                if args.strand:
+                    strands = []
+                    for i, bool in enumerate(args.strand.split(",")):
+                        if bool == "T": strands.append(True)
+                        elif bool == "F": strands.append(False)
+                    args.strand = strands
+
+            bed_profile = BED_profile(args.i, args.organism, args)
+            bed_profile.cal_statistics()
+            bed_profile.plot_distribution_length()
+            if args.biotype:
+                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True, strand=True)
+            if args.repeats:
+                bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True)
+            if args.genposi:
+                bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False)
+            if args.labels:
+                for i, label in enumerate(args.labels):
+                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=True, strand=args.strand[i])
+            bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
+            bed_profile.gen_html(args.o, args.t)
+
+
+
+
+
+
         ################### Projection test ##########################################
-        if args.mode == 'projection':
+        elif args.mode == 'projection':
             # Fetching reference and query EM
             print2(parameter, "\n############# Projection Test #############")
             print2(parameter, "\tReference:        "+args.r)

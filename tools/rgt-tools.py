@@ -110,7 +110,15 @@ if __name__ == "__main__":
     parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
                                              help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
     parser_gtfachr.add_argument('-i', metavar='input', type=str, help="Input GTF file")
-    
+
+    ############### GTF get intergenic regions in BED #################################
+    # python rgt-convertor.py
+    parser_gtfintergenic = subparsers.add_parser('gtf_intergenic',
+                                           help="[GTF] Generate BED files for exon, intron, and intergenic regions")
+    parser_gtfintergenic.add_argument('-i', metavar='input', type=str, help="Input GTF file")
+    parser_gtfintergenic.add_argument('-o', metavar='output', type=str, help="Output directory for BED file")
+    parser_gtfintergenic.add_argument('-organism', metavar='  ', type=str, help="Define the organism")
+
     ############### BED add score ############################################
     # python rgt-convertor.py
     parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
@@ -582,7 +590,24 @@ if __name__ == "__main__":
                         print("chr"+line, file=f)
         # rewrite gtf file
         #os.move("temp.gtf")
-        
+
+
+    ############### GTF get intergenic regions in BED ########################
+    elif args.mode == "gtf_intergenic":
+        print(tag + ": [GTF] Generate BED files for exon, intron, and intergenic regions")
+        ann = AnnotationSet(gene_source=args.i,filter_havana=False, protein_coding=False, known_only=False)
+        genome = GenomicRegionSet(args.organism)
+        genome.get_genome_data(organism=args.organism)
+        exons = ann.get_exons()
+        genes = ann.get_genes()
+        introns = genes.subtract(exons)
+        interg = genome.subtract(genes)
+        if not os.path.exists(args.o):
+            os.makedirs(args.o)
+        exons.write_bed(os.path.join(args.o, "exons.bed"))
+        introns.write_bed(os.path.join(args.o, "introns.bed"))
+        interg.write_bed(os.path.join(args.o, "intergenic.bed"))
+
 
     ############### BED add score ############################################
     elif args.mode == "bed_add_score":
