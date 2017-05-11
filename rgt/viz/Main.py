@@ -64,8 +64,10 @@ def main():
     parser_bedprofile.add_argument('-biotype', metavar='  ', default=False, help='Define the directory for biotype BED files.')
     parser_bedprofile.add_argument('-repeats', metavar='  ', default=False, help='Define the directory for repeats BED files.')
     parser_bedprofile.add_argument('-genposi', metavar='  ', default=False, help='Define the directory for the generic position BED files. (exons, introns, and intergenic regions)')
-    parser_bedprofile.add_argument('-labels', metavar='  ', help='Define the labels for more BED sets')
-    parser_bedprofile.add_argument('-dirs', metavar='  ', help='Define the directories for more BED sets corresponding to the labels')
+    parser_bedprofile.add_argument('-labels', metavar='  ', default=None, help='Define the labels for more BED sets')
+    parser_bedprofile.add_argument('-sources', metavar='  ', default=None, help='Define the directories for more BED sets corresponding to the labels')
+    parser_bedprofile.add_argument('-strand', metavar='  ', default=None,
+                                   help='Define whether to perform strand-specific comparison for each reference corresponding to the labels')
 
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
@@ -304,16 +306,34 @@ def main():
             else:
                 print2(parameter, "\tOrganism:\t" + args.organism)
 
+            if args.labels:
+                args.labels = args.labels.split(",")
+                args.sources = args.sources.split(",")
+                if not args.sources:
+                    print("Please define the sources files corresponding to the the labels.")
+                    sys.exit(1)
+                elif len(args.labels) != len(args.sources):
+                    print("The number of labels doesn't match the number of sources.")
+                    sys.exit(1)
+                if args.strand:
+                    strands = []
+                    for i, bool in enumerate(args.strand.split(",")):
+                        if bool == "T": strands.append(True)
+                        elif bool == "F": strands.append(False)
+                    args.strand = strands
+
             bed_profile = BED_profile(args.i, args.organism, args)
             bed_profile.cal_statistics()
-            bed_profile.plot_distribution_length(outdir=os.path.join(args.o, args.t))
+            bed_profile.plot_distribution_length()
             if args.biotype:
-                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True)
+                bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True, strand=True)
             if args.repeats:
                 bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True)
             if args.genposi:
                 bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False)
-
+            if args.labels:
+                for i, label in enumerate(args.labels):
+                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=True, strand=args.strand[i])
             bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
             bed_profile.gen_html(args.o, args.t)
 

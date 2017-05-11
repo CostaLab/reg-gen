@@ -2161,7 +2161,7 @@ class GenomicRegionSet:
 
             - regionset -- A GenomicRegionSet defining the interval for counting.
         """
-        return len(self.intersect(regionset))
+        return len(self.intersect(regionset, mode=OverlapType.ORIGINAL))
 
     def counts_per_region(self, regionset):
         """Return a list of counting numbers of the given GenomicRegionSet based on the self.
