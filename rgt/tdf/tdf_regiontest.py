@@ -58,10 +58,9 @@ class RandomTest:
                      "DBD_all": 0, "DBD_sig": 0, "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
                      "DBSs_background_all": "-", "DBSs_background_DBD_sig": "-", "p_value": "-",
                      "loci": "-", "autobinding": 0,
-                     "Mix_Antiparallel_A": 0, "Mix_Antiparallel_G": 0, "Mix_Antiparallel_T": 0,
-                     "Mix_Parallel_C": 0, "Mix_Parallel_G": 0, "Mix_Parallel_T": 0,
-                     "Purine_Antiparallel_A": 0, "Purine_Antiparallel_G": 0, "Purine_Antiparallel_T": 0,
-                     "Pyrimidine_Parallel_C": 0, "Pyrimidine_Parallel_G": 0, "Pyrimidine_Parallel_T": 0}
+                     "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0, "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+                     "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
+                     "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
 
 
     def get_rna_region_str(self, rna):
@@ -270,6 +269,12 @@ class RandomTest:
         for i, mode in enumerate(self.txpf.motifs.keys()):
             for con in self.txpf.motifs[mode].keys():
                 self.stat[mode+"_"+con] = str(self.txpf.motifs[mode][con])
+
+    def uniq_motif(self):
+        self.txpf.uniq_motif_statistics(rnalen=self.rna_len)
+        for k, v in self.txpf.uniq_motifs.iteritems():
+            self.stat[k] = sum(v)
+            self.stat["uniq_"+k] = sum([1 for x in v if x > 0])
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""

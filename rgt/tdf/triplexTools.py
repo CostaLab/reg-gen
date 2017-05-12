@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
-
+import matplotlib.gridspec as gridspec
 
 # Distal Libraries
 from rgt.SequenceSet import SequenceSet
@@ -43,10 +43,14 @@ order_stat = ["title", "name", "genome", "exons", "seq_length",
               "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
               "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
               "associated_gene", "expression", "loci", "autobinding",
-              "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
-              "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
-              "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
-              "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
+              "MA_G", "MA_T", "MP_G", "MP_T", "RA_A", "RA_G", "YP_C", "YP_T",
+              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T",
+              "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+
+              # "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
+              # "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
+              # "Purine_Antiparallel_A", "Purine_Antiparallel_G", "Purine_Antiparallel_T",
+              # "Pyrimidine_Parallel_C", "Pyrimidine_Parallel_G", "Pyrimidine_Parallel_T"]
 ####################################################################################
 ####################################################################################
 
@@ -733,7 +737,6 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
              filename, ac=None, showpa=False, exons=None):
     # Plotting
     f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-    
     # Extract data points
     x = range(rnalen)
     #print(rnalen)
@@ -789,7 +792,10 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
 
     # RNA accessbility
     if ac:
-        n_value = read_ac(ac, cut_off, rnalen=rnalen)
+        if isinstance(ac, list):
+            n_value = ac
+        else:
+            n_value = read_ac(ac, cut_off, rnalen=rnalen)
         drawing = False
         for i in x:
             if n_value[i] > 0:

@@ -68,11 +68,11 @@ class RNADNABinding:
     def motif_statistics(self):
         if not self.match: return None
         else:
-            res = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
-                   "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
-                   "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
-                   "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
-            # res = numpy.array([[0,0,0],[0,0,0][0,0,0][0,0,0]])
+            res = {"Mix_Antiparallel": {"G": 0, "T": 0},
+                   "Mix_Parallel": {"G": 0, "T": 0},
+                   "Purine_Antiparallel": {"A": 0, "G": 0},
+                   "Pyrimidine_Parallel": {"C": 0, "T": 0}}
+
             if self.strand == "+":
                 rna = self.match[0].split()[1]
                 linking = self.match[1].strip()
@@ -95,6 +95,8 @@ class RNADNABinding:
                 orient = "Parallel"
             elif self.orient == "A":
                 orient = "Antiparallel"
+            #########################################333
+            # Overall counts
 
             for i, bp in enumerate(linking):
                 if bp == "|":
@@ -776,10 +778,10 @@ class RNADNABindingSet:
         return z
 
     def motif_statistics(self):
-        self.motifs = {"Mix_Antiparallel": {"A": 0, "G": 0, "T": 0},
-                       "Mix_Parallel": {"C": 0, "G": 0, "T": 0},
-                       "Purine_Antiparallel": {"A": 0, "G": 0, "T": 0},
-                       "Pyrimidine_Parallel": {"C": 0, "G": 0, "T": 0}}
+        self.motifs = {"Mix_Antiparallel": {"G": 0, "T": 0},
+                       "Mix_Parallel": {"G": 0, "T": 0},
+                       "Purine_Antiparallel": {"A": 0, "G": 0},
+                       "Pyrimidine_Parallel": {"C": 0, "T": 0}}
         if len(self) > 0:
             for s in self:
                 m = s.motif_statistics()
@@ -787,3 +789,30 @@ class RNADNABindingSet:
                     for com in m[mode].keys():
                         self.motifs[mode][com] += m[mode][com]
         # print(self.motifs)
+
+    def uniq_motif_statistics(self, rnalen):
+        self.uniq_motifs = {"MA_G": [0] * rnalen,
+                            "MA_T": [0] * rnalen,
+                            "MP_G": [0] * rnalen,
+                            "MP_T": [0] * rnalen,
+                            "RA_A": [0] * rnalen,
+                            "RA_G": [0] * rnalen,
+                            "YP_C": [0] * rnalen,
+                            "YP_T": [0] * rnalen}
+        if len(self) > 0:
+            for rd in self:
+                if rd.strand == "+":
+                    rna = rd.match[0].split()[1]
+                    linking = rd.match[1].strip()
+                elif rd.strand == "-":
+                    rna = rd.match[3].split()[1]
+                    linking = rd.match[2].strip()
+                for i, l in enumerate(linking):
+                    if l == "|":
+                        self.uniq_motifs[rd.motif+rd.orient+"_"+rna[i].upper()][rd.rna.initial+i] += 1
+
+    def rna_track(self, rnalen):
+        self.rna_track = [0] * rnalen
+        for rd in self:
+            for i in range(rd.rna.initial, rd.rna.final):
+                self.rna_track[i] += 1

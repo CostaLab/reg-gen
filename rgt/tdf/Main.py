@@ -449,7 +449,7 @@ def main():
         promoter.dbd_regions(output=args.o)
         promoter.autobinding(output=args.o, l=args.l, e=args.e,
                              c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        promoter.dbs_motif(outdir=args.o)
+        # promoter.dbs_motif(outdir=args.o)
         if len(promoter.rbss) == 0:
             no_binding_response(args=args, rna_regions=promoter.rna_regions,
                                 rna_name=promoter.rna_name, organism=promoter.organism,
@@ -469,8 +469,8 @@ def main():
                             ylabel="Number of DBSs", 
                             linelabel="No. DBSs", filename="plot_promoter.png")
 
-        promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_DBD
-                        )
+        promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_DBD)
+        promoter.uniq_motif()
         #if args.showdbs:
         #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
         #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
@@ -573,7 +573,7 @@ def main():
         # print(args.par)
         randomtest.autobinding(output=args.o, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        randomtest.dbs_motif(outdir=args.o)
+        # randomtest.dbs_motif(outdir=args.o)
         if len(randomtest.rbss) == 0:
             # no_binding_code()
             no_binding_response(args=args, rna_regions=randomtest.rna_regions,
@@ -626,7 +626,7 @@ def main():
         #                       sig_boolean=randomtest.data["dbs"]["sig_boolean"], 
         #                       ylabel="Number of DBS on target regions",
         #                       filename="boxplot_dbs" )
-
+        randomtest.uniq_motif()
         randomtest.gen_html(directory=args.o, parameters=args, align=50, alpha=args.a,
                             score=args.score, obed=obed)
 

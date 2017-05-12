@@ -62,10 +62,13 @@ class PromoterTest:
                       "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
                       "DBSs_background_all": 0, "DBSs_background_DBD_sig": 0, "p_value": "-",
                       "associated_gene": ".", "expression": "n.a.", "loci": "-", "autobinding": 0,
-                      "Mix_Antiparallel_A": 0, "Mix_Antiparallel_G": 0, "Mix_Antiparallel_T": 0,
-                      "Mix_Parallel_C": 0, "Mix_Parallel_G": 0, "Mix_Parallel_T": 0,
-                      "Purine_Antiparallel_A": 0, "Purine_Antiparallel_G": 0, "Purine_Antiparallel_T": 0,
-                      "Pyrimidine_Parallel_C": 0, "Pyrimidine_Parallel_G": 0, "Pyrimidine_Parallel_T": 0 }
+                      "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0, "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+                      "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
+                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
+                      # "Mix_Antiparallel_A": 0, "Mix_Antiparallel_G": 0, "Mix_Antiparallel_T": 0,
+                      # "Mix_Parallel_C": 0, "Mix_Parallel_G": 0, "Mix_Parallel_T": 0,
+                      # "Purine_Antiparallel_A": 0, "Purine_Antiparallel_G": 0, "Purine_Antiparallel_T": 0,
+                      # "Pyrimidine_Parallel_C": 0, "Pyrimidine_Parallel_G": 0, "Pyrimidine_Parallel_T": 0 }
         ####################################################################################
         # Input BED files
         if bed and bg:
@@ -226,8 +229,8 @@ class PromoterTest:
                             p.data = str(self.de_gene.values[p.name])
                         self.scores = de_prom.get_score_dict()
                         # self.scores = de_genes.get_score_dict()
-                        print(self.scores.keys()[:5])
-                        print(self.scores.values()[:5])
+                        # print(self.scores.keys()[:5])
+                        # print(self.scores.values()[:5])
 
                 # de_prom.merge(namedistinct=True, strand_specific=True)
                 print2(summary, "   \t" + str(len(de_prom)) + "\tmerged promoters ")
@@ -277,7 +280,7 @@ class PromoterTest:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
-        print(self.rna_regions)
+        # print(self.rna_regions)
         if self.rna_regions:
             r_genes = rna_associated_gene(rna_regions=self.rna_regions,
                                           name=self.rna_name, organism=self.organism)
@@ -522,13 +525,20 @@ class PromoterTest:
         self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
         self.stat["autobinding"] = len(self.autobinding)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
-        self.autobinding.motif_statistics()
+        # self.autobinding.motif_statistics()
+
 
     def dbs_motif(self, outdir):
         self.txp_def.motif_statistics()
         for i, mode in enumerate(self.txp_def.motifs.keys()):
             for con in self.txp_def.motifs[mode].keys():
                 self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
+
+    def uniq_motif(self):
+        self.txp_def.uniq_motif_statistics(rnalen=self.rna_len)
+        for k, v in self.txp_def.uniq_motifs.iteritems():
+            self.stat[k] = sum(v)
+            self.stat["uniq_"+k] = sum([1 for x in v if x > 0])
 
         # f, ax = plt.subplots(1, 1, dpi=300, figsize=(6, 6))
         # labels = []
@@ -558,10 +568,11 @@ class PromoterTest:
         if not self.rna_name: self.rna_name = rnas[0].name
 
         self.rna_len = rnas.total_len()
+        self.autobinding.rna_track(rnalen=self.rna_len)
 
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region,
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,
-                 filename=filename, ac=ac, showpa=showpa, exons=self.rna_regions)
+                 filename=filename, ac=self.autobinding.rna_track, showpa=showpa, exons=self.rna_regions)
 
     def barplot(self, dirp, filename, sig_region, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
@@ -905,8 +916,8 @@ class PromoterTest:
                 #     scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
                 #     rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
                 #     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
-                print(self.txp_de.merged_dict[rbsm])
-                print(self.scores.keys()[:10])
+                # print(self.txp_de.merged_dict[rbsm])
+                # print(self.scores.keys()[:10])
                 rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array([self.scores[p.toString()] for p in self.txp_de.merged_dict[rbsm] ])
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
