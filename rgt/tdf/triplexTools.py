@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
-import matplotlib.gridspec as gridspec
+
 
 # Distal Libraries
 from rgt.SequenceSet import SequenceSet
@@ -43,9 +43,8 @@ order_stat = ["title", "name", "genome", "exons", "seq_length",
               "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
               "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
               "associated_gene", "expression", "loci", "autobinding",
-              "MA_G", "MA_T", "MP_G", "MP_T", "RA_A", "RA_G", "YP_C", "YP_T",
-              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T",
-              "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+              "MA_G","MA_T","MP_G","MP_T","RA_A","RA_G","YP_C","YP_T",
+              "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T", "uniq_RA_A", "uniq_RA_G", "uniq_YP_C"]
 
               # "Mix_Antiparallel_A", "Mix_Antiparallel_G", "Mix_Antiparallel_T",
               # "Mix_Parallel_C", "Mix_Parallel_G", "Mix_Parallel_T",
@@ -737,6 +736,7 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
              filename, ac=None, showpa=False, exons=None):
     # Plotting
     f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
+
     # Extract data points
     x = range(rnalen)
     #print(rnalen)
@@ -805,8 +805,8 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
                     last_i = i
                     drawing = True
             elif drawing:
-                pac = ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                                   hatch='///', fill=False, snap=False, linewidth=0, label="RNA accessibility"))
+                ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
+                             hatch='///', fill=False, snap=False, linewidth=0, label="Autobinding"))
                 drawing = False
             else:
                 continue
@@ -818,19 +818,19 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     for uniqlabel in uniq(labels):
         legend_h.append(handles[labels.index(uniqlabel)])
         legend_l.append(uniqlabel)
-    ax.legend(legend_h, legend_l, 
-              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
+    ax.legend(legend_h, legend_l,
+              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
               prop={'size':9}, ncol=3)
 
     # XY axis
     ax.set_xlim(left=0, right=rnalen )
-    ax.set_ylim( [min_y, max_y] ) 
-    for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9) 
-    for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9) 
+    ax.set_ylim( [min_y, max_y] )
+    for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
+    for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
     ax.set_xlabel(rnaname+" sequence (bp)", fontsize=9)
-    
+
     ax.set_ylabel(ylabel,fontsize=9, rotation=90)
-    
+
     if None:
         if exons and len(exons) > 1:
             w = 0

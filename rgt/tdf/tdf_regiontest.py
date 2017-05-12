@@ -278,10 +278,10 @@ class RandomTest:
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
-
+        self.autobinding.rna_track(rnalen=self.rna_len)
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region,
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,
-                 filename=filename, ac=ac, showpa=showpa)
+                 filename=filename, ac=self.autobinding.rna_track, showpa=showpa)
 
     def boxplot(self, dir, matrix, sig_region, truecounts, sig_boolean, ylabel, filename):
         """Generate the visualized plot"""
