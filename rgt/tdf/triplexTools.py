@@ -806,7 +806,7 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
                     drawing = True
             elif drawing:
                 ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                             hatch='///', fill=False, snap=False, linewidth=0, label="Autobinding"))
+                            fill=True, color="silver", snap=False, linewidth=0, label="Autobinding"))
                 drawing = False
             else:
                 continue
