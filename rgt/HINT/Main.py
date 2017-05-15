@@ -26,7 +26,7 @@ from plot import Plot
 
 # External
 import os
-from numpy import array, sum, isnan
+from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
 from sklearn.externals import joblib
@@ -114,8 +114,10 @@ def main():
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
 
-    parser.add_option("--hmm-model", dest="hmm_model", type="string", metavar="STRING", default=None)
-    parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT")
+    parser.add_option("--model-name", dest="model_name", type="string", metavar="STRING", default=None)
+    parser.add_option("--model-file", dest="model_file", type="string", metavar="STRING", default=None)
+    parser.add_option("--fp-state", dest="fp_state", type="string", metavar="STRING")
+    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None)
     # Parameters Options
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
                       help=("Organism considered on the analysis. Check our full documentation for all available "
@@ -299,7 +301,7 @@ def main():
                       help=("motif predicted binding sites file"))
 
     # GENERAL Hidden Options
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=1000,
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
                       help=SUPPRESS_HELP)
@@ -433,9 +435,7 @@ def main():
         if (options.print_norm_signal):
             system("touch " + options.print_norm_signal + " | echo -n "" > " + options.print_norm_signal)
         if (options.print_slope_signal):
-            system("touch " + options.print_raw_signal + " | echo -n "" > " + options.print_slope_signal)
-        if (options.print_diff_signal):
-            system("touch " + options.print_diff_signal + " | echo -n "" > " + options.print_diff_signal)
+            system("touch " + options.print_slope_signal + " | echo -n "" > " + options.print_slope_signal)
         signal = GenomicSignal(options.reads_file)
         signal.load_sg_coefs(slope_window_size=9)
         regions = GenomicRegionSet("Interested regions")
@@ -445,17 +445,14 @@ def main():
 
         genome_data = GenomeData(options.organism)
         for region in regions:
-            hon_signal, slope_signal, diff_signal = signal.get_signal1(ref=region.chrom, start=region.initial,
-                                                                       end=region.final,
-                                                                       downstream_ext=atac_downstream_ext,
-                                                                       upstream_ext=atac_upstream_ext,
-                                                                       forward_shift=atac_forward_shift,
-                                                                       reverse_shift=atac_reverse_shift,
-                                                                       genome_file_name=genome_data.get_genome(),
-                                                                       print_raw_signal=options.print_raw_signal,
-                                                                       print_bc_signal=options.print_bc_signal,
-                                                                       print_norm_signal=options.print_norm_signal,
-                                                                       print_slope_signal=options.print_slope_signal)
+            norm_signal, slope_signal = signal.get_signal(ref=region.chrom, start=region.initial, end=region.final,
+                                                           downstream_ext=atac_downstream_ext,
+                                                           upstream_ext=atac_upstream_ext,
+                                                           forward_shift=atac_forward_shift,
+                                                           reverse_shift=atac_reverse_shift,
+                                                           genome_file_name=genome_data.get_genome(),
+                                                           print_raw_signal=options.print_raw_signal,
+                                                           print_norm_signal=options.print_norm_signal)
         return
     # IF HINT is required to output the line plot and motif logo
     if options.print_line_plot:
@@ -755,7 +752,7 @@ def main():
     # Test complex model
     ##############################################################
     for group in group_list:
-        group.hmm = joblib.load(options.hmm_model)
+        group.hmm = joblib.load(options.model_file)
 
     ###################################################################################################
     # Main Pipeline
@@ -779,38 +776,18 @@ def main():
                 # Fetching DNase signal
                 try:
                     if (group.is_atac):
-                        if options.strands_specific:
-                            atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = group.dnase_file.get_signal1(r.chrom,
-                                                                                                            r.initial,
-                                                                                                            r.final,
-                                                                                                            atac_downstream_ext,
-                                                                                                            atac_upstream_ext,
-                                                                                                            atac_forward_shift,
-                                                                                                            atac_reverse_shift,
-                                                                                                            atac_initial_clip,
-                                                                                                            atac_norm_per,
-                                                                                                            atac_slope_per,
-                                                                                                            group.bias_table,
-                                                                                                            genome_data.get_genome(),
-                                                                                                            options.print_raw_signal,
-                                                                                                            options.print_bc_signal,
-                                                                                                            options.print_norm_signal,
-                                                                                                            options.print_slope_signal)
-                        else:
-                            atac_norm, atac_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
-                                                                                 atac_downstream_ext,
-                                                                                 atac_upstream_ext,
-                                                                                 atac_forward_shift,
-                                                                                 atac_reverse_shift,
-                                                                                 atac_initial_clip,
-                                                                                 atac_norm_per,
-                                                                                 atac_slope_per,
-                                                                                 group.bias_table,
-                                                                                 genome_data.get_genome(),
-                                                                                 options.print_raw_signal,
-                                                                                 options.print_bc_signal,
-                                                                                 options.print_norm_signal,
-                                                                                                            options.print_slope_signal)
+                        # if options.strands_specific:
+                        atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
+                            group.dnase_file.get_signal1(r.chrom, r.initial, r.final, atac_downstream_ext,
+                                                         atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
+                                                         atac_initial_clip, atac_norm_per, atac_slope_per,
+                                                         group.bias_table, genome_data.get_genome())
+                        # else:
+                        atac_norm, atac_slope = \
+                            group.dnase_file.get_signal(r.chrom, r.initial, r.final, atac_downstream_ext,
+                                                        atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
+                                                        atac_initial_clip, atac_norm_per, atac_slope_per,
+                                                        group.bias_table, genome_data.get_genome())
                     else:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                               dnase_downstream_ext, dnase_upstream_ext,
@@ -832,12 +809,30 @@ def main():
 
                 # Formatting sequence
                 try:
-                    # input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
                     if options.strands_specific:
-                        input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
-                        #input_sequence = array([array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T])
+                        if options.model_name == "HMM":
+                            diff_signal = absolute(subtract(array(atac_norm_f), array(atac_norm_r)))
+                            input_sequence = array([atac_norm, atac_slope, diff_signal]).T
+                            #input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
+                        elif options.model_name == "CRFs":
+                            input_sequence = list()
+                            for i in range(len(atac_norm_f)):
+                                features = signal2features(norm_signal_f=atac_norm_f[i],
+                                                           slope_signal_f=atac_slope_f[i],
+                                                           norm_signal_r=atac_norm_r[i],
+                                                           slope_signal_r=atac_slope_r[i],
+                                                           is_specific=True)
+                                input_sequence.append(features)
+                            input_sequence = [input_sequence]
                     else:
-                        input_sequence = array([atac_norm, atac_slope]).T
+                        if options.model_name == "HMM":
+                            input_sequence = array([atac_norm, atac_slope]).T
+                        elif options.model_name == "CRFs":
+                            input_sequence = list()
+                            for i in range(len(atac_norm)):
+                                features = signal2features(norm_signal=atac_norm[i], slope_signal=atac_slope[i])
+                                input_sequence.append(features)
+                            input_sequence = [input_sequence]
                 except Exception:
                     raise
                     error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom,
@@ -847,9 +842,12 @@ def main():
 
                 # Applying HMM
                 if (isinstance(group.hmm, list)): continue  # TODO ERROR
-                if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                #if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                 try:
-                    posterior_list = group.hmm.predict(input_sequence)
+                    if options.model_name == "HMM":
+                        posterior_list = group.hmm.predict(input_sequence)
+                    elif options.model_name == "CRFs":
+                        posterior_list = group.hmm.predict(input_sequence)[0]
                     # posterior_list = array(group.hmm.predict(input_sequence))[0]
                 except Exception:
                     raise
@@ -858,26 +856,29 @@ def main():
                             r.final)]) + "). This iteration will be skipped.")
                     continue
 
+                if options.fp_bed_fname:
+                    output_bed_file(r.chrom, r.initial, r.final, posterior_list, options.fp_bed_fname)
                 # Formatting results
                 start_pos = 0
                 flag_start = False
                 # fp_state_nb = 4
-                fp_state_nb = int(options.fp_state)
-                for k in range(r.initial, r.final):
+                fp_state_nb = options.fp_state.split(",")
+                for k in range(r.initial, r.initial + len(posterior_list)):
                     curr_index = k - r.initial
                     if (flag_start):
-                        if (posterior_list[curr_index] != fp_state_nb):
+                        if (str(posterior_list[curr_index]) not in fp_state_nb):
                             if (k - start_pos < fp_limit_size):
                                 fp = GenomicRegion(r.chrom, start_pos, k)
                                 footprints.add(fp)
                             flag_start = False
                     else:
-                        if (posterior_list[curr_index] == fp_state_nb):
+                        if (str(posterior_list[curr_index]) in fp_state_nb):
                             flag_start = True
                             start_pos = k
                 if (flag_start):
-                    fp = GenomicRegion(r.chrom, start_pos, r.final)
-                    footprints.add(fp)
+                    if (r.final - start_pos < fp_limit_size):
+                        fp = GenomicRegion(r.chrom, start_pos, r.final)
+                        footprints.add(fp)
 
             ###################################################################################################
             # HISTONES
@@ -1036,18 +1037,21 @@ def main():
                 tcshift2 = dnase_reverse_shift
                 tcinitialclip = dnase_initial_clip
 
-        # Sorting and Merging
-        footprints.merge()
-
         # Overlapping results with original regions
         footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
 
         # Extending footprints
         for f in footprints.sequences:
-            if f.final - f.initial < fp_limit or f.final - f.initial > 2 * fp_limit:
-                mid = (f.initial + f.final) / 2
-                f.initial = max(0, mid - fp_ext)
-                f.final = mid + fp_ext
+            if f.final - f.initial < fp_limit:
+                f.initial = max(0, f.initial - fp_ext)
+                f.final = f.final + fp_ext
+        #    elif f.final - f.initial > 2 * fp_limit:
+        #       mid = (f.initial + f.final) / 2
+        #       f.initial = max(0, mid - 2 * fp_ext)
+        #       f.final = mid + 2 * fp_ext
+
+        # Sorting and Merging
+        footprints.merge()
 
         # Fetching chromosome sizes
         chrom_sizes_file_name = genome_data.get_chromosome_sizes()
@@ -1076,3 +1080,47 @@ def main():
         # Creating output file
         output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
         footprints.write_bed(output_file_name)
+
+def signal2features(norm_signal=None, slope_signal=None, norm_signal_f=None, slope_signal_f=None,
+                    norm_signal_r=None, slope_signal_r=None, is_specific=False):
+    features = dict()
+    if is_specific:
+        features = {
+        'norm_signa_f': norm_signal_f,
+        'slope_signal_f': slope_signal_f,
+        'norm_signal_r': norm_signal_r,
+        'slope_signal_r': slope_signal_r
+        }
+    else:
+        features = {
+        'norm_signal': norm_signal,
+        'slope_signal': slope_signal,
+        }
+    return features
+
+def output_bed_file(chrom, start, end, states, output_fname):
+
+    state_dict = dict([(0, "0"), (1, "1"), (2, "2"), (3, "FP"), (4, "4"), (5, "5"), (6, "6")])
+    color_dict = dict([(0, "0,0,0"), (1, "102,0,51"), (2, "153,0,153"), (3, "102,0,204"), (4, "0,0,255"),
+                       (5, "51,153,255"), (6, "102,255,255")])
+
+    current_state = states[0]
+    start_postion = start
+    is_print = False
+    with open(output_fname, "a") as bed_file:
+        for i in range(len(states)):
+            if states[i] != current_state:
+                end_position = start + i
+                is_print = True
+            elif i == len(states) - 1:
+                end_position = end
+                is_print = True
+
+            if is_print:
+                bed_file.write(chrom + " " + str(start_postion) + " " + str(end_position) + " "
+                               + state_dict[current_state] + " " + str(1000) + " . "
+                               + str(start_postion) + " " + str(end_position) + " "
+                               + color_dict[current_state] + "\n")
+                start_postion = end_position
+                current_state = states[i]
+                is_print = False

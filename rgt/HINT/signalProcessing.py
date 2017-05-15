@@ -103,8 +103,8 @@ class GenomicSignal:
 
     def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                    initial_clip=1000, per_norm=98, per_slope=98,
-                   bias_table=None, genome_file_name=None, print_raw_signal=False,
-                   print_bc_signal=False, print_norm_signal=False, print_slope_signal=False):
+                   bias_table=None, genome_file_name=None,
+                   print_raw_signal=None, print_bc_signal=None, print_norm_signal=None, print_slope_signal=None):
         """ 
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -151,7 +151,7 @@ class GenomicSignal:
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Cleavage bias correction
-        bc_signal = self.bias_correction(raw_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
+        bc_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bc_signal))
@@ -196,7 +196,7 @@ class GenomicSignal:
             signal_file.close()
 
         # Returning normalized and slope sequences
-        return bc_signal, slope_signal
+        return rescal_signal, slope_signal
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
                         forward_shift, reverse_shift, is_strand_specific=False):
@@ -417,8 +417,8 @@ class GenomicSignal:
 
     def get_signal1(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                     initial_clip=1000, per_norm=98, per_slope=98,
-                    bias_table=None, genome_file_name=None, print_raw_signal=False,
-                    print_bc_signal=False, print_norm_signal=False, print_slope_signal=False):
+                    bias_table=None, genome_file_name=None, print_raw_signal=None,
+                    print_bc_signal=None, print_norm_signal=None, print_slope_signal=None):
         """
 
         :param ref: Chromosome name.
