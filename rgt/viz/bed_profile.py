@@ -56,12 +56,14 @@ class BED_profile:
         self.organism = organism
         self.chromosomes = GenomicRegionSet(organism)
         self.chromosomes.get_genome_data(organism=organism, chrom_X=True)
+        genome = GenomeData(organism=organism)
+        self.fasta_dir = genome.get_genome()
         self.stats = OrderedDict()
         self.ind_col = {}
         # self.fig_size = (6, 6)
         size_panel = 6
         rows = len(self.beds)
-        cols = 1
+        cols = 2
         if args.biotype:
             self.ind_col["Biotype"] = cols
             cols += 1
@@ -141,6 +143,61 @@ class BED_profile:
                 ax.set_xlabel("Length (log10)")
                 ax.set_ylabel("Frequency")
                 ax.set_xlim([0, max_len])
+
+
+    def plot_motif_composition(self):
+        motifs_1 = []
+        motifs_2 = []
+        color_list = ["r", "b", "y", "g"]
+        color_listp = ["r", "r", "r", "r", "b", "b", "b", "b", "y", "y", "y", "y", "g", "g", "g", "g"]
+
+        for i, bed in enumerate(self.beds):
+            seqs = bed.get_sequences(genome_fasta=self.fasta_dir)
+            seqs.cal_motif_statistics()
+
+            motifs_1.append(seqs.motif_statistics_1)
+            motifs_2.append(seqs.motif_statistics_2)
+
+        for i in range(len(self.beds) + 1):
+
+            ax = self.fig_axs[i, 1]
+            if i == 0:
+                # print(overlapping_counts)
+                proportion = []
+                for counts in motifs_1:
+                    ss = sum(counts.values())
+                    proportion.append([counts[x] / ss * 100 for x in ["A", "T", "C", "G"]])
+                # print(proportion)
+                ptable = []
+                for j in range(4):
+                    ptable.append([x[j] for x in proportion])
+                # print(ptable)
+                width = 0.6
+                bottom = [0] * len(self.bednames)
+                for j, y in enumerate(ptable):
+                    ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
+                           edgecolor="none", align='center')
+                    bottom = [x + y for x, y in zip(bottom, y)]
+                ax.set_title("Composition")
+                ax.yaxis.tick_left()
+                ax.set_xticks(range(len(self.bednames)))
+                ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
+                ax.set_ylabel("Percentage %")
+                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+                ax.set_ylim([0, 100])
+                ax.set_xlim([-0.5, len(self.bednames) - 0.5])
+
+            elif i > 0:
+                x = [x - 0.4 for x in range(len(motifs_2[i-1].keys()))]
+                ax.bar(left=x, height=motifs_2[i-1].values(),
+                       color=color_listp, linewidth=0)
+                ax.set_title(self.bednames[i - 1])
+                ax.set_ylabel("Number")
+                ax.set_xticks([x for x in range(len(motifs_2[i-1].keys()))])
+                ax.set_xticklabels(motifs_2[i-1].keys(), fontsize=7, rotation=20, ha="right")
+                ax.set_xlim([-0.5, len(motifs_2[i-1].keys()) - 0.5])
+
+
 
     # def plot_distribution_chromosome(self, outdir):
     #
@@ -305,6 +362,6 @@ class BED_profile:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                              border_list=None, sortable=True, clean=True)
-        html.add_figure("figure_"+title+".png", align=50, width=str(300*len(self.ind_col.keys())))
+        html.add_figure("figure_"+title+".png", align=50, width=str(300*(2+len(self.ind_col.keys()))))
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))

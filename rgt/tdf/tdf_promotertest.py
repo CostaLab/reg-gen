@@ -27,8 +27,8 @@ from RNADNABindingSet import RNADNABindingSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
-from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
-    get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
+from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna, \
+    save_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
     split_gene_name, region_link_internet, rna_associated_gene
 
 
@@ -314,14 +314,14 @@ class PromoterTest:
         self.triplexator_p = [l, e, c, fr, fm, of, mf]
 
         # DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "de.fa"),
                         output=os.path.join(temp, "de.txp"),
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par)
 
         # non-DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "nde.fa"),
                         output=os.path.join(temp, "nde.txp"),
