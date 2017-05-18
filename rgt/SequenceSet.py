@@ -234,15 +234,16 @@ class SequenceSet:
             for nt2 in motif_statistics_2.keys():
                 motif_statistics_2[nt2] += s.seq.count(nt2)
 
-        motif2 = {"AA": motif_statistics_2["AA"],
-                  "AT/TA": motif_statistics_2["AT"] + motif_statistics_2["TA"],
-                  "AC/CA": motif_statistics_2["AC"] + motif_statistics_2["CA"],
-                  "AG/GA": motif_statistics_2["AG"] + motif_statistics_2["GA"],
-                  "TT": motif_statistics_2["TT"],
-                  "TC/CT": motif_statistics_2["TC"] + motif_statistics_2["CT"],
-                  "TG/GT": motif_statistics_2["TG"] + motif_statistics_2["GT"],
-                  "CC": motif_statistics_2["CC"],
-                  "CG": motif_statistics_2["CG"],
-                  "GG": motif_statistics_2["GG"] }
+        # motif2 = {"AA": motif_statistics_2["AA"],
+        #           "AT/TA": motif_statistics_2["AT"] + motif_statistics_2["TA"],
+        #           "AC/CA": motif_statistics_2["AC"] + motif_statistics_2["CA"],
+        #           "AG/GA": motif_statistics_2["AG"] + motif_statistics_2["GA"],
+        #           "TT": motif_statistics_2["TT"],
+        #           "TC/CT": motif_statistics_2["TC"] + motif_statistics_2["CT"],
+        #           "TG/GT": motif_statistics_2["TG"] + motif_statistics_2["GT"],
+        #           "CC": motif_statistics_2["CC"],
+        #           "CG/GC": motif_statistics_2["CG"] + motif_statistics_2["GC"],
+        #           "GG": motif_statistics_2["GG"] }
 
-        self.motif_statistics_2 = motif2
+        # self.motif_statistics_2 = motif2
+        self.motif_statistics_2 = motif_statistics_2
