@@ -194,7 +194,8 @@ class BED_profile:
                 ax.set_ylim([0, 100])
                 ax.set_xlim([-0.5, len(self.bednames) - 0.5])
                 # ax.legend(bars, ntlist, ax=ax)
-                ax.legend(bars[::-1], ntlist[::-1], loc=2)
+                ax.legend(bars[::-1], ntlist[::-1], ncol=4, bbox_to_anchor=(0.05,0.9,0.90,0.08),
+                          mode="expand", borderaxespad=0)
 
             elif i > 0:
                 # a = [[motifs_2[i-1]["AT/TA"], motifs_2[i-1]["TG/GT"], motifs_2[i-1]["TC/CT"], motifs_2[i-1]["TT"], ],
@@ -344,7 +345,7 @@ class BED_profile:
                 ax.bar(left=x, height=overlapping_counts[i-1],
                        color=color_list, linewidth=0)
                 ax.set_title(self.bednames[i-1])
-                ax.set_ylabel("Number")
+                # ax.set_ylabel("Number")
                 ax.set_xticks([x for x in range(len(overlapping_counts[i-1]))])
                 ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
                 ax.set_xlim([-0.5, len(overlapping_counts[i-1])-0.5])

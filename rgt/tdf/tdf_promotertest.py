@@ -526,6 +526,12 @@ class PromoterTest:
         self.stat["autobinding"] = len(self.autobinding)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         # self.autobinding.motif_statistics()
+        # Saving autobinding dbs in BED
+        if len(self.rna_regions) > 0:
+            rna_regionsets = GenomicRegionSet(name=self.rna_name)
+            rna_regionsets.load_from_list(self.rna_regions)
+            autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
+            autobinding_loci.write_bed(filename=os.path.join(output, "autobinding.bed"))
 
 
     def dbs_motif(self, outdir):

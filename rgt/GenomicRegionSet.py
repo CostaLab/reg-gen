@@ -2813,3 +2813,8 @@ class GenomicRegionSet:
         for r in self:
             genes.add(gene_name=r.name, value=float(r.data.split("\t")[0]))
         return genes
+
+    def load_from_list(self, loci_list):
+        """Load the regions from a list, such as [['chr1', 1000, 1500, '+']]"""
+        for l in loci_list:
+            self.add(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2]), orientation=l[3]))

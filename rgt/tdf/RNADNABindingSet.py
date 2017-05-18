@@ -658,6 +658,11 @@ class RNADNABindingSet:
             dbss.add_associated_gene_data(organism=associated)
         dbss.write_bed(filename)
 
+    def get_overlapping_regions(self, regionset):
+        """Return a GenomicRegionSet which overlapping the given regions"""
+        dbss = self.get_dbs(dbd_tag=True, sort=True)
+        overlaps = dbss.intersect(regionset, mode=OverlapType.ORIGINAL)
+        return overlaps
 
     def count_dbs_on_dbd(self, rna_len):
         """Return the frequency list of the appearance of DBS on RNA profile"""
