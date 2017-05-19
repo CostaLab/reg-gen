@@ -1,6 +1,8 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
+import sys
+import matplotlib
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
 import numpy
@@ -11,7 +13,7 @@ import natsort
 from rgt.Util import Html
 from rgt.CoverageSet import *
 from rgt.ExperimentalMatrix import *
-from shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
+from shared_function import shiftedColorMap
 # Local test
 dir = os.getcwd()
 
@@ -56,12 +58,14 @@ class BED_profile:
         self.organism = organism
         self.chromosomes = GenomicRegionSet(organism)
         self.chromosomes.get_genome_data(organism=organism, chrom_X=True)
+        genome = GenomeData(organism=organism)
+        self.fasta_dir = genome.get_genome()
         self.stats = OrderedDict()
         self.ind_col = {}
         # self.fig_size = (6, 6)
         size_panel = 6
         rows = len(self.beds)
-        cols = 1
+        cols = 2
         if args.biotype:
             self.ind_col["Biotype"] = cols
             cols += 1
@@ -138,9 +142,93 @@ class BED_profile:
             elif i > 0:
                 ax.hist(dis[i-1], bins=100, color="cornflowerblue", linewidth=0)
                 ax.set_title(self.bednames[i-1])
-                ax.set_xlabel("Length (log10)")
+
                 ax.set_ylabel("Frequency")
                 ax.set_xlim([0, max_len])
+        ax.set_xlabel("Length (log10)")
+
+
+    def plot_motif_composition(self):
+        motifs_1 = []
+        motifs_2 = []
+        color_list = ["r", "b", "y", "g"]
+        color_list = ["lightcoral", "royalblue", "plum", "lightgreen"]
+        # color_listp = ["r", "r", "r", "r", "b", "b", "b", "b", "y", "y", "y", "y", "g", "g", "g", "g"]
+
+        for i, bed in enumerate(self.beds):
+            seqs = bed.get_sequences(genome_fasta=self.fasta_dir)
+            seqs.cal_motif_statistics()
+
+            motifs_1.append(seqs.motif_statistics_1)
+            motifs_2.append(seqs.motif_statistics_2)
+
+        for i in range(len(self.beds) + 1):
+
+            ax = self.fig_axs[i, 1]
+            if i == 0:
+                # print(overlapping_counts)
+                proportion = []
+                ntlist = ["A", "T", "C", "G"]
+                for counts in motifs_1:
+                    ss = sum(counts.values())
+                    proportion.append([counts[x] / ss * 100 for x in ntlist])
+                # print(proportion)
+                ptable = []
+                for j in range(4):
+                    ptable.append([x[j] for x in proportion])
+                # print(ptable)
+                width = 0.6
+                bottom = [0] * len(self.bednames)
+                bars = []
+                for j, y in enumerate(ptable):
+                    bar = ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
+                           edgecolor="none", align='center')
+                    bars.append(bar)
+                    bottom = [x + y for x, y in zip(bottom, y)]
+                ax.set_title("Composition")
+                ax.yaxis.tick_left()
+                ax.set_xticks(range(len(self.bednames)))
+                ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")
+                ax.set_ylabel("Percentage %")
+                # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
+                ax.set_ylim([0, 100])
+                ax.set_xlim([-0.5, len(self.bednames) - 0.5])
+                # ax.legend(bars, ntlist, ax=ax)
+                ax.legend(bars[::-1], ntlist[::-1], ncol=4, bbox_to_anchor=(0.05,0.9,0.90,0.08),
+                          mode="expand", borderaxespad=0)
+
+            elif i > 0:
+                # a = [[motifs_2[i-1]["AT/TA"], motifs_2[i-1]["TG/GT"], motifs_2[i-1]["TC/CT"], motifs_2[i-1]["TT"], ],
+                #      [motifs_2[i-1]["AC/CA"], motifs_2[i-1]["CG/GC"], motifs_2[i-1]["CC"], 0 ],
+                #      [motifs_2[i-1]["AG/GA"], motifs_2[i-1]["TT"], 0,0],
+                #      [motifs_2[i-1]["AA"], 0,0,0] ]
+
+                a = [[motifs_2[i - 1]["AT"], motifs_2[i - 1]["GT"], motifs_2[i - 1]["CT"], motifs_2[i - 1]["TT"]],
+                     [motifs_2[i - 1]["AC"], motifs_2[i - 1]["GC"], motifs_2[i - 1]["CC"], motifs_2[i - 1]["TC"]],
+                     [motifs_2[i - 1]["AG"], motifs_2[i - 1]["GG"], motifs_2[i - 1]["CG"], motifs_2[i - 1]["TG"]],
+                     [motifs_2[i - 1]["AA"], motifs_2[i - 1]["GA"], motifs_2[i - 1]["CA"], motifs_2[i - 1]["TA"]]]
+                ar = numpy.array(a)
+                total = numpy.sum(ar)
+                amin = numpy.amin(ar)
+                amax = numpy.amax(ar)
+                random_freq = (total/16)/amax
+                amin = amin/amax
+
+                orig_cmap = matplotlib.cm.coolwarm
+                shifted_cmap = shiftedColorMap(orig_cmap, start=amin, midpoint=random_freq, name='shifted')
+
+                hp = ax.imshow(a, cmap=shifted_cmap, interpolation='none')
+                # ax.set_frame_on(False)
+                ax.set_title(self.bednames[i - 1])
+                plt.colorbar(mappable=hp, cax=None, ax=ax)
+                # ax.xaxis.tick_top()
+                ax.set_aspect('equal')
+                ax.set_xticks(range(4), minor=False)
+                ax.set_yticks(range(4), minor=False)
+                ticks = ["A", "G", "C", "T"]
+                ax.set_xticklabels(ticks, minor=False)
+                ax.set_yticklabels(ticks[::-1], minor=False)
+
 
     # def plot_distribution_chromosome(self, outdir):
     #
@@ -257,7 +345,7 @@ class BED_profile:
                 ax.bar(left=x, height=overlapping_counts[i-1],
                        color=color_list, linewidth=0)
                 ax.set_title(self.bednames[i-1])
-                ax.set_ylabel("Number")
+                # ax.set_ylabel("Number")
                 ax.set_xticks([x for x in range(len(overlapping_counts[i-1]))])
                 ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
                 ax.set_xlim([-0.5, len(overlapping_counts[i-1])-0.5])
@@ -281,7 +369,6 @@ class BED_profile:
         html_header = dir_name + " / " + title
         link_d = OrderedDict()
         link_d["BED profile"] = "index.html"
-        link_d["Parameters"] = "parameters.html"
 
 
         html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory, "style"),
@@ -305,6 +392,6 @@ class BED_profile:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                              border_list=None, sortable=True, clean=True)
-        html.add_figure("figure_"+title+".png", align=50, width=str(300*len(self.ind_col.keys())))
+        html.add_figure("figure_"+title+".png", align=50, width=str(300*(2+len(self.ind_col.keys()))))
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))

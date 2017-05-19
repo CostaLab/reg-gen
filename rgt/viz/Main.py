@@ -325,6 +325,7 @@ def main():
             bed_profile = BED_profile(args.i, args.organism, args)
             bed_profile.cal_statistics()
             bed_profile.plot_distribution_length()
+            bed_profile.plot_motif_composition()
             if args.biotype:
                 bed_profile.plot_ref(ref_dir=args.biotype, tag="Biotype", other=True, strand=True)
             if args.repeats:

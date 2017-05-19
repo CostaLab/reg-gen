@@ -533,7 +533,7 @@ def random_each(input):
     return [ [len(tr) for tr in txp.merged_dict.values() ], [len(dbss) for dbss in txpf.merged_dict.values()] ]
 
 
-def get_sequence(dir, filename, regions, genome_path):
+def save_sequence(dir, filename, regions, genome_path):
     """
     Fetch sequence into FASTA file according to the given BED file
     """
@@ -550,7 +550,7 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
     
     # Generate FASTA 
-    get_sequence(dir=temp, filename="dna_"+prefix+".fa", regions=dna_region, genome_path=genome_path)
+    save_sequence(dir=temp, filename="dna_"+prefix+".fa", regions=dna_region, genome_path=genome_path)
 
     # Triplexator
     run_triplexator(ss=rna_fasta, ds=os.path.join(temp,"dna_"+prefix+".fa"), 
@@ -806,7 +806,7 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
                     drawing = True
             elif drawing:
                 ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                             hatch='///', fill=False, snap=False, linewidth=0, label="Autobinding"))
+                            fill=True, color="silver", snap=False, linewidth=0, label="Autobinding"))
                 drawing = False
             else:
                 continue

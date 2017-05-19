@@ -27,8 +27,8 @@ from RNADNABindingSet import RNADNABindingSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
-from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
-    get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
+from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna, \
+    save_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
     split_gene_name, region_link_internet, rna_associated_gene
 
 
@@ -314,14 +314,14 @@ class PromoterTest:
         self.triplexator_p = [l, e, c, fr, fm, of, mf]
 
         # DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "de.fa"),
                         output=os.path.join(temp, "de.txp"),
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par)
 
         # non-DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "nde.fa"),
                         output=os.path.join(temp, "nde.txp"),
@@ -526,6 +526,12 @@ class PromoterTest:
         self.stat["autobinding"] = len(self.autobinding)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         # self.autobinding.motif_statistics()
+        # Saving autobinding dbs in BED
+        if len(self.rna_regions) > 0:
+            rna_regionsets = GenomicRegionSet(name=self.rna_name)
+            rna_regionsets.load_from_list(self.rna_regions)
+            autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
+            autobinding_loci.write_bed(filename=os.path.join(output, "autobinding.bed"))
 
 
     def dbs_motif(self, outdir):
