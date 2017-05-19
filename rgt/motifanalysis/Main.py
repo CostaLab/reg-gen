@@ -497,7 +497,7 @@ def main_enrichment():
     err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] <background_bed_file> [input1.bed input2.bed ..]"
+    usage_message = "%prog --enrichment [options] <background_bed_file> [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
