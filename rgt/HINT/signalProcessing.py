@@ -203,6 +203,41 @@ class GenomicSignal:
         # Returning normalized and slope sequences
         return rescal_signal_forward, slope_signal_forward, rescal_signal_reverse, slope_signal_reverse
 
+    def get_signal2(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                   initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
+                   print_raw_signal=None, print_bc_signal=None, print_norm_signal=None, print_slope_signal=None):
+        # Fetch raw signal
+        pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
+        if (ps_version == "0.7.5"):
+            self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
+        else:
+            iter = self.bam.fetch(reference=ref, start=start, end=end)
+            for alignment in iter:
+                pileup_region.__call__(alignment)
+        raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
+
+        # Std-based clipping
+        mean = raw_signal.mean()
+        std = raw_signal.std()
+        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
+
+        # Cleavage bias correction
+        bc_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
+
+        # Boyle normalization (within-dataset normalization)
+        boyle_signal = array(self.boyle_norm(bc_signal))
+
+        # Hon normalization (between-dataset normalization)
+        perc = scoreatpercentile(boyle_signal, per_norm)
+        std = boyle_signal.std()
+        hon_signal = self.hon_norm(boyle_signal, perc, std)
+
+        # Slope signal
+        slope_signal = self.slope(hon_signal, self.sg_coefs)
+
+        # Returning normalized and slope sequences
+        return hon_signal, slope_signal
+
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
                         forward_shift, reverse_shift, is_strand_specific=False):
         """ 

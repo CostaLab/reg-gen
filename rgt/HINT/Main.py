@@ -946,12 +946,12 @@ def train_hmm():
     parser.add_option("--reads-file", dest="reads_file", type="string",
                       metavar="FILE", default=None,
                       help=("The BAM file containing the DNase-seq or ATAC-seq reads"))
-    parser.add_option("--training-chrom", dest="training_chrom", type="string",
+    parser.add_option("--chrom", dest="chrom", type="string",
                       metavar="STRING", default="chr1",
                       help=("The name of chromosome used to train HMM"))
-    parser.add_option("--training-chrom-start", dest="training_chrom_start", type="int",
+    parser.add_option("--start", dest="start", type="int",
                       metavar="INT", default=211428000)
-    parser.add_option("--training-chrom-end", dest="training_chrom_end", type="int",
+    parser.add_option("--end", dest="end", type="int",
                       metavar="INT", default=211438000)
     parser.add_option("--annotate-file", dest="annotate_file", type="string", metavar="STRING",
                       default=None,
@@ -963,6 +963,22 @@ def train_hmm():
                             "should have two files: one for the forward and one for the reverse strand. "
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
+    parser.add_option("--downstream-ext", dest="downstream_ext", type="int",
+                      metavar="INT", default=1,
+                      help=("Number of bps to extend towards the downstream region"))
+    parser.add_option("--upstream-ext", dest="upstream_ext", type="int",
+                      metavar="INT", default=0,
+                      help=("Number of bps to extend towards the upstream region"))
+    parser.add_option("--forward-shift", dest="forward_shift", type="int",
+                      metavar="INT", default=0,
+                      help=("Number of bps to shift the reads aligned to the forward strand"))
+    parser.add_option("--reverse-shift", dest="reverse_shift", type="int",
+                      metavar="INT", default=0,
+                      help=("Number of bps to shift the reads aligned to the reverse strand"))
+    parser.add_option("--k-nb", dest="k_nb", type="int",
+                      metavar="INT", default=6,
+                      help=("K-mers size used to estimate the bias"))
+
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
                       metavar="PATH", default=getcwd(),
@@ -983,7 +999,9 @@ def train_hmm():
                          print_bed_file=options.print_bed_file, output_location=options.output_location,
                          output_prefix=options.output_prefix, bias_table=options.bias_table,
                          organism=options.organism, k_nb=options.k_nb, chrom=options.chrom,
-                         start=options.start, end=options.end)
+                         start=options.start, end=options.end,
+                         downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                         forward_shift=options.forward_shift, reverse_shift=options.reverse_shift)
     hmm_model.train()
 
     # TODO
@@ -1403,6 +1421,7 @@ def diff_footprints():
 
     # TODO
     exit(0)
+
 
 def output_bed_file(chrom, start, end, states, output_fname, fp_states):
     state_dict = dict([(0, "0"), (1, "1"), (2, "2"), (3, "3"), (4, "4"), (5, "5"), (6, "6")])

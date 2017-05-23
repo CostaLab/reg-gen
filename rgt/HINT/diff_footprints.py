@@ -3,6 +3,7 @@ import os
 import sys
 import numpy as np
 import pysam
+from pysam import __version__ as ps_version
 from pysam import Samfile
 from pysam import Fastafile
 from math import log, ceil, floor
@@ -14,6 +15,8 @@ import pyx
 from ..Util import AuxiliaryFunctions, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
+from signalProcessing import GenomicSignal
+from pileupRegion import PileupRegion
 
 """
 Perform differential footprints analysis based on the prediction.
@@ -86,10 +89,10 @@ class DiffFootprints:
         aux = nr + nf
 
         # Std-based clipping to avoid spurious high counts
-        mean = np.array(aux).mean()
-        std = np.array(aux).std()
-        nf = [min(e, mean + (10 * std)) for e in nf]
-        nr = [min(e, mean + (10 * std)) for e in nr]
+        # mean = np.array(aux).mean()
+        # std = np.array(aux).std()
+        # nf = [min(e, mean + (10 * std)) for e in nf]
+        # nr = [min(e, mean + (10 * std)) for e in nr]
 
         # Smoothed counts
         Nf = []
@@ -143,8 +146,6 @@ class DiffFootprints:
             zf = log(nf[i] + 1) - log(nhatf + 1)
             zr = log(nr[i] + 1) - log(nhatr + 1)
             bias_corrected_signal.append(zf + zr)
-            #tc_corrected_signal.append(nf[i] / af[i] + nr[i] / ar[i])
-            tc_corrected_signal.append(nf[i] + nr[i])
             fSum -= fLast
             fSum += af[i + (window / 2)]
             fLast = af[i - (window / 2) + 1]
@@ -165,34 +166,53 @@ class DiffFootprints:
         fastaFile.close()
         return bias_corrected_signal, tc_corrected_signal, sequence
 
-    def get_stats(self, bam, bias_table, genome_file_name, chrName, start, end,
-                  forward_shift, reverse_shift, initial_clip, factor, strand, motif_length):
-        # Bias Correction
-        corrected_signal, tc_corrected_signal, sequence = \
-                    self.bias_correction(bam, bias_table, genome_file_name, chrName, start, end,
-                                        forward_shift, reverse_shift, factor, strand)
+    def get_stats(self, reads_file, bias_table, genome_file_name, chrName, start, end, factor):
+
+        signal = GenomicSignal(reads_file)
+        signal.load_sg_coefs(slope_window_size=9)
+
+        norm_signal, _ = signal.get_signal2(chrName, start, end, self.downstream_ext,
+                                           self.upstream_ext, self.forward_shift, self.reverse_shift,
+                                           initial_clip=self.initial_clip, bias_table=bias_table,
+                                           genome_file_name=genome_file_name)
+
+        # Remove the impact from different sequence depth
+        norm_signal = [i * factor for i in norm_signal]
 
         # Summing min value to signal
-        stdz_signal = [e + self.min_value for e in corrected_signal]
+        # stdz_signal = [e + self.min_value for e in norm_signal]
 
         # Evaluating protection score
-        signal_half_len = len(corrected_signal) / 2
+        signal_half_len = len(norm_signal) / 2
         motif_half_len = self.motif_ext / 2
-        nc = sum(stdz_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
-        nr = sum(stdz_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
-        nl = sum(stdz_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
-        spr = (nr - nc) / self.motif_ext + (nl - nc) / self.motif_ext
+        nc = sum(norm_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
+        nr = sum(norm_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
+        nl = sum(norm_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
 
+        spr = (nr - nc) / self.motif_ext + (nl - nc) / self.motif_ext
 
         fos = (nr + 1) / (nc + 1) + (nl + 1) / (nc + 1)
 
-        nc = sum(tc_corrected_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
-        nr = sum(tc_corrected_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
-        nl = sum(tc_corrected_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
+        # Fetch raw signal
+        bam = Samfile(reads_file, "rb")
+        pileup_region = PileupRegion(start, end, self.downstream_ext, self.upstream_ext, self.forward_shift, self.reverse_shift)
+        if (ps_version == "0.7.5"):
+            bam.fetch(reference=chrName, start=start, end=end, callback=pileup_region)
+        else:
+            iter = bam.fetch(reference=chrName, start=start, end=end)
+            for alignment in iter: pileup_region.__call__(alignment)
+
+        tc_signal = np.array([min(e, self.initial_clip) for e in pileup_region.vector])
+
+        # Remove the impact from different sequence depth
+        # tc_signal = [i * factor for i in tc_signal]
+
+        nr = sum(tc_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
+        nl = sum(tc_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
 
         tc = (nr + nl) / (2 * self.motif_ext)
 
-        return spr, tc, fos, np.array(corrected_signal), np.array(tc_corrected_signal), sequence
+        return spr, tc, fos, np.array(norm_signal), np.array(tc_signal)
 
     def diff(self):
         mpbs = GenomicRegionSet("Motif Predicted Binding Sites")
@@ -212,19 +232,16 @@ class DiffFootprints:
             table_list = self.bias_table2.split(",")
             bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
 
-        # Initializatio
-        # protectDict = dict()
-        bam1 = Samfile(self.reads_file1,"rb")
-        ct1=reduce(lambda x, y: x + y, [ int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file1) ])
-        bam2 = Samfile(self.reads_file2,"rb")
-        ct2=reduce(lambda x, y: x + y, [ int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file2) ])
+        # Compute the reads number ratio between two bam file
+        #ct1 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file1)])
+        #ct2 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file2)])
 
-        if (ct1 > ct2):
-            factor1 = 1.0
-            factor2 = ct1 / float(ct2)
-        else:
-            factor2 = 1.0
-            factor1 = ct2 / float(ct1)
+        #if (ct1 > ct2):
+        #    factor1 = 1.0
+        #    factor2 = log(ct1 / float(ct2), 2)
+        #else:
+        #    factor2 = 1.0
+        #    factor1 = log(ct2 / float(ct1), 2)
 
         # Iterating on MPBSs
         for mpbs_name in mpbs_name_list:
@@ -235,19 +252,14 @@ class DiffFootprints:
             mpbs_regions = mpbs.by_names([mpbs_name])
             spr1 = 0.0
             spr2 = 0.0
-            dspr = 0
             tc1 = 0
             tc2 = 0
-            dtc = 0
             fc1 = 0
             fc2 = 0
-            dfc = 0
             corrected_signal1 = []
             corrected_signal2 = []
-            dcorrected_signal = []
             tc_corrected_signal1 = []
             tc_corrected_signal2 = []
-            dtc_corrected_signal = []
             counter = 0.0
             for region in mpbs_regions:
                 length = region.final - region.initial
@@ -255,47 +267,38 @@ class DiffFootprints:
                 p1 = max(mid - self.window_size / 2, 0)
                 p2 = mid + self.window_size / 2
 
-                sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1, sequence1 = \
-                    self.get_stats(bam=bam1, bias_table=bias_table1, genome_file_name=genome_data.get_genome(),
-                                   chrName=region.chrom, start=p1, end=p2, forward_shift=self.forward_shift,
-                                   reverse_shift=self.reverse_shift, initial_clip=self.initial_clip,
-                                   factor=factor1, strand=region.orientation, motif_length=length)
+                sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1 = \
+                    self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                                   genome_file_name=genome_data.get_genome(),
+                                   chrName=region.chrom, start=p1, end=p2, factor=1)
 
-                sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2, sequence2 = \
-                    self.get_stats(bam=bam2, bias_table=bias_table2, genome_file_name=genome_data.get_genome(),
-                                   chrName=region.chrom, start=p1, end=p2, forward_shift=self.forward_shift,
-                                   reverse_shift=self.reverse_shift, initial_clip=self.initial_clip,
-                                   factor=factor2, strand=region.orientation, motif_length=length)
+                sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2 = \
+                    self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                                   genome_file_name=genome_data.get_genome(),
+                                   chrName=region.chrom, start=p1, end=p2, factor=1)
                 spr1 += sp1
                 spr2 += sp2
-                #dspr += max(0, sp2) - max(0, sp1)
-                dspr += sp2 - sp1
                 tc1 += tc_1
                 tc2 += tc_2
-                dtc += tc_2 - tc_1
                 fc1 += fc_1
                 fc2 += fc_2
-                dfc += fc_2 - fc_1
 
                 if (region.orientation == "-"):
                     corrected_signal_1 = corrected_signal_1[::-1]
                     corrected_signal_2 = corrected_signal_2[::-1]
                     tc_corrected_signal_1 = tc_corrected_signal_1[::-1]
                     tc_corrected_signal_2 = tc_corrected_signal_2[::-1]
+
                 if (len(corrected_signal1) == 0):
                     corrected_signal1 = corrected_signal_1
                     corrected_signal2 = corrected_signal_2
-                    dcorrected_signal = corrected_signal2 - corrected_signal1
                     tc_corrected_signal1 = tc_corrected_signal_1
                     tc_corrected_signal2 = tc_corrected_signal_2
-                    dtc_corrected_signal = tc_corrected_signal2 - tc_corrected_signal1
                 else:
                     corrected_signal1 += corrected_signal_1
                     corrected_signal2 += corrected_signal_2
-                    dcorrected_signal += corrected_signal2 - corrected_signal1
                     tc_corrected_signal1 += tc_corrected_signal_1
                     tc_corrected_signal2 += tc_corrected_signal_2
-                    dtc_corrected_signal += tc_corrected_signal2 - tc_corrected_signal1
                 counter += 1.0
 
                 # Update pwm
@@ -316,19 +319,15 @@ class DiffFootprints:
             if (counter > 0):
                 protmean1 = spr1 / counter
                 protmean2 = spr2 / counter
-                difprotmean = dspr / counter
+                difprotmean = protmean2 - protmean1
                 tcmean1 = tc1 / counter
                 tcmean2 = tc2 / counter
-                diftcmean = dtc / counter
+                diftcmean = tcmean2 - tcmean1
                 fcmean1 = fc1 / counter
                 fcmean2 = fc2 / counter
-                diffcmean = dfc / counter
-                correctedSignalMean1 = corrected_signal1 / counter
-                correctedSignalMean2 = corrected_signal2 / counter
-                dcorrectedSignalMean = dcorrected_signal / counter
+                diffcmean = fcmean2 - fcmean1
                 tccorrectedSignalMean1 = tc_corrected_signal1 / counter
                 tccorrectedSignalMean2 = tc_corrected_signal2 / counter
-                dtccorrectedSignalMean = dtc_corrected_signal / counter
 
                 res = [protmean1, protmean2, difprotmean, tcmean1, tcmean2, diftcmean, fcmean1, fcmean2, diffcmean,
                            counter]
@@ -338,12 +337,10 @@ class DiffFootprints:
                 f.write("\n")
                 f.close()
 
-                self.plot(mpbs_name, correctedSignalMean1, correctedSignalMean2, dcorrectedSignalMean,
-                          tccorrectedSignalMean1, tccorrectedSignalMean2, dtccorrectedSignalMean,
+                self.plot(mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
                           pwm_dict, self.output_location, self.output_prefix)
 
-    def plot(self, mpbs_name, correctedSignalMean1, correctedSignalMean2, dcorrectedSignalMean,
-             tccorrectedSignalMean1, tccorrectedSignalMean2, dtccorrectedSignalMean,
+    def plot(self, mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
              pwm_dict, output_location, output_prefix):
         # Output PWM and create logo
         loc = os.path.join(output_location, output_prefix)
@@ -363,12 +360,8 @@ class DiffFootprints:
         # Output the raw, bias corrected signal and protection score
         output_fname = os.path.join(loc, "{}.txt".format(mpbs_name))
         output_file = open(output_fname, "w")
-        output_file.write("corrected signal1: \n" + np.array_str(np.array(correctedSignalMean1)) + "\n")
-        output_file.write("corrected signal2: \n" + np.array_str(np.array(correctedSignalMean2)) + "\n")
-        output_file.write("different corrected signal: \n" + np.array_str(np.array(dcorrectedSignalMean)) + "\n")
         output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
         output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
-        output_file.write("different corrected signal: \n" + np.array_str(np.array(dtccorrectedSignalMean)) + "\n")
         output_file.close()
 
         start = -(self.window_size / 2)

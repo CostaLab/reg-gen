@@ -30,7 +30,8 @@ class TrainHMM:
     """
 
     def __init__(self, reads_file, annotate_file, print_bed_file, output_location,
-                 output_prefix, bias_table, organism, k_nb, chrom, start, end):
+                 output_prefix, bias_table, organism, k_nb, chrom, start, end,
+                 downstream_ext, upstream_ext, forward_shift, reverse_shift):
         self.reads_file = reads_file
         self.annotate_file = annotate_file
         self.print_bed_file = print_bed_file
@@ -42,6 +43,10 @@ class TrainHMM:
         self.chrom = chrom
         self.start = start
         self.end = end
+        self.downstream_ext = downstream_ext
+        self.upstream_ext = upstream_ext
+        self.forward_shift = forward_shift
+        self.reverse_shift = reverse_shift
 
     def read_states_signals(self):
         # Read states from the annotation file
@@ -68,8 +73,11 @@ class TrainHMM:
         # Get the normalization and slope signal from the raw bam file
         raw_signal = GenomicSignal(self.reads_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
-        norm_signal, slope_signal = raw_signal.get_signal2(ref=self.chrom, start=self.start, end=self.end,
-                                                           bias_table=table, genome_file_name=genome_data.get_genome())
+        norm_signal, slope_signal = \
+            raw_signal.get_signal2(self.chrom, self.start, self.end,
+                                   self.downstream_ext, self.upstream_ext,
+                                   self.forward_shift, self.reverse_shift,
+                                   bias_table=table, genome_file_name=genome_data.get_genome())
         if self.print_bed_file:
             self.output_bed_file(states)
 
@@ -131,8 +139,7 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
-
-        output_fname = os.path.join(self.output_location, output_prefix)
+        output_fname = os.path.join(self.output_location, self.output_prefix)
         hmm_model.save_hmm(output_fname)
 
     def train1(self):
