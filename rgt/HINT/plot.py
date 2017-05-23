@@ -26,34 +26,31 @@ class Plot:
 
     """
 
-    def __init__(self, atac_bam_file, dnase_bam_file, motif_file, motif_name, window_size,
-                 atac_downstream_ext, atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
-                 initial_clip, organism, bias_table, k_nb, protection_score,
-                 strands_specific, output_loc):
-        self.atac_bam_file = atac_bam_file
-        self.dnase_bam_file = dnase_bam_file
-        self.motif_file = motif_file
-        self.motif_name = motif_name
-        self.window_size = window_size
-        self.atac_downstream_ext = atac_downstream_ext
-        self.atac_upstream_ext = atac_upstream_ext
-        self.atac_forward_shift = atac_forward_shift
-        self.atac_reverse_shift = atac_reverse_shift
-        self.initial_clip = initial_clip
+    def __init__(self, organism, reads_file, motif_file, window_size,
+                 downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                 initial_clip, bias_table, k_nb, output_loc, output_prefix):
         self.organism = organism
+        self.reads_file = reads_file
+        self.motif_file = motif_file
+        self.window_size = window_size
+        self.downstream_ext = downstream_ext
+        self.upstream_ext = upstream_ext
+        self.forward_shift = forward_shift
+        self.reverse_shift = reverse_shift
+        self.initial_clip = initial_clip
         self.bias_table = bias_table
         self.k_nb = k_nb
-        self.strands_specific = strands_specific
-        self.protection_score = protection_score
         self.output_loc = output_loc
+        self.output_prefix = output_prefix
 
     def line(self):
-        signal = GenomicSignal(self.atac_bam_file)
+        signal = GenomicSignal(self.reads_file)
         signal.load_sg_coefs(slope_window_size=9)
         bias_table = BiasTable()
         bias_table_list = self.bias_table.split(",")
         table = bias_table.load_table(table_file_name_F=bias_table_list[0],
                                       table_file_name_R=bias_table_list[1])
+
         genome_data = GenomeData(self.organism)
         fasta = Fastafile(genome_data.get_genome())
         pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
@@ -70,10 +67,6 @@ class Plot:
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
         mpbs_regions.read_bed(self.motif_file)
 
-        total_nc_signal = 0
-        total_nl_signal = 0
-        total_nr_signal = 0
-
         for region in mpbs_regions:
             if str(region.name).split(":")[-1] == "Y":
                 num_sites += 1
@@ -84,10 +77,10 @@ class Plot:
 
                 # Fetch raw signal
                 raw_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                  downstream_ext=self.atac_downstream_ext,
-                                                  upstream_ext=self.atac_upstream_ext,
-                                                  forward_shift=self.atac_forward_shift,
-                                                  reverse_shift=self.atac_reverse_shift,
+                                                  downstream_ext=self.downstream_ext,
+                                                  upstream_ext=self.upstream_ext,
+                                                  forward_shift=self.forward_shift,
+                                                  reverse_shift=self.reverse_shift,
                                                   genome_file_name=genome_data.get_genome())
 
                 mean_raw_signal = np.add(mean_raw_signal, raw_signal)
@@ -95,10 +88,10 @@ class Plot:
                 # Fetch bias correction signal
                 bc_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
                                                  bias_table=table,
-                                                 downstream_ext=self.atac_downstream_ext,
-                                                 upstream_ext=self.atac_upstream_ext,
-                                                 forward_shift=self.atac_forward_shift,
-                                                 reverse_shift=self.atac_reverse_shift,
+                                                 downstream_ext=self.downstream_ext,
+                                                 upstream_ext=self.upstream_ext,
+                                                 forward_shift=self.forward_shift,
+                                                 reverse_shift=self.reverse_shift,
                                                  genome_file_name=genome_data.get_genome())
 
                 mean_bc_signal = np.add(mean_bc_signal, bc_signal)
@@ -142,55 +135,56 @@ class Plot:
                 mean_bias_signal_f = np.add(mean_bias_signal_f, np.array(bias_signal_f))
                 mean_bias_signal_r = np.add(mean_bias_signal_r, np.array(bias_signal_r))
 
-                if self.protection_score:
-                    # signal in the center of the MPBS
-                    p1 = region.initial
-                    p2 = region.final
-                    nc_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                     bias_table=table,
-                                                     downstream_ext=self.atac_downstream_ext,
-                                                     upstream_ext=self.atac_upstream_ext,
-                                                     forward_shift=self.atac_forward_shift,
-                                                     reverse_shift=self.atac_reverse_shift,
-                                                     genome_file_name=genome_data.get_genome())
-                    total_nc_signal += sum(nc_signal)
-                    p1 = region.final
-                    p2 = 2 * region.final - region.initial
-                    nr_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                     bias_table=table,
-                                                     downstream_ext=self.atac_downstream_ext,
-                                                     upstream_ext=self.atac_upstream_ext,
-                                                     forward_shift=self.atac_forward_shift,
-                                                     reverse_shift=self.atac_reverse_shift,
-                                                     genome_file_name=genome_data.get_genome())
-                    total_nr_signal += sum(nr_signal)
-                    p1 = 2 * region.initial - region.final
-                    p2 = region.final
-                    nl_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                     bias_table=table,
-                                                     downstream_ext=self.atac_downstream_ext,
-                                                     upstream_ext=self.atac_upstream_ext,
-                                                     forward_shift=self.atac_forward_shift,
-                                                     reverse_shift=self.atac_reverse_shift,
-                                                     genome_file_name=genome_data.get_genome())
-                    total_nl_signal += sum(nl_signal)
+                # if self.protection_score:
+                #     # signal in the center of the MPBS
+                #     p1 = region.initial
+                #     p2 = region.final
+                #     nc_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
+                #                                      bias_table=table,
+                #                                      downstream_ext=self.atac_downstream_ext,
+                #                                      upstream_ext=self.atac_upstream_ext,
+                #                                      forward_shift=self.atac_forward_shift,
+                #                                      reverse_shift=self.atac_reverse_shift,
+                #                                      genome_file_name=genome_data.get_genome())
+                #     total_nc_signal += sum(nc_signal)
+                #     p1 = region.final
+                #     p2 = 2 * region.final - region.initial
+                #     nr_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
+                #                                      bias_table=table,
+                #                                      downstream_ext=self.atac_downstream_ext,
+                #                                      upstream_ext=self.atac_upstream_ext,
+                #                                      forward_shift=self.atac_forward_shift,
+                #                                      reverse_shift=self.atac_reverse_shift,
+                #                                      genome_file_name=genome_data.get_genome())
+                #     total_nr_signal += sum(nr_signal)
+                #     p1 = 2 * region.initial - region.final
+                #     p2 = region.final
+                #     nl_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
+                #                                      bias_table=table,
+                #                                      downstream_ext=self.atac_downstream_ext,
+                #                                      upstream_ext=self.atac_upstream_ext,
+                #                                      forward_shift=self.atac_forward_shift,
+                #                                      reverse_shift=self.atac_reverse_shift,
+                #                                      genome_file_name=genome_data.get_genome())
+                #     total_nl_signal += sum(nl_signal)
 
         mean_raw_signal = mean_raw_signal / num_sites
         mean_bc_signal = mean_bc_signal / num_sites
 
+        mean_raw_signal = self.rescaling(mean_raw_signal)
+        mean_bc_signal = self.rescaling(mean_bc_signal)
+
         mean_bias_signal_f = mean_bias_signal_f / num_sites
         mean_bias_signal_r = mean_bias_signal_r / num_sites
 
-        protection_score = (total_nl_signal + total_nr_signal - 2 * total_nc_signal) / (2 * num_sites)
-
         # Output PWM and create logo
-        pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.motif_name))
+        pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.output_prefix))
         pwm_file = open(pwm_fname, "w")
         for e in ["A", "C", "G", "T"]:
             pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
         pwm_file.close()
 
-        logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.motif_name))
+        logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
         pwm = motifs.read(open(pwm_fname), "pfm")
         pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -198,18 +192,15 @@ class Plot:
                     show_fineprint=False, show_ends=False)
 
         # Output the raw, bias corrected signal and protection score
-        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.motif_name))
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         output_file = open(output_fname, "w")
 
-        output_file.write("raw signal: \n" + np.array_str(mean_raw_signal) + "\n")
-        output_file.write("bias corrected signal: \n" + np.array_str(mean_bc_signal) + "\n")
+        output_file.write("raw signal: \n" + np.array_str(np.array(mean_raw_signal)) + "\n")
+        output_file.write("bias corrected signal: \n" + np.array_str(np.array(mean_bc_signal)) + "\n")
 
         output_file.write("forward bias signal: \n" + np.array_str(mean_bias_signal_f) + "\n")
         output_file.write("reverse bias signal: \n" + np.array_str(mean_bias_signal_r) + "\n")
-        if self.protection_score:
-            output_file.write("protection score: \n" + str(protection_score) + "\n")
         output_file.close()
-
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -235,17 +226,15 @@ class Plot:
         ax1.set_yticks([min_bias_signal, max_bias_signal])
         ax1.set_yticklabels([str(round(min_bias_signal, 2)), str(round(max_bias_signal, 2))], rotation=90)
 
-        ax1.text(start+2, max_bias_signal, '# Sites = {}'.format(str(num_sites)), fontweight='bold')
-        ax1.set_title(self.motif_name, fontweight='bold')
+        ax1.text(start + 2, max_bias_signal, '# Sites = {}'.format(str(num_sites)), fontweight='bold')
+        ax1.set_title(self.output_prefix, fontweight='bold')
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_bias_signal, max_bias_signal])
         ax1.legend(loc="upper right", frameon=False)
         ax1.set_ylabel("Average Bias \nSignal", rotation=90, fontweight='bold')
 
-
         ax2.plot(x, mean_raw_signal, color='red', label='Uncorrected')
         ax2.plot(x, mean_bc_signal, color='green', label='Corrected')
-
 
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
@@ -262,19 +251,18 @@ class Plot:
         ax2.set_xlim(start, end)
         ax2.set_ylim([min_signal, max_signal])
 
-
         ax2.spines['bottom'].set_position(('outward', 40))
         ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
         ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
         ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
 
-        figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.motif_name))
+        figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
         fig.tight_layout()
         fig.savefig(figure_name, format="eps", dpi=300)
 
         # Creating canvas and printing eps / pdf with merged results
-        output_fname = os.path.join(self.output_loc, "{}.eps".format(self.motif_name))
+        output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
         c.insert(pyx.epsfile.epsfile(2.68, 1.55, logo_fname, width=17, height=2.45))
@@ -284,7 +272,7 @@ class Plot:
         os.system("epstopdf " + output_fname)
 
     def line1(self):
-        signal = GenomicSignal(self.atac_bam_file)
+        signal = GenomicSignal(self.reads_file)
         signal.load_sg_coefs(slope_window_size=9)
         bias_table = BiasTable()
         bias_table_list = self.bias_table.split(",")
@@ -316,17 +304,17 @@ class Plot:
                 # Fetch raw signal
                 norm_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
                                                    bias_table=table,
-                                                   downstream_ext=self.atac_downstream_ext,
-                                                   upstream_ext=self.atac_upstream_ext,
-                                                   forward_shift=self.atac_forward_shift,
-                                                   reverse_shift=self.atac_reverse_shift,
+                                                   downstream_ext=self.downstream_ext,
+                                                   upstream_ext=self.upstream_ext,
+                                                   forward_shift=self.forward_shift,
+                                                   reverse_shift=self.reverse_shift,
                                                    genome_file_name=genome_data.get_genome())
                 norm_signal_f, _, norm_signal_r, _ = signal.get_signal1(ref=region.chrom, start=p1, end=p2,
                                                                         bias_table=table,
-                                                                        downstream_ext=self.atac_downstream_ext,
-                                                                        upstream_ext=self.atac_upstream_ext,
-                                                                        forward_shift=self.atac_forward_shift,
-                                                                        reverse_shift=self.atac_reverse_shift,
+                                                                        downstream_ext=self.downstream_ext,
+                                                                        upstream_ext=self.upstream_ext,
+                                                                        forward_shift=self.forward_shift,
+                                                                        reverse_shift=self.reverse_shift,
                                                                         genome_file_name=genome_data.get_genome())
 
                 num_sites += 1
@@ -361,7 +349,7 @@ class Plot:
         mean_slope_signal_r = signal.slope(mean_norm_signal_r, signal.sg_coefs)
 
         # Output the norm and slope signal
-        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.motif_name))
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
         f.write("\t".join((map(str, mean_norm_signal))) + "\n")
         f.write("\t".join((map(str, mean_slope_signal))) + "\n")
@@ -372,13 +360,13 @@ class Plot:
         f.close()
 
         # Output PWM and create logo
-        pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.motif_name))
+        pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.output_prefix))
         pwm_file = open(pwm_fname, "w")
         for e in ["A", "C", "G", "T"]:
             pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
         pwm_file.close()
 
-        logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.motif_name))
+        logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
         pwm = motifs.read(open(pwm_fname), "pfm")
         pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -408,12 +396,11 @@ class Plot:
         ax1.set_yticks([min_signal, max_signal])
         ax1.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
 
-        ax1.set_title(self.motif_name, fontweight='bold')
+        ax1.set_title(self.output_prefix, fontweight='bold')
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_signal, max_signal])
         ax1.legend(loc="upper right", frameon=False)
         ax1.set_ylabel("Average Signal", rotation=90, fontweight='bold')
-
 
         min_signal = min(min(mean_norm_signal_f), min(mean_norm_signal_r))
         max_signal = max(max(mean_norm_signal_f), max(mean_norm_signal_r))
@@ -438,13 +425,13 @@ class Plot:
         ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
         ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
 
-        figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.motif_name))
+        figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
         fig.tight_layout()
         fig.savefig(figure_name, format="eps", dpi=300)
 
         # Creating canvas and printing eps / pdf with merged results
-        output_fname = os.path.join(self.output_loc, "{}.eps".format(self.motif_name))
+        output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
         c.insert(pyx.epsfile.epsfile(2.10, 1.55, logo_fname, width=17.5, height=3))

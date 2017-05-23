@@ -4,6 +4,7 @@
 
 # Python
 from __future__ import print_function
+import os
 import numpy as np
 import math
 from sklearn import metrics
@@ -31,18 +32,16 @@ class Evaluation:
 
     """
 
-    def __init__(self, tf_name, tfbs_file, footprint_file, footprint_name, footprint_type,
-                 print_roc_curve, print_pr_curve, output_location, alignment_file, organism):
-        self.tf_name = tf_name
+    def __init__(self, tfbs_file, footprint_file, footprint_name, footprint_type,
+                 output_location, output_prefix, print_roc_curve, print_pr_curve):
         self.tfbs_file = tfbs_file
         self.footprint_file = footprint_file.split(",")
         self.footprint_name = footprint_name.split(",")
         self.footprint_type = footprint_type.split(",")
+        self.output_location = output_location
+        self.output_prefix = output_prefix
         self.print_roc_curve = print_roc_curve
         self.print_pr_curve = print_pr_curve
-        self.output_location = output_location
-        self.alignment_file = alignment_file
-        self.organism = organism
         if self.output_location[-1] != "/":
             self.output_location += "/"
 
@@ -68,13 +67,13 @@ class Evaluation:
         prc_auc_50 = dict()
         prc_auc_100 = dict()
 
+        max_score = 0
         if "SEG" in self.footprint_type:
             mpbs_regions = GenomicRegionSet("TFBS")
             mpbs_regions.read_bed(self.tfbs_file)
             mpbs_regions.sort()
 
             # Verifying the maximum score of the MPBS file
-            max_score = -99999999
             for region in iter(mpbs_regions):
                 score = int(region.data)
                 if score > max_score:
@@ -114,7 +113,7 @@ class Evaluation:
                 recall[i], precision[i], prc_auc_1[i], prc_auc_10[i], prc_auc_50[i], prc_auc_100[i] = self.precision_recall_curve(footprints_regions)
 
         # Output the statistics results into text
-        stats_fname = self.output_location + self.tf_name + "_stats.txt"
+        stats_fname = os.path.join(self.output_location, "{}_stats.txt".format(self.output_prefix))
         stats_header = ["METHOD", "AUC_100", "AUC_50", "AUC_10", "AUC_1", "AUPR_100", "AUPR_50", "AUPR_10", "AUPR_1"]
         with open(stats_fname, "w") as stats_file:
             stats_file.write("\t".join(stats_header) + "\n")
@@ -129,14 +128,14 @@ class Evaluation:
             label_x = "False Positive Rate"
             label_y = "True Positive Rate"
             curve_name = "ROC"
-            self.plot_curve(fpr, tpr, roc_auc_100, label_x, label_y, self.tf_name, curve_name)
+            self.plot_curve(fpr, tpr, roc_auc_100, label_x, label_y, self.output_prefix, curve_name)
         if self.print_pr_curve:
             label_x = "Recall"
             label_y = "Precision"
             curve_name = "PRC"
-            self.plot_curve(recall, precision, prc_auc_100, label_x, label_y, self.tf_name, curve_name)
+            self.plot_curve(recall, precision, prc_auc_100, label_x, label_y, self.output_prefix, curve_name)
 
-        self.output_points(self.tf_name, fpr, tpr, recall, precision)
+        self.output_points(self.output_prefix, fpr, tpr, recall, precision)
 
     def plot_curve(self, data_x, data_y, stats, label_x, label_y, tf_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",

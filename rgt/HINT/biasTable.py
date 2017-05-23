@@ -35,24 +35,24 @@ class BiasTable:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, original_regions=None, dnase_file_name=None, genome_file_name=None,
-                 k_nb=None, forward_shift=None, reverse_shift=None, estimate_bias_type=None, output_loc=None):
+    def __init__(self, reads_file=None, regions_file=None, genome_file=None, k_nb=None,
+                 forward_shift=None, reverse_shift=None, bias_type=None, output_location=None):
         """ 
         Initializes BiasTable.
         """
         self.regions = GenomicRegionSet("Bias Regions")
-        if original_regions != None:
-            if original_regions.split(".")[-1] == "bed":
-                self.regions.read_bed(original_regions)
-            if original_regions.split(".")[-1] == "fa":
-                self.regions.read_sequence(original_regions)
-        self.dnase_file_name = dnase_file_name
-        self.genome_file_name = genome_file_name
+        self.reads_file = reads_file
+        if regions_file != None:
+            if regions_file.split(".")[-1] == "bed":
+                self.regions.read_bed(regions_file)
+            if regions_file.split(".")[-1] == "fa":
+                self.regions.read_sequence(regions_file)
+        self.genome_file = genome_file
         self.k_nb = k_nb
         self.forward_shift = forward_shift
         self.reverse_shift = reverse_shift
-        self.estimate_bias_type = estimate_bias_type
-        self.output_loc = output_loc
+        self.bias_type = bias_type
+        self.output_location = output_location
 
     def load_table(self, table_file_name_F, table_file_name_R):
         """ 
@@ -78,25 +78,26 @@ class BiasTable:
         table_file_R.close()
         return [bias_table_F, bias_table_R]
 
-    def write_tables(self, file_name, table):
-        f = open(file_name + "_F.txt", "w")
+    def write(self, file_name, table):
+        output_fname = os.path.join(self.output_location, file_name)
+        f = open(output_fname + "_F.txt", "w")
         for t in table[0].keys():
             f.write(t + "\t" + str(table[0][t]) + "\n")
         f.close()
-        f = open(file_name + "_R.txt", "w")
+        f = open(output_fname + "_R.txt", "w")
         for t in table[1].keys():
             f.write(t + "\t" + str(table[1][t]) + "\n")
         f.close()
 
-    def estimate_table(self):
+    def estimate(self):
         bias_table = None
-        if self.estimate_bias_type == "FRE":
-            bias_table = self.estimate_table_fre()
-        elif self.estimate_bias_type == "PWM":
-            bias_table = self.estimate_table_pwm()
+        if self.bias_type == "KMER":
+            bias_table = self.estimate_bias_kmer()
+        elif self.bias_type == "PPM":
+            bias_table = self.estimate_bias_ppm()
         return bias_table
 
-    def estimate_table_fre(self):
+    def estimate_bias_kmer(self):
         """ 
         Estimates bias based on HS regions or whole genome, DNase-seq signal and genomic sequences.
 
@@ -114,9 +115,9 @@ class BiasTable:
         pseudocount = 1.0
 
         # Initializing bam and fasta
-        if (self.dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
-        bamFile = Samfile(self.dnase_file_name, "rb")
-        fastaFile = Fastafile(self.genome_file_name)
+        if (self.reads_file.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
+        bamFile = Samfile(self.reads_file, "rb")
+        fastaFile = Fastafile(self.genome_file)
 
         # Initializing dictionaries
         obsDictF = dict()
@@ -240,14 +241,14 @@ class BiasTable:
         # Return
         return [bias_table_F, bias_table_R]
 
-    def get_pwm_score(self, sequence, pwm, k_nb):
+    def get_ppm_score(self, sequence, ppm, k_nb):
         score = 1.0
         for position in range(k_nb):
             letter = sequence[position]
-            score *= pwm[letter][position]
+            score *= ppm[letter][position]
         return score
 
-    def estimate_table_pwm(self):
+    def estimate_bias_ppm(self):
         """
         Estimates bias based on HS regions or whole genome, DNase-seq signal and genomic sequences.
 
@@ -261,9 +262,9 @@ class BiasTable:
         """
 
         # Initializing bam and fasta
-        if (self.dnase_file_name.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
-        bamFile = Samfile(self.dnase_file_name, "rb")
-        fastaFile = Fastafile(self.genome_file_name)
+        if (self.reads_file.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
+        bamFile = Samfile(self.reads_file, "rb")
+        fastaFile = Fastafile(self.genome_file)
 
         obs_f_pwm_dict = dict([("A", [0.0] * self.k_nb), ("C", [0.0] * self.k_nb),
                         ("G", [0.0] * self.k_nb), ("T", [0.0] * self.k_nb), ("N", [0.0] * self.k_nb)])
@@ -330,16 +331,13 @@ class BiasTable:
         fastaFile.close()
 
         # Output pwms
+        os.system("mkdir -p " + os.path.join(self.output_location, "pfm"))
         pwm_dict_list = [obs_f_pwm_dict, obs_r_pwm_dict, exp_f_pwm_dict, exp_r_pwm_dict]
         pwm_file_list = []
-        pwm_obs_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_f.pwm".format(str(self.k_nb), str(self.forward_shift)))
-        pwm_obs_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "obs_{}_{}_r.pwm".format(str(self.k_nb), str(self.forward_shift)))
-        pwm_exp_f = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_f.pwm".format(str(self.k_nb), str(self.forward_shift)))
-        pwm_exp_r = os.path.join(self.output_loc, "Bias", "pwm",
-                                       "exp_{}_{}_r.pwm".format(str(self.k_nb), str(self.forward_shift)))
+        pwm_obs_f = os.path.join(self.output_location, "pfm", "obs_{}_f.pfm".format(str(self.k_nb)))
+        pwm_obs_r = os.path.join(self.output_location, "pfm", "obs_{}_r.pfm".format(str(self.k_nb)))
+        pwm_exp_f = os.path.join(self.output_location, "pfm", "exp_{}_f.pfm".format(str(self.k_nb)))
+        pwm_exp_r = os.path.join(self.output_location, "pfm", "exp_{}_r.pfm".format(str(self.k_nb)))
 
         pwm_file_list.append(pwm_obs_f)
         pwm_file_list.append(pwm_obs_r)
@@ -357,14 +355,12 @@ class BiasTable:
         motif_exp_r = motifs.read(open(pwm_exp_r), "pfm")
 
         # Output logos
-        logo_obs_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_f.pdf".format(str(self.k_nb), str(self.forward_shift)))
-        logo_obs_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "obs_{}_{}_r.pdf".format(str(self.k_nb), str(self.forward_shift)))
-        logo_exp_f = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_f.pdf".format(str(self.k_nb), str(self.forward_shift)))
-        logo_exp_r = os.path.join(self.output_loc, "Bias", "logo",
-                                       "exp_{}_{}_r.pdf".format(str(self.k_nb), str(self.forward_shift)))
+        os.system("mkdir -p " + os.path.join(self.output_location, "logo"))
+        logo_obs_f = os.path.join(self.output_location, "logo", "obs_{}_f.pdf".format(str(self.k_nb)))
+        logo_obs_r = os.path.join(self.output_location, "logo", "obs_{}_r.pdf".format(str(self.k_nb)))
+        logo_exp_f = os.path.join(self.output_location, "logo", "exp_{}_f.pdf".format(str(self.k_nb)))
+        logo_exp_r = os.path.join(self.output_location, "logo", "exp_{}_r.pdf".format(str(self.k_nb)))
+
         motif_obs_f.weblogo(logo_obs_f, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.2, yaxis_tic_interval=0.1)
         motif_obs_r.weblogo(logo_obs_r, format="pdf", stack_width="large", color_scheme="color_classic",
@@ -374,8 +370,6 @@ class BiasTable:
         motif_exp_r.weblogo(logo_exp_r, format="pdf", stack_width="large", color_scheme="color_classic",
                            yaxis_scale=0.02, yaxis_tic_interval=0.01)
 
-
-
         # Creating bias dictionary
         print(motif_exp_r.pwm)
         alphabet = ["A", "C", "G", "T"]
@@ -383,12 +377,16 @@ class BiasTable:
         bias_table_F = dict([(e, 0.0) for e in k_mer_comb])
         bias_table_R = dict([(e, 0.0) for e in k_mer_comb])
         for k_mer in k_mer_comb:
-            obsF = self.get_pwm_score(k_mer, motif_obs_f.pwm, self.k_nb)
-            expF = self.get_pwm_score(k_mer, motif_exp_f.pwm, self.k_nb)
+            obsF = self.get_ppm_score(k_mer, motif_obs_f.pwm, self.k_nb)
+            expF = self.get_ppm_score(k_mer, motif_exp_f.pwm, self.k_nb)
             bias_table_F[k_mer] = round(obsF / expF, 6)
-            obsR = self.get_pwm_score(k_mer, motif_obs_r.pwm, self.k_nb)
-            expR = self.get_pwm_score(k_mer, motif_exp_r.pwm, self.k_nb)
+            obsR = self.get_ppm_score(k_mer, motif_obs_r.pwm, self.k_nb)
+            expR = self.get_ppm_score(k_mer, motif_exp_r.pwm, self.k_nb)
             bias_table_R[k_mer] = round(obsR / expR, 6)
 
         # Return
         return [bias_table_F, bias_table_R]
+
+    def estimate_bias_lslim(self):
+        # TODO
+        return 0

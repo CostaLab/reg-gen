@@ -29,36 +29,16 @@ class TrainHMM:
     Contains methods used to train a hidden Markov model
     """
 
-    def __init__(self, bias_bam_file, training_bam_file, annotate_file, print_bed_file,
-                 output_locaiton, output_fname,
-                 print_raw_signal, print_bc_signal, print_norm_signal, print_slope_signal, print_diff_signal,
-                 atac_initial_clip, atac_downstream_ext, atac_upstream_ext,
-                 atac_forward_shift, atac_reverse_shift,
-                 estimate_bias_correction, estimate_bias_type,
-                 bias_table, original_regions, organism, k_nb, strands_specific, chrom, start, end):
-        self.bias_bam_file = bias_bam_file
-        self.training_bam_file = training_bam_file
-        self.annotate_fname = annotate_file
+    def __init__(self, reads_file, annotate_file, print_bed_file, output_location,
+                 output_prefix, bias_table, organism, k_nb, chrom, start, end):
+        self.reads_file = reads_file
+        self.annotate_file = annotate_file
         self.print_bed_file = print_bed_file
-        self.output_locaiton = output_locaiton
-        self.output_fname = output_fname
-        self.print_raw_signal = print_raw_signal
-        self.print_bc_signal = print_bc_signal
-        self.print_norm_signal = print_norm_signal
-        self.print_slope_signal = print_slope_signal
-        self.print_diff_signal = print_diff_signal
-        self.atac_initial_clip = atac_initial_clip
-        self.atac_downstream_ext = atac_downstream_ext
-        self.atac_upstream_ext = atac_upstream_ext
-        self.atac_forward_shift = atac_forward_shift
-        self.atac_reverse_shift = atac_reverse_shift
-        self.estimate_bias_correction = estimate_bias_correction
-        self.estimate_bias_type = estimate_bias_type
+        self.output_location = output_location
+        self.output_prefix = output_prefix
         self.bias_table = bias_table
-        self.original_regions = original_regions
         self.organism = organism
         self.k_nb = k_nb
-        self.strands_specific = strands_specific
         self.chrom = chrom
         self.start = start
         self.end = end
@@ -66,8 +46,8 @@ class TrainHMM:
     def read_states_signals(self):
         # Read states from the annotation file
         states = ""
-        with open(self.annotate_fname) as annotate_file:
-            for line in annotate_file:
+        with open(self.annotate_file) as f:
+            for line in f:
                 if len(line) < 2 or "#" in line or "=" in line:
                     continue
                 ll = line.strip().split(" ")
@@ -77,54 +57,30 @@ class TrainHMM:
         # If need to estimate bias table
         genome_data = GenomeData(self.organism)
         table = None
-        if self.estimate_bias_correction:
-
-            bias_table = BiasTable(original_regions=self.original_regions, dnase_file_name=self.bias_bam_file,
-                                   genome_file_name=genome_data.get_genome(), k_nb=self.k_nb,
-                                   forward_shift=self.atac_forward_shift, reverse_shift=self.atac_reverse_shift,
-                                   estimate_bias_type=self.estimate_bias_type, output_loc=self.output_locaiton)
-
-
-            table = bias_table.estimate_table()
-
-            bias_fname = os.path.join(self.output_locaiton, "Bias", "{}_{}".format(self.k_nb, self.atac_forward_shift))
-            bias_table.write_tables(bias_fname, table)
 
         # If the bias table is provided
         if self.bias_table:
-            bias_table = BiasTable(output_loc=self.output_locaiton)
+            bias_table = BiasTable()
             bias_table_list = self.bias_table.split(",")
             table = bias_table.load_table(table_file_name_F=bias_table_list[0],
                                           table_file_name_R=bias_table_list[1])
 
         # Get the normalization and slope signal from the raw bam file
-        raw_signal = GenomicSignal(self.training_bam_file)
+        raw_signal = GenomicSignal(self.reads_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
-        norm_signal, slope_signal, diff_signal = raw_signal.get_signal1(
-                                                    ref=self.chrom, start=self.start, end=self.end,
-                                                    downstream_ext=self.atac_downstream_ext,
-                                                    upstream_ext=self.atac_upstream_ext,
-                                                    forward_shift=self.atac_forward_shift,
-                                                    reverse_shift=self.atac_reverse_shift,
-                                                    initial_clip=self.atac_initial_clip,
-                                                    bias_table=table,
-                                                    genome_file_name=genome_data.get_genome(),
-                                                    print_raw_signal=self.print_raw_signal,
-                                                    print_bc_signal=self.print_bc_signal,
-                                                    print_norm_signal=self.print_norm_signal,
-                                                    print_slope_signal=self.print_slope_signal,
-                                                    print_diff_signal=self.print_diff_signal)
+        norm_signal, slope_signal = raw_signal.get_signal2(ref=self.chrom, start=self.start, end=self.end,
+                                                           bias_table=table, genome_file_name=genome_data.get_genome())
         if self.print_bed_file:
             self.output_bed_file(states)
 
-        return states, norm_signal, slope_signal, diff_signal
+        return states, norm_signal, slope_signal
 
     def train(self):
         # Estimate the HMM parameters using the maximum likelihood method.
-        states, norm_signal, slope_signal, diff_signal = self.read_states_signals()
+        states, norm_signal, slope_signal = self.read_states_signals()
         hmm_model = HMM()
 
-        hmm_model.dim = 3
+        hmm_model.dim = 2
         # States number
         state_list = [int(state) for state in list(states)]
         hmm_model.states = len(np.unique(np.array(state_list)))
@@ -175,15 +131,13 @@ class TrainHMM:
                     covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
-        if self.estimate_bias_correction:
-            model_fname = os.path.join(self.output_locaiton, "Model", "{}_{}".format(self.k_nb, self.atac_forward_shift))
-        else:
-            model_fname = os.path.join(self.output_locaiton, "Model", self.output_fname)
-        hmm_model.save_hmm(model_fname)
+
+        output_fname = os.path.join(self.output_location, output_prefix)
+        hmm_model.save_hmm(output_fname)
 
     def train1(self):
         # Estimate the HMM parameters using the maximum likelihood method.
-        states, norm_signal, slope_signal, diff_signal = self.read_states_signals()
+        states, norm_signal, slope_signal = self.read_states_signals()
         hmm_model = HMM()
 
         hmm_model.dim = 3
