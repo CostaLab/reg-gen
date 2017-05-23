@@ -144,7 +144,7 @@ class RandomTest:
                                dbd_tag=False,
                                remove_duplicates=False, associated=self.organism)
             self.txpf.write_bed(filename=os.path.join(temp, obed + "_dbss.bed"),
-                                remove_duplicates=False)
+                                remove_duplicates=False, associated=self.organism)
 
 
     def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
