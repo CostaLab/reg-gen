@@ -83,9 +83,10 @@ class Evaluation:
         for i in range(len(self.footprint_file)):
             footprints_regions = GenomicRegionSet("Footprints Prediction")
             footprints_regions.read_bed(self.footprint_file[i])
+            footprints_regions.sorted = True
 
             # Sort footprint prediction bed files
-            footprints_regions.sort()
+            # footprints_regions.sort()
 
             if self.footprint_type[i] == "SEG":
                 # Increasing the score of MPBS entry once if any overlaps found in the predicted footprints.
