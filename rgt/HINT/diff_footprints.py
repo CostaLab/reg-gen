@@ -10,6 +10,7 @@ from math import log, ceil, floor
 from Bio import motifs
 import matplotlib.pyplot as plt
 import pyx
+from scipy import stats
 
 # Internal
 from ..Util import AuxiliaryFunctions, GenomeData
@@ -54,7 +55,7 @@ class DiffFootprints:
         self.output_prefix = output_prefix
 
     def bias_correction(self, bam, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift, factor, strand):
+                        forward_shift, reverse_shift, factor):
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -77,21 +78,22 @@ class DiffFootprints:
         for read in bam.fetch(chrName, p1_w, p2_w):
             if (not read.is_reverse):
                 cut_site = read.pos + forward_shift
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
 
-        nf = [i * factor for i in nf]
-        nr = [i * factor for i in nr]
-        aux = nr + nf
-
+        # nf = [i * factor for i in nf]
+        # nr = [i * factor for i in nr]
         # Std-based clipping to avoid spurious high counts
-        # mean = np.array(aux).mean()
-        # std = np.array(aux).std()
+        # mean = np.array(nf).mean()
+        # std = np.array(nf).std()
         # nf = [min(e, mean + (10 * std)) for e in nf]
+
+        # mean = np.array(nr).mean()
+        # std = np.array(nr).std()
         # nr = [min(e, mean + (10 * std)) for e in nr]
 
         # Smoothed counts
@@ -112,8 +114,6 @@ class DiffFootprints:
             rLast = nr[i - (window / 2) + 1]
 
         # Fetching sequence
-        # currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
-        # currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
         currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
@@ -139,13 +139,12 @@ class DiffFootprints:
         fLast = af[0]
         rLast = ar[0]
         bias_corrected_signal = []
-        tc_corrected_signal = []
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
             zf = log(nf[i] + 1) - log(nhatf + 1)
             zr = log(nr[i] + 1) - log(nhatr + 1)
-            bias_corrected_signal.append(zf + zr)
+            bias_corrected_signal.append(nf[i] / af[i] + nr[i] / ar[i])
             fSum -= fLast
             fSum += af[i + (window / 2)]
             fLast = af[i - (window / 2) + 1]
@@ -153,66 +152,49 @@ class DiffFootprints:
             rSum += ar[i + (window / 2)]
             rLast = ar[i - (window / 2) + 1]
 
-        for i in range(len(bias_corrected_signal)):
-            if bias_corrected_signal[i] < 0: bias_corrected_signal[i] = 0.0
-
-        if strand == "-":
-            sequence = []
-            # sequence=revcomp(str(fastaFile.fetch(chrName,p1, p2)).upper())
-        else:
-            sequence = str(fastaFile.fetch(chrName, p1, p2)).upper()
-
         # Termination
         fastaFile.close()
-        return bias_corrected_signal, tc_corrected_signal, sequence
+        return bias_corrected_signal
 
     def get_stats(self, reads_file, bias_table, genome_file_name, chrName, start, end, factor):
 
-        signal = GenomicSignal(reads_file)
-        signal.load_sg_coefs(slope_window_size=9)
+        bam = Samfile(reads_file, "rb")
+        bc_signal = self.bias_correction(bam, bias_table, genome_file_name, chrName, start, end,
+                         self.forward_shift, self.reverse_shift, factor)
 
-        norm_signal, _ = signal.get_signal2(chrName, start, end, self.downstream_ext,
-                                           self.upstream_ext, self.forward_shift, self.reverse_shift,
-                                           initial_clip=self.initial_clip, bias_table=bias_table,
-                                           genome_file_name=genome_file_name)
 
-        # Remove the impact from different sequence depth
-        norm_signal = [i * factor for i in norm_signal]
-
-        # Summing min value to signal
-        # stdz_signal = [e + self.min_value for e in norm_signal]
-
-        # Evaluating protection score
-        signal_half_len = len(norm_signal) / 2
+        # # Evaluating protection score
+        signal_half_len = len(bc_signal) / 2
         motif_half_len = self.motif_ext / 2
-        nc = sum(norm_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
-        nr = sum(norm_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
-        nl = sum(norm_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
-
-        spr = (nr - nc) / self.motif_ext + (nl - nc) / self.motif_ext
+        nc = sum(bc_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
+        nr = sum(bc_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
+        nl = sum(bc_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
 
         fos = (nr + 1) / (nc + 1) + (nl + 1) / (nc + 1)
+        # spr = (nr - nc) / self.motif_ext + (nl - nc) / self.motif_ext
 
         # Fetch raw signal
-        bam = Samfile(reads_file, "rb")
-        pileup_region = PileupRegion(start, end, self.downstream_ext, self.upstream_ext, self.forward_shift, self.reverse_shift)
-        if (ps_version == "0.7.5"):
-            bam.fetch(reference=chrName, start=start, end=end, callback=pileup_region)
-        else:
-            iter = bam.fetch(reference=chrName, start=start, end=end)
-            for alignment in iter: pileup_region.__call__(alignment)
-
-        tc_signal = np.array([min(e, self.initial_clip) for e in pileup_region.vector])
-
-        # Remove the impact from different sequence depth
-        # tc_signal = [i * factor for i in tc_signal]
-
-        nr = sum(tc_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
-        nl = sum(tc_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
-
-        tc = (nr + nl) / (2 * self.motif_ext)
-
-        return spr, tc, fos, np.array(norm_signal), np.array(tc_signal)
+        # pileup_region = PileupRegion(start, end, self.downstream_ext, self.upstream_ext, self.forward_shift, self.reverse_shift)
+        # if (ps_version == "0.7.5"):
+        #     bam.fetch(reference=chrName, start=start, end=end, callback=pileup_region)
+        # else:
+        #     iter = bam.fetch(reference=chrName, start=start, end=end)
+        #     for alignment in iter: pileup_region.__call__(alignment)
+        # tc_signal = np.array([min(e, self.initial_clip) for e in pileup_region.vector])
+        #
+        # signal_half_len = len(tc_signal) / 2
+        # motif_half_len = self.motif_ext / 2
+        #
+        # nc = sum(tc_signal[signal_half_len - motif_half_len:signal_half_len + motif_half_len])
+        # nr = sum(tc_signal[signal_half_len + motif_half_len:signal_half_len + motif_half_len + self.motif_ext])
+        # nl = sum(tc_signal[signal_half_len - motif_half_len - self.motif_ext:signal_half_len - motif_half_len])
+        #
+        # fos = (nr + 1) / (nc + 1) + (nl + 1) / (nc + 1)
+        #
+        # tc = (nr + nl) / (2 * self.motif_ext)
+        #
+        # return spr, tc, fos, np.array(bc_signal), np.array(tc_signal)
+        return fos
 
     def diff(self):
         mpbs = GenomicRegionSet("Motif Predicted Binding Sites")
@@ -233,15 +215,15 @@ class DiffFootprints:
             bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
 
         # Compute the reads number ratio between two bam file
-        #ct1 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file1)])
-        #ct2 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file2)])
+        ct1 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file1)])
+        ct2 = reduce(lambda x, y: x + y, [int(l.rstrip('\n').split('\t')[2]) for l in pysam.idxstats(self.reads_file2)])
 
-        #if (ct1 > ct2):
-        #    factor1 = 1.0
-        #    factor2 = log(ct1 / float(ct2), 2)
-        #else:
-        #    factor2 = 1.0
-        #    factor1 = log(ct2 / float(ct1), 2)
+        if (ct1 > ct2):
+            factor1 = 1.0
+            factor2 = ct1 / float(ct2)
+        else:
+            factor2 = 1.0
+            factor1 = ct2 / float(ct1)
 
         # Iterating on MPBSs
         for mpbs_name in mpbs_name_list:
@@ -339,6 +321,74 @@ class DiffFootprints:
 
                 self.plot(mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
                           pwm_dict, self.output_location, self.output_prefix)
+
+    def diff1(self):
+        mpbs = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs.read_bed(self.mpbs_file)
+
+        mpbs_name_list = list(set(mpbs.get_names()))
+
+        genome_data = GenomeData(self.organism)
+        fasta = Fastafile(genome_data.get_genome())
+
+        bias_table1 = None
+        bias_table2 = None
+        if self.bias_table1:
+            table_list = self.bias_table1.split(",")
+            bias_table1 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
+        if self.bias_table2:
+            table_list = self.bias_table2.split(",")
+            bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
+
+        # Iterating on MPBSs
+        for mpbs_name in mpbs_name_list:
+            pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
+                             ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
+                             ("N", [0.0] * self.window_size)])
+
+            mpbs_regions = mpbs.by_names([mpbs_name])
+
+            fos1_list = list()
+            fos2_list = list()
+            counter = 0.0
+            for region in mpbs_regions:
+                mid = (region.final + region.initial) / 2
+                p1 = max(mid - self.window_size / 2, 0)
+                p2 = mid + self.window_size / 2
+
+                fos1 = self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                                   genome_file_name=genome_data.get_genome(),
+                                   chrName=region.chrom, start=p1, end=p2, factor=1)
+
+                fos2 = self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                                   genome_file_name=genome_data.get_genome(),
+                                   chrName=region.chrom, start=p1, end=p2, factor=1)
+
+                fos1_list.append(fos1)
+                fos2_list.append(fos2)
+                counter += 1.0
+
+            # Updating protection
+            if (counter > 0):
+                mean_fos1 = np.mean(fos1_list)
+                std_fos1 = np.std(fos1_list)
+                mean_fos2 = np.mean(fos2_list)
+                std_fos2 = np.std(fos2_list)
+
+                output_file = os.path.join(self.output_location, self.output_prefix, "{}.txt".format(mpbs_name))
+                f = open(output_file, "w")
+                f.write("\t".join(["FOS1"] + [str(i) for i in fos1_list]))
+                f.write("\n")
+                f.write("\t".join(["FOS2"] + [str(i) for i in fos2_list]))
+                f.close()
+
+                stat, pvalue = stats.ttest_ind(np.array(fos1_list), np.array(fos2_list))
+                res = [mean_fos1, std_fos1, mean_fos2, std_fos2, stat, pvalue, counter]
+                output_file = os.path.join(self.output_location, "{}.txt".format(self.output_prefix))
+                f = open(output_file, "a")
+                f.write("\t".join([mpbs_name] + [str(i) for i in res]))
+                f.write("\n")
+                f.close()
 
     def plot(self, mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
              pwm_dict, output_location, output_prefix):

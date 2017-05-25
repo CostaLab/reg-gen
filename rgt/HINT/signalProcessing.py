@@ -274,11 +274,11 @@ class GenomicSignal:
         for read in self.bam.fetch(chrName, p1_w, p2_w):
             if (not read.is_reverse):
                 cut_site = read.pos + forward_shift
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
 
         # Smoothed counts

@@ -1389,7 +1389,7 @@ def diff_footprints():
 
     # Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int",
-                      metavar="INT", default=50, help=SUPPRESS_HELP)
+                      metavar="INT", default=1000, help=SUPPRESS_HELP)
     parser.add_option("--downstream-ext", dest="downstream_ext", type="int",
                       metavar="INT", default=1, help=SUPPRESS_HELP)
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int",
@@ -1417,7 +1417,7 @@ def diff_footprints():
                                      options.initial_clip, options.downstream_ext, options.upstream_ext,
                                      options.forward_shift, options.reverse_shift, options.k_nb,
                                      options.output_location, options.output_prefix)
-    diff_footprints.diff()
+    diff_footprints.diff1()
 
     # TODO
     exit(0)
