@@ -68,12 +68,12 @@ class Evaluation:
 
         max_score = 0
         if "SEG" in self.footprint_type:
-            regions = GenomicRegionSet("TFBS")
-            regions.read_bed(self.tfbs_file)
+            mpbs_regions = GenomicRegionSet("TFBS")
+            mpbs_regions.read_bed(self.tfbs_file)
 
-            names = [self.output_prefix + ":N", self.output_prefix + ":Y"]
-            mpbs_regions = regions.by_names(names)
-            mpbs_regions.sort()
+            #names = [self.output_prefix + ":N", self.output_prefix + ":Y"]
+            #mpbs_regions = regions.by_names(names)
+            #mpbs_regions.sort()
 
             # Verifying the maximum score of the MPBS file
             for region in iter(mpbs_regions):
@@ -97,7 +97,6 @@ class Evaluation:
                 for region in iter(intersect_regions):
                     region.data = str(int(region.data.split("\t")[0]) + max_score)
                     increased_score_mpbs_regions.add(region)
-
 
                 # Keep the score of remained MPBS entry unchanged
                 without_intersect_regions = mpbs_regions.subtract(footprints_regions, whole_region=True)

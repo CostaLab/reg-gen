@@ -1417,7 +1417,7 @@ def diff_footprints():
                                      options.initial_clip, options.downstream_ext, options.upstream_ext,
                                      options.forward_shift, options.reverse_shift, options.k_nb,
                                      options.output_location, options.output_prefix)
-    diff_footprints.diff1()
+    diff_footprints.diff2()
 
     # TODO
     exit(0)
