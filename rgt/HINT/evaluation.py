@@ -117,8 +117,8 @@ class Evaluation:
         # Output the statistics results into text
         stats_fname = os.path.join(self.output_location, "{}_stats.txt".format(self.output_prefix))
         stats_header = ["METHOD", "AUC_100", "AUC_50", "AUC_10", "AUC_1", "AUPR_100", "AUPR_50", "AUPR_10", "AUPR_1"]
-        with open(stats_fname, "w") as stats_file:
-            stats_file.write("\t".join(stats_header) + "\n")
+        with open(stats_fname, "a") as stats_file:
+            #stats_file.write("\t".join(stats_header) + "\n")
             for i in range(len(self.footprint_name)):
                 stats_file.write(self.footprint_name[i] + "\t" +
                                  str(roc_auc_100[i]) + "\t" + str(roc_auc_50[i]) + "\t" + str(roc_auc_10[i]) + "\t" +
@@ -137,7 +137,7 @@ class Evaluation:
             curve_name = "PRC"
             self.plot_curve(recall, precision, prc_auc_100, label_x, label_y, self.output_prefix, curve_name)
 
-        self.output_points(self.output_prefix, fpr, tpr, recall, precision)
+        #self.output_points(self.output_prefix, fpr, tpr, recall, precision)
 
     def plot_curve(self, data_x, data_y, stats, label_x, label_y, tf_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",
