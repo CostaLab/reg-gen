@@ -5,6 +5,7 @@ import sys
 import pysam
 import shutil
 import pickle
+import errno
 from ctypes import *
 from collections import *
 import natsort as natsort_ob
@@ -16,7 +17,7 @@ import matplotlib
 from matplotlib import colors
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from matplotlib.backends.backend_pdf import PdfPages
+# from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import MaxNLocator
 
 
@@ -412,7 +413,7 @@ def gen_heatmap(path):
     # os.path.join(path,'matrix_p.txt'), lmats, delimiter='\t')
     try:
         fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.png'))
-        fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
+        # fig.savefig(os.path.join(path, 'condition_lncRNA_dendrogram.pdf'), format="pdf")
     except:
         pass
 
@@ -865,9 +866,9 @@ def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linel
     ax.legend(legend_h, legend_l, 
               bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
               prop={'size':12}, ncol=3)
-    pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-    pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
-    pp.close()
+    # pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
+    # pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
+    # pp.close()
 
 def load_dump(path, filename):
     file = open(os.path.join(path,filename),'r')
@@ -1042,7 +1043,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
                         
                     loop = False
         if not out_file:
-            dbd.write_bed(filename=os.path.join(output, "DBD_"+rna_name+".bed"))
+            dbd.write_bed(filename=os.path.join(output, rna_name+"_DBDs.bed"))
         else:
             # print(dbd)
             # print(dbd.sequences[0])
@@ -1052,7 +1053,7 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         #print(dbdmap)
         if not out_file:
             seq = pysam.Fastafile(os.path.join(output,"rna_temp.fa"))
-            fasta_f = os.path.join(output, "DBD_"+rna_name+".fa")
+            fasta_f = os.path.join(output, rna_name+"_DBDs.fa")
         else:
             seq = pysam.Fastafile(os.path.join(temp,"rna_temp.fa"))
             fasta_f = output+".fa"
@@ -1311,3 +1312,10 @@ def save_profile(rna_regions, rna_name, organism, output, bed,\
     with open(pro_path, 'w') as f:
         for lines in newlines:
             print("\t".join(lines), file=f)
+
+def silentremove(filename):
+    try:
+        os.remove(filename)
+    except OSError as e: # this would be "except OSError, e:" before Python 2.6
+        if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
+            raise # re-raise exception if a different error occurred

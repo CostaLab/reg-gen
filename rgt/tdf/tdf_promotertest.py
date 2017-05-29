@@ -80,16 +80,8 @@ class PromoterTest:
             # score
             if score:
                 self.scores = self.de_regions.get_score_dict()
-                # for promoter in self.de_regions:
-                #     if promoter.data: self.scores.append(promoter.data.split("\t")[0])
-                #     else: self.scores = None
-                # self.score_dict = self.de_regions.get_score_dict()
 
-            # try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
-            # except: pass
             self.nde_regions.read_bed(bg)
-            # try: self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
-            # except: pass
             self.nde_regions.remove_duplicates()
 
         ####################################################################################
@@ -106,11 +98,10 @@ class PromoterTest:
             try:
                 data = load_dump(path=temp, filename=dumpname)
                 self.de_gene = data[0]
-                self.ensembl2symbol = data[1]
-                self.nde_gene = data[2]
-                self.de_regions = data[3]
-                self.nde_regions = data[4]
-                if score: self.scores = data[5]
+                self.nde_gene = data[1]
+                self.de_regions = data[2]
+                self.nde_regions = data[3]
+                if score: self.scores = data[4]
 
             except:
 
@@ -121,7 +112,6 @@ class PromoterTest:
 
                 if score:
                     self.de_gene.read(gene_list_file, score=True)
-                    # self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
@@ -160,16 +150,8 @@ class PromoterTest:
                     t2 = time.time()
                     print("\t" + str(datetime.timedelta(seconds=round(t2 - t1))))
 
-
-                    # Generate a dict for ID transfer
-                    de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
-                    print2(summary, "   \t" + str(len(de_ensembl)) + "\tgenes are mapped to Ensembl ID")
-                    if len(unmap_gs) > 0:
-                        print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
-
-                    self.de_gene.genes = de_ensembl
                     de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
-                                                                    gene_set=self.de_gene,
+                                                                    gene_set=self.de_gene, regiondata=score,
                                                                     unmaplist=True, variants=False)
 
                     print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
@@ -180,7 +162,7 @@ class PromoterTest:
                     ######################################################
                     # NonDE gene regions
 
-                    nde_ensembl = [g for g in ann.symbol_dict.keys() if g not in de_ensembl]
+                    nde_ensembl = [g for g in ann.symbol_dict.values() if g not in self.de_gene]
                     print2(summary, "   \t" + str(len(nde_ensembl)) + "\tnon-target genes")
                     self.nde_gene = GeneSet("nde genes")
                     self.nde_gene.genes = nde_ensembl
@@ -192,21 +174,7 @@ class PromoterTest:
                     print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
 
                     if score:
-
-                        # self.scores = {}
-                        for p in de_prom:
-                            # d = c.split("\t")
-                            # print(p.name)
-                            # print(self.ensembl2symbol.items()[:4])
-                            # print(self.de_gene.values.items()[:4])
-                            # if p.name.startswith("EN"):
-                            #     p.data = self.de_gene.values[self.ensembl2symbol[p.name.upper()]]
-                            # else:
-                            if p.name in self.de_gene.genes:
-                                p.data = self.de_gene.values[p.name.upper()]
                         self.scores = de_prom.get_score_dict()
-                        # print(self.scores.keys()[:5])
-                        # print(self.scores.values()[:5])
 
                 else:
                 ## Refseq
@@ -228,47 +196,20 @@ class PromoterTest:
                         for p in de_prom:
                             p.data = str(self.de_gene.values[p.name])
                         self.scores = de_prom.get_score_dict()
-                        # self.scores = de_genes.get_score_dict()
-                        # print(self.scores.keys()[:5])
-                        # print(self.scores.values()[:5])
-
-                # de_prom.merge(namedistinct=True, strand_specific=True)
-                print2(summary, "   \t" + str(len(de_prom)) + "\tmerged promoters ")
-
+                print2(summary, "   Target genes:")
+                print2(summary, "   \t" + str(len(self.de_gene)) + "\tgenes loaded")
                 print2(summary, "   \t" + str(len(de_prom)) + "\tunique target promoters are loaded")
 
-                # for promoter in de_prom:
-                #     # if self.ensembl2symbol:
-                #     try:
-                #         gene_sym = self.ensembl2symbol[promoter.name]
-                #     except:
-                #         gene_sym = promoter.name
-                #
-                #     if score:
-                #         try:
-                #             try:
-                #                 s = self.de_gene.values[promoter.name]
-                #             except:
-                #                 s = self.de_gene.values[gene_sym.upper()]
-                #         except:
-                #             try:
-                #                 print("Warning: " + promoter.name + "\tcannot be mapped to get its score.")
-                #             except:
-                #                 print("Warning: " + gene_sym + "\tcannot be mapped to get its score.")
-                #             s = 0
-                #         self.scores[promoter.toString()] = s
-
                 self.de_regions = de_prom
-
+                print2(summary, "   Non-target genes:")
                 nde_prom.merge(namedistinct=True)
-                print2(summary, "   \t" + str(len(nde_prom)) + "\tmerged non-target promoters")
-
                 self.nde_regions = nde_prom
-
+                print2(summary, "   \t" + str(len(self.nde_regions)) + "\tgenes loaded")
                 print2(summary, "   \t" + str(len(nde_prom)) + "\tunique non-target promoters are loaded")
+
                 # Loading score
 
-                data = [self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
+                data = [self.de_gene, self.nde_gene, self.de_regions, self.nde_regions]
                 if score: data.append(self.scores)
                 dump(object=data, path=temp, filename=dumpname)
 
@@ -528,10 +469,11 @@ class PromoterTest:
         # self.autobinding.motif_statistics()
         # Saving autobinding dbs in BED
         if len(self.rna_regions) > 0:
+            # print(self.rna_regions)
             rna_regionsets = GenomicRegionSet(name=self.rna_name)
             rna_regionsets.load_from_list(self.rna_regions)
             autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
-            autobinding_loci.write_bed(filename=os.path.join(output, "autobinding.bed"))
+            autobinding_loci.write_bed(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
 
 
     def dbs_motif(self, outdir):
@@ -679,7 +621,7 @@ class PromoterTest:
                     fig_dir=os.path.join(os.path.dirname(directory), "style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
-        html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
+        html.add_figure(self.rna_name+"_lineplot.png", align="left", width="45%", more_images=[self.rna_name+"_barplot.png"])
 
         if self.showdbs:
             html.add_figure("plot_dbss.png", align="left", width="45%", more_images=["bar_dbss.png"])

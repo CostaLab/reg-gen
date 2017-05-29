@@ -2782,10 +2782,14 @@ class GenomicRegionSet:
         """Get a dictionary of scores"""
         d = {}
         for r in self:
-            if r.data:
+            #
+            if isinstance(r.data, str):
                 d[r.toString()] = float(r.data.split("\t")[0])
-            else:
-                continue
+            elif isinstance(r.data, float) or isinstance(r.data, int):
+                d[r.toString()] = r.data
+
+        # except:
+                # continue
         return d
 
 

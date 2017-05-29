@@ -23,7 +23,7 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat, update_profile, merge_DBD_regions,\
-                         save_profile, rank_array
+                         save_profile, rank_array, silentremove
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -455,9 +455,7 @@ def main():
                                 rna_name=promoter.rna_name, organism=promoter.organism,
                                 stat=promoter.stat, expression=promoter.rna_expression)
 
-        os.remove(os.path.join(args.o,"rna_temp.fa"))
-        try: os.remove(os.path.join(args.o,"rna_temp.fa.fai"))
-        except: pass
+
         print2(summary, "Step 3: Establishing promoter profile.")
         t3 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
@@ -467,9 +465,9 @@ def main():
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
                             sig_region=promoter.sig_DBD,
                             ylabel="Number of DBSs", 
-                            linelabel="No. DBSs", filename="plot_promoter.png")
+                            linelabel="No. DBSs", filename=promoter.rna_name+"_lineplot.png")
 
-        promoter.barplot(dirp=args.o, filename="bar_promoter.png", sig_region=promoter.sig_DBD)
+        promoter.barplot(dirp=args.o, filename=promoter.rna_name+"_barplot.png", sig_region=promoter.sig_DBD)
         promoter.uniq_motif()
         #if args.showdbs:
         #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
@@ -499,10 +497,16 @@ def main():
         #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
         #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
         # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
-        try: os.remove(os.path.join(args.o, "de.fa"))
-        except OSError: pass
-        try: os.remove(os.path.join(args.o, "nde.fa"))
-        except OSError: pass
+
+
+        silentremove(os.path.join(args.o,"rna_temp.fa"))
+        silentremove(os.path.join(args.o,"rna_temp.fa.fai"))
+        silentremove(os.path.join(args.o, "de.fa"))
+        silentremove(os.path.join(args.o, "nde.fa"))
+        silentremove(os.path.join(args.o, "de.txp"))
+        silentremove(os.path.join(args.o, "autobinding.txp"))
+
+
         write_stat(stat=promoter.stat, filename=os.path.join(args.o, "stat.txt"))
 
 
@@ -591,17 +595,10 @@ def main():
 
         print2(summary, "Step 3: Generating plot and output HTML")
 
-        os.remove(os.path.join(args.o, "rna_temp.fa"))
-        try:
-            os.remove(os.path.join(args.o, "rna_temp.fa.fai"))
-        except:
-            pass
-
-
         randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
                             log=args.log, ylabel="Number of DBS",
                             sig_region=randomtest.data["region"]["sig_region"],
-                            linelabel="No. DBS", filename="lineplot_region.png")
+                            linelabel="No. DBS", filename=randomtest.rna_name+"_lineplot.png")
 
         #randomtest.lineplot(txp=randomtest.txp, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
         #                    log=args.log, ylabel="Number of target regions with DBS", 
@@ -613,7 +610,7 @@ def main():
                            truecounts=[r[0] for r in randomtest.counts_tr.values()],
                            sig_boolean=randomtest.data["region"]["sig_boolean"],
                            ylabel="Number of target regions",
-                           filename="boxplot_regions" )
+                           filename=randomtest.rna_name+"_boxplot" )
         #if args.showdbs:
         #    randomtest.lineplot(txp=randomtest.txpf, dirp=args.o, ac=args.ac, cut_off=args.accf, showpa=args.showpa,
         #                        log=args.log, ylabel="Number of DBS on target regions",
@@ -636,14 +633,12 @@ def main():
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3-t0))))
 
         output_summary(summary, args.o, "summary.txt")
-        # save_profile(output=args.o, bed=args.bed)
-        # save_profile(rna_regions=randomtest.rna_regions, rna_name=randomtest.rna_name,
-        #              organism=randomtest.organism, output=args.o, bed=args.bed,
-        #              stat=randomtest.stat, topDBD=randomtest.topDBD,
-        #              sig_DBD=randomtest.data["region"]["sig_region"],
-        #              expression=randomtest.rna_expression)
-        # list_all_index(path=os.path.dirname(args.o))
+
         for f in os.listdir(args.o):
             if re.search("dna*.fa", f) or re.search("dna*.txp", f):
-                os.remove(os.path.join(args.o, f))
+                silentremove(os.path.join(args.o, f))
+        silentremove(os.path.join(args.o, "rna_temp.fa"))
+        silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+        silentremove(os.path.join(args.o, randomtest.rna_name+"_autobinding.txp"))
+
         write_stat(stat=randomtest.stat, filename=os.path.join(args.o, "stat.txt"))

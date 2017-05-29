@@ -252,14 +252,13 @@ class RandomTest:
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
 
-
     def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
         rna = os.path.join(output, "rna_temp.fa")
         run_triplexator(ss=None, ds=None, autobinding=rna,
-                        output=os.path.join(output, "autobinding.txp"),
+                        output=os.path.join(output, self.rna_name+"_autobinding.txp"),
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
         self.autobinding = RNADNABindingSet("autobinding")
-        self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
+        self.autobinding.read_txp(filename=os.path.join(output, self.rna_name+"_autobinding.txp"), dna_fine_posi=True, seq=True)
         self.stat["autobinding"] = len(self.autobinding)
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         self.autobinding.motif_statistics()
@@ -354,9 +353,9 @@ class RandomTest:
         ax.xaxis.label.set_size(14)
         ax.yaxis.label.set_size(14)
 
-        pp = PdfPages(os.path.join(dir, filename + '.pdf'))
-        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
-        pp.close()
+        # pp = PdfPages(os.path.join(dir, filename + '.pdf'))
+        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        # pp.close()
 
     def gen_html(self, directory, parameters, obed, align=50, alpha=0.05, score=False):
         """Generate the HTML file"""
@@ -376,7 +375,7 @@ class RandomTest:
                     fig_dir=os.path.join(os.path.dirname(directory),"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         # Plots
-        html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
+        html.add_figure(self.rna_name+"_lineplot.png", align="left", width="45%", more_images=[self.rna_name+"_boxplot.png"])
         if self.showdbs:
             html.add_figure("lineplot_dbs.png", align="left", width="45%", more_images=["boxplot_dbs.png"])
 

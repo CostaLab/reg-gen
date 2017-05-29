@@ -525,7 +525,7 @@ class AnnotationSet:
             return mapped_list, unmapped_list
 
 
-    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False, variants=False, gene_id=False):
+    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False, variants=False, gene_id=False, regiondata=False):
         """
         Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters.
         The ID of each gene will be put in the NAME field of each GenomicRegion.
@@ -581,6 +581,9 @@ class AnnotationSet:
                 gr.name = e[self.GeneField.GENE_ID]
             else:
                 gr.name = e[self.GeneField.GENE_NAMES]
+
+            if gene_set and regiondata:
+                gr.data = gene_set.values[gr.name]
             result_grs.add(gr)
 
         if unmaplist: return result_grs, unmapped_gene_list
