@@ -388,5 +388,110 @@ class BiasTable:
         return [bias_table_F, bias_table_R]
 
     def estimate_bias_lslim(self):
-        # TODO
+
+        """
+        Estimates bias based on HS regions or whole genome, DNase-seq signal and genomic sequences.
+
+        Keyword arguments:
+        regions -- background regions.
+        atac_file_name -- DNase-seq file name.
+        genome_file_name -- Genome to fetch genomic sequences from.
+
+        Return:
+        bias_table_F, bias_table_R -- Bias tables.
+        """
+
+        # Parameters
+        maxDuplicates = 100
+        pseudocount = 1.0
+
+        # Initializing bam and fasta
+        if (self.reads_file.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
+        bamFile = Samfile(self.reads_file, "rb")
+        fastaFile = Fastafile(self.genome_file)
+
+        # Initializing dictionaries
+        obsDictF = dict()
+        obsDictR = dict()
+        expDictF = dict()
+        expDictR = dict()
+
+        # Iterating on HS regions
+        for region in self.regions:
+
+            # Initialization
+            prevPos = -1
+            trueCounter = 0
+
+            # Evaluating observed frequencies ####################################
+            # Fetching reads
+            for r in bamFile.fetch(region.chrom, region.initial, region.final):
+
+                # Calculating positions
+                if (not r.is_reverse):
+                    cut_site = r.pos + self.forward_shift - 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
+                else:
+                    cut_site = r.aend + self.reverse_shift + 1
+                    p1 = cut_site - int(floor(self.k_nb / 2))
+                p2 = p1 + self.k_nb
+
+                # Verifying PCR artifacts
+                if (p1 == prevPos):
+                    trueCounter += 1
+                else:
+                    prevPos = p1
+                    trueCounter = 0
+
+                if (trueCounter > maxDuplicates): continue
+
+                # Fetching k-mer
+                try:
+                    currStr = str(fastaFile.fetch(region.chrom, p1, p2)).upper()
+                except Exception:
+                    continue
+                if (r.is_reverse): currStr = AuxiliaryFunctions.revcomp(currStr)
+
+                # Counting k-mer in dictionary
+                if (not r.is_reverse):
+                    try:
+                        obsDictF[currStr] += 1
+                    except Exception:
+                        obsDictF[currStr] = 1
+                else:
+                    try:
+                        obsDictR[currStr] += 1
+                    except Exception:
+                        obsDictR[currStr] = 1
+
+            # Evaluating expected frequencies ####################################
+            # Fetching whole sequence
+            try:
+                currStr = str(fastaFile.fetch(region.chrom, region.initial, region.final)).upper()
+            except Exception:
+                continue
+            currRevComp = AuxiliaryFunctions.revcomp(currStr)
+
+            # Iterating on each sequence position
+            for i in range(0, len(currStr) - self.k_nb):
+                # Counting k-mer in dictionary
+                s = currStr[i:i + self.k_nb]
+                try:
+                    expDictF[s] += 1
+                except Exception:
+                    expDictF[s] = 1
+
+                # Counting k-mer in dictionary for reverse complement
+                s = currRevComp[i:i + self.k_nb]
+                try:
+                    expDictR[s] += 1
+                except Exception:
+                    expDictR[s] = 1
+
+        # Closing files
+        bamFile.close()
+        fastaFile.close()
+
+        # 
+
         return 0
