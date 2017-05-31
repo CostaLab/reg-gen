@@ -36,25 +36,9 @@ class LSlim:
                 context *= a
             o += 1
         l += 1
-        init()
+        self.init()
 
     def init(self):
         self.localMixtureScore = [None] * self.order + 1
         self.ancestorScore = [None] * self.order + 1
         self.e = [None] * self.order + 1
-        try:
-            self.logGamma = ArrayHandler.clone(self.componentMixtureParameters)
-            self.componentMixturePotential = ArrayHandler.clone(self.componentMixtureParameters)
-            self.componentMixtureLogNorm = [None] * self.length
-            self.componentMixtureIndex = [None] * self.length
-            self.ancestorMixturePotential = ArrayHandler.clone(self.ancestorMixtureParameters)
-            self.dependencyPotential = ArrayHandler.clone(self.dependencyParameters)
-            self.dependencyLogNorm = [None] * self.length
-            self.dependencyIndex = [None] * self.length
-            self.ancestorMixtureLogNorm = [None] * self.length
-            self.ancestorMixtureIndex = [None] * self.length
-
-            l = 0
-            while l < self.length:
-                self.dependencyLogNorm[l] = [None] * self.componentMixtureParameters[l].length
-                self.dependencyIndex[l] = [None] * componentMixtureParameters[l].length
