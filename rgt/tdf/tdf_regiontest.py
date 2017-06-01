@@ -67,11 +67,15 @@ class RandomTest:
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
         self.rna_regions = get_rna_region_str(rna)
-        r_genes = rna_associated_gene(rna_regions=self.rna_regions,
-                                      name=self.rna_name, organism=self.organism)
-        self.stat["associated_gene"] = r_genes
-        self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
-                            str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        if self.rna_regions:
+            r_genes = rna_associated_gene(rna_regions=self.rna_regions,
+                                          name=self.rna_name, organism=self.organism)
+            self.stat["associated_gene"] = r_genes
+            self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
+                                str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        else:
+            self.stat["associated_gene"] = "."
+            self.stat["loci"] = "n.a."
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
         else:
