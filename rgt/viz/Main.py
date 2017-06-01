@@ -275,7 +275,7 @@ def main():
         sys.exit(1)
     else:
         args = parser.parse_args()
-        if not args.o:
+        if not args.o and args.mode != 'integration':
             print("** Error: Please define the output directory (-o).")
             sys.exit(1)
         
