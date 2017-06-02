@@ -811,7 +811,7 @@ if __name__ == "__main__":
                     if reg[0] == r.chrom and reg[1] == r.initial and reg[2] == r.final:
                         name = "peak_"+str(j+1)
             elif args.loci:
-                name = r.toString()
+                name = r.toString(underline=True)
             else: name = r.name
 
             if r.data and len(r.data.split()) == 7:

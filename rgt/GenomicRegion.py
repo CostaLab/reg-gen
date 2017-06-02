@@ -73,7 +73,7 @@ class GenomicRegion:
     def __eq__(self, other):
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
 
-    def toString(self, space=False):
+    def toString(self, space=False, underline=False):
         """Return a string of GenomicRegion by its position.
 
         *Keyword arguments:*
@@ -82,6 +82,8 @@ class GenomicRegion:
         """
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
+        elif underline:
+            return self.chrom+"_"+str(self.initial)+"_"+str(self.final)
         else:
             return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 
