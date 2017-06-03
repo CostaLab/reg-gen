@@ -117,8 +117,8 @@ class Evaluation:
         # Output the statistics results into text
         stats_fname = os.path.join(self.output_location, "{}_stats.txt".format(self.output_prefix))
         stats_header = ["METHOD", "AUC_100", "AUC_50", "AUC_10", "AUC_1", "AUPR_100", "AUPR_50", "AUPR_10", "AUPR_1"]
-        with open(stats_fname, "a") as stats_file:
-            #stats_file.write("\t".join(stats_header) + "\n")
+        with open(stats_fname, "w") as stats_file:
+            stats_file.write("\t".join(stats_header) + "\n")
             for i in range(len(self.footprint_name)):
                 stats_file.write(self.footprint_name[i] + "\t" +
                                  str(roc_auc_100[i]) + "\t" + str(roc_auc_50[i]) + "\t" + str(roc_auc_10[i]) + "\t" +
