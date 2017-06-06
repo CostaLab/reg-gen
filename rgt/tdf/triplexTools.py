@@ -1240,18 +1240,20 @@ def integrate_stat(path):
 
 def merge_DBD_regions(path):
     """Merge all available DBD regions in BED format. """
-
-    for t in os.listdir(path):
-        if os.path.isdir(os.path.join(path, t)):
-            dbd_pool = GenomicRegionSet(t)
-            for rna in os.listdir(os.path.join(path,t)):
-                f = os.path.join(path, t, rna, "DBD_"+rna+".bed")
-                if os.path.exists(f):
-                    dbd = GenomicRegionSet(rna)
-                    dbd.read_bed(f)
-                    for r in dbd: r.name = rna+"_"+r.name
-                    dbd_pool.combine(dbd)
-            dbd_pool.write_bed(os.path.join(path, t, "DBD_"+t+".bed"))
+    base = os.path.basename(path)
+    dir_name = os.path.basename(os.path.dirname(path))
+    dbd_pool = GenomicRegionSet(dir_name + "_" + base)
+    for rna in os.listdir(path):
+        if os.path.isdir(os.path.join(path, rna)):
+            f = os.path.join(path, rna, rna+"_DBDs.bed")
+            if os.path.exists(f):
+                print(rna)
+                dbd = GenomicRegionSet(rna)
+                dbd.read_bed(f)
+                for r in dbd: r.name = rna+"_"+r.name
+                dbd_pool.combine(dbd)
+    print(len(dbd_pool))
+    dbd_pool.write_bed(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
 
 
 def save_profile(rna_regions, rna_name, organism, output, bed,\
@@ -1319,3 +1321,53 @@ def silentremove(filename):
     except OSError as e: # this would be "except OSError, e:" before Python 2.6
         if e.errno != errno.ENOENT: # errno.ENOENT = no such file or directory
             raise # re-raise exception if a different error occurred
+
+def integrate_html(target):
+    # Project level index file
+    condition_list = []  # name, link, no. tests, no. sig.
+    for item in os.listdir(target):
+        if item == "style": continue
+        if os.path.isfile(os.path.join(target, item)):
+            continue
+        elif os.path.isdir(os.path.join(target, item)):
+            h = os.path.join(item, "index.html")
+            stat = os.path.join(target, item, "statistics_" + item + ".txt")
+
+            if os.path.isfile(stat):
+                nt = 0
+                ns = 0
+                with open(stat) as f:
+                    for line in f:
+                        line = line.strip().split("\t")
+                        if line[0] == "title": continue
+                        nt += 1
+                        if float(line[13]) < 0.05: ns += 1
+                # print([item, h, str(nt), str(ns)])
+                condition_list.append([item, h, str(nt), str(ns)])
+
+    if len(condition_list) > 0:
+        # print(condition_list)
+        link_d = {}
+        for item in os.listdir(os.path.dirname(target)):
+            if os.path.isfile(os.path.dirname(target) + "/" + item + "/index.html"):
+                link_d[item] = "../" + item + "/index.html"
+
+        fp = condition_list[0][0] + "/style"
+        html = Html(name="Directory: " + target, links_dict=link_d,
+                    fig_rpath=fp,
+                    RGT_header=False, other_logo="TDF")
+        html.add_heading("All conditions in: " + target + "/")
+        data_table = []
+        type_list = 'sssssssssssss'
+        col_size_list = [20] * 10
+        c = 0
+        header_list = ["No.", "Conditions", "No. tests", "No. sig. tests"]
+        for i, exp in enumerate(condition_list):
+            c += 1
+            data_table.append([str(c),
+                               '<a href="' + exp[1] + '">' + exp[0] + "</a>",
+                               exp[2], exp[3]])
+        html.add_zebra_table(header_list, col_size_list, type_list, data_table,
+                             sortable=True, clean=True)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(target, "index.html"))

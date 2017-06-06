@@ -122,7 +122,7 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         
         no_bw_files.append(i)
         exp_data.compute_putative_region_index()
-        
+
         if exp_data.indices_of_interest is None:
             continue
         

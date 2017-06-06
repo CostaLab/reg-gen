@@ -6,60 +6,60 @@ DIR=${HOME}/rgt_test
 
 mkdir -p $DIR
 
-#################################################################
-## THOR
-##
-# echo "**********************************************"
-# echo "Testing THOR"
-# mkdir -p ${DIR}/THOR
-# cd ${DIR}/THOR/
-#
-# # Download the data
-# file="${DIR}/THOR/THOR_example_data/THOR.config"
-# if [ -f "$file" ]
-# then
-# 	echo "$file found."
-# else
-# 	echo "$file not found."
-# 	curl http://www.regulatory-genomics.org/wp-content/uploads/2015/07/THOR_example_data.tar.gz | tar xz
-# fi
-#
-# # Run test script
-# cd THOR_example_data/
-# rm -rf report_* sample-*
-# rgt-THOR THOR.config -n sample --report
-# rm -rf report_* sample-*
-# rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand
-# rm -rf report_* sample-*
-# rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand --merge-bin
-#
-# echo "********* THOR test completed ****************"
-
 ################################################################
-# TDF
+# THOR
+#
  echo "**********************************************"
- echo "Testing TDF"
- mkdir -p ${DIR}/TDF
- cd ${DIR}/TDF/
+ echo "Testing THOR"
+ mkdir -p ${DIR}/THOR
+ cd ${DIR}/THOR/
 
  # Download the data
- file="${DIR}/TDF/TDF_examples/FENDRR_mm9/FENDRR.fasta"
+ file="${DIR}/THOR/THOR_example_data/THOR.config"
  if [ -f "$file" ]
  then
  	echo "$file found."
  else
  	echo "$file not found."
-    wget -qO- -O TDF_examples.zip http://costalab.org/files/tdf/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
+ 	curl http://www.regulatory-genomics.org/wp-content/uploads/2015/07/THOR_example_data.tar.gz | tar xz
  fi
 
  # Run test script
-# cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
-# rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
+ cd THOR_example_data/
+ rm -rf report_* sample-*
+ rgt-THOR THOR.config -n sample --report
+# rm -rf report_* sample-*
+# rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand
+# rm -rf report_* sample-*
+# rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand --merge-bin
 
- cd ${DIR}/TDF/TDF_examples/TERC_hg19/
- rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10
+ echo "********* THOR test completed ****************"
 
- echo "********* TDF test completed ****************"
+################################################################
+# TDF
+#echo "**********************************************"
+#echo "Testing TDF"
+#mkdir -p ${DIR}/TDF
+#cd ${DIR}/TDF/
+#
+## Download the data
+#file="${DIR}/TDF/TDF_examples/FENDRR_mm9/FENDRR.fasta"
+#if [ -f "$file" ]
+#then
+#echo "$file found."
+#else
+#echo "$file not found."
+#wget -qO- -O TDF_examples.zip http://costalab.org/files/tdf/TDF_examples.zip && unzip TDF_examples.zip && rm TDF_examples.zip
+#fi
+#
+## Run test script
+#cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
+#rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
+#
+#cd ${DIR}/TDF/TDF_examples/TERC_hg19/
+#rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10
+#
+#echo "********* TDF test completed ****************"
 
 #################################################################
 ## Viz
