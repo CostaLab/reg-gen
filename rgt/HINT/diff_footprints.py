@@ -159,9 +159,8 @@ class DiffFootprints:
         fastaFile.close()
         return bias_corrected_signal, bias_corrected_tc
 
-    def get_stats(self, reads_file, bias_table, genome_file_name, chrName, start, end, motif_length, factor):
+    def get_stats(self, bam, bias_table, genome_file_name, chrName, start, end, motif_length, factor):
 
-        bam = Samfile(reads_file, "rb")
         bc_signal, bias_corrected_tc = self.bias_correction(bam, bias_table, genome_file_name, chrName, start, end,
                          self.forward_shift, self.reverse_shift, factor)
 
@@ -214,6 +213,9 @@ class DiffFootprints:
 
         self.output_factor(factor1, factor2)
         # Iterating on MPBSs
+
+        bam1 = Samfile(self.reads_file1, "rb")
+        bam2 = Samfile(self.reads_file2, "rb")
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
@@ -249,12 +251,12 @@ class DiffFootprints:
                 p2 = mid + self.window_size / 2
 
                 sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1 = \
-                    self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                    self.get_stats(bam=bam1, bias_table=bias_table1,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor1)
 
                 sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2 = \
-                    self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                    self.get_stats(bam=bam2, bias_table=bias_table2,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
                 spr1 += sp1
@@ -475,6 +477,8 @@ class DiffFootprints:
         self.output_factor(factor1, factor2)
 
         # Iterating on MPBSs
+        bam1 = Samfile(self.reads_file1, "rb")
+        bam2 = Samfile(self.reads_file2, "rb")
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
@@ -504,12 +508,12 @@ class DiffFootprints:
                 p2 = mid + self.window_size / 2
 
                 sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1 = \
-                    self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                    self.get_stats(bam=bam1, bias_table=bias_table1,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor1)
 
                 sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2 = \
-                    self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                    self.get_stats(bam=bam2, bias_table=bias_table2,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
                 spr1 += sp1
@@ -634,6 +638,8 @@ class DiffFootprints:
         self.output_factor(factor1, factor2)
 
         # Iterating on MPBSs
+        bam1 = Samfile(self.reads_file1, "rb")
+        bam2 = Samfile(self.reads_file2, "rb")
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
@@ -669,12 +675,12 @@ class DiffFootprints:
                 p2 = mid + self.window_size / 2
 
                 sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1 = \
-                    self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                    self.get_stats(bam=bam1, bias_table=bias_table1,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor1)
 
                 sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2 = \
-                    self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                    self.get_stats(bam=bam2, bias_table=bias_table2,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
                 spr1 += sp1
@@ -828,6 +834,8 @@ class DiffFootprints:
         self.output_factor(factor1, factor2)
 
         # Iterating on MPBSs
+        bam1 = Samfile(self.reads_file1, "rb")
+        bam2 = Samfile(self.reads_file2, "rb")
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
@@ -863,12 +871,12 @@ class DiffFootprints:
                 p2 = mid + self.window_size / 2
 
                 sp1, tc_1, fc_1, corrected_signal_1, tc_corrected_signal_1 = \
-                    self.get_stats(reads_file=self.reads_file1, bias_table=bias_table1,
+                    self.get_stats(bam=bam1, bias_table=bias_table1,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor1)
 
                 sp2, tc_2, fc_2, corrected_signal_2, tc_corrected_signal_2 = \
-                    self.get_stats(reads_file=self.reads_file2, bias_table=bias_table2,
+                    self.get_stats(bam=bam2, bias_table=bias_table2,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
                 spr1 += sp1
