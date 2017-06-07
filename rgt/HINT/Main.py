@@ -1386,6 +1386,11 @@ def diff_footprints():
                       metavar="INT", default=20)
     parser.add_option("--min-value", dest="min_value", type="int",
                       metavar="INT", default=1)
+    parser.add_option("--housekeeping-genes", dest="housekeeping_genes", type="string",
+                      metavar="FILE", default=None,
+                      help=("A bed file containing house keeping genes used to normalize library size"))
+    parser.add_option("--diff", dest="diff", type="int",
+                      metavar="INT", default=None)
 
     # Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int",
@@ -1416,8 +1421,16 @@ def diff_footprints():
                                      options.window_size, options.motif_ext, options.min_value,
                                      options.initial_clip, options.downstream_ext, options.upstream_ext,
                                      options.forward_shift, options.reverse_shift, options.k_nb,
+                                     options.housekeeping_genes,
                                      options.output_location, options.output_prefix)
-    diff_footprints.diff2()
+    if options.diff == None:
+        diff_footprints.diff()
+    elif options.diff == 1:
+        diff_footprints.diff1()
+    elif options.diff == 2:
+        diff_footprints.diff2()
+    elif options.diff == 3:
+        diff_footprints.diff3()
 
     # TODO
     exit(0)
