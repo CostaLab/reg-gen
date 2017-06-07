@@ -42,3 +42,21 @@ class LSlim:
         self.localMixtureScore = [None] * self.order + 1
         self.ancestorScore = [None] * self.order + 1
         self.e = [None] * self.order + 1
+
+
+    # def pre_compute(self):
+    #     l = 0
+    #     while l < self.length:
+    #         self.componentMixtureLogNorm[l] = self.logSumNormalisation(componentMixtureParameters[l], 0,
+    #                                                                    componentMixtureParameters[l].length,
+    #                                                                    componentMixturePotential[l], 0)
+    #
+    # def logSumNormalisation(self, d, startD, endD, offset, secondValues, dest, startDest):
+    #     sum = 0.0
+    #     for i in range(endD - startD):
+    #         dest[(startDest + i)] = np.exp(d[(startD + i)] - offset)
+    #         sum += dest[(startDest + i)]
+    #
+    #     if sum != 1.0:
+
+

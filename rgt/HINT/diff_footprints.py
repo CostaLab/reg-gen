@@ -468,7 +468,8 @@ class DiffFootprints:
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
                 spr1 += sp1
                 spr2 += sp2
-                dspr += max(0, sp2) - max(0, sp1)
+                #dspr += max(0, sp2) - max(0, sp1)
+                dspr += sp2 - sp1
                 tc1 += tc_1
                 tc2 += tc_2
                 dtc += tc_2 - tc_1

@@ -260,6 +260,9 @@ class BiasTable:
         Return:
         bias_table_F, bias_table_R -- Bias tables.
         """
+        # Parameters
+        maxDuplicates = 100
+        pseudocount = 1.0
 
         # Initializing bam and fasta
         if (self.reads_file.split(".")[-1].upper() != "BAM"): return None  # TODO ERROR
@@ -277,6 +280,10 @@ class BiasTable:
 
         # Iterating on HS regions
         for region in self.regions:
+            # Initialization
+            prevPos = -1
+            trueCounter = 0
+
             # Evaluating observed frequencies
             # Fetching reads
             for r in bamFile.fetch(region.chrom, region.initial, region.final):
@@ -290,6 +297,14 @@ class BiasTable:
                     cut_site = r.aend + self.reverse_shift + 1
                     p1 = cut_site - int(floor(self.k_nb / 2))
                 p2 = p1 + self.k_nb
+
+                # Verifying PCR artifacts
+                if (p1 == prevPos):
+                    trueCounter += 1
+                else:
+                    prevPos = p1
+                    trueCounter = 0
+                if (trueCounter > maxDuplicates): continue
 
                 # Fetching k-mer
                 try:
@@ -322,7 +337,7 @@ class BiasTable:
                     exp_f_pwm_dict[s[i]][i] += 1
 
                 # Counting k-mer in dictionary for reverse complement
-                    s = AuxiliaryFunctions.revcomp(s)
+                s = AuxiliaryFunctions.revcomp(s)
                 for i in range(0, len(s)):
                     exp_r_pwm_dict[s[i]][i] += 1
 
@@ -371,7 +386,6 @@ class BiasTable:
                            yaxis_scale=0.02, yaxis_tic_interval=0.01)
 
         # Creating bias dictionary
-        print(motif_exp_r.pwm)
         alphabet = ["A", "C", "G", "T"]
         k_mer_comb = ["".join(e) for e in product(alphabet, repeat=self.k_nb)]
         bias_table_F = dict([(e, 0.0) for e in k_mer_comb])
