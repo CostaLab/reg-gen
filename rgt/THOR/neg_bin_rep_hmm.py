@@ -62,9 +62,9 @@ def get_init_parameters(s0, s1, s2, **info):
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
 
     alpha = (var - mu) / np.square(mu)
-    # np.nan_to_num(alpha)
-    alpha[np.isnan(alpha)] = 0.001
-    # np.where(alpha < 0, 0.001)
+
+    # alpha[np.isnan(alpha)] = 0.001
+
     alpha[alpha < 0] = 0.001
 
     for el in [mu, alpha]:

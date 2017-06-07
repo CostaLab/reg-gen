@@ -1247,7 +1247,7 @@ def merge_DBD_regions(path):
         if os.path.isdir(os.path.join(path, rna)):
             f = os.path.join(path, rna, rna+"_DBDs.bed")
             if os.path.exists(f):
-                print(rna)
+                print(f)
                 dbd = GenomicRegionSet(rna)
                 dbd.read_bed(f)
                 for r in dbd: r.name = rna+"_"+r.name
