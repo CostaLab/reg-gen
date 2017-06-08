@@ -23,7 +23,7 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat, update_profile, integrate_html, \
-                         merge_DBD_regions, rank_array, silentremove
+                         merge_DBD_regions, rank_array, silentremove, summerize_stat
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
@@ -194,7 +194,7 @@ def main():
                     if f == "stat.txt":
                         targets.append(os.path.dirname(dirpath))
             targets = list(set(targets))
-
+            # print(targets)
             # Build tabs for each condition
             link_d = OrderedDict()
             for tar in sorted([os.path.basename(t) for t in targets]):
@@ -202,67 +202,21 @@ def main():
 
             # For each condition
             for target in targets:
-                # print(target)
-
-                # merge_DBD_regions(path=target)
+                merge_DBD_regions(path=target)
                 # stat
                 integrate_stat(path=target)
-
-                # index.html
-                base = os.path.basename(target)
-                h = os.path.join(target, "index.html")
-                stat = os.path.join(target, "statistics_" + base + ".txt")
-                fp = "./style"
-                html = Html(name=base, links_dict=link_d,
-                            fig_rpath=fp, homepage="../index.html",
-                            RGT_header=False, other_logo="TDF")
-                html.add_heading(target)
-                data_table = []
-                type_list = 'sssssssssssss'
-                col_size_list = [20] * 20
-                c = 0
-                header_list = ["No.", "RNA", "Closest genes",
-                               "Exon", "Length", "Score*",
-                               "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
-                               "Organism", "Target region", "Rank*"]
-
-                with open(stat) as f_stat:
-                    for line in f_stat:
-                        if line.startswith("title"):
-                            continue
-                        elif not line.strip():
-                            continue
-                        else:
-                            c += 1
-                            l = line.strip().split()
-                            hh = "./"+l[0]+"/index.html"
-                            data_table.append([str(c), '<a href="'+hh+'">'+l[0]+"</a>", l[17],
-                                               l[3], l[4], l[18],
-                                               l[15], l[14], l[8],l[20],
-                                               l[2], l[5]])
-                # print(data_table)
-                rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
-                rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
-                rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
-                rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
-
-                for i, d in enumerate(data_table):
-                    d.append(str(rank_sum[i]))
-                nd = natsort_ob.natsorted(data_table, key=lambda x: x[-1])
-                html.add_zebra_table(header_list, col_size_list, type_list, nd,
-                                     sortable=True, clean=True)
-                html.add_fixed_rank_sortable()
-                html.write(h)
-
+                summerize_stat(target=target, link_d=link_d)
             # Project level index file
-            condition_list = []  # name, link, no. tests, no. sig.
+            integrate_html(args.path)
             for item in os.listdir(args.path):
+                # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue
                 elif os.path.isdir(os.path.join(args.path, item)):
                     integrate_html(os.path.join(args.path, item))
                     for it in os.listdir(os.path.join(args.path, item)):
+                        # print("\t" + item + "\t" + it)
                         if it == "style": continue
                         elif os.path.isfile(os.path.join(args.path, item, it)):
                             continue

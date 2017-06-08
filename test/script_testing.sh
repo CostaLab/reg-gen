@@ -53,8 +53,8 @@ mkdir -p $DIR
 #fi
 #
 ## Run test script
-#cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
-#rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
+cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
 #
 cd ${DIR}/TDF/TDF_examples/TERC_hg19/
 rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 100 -mp 5
