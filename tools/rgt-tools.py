@@ -148,6 +148,7 @@ if __name__ == "__main__":
                                   help="Target BED file")
     parser_bedrename.add_argument('-genes', metavar='  ', default=False, type=str,
                                   help="Target gene list")
+
     ############### BED change strand ###############################################
     # python rgt-convertor.py
     parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")

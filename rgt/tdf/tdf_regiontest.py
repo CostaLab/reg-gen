@@ -151,7 +151,7 @@ class RandomTest:
                                 remove_duplicates=False, associated=self.organism)
 
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha, mp):
         """Perform randomization for the given times"""
 
         self.repeats = repeats
@@ -168,7 +168,7 @@ class RandomTest:
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-2)
+        pool = multiprocessing.Pool(processes=mp)
         mp_output = pool.map(random_each, mp_input)
         # print(mp_output)
         pool.close()

@@ -25,9 +25,9 @@ mkdir -p $DIR
  fi
 
  # Run test script
- cd THOR_example_data/
- rm -rf report_* sample-*
- rgt-THOR THOR.config -n sample --report --merge-bin
+# cd THOR_example_data/
+# rm -rf report_* sample-*
+# rgt-THOR THOR.config -n sample --report --merge-bin
 # rm -rf report_* sample-*
 # rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand
 # rm -rf report_* sample-*
@@ -56,8 +56,8 @@ mkdir -p $DIR
 #cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
 #rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
 #
-#cd ${DIR}/TDF/TDF_examples/TERC_hg19/
-#rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 10
+cd ${DIR}/TDF/TDF_examples/TERC_hg19/
+rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 100 -mp 5
 #
 #echo "********* TDF test completed ****************"
 

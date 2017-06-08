@@ -128,6 +128,7 @@ def main():
     parser_randomtest.add_argument('-accf', type=float, default=500, metavar='  ', help="Define the cut off value for RNA accecibility")
     parser_randomtest.add_argument('-obed', action="store_true", default=True, help="Output the BED files for DNA binding sites.")
     parser_randomtest.add_argument('-showpa', action="store_true", default=False, help="Show parallel and antiparallel bindings in the plot separately.")
+    parser_randomtest.add_argument('-mp', type=int, default=1, metavar='  ', help="Define the number of threads for multiprocessing")
     
     parser_randomtest.add_argument('-l', type=int, default=20, metavar='  ', help="[Triplexator] Define the minimum length of triplex (default: %(default)s)")
     parser_randomtest.add_argument('-e', type=int, default=20, metavar='  ', help="[Triplexator] Set the maximal error-rate in %% tolerated (default: %(default)s)")
@@ -201,9 +202,9 @@ def main():
 
             # For each condition
             for target in targets:
-                print(target)
+                # print(target)
 
-                merge_DBD_regions(path=target)
+                # merge_DBD_regions(path=target)
                 # stat
                 integrate_stat(path=target)
 
@@ -557,7 +558,7 @@ def main():
         print2(summary, "Step 2: Randomization and counting number of binding sites")
         randomtest.random_test(repeats=args.n, temp=args.o, remove_temp=args.rt, l=args.l, e=args.e,
                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par, rm=args.rm,
-                               filter_bed=args.f, alpha=args.a)
+                               filter_bed=args.f, alpha=args.a, mp=args.mp)
         randomtest.dbd_regions(sig_region=randomtest.data["region"]["sig_region"], output=args.o)
 
         t2 = time.time()

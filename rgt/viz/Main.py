@@ -256,7 +256,7 @@ def main():
     parser_integration = subparsers.add_parser('integration', help='Provides some tools to deal with experimental matrix or other purposes.')
     parser_integration.add_argument('-ihtml', action="store_true", help='Integrate all the html files within the given directory and generate index.html for all plots.')
     parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
-    parser_integration.add_argument('-p', help='Define the folder of the output file.') 
+    parser_integration.add_argument('-o', help='Define the folder of the output file.')
     ################### Parsing the arguments ################################
     if len(sys.argv) == 1:
         parser.print_help()
@@ -275,21 +275,22 @@ def main():
         sys.exit(1)
     else:
         args = parser.parse_args()
-        if not args.o and args.mode != 'integration':
-            print("** Error: Please define the output directory (-o).")
-            sys.exit(1)
+        if args.mode != 'integration':
+            if not args.o:
+                print("** Error: Please define the output directory (-o).")
+                sys.exit(1)
         
-        t0 = time.time()
-        # Normalised output path
-        args.o = os.path.normpath(os.path.join(dir,args.o))
-        check_dir(args.o)
-        check_dir(os.path.join(args.o, args.t))
-        
-        # Input parameters dictionary
-        parameter = []
-        parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        parameter.append("User: " + getpass.getuser())
-        parameter.append("\nCommand:\n\t$ " + " ".join(sys.argv))
+            t0 = time.time()
+            # Normalised output path
+            args.o = os.path.normpath(os.path.join(dir,args.o))
+            check_dir(args.o)
+            check_dir(os.path.join(args.o, args.t))
+
+            # Input parameters dictionary
+            parameter = []
+            parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+            parameter.append("User: " + getpass.getuser())
+            parameter.append("\nCommand:\n\t$ " + " ".join(sys.argv))
 
         #################################################################################################
         ##### Main #####################################################################################
