@@ -62,7 +62,6 @@ class BED_profile:
         self.fasta_dir = genome.get_genome()
         self.stats = OrderedDict()
         self.ind_col = {}
-        # self.fig_size = (6, 6)
         size_panel = 6
         rows = len(self.beds)
         cols = 2
@@ -80,10 +79,11 @@ class BED_profile:
                 self.ind_col[label] = cols
                 cols += 1
         self.fig_f, self.fig_axs = plt.subplots(rows+1, cols, dpi=300, figsize=(cols*size_panel, rows*size_panel))
-        # print(len(self.fig_axs))
-        # self.figures = OrderedDict()
-        # for bed in self.bednames:
-        #     self.figures[bed] = []
+        self.table_h = {}
+        self.tables = {}
+        for bed in self.bednames:
+            self.table_h[bed] = [bed]
+            self.tables[bed] = []
 
 
     def cal_statistics(self):
@@ -95,6 +95,10 @@ class BED_profile:
             self.stats[self.bednames[i]]["max"] = bed.max_size()
             self.stats[self.bednames[i]]["min"] = bed.min_size()
             self.stats[self.bednames[i]]["Internal overlaps"] = len(bed) - len(bed.merge(w_return=True))
+
+            # tables
+            ass_genes = bed.gene_association(organism=self.organism)
+
         # print(self.stats)
 
     def plot_distribution_length(self):
@@ -125,15 +129,6 @@ class BED_profile:
                 violin['cmaxes'].set_color('b')
                 violin['cbars'].set_color('b')
                 violin['cmedians'].set_color('b')
-                # bp = ax.boxplot(dis, notch=False, sym='o', vert=True, whis=1.5, positions=None,
-                #                 widths=None, patch_artist=True, bootstrap=None,
-                #                 autorange=True)
-                # z = 10
-                # plt.setp(bp['whiskers'], color='black', linestyle='-', linewidth=0.8, zorder=z)
-                # plt.setp(bp['fliers'], markerfacecolor='gray', color='white', alpha=0.3, markersize=1.8, zorder=z)
-                # plt.setp(bp['caps'], color='gray', zorder=z)
-                # plt.setp(bp['medians'], color='black', linewidth=1.5, zorder=z + 1)
-                # plt.setp(bp['boxes'], linewidth=0, facecolor="cornflowerblue")
 
                 ax.set_xticks([x + 1 for x in range(len(dis))])
                 ax.set_xticklabels(self.bednames, fontsize=7, rotation=20, ha="right")

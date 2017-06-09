@@ -2822,3 +2822,14 @@ class GenomicRegionSet:
         """Load the regions from a list, such as [['chr1', 1000, 1500, '+']]"""
         for l in loci_list:
             self.add(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2]), orientation=l[3]))
+
+    # def map_names(self, target):
+    #     """Return a list of the target names overlapping the regions in the self in order"""
+    #     if isinstance(target, str):
+    #         ref_name = os.path.basename(target).split(".")[0]
+    #         target_bed = GenomicRegionSet(ref_name)
+    #         target_bed.read(target)
+    #     else:
+    #         target_bed = target
+
+
