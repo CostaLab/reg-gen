@@ -134,8 +134,7 @@ def main():
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
 
     parser.add_option("--model-file", dest="model_file", type="string", metavar="STRING", default=None)
-    parser.add_option("--fp-state", dest="fp_state", type="string", metavar="STRING")
-    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None)
+    parser.add_option("--fp-state", dest="fp_state", type="string", metavar="STRING", default=3)
     # Parameters Options
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
                       help=("Organism considered on the analysis. Check our full documentation for all available "
@@ -615,8 +614,6 @@ def main():
                             r.final)]) + "). This iteration will be skipped.")
                     continue
 
-                if options.fp_bed_fname:
-                    output_bed_file(r.chrom, r.initial, r.final, posterior_list, options.fp_bed_fname, options.fp_state)
                 # Formatting results
                 start_pos = 0
                 flag_start = False
@@ -1434,33 +1431,3 @@ def diff_footprints():
 
     # TODO
     exit(0)
-
-
-def output_bed_file(chrom, start, end, states, output_fname, fp_states):
-    state_dict = dict([(0, "0"), (1, "1"), (2, "2"), (3, "3"), (4, "4"), (5, "5"), (6, "6")])
-    color_dict = dict([(0, "0,0,0"), (1, "102,0,51"), (2, "153,0,153"), (3, "102,0,204"), (4, "0,0,255"),
-                       (5, "51,153,255"), (6, "102,255,255")])
-    fp_state_list = fp_states.split(",")
-    for fp_state in fp_state_list:
-        state_dict[int(fp_state)] = "FP"
-
-    current_state = states[0]
-    start_postion = start
-    is_print = False
-    with open(output_fname, "a") as bed_file:
-        for i in range(len(states)):
-            if states[i] != current_state:
-                end_position = start + i
-                is_print = True
-            elif i == len(states) - 1:
-                end_position = end
-                is_print = True
-
-            if is_print:
-                bed_file.write(chrom + " " + str(start_postion) + " " + str(end_position) + " "
-                               + state_dict[current_state] + " " + str(1000) + " . "
-                               + str(start_postion) + " " + str(end_position) + " "
-                               + color_dict[current_state] + "\n")
-                start_postion = end_position
-                current_state = states[i]
-                is_print = False
