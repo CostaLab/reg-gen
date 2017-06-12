@@ -169,7 +169,7 @@ def main():
                       default=None)
 
     # GENERAL Hidden Options
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=0,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
                       help=SUPPRESS_HELP)
@@ -618,7 +618,8 @@ def main():
                 start_pos = 0
                 flag_start = False
                 # fp_state_nb = 4
-                fp_state_nb = options.fp_state.split(",")
+                # fp_state_nb = options.fp_state.split(",")
+                fp_state_nb = ['3']
                 for k in range(r.initial, r.initial + len(posterior_list)):
                     curr_index = k - r.initial
                     if (flag_start):
