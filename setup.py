@@ -352,7 +352,7 @@ copy_files_dictionary = {
 "mm10": ["genes_Gencode_mm10.bed","chrom.sizes.mm10","alias_mouse.txt","genes_RefSeq_mm10.bed"],
 "zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
 "zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
-"fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.hmm", "atac_bc.hmm", "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm", "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
+"fp_hmms": ["atac.pkl", "atac_F.txt", "atac_R.txt", "dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.hmm", "atac_bc.hmm", "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm", "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
 "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
 "fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
 }
