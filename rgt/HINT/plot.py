@@ -11,7 +11,6 @@ import matplotlib
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import pyx
 
 # Internal
 from ..Util import GenomeData
