@@ -81,9 +81,12 @@ class BED_profile:
         self.fig_f, self.fig_axs = plt.subplots(rows+1, cols, dpi=300, figsize=(cols*size_panel, rows*size_panel))
         self.table_h = {}
         self.tables = {}
-        for bed in self.bednames:
-            self.table_h[bed] = [bed]
-            self.tables[bed] = []
+        for i, bed in enumerate(self.beds):
+            self.table_h[self.bednames[i]] = [self.bednames[i]]
+            self.tables[self.bednames[i]] = []
+            self.tables[self.bednames[i]].append([r.toString() for r in bed])
+            self.table_h[self.bednames[i]].append("strand")
+            self.tables[self.bednames[i]].append([r.orientation for r in bed])
 
 
     def cal_statistics(self):
@@ -98,6 +101,10 @@ class BED_profile:
 
             # tables
             ass_genes = bed.gene_association(organism=self.organism)
+            self.table_h[self.bednames[i]].append("associated_gene")
+            self.tables[self.bednames[i]].append([r.name for r in ass_genes])
+            self.table_h[self.bednames[i]].append("length")
+            self.tables[self.bednames[i]].append([str(len(r)) for r in bed])
 
         # print(self.stats)
 
@@ -291,10 +298,15 @@ class BED_profile:
                 else:
                     c.append(bed.count_by_regionset(ref))
             if other:
-
                 c.append(max(0, len(bed) - sum(c)))
             overlapping_counts.append(c)
-
+        # Tables
+        for i, bed in enumerate(self.beds):
+            for j, ref in enumerate(refs):
+                names = bed.map_names(ref, strand=strand)
+                self.table_h[self.bednames[i]].append(refs_names[j])
+                self.tables[self.bednames[i]].append(names)
+        # Generate Figure
         if other:
             color_list = plt.cm.Set1(numpy.linspace(0, 1, len(refs_names))).tolist()
         else:
@@ -336,9 +348,9 @@ class BED_profile:
                 ax.set_xlim([-0.5, len(self.bednames)-0.5])
 
             elif i > 0:
-                x = [ x - 0.4 for x in range(len(overlapping_counts[i-1])) ]
-                ax.bar(left=x, height=overlapping_counts[i-1],
-                       color=color_list, linewidth=0)
+                x = [ x for x in range(len(overlapping_counts[i-1])) ]
+                ax.bar(x, overlapping_counts[i-1],
+                       color=color_list, linewidth=0, edgecolor="none", align='center')
                 ax.set_title(self.bednames[i-1])
                 # ax.set_ylabel("Number")
                 ax.set_xticks([x for x in range(len(overlapping_counts[i-1]))])
@@ -365,7 +377,6 @@ class BED_profile:
         link_d = OrderedDict()
         link_d["BED profile"] = "index.html"
 
-
         html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory, "style"),
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
 
@@ -390,3 +401,12 @@ class BED_profile:
         html.add_figure("figure_"+title+".png", align=50, width=str(300*(2+len(self.ind_col.keys()))))
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))
+
+    def write_tables(self, out_dir, title):
+        target_dir = os.path.join(out_dir, title)
+        for bed in self.bednames:
+            with open(os.path.join(target_dir, "table_"+bed+".txt"), "w") as f:
+                print("\t".join(self.table_h[bed]), file=f)
+                m = numpy.transpose(numpy.array(self.tables[bed])).tolist()
+                for line in m:
+                    print("\t".join(line), file=f)

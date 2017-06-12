@@ -2823,13 +2823,41 @@ class GenomicRegionSet:
         for l in loci_list:
             self.add(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2]), orientation=l[3]))
 
-    # def map_names(self, target):
-    #     """Return a list of the target names overlapping the regions in the self in order"""
-    #     if isinstance(target, str):
-    #         ref_name = os.path.basename(target).split(".")[0]
-    #         target_bed = GenomicRegionSet(ref_name)
-    #         target_bed.read(target)
-    #     else:
-    #         target_bed = target
+    def map_names(self, target, strand=False):
+        """Return a list of the target names overlapping the regions in the self in order"""
+        names = []
 
+        iter_a = iter(self)
+        s = iter_a.next()
+        last_j = len(target) - 1
+        j = 0
+        cont_loop = True
+
+        while cont_loop:
+            # When the regions overlap
+            if s.overlap(target[j]):
+                if strand and s.orientation == target[j].orientation:
+                    names.append(target[j].name)
+                    try: s = iter_a.next()
+                    except: cont_loop = False
+                elif not strand:
+                    names.append(target[j].name)
+                    try: s = iter_a.next()
+                    except: cont_loop = False
+                else:
+                    if j == last_j: cont_loop = False
+                    else: j += 1
+
+            elif s < target[j]:
+                names.append(".")
+                try: s = iter_a.next()
+                except: cont_loop = False
+            elif s > target[j]:
+                if j == last_j: cont_loop = False
+                else: j += 1
+            else:
+                try: s = iter_a.next()
+                except: cont_loop = False
+
+        return names
 
