@@ -8,7 +8,6 @@ from pysam import Fastafile
 from math import log, ceil, floor
 from Bio import motifs
 import matplotlib.pyplot as plt
-import pyx
 from scipy import stats
 
 # Internal
