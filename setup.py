@@ -92,7 +92,7 @@ tools_dictionary = {
 "hint": (
     "rgt-hint",
     "rgt.HINT.Main:main",
-    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn","pysam>=0.7.5"],
+    ["numpy>=1.4.0","scipy>=0.7.0","scikit-learn>=0.14","hmmlearn>=0.2.0","pysam>=0.7.5"],
     []
 ), 
 "ODIN": (
