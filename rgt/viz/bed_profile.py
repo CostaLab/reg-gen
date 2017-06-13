@@ -35,6 +35,7 @@ class BED_profile:
                         name = os.path.basename(f).replace(".bed", "")
                         bed = GenomicRegionSet(name)
                         bed.read_bed(os.path.join(dirpath, f))
+                        bed.sort()
                         self.beds.append(bed)
                         self.bednames.append(name)
 
@@ -47,6 +48,7 @@ class BED_profile:
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
                 bed.read_bed(input_path)
+                bed.sort()
                 self.beds = [bed]
                 self.bednames = [name]
             else:
@@ -303,7 +305,7 @@ class BED_profile:
         # Tables
         for i, bed in enumerate(self.beds):
             for j, ref in enumerate(refs):
-                names = bed.map_names(ref, strand=strand)
+                names = bed.map_names(ref, strand=strand, convert_nt=True)
                 self.table_h[self.bednames[i]].append(refs_names[j])
                 self.tables[self.bednames[i]].append(names)
         # Generate Figure
@@ -405,8 +407,13 @@ class BED_profile:
     def write_tables(self, out_dir, title):
         target_dir = os.path.join(out_dir, title)
         for bed in self.bednames:
+            # print(len(self.tables[bed]))
+            # print([ len(l) for l in self.tables[bed] ])
             with open(os.path.join(target_dir, "table_"+bed+".txt"), "w") as f:
                 print("\t".join(self.table_h[bed]), file=f)
-                m = numpy.transpose(numpy.array(self.tables[bed])).tolist()
-                for line in m:
+                m = numpy.array(self.tables[bed])
+                # print(m.shape)
+                m = m.transpose()
+                # print(m.shape)
+                for line in m.tolist():
                     print("\t".join(line), file=f)

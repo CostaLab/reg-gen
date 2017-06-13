@@ -172,6 +172,7 @@ class ExperimentalMatrix:
                     regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
                 else:
                     regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    regions.sort()
                     if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
             
