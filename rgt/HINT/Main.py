@@ -1240,6 +1240,9 @@ def print_signals():
                       action="store_true", default=False,
                       help=("If used, it will print the base overlap (slope) signals from DNase-seq "
                             " or ATAC-seq data. "))
+    parser.add_option("--bigWig", dest="bigWig",
+                      action="store_true", default=False,
+                      help=("If used, all .wig files will be converted to .bw files"))
 
     options, arguments = parser.parse_args()
 
@@ -1265,14 +1268,21 @@ def print_signals():
     signal.load_sg_coefs(slope_window_size=9)
     regions = GenomicRegionSet("Interested regions")
     regions.read_bed(options.regions_file)
-    regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
-    regions.merge()  # Sort & Merge
+    #regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    #regions.merge()  # Sort & Merge
+
+    table = None
+    if options.bias_table:
+        bias_table = BiasTable()
+        bias_table_list = options.bias_table.split(",")
+        table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                      table_file_name_R=bias_table_list[1])
 
     genome_data = GenomeData(options.organism)
     for region in regions:
         signal.print_signal(ref=region.chrom, start=region.initial, end=region.final,
                             downstream_ext=options.downstream_ext,
-                            bias_table=options.bias_table,
+                            bias_table=table,
                             upstream_ext=options.upstream_ext,
                             forward_shift=options.forward_shift,
                             reverse_shift=options.reverse_shift,
@@ -1282,6 +1292,27 @@ def print_signals():
                             norm_signal_file=norm_signal_file,
                             slope_signal_file=slope_signal_file)
 
+    chrom_sizes_file = genome_data.get_chromosome_sizes()
+    if options.bigWig:
+        if options.print_raw_signal:
+            bw_filename = os.path.join(options.output_location, "{}.raw.bw".format(options.output_prefix))
+            system(" ".join(["wigToBigWig", raw_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(raw_signal_file)
+
+        if options.print_bc_signal:
+            bw_filename = os.path.join(options.output_location, "{}.bc.bw".format(options.output_prefix))
+            system(" ".join(["wigToBigWig", bc_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(bc_signal_file)
+
+        if options.print_norm_signal:
+            bw_filename = os.path.join(options.output_location, "{}.norm.bw".format(options.output_prefix))
+            system(" ".join(["wigToBigWig", norm_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(norm_signal_file)
+
+        if options.print_slope_signal:
+            bw_filename = os.path.join(options.output_location, "{}.slope.bw".format(options.output_prefix))
+            system(" ".join(["wigToBigWig", slope_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(slope_signal_file)
     # TODO
     exit(0)
 
