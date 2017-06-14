@@ -83,12 +83,17 @@ class BED_profile:
         self.fig_f, self.fig_axs = plt.subplots(rows+1, cols, dpi=300, figsize=(cols*size_panel, rows*size_panel))
         self.table_h = {}
         self.tables = {}
+        self.count_table = {}
+        self.count_tableh = []
         for i, bed in enumerate(self.beds):
             self.table_h[self.bednames[i]] = [self.bednames[i]]
             self.tables[self.bednames[i]] = []
             self.tables[self.bednames[i]].append([r.toString() for r in bed])
             self.table_h[self.bednames[i]].append("strand")
             self.tables[self.bednames[i]].append([r.orientation for r in bed])
+            self.count_table[bed.name] = {}
+
+
 
 
     def cal_statistics(self):
@@ -108,7 +113,8 @@ class BED_profile:
             self.table_h[self.bednames[i]].append("length")
             self.tables[self.bednames[i]].append([str(len(r)) for r in bed])
 
-        # print(self.stats)
+            self.count_table[bed.name]["Number"] = len(bed)
+        self.count_tableh.append("Number")
 
     def plot_distribution_length(self):
         dis = []
@@ -278,7 +284,7 @@ class BED_profile:
         index = natsort.index_natsorted(refs_names)
         refs = natsort.order_by_index(refs, index)
         refs_names = natsort.order_by_index(refs_names, index)
-
+        self.count_tableh = self.count_tableh + refs_names
         if other:
             refs_names.append("Else")
         if strand:
@@ -296,9 +302,12 @@ class BED_profile:
                 bed_minus = bed.filter_strand(strand="-")
             for j, ref in enumerate(refs):
                 if strand:
-                    c.append(bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j]))
+                    cc = bed_plus.count_by_regionset(ref_plus[j]) + bed_minus.count_by_regionset(ref_minus[j])
                 else:
-                    c.append(bed.count_by_regionset(ref))
+                    cc = bed.count_by_regionset(ref)
+                c.append(cc)
+                self.count_table[bed.name][ref.name] = cc
+
             if other:
                 c.append(max(0, len(bed) - sum(c)))
             overlapping_counts.append(c)
@@ -417,3 +426,8 @@ class BED_profile:
                 # print(m.shape)
                 for line in m.tolist():
                     print("\t".join(line), file=f)
+        with open(os.path.join(target_dir, "count_table.txt"), "w") as f:
+            print("\t".join(["Counts"]+self.count_tableh), file=f)
+            for bed in self.bednames:
+                print("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh ]), file=f)
+
