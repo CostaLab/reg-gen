@@ -315,53 +315,53 @@ class DiffFootprints:
                 self.plot(mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
                           pwm_dict, self.output_location, self.output_prefix)
 
-        # Compute the median differences of the all motifs
-        mean_diff_prot = list()
-        mean_diff_tc = list()
-        for mpbs_name in mpbs_name_list:
-            mean_diff_prot.append(np.mean(np.array(prot_dict2[mpbs_name])- np.array(prot_dict1[mpbs_name])))
-            mean_diff_tc.append(np.mean(np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])))
-
-        median_diff_prot = np.median(np.array(mean_diff_prot))
-        median_diff_tc = np.median(np.array(mean_diff_tc))
-        self.output_mu(median_diff_prot, median_diff_tc)
-
-        mu = [median_diff_prot, median_diff_tc]
-        output_file = os.path.join(self.output_location, "{}.txt".format(self.output_prefix))
-        f = open(output_file, "a")
-        for mpbs_name in mpbs_name_list:
-            count = len(prot_dict1[mpbs_name])
-
-            mean_prot1 = sum(prot_dict1[mpbs_name]) / count
-            mean_prot2 = sum(prot_dict2[mpbs_name]) / count
-            mean_tc1 = sum(tc_dict1[mpbs_name]) / count
-            mean_tc2 = sum(tc_dict2[mpbs_name]) / count
-            mean_diff_prot = mean_prot2 - mean_prot1
-            mean_diff_tc = mean_tc2 - mean_tc1
-
-            diff_prot = np.array(prot_dict2[mpbs_name]) - np.array(prot_dict1[mpbs_name])
-            diff_tc = np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])
-
-            X = [diff_prot.tolist(), diff_tc.tolist()]
-            stats, pvalue = self.hotellings(np.matrix(X).T, np.matrix(mu))
-
-            res = [mean_prot1, mean_prot2, mean_diff_prot, mean_tc1, mean_tc2, mean_diff_tc, stats, pvalue, count]
-            f.write("\t".join([mpbs_name] + [str(i) for i in res]))
-            f.write("\n")
-        f.close()
+        # # Compute the median differences of the all motifs
+        # mean_diff_prot = list()
+        # mean_diff_tc = list()
+        # for mpbs_name in mpbs_name_list:
+        #     mean_diff_prot.append(np.mean(np.array(prot_dict2[mpbs_name])- np.array(prot_dict1[mpbs_name])))
+        #     mean_diff_tc.append(np.mean(np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])))
+        #
+        # median_diff_prot = np.median(np.array(mean_diff_prot))
+        # median_diff_tc = np.median(np.array(mean_diff_tc))
+        # self.output_mu(median_diff_prot, median_diff_tc)
+        #
+        # mu = [median_diff_prot, median_diff_tc]
+        # output_file = os.path.join(self.output_location, "{}.txt".format(self.output_prefix))
+        # f = open(output_file, "a")
+        # for mpbs_name in mpbs_name_list:
+        #     count = len(prot_dict1[mpbs_name])
+        #
+        #     mean_prot1 = sum(prot_dict1[mpbs_name]) / count
+        #     mean_prot2 = sum(prot_dict2[mpbs_name]) / count
+        #     mean_tc1 = sum(tc_dict1[mpbs_name]) / count
+        #     mean_tc2 = sum(tc_dict2[mpbs_name]) / count
+        #     mean_diff_prot = mean_prot2 - mean_prot1
+        #     mean_diff_tc = mean_tc2 - mean_tc1
+        #
+        #     diff_prot = np.array(prot_dict2[mpbs_name]) - np.array(prot_dict1[mpbs_name])
+        #     diff_tc = np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])
+        #
+        #     X = [diff_prot.tolist(), diff_tc.tolist()]
+        #     stats, pvalue = self.hotellings(np.matrix(X).T, np.matrix(mu))
+        #
+        #     res = [mean_prot1, mean_prot2, mean_diff_prot, mean_tc1, mean_tc2, mean_diff_tc, stats, pvalue, count]
+        #     f.write("\t".join([mpbs_name] + [str(i) for i in res]))
+        #     f.write("\n")
+        # f.close()
 
 
     def plot(self, mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
              pwm_dict, output_location, output_prefix):
         # Output PWM and create logo
-        loc = os.path.join(output_location, output_prefix)
-        pwm_fname = os.path.join(loc, "{}.pwm".format(mpbs_name))
+        #loc = os.path.join(output_location, output_prefix)
+        pwm_fname = os.path.join(output_location, "{}.pwm".format(mpbs_name))
         pwm_file = open(pwm_fname, "w")
         for e in ["A", "C", "G", "T"]:
             pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
         pwm_file.close()
 
-        logo_fname = os.path.join(loc, "{}.logo.eps".format(mpbs_name))
+        logo_fname = os.path.join(output_location, "{}.logo.eps".format(mpbs_name))
         pwm = motifs.read(open(pwm_fname), "pfm")
         pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
@@ -369,11 +369,11 @@ class DiffFootprints:
                     show_fineprint=False, show_ends=False)
 
         # Output the raw, bias corrected signal and protection score
-        output_fname = os.path.join(loc, "{}.txt".format(mpbs_name))
-        output_file = open(output_fname, "w")
-        output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
-        output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
-        output_file.close()
+        # output_fname = os.path.join(loc, "{}.txt".format(mpbs_name))
+        # output_file = open(output_fname, "w")
+        # output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
+        # output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
+        # output_file.close()
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -407,12 +407,12 @@ class DiffFootprints:
         ax.spines['bottom'].set_position(('outward', 40))
         ax.set_xlabel("Coordinates from Motif Center", fontweight='bold')
 
-        figure_name = os.path.join(loc, "{}.line.eps".format(mpbs_name))
+        figure_name = os.path.join(output_location, "{}.line.eps".format(mpbs_name))
         fig.tight_layout()
         fig.savefig(figure_name, format="eps", dpi=300)
 
         # Creating canvas and printing eps / pdf with merged results
-        output_fname = os.path.join(loc, "{}.eps".format(mpbs_name))
+        output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
         c.insert(pyx.epsfile.epsfile(2.22, 1.55, logo_fname, width=17.5, height=3))
