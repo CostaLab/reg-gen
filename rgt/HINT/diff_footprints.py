@@ -89,14 +89,6 @@ class DiffFootprints:
 
         nf = [i * factor for i in nf]
         nr = [i * factor for i in nr]
-        # Std-based clipping to avoid spurious high counts
-        # mean = np.array(nf).mean()
-        # std = np.array(nf).std()
-        # nf = [min(e, mean + (10 * std)) for e in nf]
-
-        # mean = np.array(nr).mean()
-        # std = np.array(nr).std()
-        # nr = [min(e, mean + (10 * std)) for e in nr]
 
         # Smoothed counts
         Nf = []
@@ -149,8 +141,6 @@ class DiffFootprints:
             zr = log(nr[i] + 1) - log(nhatr + 1)
             bias_corrected_signal.append(zf + zr)
             bias_corrected_tc.append(nf[i] + nr[i])
-            #bias_corrected_tc.append(nf[i] / af[i] + nr[i] / ar[i])
-            #bias_corrected_tc.append(nhatf + nhatr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
             fLast = af[i - (window / 2) + 1]
@@ -252,21 +242,6 @@ class DiffFootprints:
             tc_dict1[mpbs_name] = list()
             tc_dict2[mpbs_name] = list()
 
-            # spr1_list = list()
-            # spr2_list = list()
-            # tc1_list = list()
-            # tc2_list = list()
-            # fc1_list = list()
-            # fc2_list = list()
-            # spr1 = 0.0
-            # spr2 = 0.0
-            # dspr = 0.0
-            # tc1 = 0
-            # tc2 = 0
-            # dtc = 0
-            # fc1 = 0
-            # fc2 = 0
-            # dfc = 0
             corrected_signal1 = []
             corrected_signal2 = []
             dcorrected_signal = []
@@ -289,27 +264,11 @@ class DiffFootprints:
                     self.get_stats(bam=bam2, bias_table=bias_table2,
                                    genome_file_name=genome_data.get_genome(),
                                    chrName=region.chrom, start=p1, end=p2, motif_length=length, factor=factor2)
-                # spr1 += sp1
-                # spr2 += sp2
-                # dspr += sp2 - sp1
-                # tc1 += tc_1
-                # tc2 += tc_2
-                # dtc += tc_2 - tc_1
-                # fc1 += fc_1
-                # fc2 += fc_2
-                # dfc += fc_2 - fc_1
 
                 prot_dict1[mpbs_name].append(sp1)
                 prot_dict2[mpbs_name].append(sp2)
                 tc_dict1[mpbs_name].append(tc_1)
                 tc_dict2[mpbs_name].append(tc_2)
-
-                # spr1_list.append(sp1)
-                # spr2_list.append(sp2)
-                # tc1_list.append(tc_1)
-                # fc1_list.append(fc_1)
-                # tc2_list.append(tc_2)
-                # fc2_list.append(fc_2)
 
                 if (region.orientation == "-"):
                     corrected_signal_1 = corrected_signal_1[::-1]
@@ -349,41 +308,8 @@ class DiffFootprints:
 
             # Updating protection
             if (counter > 0):
-                # protmean1 = spr1 / counter
-                # protmean2 = spr2 / counter
-                # difprotmean = dspr / counter
-                # tcmean1 = tc1 / counter
-                # tcmean2 = tc2 / counter
-                # diftcmean = dtc / counter
-                # fcmean1 = fc1 / counter
-                # fcmean2 = fc2 / counter
-                # diffcmean = dfc / counter
-                # corrected_signal1_mean = corrected_signal1 / counter
-                # corrected_signal2_mean = corrected_signal2 / counter
-                # dcorrected_signal_mean = dcorrected_signal / counter
                 tccorrectedSignalMean1 = tc_corrected_signal1 / counter
                 tccorrectedSignalMean2 = tc_corrected_signal2 / counter
-                # dtc_corrected_signal = dtc_corrected_signal / counter
-
-                # Kolmogorov-Smirnov test
-                # spr_ks_stat, spr_ks_pvalue = stats.ks_2samp(np.array(spr2_list), np.array(spr1_list))
-                # tc_ks_stat, tc_ks_pvalue = stats.ks_2samp(np.array(tc2_list), np.array(tc1_list))
-                # fc_ks_stat, fc_ks_pvalue = stats.ks_2samp(np.array(fc2_list), np.array(fc1_list))
-
-                # Calculates the T-test for the mean of ONE group of scores
-                # dspr = np.subtract(np.array(spr2_list), np.array(spr1_list))
-                # dtc = np.subtract(np.array(tc2_list), np.array(tc1_list))
-                # dfc = np.subtract(np.array(fc2_list), np.array(fc1_list))
-
-                # spr_t_1samp_stat, spr_t_1samp_pvalue = stats.ttest_1samp(dspr, 0.0)
-                # tc_t_1samp_stat, tc_t_1samp_pvalue = stats.ttest_1samp(dtc, 0.0)
-                # fc_t_1samp_stat, fc_t_1samp_pvalue = stats.ttest_1samp(dfc, 0.0)
-
-                # Calculates the T-test for the means of two independent samples of scores.
-                # spr_ttest_ind_stat, spr_ttest_ind_pvalue = stats.ttest_ind(np.array(spr2_list), np.array(spr1_list))
-                # tc_ttest_ind_stat, tc_ttest_ind_pvalue = stats.ttest_ind(np.array(tc2_list), np.array(tc1_list))
-                # fc_ttest_ind_stat, fc_ttest_ind_pvalue = stats.ttest_ind(np.array(fc2_list), np.array(fc1_list))
-
 
                 self.plot(mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
                           pwm_dict, self.output_location, self.output_prefix)
@@ -412,10 +338,6 @@ class DiffFootprints:
             mean_diff_prot = mean_prot2 - mean_prot1
             mean_diff_tc = mean_tc2 - mean_tc1
 
-            #diff_prot = list()
-            #for i in range(len(prot_dict2[mpbs_name])):
-            #    diff = max(0, prot_dict2[mpbs_name][i]) - max(0, prot_dict1[mpbs_name][i])
-            #    diff_prot.append(diff)
             diff_prot = np.array(prot_dict2[mpbs_name]) - np.array(prot_dict1[mpbs_name])
             diff_tc = np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])
 
