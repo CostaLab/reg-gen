@@ -413,7 +413,7 @@ class DiffFootprints:
         output_fname = os.path.join(output_location, "{}.eps".format(mpbs_name))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.22, 1.55, logo_fname, width=17.5, height=3))
+        c.insert(pyx.epsfile.epsfile(2.22, 1.5, logo_fname, width=17.5, height=3))
         c.writeEPSfile(output_fname)
         os.remove(figure_name)
         os.remove(logo_fname)
