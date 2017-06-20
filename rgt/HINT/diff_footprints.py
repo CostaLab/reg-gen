@@ -367,11 +367,11 @@ class DiffFootprints:
                     show_fineprint=False, show_ends=False)
 
         # Output the raw, bias corrected signal and protection score
-        output_fname = os.path.join(output_location, "{}.txt".format(mpbs_name))
-        output_file = open(output_fname, "w")
-        output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
-        output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
-        output_file.close()
+        # output_fname = os.path.join(output_location, "{}.txt".format(mpbs_name))
+        # output_file = open(output_fname, "w")
+        # output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
+        # output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
+        # output_file.close()
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
