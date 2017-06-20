@@ -195,7 +195,7 @@ class DiffFootprints:
             table_list = self.bias_table2.split(",")
             bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
 
-        # Compute the number of total non-mitochondrial tag counts located in footprints
+        # Compute the number of total tag counts located in footprints
         if factor1 == None and factor2 == None:
             total_tc1 = 0
             total_tc2 = 0
@@ -231,6 +231,7 @@ class DiffFootprints:
         tc_dict1 = dict()
         prot_dict2 = dict()
         tc_dict2 = dict()
+        mpbs_name_list = ['MA0076.2.ELK4', 'MA0098.3.ETS1']
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
