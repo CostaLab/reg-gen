@@ -1414,11 +1414,13 @@ def diff_footprints():
     parser.add_option("--motif-ext", dest="motif_ext", type="int",
                       metavar="INT", default=20)
     parser.add_option("--min-value", dest="min_value", type="int",
-                      metavar="INT", default=1)
+                      metavar="INT", default=100)
     parser.add_option("--housekeeping-genes", dest="housekeeping_genes", type="string",
                       metavar="FILE", default=None,
                       help=("A bed file containing house keeping genes used to normalize library size"))
-    parser.add_option("--diff", dest="diff", type="int",
+    parser.add_option("--factor1", dest="factor1", type="float",
+                      metavar="INT", default=None)
+    parser.add_option("--factor2", dest="factor2", type="float",
                       metavar="INT", default=None)
 
     # Hidden Options
@@ -1452,14 +1454,8 @@ def diff_footprints():
                                      options.forward_shift, options.reverse_shift, options.k_nb,
                                      options.housekeeping_genes,
                                      options.output_location, options.output_prefix)
-    if options.diff == None:
-        diff_footprints.diff()
-    elif options.diff == 1:
-        diff_footprints.diff1()
-    elif options.diff == 2:
-        diff_footprints.diff2()
-    elif options.diff == 3:
-        diff_footprints.diff3()
+
+    diff_footprints.diff(options.factor1, options.factor2)
 
     # TODO
     exit(0)
