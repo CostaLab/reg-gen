@@ -231,7 +231,7 @@ class DiffFootprints:
         tc_dict1 = dict()
         prot_dict2 = dict()
         tc_dict2 = dict()
-        mpbs_name_list = ['MA0076.2.ELK4', 'MA0098.3.ETS1']
+        mpbs_name_list = ['MA0076.2.ELK4', 'MA0080.4.SPI1']
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
