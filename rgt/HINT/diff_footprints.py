@@ -231,7 +231,6 @@ class DiffFootprints:
         tc_dict1 = dict()
         prot_dict2 = dict()
         tc_dict2 = dict()
-        mpbs_name_list = ['MA0076.2.ELK4', 'MA0080.4.SPI1']
         for mpbs_name in mpbs_name_list:
             pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
                              ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
@@ -315,41 +314,6 @@ class DiffFootprints:
                 self.plot(mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
                           pwm_dict, self.output_location, self.output_prefix)
 
-        # # Compute the median differences of the all motifs
-        # mean_diff_prot = list()
-        # mean_diff_tc = list()
-        # for mpbs_name in mpbs_name_list:
-        #     mean_diff_prot.append(np.mean(np.array(prot_dict2[mpbs_name])- np.array(prot_dict1[mpbs_name])))
-        #     mean_diff_tc.append(np.mean(np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])))
-        #
-        # median_diff_prot = np.median(np.array(mean_diff_prot))
-        # median_diff_tc = np.median(np.array(mean_diff_tc))
-        # self.output_mu(median_diff_prot, median_diff_tc)
-        #
-        # mu = [median_diff_prot, median_diff_tc]
-        # output_file = os.path.join(self.output_location, "{}.txt".format(self.output_prefix))
-        # f = open(output_file, "a")
-        # for mpbs_name in mpbs_name_list:
-        #     count = len(prot_dict1[mpbs_name])
-        #
-        #     mean_prot1 = sum(prot_dict1[mpbs_name]) / count
-        #     mean_prot2 = sum(prot_dict2[mpbs_name]) / count
-        #     mean_tc1 = sum(tc_dict1[mpbs_name]) / count
-        #     mean_tc2 = sum(tc_dict2[mpbs_name]) / count
-        #     mean_diff_prot = mean_prot2 - mean_prot1
-        #     mean_diff_tc = mean_tc2 - mean_tc1
-        #
-        #     diff_prot = np.array(prot_dict2[mpbs_name]) - np.array(prot_dict1[mpbs_name])
-        #     diff_tc = np.array(tc_dict2[mpbs_name]) - np.array(tc_dict1[mpbs_name])
-        #
-        #     X = [diff_prot.tolist(), diff_tc.tolist()]
-        #     stats, pvalue = self.hotellings(np.matrix(X).T, np.matrix(mu))
-        #
-        #     res = [mean_prot1, mean_prot2, mean_diff_prot, mean_tc1, mean_tc2, mean_diff_tc, stats, pvalue, count]
-        #     f.write("\t".join([mpbs_name] + [str(i) for i in res]))
-        #     f.write("\n")
-        # f.close()
-
     def plot(self, mpbs_name, tccorrectedSignalMean1, tccorrectedSignalMean2,
              pwm_dict, output_location, output_prefix):
         # Output PWM and create logo
@@ -365,13 +329,6 @@ class DiffFootprints:
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
                     show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                     show_fineprint=False, show_ends=False)
-
-        # Output the raw, bias corrected signal and protection score
-        # output_fname = os.path.join(output_location, "{}.txt".format(mpbs_name))
-        # output_file = open(output_fname, "w")
-        # output_file.write("tc corrected signal1: \n" + np.array_str(np.array(tccorrectedSignalMean1)) + "\n")
-        # output_file.write("tc corrected signal2: \n" + np.array_str(np.array(tccorrectedSignalMean2)) + "\n")
-        # output_file.close()
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
