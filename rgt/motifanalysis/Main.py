@@ -11,7 +11,6 @@ import time
 from random import seed
 from optparse import OptionGroup
 from shutil import copy
-import gc
 
 # Internal
 from rgt import __version__
@@ -29,8 +28,6 @@ from rgt.AnnotationSet import AnnotationSet
 # External
 from pysam import Fastafile
 from fisher import pvalue
-from mem_top import mem_top
-from memory_profiler import profile
 
 """
 Contains functions to common motif analyses.
@@ -166,7 +163,6 @@ def main():
     print("Completed in", time.time() - start, "seconds")
 
 
-# @profile(precision=4)
 def main_matching():
     """
     Performs motif matching.
@@ -457,10 +453,6 @@ def main_matching():
         if os.path.isfile(output_bed_file):
             os.remove(output_bed_file)
 
-        print("match multiple, new grs for each sequence then written to file in append mode, no mem profiling")
-
-        # print(mem_top())
-
         # Iterating on genomic regions
         for genomic_region in genomic_region_set.sequences:
 
@@ -470,12 +462,9 @@ def main_matching():
             # for motif in motif_list:
             #     match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=tmp)
 
-            # match_multiple(motif_list, sequence, genomic_region, output=tmp)
             grs = match_multiple(motif_list, sequence, genomic_region)
 
             grs.write_bed(output_bed_file, mode="a")
-
-        # print(mem_top())
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
