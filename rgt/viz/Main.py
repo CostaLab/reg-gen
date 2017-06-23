@@ -336,6 +336,7 @@ def main():
             if args.labels:
                 for i, label in enumerate(args.labels):
                     bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=True, strand=args.strand[i])
+            bed_profile.write_tables(args.o, args.t)
             bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
             bed_profile.gen_html(args.o, args.t)
 
