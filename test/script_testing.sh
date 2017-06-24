@@ -28,10 +28,6 @@ Run test script
 cd THOR_example_data/
 rm -rf report_* sample-*
 rgt-THOR THOR.config -n sample --report
-rm -rf report_* sample-*
-rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand
-rm -rf report_* sample-*
-rgt-THOR THOR_fwd.config -n sample_FWD --report --single-strand --no-merge-bin
 
 echo "********* THOR test completed ****************"
 

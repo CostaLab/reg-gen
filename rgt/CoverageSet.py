@@ -10,7 +10,7 @@ import os
 import sys
 import pysam
 import numpy as np
-
+import pyBigWig
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -579,9 +579,25 @@ class CoverageSet:
         #     bwf.close()
         #
         # except ImportError, e:
-        import pyBigWig
+
         self.coverage = []
+        # curdir = os.getcwd()
+        # print(curdir)
+        # currentFile = __file__
+        # realPath = os.path.realpath(currentFile)  # /home/user/test/my_script.py
+        # dirPath = os.path.dirname(realPath)  # /home/user/test
+        # dirName = os.path.basename(dirPath)  # test
+        # target_dir = os.path.join(curdir,os.path.dirname(bigwig_file))
+        # bwfile = os.path.basename(bigwig_file)
+        # os.chdir(target_dir)
+        # print(target_dir)
+        # print(bwfile)
+        # bwfile = os.path.relpath(bigwig_file, curdir)
+        # print(bwfile)
+        # bwf = pyBigWig.open(bwfile)
         bwf = pyBigWig.open(bigwig_file)
+        # print(bwf.isBigWig())
+        # os.chdir(curdir)
 
         for gr in self.genomicRegions:
             steps = int(len(gr) / stepsize)
