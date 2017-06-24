@@ -90,7 +90,7 @@ class BED_profile:
             self.tables[self.bednames[i]] = []
             self.tables[self.bednames[i]].append([r.toString() for r in bed])
             self.table_h[self.bednames[i]].append("strand")
-            self.tables[self.bednames[i]].append([r.orientation for r in bed])
+            self.tables[self.bednames[i]].append([r.orientation if r.orientation else "." for r in bed ])
             self.count_table[bed.name] = {}
 
 
@@ -423,9 +423,10 @@ class BED_profile:
                 m = numpy.array(self.tables[bed])
                 # print(m.shape)
                 m = m.transpose()
-                # print(m.shape)
+                print(m)
                 for line in m.tolist():
-                    print("\t".join(line), file=f)
+                    if line:
+                        print("\t".join(line), file=f)
         with open(os.path.join(target_dir, "count_table.txt"), "w") as f:
             print("\t".join(["Counts"]+self.count_tableh), file=f)
             for bed in self.bednames:
