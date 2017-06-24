@@ -425,115 +425,116 @@ def main():
     # Creating HMMs
     ###################################################################################################
 
-    # # Fetching HMM input
-    # flag_multiple_hmms = False
-    # if (options.hmm_file):  # Argument is passed
-    #
-    #     hmm_group_list = options.hmm_file.split(";")
-    #     if (len(hmm_group_list) != len(group_list)): pass  # TODO ERROR
-    #     for g in range(0, len(group_list)):
-    #
-    #         group = group_list[g]
-    #
-    #         # Fetching list of HMM files
-    #         group.hmm = hmm_group_list[g].split(",")
-    #
-    #         # Verifying HMM application mode (one HMM or multiple HMM files)
-    #         if (len(group.hmm) == 1):
-    #             group.flag_multiple_hmms = False
-    #             group.hmm = group.hmm[0]
-    #         elif (len(group.hmm) == len(histone_file_name_list)):
-    #             flag_multiple_hmms = True
-    #         else:
-    #             error_handler.throw_error("FP_NB_HMMS")
-    #
-    # else:  # Argument was not passed
-    #
-    #     for group in group_list:
-    #
-    #         group.flag_multiple_hmms = False
-    #         if (group.dnase_only):
-    #             if (bias_correction):
-    #                 if (group.is_atac):
-    #                     group.hmm = hmm_data.get_default_hmm_atac_bc()
-    #                 else:
-    #                     group.hmm = hmm_data.get_default_hmm_dnase_bc()
-    #             else:
-    #                 if (group.is_atac):
-    #                     group.hmm = hmm_data.get_default_hmm_atac()
-    #                 else:
-    #                     group.hmm = hmm_data.get_default_hmm_dnase()
-    #         elif (group.histone_only):
-    #             group.hmm = hmm_data.get_default_hmm_histone()
-    #         else:
-    #             if (bias_correction):
-    #                 if (group.is_atac):
-    #                     group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
-    #                 else:
-    #                     group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
-    #             else:
-    #                 if (group.is_atac):
-    #                     group.hmm = hmm_data.get_default_hmm_atac_histone()
-    #                 else:
-    #                     group.hmm = hmm_data.get_default_hmm_dnase_histone()
-    #
-    # # Creating scikit HMM list
-    # for group in group_list:
-    #
-    #     if (group.flag_multiple_hmms):
-    #
-    #         hmm_list = []
-    #         for hmm_file_name in group.hmm:
-    #
-    #             try:
-    #                 hmm_scaffold = HMM()
-    #                 hmm_scaffold.load_hmm(hmm_file_name)
-    #                 if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-    #                     scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-    #                                              transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-    #                     scikit_hmm.means_ = array(hmm_scaffold.means)
-    #                     scikit_hmm.covars_ = array(hmm_scaffold.covs)
-    #                 else:
-    #                     scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
-    #                     scikit_hmm.startprob_ = array(hmm_scaffold.pi)
-    #                     scikit_hmm.transmat_ = array(hmm_scaffold.A)
-    #                     scikit_hmm.means_ = array(hmm_scaffold.means)
-    #                     scikit_hmm.covars_ = array(hmm_scaffold.covs)
-    #
-    #             except Exception:
-    #                 error_handler.throw_error("FP_HMM_FILES")
-    #             hmm_list.append(scikit_hmm)
-    #
-    #         group.hmm = hmm_list
-    #
-    #     else:
-    #
-    #         scikit_hmm = None
-    #         try:
-    #             hmm_scaffold = HMM()
-    #             hmm_scaffold.load_hmm(group.hmm)
-    #             if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-    #                 scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-    #                                          transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-    #                 scikit_hmm.means_ = array(hmm_scaffold.means)
-    #                 scikit_hmm.covars_ = array(hmm_scaffold.covs)
-    #             else:
-    #                 scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
-    #                 scikit_hmm.startprob_ = array(hmm_scaffold.pi)
-    #                 scikit_hmm.transmat_ = array(hmm_scaffold.A)
-    #                 scikit_hmm.means_ = array(hmm_scaffold.means)
-    #                 scikit_hmm.covars_ = array(hmm_scaffold.covs)
-    #
-    #
-    #         except Exception:
-    #             error_handler.throw_error("FP_HMM_FILES")
-    #         group.hmm = scikit_hmm
+    # Fetching HMM input
+    flag_multiple_hmms = False
+    if (options.hmm_file):  # Argument is passed
+
+        hmm_group_list = options.hmm_file.split(";")
+        if (len(hmm_group_list) != len(group_list)): pass  # TODO ERROR
+        for g in range(0, len(group_list)):
+
+            group = group_list[g]
+
+            # Fetching list of HMM files
+            group.hmm = hmm_group_list[g].split(",")
+
+            # Verifying HMM application mode (one HMM or multiple HMM files)
+            if (len(group.hmm) == 1):
+                group.flag_multiple_hmms = False
+                group.hmm = group.hmm[0]
+            elif (len(group.hmm) == len(histone_file_name_list)):
+                flag_multiple_hmms = True
+            else:
+                error_handler.throw_error("FP_NB_HMMS")
+
+    else:  # Argument was not passed
+
+        for group in group_list:
+
+            group.flag_multiple_hmms = False
+            if (group.dnase_only):
+                if (bias_correction):
+                    if (group.is_atac):
+                        group.hmm = hmm_data.get_default_hmm_atac_bc()
+                    else:
+                        group.hmm = hmm_data.get_default_hmm_dnase_bc()
+                else:
+                    if (group.is_atac):
+                        group.hmm = hmm_data.get_default_hmm_atac()
+                    else:
+                        group.hmm = hmm_data.get_default_hmm_dnase()
+            elif (group.histone_only):
+                group.hmm = hmm_data.get_default_hmm_histone()
+            else:
+                if (bias_correction):
+                    if (group.is_atac):
+                        group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
+                    else:
+                        group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
+                else:
+                    if (group.is_atac):
+                        group.hmm = hmm_data.get_default_hmm_atac_histone()
+                    else:
+                        group.hmm = hmm_data.get_default_hmm_dnase_histone()
+
+    # Creating scikit HMM list
+    for group in group_list:
+
+        if (group.flag_multiple_hmms):
+
+            hmm_list = []
+            for hmm_file_name in group.hmm:
+
+                try:
+                    hmm_scaffold = HMM()
+                    hmm_scaffold.load_hmm(hmm_file_name)
+                    if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
+                                                 transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+                        scikit_hmm.means_ = array(hmm_scaffold.means)
+                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                    else:
+                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+                        scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+                        scikit_hmm.transmat_ = array(hmm_scaffold.A)
+                        scikit_hmm.means_ = array(hmm_scaffold.means)
+                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+
+                except Exception:
+                    error_handler.throw_error("FP_HMM_FILES")
+                hmm_list.append(scikit_hmm)
+
+            group.hmm = hmm_list
+
+        else:
+
+            scikit_hmm = None
+            try:
+                hmm_scaffold = HMM()
+                hmm_scaffold.load_hmm(group.hmm)
+                if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
+                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
+                                             transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
+                    scikit_hmm.means_ = array(hmm_scaffold.means)
+                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
+                else:
+                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+                    scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+                    scikit_hmm.transmat_ = array(hmm_scaffold.A)
+                    scikit_hmm.means_ = array(hmm_scaffold.means)
+                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
+
+
+            except Exception:
+                error_handler.throw_error("FP_HMM_FILES")
+            group.hmm = scikit_hmm
 
     ##############################################################
     # Test complex model
     ##############################################################
-    for group in group_list:
-        group.hmm = joblib.load(options.model_file)
+    if options.model_file != None:
+        for group in group_list:
+            group.hmm = joblib.load(options.model_file)
 
     ###################################################################################################
     # Main Pipeline
