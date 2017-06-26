@@ -188,6 +188,10 @@ if __name__ == "__main__":
                                help="Define the target BED file to subtract.")
     parser_bedsub.add_argument('-all', action="store_true", default=False,
                                help="Subtract the whole region when it overlaps.")
+    parser_bedsub.add_argument('-blocki', action="store_true", default=False,
+                               help="Read the blocks in input.")
+    parser_bedsub.add_argument('-blockt', action="store_true", default=False,
+                               help="Read the blocks in target.")
 
     ############### BED cut ###############################################
     # python rgt-convertor.py
@@ -710,8 +714,12 @@ if __name__ == "__main__":
         print(tag + ": [BED] Subtract the regions")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
+        if args.blocki:
+            bed.extract_blocks()
         target = GenomicRegionSet("target")
         target.read_bed(args.t)
+        if args.blockt:
+            target.extract_blocks()
         out = bed.subtract(y=target, whole_region=args.all)
         out.write_bed(args.o)
 

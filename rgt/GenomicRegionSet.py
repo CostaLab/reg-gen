@@ -201,8 +201,14 @@ class GenomicRegionSet:
 
                     if start == end:
                         raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
+                    g = GenomicRegion(chrom, start, end, name, orientation, data)
 
-                    self.add(GenomicRegion(chrom, start, end, name, orientation, data))
+                    if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                        gs = g.extract_blocks()
+                        for gg in gs:
+                            self.add(gg)
+                    else:
+                        self.add(g)
                 except:
                     if line == []:
                         continue
@@ -2892,7 +2898,7 @@ class GenomicRegionSet:
                 except: cont_loop = False
         # print([len(self), len(names)])
         while len(names) < len(self):
-            print(".", end="")
+            # print(".", end="")
             names.append(".")
 
         return names

@@ -56,6 +56,9 @@ class BED_profile:
                 self.EM.read(input)
                 self.beds = self.EM.get_regionsets()
                 self.bednames = self.EM.get_regionsnames()
+        else:
+            print("***Please make sure that there are BED files in " + input_path)
+            sys.exit(1)
 
         self.organism = organism
         self.chromosomes = GenomicRegionSet(organism)
@@ -423,7 +426,6 @@ class BED_profile:
                 m = numpy.array(self.tables[bed])
                 # print(m.shape)
                 m = m.transpose()
-                print(m)
                 for line in m.tolist():
                     if line:
                         print("\t".join(line), file=f)

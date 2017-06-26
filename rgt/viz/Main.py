@@ -67,7 +67,9 @@ def main():
     parser_bedprofile.add_argument('-labels', metavar='  ', default=None, help='Define the labels for more BED sets')
     parser_bedprofile.add_argument('-sources', metavar='  ', default=None, help='Define the directories for more BED sets corresponding to the labels')
     parser_bedprofile.add_argument('-strand', metavar='  ', default=None,
-                                   help='Define whether to perform strand-specific comparison for each reference corresponding to the labels')
+                                   help='Define whether to perform strand-specific comparison for each reference corresponding to the labels (T or F)')
+    parser_bedprofile.add_argument('-other', metavar='  ', default=None,
+                                   help='Define whether to count "else" for each reference corresponding to the labels (T or F)')
 
     ################### Projection test ##########################################
     parser_projection = subparsers.add_parser('projection',help='Projection test evaluates the association level by comparing to the random binomial model.')
@@ -322,6 +324,13 @@ def main():
                         if bool == "T": strands.append(True)
                         elif bool == "F": strands.append(False)
                     args.strand = strands
+                if args.other:
+                    others = []
+                    for i, bool in enumerate(args.other.split(",")):
+                        if bool == "T": others.append(True)
+                        elif bool == "F": others.append(False)
+                    args.other = others
+
 
             bed_profile = BED_profile(args.i, args.organism, args)
             bed_profile.cal_statistics()
@@ -332,10 +341,10 @@ def main():
             if args.repeats:
                 bed_profile.plot_ref(ref_dir=args.repeats, tag="Repeats", other=True)
             if args.genposi:
-                bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False)
+                bed_profile.plot_ref(ref_dir=args.genposi, tag="Genetic position", other=False, strand=False)
             if args.labels:
                 for i, label in enumerate(args.labels):
-                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=True, strand=args.strand[i])
+                    bed_profile.plot_ref(ref_dir=args.sources[i], tag=label, other=args.other[i], strand=args.strand[i])
             bed_profile.write_tables(args.o, args.t)
             bed_profile.save_fig(filename=os.path.join(args.o, args.t, "figure_"+args.t))
             bed_profile.gen_html(args.o, args.t)
