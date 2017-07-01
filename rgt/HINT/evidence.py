@@ -14,17 +14,17 @@ Authors: Eduardo G. Gusmao, Zhijian Li
 """
 class Evidence:
 
-    def __init__(self, peak_ext, mpbs_name, tfbs_summit_fname, mpbs_fname, output_location):
+    def __init__(self, mpbs_file, tfbs_summit_file, peak_ext, output_location, output_prefix):
+        self.mpbs_file = mpbs_file
+        self.tfbs_summit_file = tfbs_summit_file
         self.peak_ext = peak_ext
-        self.mpbs_name = mpbs_name
-        self.tfbs_summit_fname = tfbs_summit_fname
-        self.mpbs_fname = mpbs_fname
         self.output_location = output_location
+        self.output_prefix = output_prefix
 
     def create_file(self):
         # Expanding summits
         tfbs_summit_regions = GenomicRegionSet("TFBS Summit Regions")
-        tfbs_summit_regions.read_bed(self.tfbs_summit_fname)
+        tfbs_summit_regions.read_bed(self.tfbs_summit_file)
 
         for region in iter(tfbs_summit_regions):
             summit = int(region.data.split()[-1]) + region.initial
@@ -33,7 +33,7 @@ class Evidence:
 
         # Calculating intersections
         mpbs_regions = GenomicRegionSet("MPBS Regions")
-        mpbs_regions.read_bed(self.mpbs_fname)
+        mpbs_regions.read_bed(self.mpbs_file)
 
         tfbs_summit_regions.sort()
         mpbs_regions.sort()
@@ -52,5 +52,5 @@ class Evidence:
 
         tfbs_regions.sort()
 
-        tfbs_fname = os.path.join(self.output_location, "{}.bed".format(self.mpbs_name))
+        tfbs_fname = os.path.join(self.output_location, "{}.bed".format(self.output_prefix))
         tfbs_regions.write_bed(tfbs_fname)
