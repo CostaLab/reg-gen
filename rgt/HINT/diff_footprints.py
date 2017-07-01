@@ -177,7 +177,7 @@ class DiffFootprints:
 
         return spr, tc, fos, np.array(bc_signal), np.array(bias_corrected_tc)
 
-    def diff(self, factor1, factor2):
+    def diff(self, total_tc1, total_tc2):
         mpbs = GenomicRegionSet("Motif Predicted Binding Sites")
         mpbs.read_bed(self.mpbs_file)
 
@@ -196,7 +196,7 @@ class DiffFootprints:
             bias_table2 = BiasTable().load_table(table_file_name_F=table_list[0], table_file_name_R=table_list[1])
 
         # Compute the number of total tag counts located in footprints
-        if factor1 == None and factor2 == None:
+        if total_tc1 == None and total_tc2 == None:
             total_tc1 = 0
             total_tc2 = 0
             signal1 = GenomicSignal(self.reads_file1)
@@ -213,15 +213,14 @@ class DiffFootprints:
                                                    downstream_ext=self.downstream_ext, upstream_ext=self.upstream_ext,
                                                    forward_shift=self.forward_shift, reverse_shift=self.reverse_shift)
 
+        if (total_tc1 > total_tc2):
+            factor1 = 1.0
+            factor2 = total_tc1 / float(total_tc2)
+        else:
+            factor2 = 1.0
+            factor1 = total_tc2 / float(total_tc1)
 
-            if (total_tc1 > total_tc2):
-                factor1 = 1.0
-                factor2 = total_tc1 / float(total_tc2)
-            else:
-                factor2 = 1.0
-                factor1 = total_tc2 / float(total_tc1)
-
-            self.output_factor(factor1, factor2)
+        self.output_factor(factor1, factor2)
 
         # Iterating on MPBSs
         bam1 = Samfile(self.reads_file1, "rb")

@@ -5,7 +5,7 @@
 # Python
 import os
 import numpy as np
-from pysam import Fastafile
+from pysam import Fastafile, Samfile
 from Bio import motifs
 import matplotlib
 
@@ -18,6 +18,7 @@ from signalProcessing import GenomicSignal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 from ..Util import AuxiliaryFunctions
+from pileupRegion import PileupRegion
 
 
 class Plot:
@@ -66,6 +67,7 @@ class Plot:
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
         mpbs_regions.read_bed(self.motif_file)
 
+        bam = Samfile(self.reads_file, "rb")
         for region in mpbs_regions:
             if str(region.name).split(":")[-1] == "Y":
                 num_sites += 1
@@ -75,24 +77,10 @@ class Plot:
                 p2 = mid + (self.window_size / 2)
 
                 # Fetch raw signal
-                raw_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                  downstream_ext=self.downstream_ext,
-                                                  upstream_ext=self.upstream_ext,
-                                                  forward_shift=self.forward_shift,
-                                                  reverse_shift=self.reverse_shift,
-                                                  genome_file_name=genome_data.get_genome())
+                raw_signal, bc_signal = self.get_signal(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=table)
 
                 mean_raw_signal = np.add(mean_raw_signal, raw_signal)
-
-                # Fetch bias correction signal
-                bc_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                 bias_table=table,
-                                                 downstream_ext=self.downstream_ext,
-                                                 upstream_ext=self.upstream_ext,
-                                                 forward_shift=self.forward_shift,
-                                                 reverse_shift=self.reverse_shift,
-                                                 genome_file_name=genome_data.get_genome())
-
                 mean_bc_signal = np.add(mean_bc_signal, bc_signal)
 
                 # Update pwm
@@ -134,39 +122,6 @@ class Plot:
                 mean_bias_signal_f = np.add(mean_bias_signal_f, np.array(bias_signal_f))
                 mean_bias_signal_r = np.add(mean_bias_signal_r, np.array(bias_signal_r))
 
-                # if self.protection_score:
-                #     # signal in the center of the MPBS
-                #     p1 = region.initial
-                #     p2 = region.final
-                #     nc_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                #                                      bias_table=table,
-                #                                      downstream_ext=self.atac_downstream_ext,
-                #                                      upstream_ext=self.atac_upstream_ext,
-                #                                      forward_shift=self.atac_forward_shift,
-                #                                      reverse_shift=self.atac_reverse_shift,
-                #                                      genome_file_name=genome_data.get_genome())
-                #     total_nc_signal += sum(nc_signal)
-                #     p1 = region.final
-                #     p2 = 2 * region.final - region.initial
-                #     nr_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                #                                      bias_table=table,
-                #                                      downstream_ext=self.atac_downstream_ext,
-                #                                      upstream_ext=self.atac_upstream_ext,
-                #                                      forward_shift=self.atac_forward_shift,
-                #                                      reverse_shift=self.atac_reverse_shift,
-                #                                      genome_file_name=genome_data.get_genome())
-                #     total_nr_signal += sum(nr_signal)
-                #     p1 = 2 * region.initial - region.final
-                #     p2 = region.final
-                #     nl_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                #                                      bias_table=table,
-                #                                      downstream_ext=self.atac_downstream_ext,
-                #                                      upstream_ext=self.atac_upstream_ext,
-                #                                      forward_shift=self.atac_forward_shift,
-                #                                      reverse_shift=self.atac_reverse_shift,
-                #                                      genome_file_name=genome_data.get_genome())
-                #     total_nl_signal += sum(nl_signal)
-
         mean_raw_signal = mean_raw_signal / num_sites
         mean_bc_signal = mean_bc_signal / num_sites
 
@@ -205,7 +160,7 @@ class Plot:
         end = (self.window_size / 2) - 1
 
         fig, (ax1, ax2) = plt.subplots(2)
-        x = np.linspace(-50, 49, num=self.window_size)
+        x = np.linspace(start, end, num=self.window_size)
 
         ax1.plot(x, mean_bias_signal_f, color='red', label='Forward')
         ax1.plot(x, mean_bias_signal_r, color='blue', label='Reverse')
@@ -438,6 +393,92 @@ class Plot:
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
         os.system("epstopdf " + output_fname)
+
+    def get_signal(self, ref, start, end, bam, fasta, bias_table):
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(k_nb / 2.)
+        p2_wk = p2_w + int(k_nb / 2.)
+
+        # Raw counts
+        nf = [0.0] * (p2_w - p1_w)
+        nr = [0.0] * (p2_w - p1_w)
+        for read in bam.fetch(ref, p1_w, p2_w):
+            if (not read.is_reverse):
+                cut_site = read.pos + self.forward_shift
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nf[cut_site - p1_w] += 1.0
+            else:
+                cut_site = read.aend + self.reverse_shift - 1
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nr[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(nf[:window])
+        rSum = sum(nr[:window])
+        fLast = nf[0]
+        rLast = nr[0]
+        for i in range((window / 2), len(nf) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += nf[i + (window / 2)]
+            fLast = nf[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += nr[i + (window / 2)]
+            rLast = nr[i - (window / 2) + 1]
+
+        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+        # Iterating on sequence to create signal
+        af = []
+        ar = []
+        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+            try:
+                af.append(fBiasDict[fseq])
+            except Exception:
+                af.append(defaultKmerValue)
+            try:
+                ar.append(rBiasDict[rseq])
+            except Exception:
+                ar.append(defaultKmerValue)
+
+        # Calculating bias and writing to wig file
+        fSum = sum(af[:window])
+        rSum = sum(ar[:window])
+        fLast = af[0]
+        rLast = ar[0]
+        bc_signal = []
+        raw_signal = []
+        for i in range((window / 2), len(af) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+            raw_signal.append(nf[i] + nr[i])
+            bc_signal.append(nhatf + nhatr)
+            fSum -= fLast
+            fSum += af[i + (window / 2)]
+            fLast = af[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += ar[i + (window / 2)]
+            rLast = ar[i - (window / 2) + 1]
+
+        return np.array(raw_signal), np.array(bc_signal)
+
 
     def rescaling(self, vector):
         maxN = max(vector)

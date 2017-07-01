@@ -25,10 +25,10 @@ from evidence import Evidence
 from plot import Plot
 from diff_footprints import DiffFootprints
 
-
 # External
 import os
 import sys
+import pysam
 from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
 from hmmlearn import __version__ as hmm_ver
@@ -113,6 +113,8 @@ def main():
         atac_footprints()
     elif sys.argv[1] == "--dnase-footprints":
         dnase_footprints()
+    elif sys.argv[1] == "--histione-footprints":
+        histone_footprints()
 
     # Optional Input Options
     parser.add_option("--hmm-file", dest="hmm_file", type="string",
@@ -160,7 +162,7 @@ def main():
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
                       default=getcwd(),
                       help=("Path where the output files will be written."))
-    parser.add_option("--output-fname", dest="output_fname", type="string", metavar="STRING",
+    parser.add_option("--output-prefix", dest="output_prefix", type="string", metavar="STRING",
                       default=None)
 
     # GENERAL Hidden Options
@@ -201,6 +203,26 @@ def main():
     parser.add_option("--dnase-reverse-shift", dest="dnase_reverse_shift", type="int",
                       metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--dnase-bias-correction-k", dest="dnase_bias_correction_k", type="int",
+                      metavar="INT", default=6, help=SUPPRESS_HELP)
+
+    # ATAC Hidden Options
+    parser.add_option("--atac-initial-clip", dest="atac_initial_clip", type="int",
+                      metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--atac-sg-window-size", dest="atac_sg_window_size", type="int",
+                      metavar="INT", default=9, help=SUPPRESS_HELP)
+    parser.add_option("--atac-norm-per", dest="atac_norm_per", type="float",
+                      metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--atac-slope-per", dest="atac_slope_per", type="float",
+                      metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--atac-downstream-ext", dest="atac_downstream_ext", type="int",
+                      metavar="INT", default=1, help=SUPPRESS_HELP)
+    parser.add_option("--atac-upstream-ext", dest="atac_upstream_ext", type="int",
+                      metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--atac-forward-shift", dest="atac_forward_shift", type="int",
+                      metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--atac-reverse-shift", dest="atac_reverse_shift", type="int",
+                      metavar="INT", default=-4, help=SUPPRESS_HELP)
+    parser.add_option("--atac-bias-correction-k", dest="atac_bias_correction_k", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
 
     # HISTONE Hidden Options
@@ -245,6 +267,16 @@ def main():
     dnase_forward_shift = options.dnase_forward_shift
     dnase_reverse_shift = options.dnase_reverse_shift
     dnase_bias_correction_k = options.dnase_bias_correction_k
+    # ATAC Hidden Options
+    atac_initial_clip = options.atac_initial_clip
+    atac_sg_window_size = options.atac_sg_window_size
+    atac_norm_per = options.atac_norm_per
+    atac_slope_per = options.atac_slope_per
+    atac_downstream_ext = options.atac_downstream_ext
+    atac_upstream_ext = options.atac_upstream_ext
+    atac_forward_shift = options.atac_forward_shift
+    atac_reverse_shift = options.atac_reverse_shift
+    atac_bias_correction_k = options.atac_bias_correction_k
     # HISTONE Hidden Options
     histone_initial_clip = options.histone_initial_clip
     histone_sg_window_size = options.histone_initial_clip
@@ -343,7 +375,6 @@ def main():
 
     bias_correction = False
     if (options.bias_table):
-
         bias_table_group_list = options.bias_table.split(";")
         if (len(bias_table_group_list) != len(group_list)): pass  # TODO ERROR
         for g in range(0, len(group_list)):
@@ -353,20 +384,6 @@ def main():
             group.bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
                                                       table_file_name_R=bias_table_list[1])
         bias_correction = True
-
-    elif (options.estimate_bias_correction):
-
-        for group in group_list:
-            if (group.histone_only): continue
-            if (group.is_atac):
-                my_k_nb = atac_bias_correction_k
-                my_shift = atac_downstream_ext
-            else:
-                my_k_nb = dnase_bias_correction_k
-                my_shift = dnase_downstream_ext
-            group.bias_table = BiasTable()
-        bias_correction = True
-
     elif (options.default_bias_correction):
 
         for group in group_list:
@@ -418,26 +435,30 @@ def main():
 
             group.flag_multiple_hmms = False
             if (group.dnase_only):
-                if (bias_correction):
+                if bias_correction:
                     if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac_bc()
+                        #group.hmm = hmm_data.get_default_hmm_atac_bc()
+                        hmm_file = hmm_data.get_default_hmm_atac_bc()
+                        group.hmm = joblib.load(hmm_file)
                     else:
                         group.hmm = hmm_data.get_default_hmm_dnase_bc()
                 else:
                     if (group.is_atac):
-                        group.hmm = hmm_data.get_default_hmm_atac()
+                        #group.hmm = hmm_data.get_default_hmm_atac()
+                        hmm_file = hmm_data.get_default_hmm_atac_bc()
+                        group.hmm = joblib.load(hmm_file)
                     else:
                         group.hmm = hmm_data.get_default_hmm_dnase()
-            elif (group.histone_only):
+            elif group.histone_only:
                 group.hmm = hmm_data.get_default_hmm_histone()
             else:
-                if (bias_correction):
-                    if (group.is_atac):
+                if bias_correction:
+                    if group.is_atac:
                         group.hmm = hmm_data.get_default_hmm_atac_histone_bc()
                     else:
                         group.hmm = hmm_data.get_default_hmm_dnase_histone_bc()
                 else:
-                    if (group.is_atac):
+                    if group.is_atac:
                         group.hmm = hmm_data.get_default_hmm_atac_histone()
                     else:
                         group.hmm = hmm_data.get_default_hmm_dnase_histone()
@@ -449,57 +470,32 @@ def main():
 
             hmm_list = []
             for hmm_file_name in group.hmm:
-
+                scikit_hmm = None
                 try:
                     hmm_scaffold = HMM()
                     hmm_scaffold.load_hmm(hmm_file_name)
-                    if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-                                                 transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                        scikit_hmm.means_ = array(hmm_scaffold.means)
-                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
-                    else:
-                        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
-                        scikit_hmm.startprob_ = array(hmm_scaffold.pi)
-                        scikit_hmm.transmat_ = array(hmm_scaffold.A)
-                        scikit_hmm.means_ = array(hmm_scaffold.means)
-                        scikit_hmm.covars_ = array(hmm_scaffold.covs)
-
-                except Exception:
-                    error_handler.throw_error("FP_HMM_FILES")
-                hmm_list.append(scikit_hmm)
-
-            group.hmm = hmm_list
-
-        else:
-
-            scikit_hmm = None
-            try:
-                hmm_scaffold = HMM()
-                hmm_scaffold.load_hmm(group.hmm)
-                if (int(hmm_ver.split(".")[0]) <= 0 and int(hmm_ver.split(".")[1]) <= 1):
-                    scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full",
-                                             transmat=array(hmm_scaffold.A), startprob=array(hmm_scaffold.pi))
-                    scikit_hmm.means_ = array(hmm_scaffold.means)
-                    scikit_hmm.covars_ = array(hmm_scaffold.covs)
-                else:
                     scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
                     scikit_hmm.startprob_ = array(hmm_scaffold.pi)
                     scikit_hmm.transmat_ = array(hmm_scaffold.A)
                     scikit_hmm.means_ = array(hmm_scaffold.means)
                     scikit_hmm.covars_ = array(hmm_scaffold.covs)
-
-
+                except Exception:
+                    error_handler.throw_error("FP_HMM_FILES")
+                hmm_list.append(scikit_hmm)
+            group.hmm = hmm_list
+        else:
+            scikit_hmm = None
+            try:
+                hmm_scaffold = HMM()
+                hmm_scaffold.load_hmm(group.hmm)
+                scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+                scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+                scikit_hmm.transmat_ = array(hmm_scaffold.A)
+                scikit_hmm.means_ = array(hmm_scaffold.means)
+                scikit_hmm.covars_ = array(hmm_scaffold.covs)
             except Exception:
                 error_handler.throw_error("FP_HMM_FILES")
             group.hmm = scikit_hmm
-
-    ##############################################################
-    # Test complex model
-    ##############################################################
-    if options.model_file != None:
-        for group in group_list:
-            group.hmm = joblib.load(options.model_file)
 
     ###################################################################################################
     # Main Pipeline
@@ -518,23 +514,18 @@ def main():
             # DNASE ONLY
             ###################################################################################################
 
-            if (group.dnase_only):
+            if group.dnase_only:
 
                 # Fetching DNase signal
                 try:
-                    if (group.is_atac):
-                        # if options.strands_specific:
+                    if group.is_atac:
                         atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
-                            group.dnase_file.get_signal1(r.chrom, r.initial, r.final, atac_downstream_ext,
-                                                         atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
-                                                         atac_initial_clip, atac_norm_per, atac_slope_per,
-                                                         group.bias_table, genome_data.get_genome())
-                        # else:
-                        atac_norm, atac_slope = \
-                            group.dnase_file.get_signal(r.chrom, r.initial, r.final, atac_downstream_ext,
-                                                        atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
-                                                        atac_initial_clip, atac_norm_per, atac_slope_per,
-                                                        group.bias_table, genome_data.get_genome())
+                            group.dnase_file.get_signal_atac(r.chrom, r.initial, r.final, atac_downstream_ext,
+                                                             atac_upstream_ext, atac_forward_shift, atac_reverse_shift,
+                                                             atac_initial_clip, atac_norm_per, atac_slope_per,
+                                                             group.bias_table, genome_data.get_genome())
+
+                        input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
                     else:
                         dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                               dnase_downstream_ext, dnase_upstream_ext,
@@ -547,34 +538,18 @@ def main():
                                                                               options.print_bc_signal,
                                                                               options.print_norm_signal,
                                                                               options.print_slope_signal)
+                        input_sequence = array([dnase_norm, dnase_slope]).T
                 except Exception:
-                    raise
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region (" + ",".join([r.chrom,
-                                                                                                    str(r.initial), str(
-                            r.final)]) + "). This iteration will be skipped.")
-                    continue
-
-                # Formatting sequence
-                try:
-                    if options.strands_specific:
-                        diff_signal = absolute(subtract(array(atac_norm_f), array(atac_norm_r)))
-                        input_sequence = array([atac_norm, atac_slope, diff_signal]).T
-                    else:
-                        input_sequence = array([atac_norm, atac_slope]).T
-                except Exception:
-                    raise
-                    error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom,
                                                                                                     str(r.initial), str(
                             r.final)]) + "). This iteration will be skipped.")
                     continue
 
                 # Applying HMM
                 if (isinstance(group.hmm, list)): continue  # TODO ERROR
-                # if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                 try:
                     posterior_list = group.hmm.predict(input_sequence)
                 except Exception:
-                    raise
                     error_handler.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom,
                                                                                                    str(r.initial), str(
                             r.final)]) + "). This iteration will be skipped.")
@@ -583,25 +558,25 @@ def main():
                 # Formatting results
                 start_pos = 0
                 flag_start = False
-                # fp_state_nb = 4
-                # fp_state_nb = options.fp_state.split(",")
-                fp_state_nb = ['3']
+                if group.is_atac:
+                    fp_state_nb = 1
+                else:
+                    fp_state_nb = 4
                 for k in range(r.initial, r.initial + len(posterior_list)):
                     curr_index = k - r.initial
                     if (flag_start):
-                        if (str(posterior_list[curr_index]) not in fp_state_nb):
-                            if (k - start_pos < fp_limit_size):
+                        if (posterior_list[curr_index] != fp_state_nb):
+                            if (k - start_pos < options.fp_limit_size):
                                 fp = GenomicRegion(r.chrom, start_pos, k)
                                 footprints.add(fp)
                             flag_start = False
                     else:
-                        if (str(posterior_list[curr_index]) in fp_state_nb):
+                        if (posterior_list[curr_index] == fp_state_nb):
                             flag_start = True
                             start_pos = k
                 if (flag_start):
-                    if (r.final - start_pos < fp_limit_size):
-                        fp = GenomicRegion(r.chrom, start_pos, r.final)
-                        footprints.add(fp)
+                    fp = GenomicRegion(r.chrom, start_pos, r.final)
+                    footprints.add(fp)
 
             ###################################################################################################
             # HISTONES
@@ -641,7 +616,6 @@ def main():
                                                                                   options.print_norm_signal,
                                                                                   options.print_slope_signal)
                     except Exception:
-                        raise
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region (" + ",".join([r.chrom,
                                                                                                         str(r.initial),
                                                                                                         str(
@@ -663,7 +637,6 @@ def main():
                                                                               histone_slope_per, False, False, False,
                                                                               False, False)
                     except Exception:
-                        raise
                         error_handler.throw_warning("FP_HISTONE_PROC", add_msg="for region (" + ",".join([r.chrom,
                                                                                                           str(
                                                                                                               r.initial),
@@ -678,7 +651,6 @@ def main():
                         else:
                             input_sequence = array([dnase_norm, dnase_slope, histone_norm, histone_slope]).T
                     except Exception:
-                        raise
                         error_handler.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join(
                             [r.chrom, str(r.initial), str(
                                 r.final)]) + ") and histone modification " + histone_file.file_name + ". This iteration will be skipped.")
@@ -690,12 +662,10 @@ def main():
                     else:
                         current_hmm = group.hmm
                     if (
-                            isnan(sum(
-                                input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+                    isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
                     try:
                         posterior_list = current_hmm.predict(input_sequence)
                     except Exception:
-                        raise
                         error_handler.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join(
                             [r.chrom, str(r.initial), str(
                                 r.final)]) + ") and histone modification " + histone_file.file_name + ". This iteration will be skipped.")
@@ -736,74 +706,40 @@ def main():
             fp_limit = fp_limit_size_ext_histone
             fp_ext = fp_ext_histone
             tc_ext = tc_ext_histone
-            tcsignal = group.histone_file_list[0]
-            tcext1 = histone_downstream_ext
-            tcext2 = histone_upstream_ext
-            tcshift1 = histone_forward_shift
-            tcshift2 = histone_reverse_shift
-            tcinitialclip = histone_initial_clip
+            reads_file = group.histone_file_list[0]
+            downstream_ext = histone_downstream_ext
+            upstream_ext = histone_upstream_ext
+            forward_shift = histone_forward_shift
+            reverse_shift = histone_reverse_shift
+            initial_clip = histone_initial_clip
         else:
             fp_limit = fp_limit_size_ext
             fp_ext = fp_ext
             tc_ext = tc_ext
-            tcsignal = group.dnase_file
+            reads_file = group.dnase_file
             if (group.is_atac):
-                tcext1 = atac_downstream_ext
-                tcext2 = atac_upstream_ext
-                tcshift1 = atac_forward_shift
-                tcshift2 = atac_reverse_shift
-                tcinitialclip = atac_initial_clip
+                downstream_ext = atac_downstream_ext
+                upstream_ext = atac_upstream_ext
+                forward_shift = atac_forward_shift
+                reverse_shift = atac_reverse_shift
+                initial_clip = atac_initial_clip
             else:
-                tcext1 = dnase_downstream_ext
-                tcext2 = dnase_upstream_ext
-                tcshift1 = dnase_forward_shift
-                tcshift2 = dnase_reverse_shift
-                tcinitialclip = dnase_initial_clip
-
-        # Overlapping results with original regions
-        footprints = footprints.intersect(group.original_regions, mode=OverlapType.ORIGINAL)
-
-        # Extending footprints
-        for f in footprints.sequences:
-            if f.final - f.initial < fp_limit:
-                f.initial = max(0, f.initial - fp_ext)
-                f.final = f.final + fp_ext
-
-        footprints.merge()
-
-        for f in footprints.sequences:
-            if f.final - f.initial > 3 * fp_limit:
-                mid = (f.initial + f.final) / 2
-                f.initial = max(0, mid - 3 * fp_ext)
-                f.final = mid + 3 * fp_ext
-
-        # Fetching chromosome sizes
-        chrom_sizes_file_name = genome_data.get_chromosome_sizes()
-        chrom_sizes_file = open(chrom_sizes_file_name, "r")
-        chrom_sizes_dict = dict()
-        for chrom_sizes_entry_line in chrom_sizes_file:
-            chrom_sizes_entry_vec = chrom_sizes_entry_line.strip().split("\t")
-            chrom_sizes_dict[chrom_sizes_entry_vec[0]] = int(chrom_sizes_entry_vec[1])
-        chrom_sizes_file.close()
-
-        # Evaluating TC
-        for f in footprints.sequences:
-            mid = (f.initial + f.final) / 2
-            p1 = max(mid - tc_ext, 0)
-            p2 = min(mid + tc_ext, chrom_sizes_dict[f.chrom])
-            try:
-                tag_count = tcsignal.get_tag_count(f.chrom, p1, p2, tcext1, tcext2, tcshift1, tcshift2, tcinitialclip)
-            except Exception:
-                tag_count = 0
-            f.data = str(int(tag_count))
+                downstream_ext = dnase_downstream_ext
+                upstream_ext = dnase_upstream_ext
+                forward_shift = dnase_forward_shift
+                reverse_shift = dnase_reverse_shift
+                initial_clip = dnase_initial_clip
 
         ###################################################################################################
-        # Writing output
+        # Post-processing
         ###################################################################################################
 
-        # Creating output file
-        output_file_name = os.path.join(options.output_location, "{}.bed".format(options.output_fname))
-        footprints.write_bed(output_file_name)
+        post_processing(footprints=footprints, original_regions=group.original_regions, fp_limit=fp_limit,
+                        fp_ext=fp_ext, genome_data=genome_data, tc_ext=tc_ext,
+                        reads_file=reads_file, downstream_ext=downstream_ext, upstream_ext=upstream_ext,
+                        forward_shift=forward_shift, reverse_shift=reverse_shift,
+                        initial_clip=initial_clip, output_location=options.output_location,
+                        output_prefix=options.output_prefix)
 
 def atac_footprints():
     """
@@ -839,26 +775,29 @@ def atac_footprints():
 
     # ATAC Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
-    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9, help=SUPPRESS_HELP)
+    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9,
+                      help=SUPPRESS_HELP)
     parser.add_option("--norm-per", dest="norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
     parser.add_option("--slope-per", dest="slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
-    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1, help=SUPPRESS_HELP)
+    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1,
+                      help=SUPPRESS_HELP)
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--forward-shift", dest="forward_shift", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
-    parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=-4, help=SUPPRESS_HELP)
-    parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8, help=SUPPRESS_HELP)
+    parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=-4,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8,
+                      help=SUPPRESS_HELP)
 
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+                      help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
     parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
 
     # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string",
-                      metavar="PATH", default=getcwd(),
+    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=getcwd(),
                       help=("Path where the output bias table files will be written."))
-    parser.add_option("--output-prefix", dest="output_prefix", type="string",
-                      metavar="STRING", default=getcwd(),
+    parser.add_option("--output-prefix", dest="output_prefix", type="string", metavar="STRING", default=getcwd(),
                       help=("The prefix for results files."))
 
     # Processing Options
@@ -898,7 +837,6 @@ def atac_footprints():
     # Initializing result set
     footprints = GenomicRegionSet(options.output_prefix)
 
-
     reads_file = GenomicSignal(arguments[0])
     reads_file.load_sg_coefs(options.sg_window_size)
 
@@ -911,55 +849,53 @@ def atac_footprints():
                                        options.upstream_ext, options.forward_shift, options.reverse_shift,
                                        options.initial_clip, options.norm_per, options.slope_per,
                                        bias_table, genome_data.get_genome())
-        input_sequence = None
         try:
             input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
         except Exception:
             err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Applying HMM
-        posterior_list = None
         try:
             posterior_list = hmm.predict(input_sequence)
         except Exception:
             err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Formatting results
         start_pos = 0
         flag_start = False
-        fp_state_nb = ['1']
+        fp_state_nb = 1
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
-            if flag_start:
-                if str(posterior_list[curr_index]) not in fp_state_nb:
-                    if k - start_pos < options.fp_limit_size:
+            if (flag_start):
+                if (posterior_list[curr_index] != fp_state_nb):
+                    if (k - start_pos < options.fp_limit_size):
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
                     flag_start = False
             else:
-                if str(posterior_list[curr_index]) in fp_state_nb:
+                if (posterior_list[curr_index] == fp_state_nb):
                     flag_start = True
                     start_pos = k
-        if flag_start:
-            if r.final - start_pos < options.fp_limit_size:
-                fp = GenomicRegion(r.chrom, start_pos, r.final)
-                footprints.add(fp)
+        if (flag_start):
+            fp = GenomicRegion(r.chrom, start_pos, r.final)
+            footprints.add(fp)
 
     ###################################################################################################
     # Post-processing
     ###################################################################################################
 
-    post_processing(footprints, original_regions, options.fp_limit, options.fp_ext, genome_data,
-                    options.tc_ext, reads_file, options.downstream_ext, options.upstream_ext,
-                    options.initial_clip, options.output_location, options.output_prefix)
-
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+                    fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+                    reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                    forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                    initial_clip=options.initial_clip, output_location=options.output_location,
+                    output_prefix=options.output_prefix)
     # TODO
     exit(0)
-
 
 def dnase_footprints():
     """
@@ -1004,18 +940,24 @@ def dnase_footprints():
                             "(DNase-seq double-hit protocol). "))
 
     # DNASE Hidden Options
-    parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=1000, help=SUPPRESS_HELP)
-    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9, help=SUPPRESS_HELP)
+    parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=1000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9,
+                      help=SUPPRESS_HELP)
     parser.add_option("--norm-per", dest="norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
     parser.add_option("--slope-per", dest="slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
-    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1, help=SUPPRESS_HELP)
+    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1,
+                      help=SUPPRESS_HELP)
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--forward-shift", dest="forward_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
-    parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
+    parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=6,
+                      help=SUPPRESS_HELP)
 
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000, help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+                      help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
     parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
@@ -1028,13 +970,11 @@ def dnase_footprints():
                       metavar="STRING", default=getcwd(),
                       help=("The prefix for results files."))
 
-
     # Processing Options
     options, arguments = parser.parse_args()
 
     if len(arguments) != 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
-
 
     ########################################################################################################
     # Global class initialization
@@ -1087,7 +1027,6 @@ def dnase_footprints():
     # Initializing result set
     footprints = GenomicRegionSet(options.output_prefix)
 
-
     reads_file = GenomicSignal(arguments[0])
     reads_file.load_sg_coefs(options.sg_window_size)
 
@@ -1098,28 +1037,25 @@ def dnase_footprints():
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
     regions.merge()
 
-
     for r in regions:
         dnase_norm, dnase_slope = reads_file.get_signal(r.chrom, r.initial, r.final, options.downstream_ext,
-                                                            options.upstream_ext, options.forward_shift,
-                                                            options.reverse_shift, options.initial_clip, options.norm_per,
-                                                            options.slope_per, bias_table, genome_data.get_genome())
+                                                        options.upstream_ext, options.forward_shift,
+                                                        options.reverse_shift, options.initial_clip, options.norm_per,
+                                                        options.slope_per, bias_table, genome_data.get_genome())
 
-        input_sequence = None
         try:
             input_sequence = array([dnase_norm, dnase_slope]).T
         except Exception:
             err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Applying HMM
-        posterior_list = None
         try:
             posterior_list = scikit_hmm.predict(input_sequence)
         except Exception:
             err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Formatting results
@@ -1145,10 +1081,12 @@ def dnase_footprints():
     ###################################################################################################
     # Post-processing
     ###################################################################################################
-    post_processing(footprints, original_regions, options.fp_limit, options.fp_ext, genome_data,
-                    options.tc_ext, reads_file, options.downstream_ext, options.upstream_ext,
-                    options.initial_clip, options.output_location, options.output_prefix)
-
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+                    fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+                    reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                    forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                    initial_clip=options.initial_clip, output_location=options.output_location,
+                    output_prefix=options.output_prefix)
     # TODO
     exit(0)
 
@@ -1181,19 +1119,23 @@ def histone_footprints():
                             "options. All default files such as genomes will be based on the chosen organism "
                             "and the data.config file."))
 
-
     # DNASE Hidden Options
-    parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=1000, help=SUPPRESS_HELP)
-    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=201, help=SUPPRESS_HELP)
+    parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=1000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=201,
+                      help=SUPPRESS_HELP)
     parser.add_option("--norm-per", dest="norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
     parser.add_option("--slope-per", dest="slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
-    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=200, help=SUPPRESS_HELP)
+    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=200,
+                      help=SUPPRESS_HELP)
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--forward-shift", dest="forward_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
     parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
 
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000, help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+                      help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
     parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
@@ -1205,7 +1147,6 @@ def histone_footprints():
     parser.add_option("--output-prefix", dest="output_prefix", type="string",
                       metavar="STRING", default=getcwd(),
                       help=("The prefix for results files."))
-
 
     # Processing Options
     options, arguments = parser.parse_args()
@@ -1252,7 +1193,6 @@ def histone_footprints():
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
     regions.merge()
 
-
     for r in regions:
         dnase_norm, dnase_slope = reads_file.get_signal(ref=r.chrom, start=r.initial, end=r.final,
                                                         downstream_ext=options.downstream_ext,
@@ -1268,7 +1208,7 @@ def histone_footprints():
             input_sequence = array([dnase_norm, dnase_slope]).T
         except Exception:
             err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Applying HMM
@@ -1276,7 +1216,7 @@ def histone_footprints():
             posterior_list = scikit_hmm.predict(input_sequence)
         except Exception:
             err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
+                r.final)]) + "). This iteration will be skipped.")
             continue
 
         # Formatting results
@@ -1302,16 +1242,18 @@ def histone_footprints():
     ###################################################################################################
     # Post-processing
     ###################################################################################################
-    post_processing(footprints, original_regions, options.fp_limit, options.fp_ext, genome_data,
-                    options.tc_ext, reads_file, options.downstream_ext, options.upstream_ext,
-                    options.initial_clip, options.output_location, options.output_prefix)
-
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+                    fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+                    reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                    forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                    initial_clip=options.initial_clip, output_location=options.output_location,
+                    output_prefix=options.output_prefix)
     # TODO
     exit(0)
 
 
 def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data, tc_ext, reads_file,
-                    downstream_ext, upstream_ext, initial_clip, output_location, output_prefix):
+                    downstream_ext, upstream_ext, forward_shift, reverse_shift, initial_clip, output_location, output_prefix):
     # Sorting and Merging
     footprints.merge()
 
@@ -1339,9 +1281,10 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
         p1 = max(mid - tc_ext, 0)
         p2 = min(mid + tc_ext, chrom_sizes_dict[f.chrom])
         try:
-            tag_count = reads_file.get_tag_count(f.chrom, p1, p2, tc_ext, tc_ext,
-                                                 downstream_ext, upstream_ext,
-                                                 initial_clip)
+            tag_count = reads_file.get_tag_count(ref=f.chrom, start=p1, end=p2,
+                                                 downstream_ext=downstream_ext, upstream_ext=upstream_ext,
+                                                 forward_shift=forward_shift,reverse_shift=reverse_shift,
+                                                 initial_clip=initial_clip)
         except Exception:
             tag_count = 0
         f.data = str(int(tag_count))
@@ -1352,6 +1295,31 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
     output_file_name = os.path.join(output_location, "{}.bed".format(output_prefix))
     footprints.write_bed(output_file_name)
 
+    # the number of reads
+    lines = pysam.idxstats(reads_file.file_name).splitlines()
+    num_reads = sum(map(int, [x.split("\t")[2] for x in lines if not x.startswith("#")]))
+
+    # the number of peaks and tag count within peaks
+    num_peaks = 0
+    num_tc = 0
+    for r in original_regions:
+        num_peaks += 1
+        try:
+            tag_count = reads_file.get_tag_count(r.chrom, r.initial, r.final, downstream_ext, upstream_ext,
+                                                 forward_shift, reverse_shift, initial_clip)
+        except Exception:
+            tag_count = 0
+        num_tc += tag_count
+
+    # the number of footprints
+    num_fp = len(footprints)
+
+    output_file_name = os.path.join(output_location, "{}.info".format(output_prefix))
+    with open(output_file_name, "w") as f:
+        f.write("Number of reads: " + str(num_reads) + "\n")
+        f.write("Number of peaks: " + str(num_peaks) + "\n")
+        f.write("Number of tag counts within peaks: " + str(num_tc) + "\n")
+        f.write("Number of footprints: " + str(num_fp) + "\n")
 
 def estimate_bias():
     """
@@ -1781,8 +1749,8 @@ def print_signals():
     signal.load_sg_coefs(slope_window_size=9)
     regions = GenomicRegionSet("Interested regions")
     regions.read_bed(options.regions_file)
-    #regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
-    #regions.merge()  # Sort & Merge
+    # regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    # regions.merge()  # Sort & Merge
 
     table = None
     if options.bias_table:
