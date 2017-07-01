@@ -735,11 +735,11 @@ def main():
                 reverse_shift = atac_reverse_shift
                 initial_clip = atac_initial_clip
             else:
-                tcext1 = dnase_downstream_ext
-                tcext2 = dnase_upstream_ext
-                tcshift1 = dnase_forward_shift
-                tcshift2 = dnase_reverse_shift
-                tcinitialclip = dnase_initial_clip
+                downstream_ext = dnase_downstream_ext
+                upstream_ext = dnase_upstream_ext
+                forward_shift = dnase_forward_shift
+                reverse_shift = dnase_reverse_shift
+                initial_clip = dnase_initial_clip
 
         ###################################################################################################
         # Post-processing
