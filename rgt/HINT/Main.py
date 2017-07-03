@@ -926,6 +926,7 @@ def output_bed_file(chrom, start, end, states, output_fname, fp_state):
                 current_state = states[i]
                 is_print = False
 
+
 def dnase_footprints():
     """
     Performs footprints identification from DNase-seq.
