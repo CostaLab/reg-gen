@@ -230,7 +230,7 @@ class GenomicSignal:
         return rescal_signal_forward, slope_signal_forward, rescal_signal_reverse, slope_signal_reverse
 
     def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift, is_strand_specific):
+                        forward_shift, reverse_shift, is_strand_specific=False):
 
         if not bias_table: return signal
         # Parameters

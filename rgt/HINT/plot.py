@@ -8,9 +8,9 @@ import numpy as np
 from pysam import Fastafile, Samfile
 from Bio import motifs
 import matplotlib
-
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import pyx
 
 # Internal
 from ..Util import GenomeData
@@ -18,7 +18,6 @@ from signalProcessing import GenomicSignal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 from ..Util import AuxiliaryFunctions
-from pileupRegion import PileupRegion
 
 
 class Plot:
@@ -185,7 +184,7 @@ class Plot:
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_bias_signal, max_bias_signal])
         ax1.legend(loc="upper right", frameon=False)
-        ax1.set_ylabel("Average Bias \nSignal", rotation=90, fontweight='bold')
+        ax1.set_ylabel("Bias Signal", rotation=90, fontweight='bold')
 
         ax2.plot(x, mean_raw_signal, color='red', label='Uncorrected')
         ax2.plot(x, mean_bc_signal, color='green', label='Corrected')
@@ -207,7 +206,7 @@ class Plot:
 
         ax2.spines['bottom'].set_position(('outward', 40))
         ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        ax2.set_ylabel("Average ATAC-seq \nSignal", rotation=90, fontweight='bold')
+        ax2.set_ylabel("ATAC-seq Signal", rotation=90, fontweight='bold')
         ax2.legend(loc="center", frameon=False, bbox_to_anchor=(0.85, 0.06))
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
@@ -219,7 +218,7 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.68, 1.55, logo_fname, width=17, height=2.45))
+        c.insert(pyx.epsfile.epsfile(2.68, 1.35, logo_fname, width=17, height=2.45))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -478,7 +477,6 @@ class Plot:
             rLast = ar[i - (window / 2) + 1]
 
         return np.array(raw_signal), np.array(bc_signal)
-
 
     def rescaling(self, vector):
         maxN = max(vector)
