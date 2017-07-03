@@ -87,14 +87,9 @@ class GenomicSignal:
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
-        # Std-based clipping
-        mean = raw_signal.mean()
-        std = raw_signal.std()
-        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-
         # Tag count
         try:
-            tag_count = sum(clip_signal)
+            tag_count = sum(raw_signal)
         except Exception:
             tag_count = 0
 
