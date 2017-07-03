@@ -31,6 +31,7 @@ import sys
 import pysam
 from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
+from pysam import __version__ as pysam_ver
 from hmmlearn import __version__ as hmm_ver
 from sklearn.externals import joblib
 
