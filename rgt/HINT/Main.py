@@ -112,7 +112,7 @@ def main():
         atac_footprints()
     elif sys.argv[1] == "--dnase-footprints":
         dnase_footprints()
-    elif sys.argv[1] == "--histione-footprints":
+    elif sys.argv[1] == "--histone-footprints":
         histone_footprints()
 
     # Optional Input Options
@@ -1132,11 +1132,11 @@ def histone_footprints():
 
     parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
                       help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=2000,
                       help=SUPPRESS_HELP)
-    parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
-    parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
+    parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=500, help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=200, help=SUPPRESS_HELP)
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
@@ -1252,17 +1252,20 @@ def histone_footprints():
 
 def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data, tc_ext, reads_file,
                     downstream_ext, upstream_ext, forward_shift, reverse_shift, initial_clip, output_location, output_prefix):
-    # Sorting and Merging
-    footprints.merge()
-
     # Overlapping results with original regions
-    footprints = footprints.intersect(original_regions, mode=OverlapType.ORIGINAL)
+    footprints_overlap = footprints.intersect(original_regions, mode=OverlapType.ORIGINAL)
+
+    # Sorting and Merging
+    footprints_overlap.merge()
 
     # Extending footprints
-    for f in footprints.sequences:
+    for f in footprints_overlap.sequences:
         if (f.final - f.initial < fp_limit):
             f.initial = max(0, f.initial - fp_ext)
             f.final = f.final + fp_ext
+
+    # Sorting and Merging
+    footprints_overlap.merge()
 
     # Fetching chromosome sizes
     chrom_sizes_file_name = genome_data.get_chromosome_sizes()
@@ -1274,7 +1277,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
     chrom_sizes_file.close()
 
     # Evaluating TC
-    for f in footprints.sequences:
+    for f in footprints_overlap.sequences:
         mid = (f.initial + f.final) / 2
         p1 = max(mid - tc_ext, 0)
         p2 = min(mid + tc_ext, chrom_sizes_dict[f.chrom])
@@ -1291,7 +1294,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
     # Writing output
     ###################################################################################################
     output_file_name = os.path.join(output_location, "{}.bed".format(output_prefix))
-    footprints.write_bed(output_file_name)
+    footprints_overlap.write_bed(output_file_name)
 
     # the number of reads
     lines = pysam.idxstats(reads_file.file_name).splitlines()
@@ -1310,7 +1313,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
         num_tc += tag_count
 
     # the number of footprints
-    num_fp = len(footprints)
+    num_fp = len(footprints_overlap)
 
     output_file_name = os.path.join(output_location, "{}.info".format(output_prefix))
     with open(output_file_name, "w") as f:
