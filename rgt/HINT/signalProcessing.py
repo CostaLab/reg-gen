@@ -411,7 +411,6 @@ class GenomicSignal:
             if bias_corrected_signal_forward[i] < 0: bias_corrected_signal_forward[i] = 0.0
         for i in range(len(bias_corrected_signal_reverse)):
             if bias_corrected_signal_reverse[i] < 0: bias_corrected_signal_reverse[i] = 0.0
-        # bias_fixed_signal = [e + min_value for e in bias_corrected_signal]
 
         # Termination
         fastaFile.close()

@@ -31,8 +31,6 @@ import sys
 import pysam
 from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
-from pysam import __version__ as pysam_ver
-from hmmlearn import __version__ as hmm_ver
 from sklearn.externals import joblib
 
 """
@@ -545,11 +543,7 @@ def main():
                                                                               dnase_initial_clip, dnase_norm_per,
                                                                               dnase_slope_per,
                                                                               group.bias_table,
-                                                                              genome_data.get_genome(),
-                                                                              options.print_raw_signal,
-                                                                              options.print_bc_signal,
-                                                                              options.print_norm_signal,
-                                                                              options.print_slope_signal)
+                                                                              genome_data.get_genome())
                         input_sequence = array([dnase_norm, dnase_slope]).T
                 except Exception:
                     error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region (" + ",".join([r.chrom,
@@ -608,11 +602,7 @@ def main():
                                                                                   dnase_initial_clip, dnase_norm_per,
                                                                                   dnase_slope_per,
                                                                                   group.bias_table,
-                                                                                  genome_data.get_genome(),
-                                                                                  options.print_raw_signal,
-                                                                                  options.print_bc_signal,
-                                                                                  options.print_norm_signal,
-                                                                                  options.print_slope_signal)
+                                                                                  genome_data.get_genome())
                         else:
                             dnase_norm, dnase_slope = group.dnase_file.get_signal(r.chrom, r.initial, r.final,
                                                                                   dnase_downstream_ext,
@@ -622,11 +612,7 @@ def main():
                                                                                   dnase_initial_clip, dnase_norm_per,
                                                                                   dnase_slope_per,
                                                                                   group.bias_table,
-                                                                                  genome_data.get_genome(),
-                                                                                  options.print_raw_signal,
-                                                                                  options.print_bc_signal,
-                                                                                  options.print_norm_signal,
-                                                                                  options.print_slope_signal)
+                                                                                  genome_data.get_genome())
                     except Exception:
                         error_handler.throw_warning("FP_DNASE_PROC", add_msg="for region (" + ",".join([r.chrom,
                                                                                                         str(r.initial),
