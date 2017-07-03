@@ -153,7 +153,7 @@ class GenomicSignal:
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
-        hon_signal = self.hon_norm(boyle_signal, perc, std)
+        hon_signal = self.hon_norm_dnase(boyle_signal, perc, std)
 
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
@@ -207,11 +207,11 @@ class GenomicSignal:
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal_forward, per_norm)
         std = boyle_signal_forward.std()
-        hon_signal_forward = self.hon_norm(boyle_signal_forward, perc, std)
+        hon_signal_forward = self.hon_norm_atac(boyle_signal_forward, perc, std)
 
         perc = scoreatpercentile(boyle_signal_reverse, per_norm)
         std = boyle_signal_reverse.std()
-        hon_signal_reverse = self.hon_norm(boyle_signal_reverse, perc, std)
+        hon_signal_reverse = self.hon_norm_atac(boyle_signal_reverse, perc, std)
 
         # Rescaling signal
         rescal_signal_forward = self.rescaling(hon_signal_forward)
@@ -333,7 +333,7 @@ class GenomicSignal:
         else:
             return bias_corrected_signal
 
-    def hon_norm(self, sequence, mean, std):
+    def hon_norm_atac(self, sequence, mean, std):
         """
         Normalizes a sequence according to hon's criterion using mean and std.
         This represents a between-dataset normalization.
@@ -356,6 +356,32 @@ class GenomicSignal:
             return norm_seq
         else:
             return sequence
+
+    def hon_norm_dnase(self, sequence, mean, std):
+        """
+        Normalizes a sequence according to hon's criterion using mean and std.
+        This represents a between-dataset normalization.
+        Keyword arguments:
+        sequence -- Input sequence.
+        mean -- Global mean.
+        std -- Global std.
+        Return:
+        norm_seq -- Normalized sequence.
+        """
+
+        #if std != 0:
+        #    norm_seq = []
+        #    for e in sequence:
+        #        norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+        #    return norm_seq
+        #else:
+        #    return sequence
+        norm_seq = []
+        for e in sequence:
+            if(e == 0.0): norm_seq.append(0.0)
+            elif(e > 0.0): norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
+            else: norm_seq.append(-1.0/(1.0+(exp(-(-e-mean)/std))))
+        return norm_seq
 
     def boyle_norm(self, sequence):
         """

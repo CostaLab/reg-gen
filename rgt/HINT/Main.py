@@ -908,6 +908,7 @@ def atac_footprints():
     # TODO
     exit(0)
 
+
 def dnase_footprints():
     """
     Performs footprints identification from DNase-seq.
