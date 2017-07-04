@@ -114,6 +114,9 @@ def main():
         dnase_footprints()
     elif sys.argv[1] == "--histone-footprints":
         histone_footprints()
+    elif sys.argv[1] == "--dnase-histone-footprints":
+        dnase_histone_footprints()
+
 
     # Optional Input Options
     parser.add_option("--hmm-file", dest="hmm_file", type="string",
@@ -802,7 +805,7 @@ def atac_footprints():
     # Processing Options
     options, arguments = parser.parse_args()
 
-    if len(arguments) != 2:
+    if len(arguments) < 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
 
     ########################################################################################################
@@ -897,6 +900,7 @@ def atac_footprints():
     # TODO
     exit(0)
 
+
 def output_bed_file(chrom, start, end, states, output_fname, fp_state):
     #state_dict = dict([(0, "0"), (1, "1"), (2, "2"), (3, "3"), (4, "4")])
     #color_dict = dict([(0, "0,0,0"), (1, "102,0,51"), (2, "153,0,153"), (3, "102,0,204"), (4, "0,0,255")])
@@ -950,14 +954,14 @@ def dnase_footprints():
     parser.add_option("--hmm-file", dest="hmm_file", type="string",
                       metavar="FILE", default=None,
                       help=("If the argument is not given, then a default HMM will be used."))
-    parser.add_option("--bias-table", dest="bias_table", type="string",
-                      metavar="FILE_F,FILE_R", default=None,
-                      help=("List of files with all possible k-mers (for any k) and their bias estimates. "
-                            "Each line should contain a kmer and the bias estimate separated by tab."))
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
                       help=("Organism considered on the analysis. Check our full documentation for all available "
                             "options. All default files such as genomes will be based on the chosen organism "
                             "and the data.config file."))
+    parser.add_option("--bias-table", dest="bias_table", type="string",
+                      metavar="FILE_F,FILE_R", default=None,
+                      help=("List of files with all possible k-mers (for any k) and their bias estimates. "
+                            "Each line should contain a kmer and the bias estimate separated by tab."))
     parser.add_option("--bias-correction", dest="bias_correction",
                       action="store_true", default=False,
                       help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
@@ -1003,7 +1007,7 @@ def dnase_footprints():
     # Processing Options
     options, arguments = parser.parse_args()
 
-    if len(arguments) != 2:
+    if len(arguments) < 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
 
     ########################################################################################################
@@ -1149,7 +1153,6 @@ def histone_footprints():
                             "options. All default files such as genomes will be based on the chosen organism "
                             "and the data.config file."))
 
-    # DNASE Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=1000,
                       help=SUPPRESS_HELP)
     parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=201,
@@ -1181,7 +1184,7 @@ def histone_footprints():
     # Processing Options
     options, arguments = parser.parse_args()
 
-    if len(arguments) != 2:
+    if len(arguments) < 2:
         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
 
     ########################################################################################################
@@ -1224,7 +1227,7 @@ def histone_footprints():
     regions.merge()
 
     for r in regions:
-        dnase_norm, dnase_slope = reads_file.get_signal(ref=r.chrom, start=r.initial, end=r.final,
+        histone_norm, histone_slope = reads_file.get_signal(ref=r.chrom, start=r.initial, end=r.final,
                                                         downstream_ext=options.downstream_ext,
                                                         upstream_ext=options.upstream_ext,
                                                         forward_shift=options.forward_shift,
@@ -1235,7 +1238,7 @@ def histone_footprints():
                                                         genome_file_name=genome_data.get_genome())
 
         try:
-            input_sequence = array([dnase_norm, dnase_slope]).T
+            input_sequence = array([histone_norm, histone_slope]).T
         except Exception:
             err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
                 r.final)]) + "). This iteration will be skipped.")
@@ -1278,6 +1281,240 @@ def histone_footprints():
                     forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
                     initial_clip=options.initial_clip, output_location=options.output_location,
                     output_prefix=options.output_prefix)
+    # TODO
+    exit(0)
+
+
+def dnase_histone_footprints():
+    """
+    Performs footprints identification from DNase-seq combining with histone modification data.
+
+    Authors: Eduardo G. Gusmao, Zhijian Li.
+    """
+
+    ###################################################################################################
+    # Processing Input Arguments
+    ###################################################################################################
+
+    # Initializing Error Handler
+    err = ErrorHandler()
+
+    # Parameters
+    usage_message = "%prog --dnase-histone-footprints [options] [DNase.bam histone.bam regions.bed]"
+
+    # Initializing Option Parser
+    parser = PassThroughOptionParser(usage=usage_message)
+
+    parser.add_option("--hmm-file", dest="hmm_file", type="string",
+                      metavar="FILE", default=None,
+                      help=("If the argument is not given, then a default HMM will be used."))
+    parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
+                      help=("Organism considered on the analysis. Check our full documentation for all available "
+                            "options. All default files such as genomes will be based on the chosen organism "
+                            "and the data.config file."))
+    parser.add_option("--bias-table", dest="bias_table", type="string",
+                      metavar="FILE_F,FILE_R", default=None,
+                      help=("List of files with all possible k-mers (for any k) and their bias estimates. "
+                            "Each line should contain a kmer and the bias estimate separated by tab."))
+    parser.add_option("--bias-correction", dest="bias_correction",
+                      action="store_true", default=False,
+                      help=("Applies DNase-seq cleavage bias correction with default k-mer bias "
+                            "estimates (FAST HINT-BC). Please set the correct --bias-type "
+                            "option that matches your experimental settings."))
+    parser.add_option("--bias-type", dest="bias_type", type="string",
+                      metavar="STRING", default="SH",
+                      help=("Type of protocol used to generate the DNase-seq. "
+                            "Available options are: 'SH' (DNase-seq single-hit protocol), 'DH' "
+                            "(DNase-seq double-hit protocol). "))
+
+
+    parser.add_option("--dnase-initial-clip", dest="dnase_initial_clip", type="int", metavar="INT", default=1000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--dnase-sg-window-size", dest="dnase_sg_window_size", type="int", metavar="INT", default=9,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--dnase-norm-per", dest="dnase_norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--dnase-slope-per", dest="dnase_slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--dnase-downstream-ext", dest="dnase_downstream_ext", type="int", metavar="INT", default=1,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--dnase-upstream-ext", dest="dnase_upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--dnase-forward-shift", dest="dnase_forward_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--dnase-reverse-shift", dest="dnase_reverse_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+
+
+    parser.add_option("--histone-initial-clip", dest="histone_initial_clip", type="int", metavar="INT", default=1000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--histone-sg-window-size", dest="histone_sg_window_size", type="int", metavar="INT", default=201,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--histone-norm-per", dest="histone_norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--histone-slope-per", dest="histone_slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--histone-downstream-ext", dest="histone_downstream_ext", type="int", metavar="INT", default=200,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--histone-upstream-ext", dest="histone_upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--histone-forward-shift", dest="histone_forward_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--histone-reverse-shift", dest="histone_reverse_shift", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+
+
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
+
+    # Output Options
+    parser.add_option("--output-location", dest="output_location", type="string",
+                      metavar="PATH", default=getcwd(),
+                      help=("Path where the output bias table files will be written."))
+    parser.add_option("--output-prefix", dest="output_prefix", type="string",
+                      metavar="STRING", default=getcwd(),
+                      help=("The prefix for results files."))
+
+
+    # Processing Options
+    options, arguments = parser.parse_args()
+
+    if len(arguments) < 3:
+        err.throw_error("ME_FEW_ARG", add_msg="You must specify DNase and histone reads and regions file.")
+
+    ########################################################################################################
+    # Global class initialization
+    genome_data = GenomeData(options.organism)
+    hmm_data = HmmData()
+
+    ###################################################################################################
+    # Fetching Bias Table
+    ###################################################################################################
+    bias_table = None
+    if options.bias_correction:
+        if options.bias_table:
+            bias_table_list = options.bias_table.split(",")
+            bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
+                                                table_file_name_R=bias_table_list[1])
+        else:
+            if options.bias_type == 'SH':
+                table_F = hmm_data.get_default_bias_table_F_SH()
+                table_R = hmm_data.get_default_bias_table_R_SH()
+                bias_table = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
+            elif options.bias_type == 'DH':
+                table_F = hmm_data.get_default_bias_table_F_DH()
+                table_R = hmm_data.get_default_bias_table_R_DH()
+                bias_table = BiasTable().load_table(table_file_name_F=table_F, table_file_name_R=table_R)
+
+    ###################################################################################################
+    # Creating HMMs
+    ###################################################################################################
+    if options.hmm_file:
+        hmm_file = options.hmm_file
+    else:
+        if options.bias_correction:
+            hmm_file = hmm_data.get_default_hmm_dnase_histone_bc()
+        else:
+            hmm_file = hmm_data.get_default_hmm_dnase_histone()
+    scikit_hmm = None
+    try:
+        hmm_scaffold = HMM()
+        hmm_scaffold.load_hmm(hmm_file)
+        scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+        scikit_hmm.startprob_ = array(hmm_scaffold.pi)
+        scikit_hmm.transmat_ = array(hmm_scaffold.A)
+        scikit_hmm.means_ = array(hmm_scaffold.means)
+        scikit_hmm.covars_ = array(hmm_scaffold.covs)
+    except Exception:
+        err.throw_error("FP_HMM_FILES")
+
+
+    # Initializing result set
+    footprints = GenomicRegionSet(options.output_prefix)
+
+    dnase_reads_file = GenomicSignal(arguments[0])
+    dnase_reads_file.load_sg_coefs(options.dnase_sg_window_size)
+
+    histone_reads_file_list = list()
+    for f in arguments[1:-1]:
+        histone_reads_file_list.append(GenomicSignal(f))
+
+    original_regions = GenomicRegionSet("regions")
+    original_regions.read_bed(arguments[-1])
+
+    regions = deepcopy(original_regions)
+    regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    regions.merge()
+
+    for r in regions:
+        dnase_norm, dnase_slope = dnase_reads_file.get_signal(ref=r.chrom, start=r.initial, end=r.final,
+                                                              downstream_ext=options.dnase_downstream_ext,
+                                                              upstream_ext=options.dnase_upstream_ext,
+                                                              forward_shift=options.dnase_forward_shift,
+                                                              reverse_shift=options.dnase_reverse_shift,
+                                                              initial_clip=options.dnase_initial_clip,
+                                                              per_norm=options.dnase_norm_per,
+                                                              per_slope=options.dnase_slope_per,
+                                                              bias_table=bias_table,
+                                                              genome_file_name=genome_data.get_genome())
+        # Iterating over histone modifications
+        for i in range(0, len(histone_reads_file_list)):
+            # Fetching histone signal
+            histone_file = None
+            try:
+                histone_file = histone_reads_file_list[i]
+                histone_file.load_sg_coefs(options.histone_sg_window_size)
+                histone_norm, histone_slope = histone_file.get_signal(ref=r.chrom, start=r.initial, end=r.final,
+                                                                      downstream_ext=options.histone_downstream_ext,
+                                                                      upstream_ext=options.histone_upstream_ext,
+                                                                      forward_shift=options.histone_forward_shift,
+                                                                      reverse_shift=options.histone_reverse_shift,
+                                                                      initial_clip=options.histone_initial_clip,
+                                                                      per_norm=options.histone_norm_per,
+                                                                      per_slope=options.histone_slope_per,
+                                                                      genome_file_name=genome_data.get_genome())
+            except Exception:
+                err.throw_warning("FP_HISTONE_PROC", add_msg="for region (" + ",".join([r.chrom,str(r.initial),
+                                str(r.final)]) + ") and histone modification " + histone_file.file_name +
+                                ". This iteration will be skipped for this histone.")
+                continue
+
+            # Formatting sequence
+            input_sequence = array([dnase_norm, dnase_slope, histone_norm, histone_slope]).T
+            if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+            try:
+                posterior_list = scikit_hmm.predict(input_sequence)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + ") and histone modification " + histone_file.file_name + ". This iteration will be skipped.")
+                continue
+
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = 7
+            for k in range(r.initial, r.initial + len(posterior_list)):
+                curr_index = k - r.initial
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(r.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
+            if (flag_start):
+                fp = GenomicRegion(r.chrom, start_pos, r.final)
+                footprints.add(fp)
+
+    ###################################################################################################
+    # Post-processing
+    ###################################################################################################
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+                    fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+                    reads_file=dnase_reads_file, downstream_ext=options.dnase_downstream_ext,
+                    upstream_ext=options.dnase_upstream_ext,
+                    forward_shift=options.dnase_forward_shift, reverse_shift=options.dnase_reverse_shift,
+                    initial_clip=options.dnase_initial_clip, output_location=options.output_location,
+                    output_prefix=options.output_prefix)
+
     # TODO
     exit(0)
 
