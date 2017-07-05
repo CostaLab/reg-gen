@@ -1,9 +1,7 @@
 # Import
 import os
 import numpy as np
-import pysam
-from pysam import Samfile
-from pysam import Fastafile
+from pysam import Samfile, Fastafile
 from math import log, ceil, floor
 from Bio import motifs
 import matplotlib
@@ -18,7 +16,6 @@ from ..Util import AuxiliaryFunctions, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 from signalProcessing import GenomicSignal
-from pileupRegion import PileupRegion
 
 """
 Perform differential footprints analysis based on the prediction.
@@ -36,7 +33,7 @@ class DiffFootprints:
 
     def __init__(self, organism, mpbs_file, reads_file1, reads_file2, bias_table1, bias_table2,
                  window_size, motif_ext, min_value, initial_clip, downstream_ext, upstream_ext,
-                 forward_shift, reverse_shift, k_nb, housekeeping_genes, output_location, output_prefix):
+                 forward_shift, reverse_shift, k_nb, output_location, output_prefix):
         self.organism = organism
         self.mpbs_file = mpbs_file
         self.reads_file1 = reads_file1
@@ -52,7 +49,6 @@ class DiffFootprints:
         self.forward_shift = forward_shift
         self.reverse_shift = reverse_shift
         self.k_nb = k_nb
-        self.housekeeping_genes = housekeeping_genes
         self.output_location = output_location
         self.output_prefix = output_prefix
 

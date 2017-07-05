@@ -2161,14 +2161,11 @@ def diff_footprints():
                       help=("List of files (for each input group; separated by semicolon) with all "
                             "possible k-mers (for any k) and their bias estimates."))
     parser.add_option("--window-size", dest="window_size", type="int",
-                      metavar="INT", default=100)
+                      metavar="INT", default=200)
     parser.add_option("--motif-ext", dest="motif_ext", type="int",
                       metavar="INT", default=20)
     parser.add_option("--min-value", dest="min_value", type="int",
                       metavar="INT", default=1)
-    parser.add_option("--housekeeping-genes", dest="housekeeping_genes", type="string",
-                      metavar="FILE", default=None,
-                      help=("A bed file containing house keeping genes used to normalize library size"))
     parser.add_option("--tc1", dest="tc1", type="float",
                       metavar="INT", default=None)
     parser.add_option("--tc2", dest="tc2", type="float",
@@ -2198,12 +2195,20 @@ def diff_footprints():
 
     options, arguments = parser.parse_args()
 
+    hmm_data = HmmData()
+
+    if options.bias_table1 == None and options.bias_table2 == None:
+        table_F = hmm_data.get_default_bias_table_F_ATAC()
+        table_R = hmm_data.get_default_bias_table_R_ATAC()
+        options.bias_table1 = table_F + "," + table_R
+        options.bias_table2 = table_F + "," + table_R
+
+
     diff_footprints = DiffFootprints(options.organism, options.mpbs_file, options.reads_file1,
                                      options.reads_file2, options.bias_table1, options.bias_table2,
                                      options.window_size, options.motif_ext, options.min_value,
                                      options.initial_clip, options.downstream_ext, options.upstream_ext,
                                      options.forward_shift, options.reverse_shift, options.k_nb,
-                                     options.housekeeping_genes,
                                      options.output_location, options.output_prefix)
 
     diff_footprints.diff(options.tc1, options.tc2)
