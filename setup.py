@@ -26,8 +26,8 @@ options specific for RGT.
 
 def read(*names, **kwargs):
     with io.open(
-            os.path.join(os.path.dirname(__file__), *names),
-            encoding=kwargs.get("encoding", "utf8")
+        os.path.join(os.path.dirname(__file__), *names),
+        encoding=kwargs.get("encoding", "utf8")
     ) as fp:
         return fp.read()
 
@@ -106,13 +106,13 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.14", "hmmlearn==0.2.0", "pyx==0.12.1"],
+        ["scikit-learn>=0.14", "hmmlearn", "pyx==0.12.1"],
         []
     ),
     "THOR": (
         "rgt-THOR",
         "rgt.THOR.THOR:main",
-        ["scikit-learn>=0.17.1", "hmmlearn==0.2.0", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
+        ["scikit-learn>=0.17.1", "hmmlearn", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
     ),
@@ -198,8 +198,8 @@ parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
                   help=("The tool which will be installed. If this argument is not used, "
                         "then the complete package is installed. The current available options "
                         "are: " + ", ".join(tools_dictionary.keys()) + "; where 'core' means that "
-                                                                       "only the RGT python library will be installed with no further command-line "
-                                                                       "tools. You can also provide multiple tools in a list separated by comma."),
+                        "only the RGT python library will be installed with no further command-line "
+                        "tools. You can also provide multiple tools in a list separated by comma."),
                   dest="param_rgt_tool", default=",".join(tools_dictionary.keys()))
 
 # Processing Options
@@ -324,8 +324,7 @@ data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
-data_config_file.write(
-    "path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
+data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
 data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/" + libRGT) + "\n")
 
 data_config_file.close()
