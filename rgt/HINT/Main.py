@@ -2032,12 +2032,12 @@ def print_signal():
 
     chrom_sizes_file = genome_data.get_chromosome_sizes()
     if options.bigWig:
-        if options.print_raw_signal:
+        if options.raw_signal:
             bw_filename = os.path.join(options.output_location, "{}.raw.bw".format(options.output_prefix))
             system(" ".join(["wigToBigWig", raw_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
             os.remove(raw_signal_file)
 
-        if options.print_bc_signal:
+        if options.bc_signal:
             bw_filename = os.path.join(options.output_location, "{}.bc.bw".format(options.output_prefix))
             system(" ".join(["wigToBigWig", bc_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
             os.remove(bc_signal_file)
