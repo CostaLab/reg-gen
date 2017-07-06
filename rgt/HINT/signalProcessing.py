@@ -541,7 +541,7 @@ class GenomicSignal:
 
     def print_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                    initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
-                   raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, slope_signal_file=None):
+                   raw_signal_file=None, bc_signal_file=None):
 
         if raw_signal_file:
             pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)

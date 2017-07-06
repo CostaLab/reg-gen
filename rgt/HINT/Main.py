@@ -102,8 +102,8 @@ def main():
         evaluate_footprints()
     elif sys.argv[1] == "--print-lines":
         print_lines()
-    elif sys.argv[1] == "--print-signals":
-        print_signals()
+    elif sys.argv[1] == "--print-signal":
+        print_signal()
     elif sys.argv[1] == "--create-evidence":
         create_evidence()
     elif sys.argv[1] == "--diff-footprints":
@@ -1911,7 +1911,7 @@ def print_lines():
     exit(0)
 
 
-def print_signals():
+def print_signal():
     """
     Performs signals output.
 
@@ -1926,7 +1926,7 @@ def print_signals():
     err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --print-signals [options] [file1 file2]"
+    usage_message = "%prog --print-signal [options] [file1 file2]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)
@@ -1972,21 +1972,13 @@ def print_signals():
     parser.add_option("--output-prefix", dest="output_prefix", type="string",
                       metavar="STRING", default=getcwd(),
                       help=("The prefix for results files."))
-    parser.add_option("--print-raw-signal", dest="print_raw_signal",
+    parser.add_option("--raw-signal", dest="raw_signal",
                       action="store_true", default=False,
                       help=("If used, it will print the base overlap (raw) signals from DNase-seq "
                             " or ATAC-seq data. "))
-    parser.add_option("--print-bc-signal", dest="print_bc_signal",
+    parser.add_option("--bc-signal", dest="bc_signal",
                       action="store_true", default=False,
                       help=("If used, it will print the base overlap (bias corrected) signals from DNase-seq "
-                            " or ATAC-seq data. "))
-    parser.add_option("--print-norm-signal", dest="print_norm_signal",
-                      action="store_true", default=False,
-                      help=("If used, it will print the base overlap (normalized) signals from DNase-seq "
-                            " or ATAC-seq data. "))
-    parser.add_option("--print-slope-signal", dest="print_slope_signal",
-                      action="store_true", default=False,
-                      help=("If used, it will print the base overlap (slope) signals from DNase-seq "
                             " or ATAC-seq data. "))
     parser.add_option("--bigWig", dest="bigWig",
                       action="store_true", default=False,
@@ -2001,21 +1993,13 @@ def print_signals():
 
     raw_signal_file = None
     bc_signal_file = None
-    norm_signal_file = None
-    slope_signal_file = None
     # Output wig signal
-    if options.print_raw_signal:
+    if options.raw_signal:
         raw_signal_file = os.path.join(options.output_location, "{}.raw.wig".format(options.output_prefix))
         system("touch " + raw_signal_file + " | echo -n "" > " + raw_signal_file)
-    if options.print_bc_signal:
+    if options.bc_signal:
         bc_signal_file = os.path.join(options.output_location, "{}.bc.wig".format(options.output_prefix))
         system("touch " + bc_signal_file + " | echo -n "" > " + bc_signal_file)
-    if options.print_norm_signal:
-        norm_signal_file = os.path.join(options.output_location, "{}.norm.wig".format(options.output_prefix))
-        system("touch " + norm_signal_file + " | echo -n "" > " + norm_signal_file)
-    if options.print_slope_signal:
-        slope_signal_file = os.path.join(options.output_location, "{}.slope.wig".format(options.output_prefix))
-        system("touch " + slope_signal_file + " | echo -n "" > " + slope_signal_file)
 
     signal = GenomicSignal(options.reads_file)
     signal.load_sg_coefs(slope_window_size=9)
@@ -2044,9 +2028,7 @@ def print_signals():
                             reverse_shift=options.reverse_shift,
                             genome_file_name=genome_data.get_genome(),
                             raw_signal_file=raw_signal_file,
-                            bc_signal_file=bc_signal_file,
-                            norm_signal_file=norm_signal_file,
-                            slope_signal_file=slope_signal_file)
+                            bc_signal_file=bc_signal_file)
 
     chrom_sizes_file = genome_data.get_chromosome_sizes()
     if options.bigWig:
@@ -2059,16 +2041,6 @@ def print_signals():
             bw_filename = os.path.join(options.output_location, "{}.bc.bw".format(options.output_prefix))
             system(" ".join(["wigToBigWig", bc_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
             os.remove(bc_signal_file)
-
-        if options.print_norm_signal:
-            bw_filename = os.path.join(options.output_location, "{}.norm.bw".format(options.output_prefix))
-            system(" ".join(["wigToBigWig", norm_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
-            os.remove(norm_signal_file)
-
-        if options.print_slope_signal:
-            bw_filename = os.path.join(options.output_location, "{}.slope.bw".format(options.output_prefix))
-            system(" ".join(["wigToBigWig", slope_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
-            os.remove(slope_signal_file)
     # TODO
     exit(0)
 
