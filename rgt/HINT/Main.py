@@ -1950,9 +1950,6 @@ def print_signals():
                             "should have two files: one for the forward and one for the reverse strand. "
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
-    parser.add_option("--region-total-ext", dest="region_total_ext", type="int",
-                      metavar="INT", default=10000,
-                      help=SUPPRESS_HELP)
 
     # Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int",
@@ -1997,6 +1994,11 @@ def print_signals():
 
     options, arguments = parser.parse_args()
 
+    ########################################################################################################
+    # Global class initialization
+    genome_data = GenomeData(options.organism)
+    hmm_data = HmmData()
+
     raw_signal_file = None
     bc_signal_file = None
     norm_signal_file = None
@@ -2019,21 +2021,24 @@ def print_signals():
     signal.load_sg_coefs(slope_window_size=9)
     regions = GenomicRegionSet("Interested regions")
     regions.read_bed(options.regions_file)
-    # regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
-    # regions.merge()  # Sort & Merge
 
-    table = None
+    ###################################################################################################
+    # Fetching Bias Table
+    ###################################################################################################
     if options.bias_table:
-        bias_table = BiasTable()
         bias_table_list = options.bias_table.split(",")
-        table = bias_table.load_table(table_file_name_F=bias_table_list[0],
-                                      table_file_name_R=bias_table_list[1])
+        bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
+                                            table_file_name_R=bias_table_list[1])
+    else:
+        table_F = hmm_data.get_default_bias_table_F_ATAC()
+        table_R = hmm_data.get_default_bias_table_R_ATAC()
+        bias_table = BiasTable().load_table(table_file_name_F=table_F,
+                                            table_file_name_R=table_R)
 
-    genome_data = GenomeData(options.organism)
     for region in regions:
         signal.print_signal(ref=region.chrom, start=region.initial, end=region.final,
                             downstream_ext=options.downstream_ext,
-                            bias_table=table,
+                            bias_table=bias_table,
                             upstream_ext=options.upstream_ext,
                             forward_shift=options.forward_shift,
                             reverse_shift=options.reverse_shift,

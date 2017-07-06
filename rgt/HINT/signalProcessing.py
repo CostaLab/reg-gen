@@ -543,59 +543,104 @@ class GenomicSignal:
                    initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
                    raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, slope_signal_file=None):
 
-        # Fetch raw signal
-        pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if (ps_version == "0.7.5"):
-            self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
-        else:
-            iter = self.bam.fetch(reference=ref, start=start, end=end)
-            for alignment in iter:
-                pileup_region.__call__(alignment)
-        raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
-
-        # Std-based clipping
-        mean = raw_signal.mean()
-        std = raw_signal.std()
-        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-
-        # Cleavage bias correction
-        bc_signal = self.bias_correction(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift,
-                                         reverse_shift)
-
-        # Boyle normalization (within-dataset normalization)
-        boyle_signal = array(self.boyle_norm(bc_signal))
-
-        # Hon normalization (between-dataset normalization)
-        perc = scoreatpercentile(boyle_signal, per_norm)
-        std = boyle_signal.std()
-        hon_signal = self.hon_norm(boyle_signal, perc, std)
-
-        # Rescaling signal
-        rescal_signal = self.rescaling(hon_signal)
-
-        # Slope signal
-        slope_signal = self.slope(rescal_signal, self.sg_coefs)
-
         if raw_signal_file:
+            pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
+            if (ps_version == "0.7.5"):
+                self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
+            else:
+                iter = self.bam.fetch(reference=ref, start=start, end=end)
+                for alignment in iter:
+                    pileup_region.__call__(alignment)
+            raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
+
             f = open(raw_signal_file, "a")
             f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
                     [str(e) for e in nan_to_num(raw_signal)]) + "\n")
             f.close()
 
         if bc_signal_file:
+            # Parameters
+            window = 50
+            defaultKmerValue = 1.0
+
+            # Initialization
+            fasta = Fastafile(genome_file_name)
+            fBiasDict = bias_table[0]
+            rBiasDict = bias_table[1]
+            k_nb = len(fBiasDict.keys()[0])
+            p1 = start
+            p2 = end
+            p1_w = p1 - (window / 2)
+            p2_w = p2 + (window / 2)
+            p1_wk = p1_w - int(k_nb / 2.)
+            p2_wk = p2_w + int(k_nb / 2.)
+
+            currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+            currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+            # Iterating on sequence to create the bias signal
+            signal_bias_f = []
+            signal_bias_r = []
+            for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+                fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+                rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+                try:
+                    signal_bias_f.append(fBiasDict[fseq])
+                except Exception:
+                    signal_bias_f.append(defaultKmerValue)
+                try:
+                    signal_bias_r.append(rBiasDict[rseq])
+                except Exception:
+                    signal_bias_r.append(defaultKmerValue)
+
+            # Raw counts
+            signal_raw_f = [0.0] * (p2_w - p1_w)
+            signal_raw_r = [0.0] * (p2_w - p1_w)
+            for read in self.bam.fetch(ref, p1_w, p2_w):
+                if (not read.is_reverse):
+                    cut_site = read.pos + forward_shift
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        signal_raw_f[cut_site - p1_w] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        signal_raw_r[cut_site - p1_w] += 1.0
+
+            # Smoothed counts
+            Nf = []
+            Nr = []
+            fSum = sum(signal_raw_f[:window])
+            rSum = sum(signal_raw_r[:window])
+            fLast = signal_raw_f[0]
+            rLast = signal_raw_r[0]
+            for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+                Nf.append(fSum)
+                Nr.append(rSum)
+                fSum -= fLast
+                fSum += signal_raw_f[i + (window / 2)]
+                fLast = signal_raw_f[i - (window / 2) + 1]
+                rSum -= rLast
+                rSum += signal_raw_r[i + (window / 2)]
+                rLast = signal_raw_r[i - (window / 2) + 1]
+
+            # Calculating bias and writing to wig file
+            fSum = sum(signal_bias_f[:window])
+            rSum = sum(signal_bias_r[:window])
+            fLast = signal_bias_f[0]
+            rLast = signal_bias_r[0]
+            signal_bc = []
+            for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+                nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+                nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+                signal_bc.append(nhatf + nhatr)
+                fSum -= fLast
+                fSum += signal_bias_f[i + (window / 2)]
+                fLast = signal_bias_f[i - (window / 2) + 1]
+                rSum -= rLast
+                rSum += signal_bias_r[i + (window / 2)]
+                rLast = signal_bias_r[i - (window / 2) + 1]
+
             f = open(bc_signal_file, "a")
             f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                    [str(e) for e in nan_to_num(bc_signal)]) + "\n")
-            f.close()
-
-        if norm_signal_file:
-            f = open(norm_signal_file, "a")
-            f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(rescal_signal)]) + "\n")
-            f.close()
-
-        if slope_signal_file:
-            f = open(slope_signal_file, "a")
-            f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(slope_signal)]) + "\n")
+                    [str(e) for e in nan_to_num(signal_bc)]) + "\n")
             f.close()
