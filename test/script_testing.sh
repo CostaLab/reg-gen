@@ -145,25 +145,37 @@ mkdir -p ${DIR}/HINT
 
 cd ${DIR}/HINT
 
-url="http://www.regulatory-genomics.org/wp-content/uploads/2017/04/RGT_HINT_Test.tar.gz"
-
-# Download the data
-file="${DIR}/HINT/HINT_Test/InputMatrix_HINT_DNase.txt"
-if [ -f "$file" ]
-then
-    echo "Test data exist."
-else
-    echo "Downloading test data."
-    wget -qO- -O RGT_HINT_Test.tar.gz $url && tar xvfz RGT_HINT_Test.tar.gz && rm RGT_HINT_Test.tar.gz
-fi
-
-# Run test script
-cd RGT_HINT_Test
 echo "Running HINT using DNase-seq and histone modification data.."
-rgt-hint --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINT_DNase+Histone.txt
+url="http://134.130.18.8/open_data/hint/test/HINT_DNaseHistoneTest.tar.gz"
+echo "Downloading test data."
+wget -qO- -O HINT_DNaseHistoneTest.tar.gz $url && tar xvfz HINT_DNaseHistoneTest.tar.gz && rm HINT_DNaseHistoneTest.tar.gz
+cd HINT_DNaseHistoneTest
+rgt-hint --dnase-histone-footprints --output-location=./ --output-prefix=test DNase.bam H3K4me1.bam H3K4me3.bam regions.bed
+cd ../
+
+echo "Running HINT using only histone modification data.."
+url="http://134.130.18.8/open_data/hint/test/HINT_HistoneTest.tar.gz"
+echo "Downloading test data."
+wget -qO- -O HINT_HistoneTest.tar.gz $url && tar xvfz HINT_HistoneTest.tar.gz && rm HINT_HistoneTest.tar.gz
+cd HINT_HistoneTest
+rgt-hint --histone-footprints --output-location=./ --output-prefix=test histone.bam histonePeaks.bed
+cd ../
+
 echo "Running HINT using only DNase-seq data.."
-rgt-hint --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINT_DNase.txt
+url="http://134.130.18.8/open_data/hint/test/HINT_DNaseTest.tar.gz"
+echo "Downloading test data."
+wget -qO- -O HINT_DNaseTest.tar.gz $url && tar xvfz HINT_DNaseTest.tar.gz && rm HINT_DNaseTest.tar.gz
+cd HINT_DNaseTest
+rgt-hint --dnase-footprints --output-location=./ --output-prefix=test DNase.bam DNasePeaks.bed
 echo "Running HINT-BC using only DNase-seq data.."
-rgt-hint --default-bias-correction --output-location ./Output/ --output-fname DU_K562_HINT ./InputMatrix_HINTBC_DNase.txt
+rgt-hint --dnase-footprints --bias-correction --output-location=./ --output-prefix=test_bc DNase.bam DNasePeaks.bed
+cd ../
+
+echo "Running HINT using only ATAC-seq data.."
+url="http://134.130.18.8/open_data/hint/test/HINT_ATACTest.tar.gz"
+echo "Downloading test data."
+wget -qO- -O HINT_ATACTest.tar.gz $url && tar xvfz HINT_ATACTest.tar.gz && rm HINT_ATACTest.tar.gz
+cd HINT_ATACTest
+rgt-hint --atac-footprints --output-location=./ --output-prefix=test ATAC.bam ATACPeaks.bed
 
 echo "********* HINT test completed ****************"
