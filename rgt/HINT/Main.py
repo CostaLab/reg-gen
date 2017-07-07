@@ -1863,7 +1863,7 @@ def print_lines():
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
     parser.add_option("--window-size", dest="window_size", type="int",
-                      metavar="INT", default=100)
+                      metavar="INT", default=400)
 
     # Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int",
@@ -1897,13 +1897,14 @@ def print_lines():
 
     options, arguments = parser.parse_args()
 
-    plot = Plot(options.organism, options.reads_file, options.motif_file, options.window_size,
-                options.downstream_ext, options.upstream_ext, options.forward_shift, options.reverse_shift,
-                options.initial_clip, options.bias_table, options.k_nb,
-                options.output_location, options.output_prefix)
+    plot = Plot(organism=options.organism, reads_file=options.reads_file, motif_file=options.motif_file,
+                window_size=options.window_size, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                initial_clip=options.initial_clip, bias_table=options.bias_table, k_nb=options.k_nb,
+                output_loc=options.output_location, output_prefix=options.output_prefix)
 
     if options.print_corrected_plot:
-        plot.line()
+        plot.line2()
     if options.print_strand_plot:
         plot.line1()
 
