@@ -51,7 +51,7 @@ def main():
     helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
-    \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=True)
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
     ################### BED profile ##########################################
@@ -260,21 +260,26 @@ def main():
     parser_integration.add_argument('-l2m', help='Convert a given file list in txt format into a experimental matrix.')
     parser_integration.add_argument('-o', help='Define the folder of the output file.')
     ################### Parsing the arguments ################################
+    # print(sys.argv)
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    elif len(sys.argv) == 2: 
-        # retrieve subparsers from parser
-        subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
-        # there will probably only be one subparser_action,but better save than sorry
-        for subparsers_action in subparsers_actions:
-            # get all subparsers and print help
-            for choice, subparser in subparsers_action.choices.items():
-                if choice == sys.argv[1]:
-                    print("\nYou need more arguments.")
-                    print("\nSubparser '{}'".format(choice))        
-                    subparser.print_help()
-        sys.exit(1)
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            parser.print_help()
+            sys.exit(1)
+        else:
+            # retrieve subparsers from parser
+            subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+            # there will probably only be one subparser_action,but better save than sorry
+            for subparsers_action in subparsers_actions:
+                # get all subparsers and print help
+                for choice, subparser in subparsers_action.choices.items():
+                    if choice == sys.argv[1]:
+                        print("\nYou need more arguments.")
+                        print("\nSubparser '{}'".format(choice))
+                        subparser.print_help()
+            sys.exit(1)
     else:
         args = parser.parse_args()
         if args.mode != 'integration':
