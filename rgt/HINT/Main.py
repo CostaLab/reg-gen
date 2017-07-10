@@ -1996,10 +1996,12 @@ def print_signal():
     # Output wig signal
     if options.raw_signal:
         raw_signal_file = os.path.join(options.output_location, "{}.raw.wig".format(options.output_prefix))
-        system("touch " + raw_signal_file + " | echo -n "" > " + raw_signal_file)
+        #system("touch " + raw_signal_file + " | echo -n "" > " + raw_signal_file)
+        system("touch " + raw_signal_file)
     if options.bc_signal:
         bc_signal_file = os.path.join(options.output_location, "{}.bc.wig".format(options.output_prefix))
-        system("touch " + bc_signal_file + " | echo -n "" > " + bc_signal_file)
+        #system("touch " + bc_signal_file + " | echo -n "" > " + bc_signal_file)
+        system("touch " + bc_signal_file)
 
     signal = GenomicSignal(options.reads_file)
     signal.load_sg_coefs(slope_window_size=9)
