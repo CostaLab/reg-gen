@@ -24,7 +24,7 @@ echo "$file not found."
 curl http://www.regulatory-genomics.org/wp-content/uploads/2015/07/THOR_example_data.tar.gz | tar xz
 fi
 
-Run test script
+# Run test script
 cd THOR_example_data/
 rm -rf report_* sample-*
 rgt-THOR THOR.config -n sample --report
