@@ -18,10 +18,11 @@ from matplotlib.ticker import MaxNLocator
 from rgt.SequenceSet import SequenceSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
+from RNADNABindingSet import RNADNABindingSet
 from triplexTools import get_rna_region_str, connect_rna,\
     dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, rna_associated_gene, find_triplex, random_each,\
-    region_link_internet
+    split_gene_name, run_triplexator, find_triplex, random_each,\
+    region_link_internet, rna_associated_gene
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -51,17 +52,35 @@ class RandomTest:
 
         self.topDBD = []
         self.stat = OrderedDict(name=rna_name, genome=organism)
-        self.stat["target_regions"] = str(len(self.dna_region))
+        # self.stat["target_regions"] = str(len(self.dna_region))
+        self.stat = {"name": rna_name, "genome": organism, "exons": 1, "seq_length": None,
+                     "target_regions": str(len(self.dna_region)), "background_regions": str(len(self.dna_region)),
+                     "DBD_all": 0, "DBD_sig": 0, "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
+                     "DBSs_background_all": "-", "DBSs_background_DBD_sig": "-", "p_value": "-",
+                     "loci": "-", "autobinding": 0,
+                     "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0, "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+                     "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
+                     "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
 
 
     def get_rna_region_str(self, rna):
         """Getting the rna region from the information header with the pattern:
                 REGION_chr3_51978050_51983935_-_"""
         self.rna_regions = get_rna_region_str(rna)
+        if self.rna_regions:
+            r_genes = rna_associated_gene(rna_regions=self.rna_regions,
+                                          name=self.rna_name, organism=self.organism)
+            self.stat["associated_gene"] = r_genes
+            self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
+                                str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        else:
+            self.stat["associated_gene"] = "."
+            self.stat["loci"] = "n.a."
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
         else:
             self.rna_expression = "n.a."
+        self.stat["expression"] = str(self.rna_expression)
 
     def connect_rna(self, rna, temp):
         d = connect_rna(rna, temp, self.rna_name)
@@ -89,8 +108,8 @@ class RandomTest:
         txpf = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
                             temp=temp, organism=self.organism, remove_temp=remove_temp,
                             l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,
-                            prefix="dbs", dna_fine_posi=True)
-        txpf.remove_duplicates()
+                            prefix="dbs", dna_fine_posi=True, seq=True)
+        # txpf.remove_duplicates()
         txpf.merge_rbs(rbss=self.rbss, rm_duplicate=True, asgene_organism=self.organism)
         self.txpf = txpf
 
@@ -129,15 +148,16 @@ class RandomTest:
                                dbd_tag=False,
                                remove_duplicates=False, associated=self.organism)
             self.txpf.write_bed(filename=os.path.join(temp, obed + "_dbss.bed"),
-                                remove_duplicates=False)
+                                remove_duplicates=False, associated=self.organism)
 
 
-    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha):
+    def random_test(self, repeats, temp, remove_temp, l, e, c, fr, fm, of, mf, rm, par, filter_bed, alpha, mp):
         """Perform randomization for the given times"""
+
         self.repeats = repeats
         marks = numpy.round(numpy.linspace(0, repeats - 1, num=41)).tolist()
         print("random_test")
-        print(par)
+        # print(par)
         # Prepare the input lists for multiprocessing
         mp_input = []
         for i in range(repeats):
@@ -148,7 +168,7 @@ class RandomTest:
         # Multiprocessing
         print("\t\t|0%                  |                100%|")
         print("\t\t[", end="")
-        pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-2)
+        pool = multiprocessing.Pool(processes=mp)
         mp_output = pool.map(random_each, mp_input)
         # print(mp_output)
         pool.close()
@@ -219,7 +239,7 @@ class RandomTest:
         if self.showdbs: self.dbss_matrix = numpy.array(self.dbss_matrix)
 
         counts_dbss = [v[i] for v in dbss_counts]
-        self.stat["DBSs_random_ave"] = numpy.mean(counts_dbss)
+        self.stat["DBSs_background_all"] = numpy.mean(counts_dbss)
         try: self.stat["p_value"] = str(min(self.data["region"]["p"]))
         except: self.stat["p_value"] = "1"
 
@@ -236,13 +256,35 @@ class RandomTest:
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
 
+    def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
+        rna = os.path.join(output, "rna_temp.fa")
+        run_triplexator(ss=None, ds=None, autobinding=rna,
+                        output=os.path.join(output, self.rna_name+"_autobinding.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf)
+        self.autobinding = RNADNABindingSet("autobinding")
+        self.autobinding.read_txp(filename=os.path.join(output, self.rna_name+"_autobinding.txp"), dna_fine_posi=True, seq=True)
+        self.stat["autobinding"] = len(self.autobinding)
+        self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        self.autobinding.motif_statistics()
+
+    def dbs_motif(self, outdir):
+        self.txpf.motif_statistics()
+        for i, mode in enumerate(self.txpf.motifs.keys()):
+            for con in self.txpf.motifs[mode].keys():
+                self.stat[mode+"_"+con] = str(self.txpf.motifs[mode][con])
+
+    def uniq_motif(self):
+        self.txpf.uniq_motif_statistics(rnalen=self.rna_len)
+        for k, v in self.txpf.uniq_motifs.iteritems():
+            self.stat[k] = sum(v)
+            self.stat["uniq_"+k] = sum([1 for x in v if x > 0])
 
     def lineplot(self, txp, dirp, ac, cut_off, log, ylabel, linelabel, showpa, sig_region, filename):
         """Generate lineplot for RNA"""
-
+        self.autobinding.rna_track(rnalen=self.rna_len)
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region,
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,
-                 filename=filename, ac=ac, showpa=showpa)
+                 filename=filename, ac=self.autobinding.rna_track, showpa=showpa)
 
     def boxplot(self, dir, matrix, sig_region, truecounts, sig_boolean, ylabel, filename):
         """Generate the visualized plot"""
@@ -315,9 +357,9 @@ class RandomTest:
         ax.xaxis.label.set_size(14)
         ax.yaxis.label.set_size(14)
 
-        pp = PdfPages(os.path.join(dir, filename + '.pdf'))
-        pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
-        pp.close()
+        # pp = PdfPages(os.path.join(dir, filename + '.pdf'))
+        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        # pp.close()
 
     def gen_html(self, directory, parameters, obed, align=50, alpha=0.05, score=False):
         """Generate the HTML file"""
@@ -327,15 +369,17 @@ class RandomTest:
         link_ds["RNA"] = "index.html"
         link_ds["Sig Target Regions"] = "starget_regions.html"
         link_ds["Target Regions"] = "target_regions.html"
+        link_ds["Autobinding"] = "autobinding.html"
         link_ds["Parameters"] = "parameters.html"
 
         ##################################################
         # index.html
 
-        html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
+        html = Html(name=html_header, links_dict=link_ds,
+                    fig_dir=os.path.join(os.path.dirname(directory),"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
         # Plots
-        html.add_figure("lineplot_region.png", align="left", width="45%", more_images=["boxplot_regions.png"])
+        html.add_figure(self.rna_name+"_lineplot.png", align="left", width="45%", more_images=[self.rna_name+"_boxplot.png"])
         if self.showdbs:
             html.add_figure("lineplot_dbs.png", align="left", width="45%", more_images=["boxplot_dbs.png"])
 
@@ -365,19 +409,21 @@ class RandomTest:
                            " style=\"border-right:1pt solid gray\"",
                            " style=\"border-right:1pt solid gray\""]
         else:
-            header_list = [["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", None],
+            header_list = [["#", "DBD", "Target Regions", None, "Non-target Regions", None, "Statistics", None, "Autobinding"],
                            ["", "", "with DBS", "without DBS", "with DBS (average)", "s.d.", "<i>p</i>-value",
-                            "z-score"]]
+                            "z-score", "Number"]]
             header_titles = [["Rank", "DNA Binding Domain", "Given target regions on DNA", None,
-                              "Regions from randomization", None, "Statistics based on target regions", None],
+                              "Regions from randomization", None, "Statistics based on target regions", None,
+                              "Regions bind to themselves"],
                              ["", "",
                               "Number of target regions with DBS binding",
                               "Number of target regions without DBS binding",
                               "Average number of regions from randomization with DBS binding",
-                              "Standard deviation", "P value", "Z-score"]]
+                              "Standard deviation", "P value", "Z-score", ""]]
             border_list = [" style=\"border-right:1pt solid gray\"",
                            " style=\"border-right:1pt solid gray\"", "",
                            " style=\"border-right:1pt solid gray\"", "",
+                           " style=\"border-right:1pt solid gray\"",
                            " style=\"border-right:1pt solid gray\"",
                            " style=\"border-right:1pt solid gray\"", ""]
 
@@ -400,7 +446,10 @@ class RandomTest:
                         value2str(self.data["region"]["ave"][i]),
                         value2str(self.data["region"]["sd"][i]),
                         p_region,
-                        value2str(zs)]
+                        value2str(zs),
+                        '<a href="autobinding.html">' +
+                        str(len(self.autobinding.merged_dict[rbs])) + '</a>'
+                        ]
             if self.showdbs:
                 if self.data["dbs"]["p"][i] < alpha:
                     p_dbs = "<font color=\"red\">" + value2str(self.data["dbs"]["p"][i]) + "</font>"
@@ -459,7 +508,7 @@ class RandomTest:
                                    ])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 auto_width=True, header_titles=header_titles, sortable=True)
+                                 auto_width=True, header_titles=header_titles, sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbd_region.html"))
 
@@ -538,7 +587,7 @@ class RandomTest:
         data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         # data_table = sorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True, header_titles=header_titles, sortable=True)
+                             auto_width=True, header_titles=header_titles, sortable=True, clean=True)
         html.add_heading("Notes")
         html.add_list(["All target regions without any bindings are ignored."])
         html.add_fixed_rank_sortable()
@@ -613,7 +662,7 @@ class RandomTest:
             # data_table = sorted(data_table, key=lambda x: x[-1])
             data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titles, border_list=None, sortable=True)
+                                 header_titles=header_titles, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
             html.add_list(["DBS stands for DNA Binding Site on DNA.",
                            "DBS coverage is the proportion of the region where has potential to form triple helices with the given RNA."])
@@ -634,10 +683,10 @@ class RandomTest:
             else:
                 html.add_heading("Associated gene: " + split_gene_name(gene_name=region.name, org=self.organism),
                                  idtag=region.toString())
-                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + region.chrom + "%3A" + str(region.initial) +
-                                       "-" + str(region.final) + '" style="margin-left:50">' +
-                                       region.toString(space=True) + '</a>'])
+                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
+                #                        "&position=" + region.chrom + "%3A" + str(region.initial) +
+                #                        "-" + str(region.final) + '" style="margin-left:50">' +
+                #                        region.toString(space=True) + '</a>'])
                 data_table = []
                 for rd in self.region_dbs[region.toString()]:
                     rbs = rd.rna.str_rna(pa=False)
@@ -652,8 +701,30 @@ class RandomTest:
                                        '" style="text-align:left">' + rd.dna.toString(space=True) + '</a>',
                                        rd.dna.orientation, rd.score, rd.motif, rd.orient])
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     auto_width=True)
+                                     auto_width=True, clean=True)
         html.write(os.path.join(directory, "region_dbs.html"))
+
+        ################################################################
+        ############# Autobinding
+        html = Html(name=html_header, links_dict=link_ds,  # fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+
+        html.add_heading("Autobinding")
+        header_list = ["#", "DBD", "RNA", "DNA", "Score", "Motif", "Orientation", "Sequence"]
+        t = []
+        for rbs in self.rbss:
+            for i, rd in enumerate(self.autobinding):
+                if rbs.overlap(rd.rna):
+                    t.append([str(i), rbs.str_rna(pa=False),
+                              str(rd.rna.initial) + "-" + str(rd.rna.final),
+                              str(rd.dna.initial) + "-" + str(rd.dna.final),
+                              rd.score, rd.motif, rd.orient,
+                              '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
+        if len(t) > 0:
+            html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
+                                 sortable=True, clean=True)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "autobinding.html"))
 
         ###############################################################################33
         ################ Parameters.html
@@ -686,6 +757,6 @@ class RandomTest:
                       ["Output format", "-of", str(self.triplexator_p[5])],
                       ["Merge features", "-mf", str(self.triplexator_p[6])]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
+                             auto_width=True, clean=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))

@@ -27,9 +27,9 @@ from RNADNABindingSet import RNADNABindingSet
 from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
-from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna,\
-    get_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, region_link_internet
+from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna, \
+    save_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
+    split_gene_name, region_link_internet, rna_associated_gene
 
 
 # Color code for all analysis
@@ -55,7 +55,20 @@ class PromoterTest:
         self.scoreh = scoreh
         self.motif = OrderedDict()
         self.sig_DBD = []
-        self.stat = OrderedDict(name=rna_name, genome=self.gtf)
+        # self.stat = {name=rna_name, genome=self.gtf)
+        self.stat = { "name":rna_name, "genome":self.gtf, "exons":1, "seq_length": None,
+                      "target_regions": 0, "background_regions": 0,
+                      "DBD_all": 0, "DBD_sig": 0,
+                      "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
+                      "DBSs_background_all": 0, "DBSs_background_DBD_sig": 0, "p_value": "-",
+                      "associated_gene": ".", "expression": "n.a.", "loci": "-", "autobinding": 0,
+                      "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0, "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+                      "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
+                      "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
+                      # "Mix_Antiparallel_A": 0, "Mix_Antiparallel_G": 0, "Mix_Antiparallel_T": 0,
+                      # "Mix_Parallel_C": 0, "Mix_Parallel_G": 0, "Mix_Parallel_T": 0,
+                      # "Purine_Antiparallel_A": 0, "Purine_Antiparallel_G": 0, "Purine_Antiparallel_T": 0,
+                      # "Pyrimidine_Parallel_C": 0, "Pyrimidine_Parallel_G": 0, "Pyrimidine_Parallel_T": 0 }
         ####################################################################################
         # Input BED files
         if bed and bg:
@@ -67,16 +80,8 @@ class PromoterTest:
             # score
             if score:
                 self.scores = self.de_regions.get_score_dict()
-                # for promoter in self.de_regions:
-                #     if promoter.data: self.scores.append(promoter.data.split("\t")[0])
-                #     else: self.scores = None
-                # self.score_dict = self.de_regions.get_score_dict()
 
-            # try: self.de_regions = self.de_regions.gene_association(organism=self.organism)
-            # except: pass
             self.nde_regions.read_bed(bg)
-            # try: self.nde_regions = self.nde_regions.gene_association(organism=self.organism)
-            # except: pass
             self.nde_regions.remove_duplicates()
 
         ####################################################################################
@@ -93,11 +98,10 @@ class PromoterTest:
             try:
                 data = load_dump(path=temp, filename=dumpname)
                 self.de_gene = data[0]
-                self.ensembl2symbol = data[1]
-                self.nde_gene = data[2]
-                self.de_regions = data[3]
-                self.nde_regions = data[4]
-                if score: self.scores = data[5]
+                self.nde_gene = data[1]
+                self.de_regions = data[2]
+                self.nde_regions = data[3]
+                if score: self.scores = data[4]
 
             except:
 
@@ -108,7 +112,6 @@ class PromoterTest:
 
                 if score:
                     self.de_gene.read(gene_list_file, score=True)
-                    # self.de_gene.read_expression(geneListFile=gene_list_file, header=scoreh, valuestr=True)
                 else:
                     self.de_gene.read(gene_list_file)
                 # When there is no genes in the list
@@ -147,17 +150,10 @@ class PromoterTest:
                     t2 = time.time()
                     print("\t" + str(datetime.timedelta(seconds=round(t2 - t1))))
 
-
-                    # Generate a dict for ID transfer
-                    de_ensembl, unmap_gs, self.ensembl2symbol = ann.fix_gene_names(gene_set=self.de_gene, output_dict=True)
-                    print2(summary, "   \t" + str(len(de_ensembl)) + "\tgenes are mapped to Ensembl ID")
-                    if len(unmap_gs) > 0:
-                        print2(summary, "   \t" + str(len(unmap_gs)) + "\tunmapped genes: " + ",".join(unmap_gs))
-
-                    self.de_gene.genes = de_ensembl
                     de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=promoterLength,
-                                                                    gene_set=self.de_gene,
+                                                                    gene_set=self.de_gene, regiondata=score,
                                                                     unmaplist=True, variants=False)
+
                     print2(summary, "   \t" + str(len(de_prom)) + "\tmapped promoters")
                     if len(unmapped_gene_list) > 0:
                         print2(summary, "   \t" + str(len(unmapped_gene_list)) + "\tunmapped promoters: " + ",".join(
@@ -166,7 +162,7 @@ class PromoterTest:
                     ######################################################
                     # NonDE gene regions
 
-                    nde_ensembl = [g for g in ann.symbol_dict.keys() if g not in de_ensembl]
+                    nde_ensembl = [g for g in ann.symbol_dict.values() if g not in self.de_gene]
                     print2(summary, "   \t" + str(len(nde_ensembl)) + "\tnon-target genes")
                     self.nde_gene = GeneSet("nde genes")
                     self.nde_gene.genes = nde_ensembl
@@ -178,14 +174,7 @@ class PromoterTest:
                     print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
 
                     if score:
-
-                        self.scores = {}
-                        for p in de_prom:
-                            # d = c.split("\t")
-                            p.data = self.de_gene.values[self.ensembl2symbol[p.name]]
                         self.scores = de_prom.get_score_dict()
-                        # print(self.scores.keys()[:5])
-                        # print(self.scores.values()[:5])
 
                 else:
                 ## Refseq
@@ -207,47 +196,20 @@ class PromoterTest:
                         for p in de_prom:
                             p.data = str(self.de_gene.values[p.name])
                         self.scores = de_prom.get_score_dict()
-                        # self.scores = de_genes.get_score_dict()
-                        print(self.scores.keys()[:5])
-                        print(self.scores.values()[:5])
-
-                # de_prom.merge(namedistinct=True, strand_specific=True)
-                print2(summary, "   \t" + str(len(de_prom)) + "\tmerged promoters ")
-
+                print2(summary, "   Target genes:")
+                print2(summary, "   \t" + str(len(self.de_gene)) + "\tgenes loaded")
                 print2(summary, "   \t" + str(len(de_prom)) + "\tunique target promoters are loaded")
 
-                # for promoter in de_prom:
-                #     # if self.ensembl2symbol:
-                #     try:
-                #         gene_sym = self.ensembl2symbol[promoter.name]
-                #     except:
-                #         gene_sym = promoter.name
-                #
-                #     if score:
-                #         try:
-                #             try:
-                #                 s = self.de_gene.values[promoter.name]
-                #             except:
-                #                 s = self.de_gene.values[gene_sym.upper()]
-                #         except:
-                #             try:
-                #                 print("Warning: " + promoter.name + "\tcannot be mapped to get its score.")
-                #             except:
-                #                 print("Warning: " + gene_sym + "\tcannot be mapped to get its score.")
-                #             s = 0
-                #         self.scores[promoter.toString()] = s
-
                 self.de_regions = de_prom
-
+                print2(summary, "   Non-target genes:")
                 nde_prom.merge(namedistinct=True)
-                print2(summary, "   \t" + str(len(nde_prom)) + "\tmerged non-target promoters")
-
                 self.nde_regions = nde_prom
-
+                print2(summary, "   \t" + str(len(self.nde_regions)) + "\tgenes loaded")
                 print2(summary, "   \t" + str(len(nde_prom)) + "\tunique non-target promoters are loaded")
+
                 # Loading score
 
-                data = [self.de_gene, self.ensembl2symbol, self.nde_gene, self.de_regions, self.nde_regions]
+                data = [self.de_gene, self.nde_gene, self.de_regions, self.nde_regions]
                 if score: data.append(self.scores)
                 dump(object=data, path=temp, filename=dumpname)
 
@@ -259,9 +221,19 @@ class PromoterTest:
                 REGION_chr3_51978050_51983935_-_
             or  chr3:51978050-51983935 -    """
         self.rna_regions = get_rna_region_str(rna)
-
+        # print(self.rna_regions)
+        if self.rna_regions:
+            r_genes = rna_associated_gene(rna_regions=self.rna_regions,
+                                          name=self.rna_name, organism=self.organism)
+            self.stat["associated_gene"] = r_genes
+            self.stat["loci"] = self.rna_regions[0][0] + ":" + str(self.rna_regions[0][1]) + "-" + \
+                                str(self.rna_regions[-1][2]) + "_" + self.rna_regions[0][3]
+        else:
+            self.stat["associated_gene"] = "."
+            self.stat["loci"] = "-"
         if self.rna_regions and len(self.rna_regions[0]) == 5:
             self.rna_expression = float(self.rna_regions[0][-1])
+
         elif expfile:
             with open(expfile) as f:
                 for line in f:
@@ -270,6 +242,7 @@ class PromoterTest:
                         self.rna_expression = l[1]
         else:
             self.rna_expression = "n.a."
+        self.stat["expression"] = str(self.rna_expression)
 
     def connect_rna(self, rna, temp):
         d = connect_rna(rna, temp, self.rna_name)
@@ -282,14 +255,14 @@ class PromoterTest:
         self.triplexator_p = [l, e, c, fr, fm, of, mf]
 
         # DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "de.fa"), regions=self.de_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "de.fa"),
                         output=os.path.join(temp, "de.txp"),
                         l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par)
 
         # non-DE
-        get_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
+        save_sequence(dir=temp, filename=os.path.join(temp, "nde.fa"), regions=self.nde_regions,
                      genome_path=self.genome_path)
         run_triplexator(ss=rna, ds=os.path.join(temp, "nde.fa"),
                         output=os.path.join(temp, "nde.txp"),
@@ -322,6 +295,7 @@ class PromoterTest:
                               region_set=self.de_regions, name_replace=self.de_regions)
 
         self.rbss = self.txp_de.merged_dict.keys()
+
         for rbs in self.rbss:
             # DE
             self.txp_de.merged_dict[rbs].remove_duplicates()
@@ -349,7 +323,7 @@ class PromoterTest:
         ####################
         # DE
         self.txp_def = RNADNABindingSet("DE")
-        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True)
+        self.txp_def.read_txp(os.path.join(temp, "de.txp"), dna_fine_posi=True, seq=True)
         self.txp_def.merge_rbs(rbss=self.rbss, rm_duplicate=True,
                                name_replace=self.de_regions)  # asgene_organism=self.organism
         print("\t\t" + str(len(self.txp_def)) + "\tBinding sites on de promoters")
@@ -483,6 +457,53 @@ class PromoterTest:
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
 
+    def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
+        rna = os.path.join(output, "rna_temp.fa")
+        run_triplexator(ss=None, ds=None, autobinding=rna,
+                        output=os.path.join(output, "autobinding.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par="abo_0")
+        self.autobinding = RNADNABindingSet("autobinding")
+        self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
+        self.stat["autobinding"] = len(self.autobinding)
+        self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        # self.autobinding.motif_statistics()
+        # Saving autobinding dbs in BED
+        if len(self.rna_regions) > 0:
+            # print(self.rna_regions)
+            rna_regionsets = GenomicRegionSet(name=self.rna_name)
+            rna_regionsets.load_from_list(self.rna_regions)
+            autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
+            autobinding_loci.write_bed(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
+
+
+    def dbs_motif(self, outdir):
+        self.txp_def.motif_statistics()
+        for i, mode in enumerate(self.txp_def.motifs.keys()):
+            for con in self.txp_def.motifs[mode].keys():
+                self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
+
+    def uniq_motif(self):
+        self.txp_def.uniq_motif_statistics(rnalen=self.rna_len)
+        for k, v in self.txp_def.uniq_motifs.iteritems():
+            self.stat[k] = sum(v)
+            self.stat["uniq_"+k] = sum([1 for x in v if x > 0])
+
+        # f, ax = plt.subplots(1, 1, dpi=300, figsize=(6, 6))
+        # labels = []
+        # sizes = []
+        # for i, mode in enumerate(self.txp_def.motifs.keys()):
+        #     for con in self.txp_def.motifs[mode].keys():
+        #         labels.append(mode+" "+con)
+        #         sizes.append(self.txp_def.motifs[mode][con])
+
+        # explode = (0, 0.1, 0, 0)  # only "explode" the 2nd slice (i.e. 'Hogs')
+
+        # ax.pie(sizes, labels=labels, autopct='%1.1f%%', shadow=False, startangle=90)
+        # ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+        # pp = PdfPages(os.path.join(outdir, "dbs_motif_piechart.pdf"))
+        # pp.savefig(f, bbox_extra_artists=(plt.gci()), bbox_inches='tight')
+        # pp.close()
+
     def plot_lines(self, txp, rna, dirp, cut_off, log, ylabel, linelabel, filename, sig_region, ac=None, showpa=False):
         """Generate the plots for demonstration of RBS
 
@@ -495,10 +516,11 @@ class PromoterTest:
         if not self.rna_name: self.rna_name = rnas[0].name
 
         self.rna_len = rnas.total_len()
+        self.autobinding.rna_track(rnalen=self.rna_len)
 
         lineplot(txp=txp, rnalen=self.rna_len, rnaname=self.rna_name, dirp=dirp, sig_region=sig_region,
                  cut_off=cut_off, log=log, ylabel=ylabel, linelabel=linelabel,
-                 filename=filename, ac=ac, showpa=showpa, exons=self.rna_regions)
+                 filename=filename, ac=self.autobinding.rna_track, showpa=showpa, exons=self.rna_regions)
 
     def barplot(self, dirp, filename, sig_region, dbs=False):
         """Generate the barplot to show the difference between target promoters and non-target promoters"""
@@ -589,15 +611,17 @@ class PromoterTest:
         self.link_d["RNA"] = "index.html"
         self.link_d["Sig promoters"] = "spromoters.html"
         self.link_d["All promoters"] = "promoters.html"
+        self.link_d["Autobinding"] = "autobinding.html"
         self.link_d["Parameters"] = "parameters.html"
 
         #############################################################
         # Index main page
         #############################################################
-        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+        html = Html(name=html_header, links_dict=self.link_d,
+                    fig_dir=os.path.join(os.path.dirname(directory), "style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
 
-        html.add_figure("plot_promoter.png", align="left", width="45%", more_images=["bar_promoter.png"])
+        html.add_figure(self.rna_name+"_lineplot.png", align="left", width="45%", more_images=[self.rna_name+"_barplot.png"])
 
         if self.showdbs:
             html.add_figure("plot_dbss.png", align="left", width="45%", more_images=["bar_dbss.png"])
@@ -643,25 +667,26 @@ class PromoterTest:
                            " style=\"border-right:1pt solid gray\"", "",
                            " style=\"border-right:1pt solid gray\""]
         else:
-            header_list = [["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None],
-                           [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>"]]
+            header_list = [["#", "DBD", "Target Promoter", None, "Non-target Promoter", None, "Statistics", None, "Autobinding"],
+                           [" ", " ", "with DBS", "without DBS", "with DBS", "without DBS", "OR", "<i>p</i>", "Number"]]
             header_titles = [["Rank of the talbe",
                               "DNA Binding Domain which is the functional region on RNA.",
                               "Promoters of the differential expression genes.", None,
                               "Promoters of the non-differential expression genes.", None,
-                              "Statistics based on promoters", None],
+                              "Statistics based on promoters", None, "The RNA regions which bind to themselves"],
                              ["",
                               "",
                               "Number of target promoters which contain DBSs (DNA Binding Sites).",
                               "Number of target promoters which don't contain DBSs (DNA Binding Sites).",
                               "Number of non-target promoters which contain DBSs (DNA Binding Sites).",
                               "Number of non-target promoters which don't contain DBSs (DNA Binding Sites).",
-                              "Odds Ratio", "P-value"]
+                              "Odds Ratio", "P-value", "Number"]
                              ]
             border_list = ["style=\"border-right:1pt solid gray\"",
                            "style=\"border-right:1pt solid gray\"", "",
                            "style=\"border-right:1pt solid gray\"", "",
                            "style=\"border-right:1pt solid gray\"", "",
+                           "style=\"border-right:1pt solid gray\"",
                            "style=\"border-right:1pt solid gray\""]
 
         type_list = 'ssssssssssssssssssss'
@@ -699,7 +724,9 @@ class PromoterTest:
                        value2str(self.frequency["promoters"]["nde"][rbs][0]),
                        value2str(self.frequency["promoters"]["nde"][rbs][1]),
                        value2str(self.oddsratio[rbs]),
-                       p_promoter]
+                       p_promoter,
+                       '<a href="autobinding.html">' +
+                       str(len(self.autobinding.merged_dict[rbs]))+ '</a>']
             if self.showdbs:
                 new_row += [value2str(self.frequency["hits"]["de"][rbs][0]),
                             value2str(self.frequency["hits"]["de"][rbs][1]),
@@ -726,7 +753,7 @@ class PromoterTest:
                 svg = '<object type="image/svg+xml" data="' + f + '">Your browser does not support SVG</object>'
                 new_row = [dbd, svg]
                 data_table.append(new_row)
-            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
+            html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left", clean=True)
 
         ####
         html.add_fixed_rank_sortable()
@@ -837,6 +864,8 @@ class PromoterTest:
                 #     scores = [float(self.de_gene.values[p.name.upper()]) for p in self.txp_de.merged_dict[rbsm]]
                 #     rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array(scores)
                 #     rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
+                # print(self.txp_de.merged_dict[rbsm])
+                # print(self.scores.keys()[:10])
                 rank_score = len(self.txp_de.merged_dict[rbsm]) - rank_array([self.scores[p.toString()] for p in self.txp_de.merged_dict[rbsm] ])
                 rank_sum = [x + y + z for x, y, z in zip(rank_count, rank_coverage, rank_score)]
 
@@ -871,9 +900,31 @@ class PromoterTest:
                 data_table.append(newline)
             data_table = sorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titles, sortable=True, border_list=None)
+                                 header_titles=header_titles, sortable=True, border_list=None, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "dbds_promoters.html"))
+
+        ################################################################
+        ############# Autobinding
+        html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
+                    fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
+
+        html.add_heading("Autobinding")
+        header_list = ["#", "DBD", "RNA", "DNA", "Score", "Motif", "Orientation", "Sequence"]
+
+        t = []
+        for rbs in self.rbss:
+            for i, rd in enumerate(self.autobinding):
+                if rbs.overlap(rd.rna):
+                    t.append([str(i), rbs.str_rna(pa=False),
+                              str(rd.rna.initial) + "-" + str(rd.rna.final),
+                              str(rd.dna.initial) + "-" + str(rd.dna.final),
+                              rd.score, rd.motif, rd.orient, '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
+        if len(t) > 0:
+            html.add_zebra_table(header_list, col_size_list, type_list, t, align=align, cell_align="left",
+                                 sortable=True, clean=True)
+        html.add_fixed_rank_sortable()
+        html.write(os.path.join(directory, "autobinding.html"))
 
         ################################################################
         ############# Parameters
@@ -919,7 +970,7 @@ class PromoterTest:
                       ["Output format", "-of", str(self.triplexator_p[5])],
                       ["Merge features", "-mf", str(self.triplexator_p[6])]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             auto_width=True)
+                             auto_width=True, clean=True)
         html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, "parameters.html"))
 
@@ -1069,7 +1120,7 @@ class PromoterTest:
         # print(data_table)
         data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
         html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
-                             header_titles=header_titlesp, border_list=None, sortable=True)
+                             header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
         html.add_heading("Notes")
         html.add_list(["DBS stands for DNA Binding Site on DNA.",
                        "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])
@@ -1079,10 +1130,10 @@ class PromoterTest:
         ############################
         # Subpages for promoter centered page
         # promoters_dbds.html
-        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation"]
+        header_sub = ["#", "RBS", "DBS", "Strand", "Score", "Motif", "Orientation", "Sequence"]
         header_titles = ["", "RNA Binding Site", "DNA Binding Site", "Strand of DBS on DNA",
                          "Score of binding event", "Motif of binding by triple helix rule",
-                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel"]
+                         "Orientation of interaction between DNA and RNA. 'P'- Parallel; 'A'-Antiparallel", "Binding Sequence between DNA and RNA"]
         header_list = header_sub
         html = Html(name=html_header, links_dict=self.link_d,  # fig_dir=os.path.join(directory,"style"),
                     fig_rpath="../style", RGT_header=False, other_logo="TDF", homepage="../index.html")
@@ -1096,11 +1147,11 @@ class PromoterTest:
                 except:
                     gn = promoter.name
                 html.add_heading(split_gene_name(gene_name=gn, org=self.organism), idtag=promoter.toString())
-                html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
-                                       "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
-                    promoter.final) +
-                                       '" style="margin-left:50">' +
-                                       promoter.toString(space=True) + '</a>'])
+                # html.add_free_content(['<a href="http://genome.ucsc.edu/cgi-bin/hgTracks?db=' + self.organism +
+                #                        "&position=" + promoter.chrom + "%3A" + str(promoter.initial) + "-" + str(
+                #     promoter.final) +
+                #                        '" style="margin-left:50">' +
+                #                        promoter.toString(space=True) + '</a>'])
                 data_table = []
 
                 for j, rd in enumerate(self.promoter["de"]["rd"][promoter.toString()]):
@@ -1109,12 +1160,13 @@ class PromoterTest:
                         # rbsm = rbsm.partition(":")[2].split("-")
                         if rd.rna.overlap(rbsm):
                             rbs = "<font color=\"red\">" + rbs + "</font>"
-
+                    # print(rd.match)
                     data_table.append([str(j + 1), rbs, rd.dna.toString(space=True),
-                                       rd.dna.orientation, rd.score, rd.motif, rd.orient])
+                                       rd.dna.orientation, rd.score, rd.motif, rd.orient,
+                                       '<pre><font size="1">' + "\n".join(rd.match) + "</font></pre>"])
 
                 html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                     header_titles=header_titles, sortable=True)
+                                     header_titles=header_titles, sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, "promoters_dbds.html"))
 
@@ -1226,7 +1278,7 @@ class PromoterTest:
 
             data_table = natsort.natsorted(data_table, key=lambda x: x[-1])
             html.add_zebra_table(header_listp, col_size_list, type_list, data_table, align=align, cell_align="left",
-                                 header_titles=header_titlesp, border_list=None, sortable=True)
+                                 header_titles=header_titlesp, border_list=None, sortable=True, clean=True)
             html.add_heading("Notes")
             html.add_list(["DBS stands for DNA Binding Site on DNA.",
                            "DBS coverage is the proportion of the promoter where has potential to form triple helices with the given RNA."])

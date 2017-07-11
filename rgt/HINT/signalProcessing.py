@@ -15,9 +15,8 @@ from pileupRegion import PileupRegion
 
 # External
 from pysam import __version__ as ps_version
-from pysam import Samfile
-from pysam import Fastafile
-from numpy import exp, array, abs, int, mat, linalg, convolve, nan, nan_to_num
+from pysam import Samfile, Fastafile
+from numpy import exp, array, abs, int, mat, linalg, convolve, add, subtract, nan_to_num
 from scipy.stats import scoreatpercentile
 
 """
@@ -88,14 +87,9 @@ class GenomicSignal:
             for alignment in iter: pileup_region.__call__(alignment)
         raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
-        # Std-based clipping
-        mean = raw_signal.mean()
-        std = raw_signal.std()
-        clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
-
         # Tag count
         try:
-            tag_count = sum(clip_signal)
+            tag_count = sum(raw_signal)
         except Exception:
             tag_count = 0
 
@@ -103,9 +97,7 @@ class GenomicSignal:
 
     def get_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                    initial_clip=1000, per_norm=98, per_slope=98,
-                   bias_table=None, genome_file_name=None, print_raw_signal=False,
-                   print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
-                   strands_specific=False):
+                   bias_table=None, genome_file_name=None, print_raw_signal=False):
         """
         Gets the signal associated with self.bam based on start, end and ext.
         initial_clip, per_norm and per_slope are used as normalization factors during the normalization
@@ -135,7 +127,6 @@ class GenomicSignal:
         hon_signal -- Normalized signal.
         slopehon_signal -- Slope signal.
         """
-
         # Fetch raw signal
         pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
         if (ps_version == "0.7.5"):
@@ -152,66 +143,87 @@ class GenomicSignal:
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Cleavage bias correction
-        bias_corrected_signal = self.bias_correction(clip_signal, bias_table, genome_file_name,
-                                                     ref, start, end, forward_shift, reverse_shift, strands_specific)
+        bc_signal = self.bias_correction_dnase(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
-        boyle_signal = array(self.boyle_norm(bias_corrected_signal))
+        boyle_signal = array(self.boyle_norm(bc_signal))
 
         # Hon normalization (between-dataset normalization)
         perc = scoreatpercentile(boyle_signal, per_norm)
         std = boyle_signal.std()
-        hon_signal = self.hon_norm(boyle_signal, perc, std)
+        hon_signal = self.hon_norm_dnase(boyle_signal, perc, std)
 
         # Slope signal
         slope_signal = self.slope(hon_signal, self.sg_coefs)
 
-        # Hon normalization on slope signal (between-dataset slope smoothing)
-        abs_seq = array([abs(e) for e in slope_signal])
-        perc = scoreatpercentile(abs_seq, per_slope)
-        std = abs_seq.std()
-        slopehon_signal = self.hon_norm(slope_signal, perc, std)
+        # Returning normalized and slope sequences
+        return hon_signal, slope_signal
 
-        # Writing signal
-        if (print_raw_signal):
-            signal_file = open(print_raw_signal, "a")
-            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(raw_signal)]) + "\n")
-            signal_file.close()
-        if (print_bc_signal):
-            signal_file = open(print_bc_signal, "a")
-            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(bias_corrected_signal)]) + "\n")
-            signal_file.close()
-        if (print_norm_signal):
-            signal_file = open(print_norm_signal, "a")
-            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(hon_signal)]) + "\n")
-            signal_file.close()
-        if (print_slope_signal):
-            signal_file = open(print_slope_signal, "a")
-            signal_file.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                [str(e) for e in nan_to_num(slope_signal)]) + "\n")
-            signal_file.close()
+    def get_signal_atac(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                        initial_clip=50, per_norm=98, per_slope=98,
+                        bias_table=None, genome_file_name=None):
+
+        raw_signal_forward = [0.0] * (end - start)
+        raw_signal_reverse = [0.0] * (end - start)
+
+        reads = self.bam.fetch(reference=ref, start=start, end=end)
+        for read in reads:
+            if (not read.is_reverse):
+                cut_site = read.pos + forward_shift
+                if cut_site >= start and cut_site < end:
+                    raw_signal_forward[cut_site - start] += 1.0
+            else:
+                cut_site = read.aend + reverse_shift - 1
+                if cut_site >= start and cut_site < end:
+                    raw_signal_reverse[cut_site - start] += 1.0
+
+        raw_signal_forward = array([min(e, initial_clip) for e in raw_signal_forward])
+        raw_signal_reverse = array([min(e, initial_clip) for e in raw_signal_reverse])
+
+        # Std-based clipping
+        mean = raw_signal_forward.mean()
+        std = raw_signal_forward.std()
+        clip_signal_forward = [min(e, mean + (10 * std)) for e in raw_signal_forward.tolist()]
+
+        mean = raw_signal_reverse.mean()
+        std = raw_signal_reverse.std()
+        clip_signal_reverse = [min(e, mean + (10 * std)) for e in raw_signal_reverse.tolist()]
+
+        # Cleavage bias correction
+        if not bias_table:
+            bc_signal_forward, bc_signal_reverse = clip_signal_forward, clip_signal_reverse
+        else:
+            bc_signal_forward, bc_signal_reverse = self.bias_correction_atac(clip_signal_forward, bias_table, genome_file_name,
+                                                                    ref, start, end, forward_shift, reverse_shift)
+
+        # Boyle normalization (within-dataset normalization)
+        boyle_signal_forward = array(self.boyle_norm(bc_signal_forward))
+        boyle_signal_reverse = array(self.boyle_norm(bc_signal_reverse))
+
+        # Hon normalization (between-dataset normalization)
+        perc = scoreatpercentile(boyle_signal_forward, per_norm)
+        std = boyle_signal_forward.std()
+        hon_signal_forward = self.hon_norm_atac(boyle_signal_forward, perc, std)
+
+        perc = scoreatpercentile(boyle_signal_reverse, per_norm)
+        std = boyle_signal_reverse.std()
+        hon_signal_reverse = self.hon_norm_atac(boyle_signal_reverse, perc, std)
+
+        # Rescaling signal
+        rescal_signal_forward = self.rescaling(hon_signal_forward)
+        rescal_signal_reverse = self.rescaling(hon_signal_reverse)
+
+        # Slope signal
+        slope_signal_forward = self.slope(rescal_signal_forward, self.sg_coefs)
+        slope_signal_reverse = self.slope(rescal_signal_reverse, self.sg_coefs)
 
         # Returning normalized and slope sequences
-        return hon_signal, slopehon_signal
+        return rescal_signal_forward, slope_signal_forward, rescal_signal_reverse, slope_signal_reverse
 
-    def bias_correction(self, signal, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift, strands_specific):
-        """
-        Performs bias correction.
+    def bias_correction_dnase(self, signal, bias_table, genome_file_name, chrName, start, end,
+                        forward_shift, reverse_shift):
 
-        Keyword arguments:
-        signal -- Input signal.
-        bias_table -- Bias table.
-
-        Return:
-        bias_corrected_signal -- Bias-corrected sequence.
-        """
-
-        if (not bias_table): return signal
-
+        if not bias_table: return signal
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -235,19 +247,12 @@ class GenomicSignal:
         for read in self.bam.fetch(chrName, p1_w, p2_w):
             if (not read.is_reverse):
                 cut_site = read.pos + forward_shift
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
-                    # for i in range(max(read.pos + forward_shift, start), min(read.pos + forward_shift + 1, end - 1)):
-                    #    nf[i - start] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= start and cut_site < end:
+                if cut_site >= p1_w and cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
-                    # for i in range(max(read.aend + reverse_shift - 1, start), min(read.aend + reverse_shift, end - 1)):
-                    #    nr[i - start] += 1.0
-
-                    # if ((not read.is_reverse) and (read.pos > p1_w)): nf[read.pos - p1_w] += 1.0
-                    # if ((read.is_reverse) and ((read.aend - 1) < p2_w)): nr[read.aend - 1 - p1_w] += 1.0
 
         # Smoothed counts
         Nf = []
@@ -267,11 +272,9 @@ class GenomicSignal:
             rLast = nr[i - (window / 2) + 1]
 
         # Fetching sequence
-        currStr = str(fastaFile.fetch(chrName, p1_wk-1, p2_wk-2)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName,p1_wk+2, p2_wk+1)).upper())
-        #currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        #currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
-         #                                                            p2_wk)).upper())
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+                                                                     p2_wk)).upper())
 
         # Iterating on sequence to create signal
         af = []
@@ -294,6 +297,100 @@ class GenomicSignal:
         fLast = af[0]
         rLast = ar[0]
         bias_corrected_signal = []
+        for i in range((window / 2), len(af) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+            zf = log(nf[i] + 1) - log(nhatf + 1)
+            zr = log(nr[i] + 1) - log(nhatr + 1)
+            bias_corrected_signal.append(zf + zr)
+            fSum -= fLast
+            fSum += af[i + (window / 2)]
+            fLast = af[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += ar[i + (window / 2)]
+            rLast = ar[i - (window / 2) + 1]
+
+
+        # Termination
+        fastaFile.close()
+        return bias_corrected_signal
+
+    def bias_correction_atac(self, signal, bias_table, genome_file_name, chrName, start, end,
+                        forward_shift, reverse_shift):
+
+        if not bias_table: return signal
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fastaFile = Fastafile(genome_file_name)
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(floor(k_nb / 2.))
+        p2_wk = p2_w + int(ceil(k_nb / 2.))
+        if (p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
+
+        # Raw counts
+        nf = [0.0] * (p2_w - p1_w)
+        nr = [0.0] * (p2_w - p1_w)
+        for read in self.bam.fetch(chrName, p1_w, p2_w):
+            if (not read.is_reverse):
+                cut_site = read.pos + forward_shift
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nf[cut_site - p1_w] += 1.0
+            else:
+                cut_site = read.aend + reverse_shift - 1
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nr[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(nf[:window])
+        rSum = sum(nr[:window])
+        fLast = nf[0]
+        rLast = nr[0]
+        for i in range((window / 2), len(nf) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += nf[i + (window / 2)]
+            fLast = nf[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += nr[i + (window / 2)]
+            rLast = nr[i - (window / 2) + 1]
+
+        # Fetching sequence
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+                                                                     p2_wk)).upper())
+
+        # Iterating on sequence to create signal
+        af = []
+        ar = []
+        for i in range(int(ceil(k_nb / 2.)), len(currStr) - int(floor(k_nb / 2)) + 1):
+            fseq = currStr[i - int(floor(k_nb / 2.)):i + int(ceil(k_nb / 2.))]
+            rseq = currRevComp[len(currStr) - int(ceil(k_nb / 2.)) - i:len(currStr) + int(floor(k_nb / 2.)) - i]
+            try:
+                af.append(fBiasDict[fseq])
+            except Exception:
+                af.append(defaultKmerValue)
+            try:
+                ar.append(rBiasDict[rseq])
+            except Exception:
+                ar.append(defaultKmerValue)
+
+        # Calculating bias and writing to wig file
+        fSum = sum(af[:window])
+        rSum = sum(ar[:window])
+        fLast = af[0]
+        rLast = ar[0]
         bias_corrected_signal_forward = []
         bias_corrected_signal_reverse = []
         for i in range((window / 2), len(af) - (window / 2)):
@@ -303,7 +400,6 @@ class GenomicSignal:
             zr = log(nr[i] + 1) - log(nhatr + 1)
             bias_corrected_signal_forward.append(zf)
             bias_corrected_signal_reverse.append(zr)
-            bias_corrected_signal.append(zf + zr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
             fLast = af[i - (window / 2) + 1]
@@ -311,24 +407,17 @@ class GenomicSignal:
             rSum += ar[i + (window / 2)]
             rLast = ar[i - (window / 2) + 1]
 
-        # Fixing the negative number in bias corrected signal
-        min_value = abs(min(bias_corrected_signal_forward))
-        bias_fixed_signal_forward = [e + min_value for e in bias_corrected_signal_forward]
-
-        min_value = abs(min(bias_corrected_signal_reverse))
-        bias_fixed_signal_reverse = [e + min_value for e in bias_corrected_signal_reverse]
-
-        min_value = abs(min(bias_corrected_signal))
-        bias_fixed_signal = [e + min_value for e in bias_corrected_signal]
+        for i in range(len(bias_corrected_signal_forward)):
+            if bias_corrected_signal_forward[i] < 0: bias_corrected_signal_forward[i] = 0.0
+        for i in range(len(bias_corrected_signal_reverse)):
+            if bias_corrected_signal_reverse[i] < 0: bias_corrected_signal_reverse[i] = 0.0
 
         # Termination
         fastaFile.close()
-        if not strands_specific:
-            return bias_corrected_signal
-        else:
-            return bias_fixed_signal_forward, bias_fixed_signal_reverse
+        return bias_corrected_signal_forward, bias_corrected_signal_reverse
 
-    def hon_norm(self, sequence, mean, std):
+
+    def hon_norm_atac(self, sequence, mean, std):
         """
         Normalizes a sequence according to hon's criterion using mean and std.
         This represents a between-dataset normalization.
@@ -338,6 +427,28 @@ class GenomicSignal:
         mean -- Global mean.
         std -- Global std.
 
+        Return:
+        norm_seq -- Normalized sequence.
+        """
+        if std != 0:
+            norm_seq = []
+            for e in sequence:
+                if e == 0:
+                    norm_seq.append(e)
+                else:
+                    norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+            return norm_seq
+        else:
+            return sequence
+
+    def hon_norm_dnase(self, sequence, mean, std):
+        """
+        Normalizes a sequence according to hon's criterion using mean and std.
+        This represents a between-dataset normalization.
+        Keyword arguments:
+        sequence -- Input sequence.
+        mean -- Global mean.
+        std -- Global std.
         Return:
         norm_seq -- Normalized sequence.
         """
@@ -373,6 +484,12 @@ class GenomicSignal:
         else:
             norm_seq = [(float(e) / mean) for e in sequence]
             return norm_seq
+
+    def rescaling(self, vector):
+        maxN = max(vector)
+        minN = min(vector)
+        if maxN == minN: return vector
+        else: return [(e - minN) / (maxN - minN) for e in vector]
 
     def savitzky_golay_coefficients(self, window_size, order, deriv):
         """
@@ -422,85 +539,108 @@ class GenomicSignal:
 
         return slope_seq
 
-    def get_signal_per_strand(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
-                              initial_clip=1000, per_norm=98, per_slope=98,
-                              bias_table=None, genome_file_name=None, print_raw_signal=False,
-                              print_bc_signal=False, print_norm_signal=False, print_slope_signal=False,
-                              strands_specific=True):
-        """
+    def print_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                   initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
+                   raw_signal_file=None, bc_signal_file=None):
 
-        :param ref: Chromosome name.
-        :param start: Initial genomic coordinate of signal.
-        :param end: Final genomic coordinate of signal.
-        :param downstream_ext: Number of bps to extend towards the downstream region
-        :param upstream_ext: Number of bps to extend towards the upstream region
-        :param forward_shift: Number of bps to shift the reads aligned to the forward strand.
-        :param reverse_shift: Number of bps to shift the reads aligned to the reverse strand.
-        :param initial_clip: Signal will be initially clipped at this level to avoid outliers.
-        :param per_norm: Percentile value for 'hon_norm' function of the normalized signal.
-        :param per_slope: Percentile value for 'hon_norm' function of the slope signal.
-        :param bias_table: Bias table to perform bias correction.
-        :param genome_file_name: Genome to perform bias correction.
-        :param print_raw_signal:
-        :param print_bc_signal:
-        :param print_norm_signal:
-        :param print_slope_signal:
-        :return: normalized and slope signal for each strand.
-        """
-
-        raw_signal_forward = [0.0] * (end - start)
-        raw_signal_reverse = [0.0] * (end - start)
-
-        reads = self.bam.fetch(reference=ref, start=start, end=end)
-        for read in reads:
-            if (not read.is_reverse):
-                cut_site = read.pos + forward_shift
-                if cut_site >= start and cut_site < end:
-                    raw_signal_forward[cut_site - start] += 1.0
+        if raw_signal_file:
+            pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
+            if (ps_version == "0.7.5"):
+                self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
             else:
-                cut_site = read.aend + reverse_shift - 1
-                if cut_site >= start and cut_site < end:
-                    raw_signal_reverse[cut_site - start] += 1.0
+                iter = self.bam.fetch(reference=ref, start=start, end=end)
+                for alignment in iter:
+                    pileup_region.__call__(alignment)
+            raw_signal = array([min(e, initial_clip) for e in pileup_region.vector])
 
-        raw_signal_forward = array([min(e, initial_clip) for e in raw_signal_forward])
-        raw_signal_reverse = array([min(e, initial_clip) for e in raw_signal_reverse])
+            f = open(raw_signal_file, "a")
+            f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                    [str(e) for e in nan_to_num(raw_signal)]) + "\n")
+            f.close()
 
-        # Std-based clipping
-        mean = raw_signal_forward.mean()
-        std = raw_signal_forward.std()
-        clip_signal_forward = [min(e, mean + (10 * std)) for e in raw_signal_forward]
-        mean = raw_signal_reverse.mean()
-        std = raw_signal_reverse.std()
-        clip_signal_reverse = [min(e, mean + (10 * std)) for e in raw_signal_reverse]
+        if bc_signal_file:
+            # Parameters
+            window = 50
+            defaultKmerValue = 1.0
 
-        # Cleavage bias correction
-        bc_signal_forward = None
-        bc_signal_reverse = None
-        if bias_table:
-            bc_signal_forward, bc_signal_reverse = self.bias_correction(raw_signal_forward, bias_table,
-                                                                        genome_file_name,
-                                                                        ref, start, end, forward_shift, reverse_shift,
-                                                                        strands_specific)
-        else:
-            bc_signal_forward = clip_signal_forward
-            bc_signal_reverse = clip_signal_reverse
+            # Initialization
+            fasta = Fastafile(genome_file_name)
+            fBiasDict = bias_table[0]
+            rBiasDict = bias_table[1]
+            k_nb = len(fBiasDict.keys()[0])
+            p1 = start
+            p2 = end
+            p1_w = p1 - (window / 2)
+            p2_w = p2 + (window / 2)
+            p1_wk = p1_w - int(k_nb / 2.)
+            p2_wk = p2_w + int(k_nb / 2.)
 
-        # Boyle normalization (within-dataset normalization)
-        boyle_signal_forward = array(self.boyle_norm(bc_signal_forward))
-        boyle_signal_reverse = array(self.boyle_norm(bc_signal_reverse))
+            currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+            currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
 
-        # Hon normalization (between-dataset normalization)
-        perc = scoreatpercentile(boyle_signal_forward, per_norm)
-        std = boyle_signal_forward.std()
-        hon_signal_forward = self.hon_norm(boyle_signal_forward, perc, std)
+            # Iterating on sequence to create the bias signal
+            signal_bias_f = []
+            signal_bias_r = []
+            for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+                fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+                rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+                try:
+                    signal_bias_f.append(fBiasDict[fseq])
+                except Exception:
+                    signal_bias_f.append(defaultKmerValue)
+                try:
+                    signal_bias_r.append(rBiasDict[rseq])
+                except Exception:
+                    signal_bias_r.append(defaultKmerValue)
 
-        perc = scoreatpercentile(boyle_signal_reverse, per_norm)
-        std = boyle_signal_reverse.std()
-        hon_signal_reverse = self.hon_norm(boyle_signal_reverse, perc, std)
+            # Raw counts
+            signal_raw_f = [0.0] * (p2_w - p1_w)
+            signal_raw_r = [0.0] * (p2_w - p1_w)
+            for read in self.bam.fetch(ref, p1_w, p2_w):
+                if (not read.is_reverse):
+                    cut_site = read.pos + forward_shift
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        signal_raw_f[cut_site - p1_w] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        signal_raw_r[cut_site - p1_w] += 1.0
 
-        # Slope signal
-        slope_signal_forward = self.slope(hon_signal_forward, self.sg_coefs)
-        slope_signal_reverse = self.slope(hon_signal_reverse, self.sg_coefs)
+            # Smoothed counts
+            Nf = []
+            Nr = []
+            fSum = sum(signal_raw_f[:window])
+            rSum = sum(signal_raw_r[:window])
+            fLast = signal_raw_f[0]
+            rLast = signal_raw_r[0]
+            for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+                Nf.append(fSum)
+                Nr.append(rSum)
+                fSum -= fLast
+                fSum += signal_raw_f[i + (window / 2)]
+                fLast = signal_raw_f[i - (window / 2) + 1]
+                rSum -= rLast
+                rSum += signal_raw_r[i + (window / 2)]
+                rLast = signal_raw_r[i - (window / 2) + 1]
 
-        # Returning normalized and slope sequences
-        return hon_signal_forward, slope_signal_forward, hon_signal_reverse, slope_signal_reverse
+            # Calculating bias and writing to wig file
+            fSum = sum(signal_bias_f[:window])
+            rSum = sum(signal_bias_r[:window])
+            fLast = signal_bias_f[0]
+            rLast = signal_bias_r[0]
+            signal_bc = []
+            for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+                nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+                nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+                signal_bc.append(nhatf + nhatr)
+                fSum -= fLast
+                fSum += signal_bias_f[i + (window / 2)]
+                fLast = signal_bias_f[i - (window / 2) + 1]
+                rSum -= rLast
+                rSum += signal_bias_r[i + (window / 2)]
+                rLast = signal_bias_r[i - (window / 2) + 1]
+
+            f = open(bc_signal_file, "a")
+            f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                    [str(e) for e in nan_to_num(signal_bc)]) + "\n")
+            f.close()

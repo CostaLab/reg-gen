@@ -47,24 +47,33 @@ class GenomicRegion:
 
     def __str__(self):
         """Give informal string representation."""
-        s = '\t'.join( [self.chrom, str(self.initial), str(self.final)] )
         # Name
-        if self.name is not None: s += '\t' + self.name
-        else: s += '\t' + self.toString()
-        # Score
-        if not self.data: score = "."
+        if self.name:
+            name = self.name
         else:
+            name = self.toString()
+        # Score
+        if self.data:
             data = self.data.split("\t")
-            try: 
+            try:
                 score = data[0]
-            except: score = "."
-        s += '\t' + score
+            except:
+                score = "."
+        else:
+            score = "."
         # Orientation
-        if self.orientation: s += '\t' + self.orientation
-        else: s += '\t' + "."
+        if self.orientation:
+            orientation = self.orientation
+        else:
+            orientation = "."
         # Else
         if self.data:
-            s += '\t' + "\t".join(data[1:])
+            other_data = "\t".join(data[1:])
+            s = '\t'.join([self.chrom, str(self.initial), str(self.final),
+                           name, score, orientation, other_data])
+        else:
+            s = '\t'.join([self.chrom, str(self.initial), str(self.final),
+                           name, score, orientation])
         return s
 
     def __hash__(self):
@@ -73,7 +82,7 @@ class GenomicRegion:
     def __eq__(self, other):
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
 
-    def toString(self, space=False):
+    def toString(self, space=False, underline=False):
         """Return a string of GenomicRegion by its position.
 
         *Keyword arguments:*
@@ -82,6 +91,8 @@ class GenomicRegion:
         """
         if space:
             return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
+        elif underline:
+            return self.chrom+"_"+str(self.initial)+"_"+str(self.final)
         else:
             return self.chrom+":"+str(self.initial)+"-"+str(self.final)
 

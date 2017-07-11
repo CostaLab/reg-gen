@@ -19,3 +19,7 @@ THOR-0.1
 - GPL v3 license
 - outputs uncorrected p-valued in separate file
 - bw tools automatically in PATH
+
+
+- Merging after filtering
+- Output bins, not steps

@@ -240,10 +240,6 @@ def main_matching():
     # Processing Options
     options, arguments = parser.parse_args()
 
-    if not options.input_matrix and len(arguments) == 0:
-        err.throw_error("ME_FEW_ARG", add_msg="You must either specify an experimental matrix, "
-                                              "or at least a valid input file.")
-
     # Additional Parameters
     matching_folder_name = "match"
     random_region_name = "random_regions"
@@ -347,8 +343,8 @@ def main_matching():
             genomic_regions_dict[name] = regions
 
     if not genomic_regions_dict:
-        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
-                                                 "or at least a valid input file.")
+        err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
+                                                 "valid input file, or one of the 'promoter test' options.")
 
     max_region_len = 0
     max_region = None
@@ -501,7 +497,7 @@ def main_enrichment():
     err = ErrorHandler()
 
     # Parameters
-    usage_message = "%prog --matching [options] <background_bed_file> [input1.bed input2.bed ..]"
+    usage_message = "%prog --enrichment [options] <background_bed_file> [input1.bed input2.bed ..]"
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message)

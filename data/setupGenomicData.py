@@ -53,7 +53,13 @@ parser.add_option("--zv9-gtf-path", type="string", metavar="STRING", dest="zv9_g
 parser.add_option("--zv10-gtf-path", type="string", metavar="STRING", dest="zv10_gtf_path", default=None,
                   help="Path to an already existing zv10 GTF file.")
 
+# Repeat masker
+parser.add_option("--hg38-rm", dest="hg38_rm", action="store_true", default=False, help="Fetch repeat masker files for hg38 from Broad institute.")
+parser.add_option("--hg19-rm", dest="hg19_rm", action="store_true", default=False, help="Fetch repeat masker files for hg19 from Broad institute.")
+parser.add_option("--mm9-rm", dest="mm9_rm", action="store_true", default=False, help="Fetch repeat masker files for mm9 from Broad institute.")
+
 options, arguments = parser.parse_args()
+
 if options.all:
     options.hg19 = True
     options.hg38 = True
@@ -100,7 +106,7 @@ if options.hg19:
             print("Downloading hg19 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
             if path.isfile(gz_file_name): remove(gz_file_name)
-            system("wget " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
+            system("wget -c " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
@@ -119,7 +125,7 @@ if options.hg19:
         gtf_output_file_name_gz = path.join(output_location, "gencode.v19.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading hg19 GTF (gene annotation) from genode")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -151,7 +157,7 @@ if options.hg38:
         print("Downloading hg38 genome")
         gz_file_name = path.join(output_location, "GRCh38.primary_assembly.genome.fa.gz")
         # if(path.isfile(gz_file_name)): remove(gz_file_name)
-        system("wget " + gen_root_url + " -P " + output_location)
+        system("wget -c " + gen_root_url + " -P " + output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_genome_file.write(gz_file.read())
         gz_file.close()
@@ -170,7 +176,7 @@ if options.hg38:
         gtf_output_file_name_gz = path.join(output_location, "gencode.v24.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading hg19 GTF (gene annotation) from genode")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -178,6 +184,9 @@ if options.hg38:
         remove(gtf_output_file_name_gz)
         gtf_output_file.close()
         print("OK")
+
+    # Get Repeat Masker
+
 
 ###################################################################################################
 # Genomic Data MM9
@@ -202,7 +211,7 @@ if options.mm9:
             print("Downloading MM9 genome (" + chr_name + ")")
             gz_file_name = path.join(output_location, chr_name + ".fa.gz")
             if path.isfile(gz_file_name): remove(gz_file_name)
-            system("wget " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
+            system("wget -c " + gen_root_url + chr_name + ".fa.gz -P " + output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
@@ -221,7 +230,7 @@ if options.mm9:
         gtf_output_file_name_gz = path.join(output_location, "gencode.vM1.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM9 GTF (gene annotation)")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -250,7 +259,7 @@ if options.mm10:
         output_genome_file = open(output_genome_file_name, "w")
         print("Downloading mm10 genome")
         gz_file_name = path.join(output_location, "GRCm38.primary_assembly.genome.fa.gz")
-        system("wget " + gen_root_url + " -P " + output_location)
+        system("wget -c " + gen_root_url + " -P " + output_location)
         gz_file = gzip.open(gz_file_name, 'rb')
         output_genome_file.write(gz_file.read())
         gz_file.close()
@@ -269,7 +278,7 @@ if options.mm10:
         gtf_output_file_name_gz = path.join(output_location, "gencode.vM11.annotation.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading MM10 GTF (gene annotation)")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -303,7 +312,7 @@ if options.zv9:
             if path.isfile(gz_file_name): remove(gz_file_name)
             # Danio_rerio.Zv9.dna.chromosome.8.fa.gz
             system(
-                "wget " + gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
+                "wget -c " + gen_root_url + "Danio_rerio.Zv9.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
@@ -323,7 +332,7 @@ if options.zv9:
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.Zv9.79.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading ZV9 GTF (gene annotation)")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -358,7 +367,7 @@ if options.zv10:
             if path.isfile(gz_file_name): remove(gz_file_name)
             # Danio_rerio.GRCz10.dna.chromosome.8.fa.gz
             system(
-                "wget " + gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
+                "wget -c " + gen_root_url + "Danio_rerio.GRCz10.dna.chromosome." + chr_name + ".fa.gz -P " + output_location)
             gz_file = gzip.open(gz_file_name, 'rb')
             output_genome_file.write(gz_file.read())
             gz_file.close()
@@ -378,7 +387,7 @@ if options.zv10:
         gtf_output_file_name_gz = path.join(output_location, "Danio_rerio.GRCz10.84.gtf.gz")
         if path.isfile(gtf_output_file_name_gz): remove(gtf_output_file_name_gz)
         print("Downloading ZV10 GTF (gene annotation)")
-        system("wget " + gtf_url + " -P " + output_location)
+        system("wget -c " + gtf_url + " -P " + output_location)
         gz_file = gzip.open(gtf_output_file_name_gz, 'rb')
         gtf_output_file = open(gtf_output_file_name, "w")
         gtf_output_file.write(gz_file.read())
@@ -388,3 +397,85 @@ if options.zv10:
         # system("sed -i -e 's/^/chr/' "+gtf_output_file_name)
         # TODO add chr in each entry
         print("OK")
+
+
+###################################################################################################
+# Repeat Maskers
+###################################################################################################
+
+
+if options.hg38_rm:
+    root_url = "https://data.broadinstitute.org/igvdata/annotations/hg38/rmsk/"
+    gen_root_url = ["LINE.bed", "LTR.bed", "DNA.bed", "Simple_repeat.bed", "Low_complexity.bed",
+                    "Satellite.bed", "RC.bed", "Retroposon.bed", "RNA.bed", "rRNA.bed",
+                    "scRNA.bed", "snRNA.bed", "srpRNA.bed", "tRNA.bed" ]
+
+    output_location = path.join(curr_dir, "hg38", "repeat_maskers")
+    if not path.exists(output_location): mkdir(output_location)
+
+    for masker in gen_root_url:
+        output_file = open(path.join(output_location, masker), "w")
+        gz_file_name = path.join(output_location, masker + ".gz")
+        system("wget -c " + root_url + masker + ".gz" + " -P " + output_location)
+        gz_file = gzip.open(gz_file_name, 'rb')
+        output_file.write(gz_file.read())
+        gz_file.close()
+        remove(gz_file_name)
+        print(path.join(output_location, masker) + "\t.....OK")
+        output_file.close()
+
+if options.hg19_rm:
+    root_url = "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/variations/"
+    gen_root_url = ["SINE.rmask.gz", "LINE.rmask.gz", "LTR.rmask.gz", "DNA.rmask.gz",
+                    "Simple_repeat.rmask.gz", "Low_complexity.rmask.gz", "Satellite.rmask.gz", "RC.rmask.gz",
+                    "RNA.rmask.gz", "Other.rmask.gz", "Unknown.rmask.gz" ]
+
+    output_location = path.join(curr_dir, "hg19", "repeat_maskers")
+    if not path.exists(output_location): mkdir(output_location)
+
+    for masker in gen_root_url:
+        bedname = masker.split(".")[0]+".bed"
+        output_file = open(path.join(output_location, bedname), "w")
+        gz_file_name = path.join(output_location, masker)
+        system("wget -c " + root_url + masker + " -P " + output_location)
+        gz_file = gzip.open(gz_file_name, 'rb')
+        output_file.write(gz_file.read())
+        gz_file.close()
+        remove(gz_file_name)
+        print(path.join(output_location, bedname) + "\t.....OK")
+        output_file.close()
+
+
+
+
+if options.mm9_rm:
+    gen_root_url = ["http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_SINE.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_LINE.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_LTR.bed",
+                    "http://igv.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_DNA.bed.gz",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Simple_repeat.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Low_complexity.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Satellite.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_RNA.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Other.bed",
+                    "http://igvdata.broadinstitute.org/annotations/mm9/variation/repeat_masker/mm9_repmask_Unknown.bed"]
+
+    output_location = path.join(curr_dir, "mm9", "repeat_maskers")
+    if not path.exists(output_location): mkdir(output_location)
+
+    for masker in gen_root_url:
+        bedname = path.basename(masker).replace("mm9_repmask_", "").replace(".gz", "")
+
+        if ".gz" in masker:
+            output_file = open(path.join(output_location, bedname), "w")
+            gz_file_name = path.join(output_location, path.basename(masker))
+            system("wget -c " + masker + " -P " + output_location)
+            gz_file = gzip.open(gz_file_name, 'rb')
+            output_file.write(gz_file.read())
+            gz_file.close()
+            remove(gz_file_name)
+            output_file.close()
+        else:
+            system("wget -c " + masker + path.join(output_location, bedname))
+
+        print(path.join(output_location, bedname) + "\t.....OK")

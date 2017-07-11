@@ -525,7 +525,7 @@ class AnnotationSet:
             return mapped_list, unmapped_list
 
 
-    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False, variants=False):
+    def get_promoters(self, promoterLength=1000, gene_set=None, unmaplist=False, variants=False, gene_id=False, regiondata=False):
         """
         Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters.
         The ID of each gene will be put in the NAME field of each GenomicRegion.
@@ -549,14 +549,18 @@ class AnnotationSet:
         unmapped_gene_list = None
 
 
-        if gene_set: mapped_gene_list, unmapped_gene_list = self.fix_gene_names(gene_set)
+        if gene_set:
+            mapped_gene_list, unmapped_gene_list, maping_dict = self.fix_gene_names(gene_set, output_dict=True)
 
         # Fetching genes
 
         if not variants: target = "gene"
         else: target = "transcript"
-        if(gene_set): query_dictionary = {self.GeneField.FEATURE_TYPE:target, self.GeneField.GENE_ID:mapped_gene_list}
-        else: query_dictionary = {self.GeneField.FEATURE_TYPE:target}
+        if gene_set:
+            query_dictionary = {self.GeneField.FEATURE_TYPE:target,
+                                self.GeneField.GENE_ID:mapped_gene_list}
+        else:
+            query_dictionary = {self.GeneField.FEATURE_TYPE:target}
         
         query_annset = self.get(query_dictionary)
 
@@ -571,8 +575,17 @@ class AnnotationSet:
                 gr.initial = gr.final - 1
                 gr.final = gr.initial + promoterLength + 1
 
-            gr.name = e[self.GeneField.GENE_ID]
+            if gene_set:
+                gr.name = maping_dict[e[self.GeneField.GENE_ID]]
+            elif gene_id:
+                gr.name = e[self.GeneField.GENE_ID]
+            else:
+                gr.name = e[self.GeneField.GENE_NAMES]
+
+            if gene_set and regiondata:
+                gr.data = gene_set.values[gr.name]
             result_grs.add(gr)
+
         if unmaplist: return result_grs, unmapped_gene_list
         else: return result_grs
 
@@ -778,6 +791,35 @@ class AnnotationSet:
         # Fetching exons
         if gene_set: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon", self.GeneField.GENE_ID:mapped_gene_list}
         else: query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
+        query_annset = self.get(query_dictionary)
+
+        # Creating GenomicRegionSet
+        result_grs = GenomicRegionSet("exon")
+        for e in query_annset.gene_list:
+            gr = e[self.GeneField.GENOMIC_REGION]
+            gr.name = e[self.GeneField.TRANSCRIPT_ID]
+            result_grs.add(gr)
+
+        if gene_set: return result_grs, unmapped_gene_list
+        else: return result_grs
+
+
+    def get_biotypes(self):
+        """Get the region sets of different Biotypes.
+
+        *Keyword arguments:*
+
+        *Return:*
+
+            - result_grs -- A list of GenomicRegionSets containing the regions for each Biotype.
+        """
+
+        # Fetching gene names
+        mapped_gene_list = None
+        unmapped_gene_list = None
+
+        # Fetching exons
+        query_dictionary = {self.GeneField.FEATURE_TYPE:"exon"}
         query_annset = self.get(query_dictionary)
 
         # Creating GenomicRegionSet

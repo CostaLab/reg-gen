@@ -12,6 +12,7 @@ from __future__ import print_function
 from __future__ import division
 import os
 import sys
+import pysam
 import random
 from ctypes import *
 from scipy import stats
@@ -39,7 +40,7 @@ class GenomicRegionSet:
         self.sequences = []
         self.sorted = False
         self.fileName = ""
-        self.genome_path = ""
+        # self.genome_path = ""
 
     def get_chrom(self):
         """Return all chromosomes."""
@@ -200,8 +201,14 @@ class GenomicRegionSet:
 
                     if start == end:
                         raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
+                    g = GenomicRegion(chrom, start, end, name, orientation, data)
 
-                    self.add(GenomicRegion(chrom, start, end, name, orientation, data))
+                    if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                        gs = g.extract_blocks()
+                        for gg in gs:
+                            self.add(gg)
+                    else:
+                        self.add(g)
                 except:
                     if line == []:
                         continue
@@ -212,38 +219,38 @@ class GenomicRegionSet:
                             print("Error at line", line, self.fileName)
             self.sort()
 
-    def read_sequence(self, genome_file_dir):
-        """Read the sequences defined by a given genomic set.s
-        *Keyword arguments:*
-
-            - genomic_set - genomic set with regions to obtain the fasta file
-            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
-        """
-
-        bed=self
-        # Parse each chromosome and fetch the defined region in this chromosome
-        chroms = list(set(bed.get_chrom()))
-
-        chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
-
-        for ch in chroms:
-            if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
-
-            # Read genome in FASTA according to the given chromosome
-            ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
-            try: 
-                ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
-            except:
-                continue
-            
-            # Regions in given chromosome
-            beds = bed.any_chrom(chrom=ch)
-
-            for s in beds:
-                seq = ch_seq[0].seq[s.initial:s.final]
-                try: strand = s.strand
-                except: strand = "+"
-                s.sequence=(Sequence(seq=seq, name=s.__repr__(), strand=strand))
+    # def read_sequence(self, genome_file_dir):
+    #     """Read the sequences defined by a given genomic set.s
+    #     *Keyword arguments:*
+    #
+    #         - genomic_set - genomic set with regions to obtain the fasta file
+    #         - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
+    #     """
+    #
+    #     bed=self
+    #     # Parse each chromosome and fetch the defined region in this chromosome
+    #     chroms = list(set(bed.get_chrom()))
+    #
+    #     chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
+    #
+    #     for ch in chroms:
+    #         if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
+    #
+    #         # Read genome in FASTA according to the given chromosome
+    #         ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
+    #         try:
+    #             ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
+    #         except:
+    #             continue
+    #
+    #         # Regions in given chromosome
+    #         beds = bed.any_chrom(chrom=ch)
+    #
+    #         for s in beds:
+    #             seq = ch_seq[0].seq[s.initial:s.final]
+    #             try: strand = s.strand
+    #             except: strand = "+"
+    #             s.sequence=(Sequence(seq=seq, name=s.__repr__(), strand=strand))
 
     def write_sequence(self, out_file):
         """Write the sequences defined by a given genomic set. 
@@ -256,7 +263,16 @@ class GenomicRegionSet:
             f.write(">"+r.chrom+":"+str(r.initial)+"-"+str(r.final)+"-"+str(r.orientation)+"\n"+r.sequence.seq+"\n")
           except:
             pass
-                 
+
+    def get_sequences(self, genome_fasta, ex=0):
+        """Return SequenceSet according to the given regions and genome"""
+        seq = SequenceSet(name=self.name, seq_type="DNA")
+        seq.read_regions(regionset=self, genome_fasta=genome_fasta, ex=ex)
+        return seq
+
+    def motif_composition(self, organism):
+        genome = GenomeData(organism)
+        seqDict = self.get_sequences(genome_fasta=genome.get_genome())
 
     def read_bedgraph(self, filename):
         """Read BEDGRAPH file and add every row as a GenomicRegion.
@@ -1823,15 +1839,14 @@ class GenomicRegionSet:
         chromosome_file = open(genome.get_chromosome_sizes(),'r')
         for line in chromosome_file:
             if "random" not in line and "_" not in line:
-                if chrom_X == False and "chrX" in line: continue
-                if chrom_Y == False and "chrY" in line: continue
-                if chrom_M == False and "chrM" in line: continue
+                if not chrom_X and "chrX" in line: continue
+                if not chrom_Y and "chrY" in line: continue
+                if not chrom_M and "chrM" in line: continue
                 chrom_region = GenomicRegion(chrom=line.split("\t")[0],
                                              initial=0,
                                              final=int(line.split("\t")[1]))
                 self.add(chrom_region)
                 continue
-
         chromosome_file.close()
         
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
@@ -2162,7 +2177,7 @@ class GenomicRegionSet:
 
             - regionset -- A GenomicRegionSet defining the interval for counting.
         """
-        return len(self.intersect(regionset))
+        return len(self.intersect(regionset, mode=OverlapType.ORIGINAL))
 
     def counts_per_region(self, regionset):
         """Return a list of counting numbers of the given GenomicRegionSet based on the self.
@@ -2642,13 +2657,23 @@ class GenomicRegionSet:
 
     def average_size(self):
         """Return the average size of the regions"""
-        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        size = [ len(r) for r in self.sequences ]
         return sum(size)/len(size)
+
+    def max_size(self):
+        """Return the maximum size of the regions"""
+        size = [ len(r) for r in self.sequences ]
+        return max(size)
+
+    def min_size(self):
+        """Return the minimum size of the regions"""
+        size = [ len(r) for r in self.sequences ]
+        return min(size)
 
     def size_variance(self):
         """Return the average size of the regions"""
         import numpy as np
-        size = [ abs(r.final - r.initial) for r in self.sequences ]
+        size = [ len(r) for r in self.sequences ]
         return np.std(size)
 
     def filter_by_size(self, maximum=None, minimum=1 ):
@@ -2667,9 +2692,6 @@ class GenomicRegionSet:
         """Return a list of distances between the closest regions from two region sets."""
         if not self.sorted: self.sort()
         if not y.sorted: y.sort()
-
-
-
 
         last_j = len(y) - 1
         j = 0
@@ -2766,10 +2788,14 @@ class GenomicRegionSet:
         """Get a dictionary of scores"""
         d = {}
         for r in self:
-            if r.data:
+            #
+            if isinstance(r.data, str):
                 d[r.toString()] = float(r.data.split("\t")[0])
-            else:
-                continue
+            elif isinstance(r.data, float) or isinstance(r.data, int):
+                d[r.toString()] = r.data
+
+        # except:
+                # continue
         return d
 
 
@@ -2797,3 +2823,83 @@ class GenomicRegionSet:
         for r in self:
             genes.add(gene_name=r.name, value=float(r.data.split("\t")[0]))
         return genes
+
+    def load_from_list(self, loci_list):
+        """Load the regions from a list, such as [['chr1', 1000, 1500, '+']]"""
+        for l in loci_list:
+            self.add(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2]), orientation=l[3]))
+
+    def map_names(self, target, strand=False, convert_nt=False):
+        """Return a list of the target names overlapping the regions in the self in order"""
+        names = []
+        convert_dic = {"A": "T", "T": "A", "C": "G", "G": "C"}
+        iter_a = iter(self)
+        s = iter_a.next()
+        last_j = len(target) - 1
+        j = 0
+        cont_loop = True
+        # pre_j = 0
+
+        if convert_nt and ")n" not in target[0].name:
+            convert_nt = False
+
+        while cont_loop:
+            # When the regions overlap
+
+            if s.overlap(target[j]):
+                if strand:
+                    if s.orientation == target[j].orientation:
+                        names.append(target[j].name)
+                        try:
+                            s = iter_a.next()
+                            # j = pre_j
+                        except: cont_loop = False
+                    else:
+                        if j == last_j:
+                            names.append(".")
+                            cont_loop = False
+                        else:
+                            j += 1
+                elif not strand:
+                    if convert_nt and s.orientation=="-":
+                        seq = target[j].name.partition("(")[2].partition(")")[0]
+                        nseq = [convert_dic[r] for r in seq]
+                        n = "(" + "".join(nseq) + ")n"
+
+                    else:
+                        n = target[j].name
+                    names.append(n)
+                    try:
+                        s = iter_a.next()
+                        # j = pre_j
+                    except: cont_loop = False
+                else:
+                    if j == last_j:
+                        names.append(".")
+                        cont_loop = False
+                    else: j += 1
+            elif s < target[j]:
+                names.append(".")
+                try:
+                    s = iter_a.next()
+                    # j = pre_j
+                except: cont_loop = False
+            elif s > target[j]:
+                # pre_j = j
+                if j == last_j:
+                    names.append(".")
+                    cont_loop = False
+                else: j += 1
+            else:
+                names.append(".")
+                try:
+                    s = iter_a.next()
+                    # j = pre_j
+                except: cont_loop = False
+        # print([len(self), len(names)])
+        while len(names) < len(self):
+            # print(".", end="")
+            names.append(".")
+
+        return names
+

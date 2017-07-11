@@ -2,6 +2,7 @@
 from __future__ import print_function
 from __future__ import division
 import re
+import sys
 import time
 import numpy
 import pickle
@@ -10,7 +11,10 @@ import urllib2
 import datetime
 from shutil import copyfile
 import multiprocessing.pool
+import matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.colors as colormat
+import matplotlib.cm as cmx
 from matplotlib.backends.backend_pdf import PdfPages
 
 # Local Libraries
@@ -121,7 +125,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
 
     else:
         if annotation:
-            colors = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
+            color_res = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
         else:
             # colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             # colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
@@ -138,9 +142,23 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             else:
                 n = len(exps.fieldsDict[colorby].keys())
             # print(n)
-            # colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
-            colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
-    return colors
+            if n < 8:
+                indn = np.linspace(0, 32, 256)
+                color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
+            else:
+                set1 = plt.get_cmap('Set1')
+                cNorm = colormat.Normalize(vmin=0, vmax=n)
+                scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
+                color_res = [scalarMap.to_rgba(d) for d in range(n)]
+
+            # color_res = plt.cm.Set1(numpy.linspace(0.1, 0.9, n)).tolist()
+            # print(len(plt.cm.Set1().tolist()))
+            #
+            # np.linspace(0, 1, 9)
+
+
+
+    return color_res
 
 
 def colormaps(exps, colorby, definedinEM):
@@ -163,7 +181,7 @@ def colormaps(exps, colorby, definedinEM):
             n = len(exps.fieldsDict["factor"].keys())
         else:
             n = len(exps.fieldsDict[colorby].keys())
-        colors = plt.cm.Set1(numpy.linspace(0, 1, n)).tolist()
+        colors = plt.cm.Set1(numpy.linspace(0, n-1, n)).tolist()
 
 
         # if len(exps.get_regionsnames()) < 20:
@@ -196,14 +214,14 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                     qs.append(q.name)
             qs = list(set(qs))
             # Accent Spectral hsv Set1
-            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(qs))).tolist()
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(qs))).tolist()
 
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
 
-            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(types))).tolist()
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
 
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]:
@@ -648,6 +666,59 @@ def check_dir(path):
         os.stat(path)
     except:
         os.mkdir(path)
+
+def shiftedColorMap(cmap, start=0, midpoint=0.5, stop=1.0, name='shiftedcmap'):
+    '''
+    Function to offset the "center" of a colormap. Useful for
+    data with a negative min and positive max and you want the
+    middle of the colormap's dynamic range to be at zero
+    
+    http://stackoverflow.com/questions/7404116/defining-the-midpoint-of-a-colormap-in-matplotlib
+    Input
+    -----
+      cmap : The matplotlib colormap to be altered
+      start : Offset from lowest point in the colormap's range.
+          Defaults to 0.0 (no lower ofset). Should be between
+          0.0 and `midpoint`.
+      midpoint : The new center of the colormap. Defaults to 
+          0.5 (no shift). Should be between 0.0 and 1.0. In
+          general, this should be  1 - vmax/(vmax + abs(vmin))
+          For example if your data range from -15.0 to +5.0 and
+          you want the center of the colormap at 0.0, `midpoint`
+          should be set to  1 - 5/(5 + 15)) or 0.75
+      stop : Offset from highets point in the colormap's range.
+          Defaults to 1.0 (no upper ofset). Should be between
+          `midpoint` and 1.0.
+    '''
+    cdict = {
+        'red': [],
+        'green': [],
+        'blue': [],
+        'alpha': []
+    }
+
+    # regular index to compute the colors
+    reg_index = np.linspace(start, stop, 257)
+
+    # shifted index to match the data
+    shift_index = np.hstack([
+        np.linspace(0.0, midpoint, 128, endpoint=False),
+        np.linspace(midpoint, 1.0, 129, endpoint=True)
+    ])
+
+    for ri, si in zip(reg_index, shift_index):
+        r, g, b, a = cmap(ri)
+
+        cdict['red'].append((si, r, r))
+        cdict['green'].append((si, g, g))
+        cdict['blue'].append((si, b, b))
+        cdict['alpha'].append((si, a, a))
+
+    newcmap = matplotlib.colors.LinearSegmentedColormap(name, cdict)
+    plt.register_cmap(cmap=newcmap)
+
+    return newcmap
+
 
 class NoDaemonProcess(multiprocessing.Process):
     # make 'daemon' attribute always return False

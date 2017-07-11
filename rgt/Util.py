@@ -69,6 +69,12 @@ class GenomeData(ConfigurationFile):
         self.annotation = self.config.get(organism,'annotation')
         self.annotation_dump_dir = os.path.dirname(self.annotation)
         self.gene_alias = self.config.get(organism,'gene_alias')
+        if organism in ["hg19", "hg38", "mm9"]:
+            self.repeat_maskers = self.config.get(organism, 'repeat_maskers')
+        else:
+            self.repeat_maskers = None
+
+
 
     def get_organism(self):
         """Returns the current organism."""
@@ -107,6 +113,13 @@ class GenomeData(ConfigurationFile):
     def get_gene_alias(self):
         """Returns the current path to the gene alias txt file."""
         return self.gene_alias
+
+    def get_repeat_maskers(self):
+        """Returns the current path to directory for repeat maskers."""
+        if self.repeat_maskers:
+            return self.repeat_maskers
+        else:
+            print("*** There is no repeat masker data for "+self.organism)
 
 
 
@@ -519,7 +532,8 @@ class Html:
         
         # Initialize document
         if fig_dir:
-            self.copy_relevent_files(fig_dir)
+            if not os.path.isdir(fig_dir):
+                self.copy_relevent_files(fig_dir)
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         else:
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
@@ -538,17 +552,19 @@ class Html:
             os.stat(target_dir)
         except:
             os.mkdir(target_dir)
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(), dst=os.path.join(target_dir,"rgt_logo.gif"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(), dst=os.path.join(target_dir,"style.css"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery(), dst=os.path.join(target_dir,"jquery-1.11.1.js"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_jquery_metadata(), dst=os.path.join(target_dir,"jquery.metadata.js"))
-        #shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(), dst=os.path.join(target_dir,"jquery.metadata.js"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(),
+                        dst=os.path.join(target_dir,"rgt_logo.gif"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(),
+                        dst=os.path.join(target_dir,"style.css"))
+        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(),
+                        dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
         if self.other_logo:
             if self.other_logo == "TDF":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(), dst=os.path.join(target_dir,"tdf_logo.png"))
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(),
+                                dst=os.path.join(target_dir,"tdf_logo.png"))
             if self.other_logo == "viz":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(), dst=os.path.join(target_dir,"viz_logo.png"))
+                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(),
+                                dst=os.path.join(target_dir,"viz_logo.png"))
           
     def create_header(self, relative_dir=None, RGT_name=True, other_logo=None):
         """Creates default document header.
@@ -560,16 +576,12 @@ class Html:
             - other_logo -- Other tool logos (default = None)
         """
 
-        self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>') 
+        self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>')
             
         if relative_dir:
-            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery-1.11.1.js"></script>')
             self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
-            #self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.metadata.js"></script>')
         else:
-            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery()+'"></script>')
             self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
-            #self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_jquery_metadata()+'"></script>')
         
         self.document.append("<html>")
         self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
@@ -588,33 +600,33 @@ class Html:
         
         self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray; border-bottom:3px solid gray;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
-        self.document.append("  <tr>")
+        self.document.append("\t<tr>")
 
         # Logo
         if relative_dir:            
-            self.document.append("    <td width=\"5%\">")
+            self.document.append("\t\t<td width=\"5%\">")
             if self.homepage: self.document.append("<a href=\""+self.homepage+"\">")
             if other_logo == "TDF":
-                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\">")
+                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\">")
             elif other_logo == "viz":
-                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/viz_logo.png"+"\" width=\"130\" height=\"100\">")
+                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/viz_logo.png"+"\" width=\"130\" height=\"100\">")
             else:
-                self.document.append("    <img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\">")
+                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\">")
             if self.homepage: self.document.append("</a>")
-            self.document.append("    </td>")
+            self.document.append("\t\t</td>")
             
         else:
-            self.document.append("    <td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+            self.document.append("\t\t<td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
 
         # Gap
-        self.document.append("     <td width=\"5%\"></td>")
+        self.document.append("\t\t<td width=\"5%\"></td>")
         # Title
         if RGT_name:
-            self.document.append("    <td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+            self.document.append("\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
         else:
-            self.document.append("    <td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
+            self.document.append("\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
         
-        self.document.append("  </tr>")
+        self.document.append("\t</tr>")
         self.document.append("</table>")
         self.document.append("</h3>")
 
@@ -627,15 +639,6 @@ class Html:
                                  "\">"+\
                                  "<font size='1'>"+k+"</font>"+"</a>")
 
-        #self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
-        #self.document.append("  <tr>")
-        #self.document.append("    <td width=\"100%\"><font color=\"black\" face=\"Arial\" size=\"4\"><b>&nbsp;&nbsp;")
-        #link_str = "    "+" &nbsp;&nbsp; |&nbsp;&nbsp; ".join(["<a href=\""+os.path.join(self.cluster_path_fix,self.links_dict[k])+"\">"+k+"</a>" for k in self.links_dict.keys()])
-        #self.document.append(link_str)
-        #self.document.append("    </b></font></td>")
-        #self.document.append("  </tr>")
-        #self.document.append("</table>")
-
     def create_footer(self):
         """Adds footer."""
         self.document.append("<br><br>")
@@ -646,7 +649,7 @@ class Html:
         self.document.append("</body>")
         self.document.append("</html>")
 
-    def add_heading(self, heading, align = 50, color = "black", face = "Arial", size = 5, bold = True, idtag=None):
+    def add_heading(self, heading, align=50, color="black", face="Arial", size=5, bold=True, idtag=None):
         """Creates a heading.
         
         *Keyword arguments:*
@@ -667,11 +670,11 @@ class Html:
 
         # Creating header
         content_str = ""
-        if(isinstance(align,int)): content_str += "<p style=\"margin-left: "+str(align)+"\""+idstr+">"
-        elif(isinstance(align,str)): content_str += "<p align=\""+align+"\""+idstr+">"
+        if(isinstance(align,int)): content_str += "\t<p style=\"margin-left: "+str(align)+"\""+idstr+">"
+        elif(isinstance(align,str)): content_str += "\t<p align=\""+align+"\""+idstr+">"
         else: pass # ERROR
         content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\""+idstr+">"
-        if(bold): content_str += "<b>"
+        if bold: content_str += "<b>"
         self.document.append(content_str)
 
         # Printing heading name
@@ -679,13 +682,13 @@ class Html:
 
         # Creating footing
         end_str = ""
-        if(bold): end_str += "</b>"
+        if bold: end_str += "</b>"
         end_str += "</font></p>"
         self.document.append(end_str)
 
-    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align = 50, 
-                        cell_align = 'center', auto_width=False, colorcode=None, header_titles=None,
-                        border_list=None, sortable=False):
+    def add_zebra_table(self, header_list, col_size_list, type_list, data_table, align=50,
+                        cell_align='center', auto_width=False, colorcode=None, header_titles=None,
+                        border_list=None, sortable=False, clean=False):
         """Creates a zebra table.
 
         *Keyword arguments:*
@@ -719,7 +722,7 @@ class Html:
         # Starting table
         type_list = type_list.lower()
         if(isinstance(align,int)): self.document.append("<p style=\"margin-left: "+str(align)+"\">")
-        elif(isinstance(align,str)): self.document.append("<p align=\""+align+"\">") 
+        elif(isinstance(align,str)): self.document.append("<p align=\""+align+"\">")
         else: pass # TODO ERROR
         
         # Table header
@@ -740,11 +743,11 @@ class Html:
 
         #############################
         ##### Header ################
-        self.document.append("  <thead>")
+        self.document.append("\t<thead>")
         if (isinstance(header_list[0], list)):
         # For headers more than one row
             for r, row_list in enumerate(header_list):
-                self.document.append("    <tr>")
+                self.document.append("\t\t<tr>")
                 header_str = []
 
                 merge_num = [1] * len(row_list)
@@ -757,73 +760,91 @@ class Html:
 
                 for i in range(0,len(row_list)):
                     if merge_num[i] > 1:
-                        if header_titles:
-                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                        if header_titles and not clean:
+                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
                                               "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\" "+
                                               "title=\""+header_titles[r][i]+"\""+border_list[i+merge_num[i]-1]+auto+" >"+
                                               row_list[i]+"</th>")
+                        elif header_titles and clean:
+                            header_str.append("\t\t<th>" + row_list[i] + "</th>")
                         else:
-                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
                                               "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\""+
                                               border_list[i+merge_num[i]-1]+auto+">"+row_list[i]+"</th>")
                         
                     elif merge_num[i] == 0:
                         continue
                     else:
-                        if header_titles:
-                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                        if header_titles and not clean:
+                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
                                               "\" align=\""+cell_align+"\" "+
                                               "title=\""+header_titles[r][i]+"\""+border_list[i]+auto+">"+
                                               row_list[i]+"</th>")
+                        elif header_titles and clean:
+                            header_str.append("\t\t<th>" + row_list[i] + "</th>")
                         else:
-                            header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+
+                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
                                               "\" align=\""+cell_align+"\""+border_list[i]+auto+">"+
                                               row_list[i]+"</th>")
 
                 header_str = "    "+"\n    ".join(header_str)
                 self.document.append(header_str)
-                self.document.append("    </tr>")
+                self.document.append("\t\t</tr>")
 
         else:
-            self.document.append("    <tr>")
+            self.document.append("\t\t<tr>")
             header_str = []
             for i in range(0,len(header_list)):
-                if header_titles:
-                    header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\" "+
+                if header_titles and not clean:
+                    header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\" "+
                                       "title=\""+header_titles[i]+"\" >"+header_list[i]+"</th>")
+                elif header_titles and clean:
+                    header_str.append("\t\t<th>" + header_list[i] + "</th>")
                 else:
-                    header_str.append("<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
+                    header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
                                       header_list[i]+"</th>")
                 
             header_str = "    "+"\n    ".join(header_str)
             self.document.append(header_str)
-            self.document.append("    </tr>")
-        self.document.append("  </thead>")
+            self.document.append("\t\t</tr>")
+        self.document.append("\t</thead>")
 
         
         #############################
         ##### Table body ############
-        self.document.append("  <tbody>")
+        self.document.append("\t<tbody>")
         for i in range(0,len(data_table)):
 
             # Row type
-            if(i%2==0) and not sortable: self.document.append("    <tr class=\"odd\">")
-            else: self.document.append("    <tr>")
+            if(i%2==0) and not sortable: self.document.append("\t\t<tr class=\"odd\">")
+            else: self.document.append("\t\t<tr>")
 
             # Body data
-            for j in range(0,len(data_table[i])):
-                if(type_list[j] == "s"):
-                    self.document.append("      <td align=\""+cell_align+"\" "+border_list[j]+">"+data_table[i][j]+"</td>")
-                elif(type_list[j] == "i"): 
-                    self.document.append("      <td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+
-                                         data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
-                elif(type_list[j] == "l"):
-                    self.document.append("      <td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+
-                                         data_table[i][j][0]+"</a></td>")
-                else: pass # TODO ERROR
+            if not clean:
+                for j in range(0,len(data_table[i])):
+                    if(type_list[j] == "s"):
+                        self.document.append("\t\t\t<td align=\""+cell_align+"\" "+border_list[j]+">"+data_table[i][j]+"</td>")
+                    elif(type_list[j] == "i"):
+                        self.document.append("\t\t\t<td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+
+                                             data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
+                    elif(type_list[j] == "l"):
+                        self.document.append("\t\t\t<td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+
+                                             data_table[i][j][0]+"</a></td>")
+                    else: pass # TODO ERROR
+
+            else:
+                for j in range(0, len(data_table[i])):
+                    if (type_list[j] == "s"):
+                        self.document.append("\t\t\t<td>" + data_table[i][j] + "</td>")
+                    elif (type_list[j] == "i"):
+                        self.document.append("\t\t\t<td></td>")
+                    elif (type_list[j] == "l"):
+                        self.document.append("\t\t\t<td>" + data_table[i][j][0] + "</a></td>")
+                    else:
+                        pass  # TODO ERROR
 
             # Row ending
-            self.document.append("    </tr>")
+            self.document.append("\t\t</tr>")
         
         # Finishing table
         self.document.append("</tbody></table></p>")
@@ -831,24 +852,24 @@ class Html:
     def add_fixed_rank_sortable(self):
         """Add jquery for fixing the first column of the sortable table"""
         scripts = ["<script>",
-                   "// add custom numbering widget",
-                   "$.tablesorter.addWidget({",
-                   "    id: 'numbering',",
-                   "    format: function(table) {",
-                   "        var c = table.config;",
-                   "        $('tr:visible', table.tBodies[0]).each(function(i) {",
-                   "            $(this).find('td').eq(0).text(i + 1);",
-                   "        });",
-                   "    }",
-                   "});",
-                   "$('.tablesorter').tablesorter({",
-                   "    // prevent first column from being sortable",
-                   "    headers: {",
-                   "        0: { sorter: false }",
-                   "    },",
-                   "    // apply custom widget",
-                   "    widgets: ['numbering']",
-                   "});",
+                   "\t// add custom numbering widget",
+                   "\t$.tablesorter.addWidget({",
+                   "\t    id: 'numbering',",
+                   "\t    format: function(table) {",
+                   "\t        var c = table.config;",
+                   "\t        $('tr:visible', table.tBodies[0]).each(function(i) {",
+                   "\t            $(this).find('td').eq(0).text(i + 1);",
+                   "\t        });",
+                   "\t    }",
+                   "\t});",
+                   "\t$('.tablesorter').tablesorter({",
+                   "\t    // prevent first column from being sortable",
+                   "\t    headers: {",
+                   "\t        0: { sorter: false }",
+                   "\t    },",
+                   "\t    // apply custom widget",
+                   "\t    widgets: ['numbering']",
+                   "\t});",
                    "</script>"]
         for s in scripts:
             self.document.append(s)

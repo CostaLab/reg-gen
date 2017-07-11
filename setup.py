@@ -23,6 +23,7 @@ Installs the RGT tool with standard setuptools options and additional
 options specific for RGT.
 """
 
+
 def read(*names, **kwargs):
     with io.open(
         os.path.join(os.path.dirname(__file__), *names),
@@ -38,6 +39,7 @@ def find_version(*file_paths):
     if version_match:
         return version_match.group(1)
     raise RuntimeError("Unable to find version string.")
+
 
 current_version = find_version("rgt", "__version__.py")
 
@@ -74,7 +76,7 @@ Tools Dictionary Standard:
 common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=0.7.0",
-               "pysam>=0.8.2",
+               "pysam==0.11.1",
                "pyBigWig",
                "PyVCF"]
 
@@ -87,51 +89,53 @@ else:
     common_deps.append("ngslib")
 
 tools_dictionary = {
-"core": (
-    None,
-    None,
-    [],
-    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed",
-     "data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge",
-     "data/bin/"+bin_dir+"/bedGraphToBigWig"]
-),
-"motifanalysis": (
-    "rgt-motifanalysis",
-    "rgt.motifanalysis.Main:main",
-    ["Biopython>=1.64", "fisher>=0.1.4"],
-    ["data/bin/"+bin_dir+"/bedToBigBed", "data/bin/"+bin_dir+"/bigBedToBed"]
-),
-"hint": (
-    "rgt-hint",
-    "rgt.HINT.Main:main",
-    ["scikit-learn>=0.14", "hmmlearn<0.2.0"],
-    []
-),
-"THOR": (
-    "rgt-THOR",
-    "rgt.THOR.THOR:main",
-    ["scikit-learn>=0.17.1", "hmmlearn<0.2.0", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
-    ["data/bin/"+bin_dir+"/wigToBigWig", "data/bin/"+bin_dir+"/bigWigMerge", "data/bin/"+bin_dir+"/bedGraphToBigWig"]
-),
-"filterVCF": (
-    "rgt-filterVCF",
-    "rgt.filterVCF.filterVCF:main",
-    [],
-    []
-),
-"viz": (
-    "rgt-viz",
-    "rgt.viz.Main:main",
-    ["matplotlib>=1.1.0", "matplotlib_venn"],
-    []
-),
-"TDF": (
-    "rgt-TDF",
-    "rgt.tdf.Main:main",
-    ["matplotlib>=1.1.0", "natsort"],
-    []
-)
+    "core": (
+        None,
+        None,
+        [],
+        ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed",
+         "data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
+         "data/bin/" + bin_dir + "/bedGraphToBigWig"]
+    ),
+    "motifanalysis": (
+        "rgt-motifanalysis",
+        "rgt.motifanalysis.Main:main",
+        ["Biopython>=1.64", "fisher>=0.1.4"],
+        ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
+    ),
+    "hint": (
+        "rgt-hint",
+        "rgt.HINT.Main:main",
+        ["scikit-learn>=0.14", "hmmlearn", "pyx==0.12.1"],
+        []
+    ),
+    "THOR": (
+        "rgt-THOR",
+        "rgt.THOR.THOR:main",
+        ["scikit-learn>=0.17.1", "hmmlearn", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
+        ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
+         "data/bin/" + bin_dir + "/bedGraphToBigWig"]
+    ),
+    "filterVCF": (
+        "rgt-filterVCF",
+        "rgt.filterVCF.filterVCF:main",
+        [],
+        []
+    ),
+    "viz": (
+        "rgt-viz",
+        "rgt.viz.Main:main",
+        ["matplotlib>=1.1.0", "matplotlib_venn"],
+        []
+    ),
+    "TDF": (
+        "rgt-TDF",
+        "rgt.tdf.Main:main",
+        ["matplotlib>=1.1.0", "natsort"],
+        []
+    )
 }
+
 
 ###################################################################################################
 # Auxiliary Functions/Classes
@@ -147,11 +151,12 @@ class PassThroughOptionParser(OptionParser):
     sys.exit(status) will still be called if a known argument is passed
     incorrectly (e.g. missing arguments or bad argument types, etc.)
     """
+
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
                 OptionParser._process_args(self, largs, rargs, values)
-            except (BadOptionError,AmbiguousOptionError), e:
+            except (BadOptionError, AmbiguousOptionError), e:
                 largs.append(e.opt_str)
 
 
@@ -164,9 +169,10 @@ def recursive_chown_chmod(path_to_walk, uid, gid, file_permission, path_permissi
         chown(root_dir, uid, gid)
         chmod(root_dir, path_permission)
         for f in file_list:
-            current_complete_file = path.join(root_dir,f)
+            current_complete_file = path.join(root_dir, f)
             chown(current_complete_file, uid, gid)
             chmod(current_complete_file, file_permission)
+
 
 ###################################################################################################
 # Processing Input Arguments
@@ -175,7 +181,7 @@ def recursive_chown_chmod(path_to_walk, uid, gid, file_permission, path_permissi
 # Parameters
 rgt_data_base_name = "rgtdata"
 usage_message = "python setup.py install [python options] [RGT options]"
-version_message = "Regulatory Genomics Toolbox (RGT). Version: "+str(current_version)
+version_message = "Regulatory Genomics Toolbox (RGT). Version: " + str(current_version)
 
 # Initializing Option Parser
 parser = PassThroughOptionParser(usage=usage_message, version=version_message)
@@ -184,14 +190,14 @@ parser = PassThroughOptionParser(usage=usage_message, version=version_message)
 param_rgt_data_location_name = "--rgt-data-path"
 parser.add_option(param_rgt_data_location_name, type="string", metavar="STRING",
                   help="Path containing data used by RGT tool.",
-                  dest="param_rgt_data_location", default=path.join(getenv('HOME'),rgt_data_base_name))
+                  dest="param_rgt_data_location", default=path.join(getenv('HOME'), rgt_data_base_name))
 
 # Parameter: Tool
 param_rgt_tool_name = "--rgt-tool"
 parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
                   help=("The tool which will be installed. If this argument is not used, "
                         "then the complete package is installed. The current available options "
-                        "are: "+", ".join(tools_dictionary.keys())+"; where 'core' means that "
+                        "are: " + ", ".join(tools_dictionary.keys()) + "; where 'core' means that "
                         "only the RGT python library will be installed with no further command-line "
                         "tools. You can also provide multiple tools in a list separated by comma."),
                   dest="param_rgt_tool", default=",".join(tools_dictionary.keys()))
@@ -199,9 +205,9 @@ parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
 # Processing Options
 options, arguments = parser.parse_args()
 if path.basename(options.param_rgt_data_location) != rgt_data_base_name:
-    options.param_rgt_data_location = path.join(options.param_rgt_data_location,rgt_data_base_name)
+    options.param_rgt_data_location = path.join(options.param_rgt_data_location, rgt_data_base_name)
 if options.param_rgt_data_location[0] == "~":
-    options.param_rgt_data_location = path.join(getenv('HOME'),options.param_rgt_data_location[2:])
+    options.param_rgt_data_location = path.join(getenv('HOME'), options.param_rgt_data_location[2:])
 options.param_rgt_tool = options.param_rgt_tool.split(",")
 
 # Manually Removing Additional Options from sys.argv
@@ -216,7 +222,7 @@ for e in sys.argv:
 sys.argv = new_sys_argv
 
 # Defining entry points
-current_entry_points = {"console_scripts" : []}
+current_entry_points = {"console_scripts": []}
 for tool_option in options.param_rgt_tool:
     if tool_option != "core":
         current_entry_points["console_scripts"].append(" = ".join(tools_dictionary[tool_option][:2]))
@@ -237,62 +243,65 @@ if not path.exists(options.param_rgt_data_location):
 # Creating data.config
 data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
 # if not os.path.isfile(data_config_file_name):
-data_config_file = open(data_config_file_name,"w")
+data_config_file = open(data_config_file_name, "w")
 data_config_file.write("# Configuration file loaded at rgt startup. CAREFUL: any changes shall be overwritten\n"
                        "# whenever rgt is (re)installed. Use data.config.user for permanent changes.\n\n")
 
 genome = "mm9"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_mm9.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm9\n"))
-data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_mm9.bed\n"))
-data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_mm9.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM1.annotation.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_mm9.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.mm9\n"))
+data_config_file.write("genes_Gencode: " + path.join(genome_dir, "genes_Gencode_mm9.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome_dir, "genes_RefSeq_mm9.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "gencode.vM1.annotation.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_mouse.txt\n\n"))
+data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "mm10"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_mm10.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.mm10\n"))
-data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_mm10.bed\n"))
-data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_mm10.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"gencode.vM11.annotation.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_mouse.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_mm10.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.mm10\n"))
+data_config_file.write("genes_Gencode: " + path.join(genome_dir, "genes_Gencode_mm10.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome_dir, "genes_RefSeq_mm10.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "gencode.vM11.annotation.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_mouse.txt\n\n"))
 genome = "hg19"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_hg19.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg19\n"))
-data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg19.bed\n"))
-data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg19.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v19.annotation.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_hg19.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.hg19\n"))
+data_config_file.write("genes_Gencode: " + path.join(genome_dir, "genes_Gencode_hg19.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome_dir, "genes_RefSeq_hg19.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "gencode.v19.annotation.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_human.txt\n\n"))
+data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "hg38"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_hg38.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.hg38\n"))
-data_config_file.write("genes_Gencode: "+path.join(genome_dir,"genes_Gencode_hg38.bed\n"))
-data_config_file.write("genes_RefSeq: "+path.join(genome_dir,"genes_RefSeq_hg38.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"gencode.v24.annotation.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_human.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_hg38.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.hg38\n"))
+data_config_file.write("genes_Gencode: " + path.join(genome_dir, "genes_Gencode_hg38.bed\n"))
+data_config_file.write("genes_RefSeq: " + path.join(genome_dir, "genes_RefSeq_hg38.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "gencode.v24.annotation.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_human.txt\n\n"))
+data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "zv9"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_zv9_ensembl_release_79.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv9\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv9.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.Zv9.79.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_zv9_ensembl_release_79.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.zv9\n"))
+data_config_file.write("gene_regions: " + path.join(genome_dir, "genes_zv9.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "Danio_rerio.Zv9.79.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.txt\n\n"))
 genome = "zv10"
 genome_dir = path.join(options.param_rgt_data_location, genome)
-data_config_file.write("["+genome+"]\n")
-data_config_file.write("genome: "+path.join(genome_dir,"genome_zv10_ensembl_release_84.fa\n"))
-data_config_file.write("chromosome_sizes: "+path.join(genome_dir,"chrom.sizes.zv10\n"))
-data_config_file.write("gene_regions: "+path.join(genome_dir,"genes_zv10.bed\n"))
-data_config_file.write("annotation: "+path.join(genome_dir,"Danio_rerio.GRCz10.84.gtf\n"))
-data_config_file.write("gene_alias: "+path.join(genome_dir,"alias_zebrafish.txt\n\n"))
+data_config_file.write("[" + genome + "]\n")
+data_config_file.write("genome: " + path.join(genome_dir, "genome_zv10_ensembl_release_84.fa\n"))
+data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.zv10\n"))
+data_config_file.write("gene_regions: " + path.join(genome_dir, "genes_zv10.bed\n"))
+data_config_file.write("annotation: " + path.join(genome_dir, "Danio_rerio.GRCz10.84.gtf\n"))
+data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.txt\n\n"))
 
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
@@ -302,7 +311,7 @@ data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
 data_config_file.write("default_hmm_atac: fp_hmms/atac.hmm\n")
-data_config_file.write("default_hmm_atac_bc: fp_hmms/atac_bc.hmm\n")
+data_config_file.write("default_hmm_atac_bc: fp_hmms/atac.pkl\n")
 data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
@@ -316,7 +325,7 @@ data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
-data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/"+libRGT) + "\n")
+data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/" + libRGT) + "\n")
 
 data_config_file.close()
 
@@ -331,7 +340,7 @@ if not os.path.isfile(user_config_file_name):
     genome = "self_defined"
     genome_dir = path.join(options.param_rgt_data_location, genome)
     user_config_file.write("# Template to add a genomic section.\n")
-    user_config_file.write("#["+genome+"]\n")
+    user_config_file.write("#[" + genome + "]\n")
     user_config_file.write("#genome: undefined\n")
     user_config_file.write("#chromosome_sizes: undefined\n")
     user_config_file.write("#gene_regions: undefined\n")
@@ -353,37 +362,42 @@ Copy Files Dictionary:
     - Y1,Y2,...Yn: files/folders inside the path X to be copied.
 """
 copy_files_dictionary = {
-".": ["setupGenomicData.py","setupLogoData.py"],
-"lib": ["libtriplexator.so", libRGT],
-"hg19": ["genes_Gencode_hg19.bed","chrom.sizes.hg19","alias_human.txt","genes_RefSeq_hg19.bed"],
-"hg38": ["genes_Gencode_hg38.bed","chrom.sizes.hg38","alias_human.txt","genes_RefSeq_hg38.bed"],
-"mm9": ["genes_Gencode_mm9.bed","chrom.sizes.mm9","alias_mouse.txt","genes_RefSeq_mm9.bed"],
-"mm10": ["genes_Gencode_mm10.bed","chrom.sizes.mm10","alias_mouse.txt","genes_RefSeq_mm10.bed"],
-"zv9": ["genes_zv9.bed","chrom.sizes.zv9","alias_zebrafish.txt"],
-"zv10": ["genes_zv10.bed","chrom.sizes.zv10","alias_zebrafish.txt"],
-"fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm", "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.hmm", "atac_bc.hmm", "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm", "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
-"motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr", "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
-"fig": ["rgt_logo.gif","style.css","default_motif_logo.png","jquery-1.11.1.js","jquery.tablesorter.min.js","tdf_logo.png", "viz_logo.png"],
+    ".": ["setupGenomicData.py", "setupLogoData.py"],
+    "lib": ["libtriplexator.so", libRGT],
+    "hg19": ["genes_Gencode_hg19.bed", "chrom.sizes.hg19", "alias_human.txt", "genes_RefSeq_hg19.bed"],
+    "hg38": ["genes_Gencode_hg38.bed", "chrom.sizes.hg38", "alias_human.txt", "genes_RefSeq_hg38.bed"],
+    "mm9": ["genes_Gencode_mm9.bed", "chrom.sizes.mm9", "alias_mouse.txt", "genes_RefSeq_mm9.bed"],
+    "mm10": ["genes_Gencode_mm10.bed", "chrom.sizes.mm10", "alias_mouse.txt", "genes_RefSeq_mm10.bed"],
+    "zv9": ["genes_zv9.bed", "chrom.sizes.zv9", "alias_zebrafish.txt"],
+    "zv10": ["genes_zv10.bed", "chrom.sizes.zv10", "alias_zebrafish.txt"],
+    "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
+                "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.pkl", "atac.hmm", "atac_bc.hmm",
+                "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
+                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
+    "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr",
+               "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
+    "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
+            "tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
     copy_dest_path = path.join(options.param_rgt_data_location, copy_folder)
     if not path.exists(copy_dest_path): makedirs(copy_dest_path)
     for copy_file in copy_files_dictionary[copy_folder]:
-        copy_source_file = path.join(script_dir,"data", copy_folder, copy_file)
-        copy_dest_file = path.join(copy_dest_path,copy_file)
+        copy_source_file = path.join(script_dir, "data", copy_folder, copy_file)
+        copy_dest_file = path.join(copy_dest_path, copy_file)
         if os.path.isfile(copy_source_file):
             copy(copy_source_file, copy_dest_file)
         else:
             dir_util.copy_tree(copy_source_file, copy_dest_file)
-        
-        # if not path.exists(copy_dest_file): 
-        # try: dir_util.copy_tree(copy_source_file, copy_dest_file)
-        # except OSError as exc:
-        #     if exc.errno == ENOTDIR: 
-        #         copy(copy_source_file, copy_dest_file)
-        #     else:
-        #         raise
-    
+
+            # if not path.exists(copy_dest_file):
+            # try: dir_util.copy_tree(copy_source_file, copy_dest_file)
+            # except OSError as exc:
+            #     if exc.errno == ENOTDIR:
+            #         copy(copy_source_file, copy_dest_file)
+            #     else:
+            #         raise
+
 ###################################################################################################
 # Setup Function
 ###################################################################################################
@@ -448,4 +462,5 @@ default_path_permission = 0755
 if current_user:
     current_user_uid = getpwnam(current_user).pw_uid
     current_user_gid = getpwnam(current_user).pw_gid
-    recursive_chown_chmod(options.param_rgt_data_location,current_user_uid,current_user_gid,default_file_permission,default_path_permission)
+    recursive_chown_chmod(options.param_rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
+                          default_path_permission)
