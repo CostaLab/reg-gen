@@ -11,14 +11,14 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pyx
-
+from math import log, ceil, floor, isnan
 # Internal
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
 from rgt.GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 from ..Util import AuxiliaryFunctions
-
+from scipy.stats import scoreatpercentile
 
 class Plot:
     """
@@ -247,6 +247,8 @@ class Plot:
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
         mpbs_regions.read_bed(self.motif_file)
 
+        bam = Samfile(self.reads_file, "rb")
+
         for region in mpbs_regions:
             if str(region.name).split(":")[-1] == "Y":
                 # Extend by 50 bp
@@ -255,20 +257,9 @@ class Plot:
                 p2 = mid + (self.window_size / 2)
 
                 # Fetch raw signal
-                norm_signal, _ = signal.get_signal(ref=region.chrom, start=p1, end=p2,
-                                                   bias_table=table,
-                                                   downstream_ext=self.downstream_ext,
-                                                   upstream_ext=self.upstream_ext,
-                                                   forward_shift=self.forward_shift,
-                                                   reverse_shift=self.reverse_shift,
-                                                   genome_file_name=genome_data.get_genome())
-                norm_signal_f, _, norm_signal_r, _ = signal.get_signal1(ref=region.chrom, start=p1, end=p2,
-                                                                        bias_table=table,
-                                                                        downstream_ext=self.downstream_ext,
-                                                                        upstream_ext=self.upstream_ext,
-                                                                        forward_shift=self.forward_shift,
-                                                                        reverse_shift=self.reverse_shift,
-                                                                        genome_file_name=genome_data.get_genome())
+                norm_signal, norm_signal_f, norm_signal_r = \
+                    self.get_signal1(ref=region.chrom, start=p1,end=p2, bam=bam, fasta=fasta, bias_table=table,
+                                     signal=signal)
 
                 num_sites += 1
                 mean_norm_signal = np.add(mean_norm_signal, norm_signal)
@@ -293,13 +284,39 @@ class Plot:
         mean_norm_signal_f = mean_norm_signal_f / num_sites
         mean_norm_signal_r = mean_norm_signal_r / num_sites
 
-        mean_norm_signal = self.rescaling(mean_norm_signal)
-        mean_norm_signal_f = self.rescaling(mean_norm_signal_f)
-        mean_norm_signal_r = self.rescaling(mean_norm_signal_r)
+        mean_norm_signal = signal.boyle_norm(mean_norm_signal)
+        perc = scoreatpercentile(mean_norm_signal, 98)
+        std = np.std(mean_norm_signal)
+        mean_norm_signal = signal.hon_norm_atac(mean_norm_signal, perc, std)
+
+        mean_norm_signal_f = signal.boyle_norm(mean_norm_signal_f)
+        perc = scoreatpercentile(mean_norm_signal_f, 98)
+        std = np.std(mean_norm_signal_f)
+        mean_norm_signal_f = signal.hon_norm_atac(mean_norm_signal_f, perc, std)
+
+        mean_norm_signal_r = signal.boyle_norm(mean_norm_signal_r)
+        perc = scoreatpercentile(mean_norm_signal_r, 98)
+        std = np.std(mean_norm_signal_r)
+        mean_norm_signal_r = signal.hon_norm_atac(mean_norm_signal_r, perc, std)
 
         mean_slope_signal = signal.slope(mean_norm_signal, signal.sg_coefs)
         mean_slope_signal_f = signal.slope(mean_norm_signal_f, signal.sg_coefs)
         mean_slope_signal_r = signal.slope(mean_norm_signal_r, signal.sg_coefs)
+
+        mean_slope_signal = signal.boyle_norm(mean_slope_signal)
+        perc = scoreatpercentile(mean_slope_signal, 98)
+        std = np.std(mean_slope_signal)
+        mean_slope_signal = signal.hon_norm_atac(mean_slope_signal, perc, std)
+
+        mean_slope_signal_f = signal.boyle_norm(mean_slope_signal_f)
+        perc = scoreatpercentile(mean_slope_signal_f, 98)
+        std = np.std(mean_slope_signal_f)
+        mean_slope_signal_f = signal.hon_norm_atac(mean_slope_signal_f, perc, std)
+
+        mean_slope_signal_r = signal.boyle_norm(mean_slope_signal_r)
+        perc = scoreatpercentile(mean_slope_signal_r, 98)
+        std = np.std(mean_slope_signal_r)
+        mean_slope_signal_r = signal.hon_norm_atac(mean_slope_signal_r, perc, std)
 
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
@@ -387,11 +404,106 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.10, 1.55, logo_fname, width=17.5, height=3))
+        c.insert(pyx.epsfile.epsfile(0, 1.55, logo_fname, width=17.5, height=3))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
         os.system("epstopdf " + output_fname)
+
+        os.remove(pwm_fname)
+        os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
+
+    def get_signal1(self, ref, start, end, bam, fasta, bias_table, signal):
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(k_nb / 2.)
+        p2_wk = p2_w + int(k_nb / 2.)
+
+        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+        # Iterating on sequence to create the bias signal
+        signal_bias_f = []
+        signal_bias_r = []
+        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+            try:
+                signal_bias_f.append(fBiasDict[fseq])
+            except Exception:
+                signal_bias_f.append(defaultKmerValue)
+            try:
+                signal_bias_r.append(rBiasDict[rseq])
+            except Exception:
+                signal_bias_r.append(defaultKmerValue)
+
+        # Raw counts
+        signal_raw_f = [0.0] * (p2_w - p1_w)
+        signal_raw_r = [0.0] * (p2_w - p1_w)
+        for read in bam.fetch(ref, p1_w, p2_w):
+            if (not read.is_reverse):
+                cut_site = read.pos + self.forward_shift
+                if cut_site >= p1_w and cut_site < p2_w:
+                    signal_raw_f[cut_site - p1_w] += 1.0
+            else:
+                cut_site = read.aend + self.reverse_shift - 1
+                if cut_site >= p1_w and cut_site < p2_w:
+                    signal_raw_r[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(signal_raw_f[:window])
+        rSum = sum(signal_raw_r[:window])
+        fLast = signal_raw_f[0]
+        rLast = signal_raw_r[0]
+        for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += signal_raw_f[i + (window / 2)]
+            fLast = signal_raw_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += signal_raw_r[i + (window / 2)]
+            rLast = signal_raw_r[i - (window / 2) + 1]
+
+        # Calculating bias and writing to wig file
+        fSum = sum(signal_bias_f[:window])
+        rSum = sum(signal_bias_r[:window])
+        fLast = signal_bias_f[0]
+        rLast = signal_bias_r[0]
+        signal_bc = []
+        signal_bc_f = []
+        signal_bc_r = []
+        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            signal_bc.append(nhatf + nhatr)
+            signal_bc_f.append(nhatf)
+            signal_bc_r.append(nhatr)
+            fSum -= fLast
+            fSum += signal_bias_f[i + (window / 2)]
+            fLast = signal_bias_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += signal_bias_r[i + (window / 2)]
+            rLast = signal_bias_r[i - (window / 2) + 1]
+
+        return signal_bc, signal_bc_f, signal_bc_r
+
 
     def line2(self):
         bias_table = BiasTable()
@@ -426,8 +538,7 @@ class Plot:
                 p2 = mid + (self.window_size / 2)
 
                 signal_bias_f, signal_bias_r, signal_raw, signal_bc, signal_bc_f, signal_bc_r = \
-                    self.get_signa2(ref=region.chrom, start=p1, end=p2, bam=bam, fasta=fasta, bias_table=table)
-
+                    self.get_signal2(ref=region.chrom, start=p1, end=p2, bam=bam, fasta=fasta, bias_table=table)
 
                 num_sites += 1
                 mean_signal_bias_f = np.add(mean_signal_bias_f, np.array(signal_bias_f))
@@ -458,12 +569,10 @@ class Plot:
         mean_signal_bc_f = mean_signal_bc_f / num_sites
         mean_signal_bc_r = mean_signal_bc_r / num_sites
 
-        #mean_signal_bias_f = self.rescaling(mean_signal_bias_f)
-        #mean_signal_bias_r = self.rescaling(mean_signal_bias_r)
-        mean_signal_raw = self.rescaling(mean_signal_raw)
-        mean_signal_bc = self.rescaling(mean_signal_bc)
-        mean_signal_bc_f = self.rescaling(mean_signal_bc_f)
-        mean_signal_bc_r = self.rescaling(mean_signal_bc_r)
+        #mean_signal_raw = self.rescaling(mean_signal_raw)
+        #mean_signal_bc = self.rescaling(mean_signal_bc)
+        #mean_signal_bc_f = self.rescaling(mean_signal_bc_f)
+        #mean_signal_bc_r = self.rescaling(mean_signal_bc_r)
 
 
         # Output the norm and slope signal
@@ -486,6 +595,7 @@ class Plot:
 
         logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
         pwm = motifs.read(open(pwm_fname), "pfm")
+
         pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
                     show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
@@ -581,13 +691,20 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.10, 1.55, logo_fname, width=17.5, height=3))
+        c.insert(pyx.epsfile.epsfile(0, 1.55, logo_fname, width=17.5, height=3))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
         os.system("epstopdf " + output_fname)
 
-    def get_signa2(self, ref, start, end, bam, fasta, bias_table):
+        os.remove(pwm_fname)
+        os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
+
+    def get_signal2(self, ref, start, end, bam, fasta, bias_table):
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -664,9 +781,14 @@ class Plot:
             nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
             signal_raw.append(signal_raw_f[i] + signal_raw_r[i])
-            signal_bc.append(nhatf + nhatr)
-            signal_bc_f.append(nhatf)
-            signal_bc_r.append(nhatr)
+            #signal_bc.append(nhatf + nhatr)
+            #signal_bc_f.append(nhatf)
+            #signal_bc_r.append(nhatr)
+            zf = log(signal_raw_f[i] + 1) - log(nhatf + 1)
+            zr = log(signal_raw_r[i] + 1) - log(nhatr + 1)
+            signal_bc.append(zf + zr)
+            signal_bc_f.append(zf)
+            signal_bc_r.append(zr)
             fSum -= fLast
             fSum += signal_bias_f[i + (window / 2)]
             fLast = signal_bias_f[i - (window / 2) + 1]
@@ -677,6 +799,7 @@ class Plot:
         return signal_bias_f[(window / 2):len(signal_bias_f) - (window / 2)], \
                signal_bias_r[(window / 2):len(signal_bias_f) - (window / 2)], \
                signal_raw, signal_bc, signal_bc_f, signal_bc_r
+
 
     def get_signal(self, ref, start, end, bam, fasta, bias_table):
         # Parameters
@@ -767,3 +890,48 @@ class Plot:
         maxN = max(vector)
         minN = min(vector)
         return [(e - minN) / (maxN - minN) for e in vector]
+
+    def boyle_norm(self, sequence):
+        """
+        Normalizes a sequence according to Boyle's criterion.
+        This represents a within-dataset normalization.
+
+        Keyword arguments:
+        sequence -- Input sequence.
+
+        Return:
+        norm_seq -- Normalized sequence.
+        """
+        mean = np.array([e for e in sequence if e > 0]).mean()
+        if isnan(mean):
+            return sequence
+        else:
+            norm_seq = [(float(e) / mean) for e in sequence]
+            return norm_seq
+
+    def hon_norm(self, sequence):
+        """
+        Normalizes a sequence according to hon's criterion using mean and std.
+        This represents a between-dataset normalization.
+
+        Keyword arguments:
+        sequence -- Input sequence.
+        mean -- Global mean.
+        std -- Global std.
+
+        Return:
+        norm_seq -- Normalized sequence.
+        """
+        perc = scoreatpercentile(sequence, [98])
+        std = np.array(sequence).std()
+
+        if std != 0:
+            norm_seq = []
+            for e in sequence:
+                if e == 0:
+                    norm_seq.append(e)
+                else:
+                    norm_seq.append(1.0 / (1.0 + (np.exp(-(e - perc) / std))))
+            return norm_seq
+        else:
+            return sequence

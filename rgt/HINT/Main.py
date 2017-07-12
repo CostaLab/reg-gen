@@ -788,6 +788,8 @@ def atac_footprints():
     parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8,
                       help=SUPPRESS_HELP)
 
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=30,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
@@ -845,7 +847,11 @@ def atac_footprints():
     original_regions = GenomicRegionSet("regions")
     original_regions.read_bed(arguments[1])
 
-    for r in original_regions:
+    regions = deepcopy(original_regions)
+    regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    regions.merge()
+
+    for r in regions:
         atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
             reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
                                        options.upstream_ext, options.forward_shift, options.reverse_shift,
@@ -869,12 +875,12 @@ def atac_footprints():
         # Formatting results
         start_pos = 0
         flag_start = False
-        fp_state_nb = 4
+        fp_state_nb = 6
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
             if (flag_start):
                 if (posterior_list[curr_index] != fp_state_nb):
-                    if (2 < k - start_pos < options.fp_limit_size):
+                    if (k - start_pos < options.fp_limit_size):
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
                     flag_start = False
@@ -883,7 +889,7 @@ def atac_footprints():
                     flag_start = True
                     start_pos = k
         if (flag_start):
-            if (2 < r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+            if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
                 fp = GenomicRegion(r.chrom, start_pos, r.final)
                 footprints.add(fp)
 
@@ -2020,8 +2026,6 @@ def print_signals():
     signal.load_sg_coefs(slope_window_size=9)
     regions = GenomicRegionSet("Interested regions")
     regions.read_bed(options.regions_file)
-    # regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
-    # regions.merge()  # Sort & Merge
 
     table = None
     if options.bias_table:
