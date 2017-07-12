@@ -72,27 +72,38 @@ def main():
     # Parameters
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
-                     "In order to use this tools, please type: \n\n"
-                     "%prog [options] <experiment_matrix>\n\n"
-                     "The minimal <experiment matrix> should contain:\n"
-                     "- One region file representing the regions in which the HMM\n"
-                     "  will be applied. It should contain 'regions' in the type field\n"
-                     "  and 'HS' in the data field\n"
-                     "- One DNase-seq or ATAC-seq aligned reads file (bam) file with\n"
-                     "  'reads' in the type field and 'DNASE' or 'ATAC' in the data field.\n"
-                     "- Zero to Three histone modification aligned reads file (bam)\n"
-                     "  with 'reads' in the type field and 'HISTONE' in the data field.\n\n"
+                     "In order to use these tools, please type: \n\n"
+                     "%prog [footprinting type] [options]\n\n"
+                     "Below you can find all current available analysis types. "
+                     "To check the analyses specific options, please use:\n\n"
+                     "%prog [footprinting type] -h\n\n"
 
+                     "Options:\n"
+                     "--version     show program's version number and exit.\n"
+                     "-h, --help    show this help message and exit.\n"
+                     "--dnase-footprints    Performs footprinting from DNase-seq.\n"
+                     "--atac-footprints  Performs footprinting from ATAC-seq.\n"
+                     "--histone-footprints  Performs footprinting from histone modification.\n"
+                     "--dnase-histone-footprints  Performs footprinting from DNase-seq combining histone modification.\n"
                      "For more information, please refer to:\n"
                      "http://www.regulatory-genomics.org/hint/introduction/\n\n"
 
                      "For further questions or comments please refer to our group:\n"
                      "https://groups.google.com/forum/#!forum/rgtusers\n"
-                     "--------------------------------------------------")
+                     "--------------------------------------------------\n\n"
+                     )
     version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message, version=version_message)
+
+    # Processing Help/Version Options
+    if len(sys.argv) <= 1 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print(usage_message)
+        sys.exit(0)
+    elif sys.argv[1] == "--version":
+        print(version_message)
+        sys.exit(0)
 
     if sys.argv[1] == "--estimate-bias":
         estimate_bias()
