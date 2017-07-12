@@ -10,7 +10,7 @@ import os
 import sys
 import pysam
 import numpy as np
-
+import pyBigWig
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -566,29 +566,45 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        try:
-            from ngslib import BigWigFile
-            self.coverage = []
-            bwf = BigWigFile(bigwig_file)
+        # try:
+        #     from ngslib import BigWigFile
+        #     self.coverage = []
+        #     bwf = BigWigFile(bigwig_file)
+        #
+        #     for gr in self.genomicRegions:
+        #         depth = bwf.pileup(gr.chrom, max(0, int(gr.initial - stepsize / 2)),
+        #                            max(1, int(gr.final + stepsize / 2)))
+        #         ds = [depth[d] for d in range(0, gr.final - gr.initial, stepsize)]
+        #         self.coverage.append(np.array(ds))
+        #     bwf.close()
+        #
+        # except ImportError, e:
 
-            for gr in self.genomicRegions:
-                depth = bwf.pileup(gr.chrom, max(0, int(gr.initial - stepsize / 2)),
-                                   max(1, int(gr.final + stepsize / 2)))
-                ds = [depth[d] for d in range(0, gr.final - gr.initial, stepsize)]
-                self.coverage.append(np.array(ds))
-            bwf.close()
+        self.coverage = []
+        # curdir = os.getcwd()
+        # print(curdir)
+        # currentFile = __file__
+        # realPath = os.path.realpath(currentFile)  # /home/user/test/my_script.py
+        # dirPath = os.path.dirname(realPath)  # /home/user/test
+        # dirName = os.path.basename(dirPath)  # test
+        # target_dir = os.path.join(curdir,os.path.dirname(bigwig_file))
+        # bwfile = os.path.basename(bigwig_file)
+        # os.chdir(target_dir)
+        # print(target_dir)
+        # print(bwfile)
+        # bwfile = os.path.relpath(bigwig_file, curdir)
+        # print(bwfile)
+        # bwf = pyBigWig.open(bwfile)
+        bwf = pyBigWig.open(bigwig_file)
+        # print(bwf.isBigWig())
+        # os.chdir(curdir)
 
-        except ImportError, e:
-            import pyBigWig
-            self.coverage = []
-            bwf = pyBigWig.open(bigwig_file)
-
-            for gr in self.genomicRegions:
-                steps = int(len(gr) / stepsize)
-                ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
-                ds = [ x if x else 0 for x in ds ]
-                self.coverage.append( np.array(ds) )
-            bwf.close()
+        for gr in self.genomicRegions:
+            steps = int(len(gr) / stepsize)
+            ds = bwf.stats(gr.chrom, gr.initial, gr.final, type="mean", nBins=steps)
+            ds = [ x if x else 0 for x in ds ]
+            self.coverage.append( np.array(ds) )
+        bwf.close()
 
     def phastCons46way_score(self, stepsize=100):
         """Load the phastCons46way bigwig files to fetch the scores as coverage.

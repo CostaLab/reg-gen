@@ -8,6 +8,7 @@ import glob
 import pysam
 import numpy
 import argparse
+import natsort
 import matplotlib
 matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
@@ -187,6 +188,10 @@ if __name__ == "__main__":
                                help="Define the target BED file to subtract.")
     parser_bedsub.add_argument('-all', action="store_true", default=False,
                                help="Subtract the whole region when it overlaps.")
+    parser_bedsub.add_argument('-blocki', action="store_true", default=False,
+                               help="Read the blocks in input.")
+    parser_bedsub.add_argument('-blockt', action="store_true", default=False,
+                               help="Read the blocks in target.")
 
     ############### BED cut ###############################################
     # python rgt-convertor.py
@@ -284,6 +289,11 @@ if __name__ == "__main__":
                                             help="[BED] Convert BED file to GTF format.")
     parser_bed2gtf.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bed2gtf.add_argument('-o', metavar='output', type=str, help="Output GTF file")
+
+    ############### BED overlaps ################################
+    parser_bedoverlap = subparsers.add_parser('bed_overlap', help="[BED] Output statistics of overlaps among the BED files.")
+    parser_bedoverlap.add_argument('-i', metavar='input', type=str, help="Input BED files or directory")
+    parser_bedoverlap.add_argument('-o', metavar='output', type=str, help="Output text file")
 
     ############### BED distance ###############################################
     # python rgt-convertor.py
@@ -704,8 +714,12 @@ if __name__ == "__main__":
         print(tag + ": [BED] Subtract the regions")
         bed = GenomicRegionSet("bed")
         bed.read_bed(args.i)
+        if args.blocki:
+            bed.extract_blocks()
         target = GenomicRegionSet("target")
         target.read_bed(args.t)
+        if args.blockt:
+            target.extract_blocks()
         out = bed.subtract(y=target, whole_region=args.all)
         out.write_bed(args.o)
 
@@ -1140,6 +1154,62 @@ if __name__ == "__main__":
                        '\n')
         inf.close()
         outf.close()
+
+
+    ############### BED overlaps ###########################
+    #
+    elif args.mode == "bed_overlap":
+        beds = []
+        bednames = []
+        if os.path.isdir(args.i):
+            for dirpath, dnames, fnames in os.walk(args.i):
+                for f in fnames:
+                    if f.endswith(".bed"):
+                        name = os.path.basename(f).replace(".bed", "")
+                        bed = GenomicRegionSet(name)
+                        bed.read_bed(os.path.join(dirpath, f))
+                        bed.sort()
+                        beds.append(bed)
+                        bednames.append(name)
+
+            index = natsort.index_natsorted(bednames)
+            beds = natsort.order_by_index(beds, index)
+            bednames = natsort.order_by_index(bednames, index)
+
+        else:
+            line = args.i.split(",")
+            for b in line:
+                if b.endswith(".bed"):
+                    name = os.path.basename(b).replace(".bed", "")
+                    bed = GenomicRegionSet(name)
+                    bed.read_bed(b)
+                    bed.sort()
+                    beds = [bed]
+                    bednames = [name]
+
+        count_dic = {}
+        for bed1 in beds:
+            count_dic[bed1.name] = {}
+            for bed2 in beds:
+                if bed1.name == bed2.name:
+                    count_dic[bed1.name][bed2.name] = len(bed1)
+                else:
+                    inter = bed1.intersect(bed2, mode=OverlapType.ORIGINAL)
+                    count_dic[bed1.name][bed2.name] = len(inter)
+
+        out_table = [["Overlaps"]+bednames]
+        for b1 in bednames:
+            out_table.append([b1]+ [str(count_dic[b1][b2]) for b2 in bednames])
+
+        if not args.o:
+            for l in out_table:
+                print("\t".join(l))
+        else:
+            with open(args.o, "w") as f:
+                for l in out_table:
+                    print("\t".join(l), file=f)
+
+
 
 
     ############### BED distance ###########################

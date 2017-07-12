@@ -125,7 +125,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
 
     else:
         if annotation:
-            color_res = plt.cm.Set3(numpy.linspace(0, 1, len(annotation))).tolist()
+            color_res = plt.cm.Set1(numpy.linspace(0, 1, len(annotation))).tolist()
         else:
             # colors = [ 'lightgreen', 'pink', 'cyan', 'lightblue', 'tan', 'orange']
             # colors = plt.cm.jet(numpy.linspace(0.1, 0.9, len(gen_tags(exps, colorby)))).tolist()
@@ -142,15 +142,22 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             else:
                 n = len(exps.fieldsDict[colorby].keys())
             # print(n)
-            # colors = plt.cm.Spectral(numpy.linspace(0.1, 0.9, n)).tolist()
+            if n < 8:
+                indn = np.linspace(0, 32, 256)
+                color_res = [plt.cm.Set1(indn[i]) for i in range(n)]
+            else:
+                set1 = plt.get_cmap('Set1')
+                cNorm = colormat.Normalize(vmin=0, vmax=n)
+                scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
+                color_res = [scalarMap.to_rgba(d) for d in range(n)]
+
+            # color_res = plt.cm.Set1(numpy.linspace(0.1, 0.9, n)).tolist()
             # print(len(plt.cm.Set1().tolist()))
-            # color_res = [ plt.cm.Set1(i) for i in range(n) ]
+            #
             # np.linspace(0, 1, 9)
-            set1 = plt.get_cmap('Set1')
-            cNorm = colormat.Normalize(vmin=0, vmax=n)
-            scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=set1)
-            color_res = [ scalarMap.to_rgba(d) for d in range(n) ]
-            # print(color_res)
+
+
+
     return color_res
 
 
@@ -207,14 +214,14 @@ def color_groupded_region(EM, grouped_region, colorby, definedinEM):
                     qs.append(q.name)
             qs = list(set(qs))
             # Accent Spectral hsv Set1
-            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(qs))).tolist()
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(qs))).tolist()
 
             for i, q in enumerate(qs):
                 colors[q] = colormap[i]
         else:
             types = EM.fieldsDict[colorby].keys()
 
-            colormap = plt.cm.Spectral(numpy.linspace(0.1, 0.9, len(types))).tolist()
+            colormap = plt.cm.Set1(numpy.linspace(0.1, 0.9, len(types))).tolist()
 
             for ty in grouped_region.keys():
                 for q in grouped_region[ty]:

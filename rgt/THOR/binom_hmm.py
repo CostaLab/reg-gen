@@ -46,19 +46,18 @@ def get_init_parameters(s1, s2, **info):
     return np.asarray(n_), np.asarray(p_)
 
 class BinomialHMM(_BaseHMM):
-    def __init__(self, n, p, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=2, covariance_type='diag', startprob=None,
-                 transmat=None, startprob_prior=None, transmat_prior=None,
+    def __init__(self, n, p, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=2, covariance_type='diag', startprob_prior=None, transmat_prior=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=10, thresh=1e-2,
                  params=string.ascii_letters,
                  init_params=string.ascii_letters):
     
-        _BaseHMM.__init__(self, n_components, startprob, transmat,
+        _BaseHMM.__init__(self, n_components,
                           startprob_prior=startprob_prior,
                           transmat_prior=transmat_prior, algorithm=algorithm,
                           random_state=random_state, n_iter=n_iter,
-                          thresh=thresh, params=params,
+                          tol=thresh, params=params,
                           init_params=init_params)
         
         self.dim = [dim_cond_1, dim_cond_2] #dimension of one emission
@@ -115,11 +114,11 @@ class BinomialHMM(_BaseHMM):
         stats['posterior'] = np.copy(posteriors)
         
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
-                                      posteriors, fwdlattice, bwdlattice,
-                                      params):
+                                      posteriors, fwdlattice, bwdlattice
+                                      ):
         super(BinomialHMM, self)._accumulate_sufficient_statistics(
-            stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
-            params)
+            stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice
+            )
         
         posteriors = _valid_posteriors(posteriors, obs, self.dim)
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)
@@ -139,8 +138,8 @@ class BinomialHMM(_BaseHMM):
             self.p[i] = stats['post_emission'][i] / (self.n[i] * self._add_pseudo_counts(stats['post']))
             print('help_m_step', i, stats['post_emission'][i], stats['post'], self.p[i], file=sys.stderr)
         
-    def _do_mstep(self, stats, params):
-        super(BinomialHMM, self)._do_mstep(stats, params)
+    def _do_mstep(self, stats):
+        super(BinomialHMM, self)._do_mstep(stats)
         self._help_do_mstep(stats)
 
         self.p[0,0] = self.p[1,0]

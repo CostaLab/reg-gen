@@ -362,8 +362,8 @@ class Lineplot:
             sx_ymin = [0] * len(self.data.keys())
 
         if printtable:
-            bott = self.extend - int(0.5 * self.ss)
-            pArr = [["Group_tag", "Sort_tag", "Color_tag"] + [str(x) for x in range(-bott, bott, self.ss)]]  # Header
+            bott = self.extend + int(0.5 * self.ss)
+            pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in range(-bott, bott + 10, self.ss)]]  # Header
         nit = len(self.data.keys())
         for it, s in enumerate(self.data.keys()):
 

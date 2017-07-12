@@ -470,7 +470,7 @@ def handle_input():
                            "(recommended for histone data). [default: do not merge]")
     parser.add_option("--no-merge-bin", default=True, dest="merge_bin", action="store_false",
                       help="Merge the overlapping bin before filtering by p-value."
-                           "[default: %default]")
+                           "[default: Merging bins]")
     parser.add_option("--housekeeping-genes", default=None, dest="housekeeping_genes", type="str",
                       help="Define housekeeping genes (BED format) used for normalizing. [default: %default]")
     parser.add_option("--output-dir", dest="outputdir", default=None, type="string",

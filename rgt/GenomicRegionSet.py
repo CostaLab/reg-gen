@@ -201,8 +201,14 @@ class GenomicRegionSet:
 
                     if start == end:
                         raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
+                    g = GenomicRegion(chrom, start, end, name, orientation, data)
 
-                    self.add(GenomicRegion(chrom, start, end, name, orientation, data))
+                    if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                        gs = g.extract_blocks()
+                        for gg in gs:
+                            self.add(gg)
+                    else:
+                        self.add(g)
                 except:
                     if line == []:
                         continue
@@ -2824,13 +2830,77 @@ class GenomicRegionSet:
         for l in loci_list:
             self.add(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2]), orientation=l[3]))
 
-    # def map_names(self, target):
-    #     """Return a list of the target names overlapping the regions in the self in order"""
-    #     if isinstance(target, str):
-    #         ref_name = os.path.basename(target).split(".")[0]
-    #         target_bed = GenomicRegionSet(ref_name)
-    #         target_bed.read(target)
-    #     else:
-    #         target_bed = target
+    def map_names(self, target, strand=False, convert_nt=False):
+        """Return a list of the target names overlapping the regions in the self in order"""
+        names = []
+        convert_dic = {"A": "T", "T": "A", "C": "G", "G": "C"}
+        iter_a = iter(self)
+        s = iter_a.next()
+        last_j = len(target) - 1
+        j = 0
+        cont_loop = True
+        # pre_j = 0
 
+        if convert_nt and ")n" not in target[0].name:
+            convert_nt = False
+
+        while cont_loop:
+            # When the regions overlap
+
+            if s.overlap(target[j]):
+                if strand:
+                    if s.orientation == target[j].orientation:
+                        names.append(target[j].name)
+                        try:
+                            s = iter_a.next()
+                            # j = pre_j
+                        except: cont_loop = False
+                    else:
+                        if j == last_j:
+                            names.append(".")
+                            cont_loop = False
+                        else:
+                            j += 1
+                elif not strand:
+                    if convert_nt and s.orientation=="-":
+                        seq = target[j].name.partition("(")[2].partition(")")[0]
+                        nseq = [convert_dic[r] for r in seq]
+                        n = "(" + "".join(nseq) + ")n"
+
+                    else:
+                        n = target[j].name
+                    names.append(n)
+                    try:
+                        s = iter_a.next()
+                        # j = pre_j
+                    except: cont_loop = False
+                else:
+                    if j == last_j:
+                        names.append(".")
+                        cont_loop = False
+                    else: j += 1
+            elif s < target[j]:
+                names.append(".")
+                try:
+                    s = iter_a.next()
+                    # j = pre_j
+                except: cont_loop = False
+            elif s > target[j]:
+                # pre_j = j
+                if j == last_j:
+                    names.append(".")
+                    cont_loop = False
+                else: j += 1
+            else:
+                names.append(".")
+                try:
+                    s = iter_a.next()
+                    # j = pre_j
+                except: cont_loop = False
+        # print([len(self), len(names)])
+        while len(names) < len(self):
+            # print(".", end="")
+            names.append(".")
+
+        return names
 
