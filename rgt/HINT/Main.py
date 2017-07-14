@@ -72,27 +72,38 @@ def main():
     # Parameters
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
-                     "In order to use this tools, please type: \n\n"
-                     "%prog [options] <experiment_matrix>\n\n"
-                     "The minimal <experiment matrix> should contain:\n"
-                     "- One region file representing the regions in which the HMM\n"
-                     "  will be applied. It should contain 'regions' in the type field\n"
-                     "  and 'HS' in the data field\n"
-                     "- One DNase-seq or ATAC-seq aligned reads file (bam) file with\n"
-                     "  'reads' in the type field and 'DNASE' or 'ATAC' in the data field.\n"
-                     "- Zero to Three histone modification aligned reads file (bam)\n"
-                     "  with 'reads' in the type field and 'HISTONE' in the data field.\n\n"
+                     "In order to use these tools, please type: \n\n"
+                     "%prog [footprinting type] [options]\n\n"
+                     "Below you can find all current available analysis types. "
+                     "To check the analyses specific options, please use:\n\n"
+                     "%prog [footprinting type] -h\n\n"
 
+                     "Options:\n"
+                     "--version     show program's version number and exit.\n"
+                     "-h, --help    show this help message and exit.\n"
+                     "--dnase-footprints    Performs footprinting from DNase-seq.\n"
+                     "--atac-footprints  Performs footprinting from ATAC-seq.\n"
+                     "--histone-footprints  Performs footprinting from histone modification.\n"
+                     "--dnase-histone-footprints  Performs footprinting from DNase-seq combining histone modification.\n"
                      "For more information, please refer to:\n"
                      "http://www.regulatory-genomics.org/hint/introduction/\n\n"
 
                      "For further questions or comments please refer to our group:\n"
                      "https://groups.google.com/forum/#!forum/rgtusers\n"
-                     "--------------------------------------------------")
+                     "--------------------------------------------------\n\n"
+                     )
     version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
 
     # Initializing Option Parser
     parser = PassThroughOptionParser(usage=usage_message, version=version_message)
+
+    # Processing Help/Version Options
+    if len(sys.argv) <= 1 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print(usage_message)
+        sys.exit(0)
+    elif sys.argv[1] == "--version":
+        print(version_message)
+        sys.exit(0)
 
     if sys.argv[1] == "--estimate-bias":
         estimate_bias()
@@ -788,6 +799,8 @@ def atac_footprints():
     parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8,
                       help=SUPPRESS_HELP)
 
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=30,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
@@ -845,7 +858,11 @@ def atac_footprints():
     original_regions = GenomicRegionSet("regions")
     original_regions.read_bed(arguments[1])
 
-    for r in original_regions:
+    regions = deepcopy(original_regions)
+    regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    regions.merge()
+
+    for r in regions:
         atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
             reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
                                        options.upstream_ext, options.forward_shift, options.reverse_shift,
@@ -869,12 +886,12 @@ def atac_footprints():
         # Formatting results
         start_pos = 0
         flag_start = False
-        fp_state_nb = 4
+        fp_state_nb = 6
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
             if (flag_start):
                 if (posterior_list[curr_index] != fp_state_nb):
-                    if (2 < k - start_pos < options.fp_limit_size):
+                    if (k - start_pos < options.fp_limit_size):
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
                     flag_start = False
@@ -883,7 +900,7 @@ def atac_footprints():
                     flag_start = True
                     start_pos = k
         if (flag_start):
-            if (2 < r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+            if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
                 fp = GenomicRegion(r.chrom, start_pos, r.final)
                 footprints.add(fp)
 
@@ -1863,7 +1880,7 @@ def print_lines():
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
     parser.add_option("--window-size", dest="window_size", type="int",
-                      metavar="INT", default=100)
+                      metavar="INT", default=400)
 
     # Hidden Options
     parser.add_option("--initial-clip", dest="initial_clip", type="int",
@@ -1897,13 +1914,14 @@ def print_lines():
 
     options, arguments = parser.parse_args()
 
-    plot = Plot(options.organism, options.reads_file, options.motif_file, options.window_size,
-                options.downstream_ext, options.upstream_ext, options.forward_shift, options.reverse_shift,
-                options.initial_clip, options.bias_table, options.k_nb,
-                options.output_location, options.output_prefix)
+    plot = Plot(organism=options.organism, reads_file=options.reads_file, motif_file=options.motif_file,
+                window_size=options.window_size, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                initial_clip=options.initial_clip, bias_table=options.bias_table, k_nb=options.k_nb,
+                output_loc=options.output_location, output_prefix=options.output_prefix)
 
     if options.print_corrected_plot:
-        plot.line()
+        plot.line2()
     if options.print_strand_plot:
         plot.line1()
 
