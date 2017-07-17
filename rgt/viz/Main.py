@@ -321,15 +321,21 @@ def main():
                 if args.strand:
                     strands = []
                     for i, bool in enumerate(args.strand.split(",")):
-                        if bool == "T": strands.append(True)
+                        if bool == "T":
+                            strands.append(True)
+                            args.labels[i] += "(strand-specific)"
                         elif bool == "F": strands.append(False)
                     args.strand = strands
+                else:
+                    args.strand = [True for i in args.labels]
                 if args.other:
                     others = []
                     for i, bool in enumerate(args.other.split(",")):
                         if bool == "T": others.append(True)
                         elif bool == "F": others.append(False)
                     args.other = others
+                else:
+                    args.other = [True for i in args.labels]
 
 
             bed_profile = BED_profile(args.i, args.organism, args)
