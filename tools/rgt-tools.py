@@ -178,6 +178,8 @@ if __name__ == "__main__":
     parser_bedex.add_argument('-oz', "--onlyzero", action="store_true", default=False,
                               help="Extend only the zero-length regions")
     parser_bedex.add_argument('-len', metavar='length', type=int, help="Define the length to extend.")
+    parser_bedex.add_argument('-c', action="store_true", default=False,
+                              help="Extend from the center to both directions.")
     parser_bedex.add_argument('-l', action="store_true", default=False,
                               help="Extend from the left ends.")
     parser_bedex.add_argument('-r', action="store_true", default=False,
@@ -721,6 +723,8 @@ if __name__ == "__main__":
             bed.extend_upstream(length=args.len)
         if args.down:
             bed.extend_downstream(length= args.len)
+        if args.c:
+            bed = bed.relocate_regions(center="midpoint", left_length=args.len, right_length=args.len)
 
         bed.write_bed(args.o)
 
