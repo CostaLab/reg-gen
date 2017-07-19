@@ -26,6 +26,7 @@ from __future__ import print_function
 import string
 # from scipy.stats import binom
 from hmmlearn.hmm import _BaseHMM
+
 import sys
 # from time import time
 from math import fabs, log
@@ -81,19 +82,19 @@ def get_init_parameters(s0, s1, s2, **info):
     return alpha, mu
     
 class NegBinRepHMM(_BaseHMM):
-    def __init__(self, alpha, mu, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=3, covariance_type='diag', startprob=[1, 0, 0],
-                 transmat=None, startprob_prior=None, transmat_prior=None, func=None,
+    def __init__(self, alpha, mu, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=3, covariance_type='diag',
+                  startprob_prior=1.0, transmat_prior=1.0, func=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=30, thresh=1e-2,
                  params=string.ascii_letters,
                  init_params=string.ascii_letters):
     
-        _BaseHMM.__init__(self, n_components, startprob, transmat,
+        _BaseHMM.__init__(self, n_components,
                           startprob_prior=startprob_prior,
                           transmat_prior=transmat_prior, algorithm=algorithm,
                           random_state=random_state, n_iter=n_iter,
-                          thresh=thresh, params=params,
+                          tol=thresh, params=params,
                           init_params=init_params)
         
         self.dim = [dim_cond_1, dim_cond_2] #dimension of one emission
@@ -128,6 +129,8 @@ class NegBinRepHMM(_BaseHMM):
         or strengthening the appropriate subclass-specific regularization
         parameter.
         """
+
+        # what does this mean??
         self._init(obs, self.init_params)
 
         logprob = []
@@ -144,15 +147,15 @@ class NegBinRepHMM(_BaseHMM):
                 curr_logprob += lpr
                 self._accumulate_sufficient_statistics(
                     stats, seq, framelogprob, posteriors, fwdlattice,
-                    bwdlattice, self.params)
+                    bwdlattice)
             logprob.append(curr_logprob)
 
             # Check for convergence.
-            if i > 0 and logprob[-1] - logprob[-2] < self.thresh:
+            if i > 0 and logprob[-1] - logprob[-2] < self.tol:
                 break
 
             # Maximization step
-            self._do_mstep(stats, self.params, three_para)
+            self._do_mstep(stats, three_para)
         #print("Logprob of all M-steps: %s" %logprob, file=sys.stderr)
         self.em_prob = logprob[-1]
         return self
@@ -268,16 +271,16 @@ class NegBinRepHMM(_BaseHMM):
         return posteriors
 
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,
-                                      posteriors, fwdlattice, bwdlattice,
-                                      params):
+                                      posteriors, fwdlattice, bwdlattice
+                                      ):
         super(NegBinRepHMM, self)._accumulate_sufficient_statistics(
             stats, obs, framelogprob, posteriors, fwdlattice, bwdlattice,
-            params)
+            )
         posteriors = self._valid_posteriors(posteriors, obs)
         self._help_accumulate_sufficient_statistics(obs, stats, posteriors)        
     
-    def _do_mstep(self, stats, params, three_para):
-        super(NegBinRepHMM, self)._do_mstep(stats, params)
+    def _do_mstep(self, stats, three_para):
+        super(NegBinRepHMM, self)._do_mstep(stats)
         
         if three_para:
             self.mu[0,1] = (stats['post_emission'][0][1] + stats['post_emission'][1][2]) / (stats['post'][0][1] + stats['post'][1][2])
@@ -323,17 +326,16 @@ if __name__ == '__main__':
     
     dim_cond_1 = 2
     dim_cond_2 = 3
+    mean = [0, 0]
+    cov = [[1, 0], [0, 100]]
+    X= np.random.multivariate_normal(mean, cov, size=5)
 
-    m = NegBinRepHMM(alpha = alpha, mu = mu, dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
-    
-    X, Z = m.sample(20)
-    
     m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
     m2.fit([X], three_para=False)
     
-    posteriors = m.predict_proba(X)
+    posteriors = m2.predict_proba(X)
     e = m2.predict(X)
     for i, el in enumerate(X):
-        print(el, Z[i], e[i], Z[i] == e[i], sep='\t', file=sys.stderr)
+        print(el, e[i], sep='\t', file=sys.stderr)
     #print(np.max(posteriors, axis=1))
     print(m2.mu)
