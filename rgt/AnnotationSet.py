@@ -576,7 +576,10 @@ class AnnotationSet:
                 gr.final = gr.initial + promoterLength + 1
 
             if gene_set:
-                gr.name = maping_dict[e[self.GeneField.GENE_ID]]
+                try:
+                    gr.name = maping_dict[e[self.GeneField.GENE_ID]]
+                except:
+                    gr.name = e[self.GeneField.GENE_ID]
             elif gene_id:
                 gr.name = e[self.GeneField.GENE_ID]
             else:
