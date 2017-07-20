@@ -2,6 +2,7 @@
 from __future__ import print_function
 from __future__ import division
 import os
+import sys
 import numpy
 from collections import OrderedDict
 from matplotlib import pyplot as plt
@@ -38,10 +39,10 @@ class Boxplot:
         self.title = title
         self.exps = ExperimentalMatrix()
         self.exps.read(EMpath)
-        for f in fields:
-            if f not in ["None", "reads", "regions", "factor"]:
+        for f in self.exps.fields:
+            if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f)
-        self.exps.remove_name()
+                self.exps.remove_name()
         self.beds = self.exps.get_regionsets()  # A list of GenomicRegionSets
         self.bednames = self.exps.get_regionsnames()
         self.reads = self.exps.get_readsfiles()
@@ -67,7 +68,8 @@ class Boxplot:
             r = os.path.abspath(rp)  # Here change the relative path into absolute path
             cov = CoverageSet(r, self.all_bed)
             cov.coverage_from_genomicset(r)
-            cov.normRPM()
+            try: cov.normRPM()
+            except: pass
             c.append(cov.coverage)
         self.all_table = numpy.transpose(c)
 
@@ -167,12 +169,15 @@ class Boxplot:
 
             cuesbed[bedname] = set(tag_from_r(self.exps, self.tag_type, bedname))
             # cuesbed[bedname] = [tag for tag in self.exps.get_types(bedname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+            # print(cuesbed[bedname])
 
             for i, readname in enumerate(self.readsnames):
                 plotDict[bedname][readname] = mt[:, i]
                 # print(plotDict[bedname][readname])
                 cuesbam[readname] = set(tag_from_r(self.exps, self.tag_type, readname))
+                # print(cuesbam[readname])
                 # cuesbam[readname] = [tag for tag in self.exps.get_types(readname) if tag in self.group_tags + self.sort_tags + self.color_tags]
+
 
         sortDict = OrderedDict()  # Storing the data by sorting tags
         for g in self.group_tags:
@@ -185,10 +190,17 @@ class Boxplot:
                     # sortDict[g][a][c] = None
                     # print("            "+c)
                     for i, bed in enumerate(cuesbed.keys()):
+                        # print([g, a, c])
+
                         if set([g, a, c]) >= cuesbed[bed]:
+                            # print(cuesbed[bed])
                             sortDict[g][a][c] = []
                             for bam in cuesbam.keys():
+
                                 if set([g, a, c]) >= cuesbam[bam]:
+                                    # print(cuesbam[bam])
+                                    # print([bed, bam])
+
                                     if self.df:
                                         sortDict[g][a][c].append(plotDict[bed][bam])
                                         if len(sortDict[g][a][c]) == 2:
@@ -201,6 +213,7 @@ class Boxplot:
                                                 sortDict[g][a][c] = numpy.subtract(sortDict[g][a][c][0],
                                                                                    sortDict[g][a][c][1]).tolist()
                                     else:
+                                        # print(plotDict[bed][bam])
                                         sortDict[g][a][c] = plotDict[bed][bam]
         self.sortDict = sortDict
 
@@ -208,15 +221,24 @@ class Boxplot:
         self.colors = colormap(self.exps, colorby, definedinEM)
 
     def print_table(self, directory, folder):
-        self.printtable = OrderedDict()
+
+        # self.printtable = OrderedDict()
         table = []
-        table.append(["#group_tag", "sort_tag", "color_tag", "Signals"])
+        maxn = 0
+        # table.append(["#group_tag", "sort_tag", "color_tag", "Signals"])
         for i, g in enumerate(self.group_tags):
             for k, a in enumerate(self.sort_tags):
                 for j, c in enumerate(self.color_tags):
                     table.append([g, a, c] + [str(x) for x in self.sortDict[g][a][c]])
-        # print(table)
-        output_array(table, directory, folder, filename="output_table.txt")
+                    c = len(self.sortDict[g][a][c]) + 3
+                    if c > maxn: maxn = c
+        for i, t in enumerate(table):
+            if len(t) < maxn:
+                table[i] = t + ["n.a."] * (maxn - len(t))
+
+        # print
+
+        output_array(numpy.array([list(x) for x in zip(*table)]), directory, folder, filename="output_table.txt")
 
     def plot(self, title, scol, logT=False, ylim=False, pw=3, ph=4):
         """ Return boxplot from the given tables.
@@ -285,7 +307,7 @@ class Boxplot:
                 self.xtickrotation = 70
                 self.xtickalign = "right"
                 for k, c in enumerate(self.sortDict[g][a].keys()):
-                    if self.sortDict[g][a][c] == None:  # When there is no matching data, skip it
+                    if self.sortDict[g][a][c] == []:  # When there is no matching data, skip it
                         continue
                     else:
                         if self.df:

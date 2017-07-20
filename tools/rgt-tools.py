@@ -127,6 +127,14 @@ if __name__ == "__main__":
     parser_bedac.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', metavar='value', type=str, help="Define value to add")
 
+    ############### BED merge  ############################################
+    # python rgt-convertor.py
+    parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions by name")
+    parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedmerge.add_argument('-s', action="store_true", help="Strand specific")
+
+
     ############### BED merge by name ############################################
     # python rgt-convertor.py
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
@@ -170,6 +178,8 @@ if __name__ == "__main__":
     parser_bedex.add_argument('-oz', "--onlyzero", action="store_true", default=False,
                               help="Extend only the zero-length regions")
     parser_bedex.add_argument('-len', metavar='length', type=int, help="Define the length to extend.")
+    parser_bedex.add_argument('-c', action="store_true", default=False,
+                              help="Extend from the center to both directions.")
     parser_bedex.add_argument('-l', action="store_true", default=False,
                               help="Extend from the left ends.")
     parser_bedex.add_argument('-r', action="store_true", default=False,
@@ -631,6 +641,14 @@ if __name__ == "__main__":
                 print(line+"\t"+args.v, file=g)
 
 
+    ############### BED merge  ########################################
+    elif args.mode == "bed_merge":
+        print(tag + ": [BED] Merge regions")
+        bed1 = GenomicRegionSet("input")
+        bed1.read_bed(args.i)
+        bed1.merge(strand_specific=args.s)
+        bed1.write_bed(args.o)
+
     ############### BED merge by name ########################################
     elif args.mode == "bed_merge_by_name":
         print(tag+": [BED] Merge regions by name")
@@ -705,6 +723,8 @@ if __name__ == "__main__":
             bed.extend_upstream(length=args.len)
         if args.down:
             bed.extend_downstream(length= args.len)
+        if args.c:
+            bed = bed.relocate_regions(center="midpoint", left_length=args.len, right_length=args.len)
 
         bed.write_bed(args.o)
 
@@ -826,7 +846,7 @@ if __name__ == "__main__":
                     if reg[0] == r.chrom and reg[1] == r.initial and reg[2] == r.final:
                         name = "peak_"+str(j+1)
             elif args.loci:
-                name = r.toString(underline=True)
+                name = r.toString(underline=True, strand=True)
             else: name = r.name
 
             if r.data and len(r.data.split()) == 7:
@@ -942,6 +962,9 @@ if __name__ == "__main__":
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
         output_regions.write_bed(args.o)
+        print("input regions:\t"+str(len(input_regions)))
+        print("target regions:\t" + str(len(t)))
+        print("output regions:\t" + str(len(output_regions)))
         print("complete.")
 
     ############### BED add columns #############################################
