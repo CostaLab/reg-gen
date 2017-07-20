@@ -977,9 +977,7 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-        # if sys.platform == "darwin":
-        #     return self.intersect_python(y, mode, rm_duplicates)
-        # else:
+
         return self.intersect_c(y, mode, rm_duplicates)
 
 
@@ -1009,13 +1007,13 @@ class GenomicRegionSet:
                 while cont_loop:
                     # When the regions overlap
                     if s.overlap(b[j]):
-                        z.add( GenomicRegion(chrom=s.chrom,
-                                              initial=max(s.initial, b[j].initial),
-                                              final=min(s.final, b[j].final),
-                                              name=s.name,
-                                              orientation=s.orientation,
-                                              data=s.data,
-                                              proximity=s.proximity) )
+                        z.add(GenomicRegion(chrom=s.chrom,
+                                            initial=max(s.initial, b[j].initial),
+                                            final=min(s.final, b[j].final),
+                                            name=s.name,
+                                            orientation=s.orientation,
+                                            data=s.data,
+                                            proximity=s.proximity) )
 
                         if cont_overlap == False: 
                             pre_inter = j

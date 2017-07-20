@@ -50,7 +50,7 @@ def main():
     helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
-    parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
+    parser = argparse.ArgumentParser(description='Provides various statistical analysis methods and plotting tools for visualization of the various bioinformatic data.\
     \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=True)
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
