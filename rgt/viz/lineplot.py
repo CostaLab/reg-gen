@@ -144,7 +144,7 @@ class Lineplot:
             for ind, a in enumerate(bednames):
                 if a in tags: return ind
 
-        if mp>0: ts = time.time()
+        if mp > 0: ts = time.time()
         normRPM = False
         # Calculate for coverage
         mp_input = []
@@ -357,9 +357,9 @@ class Lineplot:
             self.colors[c] = colors[i]
 
     def plot(self, groupby, colorby, output, printtable=False, scol=False, srow=False, w=2, h=2):
-        linewidth = 10
+        linewidth = 1
 
-        rot = 50
+        rot = 30
         if len(self.data.values()[0].keys()) < 2:
             ticklabelsize = w * 1.5
         else:
@@ -419,7 +419,7 @@ class Lineplot:
                                         sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
                                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                                    ax.plot(x, y, color=self.colors[c], lw=1, label=c)
+                                    ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
                                     if it < nit - 1:
                                         ax.set_xticklabels([])
                                     # Processing for future output
@@ -455,9 +455,9 @@ class Lineplot:
                                 ym = 1.2 * max(max(yaxmax), max(sx_ymax))
                                 ax.set_ylim([-ym, ym])
 
-                ax.get_yaxis().set_label_coords(-0.1, 0.5)
+                # ax.get_yaxis().set_label_coords(-0.1, 0.5)
                 ax.set_xlim([-self.extend, self.extend])
-                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
 
 
