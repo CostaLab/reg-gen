@@ -194,7 +194,7 @@ class CoverageSet:
         #     self.reads = None
         #     self.mapped_reads = None
     
-    def coverage_from_genomicset(self, bamFile, readSize=200, strand_specific=False):
+    def coverage_from_genomicset(self, input_file, readSize=200, strand_specific=False):
 
         """Compute coverage based on the class variable <genomicRegions>. 
         
@@ -212,32 +212,50 @@ class CoverageSet:
         the number of reads falling into the GenomicRegion.
         
         """
-        
-        bam = pysam.Samfile(bamFile, "rb" )
-        self._init_read_number(bamFile)
-        
-        cov=[0]*len(self.genomicRegions)
-        for i,region in enumerate(self.genomicRegions):
-            
-            try:
-                bin_start = max(0, region.initial-readSize)
-                bin_end = region.final+readSize
+        cov = [0] * len(self.genomicRegions)
 
-                if not strand_specific:
-                    for r in bam.fetch(region.chrom,bin_start,bin_end):
-                        cov[i] += 1
-                else:
-                    for r in bam.fetch(region.chrom,bin_start,bin_end):
-                        # print(region.orientation)
-                        # print(r.is_reverse)
-                        if region.orientation == "+" and not r.is_reverse: cov[i] += 1
-                        elif region.orientation == "-" and r.is_reverse: cov[i] += 1
-                
-            except:
-                print("\tSkip: "+region.toString())
+        if input_file.endswith(".bam"):
+            bam = pysam.Samfile(input_file, "rb")
+            self._init_read_number(input_file)
 
-        self.coverage = cov 
+            for i,region in enumerate(self.genomicRegions):
+
+                try:
+                    bin_start = max(0, region.initial-readSize)
+                    bin_end = region.final+readSize
+
+                    if not strand_specific:
+                        for r in bam.fetch(region.chrom,bin_start,bin_end):
+                            cov[i] += 1
+                    else:
+                        for r in bam.fetch(region.chrom,bin_start,bin_end):
+                            # print(region.orientation)
+                            # print(r.is_reverse)
+                            if region.orientation == "+" and not r.is_reverse: cov[i] += 1
+                            elif region.orientation == "-" and r.is_reverse: cov[i] += 1
+
+                except:
+                    print("\tSkip: "+region.toString())
+
+
+        elif input_file.lower().endswith(".bigwig") or input_file.lower().endswith(".bw"):
+
+            self.coverage = []
+
+            bwf = pyBigWig.open(input_file)
+            for i, region in enumerate(self.genomicRegions):
+                # bin_start = max(0, region.initial - readSize)
+                # bin_end = region.final + readSize
+                # steps = int(len(region) / 10)
+                c = bwf.stats(region.chrom, region.initial, region.final, type="mean", nBins=1)
+                # print(c)
+                if c[0] is None:
+                    c = [0]
+                cov[i] = c[0]
+            bwf.close()
+        self.coverage = cov
         self.coverageOrig = cov
+
 
     def _get_bedinfo(self, l):
         if len(l) > 1:

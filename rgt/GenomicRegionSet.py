@@ -1394,9 +1394,10 @@ class GenomicRegionSet:
         # If there is overlap within self or y, they should be merged first. 
         if self.sorted == False: 
             self.sort()
+        a = self.merge(w_return=True)
         b = y.merge(w_return=True)
         
-        iter_a = iter(self)
+        iter_a = iter(a)
         s = iter_a.next()
         last_j = len(b) - 1
         j = 0
@@ -2832,25 +2833,49 @@ class GenomicRegionSet:
 
     def map_names(self, target, strand=False, convert_nt=False):
         """Return a list of the target names overlapping the regions in the self in order"""
-        names = []
-        convert_dic = {"A": "T", "T": "A", "C": "G", "G": "C"}
-        iter_a = iter(self)
-        s = iter_a.next()
-        last_j = len(target) - 1
-        j = 0
-        cont_loop = True
-        # pre_j = 0
+        if len(target) == 0:
+            return ["."] * len(self)
+        elif len(self) == 0:
+            return None
+        else:
+            names = []
+            convert_dic = {"A": "T", "T": "A", "C": "G", "G": "C"}
+            iter_a = iter(self)
+            s = iter_a.next()
+            last_j = len(target) - 1
+            j = 0
+            cont_loop = True
+            # pre_j = 0
 
-        if convert_nt and ")n" not in target[0].name:
-            convert_nt = False
+            if convert_nt and ")n" not in target[0].name:
+                convert_nt = False
 
-        while cont_loop:
-            # When the regions overlap
+            while cont_loop:
+                # When the regions overlap
 
-            if s.overlap(target[j]):
-                if strand:
-                    if s.orientation == target[j].orientation:
-                        names.append(target[j].name)
+                if s.overlap(target[j]):
+                    if strand:
+                        if s.orientation == target[j].orientation:
+                            names.append(target[j].name)
+                            try:
+                                s = iter_a.next()
+                                # j = pre_j
+                            except: cont_loop = False
+                        else:
+                            if j == last_j:
+                                names.append(".")
+                                cont_loop = False
+                            else:
+                                j += 1
+                    elif not strand:
+                        if convert_nt and s.orientation=="-":
+                            seq = target[j].name.partition("(")[2].partition(")")[0]
+                            nseq = [convert_dic[r] for r in seq]
+                            n = "(" + "".join(nseq) + ")n"
+
+                        else:
+                            n = target[j].name
+                        names.append(n)
                         try:
                             s = iter_a.next()
                             # j = pre_j
@@ -2859,48 +2884,29 @@ class GenomicRegionSet:
                         if j == last_j:
                             names.append(".")
                             cont_loop = False
-                        else:
-                            j += 1
-                elif not strand:
-                    if convert_nt and s.orientation=="-":
-                        seq = target[j].name.partition("(")[2].partition(")")[0]
-                        nseq = [convert_dic[r] for r in seq]
-                        n = "(" + "".join(nseq) + ")n"
-
-                    else:
-                        n = target[j].name
-                    names.append(n)
+                        else: j += 1
+                elif s < target[j]:
+                    names.append(".")
                     try:
                         s = iter_a.next()
                         # j = pre_j
                     except: cont_loop = False
-                else:
+                elif s > target[j]:
+                    # pre_j = j
                     if j == last_j:
                         names.append(".")
                         cont_loop = False
                     else: j += 1
-            elif s < target[j]:
-                names.append(".")
-                try:
-                    s = iter_a.next()
-                    # j = pre_j
-                except: cont_loop = False
-            elif s > target[j]:
-                # pre_j = j
-                if j == last_j:
+                else:
                     names.append(".")
-                    cont_loop = False
-                else: j += 1
-            else:
+                    try:
+                        s = iter_a.next()
+                        # j = pre_j
+                    except: cont_loop = False
+            # print([len(self), len(names)])
+            while len(names) < len(self):
+                # print(".", end="")
                 names.append(".")
-                try:
-                    s = iter_a.next()
-                    # j = pre_j
-                except: cont_loop = False
-        # print([len(self), len(names)])
-        while len(names) < len(self):
-            # print(".", end="")
-            names.append(".")
 
-        return names
+            return names
 

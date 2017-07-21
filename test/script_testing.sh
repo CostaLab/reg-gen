@@ -91,6 +91,7 @@ fi
 
 # Run test script
 cd ${DIR}/viz/viz_examples/
+rgt-viz boxplot Matrix_CDP.txt -o results -t boxplot_CDP
 # Basic lineplot
 rgt-viz lineplot Matrix_CDP.txt -o results -t lineplot_CDP -test
 # Add one more cell type

@@ -207,6 +207,7 @@ def main():
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
     parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific. (default: %(default)s)')
+    parser_lineplot.add_argument('-average', action="store_true", help='Show only the average of the replicates. (default: %(default)s)')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -326,15 +327,21 @@ def main():
                 if args.strand:
                     strands = []
                     for i, bool in enumerate(args.strand.split(",")):
-                        if bool == "T": strands.append(True)
+                        if bool == "T":
+                            strands.append(True)
+                            args.labels[i] += "(strand-specific)"
                         elif bool == "F": strands.append(False)
                     args.strand = strands
+                else:
+                    args.strand = [True for i in args.labels]
                 if args.other:
                     others = []
                     for i, bool in enumerate(args.other.split(",")):
                         if bool == "T": others.append(True)
                         elif bool == "F": others.append(False)
                     args.other = others
+                else:
+                    args.other = [True for i in args.labels]
 
 
             bed_profile = BED_profile(args.i, args.organism, args)
@@ -643,7 +650,7 @@ def main():
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
             lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log)
+            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log, average=args.average)
             t2 = time.time()
             print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             
