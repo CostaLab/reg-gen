@@ -298,7 +298,7 @@ class Lineplot:
                                             bi += 1
                                             te = time.time()
                                             print2(self.parameter,
-                                                   "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}s".format(
+                                                   "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
                                                        bed + "." + bam, ts - te))
 
 
