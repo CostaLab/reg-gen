@@ -83,9 +83,11 @@ common_deps = ["cython",
 if platform.startswith("darwin"):
     bin_dir = "mac"
     libRGT = "librgt_mac.so"
+    triplexes_file = "lib/libtriplexator.dylib"
 else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
+    triplexes_file = "lib/libtriplexator.so"
     common_deps.append("ngslib")
 
 tools_dictionary = {
@@ -324,7 +326,7 @@ data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
-data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, "lib/libtriplexator.so") + "\n")
+data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, triplexes_file) + "\n")
 data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/" + libRGT) + "\n")
 
 data_config_file.close()
@@ -363,7 +365,7 @@ Copy Files Dictionary:
 """
 copy_files_dictionary = {
     ".": ["setupGenomicData.py", "setupLogoData.py"],
-    "lib": ["libtriplexator.so", libRGT],
+    "lib": ["libtriplexator.so", "libtriplexator.dylib", libRGT],
     "hg19": ["genes_Gencode_hg19.bed", "chrom.sizes.hg19", "alias_human.txt", "genes_RefSeq_hg19.bed"],
     "hg38": ["genes_Gencode_hg38.bed", "chrom.sizes.hg38", "alias_human.txt", "genes_RefSeq_hg38.bed"],
     "mm9": ["genes_Gencode_mm9.bed", "chrom.sizes.mm9", "alias_mouse.txt", "genes_RefSeq_mm9.bed"],

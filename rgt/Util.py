@@ -324,6 +324,7 @@ class Library_path(ConfigurationFile):
 
     def get_triplexator(self):
         return self.path_triplexator
+    
     def get_c_rgt(self):
         return self.path_c_rgt
 
