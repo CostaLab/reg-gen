@@ -45,13 +45,12 @@ def main():
     ##########################################################################
     ##### PARAMETERS #########################################################
     ##########################################################################
-    
+    version_message = "TDF - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
     parser = argparse.ArgumentParser(description='Triplex Domain Finder is a statistical framework \
                                                   for detection of triple helix potential of \
                                                   lncRNAs from genome-wide functional data. \
-                                                  Author: Chao-Chung Kuo\
-                                                  \nVersion: ' + __version__,
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+                                                  Author: Chao-Chung Kuo',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter, version=version_message)
     
     subparsers = parser.add_subparsers(help='sub-command help',dest='mode')
     
@@ -169,18 +168,22 @@ def main():
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    elif len(sys.argv) == 2:  
-        # retrieve subparsers from parser
-        subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
-        # there will probably only be one subparser_action,but better save than sorry
-        for subparsers_action in subparsers_actions:
-            # get all subparsers and print help
-            for choice, subparser in subparsers_action.choices.items():
-                if choice == sys.argv[1]:
-                    print("\nYou need more arguments.")
-                    print("\nSubparser '{}'".format(choice))        
-                    subparser.print_help()
-        sys.exit(1)
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "-v" or sys.argv[1] == "--version":
+            print(version_message)
+            sys.exit(0)
+        else:
+            # retrieve subparsers from parser
+            subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+            # there will probably only be one subparser_action,but better save than sorry
+            for subparsers_action in subparsers_actions:
+                # get all subparsers and print help
+                for choice, subparser in subparsers_action.choices.items():
+                    if choice == sys.argv[1]:
+                        print("\nYou need more arguments.")
+                        print("\nSubparser '{}'".format(choice))
+                        subparser.print_help()
+            sys.exit(1)
     else:   
         args = parser.parse_args()
 
