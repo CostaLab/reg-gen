@@ -325,6 +325,12 @@ if __name__ == "__main__":
     parser_adddata.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_adddata.add_argument('-t', metavar='target', type=str, help="Target BED file")
 
+    ############### BED sampling regions randomly ################################
+    parser_sampling = subparsers.add_parser('bed_sampling',
+                                           help="[BED] Sampling the regions in the given BED file randomly")
+    parser_sampling.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_sampling.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_sampling.add_argument('-s', metavar='size', type=int, help="Number of the output regions")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -1290,6 +1296,15 @@ if __name__ == "__main__":
                         else:
                             print(line + "\t.", file=fout)
 
+
+    ############### BED Sampling regions randomly ###########################
+    #
+    elif args.mode == "bed_sampling":
+        print(tag + ": [BED] Sampling the regions randomly")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        beds = bed.random_subregions(size=args.s)
+        beds.write_bed(args.o)
 
 
     ############### BAM filtering by BED ###########################

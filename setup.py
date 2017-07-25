@@ -106,13 +106,13 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.14", "hmmlearn", "pyx==0.12.1"],
+        ["scikit-learn>=0.14", "hmmlearn>=0.2", "pyx==0.12.1"],
         []
     ),
     "THOR": (
         "rgt-THOR",
         "rgt.THOR.THOR:main",
-        ["scikit-learn>=0.17.1", "hmmlearn", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
+        ["scikit-learn>=0.17.1", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
     ),

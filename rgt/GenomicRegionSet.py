@@ -2062,7 +2062,7 @@ class GenomicRegionSet:
 
             - center -- Define the referring point of each region
 
-                1. midpoint -- locate the new region's center as original region's midpoint
+                1. midpointra -- locate the new region's center as original region's midpoint
                 2. leftend -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
                 3. rightend -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
                 4. bothends -- locate the new region's center as original region's both ends
