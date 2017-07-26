@@ -167,7 +167,7 @@ class GenomicRegionSet:
             self.sequences.sort(cmp=GenomicRegion.__cmp__)
             self.sorted = True
 
-    def read_bed(self, filename):
+    def read_bed(self, filename, bed12=False):
         """Read BED file and add every row as a GenomicRegion.
 
         *Keyword arguments:*
@@ -203,7 +203,7 @@ class GenomicRegionSet:
                         raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
                     g = GenomicRegion(chrom, start, end, name, orientation, data)
 
-                    if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                    if bed12 and size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
                         gs = g.extract_blocks()
                         for gg in gs:
                             self.add(gg)
@@ -327,16 +327,19 @@ class GenomicRegionSet:
                 b.add(self.sequences[i])
         return a, b
 
-    def write_bed(self, filename):
+    def write_bed(self, filename, bed12=False):
         """Write GenomicRegions to BED file.
 
         *Keyword arguments:*
 
             - filename -- define the path to the BED file.
         """
-        with open(filename, 'w') as f:
-            for s in self:
-                print(s, file=f)
+        if bed12:
+            self.write_bed_blocks(filename)
+        else:
+            with open(filename, 'w') as f:
+                for s in self:
+                    print(s, file=f)
 
     def gene_association_old(self, gene_set=None, organism="hg19", promoterLength=1000,
                          threshDist=50000, show_dis=False, strand_specific=False):
