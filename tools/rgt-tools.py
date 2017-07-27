@@ -142,7 +142,7 @@ if __name__ == "__main__":
     parser_bedmn.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
     ############### BED rename ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py bed_rename -i -o -s -d -organism
     parser_bedrename = subparsers.add_parser('bed_rename', help="[BED] Rename regions by associated genes")
     parser_bedrename.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedrename.add_argument('-o', metavar='output', type=str, help="Output BED file")
@@ -210,6 +210,8 @@ if __name__ == "__main__":
     parser_bedcut.add_argument('-o', metavar='output', type=str, help="Output BED name.")
     parser_bedcut.add_argument('-t', metavar="target", type=str,
                                help="Define the target BED file for cutting.")
+    parser_bedcut.add_argument('-s', action="store_true", default=False,
+                               help="Strand-specific.")
 
     ############### BED get promoters ########################################
     # python rgt-convertor.py bed_get_promoters -i -o -organism
@@ -266,6 +268,7 @@ if __name__ == "__main__":
     parser_bedro.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedro.add_argument('-t', metavar='target', type=str, help="Define BED file for target regions")
     parser_bedro.add_argument('-k', "--keep", action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
+    parser_bedro.add_argument('-k', "--block", action="store_true", default=False, help="Read and write BED12 format.")
 
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
@@ -325,6 +328,12 @@ if __name__ == "__main__":
     parser_adddata.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_adddata.add_argument('-t', metavar='target', type=str, help="Target BED file")
 
+    ############### BED sampling regions randomly ################################
+    parser_sampling = subparsers.add_parser('bed_sampling',
+                                           help="[BED] Sampling the regions in the given BED file randomly")
+    parser_sampling.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_sampling.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_sampling.add_argument('-s', metavar='size', type=int, help="Number of the output regions")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -952,7 +961,7 @@ if __name__ == "__main__":
 
         # with open(args.target) as f:
         t = GenomicRegionSet("targets")
-        t.read_bed(args.t)
+        t.read_bed(args.t, bed12=args.b)
 
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
@@ -961,7 +970,8 @@ if __name__ == "__main__":
             output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
-        output_regions.write_bed(args.o)
+
+        output_regions.write_bed(args.o, args.b)
         print("input regions:\t"+str(len(input_regions)))
         print("target regions:\t" + str(len(t)))
         print("output regions:\t" + str(len(output_regions)))
@@ -1290,6 +1300,15 @@ if __name__ == "__main__":
                         else:
                             print(line + "\t.", file=fout)
 
+
+    ############### BED Sampling regions randomly ###########################
+    #
+    elif args.mode == "bed_sampling":
+        print(tag + ": [BED] Sampling the regions randomly")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i)
+        beds = bed.random_subregions(size=args.s)
+        beds.write_bed(args.o)
 
 
     ############### BAM filtering by BED ###########################

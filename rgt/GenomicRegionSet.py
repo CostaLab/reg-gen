@@ -167,7 +167,7 @@ class GenomicRegionSet:
             self.sequences.sort(cmp=GenomicRegion.__cmp__)
             self.sorted = True
 
-    def read_bed(self, filename):
+    def read_bed(self, filename, bed12=False):
         """Read BED file and add every row as a GenomicRegion.
 
         *Keyword arguments:*
@@ -203,7 +203,7 @@ class GenomicRegionSet:
                         raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
                     g = GenomicRegion(chrom, start, end, name, orientation, data)
 
-                    if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                    if bed12 and size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
                         gs = g.extract_blocks()
                         for gg in gs:
                             self.add(gg)
@@ -327,17 +327,21 @@ class GenomicRegionSet:
                 b.add(self.sequences[i])
         return a, b
 
-    def write_bed(self, filename, mode="w"):
+    def write_bed(self, filename, bed12=False, mode="w"):
         """Write GenomicRegions to BED file.
 
         *Keyword arguments:*
 
             - filename -- define the path to the BED file.
+            - bed12 --
             - mode -- meaningful values are either "w", to truncate the file before writing, or "a" to append.
         """
-        with open(filename, mode) as f:
-            for s in self:
-                print(s, file=f)
+        if bed12:
+            self.write_bed_blocks(filename)
+        else:
+            with open(filename, mode) as f:
+                for s in self:
+                    print(s, file=f)
 
     def gene_association_old(self, gene_set=None, organism="hg19", promoterLength=1000,
                          threshDist=50000, show_dis=False, strand_specific=False):
@@ -978,9 +982,7 @@ class GenomicRegionSet:
                 y              ----------      ---------------              ----
                 Result                                ------
         """
-        # if sys.platform == "darwin":
-        #     return self.intersect_python(y, mode, rm_duplicates)
-        # else:
+
         return self.intersect_c(y, mode, rm_duplicates)
 
 
@@ -1010,13 +1012,13 @@ class GenomicRegionSet:
                 while cont_loop:
                     # When the regions overlap
                     if s.overlap(b[j]):
-                        z.add( GenomicRegion(chrom=s.chrom,
-                                              initial=max(s.initial, b[j].initial),
-                                              final=min(s.final, b[j].final),
-                                              name=s.name,
-                                              orientation=s.orientation,
-                                              data=s.data,
-                                              proximity=s.proximity) )
+                        z.add(GenomicRegion(chrom=s.chrom,
+                                            initial=max(s.initial, b[j].initial),
+                                            final=min(s.final, b[j].final),
+                                            name=s.name,
+                                            orientation=s.orientation,
+                                            data=s.data,
+                                            proximity=s.proximity) )
 
                         if cont_overlap == False: 
                             pre_inter = j
@@ -2065,7 +2067,7 @@ class GenomicRegionSet:
 
             - center -- Define the referring point of each region
 
-                1. midpoint -- locate the new region's center as original region's midpoint
+                1. midpointra -- locate the new region's center as original region's midpoint
                 2. leftend -- locate the new region's center as original region's 5' end (if no orientation information, default is left end)
                 3. rightend -- locate the new region's center as original region's 3' end (if no orientation information, default is right end)
                 4. bothends -- locate the new region's center as original region's both ends
