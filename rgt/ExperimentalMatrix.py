@@ -236,7 +236,7 @@ class ExperimentalMatrix:
         if field == "regions" or field == "reads":
             field = "factor"
         
-        for t in self.fieldsDict[field].keys():
+        for t in self.fieldsDict[field]:
             if name in self.fieldsDict[field][t]:
                 return t
         
@@ -248,8 +248,8 @@ class ExperimentalMatrix:
             - name -- Name to return.
         """
         result = []
-        for f in self.fieldsDict.keys():
-            for t in self.fieldsDict[f].keys():
+        for f in self.fieldsDict:
+            for t in self.fieldsDict[f]:
                 if skip_all and t == "ALL": continue
                 elif name in self.fieldsDict[f][t]:
                     result.append(t)
@@ -270,8 +270,8 @@ class ExperimentalMatrix:
             del self.names[i]
             self.files.pop(name, None)
 
-            for f in self.fieldsDict.keys():
-                for t in self.fieldsDict[f].keys(): 
+            for f in self.fieldsDict:
+                for t in self.fieldsDict[f]:
                     # try:
                     if name in self.fieldsDict[f][t]:
                         self.fieldsDict[f][t].remove(name)
@@ -306,7 +306,7 @@ class ExperimentalMatrix:
                     # print("************")
                     # print(types)
 
-                    for f in self.fieldsDict.keys():
+                    for f in self.fieldsDict:
                         if f == field: 
                             try: self.fieldsDict[f][t].append(n)
                             except: self.fieldsDict[f][t] = [n]

@@ -101,18 +101,18 @@ class GenomicRegion:
 
         if s:
             if space:
-                return "chr " + self.chrom[3:] + ": " + str(self.initial) + "-" + str(self.final) + " " + s
+                return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
             elif underline:
-                return self.chrom + "_" + str(self.initial) + "_" + str(self.final) + "_" + s
+                return "_".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
             else:
-                return self.chrom + ":" + str(self.initial) + "-" + str(self.final)
+                return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
         else:
             if space:
-                return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
+                return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
             elif underline:
-                return self.chrom+"_"+str(self.initial)+"_"+str(self.final)
+                return "_".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
             else:
-                return self.chrom+":"+str(self.initial)+"-"+str(self.final)
+                return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
 
     def extend(self, left, right, w_return=False):
         """Extend GenomicRegion on both sides.

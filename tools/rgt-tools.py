@@ -268,7 +268,7 @@ if __name__ == "__main__":
     parser_bedro.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedro.add_argument('-t', metavar='target', type=str, help="Define BED file for target regions")
     parser_bedro.add_argument('-k', "--keep", action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
-    parser_bedro.add_argument('-k', "--block", action="store_true", default=False, help="Read and write BED12 format.")
+    parser_bedro.add_argument('-b', "--block", action="store_true", default=False, help="Read and write BED12 format.")
 
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
@@ -961,17 +961,17 @@ if __name__ == "__main__":
 
         # with open(args.target) as f:
         t = GenomicRegionSet("targets")
-        t.read_bed(args.t, bed12=args.b)
+        t.read_bed(args.t, bed12=args.block)
 
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
-        input_regions.read_bed(args.i)
+        input_regions.read_bed(args.i,  bed12=args.block)
         if args.keep:
             output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
 
-        output_regions.write_bed(args.o, args.b)
+        output_regions.write_bed(args.o,  bed12=args.b)
         print("input regions:\t"+str(len(input_regions)))
         print("target regions:\t" + str(len(t)))
         print("output regions:\t" + str(len(output_regions)))

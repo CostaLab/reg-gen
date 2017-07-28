@@ -10,9 +10,8 @@ GenomicRegionSet represent a list of GenomicRegions.
 # Python
 from __future__ import print_function
 from __future__ import division
-import os
+
 import sys
-import pysam
 import random
 from ctypes import *
 from scipy import stats
@@ -44,7 +43,7 @@ class GenomicRegionSet:
 
     def get_chrom(self):
         """Return all chromosomes."""
-        return [r.chrom for r in self.sequences]
+        return [r.chrom for r in self]
 
     def get_names(self):
         """Return a list of all region names. If the name is None, it return the region string."""
@@ -85,7 +84,7 @@ class GenomicRegionSet:
 
         if percentage:
             if percentage > -50:
-                for s in self.sequences:
+                for s in self:
                     if w_return:
                         z.add(s.extend(int(len(s) * left / 100), int(len(s) * right / 100), w_return=True))
                     else:
@@ -94,7 +93,7 @@ class GenomicRegionSet:
                 print("Percentage for extension must be larger than 50%%.")
                 sys.exit(0)
         else:
-            for s in self.sequences:
+            for s in self:
                 if w_return:
                     z.add(s.extend(left, right, w_return=True))
                 else:
@@ -113,7 +112,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=length, right=0, w_return=True))
@@ -137,7 +136,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=0, right=length, w_return=True))
@@ -200,7 +199,7 @@ class GenomicRegionSet:
                         data = line[4]
 
                     if start == end:
-                        raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
+                        raise Exception("zero-length region: %s, %s, %s" % (self.chrom, str(self.initial), str(self.final)))
                     g = GenomicRegion(chrom, start, end, name, orientation, data)
 
                     if bed12 and size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
@@ -216,7 +215,7 @@ class GenomicRegionSet:
                         error_line += 1
                         if error_line > 2:
                             # Skip the first error line which contains the track information
-                            print("Error at line", line, self.fileName)
+                            print("Error at line: %s in %s" % (line, self.fileName))
             self.sort()
 
     # def read_sequence(self, genome_file_dir):
@@ -260,7 +259,7 @@ class GenomicRegionSet:
         f=open(out_file,"w")
         for r in self:
           try:
-            f.write(">"+r.chrom+":"+str(r.initial)+"-"+str(r.final)+"-"+str(r.orientation)+"\n"+r.sequence.seq+"\n")
+            f.write("".join([">",r.chrom,":",str(r.initial),"-",str(r.final),"-",str(r.orientation),"\n",r.sequence.seq,"\n"]))
           except:
             pass
 
@@ -378,7 +377,7 @@ class GenomicRegionSet:
             coord_dict[gr.chrom].append([gr.initial, gr.final, gr.name, gr.data, gr.orientation])
 
         # Sorting coord_dict
-        for chrom in coord_dict.keys():
+        for chrom in coord_dict:
             coord_dict[chrom] = sorted(coord_dict[chrom], key=lambda x: x[0])
 
         # Reading assocDict
@@ -396,12 +395,12 @@ class GenomicRegionSet:
                 assocDict[gr.chrom] = [curr_region]
 
         # Sorting assocDict
-        for chrom in assocDict.keys():
+        for chrom in assocDict:
             assocDict[chrom] = sorted(assocDict[chrom], key=lambda x: x[0])
 
         # Updating assocDict to contain all chromosomes in coord_dict
         for chrom in chromosome_list:
-            if(chrom not in assocDict.keys()):
+            if(chrom not in assocDict):
                 assocDict[chrom] = []
 
         # Updating geneFlagDict based on gene_set
@@ -410,7 +409,7 @@ class GenomicRegionSet:
             for e in gene_list:
                 geneFlagDict[e] = True
         else:
-            for e in geneFlagDict.keys():
+            for e in geneFlagDict:
                 geneFlagDict[e] = True
 
         # Associating coord_dict with assocDict
@@ -621,7 +620,7 @@ class GenomicRegionSet:
                 #aDict[chrName][-1][4] = "." # Force the STRAND field to be '.' # EG
         # Converting aDict to genomic region set
         result_grs = GenomicRegionSet(self.name+"_associated")
-        for chrom in aDict.keys():
+        for chrom in aDict:
             for coord in aDict[chrom]:
                 curr_genes_list = coord[2].split(":")
                 new_genes_list = []
@@ -856,7 +855,7 @@ class GenomicRegionSet:
         mapped_proxs = [] # Contains all the proximity information of genes associated with the coordinates which are in gene_set
 
         # Iterating on associated genomic regions
-        for gr in assoc_grs.sequences:
+        for gr in assoc_grs:
 
             # If the coordinate wasn't associated with any gene, it is not considered
             if(gr.name == "."): continue
@@ -902,38 +901,38 @@ class GenomicRegionSet:
 
         return all_genes, mapped_genes, all_proxs, mapped_proxs
 
-    def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-        from rgt.motifanalysisold.util import bedFunctions, sort
-        from rgt.motifanalysisold.enrichment.geneAssociation import *
-        self.fileName=fileName
-        regionsToGenes={}
-        coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
-        coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
-        #print dictBed
-        genes=[]
-        totalPeaks=0
-        allgenes=[]
-        for chr in dictBed.keys():
-            for (v1,v2,name,orientation,data) in dictBed[chr]:
-                totalPeaks+=1
-                names=name.split(":")
-                keep=[n for n in names if "." not in n]
-                if len(keep) > 0:
-                    self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
-                genes = genes+keep
-                allgenes=allgenes+[n.strip(".") for n in names]
-                regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
-        #print "Total Peaks", total
-        mappedGenes=len(list(set(allgenes)))
-        self.sort()
-        self.genes=list(set(genes))
-        if geneSet == None:
-          le=0
-        else:
-          le=len(geneSet)
-
-        return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
+    # def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
+    #     from rgt.motifanalysisold.util import bedFunctions, sort
+    #     from rgt.motifanalysisold.enrichment.geneAssociation import *
+    #     self.fileName=fileName
+    #     regionsToGenes={}
+    #     coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5])
+    #     coordDict = sort.sortBedDictionary(coordDict, field=0)
+    #     [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)
+    #     #print dictBed
+    #     genes=[]
+    #     totalPeaks=0
+    #     allgenes=[]
+    #     for chr in dictBed:
+    #         for (v1,v2,name,orientation,data) in dictBed[chr]:
+    #             totalPeaks+=1
+    #             names=name.split(":")
+    #             keep=[n for n in names if "." not in n]
+    #             if len(keep) > 0:
+    #                 self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
+    #             genes = genes+keep
+    #             allgenes=allgenes+[n.strip(".") for n in names]
+    #             regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
+    #     #print "Total Peaks", total
+    #     mappedGenes=len(list(set(allgenes)))
+    #     self.sort()
+    #     self.genes=list(set(genes))
+    #     if geneSet == None:
+    #       le=0
+    #     else:
+    #       le=len(geneSet)
+    #
+    #     return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
@@ -2443,7 +2442,7 @@ class GenomicRegionSet:
                 blocks[gr.name] = GenomicRegionSet(gr.name)
                 blocks[gr.name].add(gr)
 
-        for name in blocks.keys():
+        for name in blocks:
             blocks[name].merge()
             start = min([ g.initial for g in blocks[name] ])
             end = max([ g.final for g in blocks[name] ])
@@ -2768,7 +2767,7 @@ class GenomicRegionSet:
         z = self.subtract(y)
         genes = {}
         for r in z:
-            if r.name in genes.keys():
+            if r.name in genes:
                 if keep == "upstream" and r.orientation == "+" and r.initial < genes[r.name].initial:
                     genes[r.name] = r
                 elif keep == "upstream" and r.orientation == "-" and r.final > genes[r.name].final:

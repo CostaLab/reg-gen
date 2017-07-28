@@ -269,8 +269,8 @@ class RandomTest:
 
     def dbs_motif(self, outdir):
         self.txpf.motif_statistics()
-        for i, mode in enumerate(self.txpf.motifs.keys()):
-            for con in self.txpf.motifs[mode].keys():
+        for i, mode in enumerate(self.txpf.motifs):
+            for con in self.txpf.motifs[mode]:
                 self.stat[mode+"_"+con] = str(self.txpf.motifs[mode][con])
 
     def uniq_motif(self):
