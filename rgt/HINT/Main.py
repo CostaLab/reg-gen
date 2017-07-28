@@ -801,13 +801,13 @@ def atac_footprints():
 
     parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
                       help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=30,
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=10, help=SUPPRESS_HELP)
-
-    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None)
+    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
+    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=getcwd(),
@@ -878,6 +878,9 @@ def atac_footprints():
         # Applying HMM
         try:
             posterior_list = hmm.predict(input_sequence)
+            if options.fp_bed_fname:
+                output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
+                                output_fname=options.fp_bed_fname, fp_state=options.fp_state)
         except Exception:
             err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
                 r.final)]) + "). This iteration will be skipped.")
@@ -886,7 +889,7 @@ def atac_footprints():
         # Formatting results
         start_pos = 0
         flag_start = False
-        fp_state_nb = 6
+        fp_state_nb = options.fp_state
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
             if (flag_start):
@@ -1879,6 +1882,11 @@ def print_lines():
                             "should have two files: one for the forward and one for the reverse strand. "
                             "Each line should contain a kmer and the bias estimate separated by tab. "
                             "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
+    parser.add_option("--bias-table1", dest="bias_table1", type="string",
+                      metavar="FILE1_F,FILE1_R[;...;FILEM_F,FILEM_R]", default=None)
+    parser.add_option("--bias-table2", dest="bias_table2", type="string",
+                      metavar="FILE1_F,FILE1_R[;...;FILEM_F,FILEM_R]", default=None)
+
     parser.add_option("--window-size", dest="window_size", type="int",
                       metavar="INT", default=400)
 
@@ -1911,6 +1919,11 @@ def print_lines():
                       action="store_true", default=False,
                       help=("If used, the plot containing the aggregated signal,"
                             "and strand-specific signal will be printed."))
+    parser.add_option("--print-bias-plot", dest="print_bias_plot",
+                      action="store_true", default=False,
+                      help=("If used, the plot containing the aggregated signal,"
+                            "and strand-specific signal will be printed."))
+
 
     options, arguments = parser.parse_args()
 
@@ -1920,10 +1933,13 @@ def print_lines():
                 initial_clip=options.initial_clip, bias_table=options.bias_table, k_nb=options.k_nb,
                 output_loc=options.output_location, output_prefix=options.output_prefix)
 
-    if options.print_corrected_plot:
-        plot.line2()
     if options.print_strand_plot:
         plot.line1()
+        #plot.line4()
+    if options.print_corrected_plot:
+        plot.line2()
+    if options.print_bias_plot:
+        plot.line3(options.bias_table1, options.bias_table2)
 
     # TODO
     exit(0)
@@ -1998,7 +2014,14 @@ def print_signal():
                       action="store_true", default=False,
                       help=("If used, it will print the base overlap (bias corrected) signals from DNase-seq "
                             " or ATAC-seq data. "))
+    parser.add_option("--norm-signal", dest="norm_signal",
+                      action="store_true", default=False,
+                      help=("If used, it will print the base overlap (normalised) signals from DNase-seq "
+                            " or ATAC-seq data. "))
     parser.add_option("--bigWig", dest="bigWig",
+                      action="store_true", default=False,
+                      help=("If used, all .wig files will be converted to .bw files"))
+    parser.add_option("--strand-specific", dest="strand_specific",
                       action="store_true", default=False,
                       help=("If used, all .wig files will be converted to .bw files"))
 
@@ -2011,15 +2034,18 @@ def print_signal():
 
     raw_signal_file = None
     bc_signal_file = None
+    norm_signal_file = None
     # Output wig signal
     if options.raw_signal:
         raw_signal_file = os.path.join(options.output_location, "{}.raw.wig".format(options.output_prefix))
-        #system("touch " + raw_signal_file + " | echo -n "" > " + raw_signal_file)
-        system("touch " + raw_signal_file)
+        open(raw_signal_file, "a").close()
     if options.bc_signal:
         bc_signal_file = os.path.join(options.output_location, "{}.bc.wig".format(options.output_prefix))
-        #system("touch " + bc_signal_file + " | echo -n "" > " + bc_signal_file)
-        system("touch " + bc_signal_file)
+        open(bc_signal_file, "a").close()
+    if options.norm_signal:
+        norm_signal_file = os.path.join(options.output_location, "{}.norm.wig".format(options.output_prefix))
+        open(norm_signal_file, "a").close()
+
 
     signal = GenomicSignal(options.reads_file)
     signal.load_sg_coefs(slope_window_size=9)
@@ -2048,7 +2074,9 @@ def print_signal():
                             reverse_shift=options.reverse_shift,
                             genome_file_name=genome_data.get_genome(),
                             raw_signal_file=raw_signal_file,
-                            bc_signal_file=bc_signal_file)
+                            bc_signal_file=bc_signal_file,
+                            norm_signal_file=norm_signal_file,
+                            strand_specific=options.strand_specific)
 
     chrom_sizes_file = genome_data.get_chromosome_sizes()
     if options.bigWig:
@@ -2061,6 +2089,34 @@ def print_signal():
             bw_filename = os.path.join(options.output_location, "{}.bc.bw".format(options.output_prefix))
             system(" ".join(["wigToBigWig", bc_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
             os.remove(bc_signal_file)
+
+            if options.strand_specific:
+                bw_filename = os.path.join(options.output_location, "{}_Forward.bc.bw".format(options.output_prefix))
+                wig_filename = os.path.join(options.output_location, "{}_Forward.bc.wig".format(options.output_prefix))
+                system(" ".join(["wigToBigWig", wig_filename, chrom_sizes_file, bw_filename, "-verbose=0"]))
+                os.remove(wig_filename)
+
+                bw_filename = os.path.join(options.output_location, "{}_Reverse.bc.bw".format(options.output_prefix))
+                wig_filename = os.path.join(options.output_location, "{}_Reverse.bc.wig".format(options.output_prefix))
+                system(" ".join(["wigToBigWig", wig_filename, chrom_sizes_file, bw_filename, "-verbose=0"]))
+                os.remove(wig_filename)
+
+        if options.norm_signal:
+            bw_filename = os.path.join(options.output_location, "{}.norm.bw".format(options.output_prefix))
+            system(" ".join(["wigToBigWig", norm_signal_file, chrom_sizes_file, bw_filename, "-verbose=0"]))
+            os.remove(norm_signal_file)
+
+            if options.strand_specific:
+                bw_filename = os.path.join(options.output_location, "{}_Forward.norm.bw".format(options.output_prefix))
+                wig_filename = os.path.join(options.output_location, "{}_Forward.norm.wig".format(options.output_prefix))
+                system(" ".join(["wigToBigWig", wig_filename, chrom_sizes_file, bw_filename, "-verbose=0"]))
+                os.remove(wig_filename)
+
+                bw_filename = os.path.join(options.output_location, "{}_Reverse.norm.bw".format(options.output_prefix))
+                wig_filename = os.path.join(options.output_location, "{}_Reverse.norm.wig".format(options.output_prefix))
+                system(" ".join(["wigToBigWig", wig_filename, chrom_sizes_file, bw_filename, "-verbose=0"]))
+                os.remove(wig_filename)
+
     # TODO
     exit(0)
 

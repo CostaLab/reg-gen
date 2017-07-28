@@ -506,7 +506,7 @@ class GenomicSignal:
 
     def print_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
                    initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
-                   raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, slope_signal_file=None):
+                   raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, strand_specific=False):
 
         if raw_signal_file:
             pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
@@ -523,7 +523,7 @@ class GenomicSignal:
                     [str(e) for e in nan_to_num(raw_signal)]) + "\n")
             f.close()
 
-        if bc_signal_file:
+        if bc_signal_file or norm_signal_file:
             # Parameters
             window = 50
             defaultKmerValue = 1.0
@@ -594,10 +594,14 @@ class GenomicSignal:
             fLast = signal_bias_f[0]
             rLast = signal_bias_r[0]
             signal_bc = []
+            signal_bc_f = []
+            signal_bc_r = []
             for i in range((window / 2), len(signal_bias_f) - (window / 2)):
                 nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
                 nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
                 signal_bc.append(nhatf + nhatr)
+                signal_bc_f.append(nhatf)
+                signal_bc_r.append(nhatr)
                 fSum -= fLast
                 fSum += signal_bias_f[i + (window / 2)]
                 fLast = signal_bias_f[i - (window / 2) + 1]
@@ -605,7 +609,55 @@ class GenomicSignal:
                 rSum += signal_bias_r[i + (window / 2)]
                 rLast = signal_bias_r[i - (window / 2) + 1]
 
-            f = open(bc_signal_file, "a")
-            f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+            if bc_signal_file:
+                f = open(bc_signal_file, "a")
+                f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
                     [str(e) for e in nan_to_num(signal_bc)]) + "\n")
-            f.close()
+                f.close()
+
+                if strand_specific:
+                    prefix = bc_signal_file.split(".")[0]
+                    bc_signal_file_f = prefix + "_Forward" + ".bc.wig"
+                    bc_signal_file_r = prefix + "_Reverse" + ".bc.wig"
+                    f = open(bc_signal_file_f, "a")
+                    f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                        [str(e) for e in nan_to_num(signal_bc_f)]) + "\n")
+                    f.close()
+                    f = open(bc_signal_file_r, "a")
+                    f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                        [str(e) for e in nan_to_num(signal_bc_r)]) + "\n")
+                    f.close()
+
+            if norm_signal_file:
+                norm_signal_bc = self.boyle_norm(signal_bc)
+                perc = scoreatpercentile(norm_signal_bc, 98)
+                std = np.std(norm_signal_bc)
+                norm_signal_bc = self.hon_norm_atac(norm_signal_bc, perc, std)
+                f = open(norm_signal_file, "a")
+                f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                    [str(e) for e in nan_to_num(norm_signal_bc)]) + "\n")
+                f.close()
+
+                if strand_specific:
+                    prefix = bc_signal_file.split(".")[0]
+                    norm_signal_file_f = prefix + "_Forward" + ".norm.wig"
+                    norm_signal_file_r = prefix + "_Reverse" + ".norm.wig"
+
+                    signal_norm_f = self.boyle_norm(signal_bc_f)
+                    perc = scoreatpercentile(signal_norm_f, 98)
+                    std = np.std(signal_norm_f)
+                    signal_norm_f = self.hon_norm_atac(signal_norm_f, perc, std)
+
+                    signal_norm_r = self.boyle_norm(signal_bc_r)
+                    perc = scoreatpercentile(signal_norm_r, 98)
+                    std = np.std(signal_norm_r)
+                    signal_norm_r = self.hon_norm_atac(signal_norm_r, perc, std)
+
+                    f = open(norm_signal_file_f, "a")
+                    f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                        [str(e) for e in nan_to_num(signal_norm_f)]) + "\n")
+                    f.close()
+                    f = open(norm_signal_file_r, "a")
+                    f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
+                        [str(e) for e in nan_to_num(signal_norm_r)]) + "\n")
+                    f.close()
