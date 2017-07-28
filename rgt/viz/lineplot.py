@@ -137,14 +137,14 @@ class Lineplot:
         for bam in self.readsnames:
             self.cuebam[bam] = set(tag_from_r(self.exps, self.tag_type, bam))
 
-    def coverage(self, sortby, heatmap=False, logt=False, mp=0, log=False):
+    def coverage(self, sortby, heatmap=False, logt=False, mp=0, log=False, average=False):
 
         def annot_ind(bednames, tags):
             """Find the index for annotation tag"""
             for ind, a in enumerate(bednames):
                 if a in tags: return ind
 
-        if mp>0: ts = time.time()
+        if mp > 0: ts = time.time()
         normRPM = False
         # Calculate for coverage
         mp_input = []
@@ -298,7 +298,7 @@ class Lineplot:
                                             bi += 1
                                             te = time.time()
                                             print2(self.parameter,
-                                                   "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}s".format(
+                                                   "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
                                                        bed + "." + bam, ts - te))
 
 
@@ -323,6 +323,20 @@ class Lineplot:
                                             data[s][g][c][d].append(out[4])
                                         except:
                                             data[s][g][c][d] = [out[4]]
+        if average:
+            for s in data.keys():
+                for g in data[s].keys():
+                    for c in data[s][g].keys():
+                        for d in data[s][g][c].keys():
+                            if isinstance(data[s][g][c][d]["all"], list) and len(data[s][g][c][d]["all"]) > 1:
+                                # print(len(data[s][g][c][d]["all"]), end="")
+                                # print(data[s][g][c][d]["all"])
+                                a = np.array(data[s][g][c][d]["all"])
+                                averaged_array = numpy.array(np.average(a, axis=0))
+                                # print(averaged_array)
+                                # sys.exit(1)
+                                data[s][g][c][d]["all"] = [averaged_array]
+                                # print(len(data[s][g][c][d]["all"]))
         if self.df:
             for s in data.keys():
                 for g in data[s].keys():
@@ -343,8 +357,9 @@ class Lineplot:
             self.colors[c] = colors[i]
 
     def plot(self, groupby, colorby, output, printtable=False, scol=False, srow=False, w=2, h=2):
+        linewidth = 1
 
-        rot = 50
+        rot = 30
         if len(self.data.values()[0].keys()) < 2:
             ticklabelsize = w * 1.5
         else:
@@ -404,7 +419,7 @@ class Lineplot:
                                         sx_ymin[it] = min(numpy.amin(y), sx_ymin[it])
 
                                     x = numpy.linspace(-self.extend, self.extend, len(y))
-                                    ax.plot(x, y, color=self.colors[c], lw=1, label=c)
+                                    ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
                                     if it < nit - 1:
                                         ax.set_xticklabels([])
                                     # Processing for future output
@@ -422,7 +437,7 @@ class Lineplot:
                                     yaxmax[i] = max(ymax1, yaxmax[i])
                                     sx_ymax[it] = max(ymax1, sx_ymax[it])
                                     x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                    ax.plot(x, y, color=self.colors[c], lw=1, label=c)
+                                    ax.plot(x, y, color=self.colors[c], lw=linewidth, label=c)
                                     if it < nit - 1: ax.set_xticklabels([])
                                     # Processing for future output
                                     if printtable: pArr.append([g, s, c, d, "+"] + list(y))
@@ -433,16 +448,16 @@ class Lineplot:
                                     yaxmax[i] = max(ymax2, yaxmax[i])
                                     sx_ymax[it] = max(ymax2, sx_ymax[it])
                                     x = numpy.linspace(-self.extend, self.extend, y.shape[0])
-                                    ax.plot(x, -y, color=self.colors[c], lw=1, label=c)
+                                    ax.plot(x, -y, color=self.colors[c], lw=linewidth, label=c)
                                     if it < nit - 1: ax.set_xticklabels([])
                                     # Processing for future output
                                     if printtable: pArr.append([g, s, c, d, "-"] + list(y))
                                 ym = 1.2 * max(max(yaxmax), max(sx_ymax))
                                 ax.set_ylim([-ym, ym])
 
-                ax.get_yaxis().set_label_coords(-0.1, 0.5)
+                # ax.get_yaxis().set_label_coords(-0.1, 0.5)
                 ax.set_xlim([-self.extend, self.extend])
-                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot)
+                plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
 
 

@@ -340,7 +340,10 @@ class BED_profile:
                 proportion = []
                 for counts in overlapping_counts:
                     ss = sum(counts)
-                    proportion.append([x/ss * 100 for x in counts])
+                    if ss > 0:
+                        proportion.append([x/ss * 100 for x in counts])
+                    else:
+                        proportion.append([0 for x in counts])
                 # print(proportion)
                 ptable = []
                 for j in range(len(refs_names)):
