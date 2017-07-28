@@ -454,15 +454,18 @@ def main_matching():
             os.remove(output_bed_file)
 
         # Iterating on genomic regions
-        for genomic_region in genomic_region_set.sequences:
+        for genomic_region in genomic_region_set:
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            # for motif in motif_list:
-            #     match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=tmp)
+            grs = GenomicRegionSet("tmp")
 
-            grs = match_multiple(motif_list, sequence, genomic_region)
+            for motif in motif_list:
+                match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=grs)
+
+            # FIXME: we can switch to batch matching after the threshold & normalisation are implemented
+            # grs = match_multiple(motif_list, sequence, genomic_region)
 
             grs.write_bed(output_bed_file, mode="a")
 
