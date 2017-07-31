@@ -20,8 +20,6 @@ from Bio import motifs
 class Motif:
     """
     Represent a DNA binding affinity motif.
-
-    Authors: Eduardo G. Gusmao.
     """
 
     def __init__(self, input_file_name, pseudocounts, precision, fpr, thresholds):
