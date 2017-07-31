@@ -373,9 +373,7 @@ def match_single(motif, sequence, genomic_region, unique_threshold=None, normali
         motif_max = motif.max
 
     # Performing motif matching
-    # TODO: we can expand this to use bg from sequence, for example,
-    # or from organism.
-    results = MOODS.scan.scan(sequence, [motif.pssm_list], motif.bg, [current_threshold], 7, motif.alphabet)
+    results = MOODS.scan.scan(sequence, [motif.pssm], motif.bg, [current_threshold], 7, motif.alphabet)
 
     if output is None:
         output = GenomicRegionSet("mpbs")
@@ -441,20 +439,20 @@ def match_multiple(motifs, sequence, genomic_region, unique_threshold=None, norm
     Either the "output" GenomicRegionSet if provided, or a newly-instantiated one.
     """
 
-    pssm_lists = []
+    pssm_list = []
     thresholds = []
     for motif in motifs:
         if unique_threshold:
             thresholds.append(0.0)
         else:
             thresholds.append(motif.threshold)
-        pssm_lists.append(motif.pssm_list)
+            pssm_list.append(motif.pssm)
 
     # Performing motif matching
     # TODO: we can expand this to use bg from sequence, for example,
     # or from organism.
     bg = MOODS.tools.flat_bg(4)
-    results = MOODS.scan.scan_dna(sequence, pssm_lists, bg, thresholds, 7)
+    results = MOODS.scan.scan_dna(sequence, pssm_list, bg, thresholds, 7)
 
     if output is None:
         output = GenomicRegionSet("mpbs")

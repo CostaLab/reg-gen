@@ -50,7 +50,15 @@ class Motif:
         self.pfm = MOODS.parsers.pfm(input_file_name)
         self.bg = MOODS.tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
         self.pssm = MOODS.tools.log_odds(self.pfm, self.bg, pseudocounts)
+
+        # maximum value found in the whole PSSM
+        self.len = len(self.pfm[0])
         self.max = max([max(e) for e in self.pssm])
+
+        # we only support pure DNA or methylated DNA, for now.
+        self.alphabet = ["Aa", "Cc", "Gg", "Tt"]
+        if len(self.pfm) == 6:
+            self.alphabet += ["Mm", "Nn"]
 
         # Evaluating threshold
         # TODO: must probably recalculate all thresholds using MOODS functions (there's a script somewhere)
