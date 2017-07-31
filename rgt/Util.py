@@ -49,6 +49,7 @@ class ConfigurationFile:
         # Reading data directory
         self.data_dir = os.path.split(data_config_file_name)[0]
 
+
 class GenomeData(ConfigurationFile):
     """Represent genomic data. Inherits ConfigurationFile."""
 
@@ -73,8 +74,6 @@ class GenomeData(ConfigurationFile):
             self.repeat_maskers = self.config.get(organism, 'repeat_maskers')
         else:
             self.repeat_maskers = None
-
-
 
     def get_organism(self):
         """Returns the current organism."""
@@ -120,7 +119,6 @@ class GenomeData(ConfigurationFile):
             return self.repeat_maskers
         else:
             print("*** There is no repeat masker data for "+self.organism)
-
 
 
 class MotifData(ConfigurationFile):
@@ -180,6 +178,7 @@ class MotifData(ConfigurationFile):
     def get_fpr_list(self):
         """Returns the list of current paths to the fpr files."""
         return self.fpr_list
+
 
 class HmmData(ConfigurationFile):
     """Represent HMM data. Inherits ConfigurationFile."""
@@ -262,6 +261,7 @@ class HmmData(ConfigurationFile):
         """Returns the ATAC-seq default bias table for the reverse strand."""
         return self.default_bias_table_R_ATAC
 
+
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""
 
@@ -275,7 +275,6 @@ class ImageData(ConfigurationFile):
         self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
         self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
         self.viz_logo = os.path.join(self.data_dir,"fig","viz_logo.png")
-
 
     def get_rgt_logo(self):
         """Returns the rgt logo image file location."""
@@ -313,6 +312,7 @@ class ImageData(ConfigurationFile):
         """Returns the default RGT viz logo."""
         return self.viz_logo
 
+
 class Library_path(ConfigurationFile):
     """Represent the path to triplexator. Inherits ConfigurationFile."""
 
@@ -343,6 +343,7 @@ class OverlapType:
     ORIGINAL = 1
     COMP_INCL = 2
 
+
 class SequenceType:
     """Class of sequence type
     
@@ -354,11 +355,13 @@ class SequenceType:
     DNA = 0
     RNA = 1
 
+
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors. Inherits OptionParser."""
     def error(self, msg):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
+
 
 class PassThroughOptionParser(HelpfulOptionParser):
     """When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted. sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or bad argument types, etc.). Inherits HelpfulOptionParser."""
@@ -369,6 +372,7 @@ class PassThroughOptionParser(HelpfulOptionParser):
             except (BadOptionError,AmbiguousOptionError), e:
                 pass
                 #largs.append(e.opt_str)
+
 
 class ErrorHandler():
     """Handles errors in a standardized way.
@@ -501,6 +505,7 @@ class ErrorHandler():
                                     "Report: "+warning_message+" "+add_msg+"\n"
                                     "--------------------------------------------------")
         print(complete_warning_message, file=sys.stderr)
+
 
 class Html:
     """Represent an HTML file.
@@ -964,6 +969,7 @@ class Html:
         for e in self.document:
             if e: f.write(e+"\n")
         f.close()
+
 
 class AuxiliaryFunctions:
     """Class of auxiliary static functions."""

@@ -11,6 +11,8 @@ from rgt.Util import ErrorHandler
 
 # External
 from Bio import motifs
+import MOODS.tools
+import MOODS.parsers
 
 ###################################################################################################
 # Classes
@@ -30,6 +32,7 @@ class Motif:
         pfm -- Position Frequency Matrix.
         pwm -- Position Weight Matrix.
         pssm -- Position Specific Scoring Matrix.
+        alphabet -- A list of letters, eg ["A", "C", "G", "T"]
         threshold -- Motif matching threshold.
         len -- Length of the motif.
         max -- Maximum PSSM score possible.
@@ -43,20 +46,14 @@ class Motif:
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
         repository = input_file_name.split("/")[-2]
 
-        # Creating PFM & PWM
-        input_file = open(input_file_name, "r")
-        self.pfm = motifs.read(input_file, "pfm")
-        self.pwm = self.pfm.counts.normalize(pseudocounts)
-        input_file.close()
-        self.len = len(self.pfm)
-
-        # Creating PSSM
-        background = {'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}
-        self.pssm = self.pwm.log_odds(background)
-        self.pssm_list = [self.pssm[e] for e in ["A", "C", "G", "T"]]
-        self.max = self.pssm.max
+        # Creating PFM & PSSM
+        self.pfm = MOODS.parsers.pfm(input_file_name)
+        self.bg = MOODS.tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
+        self.pssm = MOODS.tools.log_odds(self.pfm, self.bg, pseudocounts)
+        self.max = max([max(e) for e in self.pssm])
 
         # Evaluating threshold
+        # TODO: must probably recalculate all thresholds using MOODS functions (there's a script somewhere)
         try:
             if pseudocounts != 0.1 or precision != 10000:
                 raise ValueError()
@@ -64,17 +61,10 @@ class Motif:
         except Exception:
             err.throw_warning("DEFAULT_WARNING", add_msg="Parameters not matching pre-computed Fpr data. "
                                                          "Recalculating (might take a while)..")
-            try:
-                distribution = self.pssm.distribution(background=background, precision=precision)
-            except Exception:
-                err.throw_error("MM_PSEUDOCOUNT_0")
-            self.threshold = distribution.threshold_fpr(fpr)
+            self.threshold = MOODS.tools.threshold_from_p(self.pssm, self.bg, fpr)
 
         # Evaluating if motif is palindromic
-        if str(self.pfm.consensus) == str(self.pfm.consensus.reverse_complement()):
-            self.is_palindrome = True
-        else:
-            self.is_palindrome = False
+        self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
 
 
 class Thresholds:
