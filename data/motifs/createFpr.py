@@ -2,10 +2,8 @@
 # Import
 import sys
 from glob import glob
-from Bio import motifs
 from os.path import basename
-import MOODS.tools
-import MOODS.parsers
+from MOODS import tools, parsers
 
 # Input
 inFolder = sys.argv[1]
@@ -23,14 +21,14 @@ for pwmFileName in sorted(glob(inFolder+"*.pwm")):
     # Creating PSSM
     name = ".".join(basename(pwmFileName).split(".")[:-1])
 
-    pfm = MOODS.parsers.pfm(pwmFileName)
-    bg = MOODS.tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
-    pssm = MOODS.tools.log_odds(pfm, bg, pseudocounts)
+    pfm = parsers.pfm(pwmFileName)
+    bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
+    pssm = tools.log_odds(pfm, bg, pseudocounts)
 
     # Evaluating thresholds
     resVec = [name]
     for fpr in fprList:
-        resVec.append(str(MOODS.tools.threshold_from_p(pssm, bg, fpr)))
+        resVec.append(str(tools.threshold_from_p(pssm, bg, fpr)))
 
     # Writing results
     outFile.write("\t".join(resVec)+"\n")

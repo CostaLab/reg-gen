@@ -9,8 +9,7 @@ from os.path import basename
 # Internal
 
 # External
-import MOODS.tools
-import MOODS.parsers
+from MOODS import tools, parsers
 
 ###################################################################################################
 # Classes
@@ -42,9 +41,9 @@ class Motif:
         repository = input_file_name.split("/")[-2]
 
         # Creating PFM & PSSM
-        self.pfm = MOODS.parsers.pfm(input_file_name)
-        self.bg = MOODS.tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
-        self.pssm = MOODS.tools.log_odds(self.pfm, self.bg, pseudocounts)
+        self.pfm = parsers.pfm(input_file_name)
+        self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
+        self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts)
 
         # maximum value found in the whole PSSM
         self.len = len(self.pfm[0])
@@ -62,8 +61,8 @@ class Motif:
                 raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
-            print("pseudocunts != 0.1 -> recomputing threshold for %s" % self.name)
-            self.threshold = MOODS.tools.threshold_from_p(self.pssm, self.bg, fpr)
+            print("pseudocunts != %f -> recomputing threshold for %s" % (1.0, self.name))
+            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
 
         # Evaluating if motif is palindromic
         self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]

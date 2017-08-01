@@ -20,8 +20,7 @@ from Util import bed_to_bb
 
 # External
 from pysam import Fastafile
-import MOODS.tools
-import MOODS.scan
+from MOODS import tools, scan
 
 
 ###################################################################################################
@@ -371,7 +370,7 @@ def match_single(motif, sequence, genomic_region, unique_threshold=None, normali
         motif_max = motif.max
 
     # Performing motif matching
-    results = MOODS.scan.scan(sequence, [motif.pssm], motif.bg, [current_threshold], 7, motif.alphabet)
+    results = scan.scan(sequence, [motif.pssm], motif.bg, [current_threshold], 7, motif.alphabet)
 
     if output is None:
         output = GenomicRegionSet("mpbs")
@@ -449,8 +448,8 @@ def match_multiple(motifs, sequence, genomic_region, unique_threshold=None, norm
     # Performing motif matching
     # TODO: we can expand this to use bg from sequence, for example,
     # or from organism.
-    bg = MOODS.tools.flat_bg(4)
-    results = MOODS.scan.scan_dna(sequence, pssm_list, bg, thresholds, 7)
+    bg = tools.flat_bg(4)
+    results = scan.scan_dna(sequence, pssm_list, bg, thresholds, 7)
 
     if output is None:
         output = GenomicRegionSet("mpbs")
