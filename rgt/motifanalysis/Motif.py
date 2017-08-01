@@ -7,10 +7,8 @@
 from os.path import basename
 
 # Internal
-from rgt.Util import ErrorHandler
 
 # External
-from Bio import motifs
 import MOODS.tools
 import MOODS.parsers
 
@@ -24,7 +22,7 @@ class Motif:
     Represent a DNA binding affinity motif.
     """
 
-    def __init__(self, input_file_name, pseudocounts, precision, fpr, thresholds):
+    def __init__(self, input_file_name, pseudocounts, fpr, thresholds):
         """ 
         Initializes Motif.
 
@@ -38,9 +36,6 @@ class Motif:
         max -- Maximum PSSM score possible.
         is_palindrome -- True if consensus is biologically palindromic.
         """
-
-        # Initializing error handler
-        err = ErrorHandler()
  
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
@@ -63,12 +58,11 @@ class Motif:
         # Evaluating threshold
         # TODO: must probably recalculate all thresholds using MOODS functions (there's a script somewhere)
         try:
-            if pseudocounts != 0.1 or precision != 10000:
+            if pseudocounts != 1.0:
                 raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
-            err.throw_warning("DEFAULT_WARNING", add_msg="Parameters not matching pre-computed Fpr data. "
-                                                         "Recalculating (might take a while)..")
+            print("pseudocunts != 0.1 -> recomputing threshold for %s" % self.name)
             self.threshold = MOODS.tools.threshold_from_p(self.pssm, self.bg, fpr)
 
         # Evaluating if motif is palindromic

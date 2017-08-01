@@ -53,9 +53,7 @@ def main_matching():
                            "and the data.config file.")
     parser.add_option("--fpr", dest="fpr", type="float", metavar="FLOAT", default=0.0001,
                       help="False positive rate cutoff for motif matching.")
-    parser.add_option("--precision", dest="precision", type="int", metavar="INT", default=10000,
-                      help="Score distribution precision for determining false positive rate cutoff.")
-    parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=0.1,
+    parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=1.0,
                       help="Pseudocounts to be added to raw counts of each PFM.")
     parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT",
                       help="If set, a random regions file will be created (eg, for later enrichment analysis). "
@@ -290,7 +288,7 @@ def main_matching():
     # Iterating on grouped file name list
     for motif_file_name in motif_file_names:
         # Append motif motif_list
-        motif_list.append(Motif(motif_file_name, options.pseudocounts, options.precision, options.fpr, thresholds))
+        motif_list.append(Motif(motif_file_name, options.pseudocounts, options.fpr, thresholds))
 
     # Performing normalized threshold strategy if requested
     if options.norm_threshold:
