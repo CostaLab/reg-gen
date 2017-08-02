@@ -62,7 +62,7 @@ class Motif:
         except Exception:
             # FIXME: this requires a modified version of MOODS. Not sure if we actually need it.
             # self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr, 2000.0)  # 10000.0 would take too long
-            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)  # 10000.0 would take too long
+            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
             print("pseudocounts != %f -> recomputing threshold for %s: %f" % (1.0, self.name, self.threshold))
 
         # Evaluating if motif is palindromic
