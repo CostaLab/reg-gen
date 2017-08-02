@@ -25,9 +25,9 @@ class Motif:
         """ 
         Initializes Motif.
 
-        Variables:
+        Fields:
         pfm -- Position Frequency Matrix.
-        pwm -- Position Weight Matrix.
+        bg -- Background frequencies.
         pssm -- Position Specific Scoring Matrix.
         alphabet -- A list of letters, eg ["A", "C", "G", "T"]
         threshold -- Motif matching threshold.
@@ -43,7 +43,7 @@ class Motif:
         # Creating PFM & PSSM
         self.pfm = parsers.pfm(input_file_name)
         self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
-        self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts)
+        self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts, 2)
 
         # maximum value found in the whole PSSM
         self.len = len(self.pfm[0])
@@ -55,14 +55,15 @@ class Motif:
             self.alphabet += ["Mm", "Nn"]
 
         # Evaluating threshold
-        # TODO: must probably recalculate all thresholds using MOODS functions (there's a script somewhere)
         try:
             if pseudocounts != 1.0:
                 raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
-            print("pseudocunts != %f -> recomputing threshold for %s" % (1.0, self.name))
-            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
+            # FIXME: this requires a modified version of MOODS. Not sure if we actually need it.
+            # self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr, 2000.0)  # 10000.0 would take too long
+            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)  # 10000.0 would take too long
+            print("pseudocounts != %f -> recomputing threshold for %s: %f" % (1.0, self.name, self.threshold))
 
         # Evaluating if motif is palindromic
         self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]

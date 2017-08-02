@@ -23,12 +23,13 @@ for pwmFileName in sorted(glob(inFolder+"*.pwm")):
 
     pfm = parsers.pfm(pwmFileName)
     bg = tools.flat_bg(len(pfm))  # total number of "points" to add, not per-row
-    pssm = tools.log_odds(pfm, bg, pseudocounts)
+    pssm = tools.log_odds(pfm, bg, pseudocounts, 2)
 
     # Evaluating thresholds
     resVec = [name]
     for fpr in fprList:
-        resVec.append(str(tools.threshold_from_p(pssm, bg, fpr)))
+        # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
+        resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
 
     # Writing results
     outFile.write("\t".join(resVec)+"\n")
