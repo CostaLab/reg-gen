@@ -29,7 +29,8 @@ for pwmFileName in sorted(glob(inFolder+"*.pwm")):
     resVec = [name]
     for fpr in fprList:
         # Note: this requires a modified version of MOODS. Only use it if you know what you are doing
-        resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+        # resVec.append(str(tools.threshold_from_p(pssm, bg, fpr, 10000.0)))
+        resVec.append(str(tools.threshold_from_p(pssm, bg, fpr)))
 
     # Writing results
     outFile.write("\t".join(resVec)+"\n")

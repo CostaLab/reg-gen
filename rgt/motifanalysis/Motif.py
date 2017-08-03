@@ -52,7 +52,7 @@ class Motif:
         # we only support pure DNA or methylated DNA, for now.
         self.alphabet = ["Aa", "Cc", "Gg", "Tt"]
         if len(self.pfm) == 6:
-            self.alphabet += ["Mm", "Nn"]
+            self.alphabet += ["m", "1"]
 
         # Evaluating threshold
         try:

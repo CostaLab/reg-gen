@@ -48,22 +48,18 @@ class Sequence():
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
 
-    def methylated_sequence(self, CpG):
-#ALPHABET "DNA with covalent modifications" DNA-LIKE
+    def methylated_sequence(self, cpg):
+        aux = list(self.seq)
 
-# Core symbols
-# A "Adenine" 8510A8 ~ T "Thymine" A89610
-# C "Cytosine" A50026 ~ G "Guanine" 313695
-# m "5-Methylcytosine" D73027 ~ 1 "Guanine:5-Methylcytosine" 4575B4
-        aux=list(self.seq)
-        for pos in CpG:
-          if self.seq[pos]=="C":
-            aux[pos]="m"
-          elif self.seq[pos]=="G":
-            aux[pos]="1"
-          else:
-            raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")         
-        self.seq="".join(aux)
+        for pos in cpg:
+            if self.seq[pos] == "C":
+                aux[pos] = "m"
+            elif self.seq[pos] == "G":
+                aux[pos] = "1"
+            else:
+                raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")
+
+        self.seq = "".join(aux)
         
     def complement(self):
         """Return another Sequence which is the complement to original sequence."""
