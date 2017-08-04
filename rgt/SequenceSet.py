@@ -48,10 +48,10 @@ class Sequence():
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
 
-    def methylated_sequence(self, cpg):
+    def methylate(self, cpg_sites):
         aux = list(self.seq)
 
-        for pos in cpg:
+        for pos in cpg_sites:
             if self.seq[pos] == "C":
                 aux[pos] = "m"
             elif self.seq[pos] == "G":
