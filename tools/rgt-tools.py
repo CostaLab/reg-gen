@@ -590,13 +590,7 @@ if __name__ == "__main__":
                     regions.add(GenomicRegion(chrom=ch, initial=int(line[3]), final=int(line[4]),
                                               name=gn, orientation=line[6]))
 
-        if args.b:
-            # exons = GenomicRegionSet("output")
-            # exons.read(args.o)
-            # exons.write_blocks(args.o)
-            regions.write_blocks(filename=args.o)
-        else:
-            regions.write(filename=args.o)
+        regions.write(filename=args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         print("Number:\t\t" + str(len(regions)))
 
 
@@ -1331,8 +1325,8 @@ if __name__ == "__main__":
     elif args.mode == "bed12tobed6":
         print(tag + ": [BED] Convert BED12 to BED6")
         bed = GenomicRegionSet(args.i)
-        bed.read_bed(args.i,bed12=True)
-        bed.write_bed(args.o)
+        bed.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
+        bed.write(args.o)
 
 
     ############### BAM filtering by BED ###########################
