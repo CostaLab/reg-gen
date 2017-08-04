@@ -203,7 +203,7 @@ class GenomicRegionSet:
                     g = GenomicRegion(chrom, start, end, name, orientation, data)
 
                     if bed12 and size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
-                        gs = g.extract_blocks()
+                        gs = g.extract_blocks(keep_name=False)
                         for gg in gs:
                             self.add(gg)
                     else:

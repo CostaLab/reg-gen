@@ -103,14 +103,14 @@ class GenomicRegion:
             if space:
                 return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
             elif underline:
-                return "_".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
+                return "_".join(["chr",self.chrom[3:],str(self.initial),str(self.final),s])
             else:
                 return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
         else:
             if space:
                 return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
             elif underline:
-                return "_".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
+                return "_".join(["chr",self.chrom[3:],str(self.initial),str(self.final)])
             else:
                 return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
 

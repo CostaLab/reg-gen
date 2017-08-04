@@ -553,9 +553,9 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
-        rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
+        rects_de = ax.bar([i + 0.325 for i in ind], propor_de, width, color=target_color,
                           edgecolor="none", label="Target promoters")
-        rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
+        rects_nde = ax.bar([i + 0.325 + width for i in ind], propor_nde, width, color=nontarget_color,
                            edgecolor="none", label="Non-target promoters")
 
         # Legend
