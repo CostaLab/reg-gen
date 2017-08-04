@@ -240,7 +240,7 @@ class GenomicRegionSet:
 
     def get_chrom(self):
         """Return all chromosomes."""
-        return [r.chrom for r in self.sequences]
+        return [r.chrom for r in self]
 
     def get_names(self):
         """Return a list of all region names. If the name is None, it return the region string."""
@@ -281,7 +281,7 @@ class GenomicRegionSet:
 
         if percentage:
             if percentage > -50:
-                for s in self.sequences:
+                for s in self:
                     if w_return:
                         z.add(s.extend(int(len(s) * left / 100), int(len(s) * right / 100), w_return=True))
                     else:
@@ -290,7 +290,7 @@ class GenomicRegionSet:
                 print("Percentage for extension must be larger than 50%%.")
                 sys.exit(0)
         else:
-            for s in self.sequences:
+            for s in self:
                 if w_return:
                     z.add(s.extend(left, right, w_return=True))
                 else:
@@ -309,7 +309,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=length, right=0, w_return=True))
@@ -333,7 +333,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=0, right=length, w_return=True))
@@ -398,8 +398,8 @@ class GenomicRegionSet:
             else:
                 b.add(self.sequences[i])
         return a, b
-
-    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
+    
+def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
                          threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
@@ -606,7 +606,7 @@ class GenomicRegionSet:
         mapped_proxs = [] # Contains all the proximity information of genes associated with the coordinates which are in gene_set
 
         # Iterating on associated genomic regions
-        for gr in assoc_grs.sequences:
+        for gr in assoc_grs:
 
             # If the coordinate wasn't associated with any gene, it is not considered
             if(gr.name == "."): continue
@@ -2442,7 +2442,7 @@ class GenomicRegionSet:
         z = self.subtract(y)
         genes = {}
         for r in z:
-            if r.name in genes.keys():
+            if r.name in genes:
                 if keep == "upstream" and r.orientation == "+" and r.initial < genes[r.name].initial:
                     genes[r.name] = r
                 elif keep == "upstream" and r.orientation == "-" and r.final > genes[r.name].final:

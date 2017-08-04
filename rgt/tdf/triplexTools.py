@@ -159,7 +159,7 @@ def list_all_index(path, link_d=None):
 
     # sig_list = []
 
-    for i, exp in enumerate(profile.keys()):
+    for i, exp in enumerate(profile):
         c += 1
         if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
@@ -355,7 +355,7 @@ def gen_heatmap(path):
     # print(data.shape)
 
 
-    fig = plt.figure(figsize=(len(matrix.keys()) * 1.5, len(rnas) * 2.5))
+    fig = plt.figure(figsize=(len(matrix) * 1.5, len(rnas) * 2.5))
     # fig = plt.figure()
     # ax1 = fig.add_axes([0.09,0.2,0.2,0.6])
     # Y = sch.linkage(data, method='single')
@@ -1247,7 +1247,7 @@ def integrate_stat(path):
     with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
-        for item in data.keys():
+        for item in data:
             # print(item)
             # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)

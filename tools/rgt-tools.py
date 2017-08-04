@@ -133,6 +133,7 @@ if __name__ == "__main__":
     parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedmerge.add_argument('-s', action="store_true", help="Strand specific")
+    parser_bedmerge.add_argument('-b', action="store_true", help="BED12 format")
 
 
     ############### BED merge by name ############################################
@@ -140,6 +141,7 @@ if __name__ == "__main__":
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
     parser_bedmn.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmn.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedmn.add_argument('-b', action="store_true", help="BED12 format")
 
     ############### BED rename ###############################################
     # python rgt-tools.py bed_rename -i -o -s -d -organism
@@ -268,7 +270,7 @@ if __name__ == "__main__":
     parser_bedro.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedro.add_argument('-t', metavar='target', type=str, help="Define BED file for target regions")
     parser_bedro.add_argument('-k', "--keep", action="store_true", default=False, help="Keep the overlapped regions, and remove the non-overlapped ones.")
-    parser_bedro.add_argument('-k', "--block", action="store_true", default=False, help="Read and write BED12 format.")
+    parser_bedro.add_argument('-b', "--block", action="store_true", default=False, help="Read and write BED12 format.")
 
     ############### BED add columns ################################
     parser_bedaddcol = subparsers.add_parser('bed_add_columns', 
@@ -334,6 +336,13 @@ if __name__ == "__main__":
     parser_sampling.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_sampling.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_sampling.add_argument('-s', metavar='size', type=int, help="Number of the output regions")
+
+    ############### BED bed12tobed6 ################################
+    parser_bed12tobed6 = subparsers.add_parser('bed12tobed6',
+                                            help="[BED] Convert BED12 to BED6")
+    parser_bed12tobed6.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bed12tobed6.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bed12tobed6.add_argument('-e', action="store_true", help="Add exon number or not")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
@@ -654,18 +663,18 @@ if __name__ == "__main__":
     elif args.mode == "bed_merge":
         print(tag + ": [BED] Merge regions")
         bed1 = GenomicRegionSet("input")
-        bed1.read(args.i)
+        bed1.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         bed1.merge(strand_specific=args.s)
-        bed1.write(args.o)
+        bed1.write(args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
 
     ############### BED merge by name ########################################
     elif args.mode == "bed_merge_by_name":
         print(tag+": [BED] Merge regions by name")
 
         bed1 = GenomicRegionSet("input")
-        bed1.read(args.i)
+        bed1.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         bed2 = bed1.mergebyname()
-        bed2.write(args.o)
+        bed2.write(args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
 
     ############### BED rename regions #######################################
     elif args.mode == "bed_rename":
@@ -965,13 +974,13 @@ if __name__ == "__main__":
 
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
-        input_regions.read(args.i)
+        input_regions.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         if args.keep:
             output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
 
-        output_regions.write(args.o, args.b)
+        output_regions.write(args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         print("input regions:\t"+str(len(input_regions)))
         print("target regions:\t" + str(len(t)))
         print("output regions:\t" + str(len(output_regions)))
@@ -1074,6 +1083,8 @@ if __name__ == "__main__":
 
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
+
+        non_available = 0
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
         def count_polyA_on_bam(bed, bam):
             pattern = "AAAAA"
@@ -1117,12 +1128,12 @@ if __name__ == "__main__":
 
                 if all_read == 0:
                     if all_r == 0:
-                        res.append([r.name, count_polyA, all_read, "n.a.", all_a, all_r, "n.a."])
+                        res.append([r.name, count_polyA, all_read, non_available, all_a, all_r, non_available])
                     else:
-                        res.append([r.name, count_polyA, all_read, "n.a.", all_a, all_r, float(all_a)/all_r])
+                        res.append([r.name, count_polyA, all_read, non_available, all_a, all_r, float(all_a)/all_r])
                 else:
                     if all_r == 0:
-                        res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, "n.a."])
+                        res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, non_available])
                     else:
                         res.append([r.name, count_polyA, all_read, float(count_polyA)/all_read, all_a, all_r, float(all_a)/all_r])
             samfile.close()
@@ -1150,11 +1161,15 @@ if __name__ == "__main__":
                         # bams.append(f.rpartition(".")[0])
                         res = count_polyA_on_bam(bed=bed, bam=os.path.join(root, f))
                         for line in res:
-                            col_res[line[0]].append([line[1:]])
+                            col_res[line[0]].append(line[1:])
 
             for r in bed:
                 ar = numpy.array(col_res[r.name])
+                # print(ar)
+                # print(numpy.mean(ar, axis=1))
                 col_res[r.name] = numpy.mean(ar, axis=1).tolist()
+                # print(col_res[r.name])
+                # sys.exit(1)
 
             with open(args.o, "w") as f:
                 print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave",
@@ -1309,6 +1324,15 @@ if __name__ == "__main__":
         bed.read(args.i)
         beds = bed.random_subregions(size=args.s)
         beds.write(args.o)
+
+
+    ############### BED bed12tobed6 ###########################
+    #
+    elif args.mode == "bed12tobed6":
+        print(tag + ": [BED] Convert BED12 to BED6")
+        bed = GenomicRegionSet(args.i)
+        bed.read_bed(args.i,bed12=True)
+        bed.write_bed(args.o)
 
 
     ############### BAM filtering by BED ###########################
