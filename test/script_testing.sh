@@ -146,7 +146,7 @@ mkdir -p ${DIR}/HINT
 cd ${DIR}/HINT
 
 echo "Running HINT using DNase-seq and histone modification data.."
-url="http://134.130.18.8/open_data/hint/test/HINT_DNaseHistoneTest.tar.gz"
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_DNaseHistoneTest.tar.gz"
 echo "Downloading test data."
 wget -qO- -O HINT_DNaseHistoneTest.tar.gz $url && tar xvfz HINT_DNaseHistoneTest.tar.gz && rm HINT_DNaseHistoneTest.tar.gz
 cd HINT_DNaseHistoneTest
@@ -154,7 +154,7 @@ rgt-hint --dnase-histone-footprints --output-location=./ --output-prefix=test DN
 cd ../
 
 echo "Running HINT using only histone modification data.."
-url="http://134.130.18.8/open_data/hint/test/HINT_HistoneTest.tar.gz"
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_HistoneTest.tar.gz"
 echo "Downloading test data."
 wget -qO- -O HINT_HistoneTest.tar.gz $url && tar xvfz HINT_HistoneTest.tar.gz && rm HINT_HistoneTest.tar.gz
 cd HINT_HistoneTest
@@ -162,7 +162,7 @@ rgt-hint --histone-footprints --output-location=./ --output-prefix=test histone.
 cd ../
 
 echo "Running HINT using only DNase-seq data.."
-url="http://134.130.18.8/open_data/hint/test/HINT_DNaseTest.tar.gz"
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_DNaseTest.tar.gz"
 echo "Downloading test data."
 wget -qO- -O HINT_DNaseTest.tar.gz $url && tar xvfz HINT_DNaseTest.tar.gz && rm HINT_DNaseTest.tar.gz
 cd HINT_DNaseTest
@@ -172,10 +172,11 @@ rgt-hint --dnase-footprints --bias-correction --output-location=./ --output-pref
 cd ../
 
 echo "Running HINT using only ATAC-seq data.."
-url="http://134.130.18.8/open_data/hint/test/HINT_ATACTest.tar.gz"
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_ATAC.tar.gz"
 echo "Downloading test data."
-wget -qO- -O HINT_ATACTest.tar.gz $url && tar xvfz HINT_ATACTest.tar.gz && rm HINT_ATACTest.tar.gz
-cd HINT_ATACTest
-rgt-hint --atac-footprints --output-location=./ --output-prefix=test ATAC.bam ATACPeaks.bed
+wget -qO- -O HINT_ATAC.tar.gz $url && tar xvfz HINT_ATAC.tar.gz && rm HINT_ATAC.tar.gz
+cd HINT_ATAC
+mkdir output
+rgt-hint --atac-footprints --organism=mm10 input/B_ATAC_chr1.bam input/B_ATACPeaks_chr1.bed --output-location=output --output-prefix=B_ATAC_chr1_footprints
 
 echo "********* HINT test completed ****************"
