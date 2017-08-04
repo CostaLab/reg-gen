@@ -212,9 +212,9 @@ class ExperimentalMatrix:
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
                 if is_bedgraph:
-                    regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]), io=GRSFileIO.BedGraph)
                 else:
-                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]))
                     regions.sort()
                     if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
@@ -319,7 +319,7 @@ class ExperimentalMatrix:
                     #         except: pass
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
-                        g.read_bed(self.files[name])
+                        g.read(self.files[name])
                         if test: g.sequences = g.sequences[0:11]
                         self.objectsDict[n] = g
                     self.trash.append(name)

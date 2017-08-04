@@ -163,58 +163,6 @@ class SequenceSet:
 
             self.add(Sequence(seq=seq, strand=region.orientation, name=region.name))
 
-    # def read_genomic_set(self, genomic_set, genome_file_dir):
-    #     """Read the sequences defined by a given genomic set.s
-    #     *Keyword arguments:*
-    #
-    #         - genomic_set - genomic set with regions to obtain the fasta file
-    #         - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
-    #     """
-    #
-    #     bed = genomic_set
-    #     # Parse each chromosome and fetch the defined region in this chromosome
-    #     chroms = list(set(bed.get_chrom()))
-    #
-    #     chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
-    #
-    #     for ch in chroms:
-    #         if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
-    #
-    #         # Read genome in FASTA according to the given chromosome
-    #         ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
-    #         try:
-    #             ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
-    #         except:
-    #             continue
-    #
-    #         # Regions in given chromosome
-    #         beds = bed.any_chrom(chrom=ch)
-    #
-    #         for s in beds:
-    #             seq = ch_seq[0].seq[s.initial:s.final]
-    #             try: strand = s.strand
-    #             except: strand = "+"
-    #             self.sequences.append(Sequence(seq=seq, name=s.__repr__(), strand=strand))
-
-
-
-    # def read_bed(self, bedfile, genome_file_dir):
-    #     """Read the sequences defined by BED file on the given genomce.
-    #
-    #     *Keyword arguments:*
-    #
-    #         - bedfile -- The path to the BED file which defines the regions.
-    #         - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
-    #     """
-    #
-    #     # Read BED into GenomicRegionSet
-    #     from rgt.GenomicRegionSet import GenomicRegionSet
-    #     bed = GenomicRegionSet(os.path.basename(bedfile))
-    #     bed.read_bed(bedfile)
-    #     self.read_genomic_set(bed, genome_file_dir)
-        
-
-
     def total_len(self):
         """Retrun the total length of the given SequenceSet."""
         tol = 0

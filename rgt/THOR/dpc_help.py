@@ -425,7 +425,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
-        norm_regionset.read_bed(norm_regions)
+        norm_regionset.read(norm_regions)
     else:
         norm_regionset = None
         

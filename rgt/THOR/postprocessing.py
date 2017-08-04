@@ -169,7 +169,7 @@ def _output_narrowPeak(name, output, pvalues, filter):
 def filter_deadzones(bed_deadzones, peak_regions):
     """Filter by peaklist by deadzones"""
     deadzones = GenomicRegionSet('deadzones')
-    deadzones.read_bed(bed_deadzones)
+    deadzones.read(bed_deadzones)
     peak_regions = peak_regions.subtract(deadzones, whole_region=True)
     
     return peak_regions

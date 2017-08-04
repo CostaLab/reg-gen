@@ -40,7 +40,7 @@ class Intersect:
         """Given a bed file as the background for analysis"""
         # bgbed = GenomicRegionSet(name="Background")
         # if path:
-        #     bgbed.read_bed(path)
+        #     bgbed.read(path)
         #     # nq = []
         #     print("\tTrimming the queries by the given background: "+path)
 
@@ -53,7 +53,7 @@ class Intersect:
 
         if path:
             bg = GenomicRegionSet("background")
-            bg.read_bed(path)
+            bg.read(path)
             self.background = bg
             for ty in self.groupedreference.keys():
                 # self.background[ty] = bg

@@ -12,7 +12,7 @@ import sys
 import shutil
 import ConfigParser
 import traceback
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
+from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
 
 def npath(filename):

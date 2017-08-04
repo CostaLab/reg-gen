@@ -42,7 +42,7 @@ if not os.path.exists(bed_dir):
     
 # Random region
 result = template.random_regions(organism= "hg19", total_size=args.n, multiply_factor=0, overlap_result=True, overlap_input=True, chrom_X=False, chrom_M=False, filter_path=args.f)
-result.write_bed(os.path.join(bed_dir, "00total.bed"))
+result.write(os.path.join(bed_dir, "00total.bed"))
 chrom = GenomicRegionSet("chrom")
 chrom.get_genome_data(organism=args.o, chrom_X=False, chrom_M=False)
             
