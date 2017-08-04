@@ -24,7 +24,7 @@ class Evidence:
     def create_file(self):
         # Expanding summits
         tfbs_summit_regions = GenomicRegionSet("TFBS Summit Regions")
-        tfbs_summit_regions.read_bed(self.tfbs_summit_file)
+        tfbs_summit_regions.read(self.tfbs_summit_file)
 
         for region in iter(tfbs_summit_regions):
             summit = int(region.data.split()[-1]) + region.initial
@@ -33,7 +33,7 @@ class Evidence:
 
         # Calculating intersections
         mpbs_regions = GenomicRegionSet("MPBS Regions")
-        mpbs_regions.read_bed(self.mpbs_file)
+        mpbs_regions.read(self.mpbs_file)
 
         tfbs_summit_regions.sort()
         mpbs_regions.sort()
@@ -53,4 +53,4 @@ class Evidence:
         tfbs_regions.sort()
 
         tfbs_fname = os.path.join(self.output_location, "{}.bed".format(self.output_prefix))
-        tfbs_regions.write_bed(tfbs_fname)
+        tfbs_regions.write(tfbs_fname)

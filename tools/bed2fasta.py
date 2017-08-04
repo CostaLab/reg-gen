@@ -21,7 +21,7 @@ def load_exon_sequence(bed, directory, genome_path):
 
     """
     regionset = GenomicRegionSet("bed")
-    regionset.read_bed(bed)
+    regionset.read(bed)
     regionset.sort()
 
     
@@ -94,7 +94,7 @@ def load_exon_sequence(bed, directory, genome_path):
                         
 
                 else:
-                    print("Warning: The given regions have no block information, please try write_bed_blocks")
+                    print("Warning: The given regions have no block information, please try write_blocks")
                 f.close()
     else:
         pre_id = ""

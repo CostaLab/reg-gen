@@ -302,7 +302,7 @@ def main_matching():
         target_regions.name = "target_regions"
         target_regions.sort()
         output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
-        target_regions.write_bed(output_file_name)
+        target_regions.write(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
 
@@ -317,7 +317,7 @@ def main_matching():
             background_regions.name = "background_regions"
             background_regions.sort()
             output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
-            background_regions.write_bed(output_file_name)
+            background_regions.write(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
 
@@ -337,7 +337,7 @@ def main_matching():
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
-            regions.read_bed(npath(input_filename))
+            regions.read(npath(input_filename))
 
             genomic_regions_dict[name] = regions
 
@@ -387,7 +387,7 @@ def main_matching():
         # Writing random regions
         output_file_name = npath(os.path.join(output_location, random_region_name))
         rand_bed_file_name = output_file_name + ".bed"
-        rand_region.write_bed(rand_bed_file_name)
+        rand_region.write(rand_bed_file_name)
 
         # Verifying condition to write bb
         if options.bigbed:
@@ -467,7 +467,7 @@ def main_matching():
             # FIXME: we can switch to batch matching after the threshold & normalisation are implemented
             # grs = match_multiple(motif_list, sequence, genomic_region)
 
-            grs.write_bed(output_bed_file, mode="a")
+            grs.write(output_bed_file, mode="a")
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
@@ -693,7 +693,7 @@ def main_enrichment():
             regions = GenomicRegionSet(name)
 
             try:
-                regions.read_bed(os.path.abspath(input_filename))
+                regions.read(os.path.abspath(input_filename))
             except:
                 err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
@@ -793,9 +793,9 @@ def main_enrichment():
     ###################################################################################################
 
     background = GenomicRegionSet("background")
-    background.read_bed(background_filename)
+    background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
-    background_mpbs.read_bed(background_mpbs_filename)
+    background_mpbs.read(background_mpbs_filename)
 
     # Evaluating background statistics
     bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background, background_mpbs)
@@ -874,7 +874,7 @@ def main_enrichment():
                 continue
 
             curr_mpbs = GenomicRegionSet("curr_mpbs")
-            curr_mpbs.read_bed(curr_mpbs_bed_name)
+            curr_mpbs.read(curr_mpbs_bed_name)
             curr_mpbs.sort()
 
             ###################################################################################################

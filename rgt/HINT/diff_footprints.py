@@ -175,7 +175,7 @@ class DiffFootprints:
 
     def diff(self, total_tc1, total_tc2):
         mpbs = GenomicRegionSet("Motif Predicted Binding Sites")
-        mpbs.read_bed(self.mpbs_file)
+        mpbs.read(self.mpbs_file)
 
         mpbs_name_list = list(set(mpbs.get_names()))
 

@@ -18,7 +18,7 @@ geneLists=[]
 
 #this should be improved
 bedGenes = GenomicRegionSet(geneFile)
-bedGenes.read_bed(geneFile)
+bedGenes.read(geneFile)
 allgenes=[]
 for r in bedGenes:
  allgenes.append(r.name)
@@ -30,11 +30,11 @@ if len(sys.argv) > 3:
     back=True
     backGroundPeaks = sys.argv[3]
     backBed=GenomicRegionSet("BACK")
-    backBed.read_bed(backGroundPeaks)
+    backBed.read(backGroundPeaks)
 
 
 backBed=GenomicRegionSet("BACK")    
-backBed.read_bed(backGroundPeaks)
+backBed.read(backGroundPeaks)
 backUP=GenomicRegionSet("BACKUP")
 [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(backGroundPeaks,genesets[0],geneFile,genomeFile)
 prop_back=back_mappedGenes/float(len(allgenes))
@@ -57,7 +57,7 @@ for g in genesets:
 '''for g in genesets:
     if back:
         backBed=GenomicRegionSet("BACK")    
-        backBed.read_bed(backGroundPeaks)
+        backBed.read(backGroundPeaks)
         backUP=GenomicRegionSet("BACKUP")
         [back_de_genes,back_de_peak_genes, back_mappedGenes, back_totalPeaks] = backUP.filter_by_gene_association(backGroundPeaks,g,geneFile,genomeFile)
         prop_back=len(backUP)/float(len(backBed))

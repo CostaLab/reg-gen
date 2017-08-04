@@ -34,7 +34,7 @@ class BED_profile:
                     if f.endswith(".bed"):
                         name = os.path.basename(f).replace(".bed", "")
                         bed = GenomicRegionSet(name)
-                        bed.read_bed(os.path.join(dirpath, f))
+                        bed.read(os.path.join(dirpath, f))
                         bed.sort()
                         self.beds.append(bed)
                         self.bednames.append(name)
@@ -47,7 +47,7 @@ class BED_profile:
             if input_path.endswith(".bed"):
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
-                bed.read_bed(input_path)
+                bed.read(input_path)
                 bed.sort()
                 self.beds = [bed]
                 self.bednames = [name]
@@ -269,14 +269,14 @@ class BED_profile:
                 if f.endswith(".bed"):
                     name = os.path.basename(f).replace(".bed", "")
                     bed = GenomicRegionSet(name)
-                    bed.read_bed(os.path.join(ref_dir, f))
+                    bed.read(os.path.join(ref_dir, f))
                     # bed.merge()
                     refs.append(bed)
                     refs_names.append(name)
         elif os.path.isfile(ref_dir) and ref_dir.endswith(".bed"):
             name = os.path.basename(ref_dir).replace(".bed", "")
             bed = GenomicRegionSet(name)
-            bed.read_bed(ref_dir)
+            bed.read(ref_dir)
             # bed.merge()
             refs.append(bed)
             refs_names.append(name)

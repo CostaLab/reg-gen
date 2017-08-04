@@ -19,12 +19,12 @@ genome = GenomeData(args.organism)
 
 if os.path.isfile(args.bed):
     regionset = GenomicRegionSet("bed")
-    regionset.read_bed(args.bed)
+    regionset.read(args.bed)
     gr = regionset.gene_association(organism=args.organism, promoterLength=1000, 
                                     threshDist=500000, show_dis=True)
     regionset.replace_region_name(gr,combine=True)
     
-    regionset.write_bed(args.output)
+    regionset.write(args.output)
 
 elif os.path.isdir(args.bed):
     if not os.path.exists(args.output):
@@ -38,11 +38,11 @@ elif os.path.isdir(args.bed):
                 fn = fnn.partition(".bed")[0]
                 try:
                     regionset = GenomicRegionSet("bed")
-                    regionset.read_bed(os.path.join(args.bed,fnn))
+                    regionset.read(os.path.join(args.bed,fnn))
                     gr = regionset.gene_association(organism=args.organism, promoterLength=1000, 
                                                     threshDist=500000, show_dis=True)
                     regionset.replace_region_name(gr,combine=True)
-                    regionset.write_bed(os.path.join(args.output, fn+"_associated.bed"))
+                    regionset.write(os.path.join(args.output, fn+"_associated.bed"))
                     
                 except:
                     pass

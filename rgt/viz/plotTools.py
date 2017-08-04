@@ -23,7 +23,7 @@ class Venn:
         for gs in self.sets:
             if gs.endswith(".bed"):
                 gregions = GenomicRegionSet(gs)
-                gregions.read_bed(gs)
+                gregions.read(gs)
                 associated_gr = gregions.gene_association(organism=self.organism, 
                     promoterLength=1000, threshDist=0, show_dis=False)
                 genes = []

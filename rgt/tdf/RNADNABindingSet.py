@@ -656,7 +656,7 @@ class RNADNABindingSet:
             dbss = dbss.change_name_by_dict(convert_dict=convert_dict)
         if associated:
             dbss.add_associated_gene_data(organism=associated)
-        dbss.write_bed(filename)
+        dbss.write(filename)
 
     def get_overlapping_regions(self, regionset):
         """Return a GenomicRegionSet which overlapping the given regions"""

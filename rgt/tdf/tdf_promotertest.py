@@ -74,14 +74,14 @@ class PromoterTest:
         if bed and bg:
             self.de_regions = GenomicRegionSet("de genes")
             self.nde_regions = GenomicRegionSet("nde genes")
-            self.de_regions.read_bed(bed)
+            self.de_regions.read(bed)
             self.de_regions.remove_duplicates()
 
             # score
             if score:
                 self.scores = self.de_regions.get_score_dict()
 
-            self.nde_regions.read_bed(bg)
+            self.nde_regions.read(bg)
             self.nde_regions.remove_duplicates()
 
         ####################################################################################
@@ -180,7 +180,7 @@ class PromoterTest:
                 ## Refseq
                     print("   \t" + "Loading from RefSeq annotation")
                     genes = GenomicRegionSet("genes")
-                    genes.read_bed(genome.get_genes_refseq())
+                    genes.read(genome.get_genes_refseq())
                     de_genes = genes.by_names(self.de_gene, load_score=score)
                     self.de_gene = de_genes.get_GeneSet()
                     de_prom = de_genes.get_promoters(length=promoterLength)
@@ -388,7 +388,7 @@ class PromoterTest:
                 output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
             except:
                 output = self.de_regions
-            output.write_bed(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
+            output.write(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
 
             self.txp_de.write_bed(filename=os.path.join(temp, obedp + "_target_promoters_dbs.bed"),
                                   associated=self.organism)
@@ -473,7 +473,7 @@ class PromoterTest:
             rna_regionsets = GenomicRegionSet(name=self.rna_name)
             rna_regionsets.load_from_list(self.rna_regions)
             autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
-            autobinding_loci.write_bed(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
+            autobinding_loci.write(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
 
 
     def dbs_motif(self, outdir):
