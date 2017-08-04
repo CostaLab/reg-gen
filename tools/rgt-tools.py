@@ -964,17 +964,17 @@ if __name__ == "__main__":
 
         # with open(args.target) as f:
         t = GenomicRegionSet("targets")
-        t.read(args.t, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
+        t.read(args.t, io=GRSFileIO.Bed12 if args.block else GRSFileIO.Bed)
 
         # with open(args.i) as fi, open(args.o, "w") as fo:
         input_regions = GenomicRegionSet("input")
-        input_regions.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
+        input_regions.read(args.i, io=GRSFileIO.Bed12 if args.block else GRSFileIO.Bed)
         if args.keep:
             output_regions = input_regions.intersect(t, mode=OverlapType.ORIGINAL)
         else:
             output_regions = input_regions.subtract(t, whole_region=True)
 
-        output_regions.write(args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
+        output_regions.write(args.o, io=GRSFileIO.Bed12 if args.block else GRSFileIO.Bed)
         print("input regions:\t"+str(len(input_regions)))
         print("target regions:\t" + str(len(t)))
         print("output regions:\t" + str(len(output_regions)))
@@ -1325,7 +1325,7 @@ if __name__ == "__main__":
     elif args.mode == "bed12tobed6":
         print(tag + ": [BED] Convert BED12 to BED6")
         bed = GenomicRegionSet(args.i)
-        bed.read(args.i, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
+        bed.read(args.i, io=GRSFileIO.Bed12)
         bed.write(args.o)
 
 
