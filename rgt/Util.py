@@ -12,7 +12,11 @@ import sys
 import shutil
 import ConfigParser
 import traceback
-from optparse import OptionParser,BadOptionError,AmbiguousOptionError
+from optparse import OptionParser, BadOptionError, AmbiguousOptionError
+
+# Internal
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 
 def npath(filename):
@@ -1061,3 +1065,195 @@ def which(program):
             if is_exe(exe_file):
                 return exe_file
     return None
+
+
+class GRSFileIO:
+    class BedFile:
+        """
+        Each row maps to a GenomicRegion.
+
+        Note: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion.
+              All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion.
+              The numbers in parentheses are the columns of the BED format.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                error_line = 0  # Count error line
+                for line in f:
+                    line = line.strip("\n")
+                    line = line.split()
+                    try:
+                        name, orientation, data = None, None, None
+                        size = len(line)
+                        chrom = line[0]
+                        start, end = int(line[1]), int(line[2])
+
+                        if start > end:
+                            start, end = end, start
+                        if size > 3:
+                            name = line[3]
+
+                        if size > 5:
+                            orientation = line[5]
+                            data = "\t".join([line[4]] + line[6:])
+                        if size == 5:
+                            data = line[4]
+
+                        if start == end:
+                            raise Exception(
+                                "zero-length region: " + grs.chrom + "," + str(grs.initial) + "," + str(grs.final))
+                        g = GenomicRegion(chrom, start, end, name, orientation, data)
+
+                        grs.add(g)
+                    except:
+                        if not line:
+                            continue
+                        else:
+                            error_line += 1
+                            if error_line > 2:
+                                # Skip the first error line which contains the track information
+                                print("Error at line", line, filename)
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+                for gr in grs:
+                    print(gr, file=f)
+
+    class Bed12File:
+        """
+        Bed file with "block information", eg exons.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                error_line = 0  # Count error line
+                for line in f:
+                    line = line.strip("\n")
+                    line = line.split()
+                    try:
+                        name, orientation, data = None, None, None
+                        size = len(line)
+                        chrom = line[0]
+                        start, end = int(line[1]), int(line[2])
+
+                        if start > end:
+                            start, end = end, start
+                        if size > 3:
+                            name = line[3]
+
+                        if size > 5:
+                            orientation = line[5]
+                            data = "\t".join([line[4]] + line[6:])
+                        if size == 5:
+                            data = line[4]
+
+                        if start == end:
+                            raise Exception(
+                                "zero-length region: " + grs.chrom + "," + str(grs.initial) + "," + str(grs.final))
+                        g = GenomicRegion(chrom, start, end, name, orientation, data)
+
+                        if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                            gs = g.extract_blocks()
+                            for gg in gs:
+                                grs.add(gg)
+                        else:
+                            grs.add(g)
+                    except:
+                        if not line:
+                            continue
+                        else:
+                            error_line += 1
+                            if error_line > 2:
+                                # Skip the first error line which contains the track information
+                                print("Error at line", line, filename)
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+
+                blocks = {}
+                for gr in grs:
+                    try:
+                        blocks[gr.name].add(gr)
+                    except:
+                        blocks[gr.name] = GenomicRegionSet(gr.name)
+                        blocks[gr.name].add(gr)
+
+                for name in blocks.keys():
+                    blocks[name].merge()
+                    start = min([g.initial for g in blocks[name]])
+                    end = max([g.final for g in blocks[name]])
+
+                    block_width = []
+                    block_start = []
+                    for g in blocks[name]:
+                        block_width.append(len(g))
+                        block_start.append(g.initial - start)
+                    block_count = len(blocks[name])
+
+                    print("\t".join([blocks[name][0].chrom,
+                                     str(start),
+                                     str(end),
+                                     name,
+                                     "0",
+                                     blocks[name][0].orientation,
+                                     str(start),
+                                     str(end),
+                                     "0",
+                                     str(block_count),
+                                     ",".join([str(w) for w in block_width]),
+                                     ",".join([str(s) for s in block_start])]), file=f)
+
+    class BedGraphFile:
+        """
+        BedGraph format, read-only.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                for line in f:
+                    try:
+                        line = line.strip("\n")
+                        line = line.split("\t")
+                        assert len(line) == 4
+
+                        chrom, start, end, data = line[0], int(line[1]), int(line[2]), str(line[3])
+
+                        grs.add(GenomicRegion(chrom=chrom, initial=start, final=end, data=data))
+                    except:
+                        print("Error at line", line, filename)
+
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            raise NotImplementedError
+
+    class FastaFile:
+        @staticmethod
+        def read_to_grs(grs, filename):
+            raise NotImplementedError
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+                for r in grs:
+                    try:
+                        f.write(">" + r.chrom + ":" + str(r.initial) + "-" + str(r.final) + "-" +
+                                str(r.orientation) + "\n" + r.sequence.seq + "\n")
+                    except:
+                        pass
+

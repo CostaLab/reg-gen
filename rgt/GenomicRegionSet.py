@@ -23,8 +23,7 @@ from collections import OrderedDict
 from rgt.SequenceSet import *
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
-from rgt.Util import GenomeData, OverlapType, Library_path
-from rgt.FileIO import BedFile
+from rgt.Util import GenomeData, OverlapType, Library_path, GRSFileIO
 
 ###############################################################################
 # Class
@@ -37,10 +36,17 @@ class GenomicRegionSet:
         - name -- Name of the GenomicRegionSet
     """
 
-    def __init__(self, name):
+    def __init__(self, name, io=GRSFileIO.BedFile):
         self.name = name
         self.sequences = []
         self.sorted = False
+        self.io = io
+
+    def read(self, filename):
+        self.io.read_to_grs(self, filename)
+
+    def write(self, filename, mode="w"):
+        self.io.write_from_grs(self, filename, mode)
 
     def get_chrom(self):
         """Return all chromosomes."""
@@ -173,10 +179,6 @@ class GenomicRegionSet:
         seq.read_regions(regionset=self, genome_fasta=genome_fasta, ex=ex)
         return seq
 
-    def motif_composition(self, organism):
-        genome = GenomeData(organism)
-        seqDict = self.get_sequences(genome_fasta=genome.get_genome())
-
     def random_subregions(self, size, name=None):
         """Return a subsampling of the genomic region set with a specific number of regions.
 
@@ -245,8 +247,7 @@ class GenomicRegionSet:
             genome = GenomeData(organism)
 
             genes = GenomicRegionSet("genes")
-            bed = BedFile(genome.get_gene_regions())
-            bed.read(genes)
+            genes.read(genome.get_gene_regions())
 
             if gene_set:
                 new_genes = GenomicRegionSet("genes")
@@ -1468,8 +1469,7 @@ class GenomicRegionSet:
         chrom_list = chrom_map.get_chrom()
         if filter_path:
             filter_map = GenomicRegionSet('filter')
-            bed = BedFile(filter_path)
-            bed.read(filter_map)
+            filter_map.read(filter_path)
             chrom_map = chrom_map.subtract(filter_map)
 
         if overlap_input:
