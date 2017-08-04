@@ -47,7 +47,7 @@ def get_experimental_matrix(bams, bed):
     m.names = np.array(['housekeep'] + names)
     m.types = np.array(['regions'] + ['reads']*len(names))
     g = GenomicRegionSet('RegionSet')
-    g.read_bed(bed)
+    g.read(bed)
     m.objectsDict['housekeep'] = g
     
     return m

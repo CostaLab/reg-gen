@@ -63,7 +63,7 @@ class Plot:
         num_sites = 0
 
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-        mpbs_regions.read_bed(self.motif_file)
+        mpbs_regions.read(self.motif_file)
 
         bam = Samfile(self.reads_file, "rb")
 
@@ -234,7 +234,7 @@ class Plot:
     #     num_sites = 0
     #
     #     mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-    #     mpbs_regions.read_bed(self.motif_file)
+    #     mpbs_regions.read(self.motif_file)
     #
     #     bam = Samfile(self.reads_file, "rb")
     #
@@ -520,7 +520,7 @@ class Plot:
         num_sites = 0
 
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-        mpbs_regions.read_bed(self.motif_file)
+        mpbs_regions.read(self.motif_file)
 
         bam = Samfile(self.reads_file, "rb")
 
@@ -780,7 +780,7 @@ class Plot:
 
         num_sites = 0
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-        mpbs_regions.read_bed(self.motif_file)
+        mpbs_regions.read(self.motif_file)
         bam = Samfile(self.reads_file, "rb")
 
         mean_signal_raw = np.zeros(self.window_size)
@@ -1021,7 +1021,7 @@ class Plot:
         signal_raw_f = np.zeros(self.window_size)
         signal_raw_r = np.zeros(self.window_size)
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-        mpbs_regions.read_bed(self.motif_file)
+        mpbs_regions.read(self.motif_file)
         bam = Samfile(self.reads_file, "rb")
 
         num_sites = 0

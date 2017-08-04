@@ -4,30 +4,222 @@ GenomicRegionSet
 GenomicRegionSet represent a list of GenomicRegions.
 
 """
+
 ###############################################################################
 # Libraries
 ###############################################################################
+
 # Python
 from __future__ import print_function
 from __future__ import division
-import os
 import sys
-import pysam
 import random
 from ctypes import *
 from scipy import stats
 from copy import deepcopy
 from collections import OrderedDict
+
 # Internal
 from rgt.SequenceSet import *
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
-from rgt.Util import GenomeData, OverlapType, AuxiliaryFunctions, Library_path
-
+from rgt.Util import GenomeData, OverlapType, Library_path
 
 ###############################################################################
 # Class
 ###############################################################################
+
+
+class GRSFileIO:
+    class Bed:
+        """
+        Each row maps to a GenomicRegion.
+
+        Note: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion.
+              All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion.
+              The numbers in parentheses are the columns of the BED format.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                error_line = 0  # Count error line
+                for line in f:
+                    line = line.strip("\n")
+                    line = line.split()
+                    try:
+                        name, orientation, data = None, None, None
+                        size = len(line)
+                        chrom = line[0]
+                        start, end = int(line[1]), int(line[2])
+
+                        if start > end:
+                            start, end = end, start
+                        if size > 3:
+                            name = line[3]
+
+                        if size > 5:
+                            orientation = line[5]
+                            data = "\t".join([line[4]] + line[6:])
+                        if size == 5:
+                            data = line[4]
+
+                        if start == end:
+                            raise Exception(
+                                "zero-length region: " + grs.chrom + "," + str(grs.initial) + "," + str(grs.final))
+                        g = GenomicRegion(chrom, start, end, name, orientation, data)
+
+                        grs.add(g)
+                    except:
+                        if not line:
+                            continue
+                        else:
+                            error_line += 1
+                            if error_line > 2:
+                                # Skip the first error line which contains the track information
+                                print("Error at line", line, filename)
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+                for gr in grs:
+                    print(gr, file=f)
+
+    class Bed12:
+        """
+        Bed file with "block information", eg exons.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                error_line = 0  # Count error line
+                for line in f:
+                    line = line.strip("\n")
+                    line = line.split()
+                    try:
+                        name, orientation, data = None, None, None
+                        size = len(line)
+                        chrom = line[0]
+                        start, end = int(line[1]), int(line[2])
+
+                        if start > end:
+                            start, end = end, start
+                        if size > 3:
+                            name = line[3]
+
+                        if size > 5:
+                            orientation = line[5]
+                            data = "\t".join([line[4]] + line[6:])
+                        if size == 5:
+                            data = line[4]
+
+                        if start == end:
+                            raise Exception(
+                                "zero-length region: " + grs.chrom + "," + str(grs.initial) + "," + str(grs.final))
+                        g = GenomicRegion(chrom, start, end, name, orientation, data)
+
+                        if size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
+                            gs = g.extract_blocks()
+                            for gg in gs:
+                                grs.add(gg)
+                        else:
+                            grs.add(g)
+                    except:
+                        if not line:
+                            continue
+                        else:
+                            error_line += 1
+                            if error_line > 2:
+                                # Skip the first error line which contains the track information
+                                print("Error at line", line, filename)
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+
+                blocks = {}
+                for gr in grs:
+                    try:
+                        blocks[gr.name].add(gr)
+                    except:
+                        blocks[gr.name] = GenomicRegionSet(gr.name)
+                        blocks[gr.name].add(gr)
+
+                for name in blocks.keys():
+                    blocks[name].merge()
+                    start = min([g.initial for g in blocks[name]])
+                    end = max([g.final for g in blocks[name]])
+
+                    block_width = []
+                    block_start = []
+                    for g in blocks[name]:
+                        block_width.append(len(g))
+                        block_start.append(g.initial - start)
+                    block_count = len(blocks[name])
+
+                    print("\t".join([blocks[name][0].chrom,
+                                     str(start),
+                                     str(end),
+                                     name,
+                                     "0",
+                                     blocks[name][0].orientation,
+                                     str(start),
+                                     str(end),
+                                     "0",
+                                     str(block_count),
+                                     ",".join([str(w) for w in block_width]),
+                                     ",".join([str(s) for s in block_start])]), file=f)
+
+    class BedGraph:
+        """
+        BedGraph format, read-only.
+        """
+
+        @staticmethod
+        def read_to_grs(grs, filename):
+            with open(filename) as f:
+                for line in f:
+                    try:
+                        line = line.strip("\n")
+                        line = line.split("\t")
+                        assert len(line) == 4
+
+                        chrom, start, end, data = line[0], int(line[1]), int(line[2]), str(line[3])
+
+                        grs.add(GenomicRegion(chrom=chrom, initial=start, final=end, data=data))
+                    except:
+                        print("Error at line", line, filename)
+
+                grs.sort()
+
+            return grs
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            raise NotImplementedError
+
+    class Fasta:
+        @staticmethod
+        def read_to_grs(grs, filename):
+            raise NotImplementedError
+
+        @staticmethod
+        def write_from_grs(grs, filename, mode="w"):
+            with open(filename, mode) as f:
+                for r in grs:
+                    try:
+                        f.write(">" + r.chrom + ":" + str(r.initial) + "-" + str(r.final) + "-" +
+                                str(r.orientation) + "\n" + r.sequence.seq + "\n")
+                    except:
+                        pass
+
 
 class GenomicRegionSet:
     """*Keyword arguments:*
@@ -39,12 +231,16 @@ class GenomicRegionSet:
         self.name = name
         self.sequences = []
         self.sorted = False
-        self.fileName = ""
-        # self.genome_path = ""
+
+    def read(self, filename, io=GRSFileIO.Bed):
+        io.read_to_grs(self, filename)
+
+    def write(self, filename, mode="w", io=GRSFileIO.Bed):
+        io.write_from_grs(self, filename, mode)
 
     def get_chrom(self):
         """Return all chromosomes."""
-        return [r.chrom for r in self.sequences]
+        return [r.chrom for r in self]
 
     def get_names(self):
         """Return a list of all region names. If the name is None, it return the region string."""
@@ -85,7 +281,7 @@ class GenomicRegionSet:
 
         if percentage:
             if percentage > -50:
-                for s in self.sequences:
+                for s in self:
                     if w_return:
                         z.add(s.extend(int(len(s) * left / 100), int(len(s) * right / 100), w_return=True))
                     else:
@@ -94,7 +290,7 @@ class GenomicRegionSet:
                 print("Percentage for extension must be larger than 50%%.")
                 sys.exit(0)
         else:
-            for s in self.sequences:
+            for s in self:
                 if w_return:
                     z.add(s.extend(left, right, w_return=True))
                 else:
@@ -113,7 +309,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=length, right=0, w_return=True))
@@ -137,7 +333,7 @@ class GenomicRegionSet:
             - length -- Extending length
         """
         z = GenomicRegionSet(name=self.name)
-        for s in self.sequences:
+        for s in self:
             if w_return:
                 if s.orientation == "+":
                     z.add(s.extend(left=0, right=length, w_return=True))
@@ -167,135 +363,11 @@ class GenomicRegionSet:
             self.sequences.sort(cmp=GenomicRegion.__cmp__)
             self.sorted = True
 
-    def read_bed(self, filename, bed12=False):
-        """Read BED file and add every row as a GenomicRegion.
-
-        *Keyword arguments:*
-
-            - filename -- define the path to the BED file.
-
-            .. note:: Chrom (1), start (2), end (2), name (4) and orientation (6) is used for GenomicRegion. All other columns (5, 7, 8, ...) are put to the data attribute of the GenomicRegion. The numbers in parentheses are the columns of the BED format.
-        """
-        self.fileName = filename
-        with open(filename) as f:
-            error_line = 0  # Count error line
-            for line in f:
-                line = line.strip("\n")
-                line = line.split()
-                try:
-                    name, orientation, data = None, None, None
-                    size = len(line)
-                    chrom = line[0]
-                    start, end = int(line[1]), int(line[2])
-
-                    if start > end:
-                        start, end = end, start
-                    if size > 3:
-                        name = line[3]
-
-                    if size > 5:
-                        orientation = line[5]
-                        data = "\t".join([line[4]] + line[6:])
-                    if size == 5:
-                        data = line[4]
-
-                    if start == end:
-                        raise Exception("zero-length region: " + self.chrom + "," + str(self.initial) + "," + str(self.final))
-                    g = GenomicRegion(chrom, start, end, name, orientation, data)
-
-                    if bed12 and size == 12 and int(line[6]) and int(line[7]) and int(line[9]):
-                        gs = g.extract_blocks()
-                        for gg in gs:
-                            self.add(gg)
-                    else:
-                        self.add(g)
-                except:
-                    if line == []:
-                        continue
-                    else:
-                        error_line += 1
-                        if error_line > 2:
-                            # Skip the first error line which contains the track information
-                            print("Error at line", line, self.fileName)
-            self.sort()
-
-    # def read_sequence(self, genome_file_dir):
-    #     """Read the sequences defined by a given genomic set.s
-    #     *Keyword arguments:*
-    #
-    #         - genomic_set - genomic set with regions to obtain the fasta file
-    #         - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
-    #     """
-    #
-    #     bed=self
-    #     # Parse each chromosome and fetch the defined region in this chromosome
-    #     chroms = list(set(bed.get_chrom()))
-    #
-    #     chro_files = [x.split(".")[0] for x in os.listdir(genome_file_dir)]
-    #
-    #     for ch in chroms:
-    #         if ch not in chro_files: print(" *** There is no genome FASTA file for: "+ch)
-    #
-    #         # Read genome in FASTA according to the given chromosome
-    #         ch_seq = SequenceSet(name=ch, seq_type=SequenceType.DNA)
-    #         try:
-    #             ch_seq.read_fasta(os.path.join(genome_file_dir, ch+".fa"))
-    #         except:
-    #             continue
-    #
-    #         # Regions in given chromosome
-    #         beds = bed.any_chrom(chrom=ch)
-    #
-    #         for s in beds:
-    #             seq = ch_seq[0].seq[s.initial:s.final]
-    #             try: strand = s.strand
-    #             except: strand = "+"
-    #             s.sequence=(Sequence(seq=seq, name=s.__repr__(), strand=strand))
-
-    def write_sequence(self, out_file):
-        """Write the sequences defined by a given genomic set. 
-        *Keyword arguments:*
-            - genome_file_dir -- A directory which contains the FASTA files for each chromosome.
-        """
-        f=open(out_file,"w")
-        for r in self:
-          try:
-            f.write(">"+r.chrom+":"+str(r.initial)+"-"+str(r.final)+"-"+str(r.orientation)+"\n"+r.sequence.seq+"\n")
-          except:
-            pass
-
     def get_sequences(self, genome_fasta, ex=0):
         """Return SequenceSet according to the given regions and genome"""
         seq = SequenceSet(name=self.name, seq_type="DNA")
         seq.read_regions(regionset=self, genome_fasta=genome_fasta, ex=ex)
         return seq
-
-    def motif_composition(self, organism):
-        genome = GenomeData(organism)
-        seqDict = self.get_sequences(genome_fasta=genome.get_genome())
-
-    def read_bedgraph(self, filename):
-        """Read BEDGRAPH file and add every row as a GenomicRegion.
-
-        *Keyword arguments:*
-
-            - filename -- define the path to the BEDGRAPH file.
-        """
-        self.fileName = filename
-        with open(filename) as f:
-            for line in f:
-                try:
-                    line = line.strip("\n")
-                    line = line.split("\t")
-                    assert len(line) == 4
-
-                    chrom, start, end, data = line[0], int(line[1]), int(line[2]), str(line[3])
-
-                    self.add(GenomicRegion(chrom=chrom, initial=start, final=end, data=data))
-                except:
-                    print("Error at line", line, self.fileName)
-
-            self.sort()
 
     def random_subregions(self, size, name=None):
         """Return a subsampling of the genomic region set with a specific number of regions.
@@ -326,332 +398,9 @@ class GenomicRegionSet:
             else:
                 b.add(self.sequences[i])
         return a, b
-
-    def write_bed(self, filename, bed12=False, mode="w"):
-        """Write GenomicRegions to BED file.
-
-        *Keyword arguments:*
-
-            - filename -- define the path to the BED file.
-            - bed12 --
-            - mode -- meaningful values are either "w", to truncate the file before writing, or "a" to append.
-        """
-        if bed12:
-            self.write_bed_blocks(filename)
-        else:
-            with open(filename, mode) as f:
-                for s in self:
-                    print(s, file=f)
-
-    def gene_association_old(self, gene_set=None, organism="hg19", promoterLength=1000,
-                         threshDist=50000, show_dis=False, strand_specific=False):
-        """Associates coordinates to genes given the following rules:
-        
-            1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
-            2. If a peak is inside overlapping genes, then the peak is annotated with both genes.
-            3. If peak is between two genes (not overlapping neither), then both genes are annotated.
-            4. If the distance between peak and gene is greater than a threshold distance, then it is not annotated.
-
-        *Keyword arguments:*
-
-            - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
-            - organism -- Organism in order to fetch genomic data. (default hg19)
-            - promoterLength -- Length of the promoter region. (default 1000)
-            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
-            - show_dis -- Show distance to the closest genes in parentheses.
-
-        *Return:*
-
-            - result_grs -- GenomicRegionSet exactly as self, but with the following additional information:
-                
-                1. name: String of genes associated with that coordinate separated by ':'
-                2. data: String of proximity information (if the coordinate matched to the corresponding gene in the previous list in a proximal position (PROX) or distal position (DIST)) separated by ':'
-                
-                The gene will contain a '.' in the beginning of its name if it is not in the gene_set given.
-        """
-
-        # Initializations
-        chromosome_list = list(set(self.get_chrom()))
-        genome_data = GenomeData(organism)
-
-        # Separating coordinates by chromosomes
-        coord_dict = dict([(chrom, []) for chrom in chromosome_list])
-        for gr in self.sequences:
-            coord_dict[gr.chrom].append([gr.initial, gr.final, gr.name, gr.data, gr.orientation])
-
-        # Sorting coord_dict
-        for chrom in coord_dict.keys():
-            coord_dict[chrom] = sorted(coord_dict[chrom], key=lambda x: x[0])
-
-        # Reading assocDict
-        gene_regions = GenomicRegionSet("gene_regions")
-        gene_regions.read_bed(genome_data.get_gene_regions())
-        assocDict = dict()
-        geneFlagDict = dict()
-        for gr in gene_regions:
-            curr_gene_name = gr.name.upper()
-            geneFlagDict[curr_gene_name] = False
-            curr_region = [gr.initial, gr.final, curr_gene_name, 0, gr.orientation]
-            try:
-                assocDict[gr.chrom].append(curr_region)
-            except Exception:
-                assocDict[gr.chrom] = [curr_region]
-
-        # Sorting assocDict
-        for chrom in assocDict.keys():
-            assocDict[chrom] = sorted(assocDict[chrom], key=lambda x: x[0])
-
-        # Updating assocDict to contain all chromosomes in coord_dict
-        for chrom in chromosome_list:
-            if(chrom not in assocDict.keys()):
-                assocDict[chrom] = []
-
-        # Updating geneFlagDict based on gene_set
-        if(gene_set):
-            gene_list = [g.upper() for g in gene_set.genes]
-            for e in gene_list:
-                geneFlagDict[e] = True
-        else:
-            for e in geneFlagDict.keys():
-                geneFlagDict[e] = True
-
-        # Associating coord_dict with assocDict
-        aDict = dict()  # Results dictionary
-        for chrName in chromosome_list:
-
-            aDict[chrName] = []  # Adding new result list
-            counter = 0  # Counter to run through gene list
-
-            # Iterating on coordinate list (main list)
-            for coord in coord_dict[chrName]:
-
-                didBreak = False  # Check wether it breaked or not.
-
-                # Running linearly through gene list
-                while(counter < len(assocDict[chrName])):
-
-                    # Extend the gene coordinates to encompass promoter region based on strandness
-                    if(assocDict[chrName][counter][4] == "+"):
-                        geneCoord = [assocDict[chrName][counter][0] - promoterLength, assocDict[chrName][counter][1],
-                                     assocDict[chrName][counter][4]]
-                    else:
-                        geneCoord = [assocDict[chrName][counter][0], assocDict[chrName][counter][1] + promoterLength,
-                                     assocDict[chrName][counter][4]]
-
-                    check = AuxiliaryFunctions.overlap(coord, geneCoord, strand_specific=strand_specific)  # Check overlap between coordinate and gene+promoter
-                    if(check == 0):  # If contain overlap, then check if the coordinate also contains overlap with the next gene
-
-                        # Verify if next gene+promoter also overlap
-                        genesList = [assocDict[chrName][counter][2] + "_PROX"]  # List of overlapping genes
-
-                        if show_dis:
-                            dis1 = abs(coord[0] - assocDict[chrName][counter][1])
-                            dis2 = abs(coord[1] - assocDict[chrName][counter][0])
-                            if coord[1] < assocDict[chrName][counter][0]:
-                                dis_list = ["+"+str(min(dis1, dis2))]
-                            elif coord[0] > assocDict[chrName][counter][1]:
-                                dis_list = ["-"+str(min(dis1, dis2))]
-                            else:
-                                dis_list = [""]
-
-                        if(counter < len(assocDict[chrName]) - 1):  # If this is not the last gene (there is a 'next') then verify overlap
-                            if(assocDict[chrName][counter + 1][4] == "+"):
-                                geneCoordNext = [assocDict[chrName][counter + 1][0] - promoterLength,
-                                                 assocDict[chrName][counter + 1][1],
-                                                 assocDict[chrName][counter][4]]
-                            else:
-                                geneCoordNext = [assocDict[chrName][counter + 1][0],
-                                                 assocDict[chrName][counter + 1][1] + promoterLength,
-                                                 assocDict[chrName][counter][4]]
-                            checkNext = AuxiliaryFunctions.overlap(coord, geneCoordNext, strand_specific=strand_specific)  # Verify overlap between coordinate and next gene
-
-                            if(checkNext == 0):
-                                genesList.append(assocDict[chrName][counter + 1][2] + "_PROX")  # If there is an overlap then add this gene to association list
-                                if show_dis:
-                                    dis1 = abs(coord[0] - assocDict[chrName][counter+1][1])
-                                    dis2 = abs(coord[1] - assocDict[chrName][counter+1][0])
-                                    if coord[1] < assocDict[chrName][counter+1][0]:
-                                        dis_list.append("+"+str(min(dis1, dis2)))
-                                    elif coord[0] > assocDict[chrName][counter+1][1]:
-                                        dis_list.append("-"+str(min(dis1, dis2)))
-                                    else:
-                                        dis_list.append("")
-                        #else: # If this is the last gene (there is no 'next') then dont verify overlap
-
-                        # Verify if genes are enriched
-                        for i in range(0, len(genesList)):  # Check if genes in genesList are enriched
-                            if(not geneFlagDict[genesList[i][:-5]]):
-                                genesList[i] = "."+genesList[i]  # If the gene is not enriched, put a dot (.) in front of it (will be used by motif matching)
-                            #else: If gene is enriched than let the name without the dot (.) in front of it
-                        didBreak = True
-                        break
-
-                    elif (check == 2):  # If contain overlap (opposite strand), then check if the coordinate also contains overlap with the next gene
-                        # Verify overlap again using maximum distance with current gene+promoter
-                        genesList = []  # List of overlapping genes
-                        if show_dis: dis_list = []
-                        maxGeneCoord = [geneCoord[0] - threshDist, geneCoord[1] + threshDist]
-                        maxCheck = AuxiliaryFunctions.overlap(coord, maxGeneCoord)
-                        if (maxCheck == 0):
-                            genesList.append(assocDict[chrName][counter][
-                                                 2] + "_DIST")  # If it overlapped then put current gene in overlap list
-                            if show_dis:
-                                dis1 = abs(coord[0] - assocDict[chrName][counter][1])
-                                dis2 = abs(coord[1] - assocDict[chrName][counter][0])
-                                if coord[1] < assocDict[chrName][counter][0]:
-                                    dis_list.append("+" + str(min(dis1, dis2)))
-                                elif coord[0] > assocDict[chrName][counter][1]:
-                                    dis_list.append("-" + str(min(dis1, dis2)))
-                                else:
-                                    dis_list.append("")
-                        # Verify overlap again using maximum distance with previous gene+promoter
-                        if (counter > 0):  # Do this verification only if this is not the first gene
-                            if (assocDict[chrName][counter - 1][4] == "+"):
-                                geneCoordPrev = [assocDict[chrName][counter - 1][0] - promoterLength,
-                                                 assocDict[chrName][counter - 1][1]]
-                            else:
-                                geneCoordPrev = [assocDict[chrName][counter - 1][0],
-                                                 assocDict[chrName][counter - 1][1] + promoterLength]
-                            maxGeneCoordPrev = [geneCoordPrev[0] - threshDist, geneCoordPrev[1] + threshDist]
-                            maxCheckPrev = AuxiliaryFunctions.overlap(coord, maxGeneCoordPrev)
-
-                            if (maxCheckPrev == 0):
-                                genesList.append(assocDict[chrName][counter - 1][
-                                                     2] + "_DIST")  # If it overlapped then put previous gene in overlap list
-                                if show_dis:
-                                    dis1 = abs(coord[0] - assocDict[chrName][counter - 1][1])
-                                    dis2 = abs(coord[1] - assocDict[chrName][counter - 1][0])
-                                    if coord[1] < assocDict[chrName][counter - 1][0]:
-                                        dis_list.append("+" + str(min(dis1, dis2)))
-                                    elif coord[0] > assocDict[chrName][counter - 1][1]:
-                                        dis_list.append("-" + str(min(dis1, dis2)))
-                                    else:
-                                        dis_list.append("")
-                        # Verify if genes are enriched
-                        if (len(genesList) == 0):
-                            genesList.append(".")  # If genesList is empty then put a '.' to represent non-association
-                            if show_dis: dis_list.append(None)
-                        else:  # If genesList is not empty then verify enriched genes
-                            for i in range(0, len(genesList)):  # Check if genes in genesList are enriched
-                                if (not geneFlagDict[genesList[i][:-5]]): genesList[i] = "." + genesList[
-                                    i]  # If the gene is not enriched, put a dot (.) in front of it (will be used by motif matching)
-                                # else: If gene is enriched than let the name without the dot (.) in front of it
-                        didBreak = True
-                        break
-
-                    elif(check == -1):  # If gene is after coordinate, then check if they are within maximum distance for overlap. Also do the same check for the previous gene.
-
-                        # Verify overlap again using maximum distance with current gene+promoter
-                        genesList = []  # List of overlapping genes
-                        if show_dis: dis_list = []
-                        maxGeneCoord = [geneCoord[0] - threshDist,geneCoord[1] + threshDist]
-                        maxCheck = AuxiliaryFunctions.overlap(coord, maxGeneCoord)
-                        if(maxCheck == 0):
-                            genesList.append(assocDict[chrName][counter][2]+"_DIST")  # If it overlapped then put current gene in overlap list
-                            if show_dis:
-                                dis1 = abs(coord[0] - assocDict[chrName][counter][1])
-                                dis2 = abs(coord[1] - assocDict[chrName][counter][0])
-                                if coord[1] < assocDict[chrName][counter][0]:
-                                    dis_list.append("+"+str(min(dis1, dis2)))
-                                elif coord[0] > assocDict[chrName][counter][1]:
-                                    dis_list.append("-"+str(min(dis1, dis2)))
-                                else: dis_list.append("")
-                        # Verify overlap again using maximum distance with previous gene+promoter
-                        if(counter > 0):  # Do this verification only if this is not the first gene
-                            if(assocDict[chrName][counter-1][4] == "+"): geneCoordPrev = [assocDict[chrName][counter-1][0]-promoterLength,assocDict[chrName][counter-1][1]]
-                            else: geneCoordPrev = [assocDict[chrName][counter-1][0], assocDict[chrName][counter-1][1]+promoterLength]
-                            maxGeneCoordPrev = [geneCoordPrev[0]-threshDist, geneCoordPrev[1]+threshDist]
-                            maxCheckPrev = AuxiliaryFunctions.overlap(coord, maxGeneCoordPrev)
-
-                            if(maxCheckPrev == 0):
-                                genesList.append(assocDict[chrName][counter-1][2]+"_DIST")  # If it overlapped then put previous gene in overlap list
-                                if show_dis:
-                                    dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
-                                    dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
-                                    if coord[1] < assocDict[chrName][counter-1][0]:
-                                        dis_list.append("+"+str(min(dis1, dis2)))
-                                    elif coord[0] > assocDict[chrName][counter-1][1]:
-                                        dis_list.append("-"+str(min(dis1, dis2)))
-                                    else: dis_list.append("")
-                        # Verify if genes are enriched
-                        if(len(genesList) == 0):
-                            genesList.append(".") # If genesList is empty then put a '.' to represent non-association
-                            if show_dis: dis_list.append(None)
-                        else: # If genesList is not empty then verify enriched genes
-                            for i in range(0,len(genesList)): # Check if genes in genesList are enriched 
-                                if(not geneFlagDict[genesList[i][:-5]]): genesList[i] = "."+genesList[i] # If the gene is not enriched, put a dot (.) in front of it (will be used by motif matching)
-                                #else: If gene is enriched than let the name without the dot (.) in front of it
-                        didBreak = True
-                        break
-
-                    #elif(check == -1): If gene is before coordinate, dont do anything! Just move to the next gene.
-                    counter += 1
-
-                # If not breaked, then the gene list is over and the coordinate can only overlap the last gene.
-                if(not didBreak): 
-                    genesList = []
-                    if show_dis: dis_list = []
-                    if(len(assocDict[chrName]) == 0): # If gene list is empty then dont associate coordinate with any gene
-                        genesList.append(".")
-                        if show_dis: dis_list.append(None)
-                    else: # If gene list is not empty then try to verify overlap between coordinate and last gene
-                        if(assocDict[chrName][counter-1][4] == "+"): geneCoordPrev = [assocDict[chrName][counter-1][0]-promoterLength,assocDict[chrName][counter-1][1]]
-                        else: geneCoordPrev = [assocDict[chrName][counter-1][0],assocDict[chrName][counter-1][1]+promoterLength]
-                        maxGeneCoordPrev = [geneCoordPrev[0]-threshDist,geneCoordPrev[1]+threshDist]
-                        maxCheckPrev = AuxiliaryFunctions.overlap(coord,maxGeneCoordPrev)
-                        if(maxCheckPrev == 0): # If it overlapped then put previous gene in overlap list and check for enrichment
-                            genesList.append(assocDict[chrName][counter-1][2]+"_DIST")
-                            if(not geneFlagDict[genesList[0][:-5]]): genesList[0] = "."+genesList[0]
-                            if show_dis:
-                                dis1 = abs(coord[0] - assocDict[chrName][counter-1][1])
-                                dis2 = abs(coord[1] - assocDict[chrName][counter-1][0])
-                                if coord[1] < assocDict[chrName][counter-1][0]: 
-                                    dis_list.append("+"+str(min(dis1, dis2)))
-                                elif coord[0] > assocDict[chrName][counter-1][1]: 
-                                    dis_list.append("-"+str(min(dis1, dis2)))
-                                else: 
-                                    dis_list.append("")
-                        else: 
-                            genesList.append(".") # If does not overlap then put a '.' to represent non-association
-                            if show_dis: dis_list.append(None)
-                # Write the curent coordinate with its corresponding overlapping genes (enriched or not)
-                aDict[chrName].append(coord[:5]) # Writing the raw coordinate until STRAND field only
-                aDict[chrName][-1][2] = ":".join(genesList) # Write list of overlapping genes
-                if show_dis: 
-                    aDict[chrName][-1].append(dis_list)
-                #aDict[chrName][-1][3] = 0 # Force the SCORE field to be '0' # EG
-                #aDict[chrName][-1][4] = "." # Force the STRAND field to be '.' # EG
-        # Converting aDict to genomic region set
-        result_grs = GenomicRegionSet(self.name+"_associated")
-        for chrom in aDict.keys():
-            for coord in aDict[chrom]:
-                curr_genes_list = coord[2].split(":")
-                new_genes_list = []
-                new_prox_list = []
-                for curr_gene in curr_genes_list:
-                    if(curr_gene == "."):
-                        new_genes_list.append(curr_gene)
-                        new_prox_list.append(curr_gene)
-                    else:
-                        new_genes_list.append("_".join(curr_gene.split("_")[:-1]))
-                        new_prox_list.append(curr_gene.split("_")[-1])
-                if show_dis:
-                    for i, d in enumerate(coord[5]):
-                        if not d: continue
-                        else:
-                            new_genes_list[i] = new_genes_list[i]+"("+d+")"        
-                
-                new_genes_list = ":".join(new_genes_list)
-                new_prox_list = ":".join(new_prox_list)
-
-                result_grs.add(GenomicRegion(chrom, coord[0], coord[1],
-                                             name=new_genes_list, data=coord[3],
-                                             orientation=coord[4], proximity=new_prox_list))
-             
-        return result_grs
-
+    
     def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
-                         threshDist=100000, show_dis=False, strand_specific=False):
+                        threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
@@ -688,7 +437,7 @@ class GenomicRegionSet:
             genome = GenomeData(organism)
 
             genes = GenomicRegionSet("genes")
-            genes.read_bed(genome.get_gene_regions())
+            genes.read(genome.get_gene_regions())
 
             if gene_set:
                 new_genes = GenomicRegionSet("genes")
@@ -823,7 +572,6 @@ class GenomicRegionSet:
 
             return z
 
-
     def filter_by_gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
         """Updates self in order to keep only the coordinates associated to genes which are in gene_set.
         
@@ -858,7 +606,7 @@ class GenomicRegionSet:
         mapped_proxs = [] # Contains all the proximity information of genes associated with the coordinates which are in gene_set
 
         # Iterating on associated genomic regions
-        for gr in assoc_grs.sequences:
+        for gr in assoc_grs:
 
             # If the coordinate wasn't associated with any gene, it is not considered
             if(gr.name == "."): continue
@@ -903,39 +651,6 @@ class GenomicRegionSet:
         self.sorted = False
 
         return all_genes, mapped_genes, all_proxs, mapped_proxs
-
-    def filter_by_gene_association_old(self,fileName,geneSet,geneAnnotation,genomeSize,promoterLength=1000,threshDist=50000):
-        from rgt.motifanalysisold.util import bedFunctions, sort
-        from rgt.motifanalysisold.enrichment.geneAssociation import *
-        self.fileName=fileName
-        regionsToGenes={}
-        coordDict = bedFunctions.createBedDictFromSingleFile(fileName, features=[1,2,3,4,5]) 
-        coordDict = sort.sortBedDictionary(coordDict, field=0)
-        [dictBed,allBed] = geneAssociationByPromoter(coordDict,geneSet,geneAnnotation,genomeSize,promoterLength,threshDist)  
-        #print dictBed
-        genes=[]
-        totalPeaks=0
-        allgenes=[]
-        for chr in dictBed.keys():
-            for (v1,v2,name,orientation,data) in dictBed[chr]:
-                totalPeaks+=1
-                names=name.split(":")
-                keep=[n for n in names if "." not in n]
-                if len(keep) > 0:
-                    self.add(GenomicRegion(chr,v1,v2,":".join(keep)))
-                genes = genes+keep
-                allgenes=allgenes+[n.strip(".") for n in names]
-                regionsToGenes[chr+":"+str(v1)+"-"+str(v2)]=[n.strip(".") for n in names]
-        #print "Total Peaks", total
-        mappedGenes=len(list(set(allgenes)))
-        self.sort()
-        self.genes=list(set(genes))
-        if geneSet == None:
-          le=0
-        else:
-          le=len(geneSet)
-
-        return le, len(self.genes), mappedGenes, totalPeaks,regionsToGenes
 
     def intersect(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         """Return the overlapping regions with three different modes.
@@ -1944,7 +1659,7 @@ class GenomicRegionSet:
         chrom_list = chrom_map.get_chrom()
         if filter_path:
             filter_map = GenomicRegionSet('filter')
-            filter_map.read_bed(filter_path)
+            filter_map.read(filter_path)
             chrom_map = chrom_map.subtract(filter_map)
 
         if overlap_input:
@@ -2429,49 +2144,6 @@ class GenomicRegionSet:
                 z.add(gr)
         return z
 
-    def write_bed_blocks(self, filename):
-        """Write BED file with information of blocks e.g. exons.
-
-        *Keyword arguments:*
-
-            - filename -- Define the filename of the new BED file.
-        """
-        f = open(filename, "w")
-        # z = GenomicRegionSet(self.name)
-        blocks = {}
-        for gr in self:
-            try: blocks[gr.name].add(gr)
-            except: 
-                blocks[gr.name] = GenomicRegionSet(gr.name)
-                blocks[gr.name].add(gr)
-
-        for name in blocks.keys():
-            blocks[name].merge()
-            start = min([ g.initial for g in blocks[name] ])
-            end = max([ g.final for g in blocks[name] ])
-            
-            block_width = []
-            block_start = []
-            for g in blocks[name]:
-                block_width.append(len(g)) 
-                block_start.append(g.initial - start)
-            block_count = len(blocks[name])
-            
-            print("\t".join([ blocks[name][0].chrom,
-                              str(start),
-                              str(end),
-                              name,
-                              "0",
-                              blocks[name][0].orientation,
-                              str(start),
-                              str(end),
-                              "0",
-                              str(block_count),
-                              ",".join([ str(w) for w in block_width ]),
-                              ",".join([ str(s) for s in block_start ])  ]), file = f)
-        
-        f.close()
-
     def coverage_per_region(self, regionset):
         """Return a list of coverage of the given GenomicRegionSet based on the self GenomicRegionSet.
 
@@ -2770,7 +2442,7 @@ class GenomicRegionSet:
         z = self.subtract(y)
         genes = {}
         for r in z:
-            if r.name in genes.keys():
+            if r.name in genes:
                 if keep == "upstream" and r.orientation == "+" and r.initial < genes[r.name].initial:
                     genes[r.name] = r
                 elif keep == "upstream" and r.orientation == "-" and r.final > genes[r.name].final:
@@ -2911,4 +2583,3 @@ class GenomicRegionSet:
                 names.append(".")
 
             return names
-

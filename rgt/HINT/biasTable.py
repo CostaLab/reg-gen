@@ -44,9 +44,7 @@ class BiasTable:
         self.reads_file = reads_file
         if regions_file != None:
             if regions_file.split(".")[-1] == "bed":
-                self.regions.read_bed(regions_file)
-            if regions_file.split(".")[-1] == "fa":
-                self.regions.read_sequence(regions_file)
+                self.regions.read(regions_file)
         self.genome_file = genome_file
         self.k_nb = k_nb
         self.forward_shift = forward_shift

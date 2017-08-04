@@ -74,14 +74,14 @@ class PromoterTest:
         if bed and bg:
             self.de_regions = GenomicRegionSet("de genes")
             self.nde_regions = GenomicRegionSet("nde genes")
-            self.de_regions.read_bed(bed)
+            self.de_regions.read(bed)
             self.de_regions.remove_duplicates()
 
             # score
             if score:
                 self.scores = self.de_regions.get_score_dict()
 
-            self.nde_regions.read_bed(bg)
+            self.nde_regions.read(bg)
             self.nde_regions.remove_duplicates()
 
         ####################################################################################
@@ -180,7 +180,7 @@ class PromoterTest:
                 ## Refseq
                     print("   \t" + "Loading from RefSeq annotation")
                     genes = GenomicRegionSet("genes")
-                    genes.read_bed(genome.get_genes_refseq())
+                    genes.read(genome.get_genes_refseq())
                     de_genes = genes.by_names(self.de_gene, load_score=score)
                     self.de_gene = de_genes.get_GeneSet()
                     de_prom = de_genes.get_promoters(length=promoterLength)
@@ -388,7 +388,7 @@ class PromoterTest:
                 output = self.de_regions.change_name_by_dict(convert_dict=self.ensembl2symbol)
             except:
                 output = self.de_regions
-            output.write_bed(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
+            output.write(filename=os.path.join(temp, obedp + "_target_promoters.bed"))
 
             self.txp_de.write_bed(filename=os.path.join(temp, obedp + "_target_promoters_dbs.bed"),
                                   associated=self.organism)
@@ -408,11 +408,11 @@ class PromoterTest:
             pvalues.append(p)
 
         # correction
-        if len(self.frequency["promoters"]["de"].keys()) > 1:
+        if len(self.frequency["promoters"]["de"]) > 1:
             reject, pvals_corrected = multiple_test_correction(pvalues, alpha=alpha, method='indep')
         else:
             pvals_corrected = pvalues
-        for i, rbs in enumerate(self.frequency["promoters"]["de"].keys()):
+        for i, rbs in enumerate(self.frequency["promoters"]["de"]):
             self.pvalue[rbs] = pvals_corrected[i]
             if pvals_corrected[i] < alpha:
                 self.sig_DBD.append(rbs)
@@ -429,11 +429,11 @@ class PromoterTest:
                 self.hoddsratio[rbs], p = stats.fisher_exact(table, alternative="greater")
                 pvalues.append(p)
             # correction
-            if len(self.frequency["hits"]["de"].keys()) > 1:
+            if len(self.frequency["hits"]["de"]) > 1:
                 reject, pvals_corrected = multiple_test_correction(pvalues, alpha=alpha, method='indep')
             else:
                 pvals_corrected = pvalues
-            for i, rbs in enumerate(self.frequency["hits"]["de"].keys()):
+            for i, rbs in enumerate(self.frequency["hits"]["de"]):
                 self.hpvalue[rbs] = pvals_corrected[i]
                 if pvals_corrected[i] < alpha:
                     self.sig_DBD.append(rbs)
@@ -473,13 +473,13 @@ class PromoterTest:
             rna_regionsets = GenomicRegionSet(name=self.rna_name)
             rna_regionsets.load_from_list(self.rna_regions)
             autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
-            autobinding_loci.write_bed(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
+            autobinding_loci.write(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
 
 
     def dbs_motif(self, outdir):
         self.txp_def.motif_statistics()
-        for i, mode in enumerate(self.txp_def.motifs.keys()):
-            for con in self.txp_def.motifs[mode].keys():
+        for i, mode in enumerate(self.txp_def.motifs):
+            for con in self.txp_def.motifs[mode]:
                 self.stat[mode+"_"+con] = str(self.txp_def.motifs[mode][con])
 
     def uniq_motif(self):
@@ -553,9 +553,9 @@ class PromoterTest:
                                          edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
                 ax.add_patch(rect)
 
-        rects_de = ax.bar([i + 0.15 for i in ind], propor_de, width, color=target_color,
+        rects_de = ax.bar([i + 0.325 for i in ind], propor_de, width, color=target_color,
                           edgecolor="none", label="Target promoters")
-        rects_nde = ax.bar([i + 0.15 + width for i in ind], propor_nde, width, color=nontarget_color,
+        rects_nde = ax.bar([i + 0.325 + width for i in ind], propor_nde, width, color=nontarget_color,
                            edgecolor="none", label="Non-target promoters")
 
         # Legend
@@ -695,17 +695,17 @@ class PromoterTest:
         rank = 0
         self.topDBD = ["-", 1]
 
-        for rbs in self.frequency["promoters"]["de"].keys():
+        for rbs in self.frequency["promoters"]["de"]:
             if self.frequency["promoters"]["de"][rbs][0] < ccf: continue
             rank += 1
             if self.pvalue[rbs] < alpha:
-                p_promoter = "<font color=\"red\">" + value2str(self.pvalue[rbs]) + "</font>"
+                p_promoter = "<font color=\"red\">%s</font>" % (value2str(self.pvalue[rbs]))
             else:
                 p_promoter = value2str(self.pvalue[rbs])
 
             if self.showdbs:
                 if self.hpvalue[rbs] < alpha:
-                    p_hit = "<font color=\"red\">" + value2str(self.hpvalue[rbs]) + "</font>"
+                    p_hit = "<font color=\"red\">%s</font>" % (value2str(self.hpvalue[rbs]))
                 else:
                     p_hit = value2str(self.hpvalue[rbs])
 
@@ -717,9 +717,8 @@ class PromoterTest:
 
             new_row = [str(rank),
                        rbs.str_rna(pa=False),
-                       '<a href="' + "dbds_promoters.html#" + rbs.str_rna() +
-                       '" style="text-align:left">' +
-                       value2str(self.frequency["promoters"]["de"][rbs][0]) + '</a>',
+                       '<a href="dbds_promoters.html#%s" style="text-align:left">%s</a>' %
+                       (rbs.str_rna(), value2str(self.frequency["promoters"]["de"][rbs][0])),
                        value2str(self.frequency["promoters"]["de"][rbs][1]),
                        value2str(self.frequency["promoters"]["nde"][rbs][0]),
                        value2str(self.frequency["promoters"]["nde"][rbs][1]),
@@ -800,7 +799,7 @@ class PromoterTest:
                              "The proportion of promoter covered by binding sites",
                              "Sum up the ranks from left-hand side columns"]
 
-        for rbsm in self.frequency["promoters"]["de"].keys():
+        for rbsm in self.frequency["promoters"]["de"]:
             html.add_heading("DNA Binding Domain: " + rbsm.str_rna(), idtag=rbsm.str_rna())
             data_table = []
             # Calculate the ranking

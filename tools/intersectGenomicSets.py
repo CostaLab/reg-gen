@@ -25,7 +25,7 @@ def bedOverllap(beds,beds2,outPath):
         for b2 in beds2:
             inter=b.intersect(b2,OverlapType.ORIGINAL)
             if len(outPath) > 0:
-              inter.write_bed(outPath+"/"+inter.name+".bed")
+              inter.write(outPath+"/"+inter.name+".bed")
             resLine.append(len(inter))
         res.append(resLine)
     res=numpy.array(res,float)

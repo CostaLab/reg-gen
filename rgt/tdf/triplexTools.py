@@ -159,7 +159,7 @@ def list_all_index(path, link_d=None):
 
     # sig_list = []
 
-    for i, exp in enumerate(profile.keys()):
+    for i, exp in enumerate(profile):
         c += 1
         if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
@@ -355,7 +355,7 @@ def gen_heatmap(path):
     # print(data.shape)
 
 
-    fig = plt.figure(figsize=(len(matrix.keys()) * 1.5, len(rnas) * 2.5))
+    fig = plt.figure(figsize=(len(matrix) * 1.5, len(rnas) * 2.5))
     # fig = plt.figure()
     # ax1 = fig.add_axes([0.09,0.2,0.2,0.6])
     # Y = sch.linkage(data, method='single')
@@ -1044,11 +1044,11 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
                         
                     loop = False
         if not out_file:
-            dbd.write_bed(filename=os.path.join(output, rna_name+"_DBDs.bed"))
+            dbd.write(filename=os.path.join(output, rna_name+"_DBDs.bed"))
         else:
             # print(dbd)
             # print(dbd.sequences[0])
-            dbd.write_bed(filename=output)
+            dbd.write(filename=output)
     # FASTA
     if fasta:
         #print(dbdmap)
@@ -1086,7 +1086,7 @@ def connect_rna(rna, temp, rna_name):
 
 def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
     regions = GenomicRegionSet("Target")
-    regions.read_bed(input_BED)
+    regions.read(input_BED)
     regions.gene_association(organism=organism, show_dis=True)
 
     connect_rna(rna_fasta, temp=temp, rna_name="RNA")
@@ -1247,7 +1247,7 @@ def integrate_stat(path):
     with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
-        for item in data.keys():
+        for item in data:
             # print(item)
             # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
@@ -1314,11 +1314,11 @@ def merge_DBD_regions(path):
             if os.path.exists(f):
                 print(f)
                 dbd = GenomicRegionSet(rna)
-                dbd.read_bed(f)
+                dbd.read(f)
                 for r in dbd: r.name = rna+"_"+r.name
                 dbd_pool.combine(dbd)
     print(len(dbd_pool))
-    dbd_pool.write_bed(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
+    dbd_pool.write(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
 
 
 def save_profile(rna_regions, rna_name, organism, output, bed,\

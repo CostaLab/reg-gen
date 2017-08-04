@@ -47,7 +47,7 @@ class RandomTest:
 
         # DNA: GenomicRegionSet
         self.dna_region = GenomicRegionSet(name="target")
-        self.dna_region.read_bed(dna_region)
+        self.dna_region.read(dna_region)
         self.dna_region = self.dna_region.gene_association(organism=self.organism, show_dis=True)
 
         self.topDBD = []
@@ -138,9 +138,9 @@ class RandomTest:
         if obed:
             # btr = self.txp.get_dbs()
             # btr = btr.gene_association(organism=self.organism, show_dis=True)
-            # btr.write_bed(os.path.join(temp, obed + "_target_region_dbs.bed"))
+            # btr.write(os.path.join(temp, obed + "_target_region_dbs.bed"))
             # dbss = txpf.get_dbs()
-            # dbss.write_bed(os.path.join(temp, obed + "_dbss.bed"))
+            # dbss.write(os.path.join(temp, obed + "_dbss.bed"))
 
             # output = self.dna_region.gene_association(organism=self.organism, show_dis=True)
 
@@ -269,8 +269,8 @@ class RandomTest:
 
     def dbs_motif(self, outdir):
         self.txpf.motif_statistics()
-        for i, mode in enumerate(self.txpf.motifs.keys()):
-            for con in self.txpf.motifs[mode].keys():
+        for i, mode in enumerate(self.txpf.motifs):
+            for con in self.txpf.motifs[mode]:
                 self.stat[mode+"_"+con] = str(self.txpf.motifs[mode][con])
 
     def uniq_motif(self):
@@ -594,7 +594,7 @@ class RandomTest:
         html.write(os.path.join(directory, "target_regions.html"))
 
         self.dna_region.sort_score()
-        self.dna_region.write_bed(os.path.join(directory, obed + "_target_regions.bed"))
+        self.dna_region.write(os.path.join(directory, obed + "_target_regions.bed"))
 
 
 

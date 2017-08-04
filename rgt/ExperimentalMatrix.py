@@ -212,9 +212,9 @@ class ExperimentalMatrix:
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
                 if is_bedgraph:
-                    regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]), io=GRSFileIO.BedGraph)
                 else:
-                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]))
                     regions.sort()
                     if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
@@ -236,7 +236,7 @@ class ExperimentalMatrix:
         if field == "regions" or field == "reads":
             field = "factor"
         
-        for t in self.fieldsDict[field].keys():
+        for t in self.fieldsDict[field]:
             if name in self.fieldsDict[field][t]:
                 return t
         
@@ -248,8 +248,8 @@ class ExperimentalMatrix:
             - name -- Name to return.
         """
         result = []
-        for f in self.fieldsDict.keys():
-            for t in self.fieldsDict[f].keys():
+        for f in self.fieldsDict:
+            for t in self.fieldsDict[f]:
                 if skip_all and t == "ALL": continue
                 elif name in self.fieldsDict[f][t]:
                     result.append(t)
@@ -270,8 +270,8 @@ class ExperimentalMatrix:
             del self.names[i]
             self.files.pop(name, None)
 
-            for f in self.fieldsDict.keys():
-                for t in self.fieldsDict[f].keys(): 
+            for f in self.fieldsDict:
+                for t in self.fieldsDict[f]:
                     # try:
                     if name in self.fieldsDict[f][t]:
                         self.fieldsDict[f][t].remove(name)
@@ -306,7 +306,7 @@ class ExperimentalMatrix:
                     # print("************")
                     # print(types)
 
-                    for f in self.fieldsDict.keys():
+                    for f in self.fieldsDict:
                         if f == field: 
                             try: self.fieldsDict[f][t].append(n)
                             except: self.fieldsDict[f][t] = [n]
@@ -319,7 +319,7 @@ class ExperimentalMatrix:
                     #         except: pass
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
-                        g.read_bed(self.files[name])
+                        g.read(self.files[name])
                         if test: g.sequences = g.sequences[0:11]
                         self.objectsDict[n] = g
                     self.trash.append(name)

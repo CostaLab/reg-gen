@@ -856,7 +856,7 @@ def atac_footprints():
     reads_file.load_sg_coefs(options.sg_window_size)
 
     original_regions = GenomicRegionSet("regions")
-    original_regions.read_bed(arguments[1])
+    original_regions.read(arguments[1])
 
     regions = deepcopy(original_regions)
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
@@ -1085,7 +1085,7 @@ def dnase_footprints():
     reads_file.load_sg_coefs(options.sg_window_size)
 
     original_regions = GenomicRegionSet("regions")
-    original_regions.read_bed(arguments[1])
+    original_regions.read(arguments[1])
 
     regions = deepcopy(original_regions)
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
@@ -1240,7 +1240,7 @@ def histone_footprints():
     reads_file.load_sg_coefs(options.sg_window_size)
 
     original_regions = GenomicRegionSet("regions")
-    original_regions.read_bed(arguments[1])
+    original_regions.read(arguments[1])
 
     regions = deepcopy(original_regions)
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
@@ -1455,7 +1455,7 @@ def dnase_histone_footprints():
         histone_reads_file_list.append(GenomicSignal(f))
 
     original_regions = GenomicRegionSet("regions")
-    original_regions.read_bed(arguments[-1])
+    original_regions.read(arguments[-1])
 
     regions = deepcopy(original_regions)
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
@@ -1583,7 +1583,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
     # Writing output
     ###################################################################################################
     output_file_name = os.path.join(output_location, "{}.bed".format(output_prefix))
-    footprints_overlap.write_bed(output_file_name)
+    footprints_overlap.write(output_file_name)
 
     # the number of reads
     lines = pysam.idxstats(reads_file.file_name).splitlines()
@@ -2050,7 +2050,7 @@ def print_signal():
     signal = GenomicSignal(options.reads_file)
     signal.load_sg_coefs(slope_window_size=9)
     regions = GenomicRegionSet("Interested regions")
-    regions.read_bed(options.regions_file)
+    regions.read(options.regions_file)
 
     ###################################################################################################
     # Fetching Bias Table

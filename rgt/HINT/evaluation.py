@@ -69,7 +69,7 @@ class Evaluation:
         max_score = 0
         if "SEG" in self.footprint_type:
             mpbs_regions = GenomicRegionSet("TFBS")
-            mpbs_regions.read_bed(self.tfbs_file)
+            mpbs_regions.read(self.tfbs_file)
 
             #names = [self.output_prefix + ":N", self.output_prefix + ":Y"]
             #mpbs_regions = regions.by_names(names)
@@ -84,7 +84,7 @@ class Evaluation:
 
         for i in range(len(self.footprint_file)):
             footprints_regions = GenomicRegionSet("Footprints Prediction")
-            footprints_regions.read_bed(self.footprint_file[i])
+            footprints_regions.read(self.footprint_file[i])
             footprints_regions.sorted = True
 
             # Sort footprint prediction bed files

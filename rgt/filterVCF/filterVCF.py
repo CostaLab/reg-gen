@@ -178,7 +178,7 @@ def main():
         
     if options.list_bed:
         tfbs_motifs = GenomicRegionSet('tfbs_motifs')   
-        tfbs_motifs.read_bed(options.list_bed)
+        tfbs_motifs.read(options.list_bed)
         
         for sample in sample_data:
             sample.intersect(tfbs_motifs)
