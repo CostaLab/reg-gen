@@ -326,17 +326,19 @@ class GenomicRegionSet:
                 b.add(self.sequences[i])
         return a, b
 
-    def write_bed(self, filename, bed12=False):
+    def write_bed(self, filename, bed12=False, mode="w"):
         """Write GenomicRegions to BED file.
 
         *Keyword arguments:*
 
             - filename -- define the path to the BED file.
+            - bed12 --
+            - mode -- meaningful values are either "w", to truncate the file before writing, or "a" to append.
         """
         if bed12:
             self.write_bed_blocks(filename)
         else:
-            with open(filename, 'w') as f:
+            with open(filename, mode) as f:
                 for s in self:
                     print(s, file=f)
 
