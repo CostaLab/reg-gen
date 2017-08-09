@@ -1,22 +1,19 @@
+
 # Python Libraries
 from __future__ import print_function
-import os
 import copy
+
+# External
 import pysam
-# Local Libraries
 
-# Distal Libraries
-from Util import SequenceType
 
-####################################################################################
-####################################################################################
 """
 Sequence
 ===================
 Sequence describes the sequence with ATCG as alphabets as well as its types.
 
 """
-class Sequence():
+class Sequence:
 
     def __init__(self, seq, strand, name=None):
         """*Keyword arguments:*
@@ -37,13 +34,13 @@ class Sequence():
         
     def dna_to_rna(self):
         """Convert the sequence from DNA sequence to RNA sequence."""
-        self.seq = self.seq.replace("T","U")
+        self.seq = self.seq.replace("T", "U")
         
     def rna_to_dna(self):
         """Convert the sequence from RNA sequence to DNA sequence."""
         self.seq = self.seq.replace("U", "T")
         
-    def GC_content(self):
+    def gc_content(self):
         """Return the ratio of GC content in this sequence."""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
@@ -70,10 +67,12 @@ class Sequence():
         else: strand = "-"
         
         seq = copy.deepcopy(self.seq)
-        seq.replace("A","G")
-        seq.replace("G","A")
-        seq.replace("C","T")
-        seq.replace("T","C")
+        seq.replace("A", "G")
+        seq.replace("G", "A")
+        seq.replace("C", "T")
+        seq.replace("T", "C")
+        seq.replace("m", "1")
+        seq.replace("1", "m")
         
         s = Sequence(seq, name=self.name+"_complement",  strand=strand)
         return s
@@ -87,7 +86,6 @@ SequenceSet
 SequenceSet represents the collection of sequences and their functions.
 
 """
-
 class SequenceSet:
 
     def __init__(self, name, seq_type):
@@ -142,7 +140,6 @@ class SequenceSet:
                     except: seq = line
                     pre_seq = True
             self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
-
 
     def read_regions(self, regionset, genome_fasta, ex=0):
         genome = pysam.Fastafile(genome_fasta)

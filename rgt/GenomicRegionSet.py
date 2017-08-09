@@ -25,6 +25,9 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.Util import GenomeData, OverlapType, Library_path
 
+# External
+from pysam import Fastafile
+
 ###############################################################################
 # Class
 ###############################################################################
@@ -206,9 +209,20 @@ class GRSFileIO:
             raise NotImplementedError
 
     class Fasta:
+        # FIXME: this one is a bit strange. It's based on the assumption that the GRS has already been
+        # populated with GenomicRegions, and then it adds the corresponding DNA sequence to each of those.
+
         @staticmethod
         def read_to_grs(grs, filename):
-            raise NotImplementedError
+            fasta = Fastafile(filename)
+
+            for gr in grs:
+                try:
+                    seq = str(fasta.fetch(gr.chrom, gr.initial, gr.final))
+                    strand = gr.orientation if gr.orientation else "+"
+                    gr.sequence = Sequence(seq=seq, name=str(gr), strand=strand)
+                except:
+                    pass
 
         @staticmethod
         def write_from_grs(grs, filename, mode="w"):
