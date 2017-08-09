@@ -27,6 +27,8 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
+from Input import Input
+from Triplexes import Triplexes
 
 dir = os.getcwd()
 
@@ -276,7 +278,7 @@ def main():
                     line = line.strip()
                     rn = os.path.basename(line).rpartition(".")[0]
                     print("\tProcessing: "+rn)
-                    command = ["rgt-TDF", args.mode, 
+                    command = ["rgt-TDF", args.mode,
                                "-r", line, "-rn", rn,
                                "-o", os.path.join(args.o, rn),
                                "-organism", args.organism ]
@@ -292,7 +294,7 @@ def main():
                     if args.filter_havana == 'F': command += ["-filter_havana", 'F']
                     if args.protein_coding == 'T': command += ["-protein_coding", 'T']
                     if args.known_only == 'F': command += ["-known_only", 'F']
-                    
+
                     if args.rm > 0: command += ["-rm", args.rm ]
                     if args.fr != 'off': command += ["-fr", args.fr ]
                     if args.c != 2: command += ["-c", args.c ]
@@ -327,7 +329,7 @@ def main():
 
 
 ################################################################################################3
-
+        # Checking all arguments
         if args.bed and not args.bg:
             print("Please add background promoters in BED format. (-bg)")
             sys.exit(1)
@@ -335,33 +337,62 @@ def main():
             print("Score header (-scoreh) can only be used when scores (-score) are loaded.")
             print("Please add '-score'.")
             sys.exit(1)
+        if args.de: args.de = os.path.normpath(os.path.join(dir, args.de))
+        if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
+        if args.bg: args.bg = os.path.normpath(os.path.join(dir, args.bg))
 
-        print2(summary, "\n"+"*************** Promoter Test ****************")
-        print2(summary, "*** Input RNA sequence: "+args.r)
-        
-        if args.o.count("/") < 3:
-            print2(summary, "*** Output directory: "+ args.o)
-        else:
-            n = args.o.count("/") - 3 + 1
-            print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
-
+        if args.filter_havana == "T": args.filter_havana = True
+        else: args.filter_havana = False
+        if args.protein_coding == "T": args.protein_coding = True
+        else: args.protein_coding = False
+        if args.known_only == "T": args.known_only = True
+        else: args.known_only = False
         args.r = os.path.normpath(os.path.join(dir, args.r))
-        
-        if args.de: args.de = os.path.normpath(os.path.join(dir,args.de))
-        if args.bed: args.bed = os.path.normpath(os.path.join(dir,args.bed))
-        if args.bg: args.bg = os.path.normpath(os.path.join(dir,args.bg))
+
+        print2(summary, "\n" + "*************** Promoter Test ****************")
+        print2(summary, "*** Input RNA sequence: " + args.r)
+        #######################################
+        # Input
+        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
+
+        tdf_input = Input(pars=args)
+        if args.de:
+            tdf_input.dna.degenes()
+        elif args.bed:
+            tdf_input.dna.bed_input()
+
+        #######################################
+        # Triplexes
+        # Target genes
+        Triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.DNA.de_promoters,
+                                 prefix="target_promoters", remove_temp=True)
+        Triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.DNA.nde_promoters,
+                                 prefix="nontarget_promoters", remove_temp=True)
+
+
+        sys.exit()
+
+        # if args.o.count("/") < 3:
+        #     print2(summary, "*** Output directory: "+ args.o)
+        # else:
+        #     n = args.o.count("/") - 3 + 1
+        #     print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
+
+
+
+
 
         # Get GenomicRegionSet from the given genes
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-        promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg, 
-                                organism=args.organism, promoterLength=args.pl, summary=summary, 
-                                temp=dir, output=args.o, showdbs=args.showdbs, score=args.score, 
-                                scoreh=args.scoreh, filter_havana=args.filter_havana, 
+
+        promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg,
+                                organism=args.organism, promoterLength=args.pl, summary=summary,
+                                temp=dir, output=args.o, showdbs=args.showdbs, score=args.score,
+                                scoreh=args.scoreh, filter_havana=args.filter_havana,
                                 protein_coding=args.protein_coding, known_only=args.known_only)
         if args.dump: sys.exit(0)
         promoter.get_rna_region_str(rna=args.r, expfile=args.rnaexp)
         promoter.connect_rna(rna=args.r, temp=args.o)
-        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt, 
+        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
                                 c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
 
         t1 = time.time()
@@ -389,19 +420,19 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
 
         print2(summary, "Step 4: Generate plot and output html files.")
-        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
+        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
                             cut_off=args.accf, log=args.log, showpa=args.showpa,
                             sig_region=promoter.sig_DBD,
-                            ylabel="Number of DBSs", 
+                            ylabel="Number of DBSs",
                             linelabel="No. DBSs", filename=promoter.rna_name+"_lineplot.png")
 
         promoter.barplot(dirp=args.o, filename=promoter.rna_name+"_barplot.png", sig_region=promoter.sig_DBD)
         promoter.uniq_motif()
         #if args.showdbs:
-        #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac, 
+        #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
         #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
         #                        sig_region=promoter.sig_region_dbs,
-        #                        ylabel="Number of DBSs on target promoters", 
+        #                        ylabel="Number of DBSs on target promoters",
         #                        linelabel="No. DBSs", filename="plot_dbss.png")
         #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
         # if args.motif: promoter.gen_motifs(temp=args.o)
@@ -418,7 +449,7 @@ def main():
         t4 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
         print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
-    
+
         output_summary(summary, args.o, "summary.txt")
         # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
         #              organism=promoter.organism, output=args.o, bed=args.bed,
