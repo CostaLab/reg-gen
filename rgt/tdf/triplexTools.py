@@ -539,6 +539,7 @@ def save_sequence(dir, filename, regions, genome_path):
     Fetch sequence into FASTA file according to the given BED file
     """
     genome = pysam.Fastafile(genome_path)
+    # print(regions)
     with open(os.path.join(dir, filename), 'w') as output:
         for region in regions:
             if "_" not in region.chrom:
@@ -1312,12 +1313,12 @@ def merge_DBD_regions(path):
         if os.path.isdir(os.path.join(path, rna)):
             f = os.path.join(path, rna, rna+"_DBDs.bed")
             if os.path.exists(f):
-                print(f)
+                # print(f)
                 dbd = GenomicRegionSet(rna)
                 dbd.read(f)
                 for r in dbd: r.name = rna+"_"+r.name
                 dbd_pool.combine(dbd)
-    print(len(dbd_pool))
+    # print(len(dbd_pool))
     dbd_pool.write(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
 
 
@@ -1437,3 +1438,10 @@ def integrate_html(target):
                              sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(target, "index.html"))
+
+def shorten_dir(path):
+    if path.count("/") < 3:
+        return path
+    else:
+        n = path.count("/") - 3 + 1
+        return path.split("/",n)[-1]

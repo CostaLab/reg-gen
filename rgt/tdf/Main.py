@@ -23,12 +23,14 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
                          integrate_stat, update_profile, integrate_html, \
-                         merge_DBD_regions, rank_array, silentremove, summerize_stat
+                         merge_DBD_regions, rank_array, silentremove, summerize_stat, \
+                         shorten_dir
 
 from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
-from Input import Input
-from Triplexes import Triplexes
+from rgt.tdf.Input import Input
+from rgt.tdf.Triplexes import Triplexes
+
 
 dir = os.getcwd()
 
@@ -351,122 +353,122 @@ def main():
 
         print2(summary, "\n" + "*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: " + args.r)
+        print2(summary, "*** Output directory: "+ shorten_dir(args.o) )
+
+        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         #######################################
         # Input
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
-
         tdf_input = Input(pars=args)
         if args.de:
             tdf_input.dna.degenes()
         elif args.bed:
             tdf_input.dna.bed_input()
+        tdf_input.rna.get_rna_info()
+        tdf_input.rna.connect_rna()
 
         #######################################
         # Triplexes
-        # Target genes
-        Triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.DNA.de_promoters,
+        triplexes = Triplexes(organism=args.organism, pars=args)
+        triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.dna.target_regions,
                                  prefix="target_promoters", remove_temp=True)
-        Triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.DNA.nde_promoters,
+        triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.dna.nontarget_regions,
                                  prefix="nontarget_promoters", remove_temp=True)
-
+        t1 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
 
         sys.exit()
 
-        # if args.o.count("/") < 3:
-        #     print2(summary, "*** Output directory: "+ args.o)
-        # else:
-        #     n = args.o.count("/") - 3 + 1
-        #     print2(summary, "*** Output directory: "+ args.o.split("/",n)[-1] )
+
 
 
 
 
 
         # Get GenomicRegionSet from the given genes
-
-        promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg,
-                                organism=args.organism, promoterLength=args.pl, summary=summary,
-                                temp=dir, output=args.o, showdbs=args.showdbs, score=args.score,
-                                scoreh=args.scoreh, filter_havana=args.filter_havana,
-                                protein_coding=args.protein_coding, known_only=args.known_only)
-        if args.dump: sys.exit(0)
-        promoter.get_rna_region_str(rna=args.r, expfile=args.rnaexp)
-        promoter.connect_rna(rna=args.r, temp=args.o)
-        promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
-                                c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-
-        t1 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
-
-        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        if args.obed: obedp = os.path.basename(args.o)
-        else: obedp = None
-        promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf, l=args.l)
-        promoter.fisher_exact(alpha=args.a)
-        t2 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        promoter.dbd_regions(output=args.o)
-        promoter.autobinding(output=args.o, l=args.l, e=args.e,
-                             c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        # promoter.dbs_motif(outdir=args.o)
-        if len(promoter.rbss) == 0:
-            no_binding_response(args=args, rna_regions=promoter.rna_regions,
-                                rna_name=promoter.rna_name, organism=promoter.organism,
-                                stat=promoter.stat, expression=promoter.rna_expression)
-
-
-        print2(summary, "Step 3: Establishing promoter profile.")
-        t3 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
-
-        print2(summary, "Step 4: Generate plot and output html files.")
-        promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
-                            cut_off=args.accf, log=args.log, showpa=args.showpa,
-                            sig_region=promoter.sig_DBD,
-                            ylabel="Number of DBSs",
-                            linelabel="No. DBSs", filename=promoter.rna_name+"_lineplot.png")
-
-        promoter.barplot(dirp=args.o, filename=promoter.rna_name+"_barplot.png", sig_region=promoter.sig_DBD)
-        promoter.uniq_motif()
-        #if args.showdbs:
-        #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
-        #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
-        #                        sig_region=promoter.sig_region_dbs,
-        #                        ylabel="Number of DBSs on target promoters",
-        #                        linelabel="No. DBSs", filename="plot_dbss.png")
-        #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
-        # if args.motif: promoter.gen_motifs(temp=args.o)
-
-        promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
-        promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
-        # promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable,
-        #                         filename="lncRNA_target_ranktable.txt")
-        # promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable,
-        #                         filename="lncRNA_target_dbstable.txt")
-
-        #promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
-
-        t4 = time.time()
-        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
-        print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
-
-        output_summary(summary, args.o, "summary.txt")
-        # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
-        #              organism=promoter.organism, output=args.o, bed=args.bed,
-        #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
-        #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
-        # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
-
-
-        silentremove(os.path.join(args.o,"rna_temp.fa"))
-        silentremove(os.path.join(args.o,"rna_temp.fa.fai"))
-        silentremove(os.path.join(args.o, "de.fa"))
-        silentremove(os.path.join(args.o, "nde.fa"))
-        silentremove(os.path.join(args.o, "de.txp"))
-        silentremove(os.path.join(args.o, "autobinding.txp"))
-
-
-        write_stat(stat=promoter.stat, filename=os.path.join(args.o, "stat.txt"))
+        #
+        # promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg,
+        #                         organism=args.organism, promoterLength=args.pl, summary=summary,
+        #                         temp=dir, output=args.o, showdbs=args.showdbs, score=args.score,
+        #                         scoreh=args.scoreh, filter_havana=args.filter_havana,
+        #                         protein_coding=args.protein_coding, known_only=args.known_only)
+        # if args.dump: sys.exit(0)
+        # promoter.get_rna_region_str(rna=args.r, expfile=args.rnaexp)
+        # promoter.connect_rna(rna=args.r, temp=args.o)
+        # promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
+        #                         c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        #
+        # t1 = time.time()
+        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
+        #
+        # print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
+        # if args.obed: obedp = os.path.basename(args.o)
+        # else: obedp = None
+        # promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf, l=args.l)
+        # promoter.fisher_exact(alpha=args.a)
+        # t2 = time.time()
+        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
+        # promoter.dbd_regions(output=args.o)
+        # promoter.autobinding(output=args.o, l=args.l, e=args.e,
+        #                      c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
+        # # promoter.dbs_motif(outdir=args.o)
+        # if len(promoter.rbss) == 0:
+        #     no_binding_response(args=args, rna_regions=promoter.rna_regions,
+        #                         rna_name=promoter.rna_name, organism=promoter.organism,
+        #                         stat=promoter.stat, expression=promoter.rna_expression)
+        #
+        #
+        # print2(summary, "Step 3: Establishing promoter profile.")
+        # t3 = time.time()
+        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
+        #
+        # print2(summary, "Step 4: Generate plot and output html files.")
+        # promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
+        #                     cut_off=args.accf, log=args.log, showpa=args.showpa,
+        #                     sig_region=promoter.sig_DBD,
+        #                     ylabel="Number of DBSs",
+        #                     linelabel="No. DBSs", filename=promoter.rna_name+"_lineplot.png")
+        #
+        # promoter.barplot(dirp=args.o, filename=promoter.rna_name+"_barplot.png", sig_region=promoter.sig_DBD)
+        # promoter.uniq_motif()
+        # #if args.showdbs:
+        # #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
+        # #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
+        # #                        sig_region=promoter.sig_region_dbs,
+        # #                        ylabel="Number of DBSs on target promoters",
+        # #                        linelabel="No. DBSs", filename="plot_dbss.png")
+        # #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
+        # # if args.motif: promoter.gen_motifs(temp=args.o)
+        #
+        # promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
+        # promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
+        # # promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable,
+        # #                         filename="lncRNA_target_ranktable.txt")
+        # # promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable,
+        # #                         filename="lncRNA_target_dbstable.txt")
+        #
+        # #promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
+        #
+        # t4 = time.time()
+        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
+        # print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
+        #
+        # output_summary(summary, args.o, "summary.txt")
+        # # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
+        # #              organism=promoter.organism, output=args.o, bed=args.bed,
+        # #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
+        # #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
+        # # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
+        #
+        #
+        # silentremove(os.path.join(args.o,"rna_temp.fa"))
+        # silentremove(os.path.join(args.o,"rna_temp.fa.fai"))
+        # silentremove(os.path.join(args.o, "de.fa"))
+        # silentremove(os.path.join(args.o, "nde.fa"))
+        # silentremove(os.path.join(args.o, "de.txp"))
+        # silentremove(os.path.join(args.o, "autobinding.txp"))
+        #
+        #
+        # write_stat(stat=promoter.stat, filename=os.path.join(args.o, "stat.txt"))
 
 
     ################################################################################

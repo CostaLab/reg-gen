@@ -41,10 +41,12 @@ class Input(object):
         self.target_seq = os.path.join(pars.o, "dna_targets.fa")
         self.background_seq = os.path.join(pars.o, "dna_background.fa")
         self.pars = pars
+        self.dna = self.DNA(pars=pars)
+        self.rna = self.RNA(pars=pars)
 
     class DNA(object):
-        def __init__(self):
-            pass
+        def __init__(self, pars):
+            self.pars = pars
 
         #     if format == "degenes":
         #         self.degenes(filename)
@@ -52,57 +54,52 @@ class Input(object):
         #         self.bed_input()
 
         def degenes(self):
-            dumpname = "_".join(["dump", Input.pars.de.rpartition("/")[-1].rpartition(".")[0],
-                                 "".join([Input.pars.filter_havana,
-                                          Input.pars.protein_coding ,
-                                          Input.pars.known_only])])
+            dumpname = "_".join(["dump", self.pars.de.rpartition("/")[-1].rpartition(".")[0]])
 
             try:
-                data = load_dump(path=Input.outfir, filename=dumpname)
+                data = load_dump(path=self.outdir, filename=dumpname)
                 self.de_genes = data[0]
                 self.nde_genes = data[1]
-                self.de_promoters = data[2]
-                self.nde_promoters = data[3]
-                if Input.pars.score:
+                self.target_regions = data[2]
+                self.nontarget_regions = data[3]
+                if self.pars.score:
                     self.scores = data[4]
             except:
 
                 #######################
                 # Load DE genes
                 self.de_genes = GeneSet("de genes")
-                self.de_genes.read(Input.pars.de, score=Input.pars.score)
-                check_geneset_empty(self.de_genes, Input.pars.de, Input.pars.o)
+                self.de_genes.read(self.pars.de, score=self.pars.score)
+                check_geneset_empty(self.de_genes, self.pars.de, self.pars.o)
 
-
-                ann = AnnotationSet(gene_source=Input.organism,
-                                    alias_source=Input.organism,
-                                    filter_havana=Input.pars.filter_havana,
-                                    protein_coding=Input.pars.protein_coding,
-                                    known_only=Input.pars.known_only)
-                self.de_promoters, unmapped = ann.get_promoters(promoterLength=Input.pars.pl,
+                ann = AnnotationSet(gene_source=self.pars.organism,
+                                    alias_source=self.pars.organism,
+                                    filter_havana=self.pars.filter_havana,
+                                    protein_coding=self.pars.protein_coding,
+                                    known_only=self.pars.known_only)
+                self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl,
                                                       gene_set=self.de_genes,
-                                                      regiondata=Input.pars.score,
+                                                      regiondata=self.pars.score,
                                                       unmaplist=True, variants=False)
-                if Input.pars.score:
-                    self.scores = self.de_promoters.get_score_dict()
+                if self.pars.score:
+                    self.scores = self.target_regions.get_score_dict()
 
                 #######################
                 # Non DE genes
                 self.nde_genes = GeneSet("nde genes")
                 self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
 
-                self.nde_promoters = ann.get_promoters(promoterLength=Input.pars.pl,
+                self.nontarget_regions = ann.get_promoters(promoterLength=self.pars.pl,
                                                        gene_set=self.nde_genes, unmaplist=False)
                 # print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
-                self.nde_promoters.merge(namedistinct=True)
+                self.nontarget_regions.merge(namedistinct=True)
 
                 #######################
                 # Loading score
-                data = [self.de_genes, self.nde_genes,
-                        self.de_regide_promotersons, self.nde_promoters]
-                if Input.pars.score:
+                data = [self.de_genes, self.nde_genes, self.target_regions, self.nontarget_regions]
+                if self.pars.score:
                     data.append(self.scores)
-                dump(object=data, path=Input.pars.o, filename=dumpname)
+                dump(object=data, path=self.pars.o, filename=dumpname)
 
             pass
 
@@ -120,19 +117,21 @@ class Input(object):
             self.nontarget_regions.remove_duplicates()
 
     class RNA:
-        def __init__(self):
-            self.name = Input.pars.rn
+        def __init__(self, pars):
+            self.name = pars.rn
+            self.pars = pars
             self.stat = {}
 
-        def get_rna_info(self, filename, expfile=None):
+        def get_rna_info(self, expfile=None):
             """Getting the rna region from the information header with the pattern:
                             REGION_chr3_51978050_51983935_-_
                         or  chr3:51978050-51983935 -    """
+            filename = self.pars.r
             self.regions = get_rna_region_str(filename)
             # print(self.rna_regions)
             if self.regions:
                 r_genes = rna_associated_gene(rna_regions=self.regions,
-                                              name=self.name, organism=Input.organism)
+                                              name=self.name, organism=self.organism)
             if self.regions and len(self.regions[0]) == 5:
                 self.expression = float(self.regions[0][-1])
 
@@ -146,7 +145,7 @@ class Input(object):
                 self.expression = "n.a."
 
         def connect_rna(self):
-            d = connect_rna(Input.pars.r, Input.pars.o, self.name)
+            d = connect_rna(self.pars.r, self.pars.o, self.name)
             self.stat["exons"] = str(d[0])
             self.stat["seq_length"] = str(d[1])
 
