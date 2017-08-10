@@ -365,7 +365,6 @@ def main():
             tdf_input.dna.bed_input()
         tdf_input.rna.get_rna_info()
         tdf_input.rna.connect_rna()
-
         #######################################
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
@@ -375,8 +374,16 @@ def main():
                                  prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
+        #######################################
+        # Statistics
+        stat = Statistics(pars=args)
+        stat.count_frequency()
+        stat.fisher_exact()
+        stat.dbd_regions()
+        stat.autobinding()
+        if no dbd
 
-        sys.exit()
+
 
 
 

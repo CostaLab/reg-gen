@@ -108,12 +108,12 @@ class Input(object):
 
         def bed_input(self):
             self.target_regions = GenomicRegionSet("targets")
-            self.target_regions.read(Input.pars.bed)
+            self.target_regions.read(self.pars.bed)
             self.target_regions.remove_duplicates()
-            if Input.pars.score:
+            if self.pars.score:
                 self.scores = self.target_regions.get_score_dict()
             self.nontarget_regions = GenomicRegionSet("background")
-            self.nontarget_regions.read(Input.pars.bg)
+            self.nontarget_regions.read(self.pars.bg)
             self.nontarget_regions.remove_duplicates()
 
     class RNA:
