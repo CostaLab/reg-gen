@@ -1063,9 +1063,11 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         with open(fasta_f, 'w') as fasta:
             for rbs in sig_region:
                 print(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final), file=fasta)
-                s = seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)
+                s = seq.fetch(rna_name, max(0, rbs.initial), rbs.final)
                 for ss in [s[i:i + 80] for i in range(0, len(s), 80)]:
                     print(ss, file=fasta)
+
+        seq.close()
 
 def connect_rna(rna, temp, rna_name):
     """Generate FASTA file merging all exons and return the number of exons and sequence length"""

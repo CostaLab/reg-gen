@@ -506,7 +506,7 @@ class RNADNABindingSet:
                 try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
                 except: pass
 
-    def read_txp(self, filename, dna_fine_posi=False, shift=None, seq=False):
+    def read_tpx(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
 
         with open(filename) as f:

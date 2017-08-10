@@ -54,10 +54,10 @@ class Input(object):
         #         self.bed_input()
 
         def degenes(self):
-            dumpname = "_".join(["dump", self.pars.de.rpartition("/")[-1].rpartition(".")[0]])
-
+            target_name = self.pars.de.rpartition("/")[-1].rpartition(".")[0]
+            dumpname = ".".join(["tdf", "dump", self.pars.rn, target_name])
             try:
-                data = load_dump(path=self.outdir, filename=dumpname)
+                data = load_dump(path=self.pars.o, filename=dumpname)
                 self.de_genes = data[0]
                 self.nde_genes = data[1]
                 self.target_regions = data[2]
@@ -146,6 +146,6 @@ class Input(object):
 
         def connect_rna(self):
             d = connect_rna(self.pars.r, self.pars.o, self.name)
-            self.stat["exons"] = str(d[0])
-            self.stat["seq_length"] = str(d[1])
+            self.num_exons = str(d[0])
+            self.seq_length = str(d[1])
 

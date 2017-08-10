@@ -1078,8 +1078,9 @@ if __name__ == "__main__":
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
 
-        non_available = 0
+        non_available = None
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
+
         def count_polyA_on_bam(bed, bam):
             pattern = "AAAAA"
             samfile = pysam.AlignmentFile(bam, "rb")
@@ -1158,16 +1159,16 @@ if __name__ == "__main__":
                             col_res[line[0]].append(line[1:])
 
             for r in bed:
-                ar = numpy.array(col_res[r.name])
-                # print(ar)
-                # print(numpy.mean(ar, axis=1))
-                col_res[r.name] = numpy.mean(ar, axis=1).tolist()
-                # print(col_res[r.name])
-                # sys.exit(1)
+                ar = numpy.array(col_res[r.name],dtype=numpy.float)
+                print(ar)
+                print(numpy.nanmean(ar, axis=1))
+                col_res[r.name] = numpy.nanmean(ar, axis=1).tolist()
+                print(col_res[r.name])
+                sys.exit(1)
 
             with open(args.o, "w") as f:
-                print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave",
-                                 "polyA_reads_on_transcript_ave", "all_reads_on_transcript_ave"]), file=f)
+                print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave", "proportion_in_window",
+                                 "polyA_reads_on_transcript_ave", "all_reads_on_transcript_ave", "proportion_on_transcript"]), file=f)
                 for gene, l in col_res.items():
                     print("\t".join([ gene ] + [ str(x) for x in l ]), file=f)
         print()

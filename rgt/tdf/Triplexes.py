@@ -32,3 +32,22 @@ class Triplexes(object):
         if remove_temp:
             os.remove(dna_fasta)
 
+        return tpx_file
+
+    def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
+        rna = os.path.join(output, "rna_temp.fa")
+        run_triplexator(ss=None, ds=None, autobinding=rna,
+                        output=os.path.join(output, "autobinding.txp"),
+                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par="abo_0")
+        self.autobinding = RNADNABindingSet("autobinding")
+        self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
+        self.stat["autobinding"] = len(self.autobinding)
+        self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        # self.autobinding.motif_statistics()
+        # Saving autobinding dbs in BED
+        if len(self.rna_regions) > 0:
+            # print(self.rna_regions)
+            rna_regionsets = GenomicRegionSet(name=self.rna_name)
+            rna_regionsets.load_from_list(self.rna_regions)
+            autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
+            autobinding_loci.write(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
