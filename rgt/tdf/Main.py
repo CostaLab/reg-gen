@@ -369,9 +369,9 @@ def main():
         #######################################
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
-        tpx_de = triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.dna.target_regions,
+        tpx_de = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
                                           prefix="target_promoters", remove_temp=True)
-        tpx_nde = triplexes.search_triplex(rna_fasta=tdf_input.pars.r, target_regions=tdf_input.dna.nontarget_regions,
+        tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
@@ -381,10 +381,12 @@ def main():
         stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
                                        background=tdf_input.dna.nontarget_regions,
                                        file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
+        triplexes.autobinding(rbss=stat.rbss)
         stat.fisher_exact_de()
         stat.dbd_regions(rna_exons=tdf_input.rna.regions)
         sys.exit()
-        stat.autobinding()
+
+
         # if no dbd
 
 

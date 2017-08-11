@@ -207,3 +207,5 @@ class Statistics(object):
         rbss = self.tpx_nde.get_rbs()
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
+
+        self.stat["autobinding"] = len(self.autobinding)

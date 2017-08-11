@@ -1,6 +1,7 @@
 import os
 from rgt.Util import GenomeData
 from rgt.tdf.triplexTools import save_sequence, run_triplexator
+from rgt.tdf.RNADNABindingSet import RNADNABindingSet
 
 class Triplexes(object):
 
@@ -13,12 +14,12 @@ class Triplexes(object):
         self.fm = pars.fm
         self.of = pars.of
         self.mf = pars.mf
-        self.par = pars.par
+        self.pars = pars.pars
         self.outdir = pars.o
 
-    def search_triplex(self, rna_fasta, target_regions, prefix, remove_temp=False):
-        # print("    \tRunning Triplexator...")
-        # rna = os.path.join(self.outdir, "rna_temp.fa")
+    def search_triplex(self, target_regions, prefix, remove_temp=False):
+        print("    \tRunning Triplexator...")
+        rna_fasta = os.path.join(self.outdir, "rna_temp.fa")
         dna_fasta = os.path.join(self.outdir, prefix+".fa")
         tpx_file = os.path.join(self.outdir, prefix+".tpx")
         # Target
@@ -27,21 +28,22 @@ class Triplexes(object):
 
         run_triplexator(ss=rna_fasta, ds=dna_fasta, output=tpx_file,
                         l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm,
-                        of=self.of, mf=self.mf, par=self.par)
+                        of=self.of, mf=self.mf, par=self.pars.par)
 
         if remove_temp:
             os.remove(dna_fasta)
 
         return tpx_file
 
-    def autobinding(self, output, l, e, c, fr, fm, of, mf, par):
-        rna = os.path.join(output, "rna_temp.fa")
-        run_triplexator(ss=None, ds=None, autobinding=rna,
-                        output=os.path.join(output, "autobinding.txp"),
-                        l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par="abo_0")
+    def autobinding(self, rbss):
+        rna_fasta = os.path.join(self.pars.o, "rna_temp.fa")
+        run_triplexator(ss=None, ds=None, autobinding=rna_fasta,
+                        output=os.path.join(self.pars.o, "autobinding.tpx"),
+                        l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm, of=self.of, mf=self.mf,
+                        par="abo_0")
         self.autobinding = RNADNABindingSet("autobinding")
-        self.autobinding.read_txp(filename=os.path.join(output, "autobinding.txp"), dna_fine_posi=True, seq=True)
-        self.stat["autobinding"] = len(self.autobinding)
+        self.autobinding.read_tpx(filename=os.path.join(self.pars.o, "autobinding.tpx"), dna_fine_posi=True, seq=True)
+
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         # self.autobinding.motif_statistics()
         # Saving autobinding dbs in BED
