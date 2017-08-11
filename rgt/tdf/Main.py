@@ -381,9 +381,15 @@ def main():
         stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
                                        background=tdf_input.dna.nontarget_regions,
                                        file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
-        triplexes.autobinding(rbss=stat.rbss)
+        triplexes.autobinding(rbss=stat.rbss, rna_exons=tdf_input.rna.regions)
         stat.fisher_exact_de()
         stat.dbd_regions(rna_exons=tdf_input.rna.regions)
+        stat.output_bed(input=tdf_input, triplexes=triplexes)
+
+
+        if len(stat.rbss) == 0:
+            no_binding_response(args=args, rna_regions=tdf_input.rna.regions, rna_name=args.rn, organism=args.organism,
+                                stat=promoter.stat, expression=promoter.rna_expression)
         sys.exit()
 
 

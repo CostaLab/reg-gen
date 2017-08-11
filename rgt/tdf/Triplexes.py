@@ -2,6 +2,7 @@ import os
 from rgt.Util import GenomeData
 from rgt.tdf.triplexTools import save_sequence, run_triplexator
 from rgt.tdf.RNADNABindingSet import RNADNABindingSet
+from rgt.GenomicRegionSet import GenomicRegionSet
 
 class Triplexes(object):
 
@@ -47,9 +48,3 @@ class Triplexes(object):
         self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
         # self.autobinding.motif_statistics()
         # Saving autobinding dbs in BED
-        if len(self.rna_regions) > 0:
-            # print(self.rna_regions)
-            rna_regionsets = GenomicRegionSet(name=self.rna_name)
-            rna_regionsets.load_from_list(self.rna_regions)
-            autobinding_loci = self.txp_def.get_overlapping_regions(regionset=rna_regionsets)
-            autobinding_loci.write(filename=os.path.join(output, self.rna_name+"_autobinding.bed"))
