@@ -20,8 +20,8 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from RNADNABindingSet import RNADNABindingSet
 from triplexTools import get_rna_region_str, connect_rna,\
-    dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, run_triplexator, find_triplex, random_each,\
+    dbd_regions, value2str, rank_array,\
+    run_triplexator, find_triplex, random_each,\
     region_link_internet, rna_associated_gene
 
 # Color code for all analysis
@@ -88,10 +88,8 @@ class RandomTest:
         self.stat["seq_length"] = str(d[1])
         self.rna_len = d[1]
 
-    def target_dna(self, temp, remove_temp, cutoff, l, e, c, fr, fm, of, mf, par, obed=False):
+    def target_dna(self, obed=False):
         """Calculate the true counts of triplexes on the given dna regions"""
-        self.triplexator_p = [ l, e, c, fr, fm, of, mf ]
-
         txp = find_triplex(rna_fasta=os.path.join(temp, "rna_temp.fa"), dna_region=self.dna_region,
                            temp=temp, organism=self.organism, remove_temp=remove_temp,
                            l=l, e=e, c=c, fr=fr, fm=fm, of=of, mf=mf, par=par, genome_path=self.genome_path,

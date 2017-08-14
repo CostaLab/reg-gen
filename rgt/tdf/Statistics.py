@@ -1,3 +1,6 @@
+# Python Libraries
+from __future__ import print_function
+from __future__ import division
 import os
 import numpy
 numpy.seterr(divide='ignore', invalid='ignore')
@@ -14,14 +17,25 @@ class Statistics(object):
     def __init__(self, pars):
         self.pars = pars
         self.sig_DBD = []
-        self.stat = { "name":self.pars.rn, "genome":self.pars.organism,
-                      "exons":1, "seq_length": None,
-                      "target_regions": 0, "background_regions": 0,
-                      "DBD_all": 0, "DBD_sig": 0,
-                      "DBSs_target_all": 0, "DBSs_target_DBD_sig": 0,
-                      "DBSs_background_all": 0, "DBSs_background_DBD_sig": 0, "p_value": "-",
-                      "associated_gene": ".", "expression": "n.a.", "loci": "-", "autobinding": 0,
-                      "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0, "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
+        self.stat = { "name": self.pars.rn,
+                      "genome": self.pars.organism,
+                      "exons": 1,
+                      "seq_length": None,
+                      "target_regions": 0,
+                      "background_regions": 0,
+                      "DBD_all": 0,
+                      "DBD_sig": 0,
+                      "DBSs_target_all": 0,
+                      "DBSs_target_DBD_sig": 0,
+                      "DBSs_background_all": 0,
+                      "DBSs_background_DBD_sig": 0,
+                      "p_value": "-",
+                      "associated_gene": ".",
+                      "expression": "n.a.",
+                      "loci": "-",
+                      "autobinding": 0,
+                      "MA_G": 0, "MA_T": 0, "MP_G": 0, "MP_T": 0,
+                      "RA_A": 0, "RA_G": 0, "YP_C": 0, "YP_T": 0,
                       "uniq_MA_G": 0, "uniq_MA_T": 0, "uniq_MP_G": 0, "uniq_MP_T": 0,
                       "uniq_RA_A": 0, "uniq_RA_G": 0, "uniq_YP_C": 0, "uniq_YP_T": 0 }
 
@@ -42,6 +56,7 @@ class Statistics(object):
         self.tpx_de = RNADNABindingSet("DE")
 
         self.tpx_de.read_tpx(file_tpx_de, dna_fine_posi=False)
+        print("\t\t" + str(len(self.tpx_de)) + "\tBinding target promoters")
         self.tpx_de.remove_duplicates()
         self.tpx_de.merge_rbs(rm_duplicate=True, cutoff=self.pars.ccf,
                               region_set=target_regions, name_replace=target_regions)
@@ -63,7 +78,6 @@ class Statistics(object):
             l2 = len(self.tpx_nde.merged_dict[rbs])
             self.frequency["promoters"]["nde"][rbs] = [l2, len_nde - l2]
 
-        print("\t\t" + str(len(self.tpx_de)) + "\tBinding target promoters")
         print("\t\t" + str(len(self.tpx_nde)) + "\tBinding non-target promoters")
         # self.stat["DBSs_target_all"] = str(len(self.txp_de))
         # self.stat["DBSs_background_all"] = str(len(self.txp_nde))
@@ -129,7 +143,7 @@ class Statistics(object):
                               associated=self.pars.organism)
         self.tpx_def.write_bed(filename=os.path.join(self.pars.o, self.pars.rn + "_dbss.bed"),
                                remove_duplicates=False, associated=self.pars.organism)
-    def fisher_exact_de(self,):
+    def fisher_exact_de(self):
         """Return oddsratio and pvalue"""
         self.oddsratio = {}
         self.pvalue = {}
@@ -179,19 +193,19 @@ class Statistics(object):
                     rna_name=self.pars.rn, output=self.pars.o)
 
 
-    def summary_stat(self, input):
+    def summary_stat(self, input, triplexes):
         self.stat["target_regions"] = str(len(input.dna.target_regions))
         self.stat["background_regions"] = str(len(input.dna.nontarget_regions))
-        if input.rna.rna_regions:
-            r_genes = rna_associated_gene(rna_regions=input.rna.rna_regions,
+        if input.rna.regions:
+            r_genes = rna_associated_gene(rna_regions=input.rna.regions,
                                           name=self.pars.rn, organism=self.pars.organism)
             self.stat["associated_gene"] = r_genes
-            self.stat["loci"] = input.rna.rna_regions[0][0] + ":" + str(input.rna.rna_regions[0][1]) + "-" + \
-                                str(input.rna.rna_regions[-1][2]) + "_" + input.rna.rna_regions[0][3]
+            self.stat["loci"] = input.rna.regions[0][0] + ":" + str(input.rna.regions[0][1]) + "-" + \
+                                str(input.rna.regions[-1][2]) + "_" + input.rna.regions[0][3]
         else:
             self.stat["associated_gene"] = "."
             self.stat["loci"] = "-"
-        self.stat["expression"] = str(input.rna.rna_expression)
+        self.stat["expression"] = str(input.rna.expression)
         self.stat["exons"] = input.rna.num_exons
         self.stat["seq_length"] = input.rna.seq_length
         self.stat["DBSs_target_all"] = str(len(self.tpx_de))
@@ -207,8 +221,7 @@ class Statistics(object):
         rbss = self.tpx_nde.get_rbs()
         overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
         self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
-
-        self.stat["autobinding"] = len(self.autobinding)
+        self.stat["autobinding"] = len(triplexes.autobinding)
 
     def output_bed(self, input, triplexes):
         if len(input.rna.regions) > 0:
@@ -217,3 +230,36 @@ class Statistics(object):
             rna_regionsets.load_from_list(input.rna.regions)
             autobinding_loci = triplexes.tpx_def.get_overlapping_regions(regionset=rna_regionsets)
             autobinding_loci.write(filename=os.path.join(self.pars.o, self.pars.rn+"_autobinding.bed"))
+
+    def write_stat(self, filename):
+        """Write the statistics into file"""
+        order_stat = ["title", "name", "genome",
+                      "exons", "seq_length",
+                      "target_regions", "background_regions",
+                      "DBD_all", "DBD_sig",
+                      "DBSs_target_all", "DBSs_target_DBD_sig",
+                      "DBSs_background_all", "DBSs_background_DBD_sig", "p_value",
+                      "Norm_DBD", "Norm_DBS", "Norm_DBS_sig",
+                      "associated_gene", "expression", "loci", "autobinding",
+                      "MA_G", "MA_T", "MP_G", "MP_T", "RA_A", "RA_G", "YP_C", "YP_T",
+                      "uniq_MA_G", "uniq_MA_T", "uniq_MP_G", "uniq_MP_T",
+                      "uniq_RA_A", "uniq_RA_G", "uniq_YP_C", "uniq_YP_T"]
+
+        with open(filename, "w") as f:
+            for k in order_stat:
+                try:
+                    print("\t".join([k, str(self.stat[k])]), file=f)
+                except:
+                    continue
+
+    def dbs_motif(self, tpx):
+        tpx.motif_statistics()
+        for i, mode in enumerate(tpx.motifs):
+            for con in tpx.motifs[mode]:
+                self.stat[mode+"_"+con] = str(tpx.motifs[mode][con])
+
+    def uniq_motif(self, tpx, rnalen):
+        tpx.uniq_motif_statistics(rnalen=rnalen)
+        for k, v in tpx.uniq_motifs.iteritems():
+            self.stat[k] = sum(v)
+            self.stat["uniq_" + k] = sum([1 for x in v if x > 0])

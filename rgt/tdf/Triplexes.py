@@ -1,3 +1,6 @@
+# Python Libraries
+from __future__ import print_function
+from __future__ import division
 import os
 from rgt.Util import GenomeData
 from rgt.tdf.triplexTools import save_sequence, run_triplexator
@@ -15,11 +18,11 @@ class Triplexes(object):
         self.fm = pars.fm
         self.of = pars.of
         self.mf = pars.mf
-        self.pars = pars.pars
+        self.pars = pars
         self.outdir = pars.o
 
     def search_triplex(self, target_regions, prefix, remove_temp=False):
-        print("    \tRunning Triplexator...")
+        # print("    \tRunning Triplexator...")
         rna_fasta = os.path.join(self.outdir, "rna_temp.fa")
         dna_fasta = os.path.join(self.outdir, prefix+".fa")
         tpx_file = os.path.join(self.outdir, prefix+".tpx")
@@ -36,7 +39,7 @@ class Triplexes(object):
 
         return tpx_file
 
-    def autobinding(self, rbss):
+    def find_autobinding(self, rbss):
         rna_fasta = os.path.join(self.pars.o, "rna_temp.fa")
         run_triplexator(ss=None, ds=None, autobinding=rna_fasta,
                         output=os.path.join(self.pars.o, "autobinding.tpx"),
@@ -45,6 +48,6 @@ class Triplexes(object):
         self.autobinding = RNADNABindingSet("autobinding")
         self.autobinding.read_tpx(filename=os.path.join(self.pars.o, "autobinding.tpx"), dna_fine_posi=True, seq=True)
 
-        self.autobinding.merge_rbs(rbss=self.rbss, rm_duplicate=False)
+        self.autobinding.merge_rbs(rbss=rbss, rm_duplicate=False)
         # self.autobinding.motif_statistics()
         # Saving autobinding dbs in BED

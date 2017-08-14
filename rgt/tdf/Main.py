@@ -18,7 +18,7 @@ import natsort as natsort_ob
 # Local Libraries
 # Distal Libraries
 from rgt import __version__
-from rgt.Util import Html
+# from rgt.Util import Html
 from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          gen_heatmap, generate_rna_exp_pv_table, revise_index, print2, \
                          output_summary, list_all_index, no_binding_response, write_stat, \
@@ -26,11 +26,12 @@ from triplexTools import rna_associated_gene, get_dbss, check_dir,\
                          merge_DBD_regions, rank_array, silentremove, summerize_stat, \
                          shorten_dir
 
-from tdf_promotertest import PromoterTest
+# from tdf_promotertest import PromoterTest
 from tdf_regiontest import RandomTest
 from rgt.tdf.Input import Input
 from rgt.tdf.Triplexes import Triplexes
 from rgt.tdf.Statistics import Statistics
+from rgt.tdf.Report import Report
 
 
 dir = os.getcwd()
@@ -312,10 +313,10 @@ def main():
 
         t0 = time.time()
         # Normalised output path
-        if not args.t: title = args.rn
-        else: title = args.t
-        
-        args.o = os.path.normpath(os.path.join(dir,args.o,title))
+        if not args.t: args.t = args.rn
+        # else: title = args.t
+        args.r = os.path.normpath(os.path.join(dir, args.r))
+        args.o = os.path.normpath(os.path.join(dir, args.o, args.t))
         check_dir(os.path.dirname(os.path.dirname(args.o)))
         check_dir(os.path.dirname(args.o))
         check_dir(args.o)
@@ -329,9 +330,6 @@ def main():
     ##### Promoter Test ############################################################
     ################################################################################
     if args.mode == 'promotertest':
-
-
-################################################################################################3
         # Checking all arguments
         if args.bed and not args.bg:
             print("Please add background promoters in BED format. (-bg)")
@@ -350,12 +348,10 @@ def main():
         else: args.protein_coding = False
         if args.known_only == "T": args.known_only = True
         else: args.known_only = False
-        args.r = os.path.normpath(os.path.join(dir, args.r))
 
-        print2(summary, "\n" + "*************** Promoter Test ****************")
+        print2(summary, "\n*************** Promoter Test ****************")
         print2(summary, "*** Input RNA sequence: " + args.r)
-        print2(summary, "*** Output directory: "+ shorten_dir(args.o) )
-
+        print2(summary, "*** Output directory: " + shorten_dir(args.o))
         print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
         #######################################
         # Input
@@ -363,9 +359,7 @@ def main():
         if args.de:
             tdf_input.dna.degenes()
         elif args.bed:
-            tdf_input.dna.bed_input()
-        tdf_input.rna.get_rna_info()
-        tdf_input.rna.connect_rna()
+            tdf_input.dna.de_bed_input()
         #######################################
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
@@ -377,169 +371,163 @@ def main():
         print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
         #######################################
         # Statistics
+        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promoters.")
         stat = Statistics(pars=args)
         stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
                                        background=tdf_input.dna.nontarget_regions,
                                        file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
-        triplexes.autobinding(rbss=stat.rbss, rna_exons=tdf_input.rna.regions)
+        triplexes.find_autobinding(rbss=stat.rbss)
         stat.fisher_exact_de()
+        stat.dbs_motif(tpx=stat.tpx_def)
+        stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
         stat.dbd_regions(rna_exons=tdf_input.rna.regions)
         stat.output_bed(input=tdf_input, triplexes=triplexes)
-
-
+        stat.summary_stat(input=tdf_input, triplexes=triplexes)
+        stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
+        t2 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+        #######################################
+        # Reports
+        print2(summary, "Step 3: Generate plot and output html files.")
         if len(stat.rbss) == 0:
-            no_binding_response(args=args, rna_regions=tdf_input.rna.regions, rna_name=args.rn, organism=args.organism,
-                                stat=promoter.stat, expression=promoter.rna_expression)
-        sys.exit()
+            no_binding_response(args=args,  stat=stat.stat)
 
+        reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+        reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
+                           linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+        reports.barplot(filename=args.rn+"_barplot.png")
+        reports.gen_html()
+        reports.gen_html_genes()
 
-        # if no dbd
+        t3 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3 - t2))))
 
+        silentremove(os.path.join(args.o, "rna_temp.fa"))
+        silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+        silentremove(os.path.join(args.o, "de.fa"))
+        silentremove(os.path.join(args.o, "nde.fa"))
+        silentremove(os.path.join(args.o, "de.txp"))
+        silentremove(os.path.join(args.o, "autobinding.tpx"))
 
-
-
-
-
-
-
-
-        # Get GenomicRegionSet from the given genes
-        #
-        # promoter = PromoterTest(gene_list_file=args.de, gtf=args.gtf, rna_name=args.rn, bed=args.bed, bg=args.bg,
-        #                         organism=args.organism, promoterLength=args.pl, summary=summary,
-        #                         temp=dir, output=args.o, showdbs=args.showdbs, score=args.score,
-        #                         scoreh=args.scoreh, filter_havana=args.filter_havana,
-        #                         protein_coding=args.protein_coding, known_only=args.known_only)
-        # if args.dump: sys.exit(0)
-        # promoter.get_rna_region_str(rna=args.r, expfile=args.rnaexp)
-        # promoter.connect_rna(rna=args.r, temp=args.o)
-        # promoter.search_triplex(temp=args.o, l=args.l, e=args.e, remove_temp=args.rt,
-        #                         c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        #
-        # t1 = time.time()
-        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1-t0))))
-        #
-        # print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promotors.")
-        # if args.obed: obedp = os.path.basename(args.o)
-        # else: obedp = None
-        # promoter.count_frequency(temp=args.o, remove_temp=args.rt, obedp=obedp, cutoff=args.ccf, l=args.l)
-        # promoter.fisher_exact(alpha=args.a)
-        # t2 = time.time()
-        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2-t1))))
-        # promoter.dbd_regions(output=args.o)
-        # promoter.autobinding(output=args.o, l=args.l, e=args.e,
-        #                      c=args.c, fr=args.fr, fm=args.fm, of=args.of, mf=args.mf, par=args.par)
-        # # promoter.dbs_motif(outdir=args.o)
-        # if len(promoter.rbss) == 0:
-        #     no_binding_response(args=args, rna_regions=promoter.rna_regions,
-        #                         rna_name=promoter.rna_name, organism=promoter.organism,
-        #                         stat=promoter.stat, expression=promoter.rna_expression)
-        #
-        #
-        # print2(summary, "Step 3: Establishing promoter profile.")
-        # t3 = time.time()
-        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3-t2))))
-        #
-        # print2(summary, "Step 4: Generate plot and output html files.")
-        # promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
-        #                     cut_off=args.accf, log=args.log, showpa=args.showpa,
-        #                     sig_region=promoter.sig_DBD,
-        #                     ylabel="Number of DBSs",
-        #                     linelabel="No. DBSs", filename=promoter.rna_name+"_lineplot.png")
-        #
-        # promoter.barplot(dirp=args.o, filename=promoter.rna_name+"_barplot.png", sig_region=promoter.sig_DBD)
-        # promoter.uniq_motif()
-        # #if args.showdbs:
-        # #    promoter.plot_lines(txp=promoter.txp_def, rna=args.r, dirp=args.o, ac=args.ac,
-        # #                        cut_off=args.accf, log=args.log, showpa=args.showpa,
-        # #                        sig_region=promoter.sig_region_dbs,
-        # #                        ylabel="Number of DBSs on target promoters",
-        # #                        linelabel="No. DBSs", filename="plot_dbss.png")
-        # #    promoter.barplot(dirp=args.o, filename="bar_dbss.png", sig_region=promoter.sig_region_dbs, dbs=True)
-        # # if args.motif: promoter.gen_motifs(temp=args.o)
-        #
-        # promoter.gen_html(directory=args.o, parameters=args, ccf=args.ccf, align=50, alpha=args.a)
-        # promoter.gen_html_genes(directory=args.o, align=50, alpha=args.a, nonDE=False)
-        # # promoter.save_table(path=os.path.dirname(args.o), table=promoter.ranktable,
-        # #                         filename="lncRNA_target_ranktable.txt")
-        # # promoter.save_table(path=os.path.dirname(args.o), table=promoter.dbstable,
-        # #                         filename="lncRNA_target_dbstable.txt")
-        #
-        # #promoter.heatmap(table="ranktable.txt", temp=os.path.dirname(args.o))
-        #
-        # t4 = time.time()
-        # print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t4-t3))))
-        # print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t4-t0))))
-        #
-        # output_summary(summary, args.o, "summary.txt")
-        # # save_profile(rna_regions=promoter.rna_regions, rna_name=promoter.rna_name,
-        # #              organism=promoter.organism, output=args.o, bed=args.bed,
-        # #              geneset=args.de, stat=promoter.stat, topDBD=promoter.topDBD,
-        # #              sig_DBD=promoter.sig_DBD, expression=promoter.rna_expression)
-        # # revise_index(root=os.path.dirname(os.path.dirname(args.o)))
-        #
-        #
-        # silentremove(os.path.join(args.o,"rna_temp.fa"))
-        # silentremove(os.path.join(args.o,"rna_temp.fa.fai"))
-        # silentremove(os.path.join(args.o, "de.fa"))
-        # silentremove(os.path.join(args.o, "nde.fa"))
-        # silentremove(os.path.join(args.o, "de.txp"))
-        # silentremove(os.path.join(args.o, "autobinding.txp"))
-        #
-        #
-        # write_stat(stat=promoter.stat, filename=os.path.join(args.o, "stat.txt"))
+        print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 
     ################################################################################
     ##### Genomic Region Test ######################################################
     ################################################################################
     if args.mode == 'regiontest':
-        def no_binding_code():
-            print("*** Find no triple helices binding on the given RNA")
-
-            pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
-            exp = os.path.basename(args.o)
-            tar_reg = os.path.basename(args.bed)
-            r_genes = rna_associated_gene(rna_regions=randomtest.rna_regions, name=randomtest.rna_name, organism=randomtest.organism)
-            newlines = []
-            if os.path.isfile(pro_path):
-                with open(pro_path,'r') as f:
-                    new_exp = True
-                    for line in f:
-                        line = line.strip()
-                        line = line.split("\t")
-                        if line[0] == exp:
-                            newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                             args.organism, tar_reg, "0",
-                                             "-", "1.0", r_genes, "No triplex found" ])
-                            new_exp = False
-                        else:
-                            newlines.append(line)
-                    if new_exp:
-                        newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                         args.organism, tar_reg,"0",
-                                         "-", "1.0", r_genes, "No triplex found" ])
-            else:
-                newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs",
-                                 "Top_DBD", "p-value","closest_genes"])
-                newlines.append([exp, args.rn, args.o.split("_")[-1],
-                                 args.organism, tar_reg, "0",
-                                 "-", "1.0", r_genes, "No triplex found" ])
-            with open(pro_path,'w') as f:
-                for lines in newlines:
-                    print("\t".join(lines), file=f)
-
-            #shutil.rmtree(args.o)
-            list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=randomtest.rna_regions)
-            shutil.rmtree(args.o)
-            sys.exit(1)
+        # def no_binding_code():
+        #     print("*** Find no triple helices binding on the given RNA")
+        #
+        #     pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
+        #     exp = os.path.basename(args.o)
+        #     tar_reg = os.path.basename(args.bed)
+        #     r_genes = rna_associated_gene(rna_regions=randomtest.rna_regions, name=randomtest.rna_name, organism=randomtest.organism)
+        #     newlines = []
+        #     if os.path.isfile(pro_path):
+        #         with open(pro_path,'r') as f:
+        #             new_exp = True
+        #             for line in f:
+        #                 line = line.strip()
+        #                 line = line.split("\t")
+        #                 if line[0] == exp:
+        #                     newlines.append([exp, args.rn, args.o.split("_")[-1],
+        #                                      args.organism, tar_reg, "0",
+        #                                      "-", "1.0", r_genes, "No triplex found" ])
+        #                     new_exp = False
+        #                 else:
+        #                     newlines.append(line)
+        #             if new_exp:
+        #                 newlines.append([exp, args.rn, args.o.split("_")[-1],
+        #                                  args.organism, tar_reg,"0",
+        #                                  "-", "1.0", r_genes, "No triplex found" ])
+        #     else:
+        #         newlines.append(["Experiment","RNA_names","Tag","Organism","Target_region","No_sig_DBDs",
+        #                          "Top_DBD", "p-value","closest_genes"])
+        #         newlines.append([exp, args.rn, args.o.split("_")[-1],
+        #                          args.organism, tar_reg, "0",
+        #                          "-", "1.0", r_genes, "No triplex found" ])
+        #     with open(pro_path,'w') as f:
+        #         for lines in newlines:
+        #             print("\t".join(lines), file=f)
+        #
+        #     #shutil.rmtree(args.o)
+        #     list_all_index(path=os.path.dirname(args.o), show_RNA_ass_gene=randomtest.rna_regions)
+        #     shutil.rmtree(args.o)
+        #     sys.exit(1)
 
             #########################################################
+
+        if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
+
         print2(summary, "\n"+"*************** Genomic Region Test ***************")
-        print2(summary, "*** Input RNA sequence: "+args.r)
-        print2(summary, "*** Input regions in BED: "+os.path.basename(args.bed))
-        print2(summary, "*** Number of randomization: "+str(args.n))
-        print2(summary, "*** Output directoey: "+os.path.basename(args.o))
+        print2(summary, "*** Input RNA sequence: " + args.r)
+        print2(summary, "*** Input regions in BED: " + os.path.basename(args.bed))
+        print2(summary, "*** Number of randomization: " + str(args.n))
+        print2(summary, "*** Output directory: " + os.path.basename(args.o))
+
+        #######################################
+        # Input
+        tdf_input = Input(pars=args)
+        tdf_input.dna.bed_input(bed=args.bed)
+
+
+
+        #######################################
+        # Triplexes
+        triplexes = Triplexes(organism=args.organism, pars=args)
+        target_tpx = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
+                                              prefix="target_promoters", remove_temp=True)
+        tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
+                                           prefix="nontarget_promoters", remove_temp=True)
+        t1 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t1 - t0))))
+        #######################################
+        # Statistics
+        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promoters.")
+        stat = Statistics(pars=args)
+        stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
+                                       background=tdf_input.dna.nontarget_regions,
+                                       file_tpx_de=tpx_de, file_tpx_nde=tpx_nde)
+        triplexes.find_autobinding(rbss=stat.rbss)
+        stat.fisher_exact_de()
+        stat.dbs_motif(tpx=stat.tpx_def)
+        stat.uniq_motif(tpx=stat.tpx_def, rnalen=tdf_input.rna.seq_length)
+        stat.dbd_regions(rna_exons=tdf_input.rna.regions)
+        stat.output_bed(input=tdf_input, triplexes=triplexes)
+        stat.summary_stat(input=tdf_input, triplexes=triplexes)
+        stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
+        t2 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+        #######################################
+        # Reports
+        print2(summary, "Step 3: Generate plot and output html files.")
+        if len(stat.rbss) == 0:
+            no_binding_response(args=args, stat=stat.stat)
+
+        reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+        reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
+                           linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+        reports.barplot(filename=args.rn + "_barplot.png")
+        reports.gen_html()
+        reports.gen_html_genes()
+
+        t3 = time.time()
+        print2(summary, "\tRunning time is: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+
+        silentremove(os.path.join(args.o, "rna_temp.fa"))
+        silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+        silentremove(os.path.join(args.o, "de.fa"))
+        silentremove(os.path.join(args.o, "nde.fa"))
+        silentremove(os.path.join(args.o, "de.txp"))
+        silentremove(os.path.join(args.o, "autobinding.tpx"))
+
+        print2(summary, "\nTotal running time is: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+
+
+
+
+
 
         args.r = os.path.normpath(os.path.join(dir,args.r))
 

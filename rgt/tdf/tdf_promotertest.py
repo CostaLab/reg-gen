@@ -28,8 +28,8 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 from rgt.motifanalysis.Statistics import multiple_test_correction
 from rgt.Util import SequenceType, Html, GenomeData, OverlapType
 from triplexTools import dump, load_dump, print2, get_rna_region_str, connect_rna, \
-    save_sequence, run_triplexator, dbd_regions, lineplot, value2str, rank_array,\
-    split_gene_name, region_link_internet, rna_associated_gene
+    save_sequence, run_triplexator, dbd_regions, value2str, rank_array,\
+    region_link_internet, rna_associated_gene
 
 
 # Color code for all analysis

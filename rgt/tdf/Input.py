@@ -1,3 +1,6 @@
+# Python Libraries
+from __future__ import print_function
+from __future__ import division
 import os
 import sys
 import pickle
@@ -42,7 +45,10 @@ class Input(object):
         self.background_seq = os.path.join(pars.o, "dna_background.fa")
         self.pars = pars
         self.dna = self.DNA(pars=pars)
+
         self.rna = self.RNA(pars=pars)
+        self.rna.get_rna_info()
+        self.rna.connect_rna()
 
     class DNA(object):
         def __init__(self, pars):
@@ -57,7 +63,7 @@ class Input(object):
             target_name = self.pars.de.rpartition("/")[-1].rpartition(".")[0]
             dumpname = ".".join(["tdf", "dump", self.pars.rn, target_name])
             try:
-                data = load_dump(path=self.pars.o, filename=dumpname)
+                data = load_dump(path=os.getcwd(), filename=dumpname)
                 self.de_genes = data[0]
                 self.nde_genes = data[1]
                 self.target_regions = data[2]
@@ -99,14 +105,14 @@ class Input(object):
                 data = [self.de_genes, self.nde_genes, self.target_regions, self.nontarget_regions]
                 if self.pars.score:
                     data.append(self.scores)
-                dump(object=data, path=self.pars.o, filename=dumpname)
+                dump(object=data, path=os.getcwd(), filename=dumpname)
 
             pass
 
         def annotation(self):
             pass
 
-        def bed_input(self):
+        def de_bed_input(self):
             self.target_regions = GenomicRegionSet("targets")
             self.target_regions.read(self.pars.bed)
             self.target_regions.remove_duplicates()
@@ -116,6 +122,13 @@ class Input(object):
             self.nontarget_regions.read(self.pars.bg)
             self.nontarget_regions.remove_duplicates()
 
+        def bed_input(self, bed):
+            self.target_regions = GenomicRegionSet("targets")
+            self.target_regions.read(bed)
+            self.target_regions.remove_duplicates()
+            if self.pars.score:
+                self.scores = self.target_regions.get_score_dict()
+
     class RNA:
         def __init__(self, pars):
             self.name = pars.rn
@@ -123,9 +136,10 @@ class Input(object):
             self.stat = {}
 
         def get_rna_info(self, expfile=None):
-            """Getting the rna region from the information header with the pattern:
-                            REGION_chr3_51978050_51983935_-_
-                        or  chr3:51978050-51983935 -    """
+            """Get the RNA information such as loci from the FASTA header following the pattern as below:
+                REGION_chr3_51978050_51983935_-_  or
+                chr3:51978050-51983935 -
+            """
             filename = self.pars.r
             self.regions = get_rna_region_str(filename)
             # print(self.rna_regions)
@@ -146,6 +160,6 @@ class Input(object):
 
         def connect_rna(self):
             d = connect_rna(self.pars.r, self.pars.o, self.name)
-            self.num_exons = str(d[0])
-            self.seq_length = str(d[1])
+            self.num_exons = d[0]
+            self.seq_length = d[1]
 
