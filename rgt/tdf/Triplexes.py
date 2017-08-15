@@ -18,6 +18,7 @@ class Triplexes(object):
         self.fm = pars.fm
         self.of = pars.of
         self.mf = pars.mf
+        self.rm = pars.rm
         self.pars = pars
         self.outdir = pars.o
 
@@ -49,5 +50,29 @@ class Triplexes(object):
         self.autobinding.read_tpx(filename=os.path.join(self.pars.o, "autobinding.tpx"), dna_fine_posi=True, seq=True)
 
         self.autobinding.merge_rbs(rbss=rbss, rm_duplicate=False)
-        # self.autobinding.motif_statistics()
-        # Saving autobinding dbs in BED
+
+    def get_tpx(self, rna_fasta_file, target_regions, dna_fine_posi, prefix="", remove_temp=False,
+                autobinding=False):
+        """Given a GenomicRegionSet to run Triplexator and return the RNADNABindingSet"""
+        # Generate FASTA
+        save_sequence(dir=self.outdir, filename="targets_" + prefix + ".fa",
+                      regions=target_regions, genome_path=self.genome)
+        # Triplexator
+        run_triplexator(ss=rna_fasta_file, ds=os.path.join(self.outdir, "targets_" + prefix + ".fa"),
+                        output=os.path.join(self.outdir, "targets_" + prefix + ".tpx"),
+                        l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm, of=self.of,
+                        mf=self.mf, rm=self.rm, par=self.pars.par)
+        # Autobinding
+        if autobinding:
+            run_triplexator(ss=rna_fasta_file, ds=os.path.join(self.outdir, "targets_" + prefix + ".fa"),
+                            output=os.path.join(self.outdir, "autobinding_" + prefix + ".txp"),
+                            l=self.l, e=self.e, c=self.c, fr=self.fr, fm=self.fm, of=self.of,
+                            mf=self.mf, rm=self.rm, par=self.pars.par + "_auto-binding-file")
+        # Read txp
+        tpx = RNADNABindingSet("targets")
+        tpx.read_tpx(os.path.join(self.outdir, "targets_" + prefix + ".tpx"), dna_fine_posi=dna_fine_posi, seq=True)
+        tpx.remove_duplicates()
+        if remove_temp:
+            os.remove(os.path.join(self.outdir, "targets_" + prefix + ".fa"))
+            os.remove(os.path.join(self.outdir, "targets_" + prefix + ".tpx"))
+        return tpx

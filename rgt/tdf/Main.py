@@ -458,7 +458,8 @@ def main():
 
             #########################################################
 
-        if args.bed: args.bed = os.path.normpath(os.path.join(dir, args.bed))
+        if args.bed:
+            args.bed = os.path.normpath(os.path.join(dir, args.bed))
 
         print2(summary, "\n"+"*************** Genomic Region Test ***************")
         print2(summary, "*** Input RNA sequence: " + args.r)
@@ -476,8 +477,8 @@ def main():
         #######################################
         # Triplexes
         triplexes = Triplexes(organism=args.organism, pars=args)
-        target_tpx = triplexes.search_triplex(target_regions=tdf_input.dna.target_regions,
-                                              prefix="target_promoters", remove_temp=True)
+        target_tpx = triplexes.get_tpx(target_regions=tdf_input.dna.target_regions,
+                                              prefix="target_regions", remove_temp=True)
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
