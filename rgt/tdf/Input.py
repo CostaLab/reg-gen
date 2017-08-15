@@ -89,6 +89,8 @@ class Input(object):
                                                       unmaplist=True, variants=False)
                 if self.pars.score:
                     self.scores = self.target_regions.get_score_dict()
+                else:
+                    self.scores = None
 
                 #######################
                 # Non DE genes
@@ -128,6 +130,11 @@ class Input(object):
             self.target_regions.remove_duplicates()
             if self.pars.score:
                 self.scores = self.target_regions.get_score_dict()
+
+            # for rbs in self.rbss:
+            #     tr = len(self.txp.merged_dict[rbs])
+            #     self.counts_tr[rbs] = [tr, len(self.dna_region) - tr]
+            #     self.counts_dbs[rbs] = len(self.txpf.merged_dict[rbs])
 
     class RNA:
         def __init__(self, pars):
