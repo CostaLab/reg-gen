@@ -8,7 +8,7 @@ mkdir -p $DIR
 
 ################################################################
 # THOR
-#
+
 echo "**********************************************"
 echo "Testing THOR"
 mkdir -p ${DIR}/THOR
@@ -51,14 +51,15 @@ fi
 # Run test script
 cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
 rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/
 
 cd ${DIR}/TDF/TDF_examples/TERC_hg19/
 rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 100 -mp 5
 
 echo "********* TDF test completed ****************"
 
-#################################################################
-## Viz
+################################################################
+# Viz
 echo "**********************************************"
 echo "Testing Viz"
 mkdir -p ${DIR}/viz
@@ -108,8 +109,8 @@ rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t inte
 
 echo "********* viz test completed ****************"
 
-#################################################################
-## Motif Analysis
+################################################################
+# Motif Analysis
 echo "**********************************************"
 echo "Testing Motif Analysis"
 mkdir -p ${DIR}/motifanalysis
@@ -137,8 +138,8 @@ rgt-motifanalysis --enrichment input/background.bed input/regions_K562.bed
 
 echo "********* Motif Analysis test completed ****************"
 
-##################################################################
-## HINT
+#################################################################
+# HINT
 echo "**********************************************"
 echo "Testing HINT"
 mkdir -p ${DIR}/HINT
@@ -179,4 +180,4 @@ cd HINT_ATAC
 mkdir output
 rgt-hint --atac-footprints --organism=mm10 input/B_ATAC_chr1.bam input/B_ATACPeaks_chr1.bed --output-location=output --output-prefix=B_ATAC_chr1_footprints
 
-echo "********* HINT test completed ****************"
+echo "********* HINT test completed ****************"#
