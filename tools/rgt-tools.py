@@ -63,7 +63,7 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description='RGT-convertor is for converting various data format \
                                                   in bioinformatic research\
-                                                  Author: Chao-Chung Kuo\
+                                                  Author: Joseph Chao-Chung Kuo\
                                                   \nVersion: 0.1.1', 
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     
@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
 
     ############### GTF to BED ###############################################
-    # python rgt-convertor.py gtf_to_bed -i -o
+    # python rgt-tools.py gtf_to_bed -i -o
     parser_gtf2bed = subparsers.add_parser('gtf_to_bed',
                                            help="[GTF] Convert GTF file to BED by the given biotype")
     parser_gtf2bed.add_argument('-i', metavar='input', type=str, help="Input GTF file")
@@ -97,7 +97,7 @@ if __name__ == "__main__":
                                 help="Save exons into entries with block in BED")
 
     ############### GTF to FASTA #############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
                                              help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
     parser_gtf2fasta.add_argument('-i', metavar='input', type=str, help="Input GTF file")
@@ -107,13 +107,13 @@ if __name__ == "__main__":
     parser_gtf2fasta.add_argument('-genome', metavar='   ', type=str, help="Define the FASTA file of the genome")
     
     ############### GTF add chr on each entry #################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_gtfachr = subparsers.add_parser('gtf_add_chr', 
                                              help="[GTF] Add 'chr' to each line in GTF for proper chromosome name")
     parser_gtfachr.add_argument('-i', metavar='input', type=str, help="Input GTF file")
 
     ############### GTF get intergenic regions in BED #################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_gtfintergenic = subparsers.add_parser('gtf_intergenic',
                                            help="[GTF] Generate BED files for exon, intron, and intergenic regions")
     parser_gtfintergenic.add_argument('-i', metavar='input', type=str, help="Input GTF file")
@@ -121,14 +121,14 @@ if __name__ == "__main__":
     parser_gtfintergenic.add_argument('-organism', metavar='  ', type=str, help="Define the organism")
 
     ############### BED add score ############################################
-    # python rgt-convertor.py
-    parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column")
+    # python rgt-tools.py
+    parser_bedac = subparsers.add_parser('bed_add_score', help="[BED] Add score column, such as '0'")
     parser_bedac.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedac.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bedac.add_argument('-v', metavar='value', type=str, help="Define value to add")
 
     ############### BED merge  ############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedmerge = subparsers.add_parser('bed_merge', help="[BED] Merge regions by name")
     parser_bedmerge.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmerge.add_argument('-o', metavar='output', type=str, help="Output BED file")
@@ -137,7 +137,7 @@ if __name__ == "__main__":
 
 
     ############### BED merge by name ############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedmn = subparsers.add_parser('bed_merge_by_name', help="[BED] Merge regions by name")
     parser_bedmn.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedmn.add_argument('-o', metavar='output', type=str, help="Output BED file")
@@ -161,7 +161,7 @@ if __name__ == "__main__":
                                   help="Target gene list")
 
     ############### BED change strand ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedchstrand = subparsers.add_parser('bed_change_strand', help="[BED] Change strand of regions by the target BED file")
     parser_bedchstrand.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedchstrand.add_argument('-o', metavar='output', type=str, help="Output BED file")
@@ -173,7 +173,7 @@ if __name__ == "__main__":
                                     help="Define the stand for all regions")
 
     ############### BED extend ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedex = subparsers.add_parser('bed_extend', help="[BED] Extend the regions")
     parser_bedex.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedex.add_argument('-o', metavar='output', type=str, help="Output BED name.")
@@ -192,7 +192,7 @@ if __name__ == "__main__":
                               help="Extend from the downstream ends.")
 
     ############### BED subtract ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedsub = subparsers.add_parser('bed_subtract', help="[BED] Subtract the regions")
     parser_bedsub.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedsub.add_argument('-o', metavar='output', type=str, help="Output BED name.")
@@ -206,7 +206,7 @@ if __name__ == "__main__":
                                help="Read the blocks in target.")
 
     ############### BED cut ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_bedcut = subparsers.add_parser('bed_cut', help="[BED] Cut the regions")
     parser_bedcut.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bedcut.add_argument('-o', metavar='output', type=str, help="Output BED name.")
@@ -216,7 +216,7 @@ if __name__ == "__main__":
                                help="Strand-specific.")
 
     ############### BED get promoters ########################################
-    # python rgt-convertor.py bed_get_promoters -i -o -organism
+    # python rgt-tools.py bed_get_promoters -i -o -organism
     parser_bedgp = subparsers.add_parser('bed_get_promoters', 
                        help="[BED] Get promoters from the given genes")
     parser_bedgp.add_argument('-i', metavar='input', type=str, help="Input file (BED or gene list)")
@@ -226,7 +226,7 @@ if __name__ == "__main__":
                               help="Define length of promoters (default:1000bp)")
     
     ############### BED get upstream regions #################################
-    # python rgt-convertor.py bed_upstream -i -o
+    # python rgt-tools.py bed_upstream -i -o
     parser_bedupstream = subparsers.add_parser('bed_upstream', 
                        help="[BED] Get regions upstream from the given BED file")
     parser_bedupstream.add_argument('-i', metavar='input', type=str, help="Input BED file")
@@ -311,7 +311,7 @@ if __name__ == "__main__":
     parser_bedoverlap.add_argument('-o', metavar='output', type=str, help="Output text file")
 
     ############### BED distance ###############################################
-    # python rgt-convertor.py
+    # python rgt-tools.py
     parser_beddis = subparsers.add_parser('bed_distance', help="[BED] Show the distance between two region sets")
     parser_beddis.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_beddis.add_argument('-o', metavar='output', type=str, help="Output table.")
@@ -345,7 +345,7 @@ if __name__ == "__main__":
     parser_bed12tobed6.add_argument('-e', action="store_true", help="Add exon number or not")
 
     ############### Divide regions in BED by expression #######################
-    # python rgt-convertor.py divideBED -bed -t -o1 -o1 -c -m
+    # python rgt-tools.py divideBED -bed -t -o1 -o1 -c -m
     parser_divideBED = subparsers.add_parser('bed_divide', 
                        help="[BED] Divide the BED files by the expression.")
     parser_divideBED.add_argument('-bed', metavar='   ', type=str, help="Input BED file")
@@ -438,7 +438,7 @@ if __name__ == "__main__":
     parser_circRNA.add_argument('-c', metavar='circ', type=str, help="Output BED file of circular RNA")
 
     ############### FASTA slicing #############################################
-    # python rgt-convertor.py sliceFASTA -i -o -l -p
+    # python rgt-tools.py sliceFASTA -i -o -l -p
     parser_sliceFASTA = subparsers.add_parser('sliceFASTA', 
                        help="[FASTA] Slice the sequence by given position and length")
     parser_sliceFASTA.add_argument('-i', metavar='input', type=str, help="Input FASTA file")
@@ -448,7 +448,7 @@ if __name__ == "__main__":
     parser_sliceFASTA.add_argument('-r', '--reverse', default=False, action="store_true", help="Reverse the sequence")
 
     ############### TXP to BED #############################################
-    # python rgt-convertor.py txp2bed -i -o
+    # python rgt-tools.py txp2bed -i -o
     parser_txp2bed = subparsers.add_parser('txp2bed',
                                            help="[BED] Convert TXP file into BED format")
     parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")

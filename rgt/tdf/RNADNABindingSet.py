@@ -1,12 +1,9 @@
 # Python Libraries
 from __future__ import print_function
-from collections import *
 import numpy
-import pysam
 # Local Libraries
 
 # Distal Libraries
-from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.Util import OverlapType
 from BindingSiteSet import BindingSite, BindingSiteSet

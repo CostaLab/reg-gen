@@ -5,7 +5,7 @@ import os
 from rgt.Util import GenomeData
 from rgt.tdf.triplexTools import save_sequence, run_triplexator
 from rgt.tdf.RNADNABindingSet import RNADNABindingSet
-from rgt.GenomicRegionSet import GenomicRegionSet
+# from rgt.GenomicRegionSet import GenomicRegionSet
 
 
 def random_each(input):
