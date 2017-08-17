@@ -53,6 +53,7 @@ class Input(object):
     class DNA(object):
         def __init__(self, pars):
             self.pars = pars
+            self.scores = None
 
         #     if format == "degenes":
         #         self.degenes(filename)
@@ -89,8 +90,6 @@ class Input(object):
                                                       unmaplist=True, variants=False)
                 if self.pars.score:
                     self.scores = self.target_regions.get_score_dict()
-                else:
-                    self.scores = None
 
                 #######################
                 # Non DE genes
