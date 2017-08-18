@@ -991,7 +991,7 @@ def no_binding_response(args, stat):
             os.remove(os.path.join(args.o, f))
 
     write_stat(stat, os.path.join(args.o, "stat.txt"))
-    sys.exit(1)
+    # sys.exit(0)
 
 def write_stat(stat, filename):
     """Write the statistics into file"""

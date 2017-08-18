@@ -1506,9 +1506,9 @@ if __name__ == "__main__":
             region.data = "\t".join([str(fc)] + data[1:])
 
         gain_peaks = GenomicRegionSet("gain_peaks")
-        lose_peaks = GenomicRegionSet("lose_peaks")
+        lose_peaks = GenomicRegionSet("lost_peaks")
         gain_table = GenomicRegionSet("gain_table")
-        lose_table = GenomicRegionSet("lose_table")
+        lose_table = GenomicRegionSet("lost_table")
 
         for region in bed2:
             l = region.data.split()
@@ -1541,12 +1541,12 @@ if __name__ == "__main__":
                     lose_peaks.add(region)
 
         gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
-        lose_peaks.write(os.path.join(args.o, name + tag + "_lose.bed"))
+        lose_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))
-        lose_table.write(os.path.join(args.o, name + tag + "_lose.table"))
+        lose_table.write(os.path.join(args.o, name + tag + "_lost.table"))
 
         print("Number of gain peaks:\t" + str(len(gain_peaks)))
-        print("Number of lose peaks:\t" + str(len(lose_peaks)))
+        print("Number of lost peaks:\t" + str(len(lose_peaks)))
         
         
     ############### getseq #############################################

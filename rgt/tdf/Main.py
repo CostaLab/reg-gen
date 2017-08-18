@@ -385,13 +385,13 @@ def main():
         print("Step 3: Generate plot and output html files.")
         if len(stat.rbss) == 0:
             no_binding_response(args=args,  stat=stat.stat)
-
-        reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-        reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
-                           linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
-        reports.barplot(filename=args.rn+"_barplot.png")
-        reports.gen_html_promotertest()
-        reports.gen_html_genes()
+        else:
+            reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+            reports.plot_lines(tpx=stat.tpx_def, ylabel="Number of DBSs",
+                               linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+            reports.barplot(filename=args.rn+"_barplot.png")
+            reports.gen_html_promotertest()
+            reports.gen_html_genes()
         t3 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
         silentremove(os.path.join(args.o, "rna_temp.fa"))
