@@ -62,7 +62,7 @@ class Input(object):
 
         def degenes(self):
             target_name = self.pars.de.rpartition("/")[-1].rpartition(".")[0]
-            dumpname = ".".join(["tdf", "dump", self.pars.rn, target_name])
+            dumpname = ".".join(["tdf", "dump", target_name])
             try:
                 data = load_dump(path=os.getcwd(), filename=dumpname)
                 self.de_genes = data[0]
