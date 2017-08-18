@@ -1,30 +1,24 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
-import sys
 import os
-# import re
+import sys
 import time
-# import shutil
 import getpass
 import argparse
 import datetime
 import subprocess
 import matplotlib
 matplotlib.use('Agg', warn=False)
-from collections import *
-# import natsort as natsort_ob
+from collections import OrderedDict
 
 # Local Libraries
 # Distal Libraries
 from rgt import __version__
 # from rgt.Util import Html
-from triplexTools import get_dbss, check_dir,\
-                         generate_rna_exp_pv_table, revise_index, print2, \
-                         no_binding_response, \
-                         integrate_stat, update_profile, integrate_html, \
-                         merge_DBD_regions, silentremove, summerize_stat, \
-                         shorten_dir
+from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
+                         no_binding_response, integrate_stat, update_profile, integrate_html, \
+                         merge_DBD_regions, silentremove, summerize_stat, shorten_dir
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
@@ -349,10 +343,10 @@ def main():
         if args.known_only == "T": args.known_only = True
         else: args.known_only = False
 
-        print2(summary, "\n*************** Promoter Test ****************")
-        print2(summary, "*** Input RNA sequence: " + args.r)
-        print2(summary, "*** Output directory: " + shorten_dir(args.o))
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
+        print("\n*************** Promoter Test ****************")
+        print("*** Input RNA sequence: " + args.r)
+        print("*** Output directory: " + shorten_dir(args.o))
+        print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
         #######################################
         # Input
         tdf_input = Input(pars=args)
@@ -368,10 +362,10 @@ def main():
         tpx_nde = triplexes.search_triplex(target_regions=tdf_input.dna.nontarget_regions,
                                            prefix="nontarget_promoters", remove_temp=True)
         t1 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1-t0))))
         #######################################
         # Statistics
-        print2(summary, "Step 2: Calculate the frequency of DNA binding sites within the promoters.")
+        print("Step 2: Calculate the frequency of DNA binding sites within the promoters.")
         stat = Statistics(pars=args)
         stat.count_frequency_promoters(target_regions=tdf_input.dna.target_regions,
                                        background=tdf_input.dna.nontarget_regions,
@@ -385,10 +379,10 @@ def main():
         stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="promotertest")
         stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
         t2 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
         #######################################
         # Reports
-        print2(summary, "Step 3: Generate plot and output html files.")
+        print("Step 3: Generate plot and output html files.")
         if len(stat.rbss) == 0:
             no_binding_response(args=args,  stat=stat.stat)
 
@@ -399,14 +393,14 @@ def main():
         reports.gen_html_promotertest()
         reports.gen_html_genes()
         t3 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
         silentremove(os.path.join(args.o, "rna_temp.fa"))
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "nde.fa"))
         silentremove(os.path.join(args.o, "de.txp"))
         silentremove(os.path.join(args.o, "autobinding.tpx"))
-        print2(summary, "\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+        print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
 
 
     ################################################################################
@@ -416,12 +410,12 @@ def main():
         if args.bed:
             args.bed = os.path.normpath(os.path.join(dir, args.bed))
 
-        print2(summary, "\n"+"*************** Genomic Region Test ***************")
-        print2(summary, "*** Input RNA sequence: " + args.r)
-        print2(summary, "*** Input regions in BED: " + os.path.basename(args.bed))
-        print2(summary, "*** Number of randomization: " + str(args.n))
-        print2(summary, "*** Output directory: " + os.path.basename(args.o))
-        print2(summary, "Step 1: Calculate the triplex forming sites on RNA and DNA.")
+        print("\n"+"*************** Genomic Region Test ***************")
+        print("*** Input RNA sequence: " + args.r)
+        print("*** Input regions in BED: " + os.path.basename(args.bed))
+        print("*** Number of randomization: " + str(args.n))
+        print("*** Output directory: " + os.path.basename(args.o))
+        print("Step 1: Calculate the triplex forming sites on RNA and DNA.")
 
         #######################################
         # Input
@@ -439,10 +433,10 @@ def main():
                                         target_regions=tdf_input.dna.target_regions,
                                         prefix="target_regions_fine", remove_temp=True, dna_fine_posi=True)
         t1 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
         #######################################
         # Statistics
-        print2(summary, "Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
+        print("Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
         stat.target_stat(target_regions=tdf_input.dna.target_regions, tpx=stat.tpx, tpxf=stat.tpxf)
         stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
                          filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
@@ -454,10 +448,10 @@ def main():
         stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
         stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
         t2 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
         #######################################
         # Reports
-        print2(summary, "Step 3: Generate plot and output html files.")
+        print("Step 3: Generate plot and output html files.")
         if len(stat.rbss) == 0:
             no_binding_response(args=args, stat=stat.stat)
 
@@ -470,10 +464,10 @@ def main():
         reports.gen_html_regiontest()
 
         t3 = time.time()
-        print2(summary, "\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
         silentremove(os.path.join(args.o, "rna_temp.fa"))
         silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
         silentremove(os.path.join(args.o, "de.fa"))
         silentremove(os.path.join(args.o, "de.txp"))
         silentremove(os.path.join(args.o, "autobinding.tpx"))
-        print2(summary, "\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+        print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
