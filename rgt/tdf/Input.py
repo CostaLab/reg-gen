@@ -151,7 +151,7 @@ class Input(object):
             # print(self.rna_regions)
             if self.regions:
                 r_genes = rna_associated_gene(rna_regions=self.regions,
-                                              name=self.name, organism=self.organism)
+                                              name=self.name, organism=self.pars.organism)
             if self.regions and len(self.regions[0]) == 5:
                 self.expression = float(self.regions[0][-1])
 
