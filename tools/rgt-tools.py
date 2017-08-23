@@ -1499,7 +1499,7 @@ if __name__ == "__main__":
 
         for region in bed2:
             data = region.data.split()
-            stat = data[4].split(";")
+            stat = data[5].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
@@ -1512,7 +1512,7 @@ if __name__ == "__main__":
 
         for region in bed2:
             l = region.data.split()
-            s = l[4].split(";")
+            s = l[5].split(";")
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
 
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
