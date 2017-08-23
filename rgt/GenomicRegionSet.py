@@ -216,13 +216,13 @@ class GRSFileIO:
         def read_to_grs(grs, filename):
             fasta = Fastafile(filename)
 
-            for gr in grs:
+            for r in grs:
                 try:
-                    seq = str(fasta.fetch(gr.chrom, gr.initial, gr.final))
-                    strand = gr.orientation if gr.orientation else "+"
-                    gr.sequence = Sequence(seq=seq, name=str(gr), strand=strand)
+                    seq = str(fasta.fetch(r.chrom, r.initial, r.final))
+                    strand = r.orientation if r.orientation else "+"
+                    r.sequence = Sequence(seq=seq, name=str(r), strand=strand)
                 except:
-                    pass
+                    print("Warning: region '%s' is skipped" % r)
 
         @staticmethod
         def write_from_grs(grs, filename, mode="w"):
@@ -232,7 +232,7 @@ class GRSFileIO:
                         f.write(">" + r.chrom + ":" + str(r.initial) + "-" + str(r.final) + "-" +
                                 str(r.orientation) + "\n" + r.sequence.seq + "\n")
                     except:
-                        pass
+                        print("Warning: region '%s' is skipped" % r)
 
 
 class GenomicRegionSet:
@@ -713,7 +713,6 @@ class GenomicRegionSet:
         """
 
         return self.intersect_c(y, mode, rm_duplicates)
-
 
     def intersect_python(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         z = GenomicRegionSet(self.name)
