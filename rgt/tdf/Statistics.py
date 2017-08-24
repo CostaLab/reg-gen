@@ -249,12 +249,12 @@ class Statistics(object):
         self.stat["DBD_sig"] = str(len(self.sig_DBD))
         self.stat["autobinding"] = len(triplexes.autobinding)
 
-    def output_bed(self, input):
+    def output_bed(self, input, tpx):
         if len(input.rna.regions) > 0:
             # print(self.rna_regions)
             rna_regionsets = GenomicRegionSet(name=self.pars.rn)
             rna_regionsets.load_from_list(input.rna.regions)
-            autobinding_loci = self.tpx_def.get_overlapping_regions(regionset=rna_regionsets)
+            autobinding_loci = tpx.get_overlapping_regions(regionset=rna_regionsets)
             autobinding_loci.write(filename=os.path.join(self.pars.o, self.pars.rn+"_autobinding.bed"))
 
     def write_stat(self, filename):
