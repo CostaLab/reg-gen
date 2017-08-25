@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 import os
 from rgt.Util import GenomeData
-from rgt.tdf.triplexTools import save_sequence, run_triplexator
+from rgt.tdf.triplexTools import save_sequence, run_triplexator, silentremove
 from rgt.tdf.RNADNABindingSet import RNADNABindingSet
 # from rgt.GenomicRegionSet import GenomicRegionSet
 
@@ -55,8 +55,9 @@ def random_each(input):
     sys.stdout.flush()
     print("".join(["="] * int(input[6])), end="")
 
-    os.remove(os.path.join(input[3], "random_" + input[0] + ".fa"))
-    os.remove(os.path.join(input[3], "random_" + input[0] + ".tpx"))
+    silentremove(os.path.join(input[3], "random_" + input[0] + ".fa"))
+    silentremove(os.path.join(input[3], "random_" + input[0] + ".tpx"))
+
     return [[len(tr) for tr in tpx.merged_dict.values()], [len(dbss) for dbss in tpxf.merged_dict.values()]]
 
 

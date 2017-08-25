@@ -940,8 +940,6 @@ def get_rna_region_str(rna):
                             r = [c, s, e, sign]
                         if score:
                             r.append(score)
-                        else:
-                            print(line)
                     except:
                         break
 
@@ -950,10 +948,6 @@ def get_rna_region_str(rna):
                 # Score
                 if r:
                     rna_regions.append(r)
-    # if rna_regions:
-    #     rna_regions.sort(key=lambda x: x[1])
-    #     if rna_regions[0][3] == "-":
-    #         rna_regions = rna_regions[::-1]
 
     return rna_regions
 

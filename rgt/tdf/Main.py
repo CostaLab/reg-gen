@@ -434,40 +434,46 @@ def main():
                                         prefix="target_regions_fine", remove_temp=True, dna_fine_posi=True)
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
+
+
         #######################################
         # Statistics
         print("Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
         stat.target_stat(target_regions=tdf_input.dna.target_regions, tpx=stat.tpx, tpxf=stat.tpxf)
-        stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
-                         filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
-        triplexes.find_autobinding(rbss=stat.rbss)
-        stat.dbs_motif(tpx=stat.tpxf)
-        stat.uniq_motif(tpx=stat.tpxf, rnalen=tdf_input.rna.seq_length)
-        stat.dbd_regions(rna_exons=tdf_input.rna.regions)
-        stat.output_bed(input=tdf_input, tpx=stat.tpxf)
-        stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
-        stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
-        t2 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
-        #######################################
-        # Reports
-        print("Step 3: Generate plot and output html files.")
+
         if len(stat.rbss) == 0:
-            no_binding_response(args=args, stat=stat.stat)
+            no_binding_response(args=args,  stat=stat.stat)
+        else:
+            stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
+                             filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
+            triplexes.find_autobinding(rbss=stat.rbss)
+            stat.dbs_motif(tpx=stat.tpxf)
+            stat.uniq_motif(tpx=stat.tpxf, rnalen=tdf_input.rna.seq_length)
+            stat.dbd_regions(rna_exons=tdf_input.rna.regions)
+            stat.output_bed(input=tdf_input, tpx=stat.tpxf)
+            stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest")
+            stat.write_stat(filename=os.path.join(args.o, "stat.txt"))
+            t2 = time.time()
+            print("\tRunning time: " + str(datetime.timedelta(seconds=round(t2 - t1))))
+            #######################################
+            # Reports
+            print("Step 3: Generate plot and output html files.")
+            if len(stat.rbss) == 0:
+                no_binding_response(args=args, stat=stat.stat)
 
-        reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
-        reports.plot_lines(tpx=stat.tpx, ylabel="Number of DBSs",
-                           linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
-        reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
-                        truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
-                        ylabel="Number of DBS on target regions")
-        reports.gen_html_regiontest()
+            reports = Report(pars=args, input=tdf_input, triplexes=triplexes, stat=stat)
+            reports.plot_lines(tpx=stat.tpx, ylabel="Number of DBSs",
+                               linelabel="No. DBSs", filename=args.rn + "_lineplot.png")
+            reports.boxplot(filename=args.rn + "_boxplot.png", matrix=stat.region_matrix, sig_region=stat.sig_DBD,
+                            truecounts=stat.counts_dbs.values(), sig_boolean=stat.data["region"]["sig_boolean"],
+                            ylabel="Number of DBS on target regions")
+            reports.gen_html_regiontest()
 
-        t3 = time.time()
-        print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
-        silentremove(os.path.join(args.o, "rna_temp.fa"))
-        silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
-        silentremove(os.path.join(args.o, "de.fa"))
-        silentremove(os.path.join(args.o, "de.txp"))
-        silentremove(os.path.join(args.o, "autobinding.tpx"))
-        print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
+            t3 = time.time()
+            print("\tRunning time: " + str(datetime.timedelta(seconds=round(t3 - t2))))
+            silentremove(os.path.join(args.o, "rna_temp.fa"))
+            silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
+            silentremove(os.path.join(args.o, "de.fa"))
+            silentremove(os.path.join(args.o, "de.txp"))
+            silentremove(os.path.join(args.o, "autobinding.tpx"))
+            print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
