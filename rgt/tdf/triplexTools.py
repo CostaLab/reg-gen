@@ -569,8 +569,8 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     txp.remove_duplicates()
 
     if remove_temp:
-        os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
-        os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
+        silentremove(os.path.join(temp,"dna_"+prefix+".fa"))
+        silentremove(os.path.join(temp,"dna_"+prefix+".txp"))
 
     return txp
 
@@ -615,8 +615,8 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         arg_ptr[i + 1] = s
     # print(arg_ptr)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
-    os.remove(os.path.join(output + ".summary"))
-    os.remove(os.path.join(output + ".log"))
+    silentremove(os.path.join(output + ".summary"))
+    silentremove(os.path.join(output + ".log"))
 
 
 
@@ -982,7 +982,7 @@ def no_binding_response(args, stat):
     # shutil.rmtree(args.o)
     for f in os.listdir(args.o):
         if os.path.isfile(os.path.join(args.o, f)):
-            os.remove(os.path.join(args.o, f))
+            silentremove(os.path.join(args.o, f))
 
     write_stat(stat, os.path.join(args.o, "stat.txt"))
     # sys.exit(0)
