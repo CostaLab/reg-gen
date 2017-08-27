@@ -20,8 +20,9 @@ from rgt.GeneSet import GeneSet
 from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.AnnotationSet import AnnotationSet
-from rgt.Util import OverlapType, GenomeData
+from rgt.Util import OverlapType, npath, GenomeData
 from rgt.GenomicRegionSet import GenomicRegionSet, GRSFileIO
+from rgt import __version__
 tag = "RGT-tools"
 
 
@@ -60,12 +61,10 @@ if __name__ == "__main__":
     ##########################################################################
     ##### PARAMETERS #########################################################
     ##########################################################################
-    
-    parser = argparse.ArgumentParser(description='RGT-convertor is for converting various data format \
-                                                  in bioinformatic research\
-                                                  Author: Joseph Chao-Chung Kuo\
-                                                  \nVersion: 0.1.1', 
-                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    version_message = "rgt-tools - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
+    parser = argparse.ArgumentParser(description='RGT-tools is for converting various data format in bioinformatic research\
+                                                  Author: Joseph Chao-Chung Kuo',
+                                     formatter_class=argparse.ArgumentDefaultsHelpFormatter, version=version_message)
     
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
@@ -95,16 +94,6 @@ if __name__ == "__main__":
                                 help="Use gene ID as region name, instead of gene symbol.")
     parser_gtf2bed.add_argument('-b', action="store_true",
                                 help="Save exons into entries with block in BED")
-
-    ############### GTF to FASTA #############################################
-    # python rgt-tools.py
-    parser_gtf2fasta = subparsers.add_parser('gtf_to_fasta', 
-                                             help="[GTF] Convert GTF file to FASTA (exons) by the given gene name")
-    parser_gtf2fasta.add_argument('-i', metavar='input', type=str, help="Input GTF file")
-    parser_gtf2fasta.add_argument('-o', metavar='output', type=str, help="Output FASTA file")
-    parser_gtf2fasta.add_argument('-t', metavar='transcript', type=str, help="Define the target transcript")
-    parser_gtf2fasta.add_argument('-g', metavar='gene', type=str, help="Define the target gene")
-    parser_gtf2fasta.add_argument('-genome', metavar='   ', type=str, help="Define the FASTA file of the genome")
     
     ############### GTF add chr on each entry #################################
     # python rgt-tools.py
@@ -460,21 +449,27 @@ if __name__ == "__main__":
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    elif len(sys.argv) == 2:  
-        # retrieve subparsers from parser
-        subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
-        # there will probably only be one subparser_action,but better save than sorry
-        for subparsers_action in subparsers_actions:
-            # get all subparsers and print help
-            for choice, subparser in subparsers_action.choices.items():
-                if choice == sys.argv[1]:
-                    print("\nYou need more arguments.")
-                    print("\nSubparser '{}'".format(choice))        
-                    subparser.print_help()
-        sys.exit(1)
+    elif len(sys.argv) == 2:
+        if sys.argv[1] == "-h" or sys.argv[1] == "--help":
+            parser.print_help()
+            sys.exit(0)
+        elif sys.argv[1] == "-v" or sys.argv[1] == "--version":
+            print(version_message)
+            sys.exit(0)
+        else:
+            # retrieve subparsers from parser
+            subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
+            # there will probably only be one subparser_action,but better save than sorry
+            for subparsers_action in subparsers_actions:
+                # get all subparsers and print help
+                for choice, subparser in subparsers_action.choices.items():
+                    if choice == sys.argv[1]:
+                        print("\nYou need more arguments.")
+                        print("\nSubparser '{}'".format(choice))
+                        subparser.print_help()
+            sys.exit(1)
     else:   
         args = parser.parse_args()
-
         try:
             if not os.path.exists(args.o.rpartition("/")[0]):
                 os.makedirs(args.o.rpartition("/")[0])
@@ -497,11 +492,14 @@ if __name__ == "__main__":
         entries = []
         with open(args.i) as gtf:
             for line in gtf:
-                line = line.strip().split("\t")
-                if line[2] == "exon":
-                    adddata = line[8].split(";")
-                    #print([ line[:7] + adddata])
-                    entries.append( line[:8] + adddata )
+                if line.startswith("#"):
+                    continue
+                else:
+                    line = line.strip().split("\t")
+                    if line[2] == "exon":
+                        adddata = line[8].split(";")
+                        #print([ line[:7] + adddata])
+                        entries.append( line[:8] + adddata )
         # sort
         entries.sort(key=lambda x: x[9])
 
@@ -592,23 +590,6 @@ if __name__ == "__main__":
 
         regions.write(filename=args.o, io=GRSFileIO.Bed12 if args.b else GRSFileIO.Bed)
         print("Number:\t\t" + str(len(regions)))
-
-
-
-    ############### GTF to FASTA #############################################
-    elif args.mode == "gtf_to_fasta":
-        print(tag+": [GTF] Export certain gene or transcripts into FASTA sequence")
-        print("input:\t" + args.i)
-        print("output:\t" + args.o)
-        print("genome:\t" + args.genome)
-        print("gene list:\t" + args.g)
-
-        ann = AnnotationSet(gene_source=args.genome,
-                            filter_havana=False, protein_coding=False, known_only=False)
-        geneset = GeneSet("target")
-        geneset.read(args.g)
-
-        genes = ann.get_genes(gene_set = geneset)
 
 
     ############### GTF add chr ##############################################

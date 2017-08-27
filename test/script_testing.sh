@@ -27,7 +27,7 @@ fi
 # Run test script
 cd THOR_example_data/
 rm -rf report_* sample-*
-rgt-THOR THOR.config -n sample --report
+rgt-THOR -n sample --report THOR.config
 
 echo "********* THOR test completed ****************"
 
@@ -180,4 +180,7 @@ cd HINT_ATAC
 mkdir output
 rgt-hint --atac-footprints --organism=mm10 input/B_ATAC_chr1.bam input/B_ATACPeaks_chr1.bed --output-location=output --output-prefix=B_ATAC_chr1_footprints
 
-echo "********* HINT test completed ****************"#
+echo "********* HINT test completed ****************"
+
+#################################################################
+# rgt-tools.py
