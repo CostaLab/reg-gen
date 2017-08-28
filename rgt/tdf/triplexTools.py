@@ -1009,8 +1009,9 @@ def integrate_stat(path):
             data[item] = {}
             with open(pro) as f:
                 for line in f:
-                    l = line.strip().split()
+                    l = line.strip().split("\t")
                     data[item][l[0]] = l[1]
+            print(data[item])
 
             data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
             data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)

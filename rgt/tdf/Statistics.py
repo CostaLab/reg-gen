@@ -198,37 +198,40 @@ class Statistics(object):
                     rna_name=self.pars.rn, output=self.pars.o)
 
 
-    def summary_stat(self, input, triplexes, mode):
+    def summary_stat(self, input, triplexes, mode, no_binding=False):
         """Summerize the statistics according to its mode: promotertest or regiontest."""
         self.stat["target_regions"] = str(len(input.dna.target_regions))
 
         if mode == "promotertest":
             self.stat["background_regions"] = str(len(input.dna.nontarget_regions))
             self.stat["DBSs_target_all"] = str(len(self.tpx_de))
-            self.stat["DBSs_background_all"] = str(len(self.tpx_nde))
-            self.stat["p_value"] = self.min_p_value
 
-            self.stat["DBD_sig"] = str(len(self.sig_DBD))
-            sigDBD = GenomicRegionSet("DBD_sig")
-            sigDBD.sequences = self.sig_DBD
-            rbss = self.tpx_de.get_rbs()
-            overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
-            self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
-            rbss = self.tpx_nde.get_rbs()
-            overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
-            self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
+            if not no_binding:
+                self.stat["DBSs_background_all"] = str(len(self.tpx_nde))
+                self.stat["p_value"] = self.min_p_value
+
+                self.stat["DBD_sig"] = str(len(self.sig_DBD))
+                sigDBD = GenomicRegionSet("DBD_sig")
+                sigDBD.sequences = self.sig_DBD
+                rbss = self.tpx_de.get_rbs()
+                overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+                self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+                rbss = self.tpx_nde.get_rbs()
+                overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+                self.stat["DBSs_background_DBD_sig"] = str(len(overlaps))
         elif mode == "regiontest":
             self.stat["background_regions"] = str(len(input.dna.target_regions))
-            self.stat["DBSs_target_all"] = str(len(self.tpxf))
-            self.stat["DBSs_background_all"] = str(numpy.mean(self.counts_dbss))
-            self.stat["p_value"] = str(min(self.data["region"]["p"]))
+            if not no_binding:
+                self.stat["DBSs_target_all"] = str(len(self.tpxf))
+                self.stat["DBSs_background_all"] = str(numpy.mean(self.counts_dbss))
+                self.stat["p_value"] = str(min(self.data["region"]["p"]))
 
-            self.stat["DBD_sig"] = str(len(self.data["region"]["sig_region"]))
-            sigDBD = GenomicRegionSet("DBD_sig")
-            sigDBD.sequences = self.data["region"]["sig_region"]
-            rbss = self.tpx.get_rbs()
-            overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
-            self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
+                self.stat["DBD_sig"] = str(len(self.data["region"]["sig_region"]))
+                sigDBD = GenomicRegionSet("DBD_sig")
+                sigDBD.sequences = self.data["region"]["sig_region"]
+                rbss = self.tpx.get_rbs()
+                overlaps = rbss.intersect(y=sigDBD, mode=OverlapType.ORIGINAL)
+                self.stat["DBSs_target_DBD_sig"] = str(len(overlaps))
 
 
         if input.rna.regions:
@@ -237,16 +240,18 @@ class Statistics(object):
             self.stat["associated_gene"] = r_genes
             self.stat["loci"] = input.rna.regions[0][0] + ":" + str(input.rna.regions[0][1]) + "-" + \
                                 str(input.rna.regions[-1][2]) + "_" + input.rna.regions[0][3]
-        else:
-            self.stat["associated_gene"] = "."
-            self.stat["loci"] = "-"
+        # else:
+        #     self.stat["associated_gene"] = "."
+        #     self.stat["loci"] = "-"
 
         self.stat["expression"] = str(input.rna.expression)
         self.stat["exons"] = input.rna.num_exons
         self.stat["seq_length"] = input.rna.seq_length
 
-        self.stat["DBD_all"] = str(len(self.rbss))
-        self.stat["DBD_sig"] = str(len(self.sig_DBD))
+        if not no_binding:
+
+            self.stat["DBD_all"] = str(len(self.rbss))
+            self.stat["DBD_sig"] = str(len(self.sig_DBD))
         self.stat["autobinding"] = len(triplexes.autobinding)
 
     def output_bed(self, input, tpx):

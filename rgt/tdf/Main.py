@@ -440,13 +440,15 @@ def main():
         # Statistics
         print("Step 2: Permutation by randomization the target regions for "+str(args.n)+ " times.")
         stat.target_stat(target_regions=tdf_input.dna.target_regions, tpx=stat.tpx, tpxf=stat.tpxf)
+        triplexes.find_autobinding(rbss=stat.rbss)
 
         if len(stat.rbss) == 0:
+            stat.summary_stat(input=tdf_input, triplexes=triplexes, mode="regiontest", no_binding=True)
             no_binding_response(args=args,  stat=stat.stat)
         else:
             stat.random_test(repeats=args.n, target_regions=tdf_input.dna.target_regions,
                              filter_bed=args.f, mp=args.mp, genome_fasta=triplexes.genome.get_genome())
-            triplexes.find_autobinding(rbss=stat.rbss)
+
             stat.dbs_motif(tpx=stat.tpxf)
             stat.uniq_motif(tpx=stat.tpxf, rnalen=tdf_input.rna.seq_length)
             stat.dbd_regions(rna_exons=tdf_input.rna.regions)
