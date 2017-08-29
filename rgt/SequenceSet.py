@@ -1,12 +1,10 @@
 # Python Libraries
 from __future__ import print_function
-import os
 import copy
 import pysam
 # Local Libraries
 
 # Distal Libraries
-from Util import SequenceType
 
 ####################################################################################
 ####################################################################################

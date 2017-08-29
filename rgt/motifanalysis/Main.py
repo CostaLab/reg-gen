@@ -13,17 +13,17 @@ from optparse import OptionGroup
 from shutil import copy
 
 # Internal
-from rgt import __version__
-from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
-from Motif import Motif, Thresholds
-from Match import match_single, match_multiple
-from Statistics import multiple_test_correction, get_fisher_dict
-from Util import Input, Result
-from rgt.AnnotationSet import AnnotationSet
+from .. import __version__
+from ..Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from ..AnnotationSet import AnnotationSet
+from .Motif import Motif, Thresholds
+from .Match import match_single, match_multiple
+from .Statistics import multiple_test_correction, get_fisher_dict
+from .Util import Input, Result
 
 # External
 from pysam import Fastafile

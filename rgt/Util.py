@@ -10,7 +10,7 @@ from __future__ import print_function
 import os
 import sys
 import shutil
-import ConfigParser
+from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
