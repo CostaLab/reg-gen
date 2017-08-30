@@ -7,8 +7,8 @@
 from __future__ import print_function
 
 # Internal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
+from ..GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
 
 # External
 import MOODS.tools

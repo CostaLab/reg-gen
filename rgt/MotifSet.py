@@ -10,15 +10,9 @@ Represents a transcription factor motif and the standardization of motif annotat
 # Python
 from __future__ import print_function
 import os
-import sys
-import sets
 import glob
-import sets
-from copy import deepcopy
 
 # Internal
-from GenomicRegion import GenomicRegion
-from Util import GenomeData, MotifData, AuxiliaryFunctions
 
 #TODO:
 #- connect motif with file and biopython object

@@ -1,10 +1,9 @@
 # Import
 import os
-import sys
 
 # Internal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import OverlapType
+from ..GenomicRegionSet import GenomicRegionSet
+from ..Util import OverlapType
 
 """
 Creates a bed file with MPBSs with (in green) and without (in red) evidence.

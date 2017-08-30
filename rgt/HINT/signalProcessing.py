@@ -11,7 +11,7 @@ from math import log, ceil, floor, isnan
 # Internal
 from ..Util import ErrorHandler
 from ..Util import AuxiliaryFunctions
-from pileupRegion import PileupRegion
+from .pileupRegion import PileupRegion
 
 # External
 import numpy as np

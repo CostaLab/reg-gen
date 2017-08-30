@@ -16,8 +16,8 @@ import pylab
 
 
 # Internal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import OverlapType
+from ..GenomicRegionSet import GenomicRegionSet
+from ..Util import OverlapType
 
 """
 Evaluate the footprints prediction using TF ChIP-seq or expression data.

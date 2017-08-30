@@ -110,7 +110,7 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.4"],
+        ["Biopython>=1.64", "fisher>=0.1.5"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (

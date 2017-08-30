@@ -14,9 +14,9 @@ import pyx
 from math import log, ceil, floor, isnan
 # Internal
 from ..Util import GenomeData
-from signalProcessing import GenomicSignal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from biasTable import BiasTable
+from .signalProcessing import GenomicSignal
+from ..GenomicRegionSet import GenomicRegionSet
+from .biasTable import BiasTable
 from ..Util import AuxiliaryFunctions
 from scipy.stats import scoreatpercentile
 

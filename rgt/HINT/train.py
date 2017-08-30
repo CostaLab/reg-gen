@@ -12,10 +12,9 @@ from hmmlearn import hmm
 
 # Internal
 from ..Util import GenomeData
-from signalProcessing import GenomicSignal
-from rgt.GenomicRegionSet import GenomicRegionSet
-from hmm import HMM
-from biasTable import BiasTable
+from .signalProcessing import GenomicSignal
+from .hmm import HMM
+from .biasTable import BiasTable
 
 """
 Train a hidden Markov model (HMM) based on the annotation data

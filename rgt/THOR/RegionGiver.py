@@ -23,10 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import sys
 
-# from rgt.CoverageSet import CoverageSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
-# from os.path import splitext, basename
+from ..GenomicRegion import GenomicRegion
+from ..GenomicRegionSet import GenomicRegionSet
 
 class RegionGiver:
     regionset = GenomicRegionSet('')

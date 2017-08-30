@@ -25,11 +25,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 # from optparse import OptionParser
 import sys
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.CoverageSet import CoverageSet
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..CoverageSet import CoverageSet
 import numpy as np
 import os
-from rgt.GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegionSet import GenomicRegionSet
 from copy import deepcopy
 
 def get_experimental_matrix(bams, bed):

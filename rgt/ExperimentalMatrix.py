@@ -7,18 +7,15 @@ ExperimentalMatrix describes an experiment.
 
 # Python
 from __future__ import print_function
-import os
-import sys
-from collections import *
 
 # Internal
-from rgt.GenomicRegionSet import *
-from rgt.GeneSet import *
-# from rgt.helper import pretty
+from .GenomicRegionSet import *
+from .GeneSet import *
 
 # External
 
-possible_types=["genes","regions","reads"]
+possible_types = ["genes", "regions", "reads"]
+
 
 class ExperimentalMatrix:
     """ Describes an experimental matrix.

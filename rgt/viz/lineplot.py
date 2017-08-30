@@ -7,10 +7,10 @@ import matplotlib.pyplot as plt
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
+from ..Util import Html
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
+from .shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
 # Local test
 dir = os.getcwd()
 

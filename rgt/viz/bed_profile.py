@@ -10,10 +10,10 @@ import natsort
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from shared_function import shiftedColorMap
+from ..Util import Html
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
+from .shared_function import shiftedColorMap
 # Local test
 dir = os.getcwd()
 

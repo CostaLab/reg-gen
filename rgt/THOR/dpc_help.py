@@ -24,14 +24,14 @@ from optparse import OptionParser, OptionGroup
 from datetime import datetime
 
 # Internal
-from rgt.THOR.postprocessing import merge_delete, filter_deadzones
-from MultiCoverageSet import MultiCoverageSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.THOR.get_extension_size import get_extension_size
-from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
-from input_parser import input_parser
-from rgt.Util import which, npath
-from rgt import __version__
+from ..THOR.postprocessing import merge_delete, filter_deadzones
+from .MultiCoverageSet import MultiCoverageSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..THOR.get_extension_size import get_extension_size
+from ..THOR.get_fast_gen_pvalue import get_log_pvalue_new
+from .input_parser import input_parser
+from ..Util import which, npath
+from .. import __version__
 
 # External
 from numpy import linspace

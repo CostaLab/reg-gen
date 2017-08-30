@@ -1,7 +1,7 @@
 # Python Libraries
 from __future__ import print_function
 from __future__ import division
-from shared_function import *
+from .shared_function import *
 
 
 # Local test

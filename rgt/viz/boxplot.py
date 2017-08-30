@@ -10,12 +10,11 @@ from scipy.stats import mstats, mannwhitneyu
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import CoverageSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from shared_function import output_array, gen_tags, tag_from_r, colormap, multiple_correction,\
-                            value2str
+from ..Util import Html
+from ..CoverageSet import CoverageSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..ExperimentalMatrix import ExperimentalMatrix
+from .shared_function import output_array, gen_tags, tag_from_r, colormap, multiple_correction, value2str
 
 
 ###########################################################################################

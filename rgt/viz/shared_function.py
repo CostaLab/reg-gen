@@ -19,11 +19,11 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from rgt.AnnotationSet import AnnotationSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
+from ..Util import Html
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
+from ..AnnotationSet import AnnotationSet
+from ..motifanalysis.Statistics import multiple_test_correction
 
 # Local test
 dir = os.getcwd()

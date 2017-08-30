@@ -22,13 +22,13 @@ from matplotlib.ticker import MaxNLocator
 
 
 # Distal Libraries
-from rgt.SequenceSet import SequenceSet
-from rgt.viz.plotTools import output_array
-from rgt.GenomicRegion import GenomicRegion
-from RNADNABindingSet import RNADNABindingSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
+from ..SequenceSet import SequenceSet
+from ..viz.plotTools import output_array
+from ..GenomicRegion import GenomicRegion
+from .RNADNABindingSet import RNADNABindingSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..motifanalysis.Statistics import multiple_test_correction
+from ..Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
 
 # Color code for all analysis
 target_color = "mediumblue"

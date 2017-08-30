@@ -13,9 +13,9 @@ from scipy import stats
 
 # Internal
 from ..Util import AuxiliaryFunctions, GenomeData
-from rgt.GenomicRegionSet import GenomicRegionSet
-from biasTable import BiasTable
-from signalProcessing import GenomicSignal
+from ..GenomicRegionSet import GenomicRegionSet
+from .biasTable import BiasTable
+from .signalProcessing import GenomicSignal
 
 """
 Perform differential footprints analysis based on the prediction.

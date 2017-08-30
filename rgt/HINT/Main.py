@@ -11,19 +11,19 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Internal
-from rgt import __version__
+from .. import __version__
 from ..Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
 from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GenomicRegion import GenomicRegion
 from ..GenomicRegionSet import GenomicRegionSet
-from signalProcessing import GenomicSignal
-from hmm import HMM
-from biasTable import BiasTable
-from evaluation import Evaluation
-from train import TrainHMM
-from evidence import Evidence
-from plot import Plot
-from diff_footprints import DiffFootprints
+from .signalProcessing import GenomicSignal
+from .hmm import HMM
+from .biasTable import BiasTable
+from .evaluation import Evaluation
+from .train import TrainHMM
+from .evidence import Evidence
+from .plot import Plot
+from .diff_footprints import DiffFootprints
 
 # External
 import os
