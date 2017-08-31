@@ -102,6 +102,9 @@ class Plot:
         mean_norm_signal_f = mean_norm_signal_f / num_sites
         mean_norm_signal_r = mean_norm_signal_r / num_sites
 
+        mean_norm_signal_f = self.rescaling(mean_norm_signal_f)
+        mean_norm_signal_r = self.rescaling(mean_norm_signal_r)
+
         mean_norm_signal = signal.boyle_norm(mean_norm_signal)
         perc = scoreatpercentile(mean_norm_signal, 98)
         std = np.std(mean_norm_signal)
@@ -172,6 +175,9 @@ class Plot:
         max_signal = max(max(mean_norm_signal_f), max(mean_norm_signal_r))
         ax2.plot(x, mean_norm_signal_f, color='red', label='Forward')
         ax2.plot(x, mean_norm_signal_r, color='green', label='Reverse')
+        ax2.plot(x, mean_norm_signal_f, color='red')
+        ax2.plot(x, mean_norm_signal_r, color='green')
+        ax2.set_title(self.output_prefix, fontweight='bold')
 
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
@@ -188,8 +194,8 @@ class Plot:
         ax2.legend(loc="upper right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
+        #ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
+        #ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -200,7 +206,7 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2, 1.4, logo_fname, width=17.8, height=1.75))
+        c.insert(pyx.epsfile.epsfile(1.48, 0.92, logo_fname, width=18.5, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -209,202 +215,9 @@ class Plot:
         os.remove(pwm_fname)
         os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
-        #os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
-
-    # def line1(self):
-    #     signal = GenomicSignal(self.reads_file)
-    #     signal.load_sg_coefs(slope_window_size=9)
-    #     bias_table = BiasTable()
-    #     bias_table_list = self.bias_table.split(",")
-    #     table = bias_table.load_table(table_file_name_F=bias_table_list[0],
-    #                                   table_file_name_R=bias_table_list[1])
-    #
-    #     genome_data = GenomeData(self.organism)
-    #     fasta = Fastafile(genome_data.get_genome())
-    #     pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
-    #                      ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
-    #                      ("N", [0.0] * self.window_size)])
-    #
-    #     mean_norm_signal = np.zeros(self.window_size)
-    #     mean_norm_signal_f = np.zeros(self.window_size)
-    #     mean_norm_signal_r = np.zeros(self.window_size)
-    #
-    #     num_sites = 0
-    #
-    #     mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
-    #     mpbs_regions.read(self.motif_file)
-    #
-    #     bam = Samfile(self.reads_file, "rb")
-    #
-    #     for region in mpbs_regions:
-    #         if str(region.name).split(":")[-1] == "Y":
-    #             # Extend by 50 bp
-    #             mid = (region.initial + region.final) / 2
-    #             p1 = mid - (self.window_size / 2)
-    #             p2 = mid + (self.window_size / 2)
-    #
-    #             # Fetch raw signal
-    #             norm_signal, norm_signal_f, norm_signal_r = \
-    #                 self.get_signal1(ref=region.chrom, start=p1,end=p2, bam=bam, fasta=fasta, bias_table=table,
-    #                                  signal=signal)
-    #
-    #             num_sites += 1
-    #             mean_norm_signal = np.add(mean_norm_signal, norm_signal)
-    #             mean_norm_signal_f = np.add(mean_norm_signal_f, norm_signal_f)
-    #             mean_norm_signal_r = np.add(mean_norm_signal_r, norm_signal_r)
-    #
-    #             # Update pwm
-    #             aux_plus = 1
-    #             dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
-    #             if (region.final - region.initial) % 2 == 0:
-    #                 aux_plus = 0
-    #             dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
-    #                                                                      p1 + aux_plus, p2 + aux_plus)).upper())
-    #             if region.orientation == "+":
-    #                 for i in range(0, len(dna_seq)):
-    #                     pwm_dict[dna_seq[i]][i] += 1
-    #             elif region.orientation == "-":
-    #                 for i in range(0, len(dna_seq_rev)):
-    #                     pwm_dict[dna_seq_rev[i]][i] += 1
-    #
-    #     mean_norm_signal = mean_norm_signal / num_sites
-    #     mean_norm_signal_f = mean_norm_signal_f / num_sites
-    #     mean_norm_signal_r = mean_norm_signal_r / num_sites
-    #
-    #     mean_norm_signal = signal.boyle_norm(mean_norm_signal)
-    #     perc = scoreatpercentile(mean_norm_signal, 98)
-    #     std = np.std(mean_norm_signal)
-    #     mean_norm_signal = signal.hon_norm_atac(mean_norm_signal, perc, std)
-    #
-    #     mean_norm_signal_f = signal.boyle_norm(mean_norm_signal_f)
-    #     perc = scoreatpercentile(mean_norm_signal_f, 98)
-    #     std = np.std(mean_norm_signal_f)
-    #     mean_norm_signal_f = signal.hon_norm_atac(mean_norm_signal_f, perc, std)
-    #
-    #     mean_norm_signal_r = signal.boyle_norm(mean_norm_signal_r)
-    #     perc = scoreatpercentile(mean_norm_signal_r, 98)
-    #     std = np.std(mean_norm_signal_r)
-    #     mean_norm_signal_r = signal.hon_norm_atac(mean_norm_signal_r, perc, std)
-    #
-    #     mean_slope_signal = signal.slope(mean_norm_signal, signal.sg_coefs)
-    #     mean_slope_signal_f = signal.slope(mean_norm_signal_f, signal.sg_coefs)
-    #     mean_slope_signal_r = signal.slope(mean_norm_signal_r, signal.sg_coefs)
-    #
-    #     mean_slope_signal = signal.boyle_norm(mean_slope_signal)
-    #     perc = scoreatpercentile(mean_slope_signal, 98)
-    #     std = np.std(mean_slope_signal)
-    #     mean_slope_signal = signal.hon_norm_atac(mean_slope_signal, perc, std)
-    #
-    #     mean_slope_signal_f = signal.boyle_norm(mean_slope_signal_f)
-    #     perc = scoreatpercentile(mean_slope_signal_f, 98)
-    #     std = np.std(mean_slope_signal_f)
-    #     mean_slope_signal_f = signal.hon_norm_atac(mean_slope_signal_f, perc, std)
-    #
-    #     mean_slope_signal_r = signal.boyle_norm(mean_slope_signal_r)
-    #     perc = scoreatpercentile(mean_slope_signal_r, 98)
-    #     std = np.std(mean_slope_signal_r)
-    #     mean_slope_signal_r = signal.hon_norm_atac(mean_slope_signal_r, perc, std)
-    #
-    #     # Output the norm and slope signal
-    #     output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
-    #     f = open(output_fname, "w")
-    #     f.write("\t".join((map(str, mean_norm_signal))) + "\n")
-    #     f.write("\t".join((map(str, mean_slope_signal))) + "\n")
-    #     f.write("\t".join((map(str, mean_norm_signal_f))) + "\n")
-    #     f.write("\t".join((map(str, mean_slope_signal_f))) + "\n")
-    #     f.write("\t".join((map(str, mean_norm_signal_r))) + "\n")
-    #     f.write("\t".join((map(str, mean_slope_signal_r))) + "\n")
-    #     f.close()
-    #
-    #     # Output PWM and create logo
-    #     pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.output_prefix))
-    #     pwm_file = open(pwm_fname, "w")
-    #     for e in ["A", "C", "G", "T"]:
-    #         pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
-    #     pwm_file.close()
-    #
-    #     logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
-    #     pwm = motifs.read(open(pwm_fname), "pfm")
-    #     pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
-    #                 color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
-    #                 show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
-    #                 show_fineprint=False, show_ends=False)
-    #
-    #     fig, (ax1, ax2) = plt.subplots(2)
-    #
-    #     start = -(self.window_size / 2)
-    #     end = (self.window_size / 2) - 1
-    #     x = np.linspace(start, end, num=self.window_size)
-    #
-    #     ax1.plot(x, mean_norm_signal, color='red', label='ATAC-seq')
-    #
-    #     ax1.xaxis.set_ticks_position('bottom')
-    #     ax1.yaxis.set_ticks_position('left')
-    #     ax1.spines['top'].set_visible(False)
-    #     ax1.spines['right'].set_visible(False)
-    #     ax1.spines['left'].set_position(('outward', 15))
-    #     ax1.spines['bottom'].set_position(('outward', 5))
-    #     ax1.tick_params(direction='out')
-    #
-    #     ax1.set_xticks([start, 0, end])
-    #     ax1.set_xticklabels([str(start), 0, str(end)])
-    #     min_signal = min(mean_norm_signal)
-    #     max_signal = max(mean_norm_signal)
-    #     ax1.set_yticks([min_signal, max_signal])
-    #     ax1.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-    #
-    #     ax1.set_title(self.output_prefix, fontweight='bold')
-    #     ax1.set_xlim(start, end)
-    #     ax1.set_ylim([min_signal, max_signal])
-    #     ax1.legend(loc="upper right", frameon=False)
-    #     ax1.set_ylabel("Average Signal", rotation=90, fontweight='bold')
-    #
-    #     min_signal = min(min(mean_norm_signal_f), min(mean_norm_signal_r))
-    #     max_signal = max(max(mean_norm_signal_f), max(mean_norm_signal_r))
-    #     ax2.plot(x, mean_norm_signal_f, color='red', label='Forward')
-    #     ax2.plot(x, mean_norm_signal_r, color='green', label='Reverse')
-    #
-    #     ax2.xaxis.set_ticks_position('bottom')
-    #     ax2.yaxis.set_ticks_position('left')
-    #     ax2.spines['top'].set_visible(False)
-    #     ax2.spines['right'].set_visible(False)
-    #     ax2.spines['left'].set_position(('outward', 15))
-    #     ax2.tick_params(direction='out')
-    #     ax2.set_xticks([start, 0, end])
-    #     ax2.set_xticklabels([str(start), 0, str(end)])
-    #     ax2.set_yticks([min_signal, max_signal])
-    #     ax2.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-    #     ax2.set_xlim(start, end)
-    #     ax2.set_ylim([min_signal, max_signal])
-    #     ax2.legend(loc="upper right", frameon=False)
-    #
-    #     ax2.spines['bottom'].set_position(('outward', 40))
-    #     ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-    #     ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
-    #
-    #     figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
-    #     fig.subplots_adjust(bottom=.2, hspace=.5)
-    #     fig.tight_layout()
-    #     fig.savefig(figure_name, format="eps", dpi=300)
-    #
-    #     # Creating canvas and printing eps / pdf with merged results
-    #     output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
-    #     c = pyx.canvas.canvas()
-    #     c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-    #     c.insert(pyx.epsfile.epsfile(0, 1.55, logo_fname, width=17.5, height=3))
-    #     c.writeEPSfile(output_fname)
-    #     os.system("epstopdf " + figure_name)
-    #     os.system("epstopdf " + logo_fname)
-    #     os.system("epstopdf " + output_fname)
-    #
-    #     os.remove(pwm_fname)
-    #     os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
-    #     os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
-    #     os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
-    #     os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
-    #     os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
 
     def get_signal1(self, ref, start, end, bam, fasta, bias_table, signal):
         # Parameters
@@ -591,7 +404,7 @@ class Plot:
                     show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                     show_fineprint=False, show_ends=False)
 
-        fig, (ax1, ax2) = plt.subplots(2)
+        fig, (ax1, ax2) = plt.subplots(2, figsize=(10, 5))
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -601,8 +414,10 @@ class Plot:
         # bias signal per strand
         min_ = min(min(mean_signal_bias_f), min(mean_signal_bias_r))
         max_ = max(max(mean_signal_bias_f), max(mean_signal_bias_r))
-        ax1.plot(x, mean_signal_bias_f, color='red', label='Forward')
-        ax1.plot(x, mean_signal_bias_r, color='blue', label='Reverse')
+        #ax1.plot(x, mean_signal_bias_f, color='purple', label='Forward')
+        #ax1.plot(x, mean_signal_bias_r, color='green', label='Reverse')
+        ax1.plot(x, mean_signal_bias_f, color='purple')
+        ax1.plot(x, mean_signal_bias_r, color='green')
         ax1.xaxis.set_ticks_position('bottom')
         ax1.yaxis.set_ticks_position('left')
         ax1.spines['top'].set_visible(False)
@@ -618,15 +433,17 @@ class Plot:
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_, max_])
         ax1.legend(loc="upper right", frameon=False)
-        ax1.set_ylabel("Bias Signal", rotation=90, fontweight='bold')
+        #ax1.set_ylabel("Bias Signal", rotation=90, fontweight='bold')
         ####################################################################
 
         #####################################################################
         # Bias corrected, non-bias corrected (not strand specific)
         min_ = min(min(mean_signal_raw), min(mean_signal_bc))
         max_ = max(max(mean_signal_raw), max(mean_signal_bc))
-        ax2.plot(x, mean_signal_raw, color='red', label='Uncorrected')
-        ax2.plot(x, mean_signal_bc, color='green', label='Corrected')
+        #ax2.plot(x, mean_signal_raw, color='blue', label='Uncorrected')
+        #ax2.plot(x, mean_signal_bc, color='red', label='Corrected')
+        ax2.plot(x, mean_signal_raw, color='blue')
+        ax2.plot(x, mean_signal_bc, color='red')
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
         ax2.spines['top'].set_visible(False)
@@ -639,11 +456,11 @@ class Plot:
         ax2.set_yticklabels([str(round(min_, 2)), str(round(max_, 2))], rotation=90)
         ax2.set_xlim(start, end)
         ax2.set_ylim([min_, max_])
-        ax2.legend(loc="upper right", frameon=False)
+        #ax2.legend(loc="upper right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
+        #ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
+        #ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
         ###################################################################################
 
         ###############################################################################
@@ -657,7 +474,8 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(2.0, 1.39, logo_fname, width=13.8, height=1.75))
+        #c.insert(pyx.epsfile.epsfile(1.10, 0.92, logo_fname, width=23.35, height=1.75))
+        c.insert(pyx.epsfile.epsfile(1.60, 0.92, logo_fname, width=23.35, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -1034,17 +852,6 @@ class Plot:
 
                 # Fetch raw signal
                 for read in bam.fetch(region.chrom, p1, p2):
-                    # if (not read.is_reverse):
-                    #     cut_site = read.pos + self.forward_shift
-                    #     for i in range(max(cut_site - self.upstream_ext, p1),
-                    #                    min(cut_site + self.downstream_ext, p2)):
-                    #         signal_raw_f[i - p1] += 1.0
-                    #
-                    # else:
-                    #     cut_site = read.aend + self.reverse_shift - 1
-                    #     for i in range(max(cut_site - self.downstream_ext, p1),
-                    #                    min(cut_site + self.upstream_ext, p2)):
-                    #         signal_raw_r[i - p1] += 1.0
                     if (not read.is_reverse):
                         cut_site = read.pos + self.forward_shift
                         if cut_site >= p1 and cut_site < p2:

@@ -809,6 +809,9 @@ def atac_footprints():
     parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
     parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
 
+    parser.add_option("--unstrand-specific", dest="unstrand_specific",
+                      action="store_true", default=False, help=SUPPRESS_HELP)
+
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=getcwd(),
                       help=("Path where the output bias table files will be written."))
@@ -862,56 +865,101 @@ def atac_footprints():
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
     regions.merge()
 
-    for r in regions:
-        atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
-            reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
-                                       options.upstream_ext, options.forward_shift, options.reverse_shift,
-                                       options.initial_clip, options.norm_per, options.slope_per,
-                                       bias_table, genome_data.get_genome())
-        try:
-            input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
-        except Exception:
-            err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
-                r.final)]) + "). This iteration will be skipped.")
-            continue
+    if not options.unstrand_specific:
+        for r in regions:
+            atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
+                reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
+                                           options.upstream_ext, options.forward_shift, options.reverse_shift,
+                                           options.initial_clip, options.norm_per, options.slope_per,
+                                           bias_table, genome_data.get_genome())
+            try:
+                input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
+            except Exception:
+                err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
 
-        # Applying HMM
-        try:
-            posterior_list = hmm.predict(input_sequence)
-            if options.fp_bed_fname:
-                output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
-                                output_fname=options.fp_bed_fname, fp_state=options.fp_state)
-        except Exception:
-            err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
-                r.final)]) + "). This iteration will be skipped.")
-            continue
+            # Applying HMM
+            try:
+                posterior_list = hmm.predict(input_sequence)
+                if options.fp_bed_fname:
+                    output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
+                                    output_fname=options.fp_bed_fname, fp_state=options.fp_state)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
 
-        # Formatting results
-        start_pos = 0
-        flag_start = False
-        fp_state_nb = options.fp_state
-        for k in range(r.initial, r.initial + len(posterior_list)):
-            curr_index = k - r.initial
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = options.fp_state
+            for k in range(r.initial, r.initial + len(posterior_list)):
+                curr_index = k - r.initial
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(r.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
             if (flag_start):
-                if (posterior_list[curr_index] != fp_state_nb):
-                    if (k - start_pos < options.fp_limit_size):
-                        fp = GenomicRegion(r.chrom, start_pos, k)
-                        footprints.add(fp)
-                    flag_start = False
-            else:
-                if (posterior_list[curr_index] == fp_state_nb):
-                    flag_start = True
-                    start_pos = k
-        if (flag_start):
-            if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
-                fp = GenomicRegion(r.chrom, start_pos, r.final)
-                footprints.add(fp)
+                if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(r.chrom, start_pos, r.final)
+                    footprints.add(fp)
+    else:
+        for r in regions:
+            atac_norm, atac_slope = \
+                reads_file.get_signal_atac2(r.chrom, r.initial, r.final, options.downstream_ext,
+                                           options.upstream_ext, options.forward_shift, options.reverse_shift,
+                                           options.initial_clip, options.norm_per, options.slope_per,
+                                           bias_table, genome_data.get_genome())
+            try:
+                input_sequence = array([atac_norm, atac_slope]).T
+            except Exception:
+                err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
 
+            # Applying HMM
+            try:
+                posterior_list = hmm.predict(input_sequence)
+                if options.fp_bed_fname:
+                    output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
+                                    output_fname=options.fp_bed_fname, fp_state=options.fp_state)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
+
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = options.fp_state
+            for k in range(r.initial, r.initial + len(posterior_list)):
+                curr_index = k - r.initial
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(r.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
+            if (flag_start):
+                if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(r.chrom, start_pos, r.final)
+                    footprints.add(fp)
     ###################################################################################################
     # Post-processing
     ###################################################################################################
 
-    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=40,
                     fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
                     reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
                     forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
@@ -1611,6 +1659,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
         f.write("Number of tag counts within peaks: " + str(num_tc) + "\n")
         f.write("Number of footprints: " + str(num_fp) + "\n")
 
+
 def estimate_bias():
     """
     Performs bias table estimation.
@@ -1900,7 +1949,7 @@ def print_lines():
     parser.add_option("--forward-shift", dest="forward_shift", type="int",
                       metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--reverse-shift", dest="reverse_shift", type="int",
-                      metavar="INT", default=-4, help=SUPPRESS_HELP)
+                      metavar="INT", default=-5, help=SUPPRESS_HELP)
     parser.add_option("--k-nb", dest="k_nb", type="int",
                       metavar="INT", default=6, help=SUPPRESS_HELP)
 
@@ -1934,8 +1983,8 @@ def print_lines():
                 output_loc=options.output_location, output_prefix=options.output_prefix)
 
     if options.print_strand_plot:
-        plot.line1()
-        #plot.line4()
+        #plot.line1()
+        plot.line4()
     if options.print_corrected_plot:
         plot.line2()
     if options.print_bias_plot:
