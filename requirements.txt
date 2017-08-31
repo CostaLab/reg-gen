@@ -6,3 +6,4 @@ pyBigWig
 pyVCF
 fisher
 HTSeq
+hmmlearn
