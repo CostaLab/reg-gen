@@ -25,6 +25,8 @@ from rgt.GeneSet import GeneSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.Util import GenomeData, OverlapType, Library_path
 
+random.seed(42)
+
 ###############################################################################
 # Class
 ###############################################################################

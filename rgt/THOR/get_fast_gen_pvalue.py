@@ -27,7 +27,7 @@ value y follows h2.
 from __future__ import print_function
 from scipy.stats import binom
 from math import log
-from sklearn.utils.extmath import logsumexp
+from scipy.misc import logsumexp
 import numpy as np
 from rgt.THOR.neg_bin import NegBin
 
