@@ -161,7 +161,12 @@ class Lineplot:
                     if not self.dft:
                         dfs = [c]
                     else:
-                        dfs = self.exps.fieldsDict[self.dft].keys()
+                        if self.dft =="regions":
+                            dfs = self.exps.get_regionsnames()
+                        elif self.dft == "reads":
+                            dfs = self.exps.get_readsnames()
+                        else:
+                            dfs = self.exps.fieldsDict[self.dft].keys()
                     for d in dfs:
                         data[s][g][c][d] = defaultdict(list)
                         for bed in self.cuebed.keys():
@@ -471,6 +476,8 @@ class Lineplot:
         if printtable:
             output_array(pArr, directory=output, folder=self.title, filename="plot_table.txt")
 
+        handles = []
+        labels =[]
         for it, ty in enumerate(self.data.keys()):
             try:
                 axs[it, 0].set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
@@ -512,8 +519,10 @@ class Lineplot:
 
                 try: axx.set_ylim([ymin, ymax])
                 except: pass
-
-        handles, labels = ax.get_legend_handles_labels()
+                hand, l = axx.get_legend_handles_labels()
+                handles += hand
+                labels += l
+        # handles, labels = ax.get_legend_handles_labels()
         uniq_labels = unique(labels)
 
         plt.legend([handles[labels.index(l)] for l in uniq_labels], uniq_labels, loc='center left', handlelength=1,

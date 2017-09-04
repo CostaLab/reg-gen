@@ -18,7 +18,7 @@ from rgt import __version__
 # from rgt.Util import Html
 from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
-                         merge_DBD_regions, silentremove, summerize_stat, shorten_dir
+                         merge_DBD_regions, silentremove, summerize_stat, shorten_dir, merge_DBSs
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
@@ -159,6 +159,7 @@ def main():
     # rgt-TDF integrate -path 
     parser_integrate = subparsers.add_parser('integrate', help="Integrate the project's links and generate project-level statistics.")
     parser_integrate.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
+    parser_integrate.add_argument('-exp', action="store_true", default=False, help='Include expression score for ranking.')
     ##########################################################################
     parser_updatehtml = subparsers.add_parser('updatehtml', help="Update the project's html.")
     parser_updatehtml.add_argument('-path',type=str, metavar='  ', help='Define the path of the project.')
@@ -206,9 +207,10 @@ def main():
             # For each condition
             for target in targets:
                 merge_DBD_regions(path=target)
+                merge_DBSs(path=target)
                 # stat
                 integrate_stat(path=target)
-                summerize_stat(target=target, link_d=link_d)
+                summerize_stat(target=target, link_d=link_d, score=args.exp)
             # Project level index file
             integrate_html(args.path)
             for item in os.listdir(args.path):

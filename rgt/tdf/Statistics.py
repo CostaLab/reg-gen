@@ -34,7 +34,7 @@ class Statistics(object):
                       "DBSs_target_DBD_sig": 0,
                       "DBSs_background_all": 0,
                       "DBSs_background_DBD_sig": 0,
-                      "p_value": "-",
+                      "p_value": "1",
                       "associated_gene": ".",
                       "expression": "n.a.",
                       "loci": "-",

@@ -1059,7 +1059,7 @@ if __name__ == "__main__":
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
 
-        non_available = None
+        non_available = 0
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
 
         def count_polyA_on_bam(bed, bam):
@@ -1101,7 +1101,7 @@ if __name__ == "__main__":
                                 if pileupread.alignment.query_sequence.endswith(pattern):
                                     # print(pileupread.alignment.query_sequence)
                                     all_a += 1
-
+                # Output: name, win_polyA, win_all_read, win_radio, whole_polyA, whole_read, whole_radio
                 if all_read == 0:
                     if all_r == 0:
                         res.append([r.name, count_polyA, all_read, non_available, all_a, all_r, non_available])
@@ -1141,11 +1141,11 @@ if __name__ == "__main__":
 
             for r in bed:
                 ar = numpy.array(col_res[r.name],dtype=numpy.float)
-                print(ar)
-                print(numpy.nanmean(ar, axis=1))
-                col_res[r.name] = numpy.nanmean(ar, axis=1).tolist()
-                print(col_res[r.name])
-                sys.exit(1)
+                # print(ar)
+                # print(numpy.nanmean(ar, axis=1))
+                col_res[r.name] = numpy.nanmean(ar, axis=0).tolist()
+                # print(col_res[r.name])
+                # sys.exit(1)
 
             with open(args.o, "w") as f:
                 print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave", "proportion_in_window",

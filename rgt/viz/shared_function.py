@@ -96,32 +96,32 @@ def colormap(exps, colorby, definedinEM, annotation=None):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
         if colorby == "reads":
-            colors = []
+            color_res = []
             for i in exps.get_readsnames():
                 c = exps.get_type(i, "color")
                 if c[0] == "(":
                     rgb = [eval(j) for j in c.strip('()').split(',')]
-                    colors.append(rgb)
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
         elif colorby == "regions":
-            colors = []
+            color_res = []
             for i in exps.get_regionsnames():
                 c = exps.get_type(i, "color")
                 if c[0] == "(":
                     rgb = [eval(j) for j in c.strip('()').split(',')]
-                    colors.append([v / 255 for v in rgb])
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
         else:
-            colors = []
+            color_res = []
             for i in exps.fieldsDict[colorby].values():
                 c = exps.get_type(i[0], "color")
                 if c[0] == "(":
                     rgb = [float(j) for j in c.strip('()').split(',')]
-                    colors.append([v / 255 for v in rgb])
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
 
     else:
         if annotation:
@@ -156,8 +156,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             #
             # np.linspace(0, 1, 9)
 
-
-
+    color_res = unique(color_res)
     return color_res
 
 
