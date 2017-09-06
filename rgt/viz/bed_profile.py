@@ -13,7 +13,7 @@ import natsort
 from rgt.Util import Html
 from rgt.CoverageSet import *
 from rgt.ExperimentalMatrix import *
-from shared_function import shiftedColorMap
+from shared_function import shiftedColorMap, walklevel
 # Local test
 dir = os.getcwd()
 
@@ -29,7 +29,7 @@ class BED_profile:
         if os.path.isdir(input_path):
             self.beds = []
             self.bednames = []
-            for dirpath, dnames, fnames in os.walk(input_path):
+            for dirpath, dnames, fnames in walklevel(input_path, level=1):
                 for f in fnames:
                     if f.endswith(".bed"):
                         name = os.path.basename(f).replace(".bed", "")
