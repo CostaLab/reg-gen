@@ -29,7 +29,7 @@ class BED_profile:
         if os.path.isdir(input_path):
             self.beds = []
             self.bednames = []
-            for dirpath, dnames, fnames in walklevel(input_path, level=1):
+            for dirpath, dnames, fnames in walklevel(input_path, level=0):
                 for f in fnames:
                     if f.endswith(".bed"):
                         name = os.path.basename(f).replace(".bed", "")
