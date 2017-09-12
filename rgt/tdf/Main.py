@@ -429,11 +429,12 @@ def main():
         triplexes = Triplexes(organism=args.organism, pars=args)
         stat = Statistics(pars=args)
         stat.tpx = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
-                                       target_regions=tdf_input.dna.target_regions,
-                                       prefix="target_regions", remove_temp=True, dna_fine_posi=False)
+                                     target_regions=tdf_input.dna.target_regions,
+                                     prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False)
+
         stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
                                         target_regions=tdf_input.dna.target_regions,
-                                        prefix="target_regions_fine", remove_temp=True, dna_fine_posi=True)
+                                        prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
 
@@ -478,6 +479,6 @@ def main():
             silentremove(os.path.join(args.o, "rna_temp.fa"))
             silentremove(os.path.join(args.o, "rna_temp.fa.fai"))
             silentremove(os.path.join(args.o, "de.fa"))
-            silentremove(os.path.join(args.o, "de.txp"))
+            # silentremove(os.path.join(args.o, "de.tpx"))
             silentremove(os.path.join(args.o, "autobinding.tpx"))
             print("\nTotal running time: " + str(datetime.timedelta(seconds=round(t3 - t0))))
