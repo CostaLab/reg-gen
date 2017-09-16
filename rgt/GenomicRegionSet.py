@@ -2585,3 +2585,10 @@ class GenomicRegionSet:
                 names.append(".")
 
             return names
+
+    def is_stranded(self):
+        """Check the GenomicRegionSet is stranded or not"""
+        if self.sequences[0].orientation == "+" or self.sequences[0].orientation == "-":
+            return True
+        else:
+            return False
