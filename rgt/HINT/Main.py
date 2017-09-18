@@ -959,7 +959,7 @@ def atac_footprints():
     # Post-processing
     ###################################################################################################
 
-    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=40,
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
                     fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
                     reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
                     forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
@@ -1601,6 +1601,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
             f.initial = max(0, f.initial - fp_ext)
             f.final = f.final + fp_ext
 
+
     # Sorting and Merging
     footprints_overlap.merge()
 
@@ -1920,6 +1921,12 @@ def print_lines():
     parser.add_option("--reads-file", dest="reads_file", type="string",
                       metavar="FILE", default=None,
                       help=("A bam file containing all the DNase-seq or ATAC-seq reads."))
+    parser.add_option("--reads-file1", dest="reads_file1", type="string",
+                      metavar="FILE", default=None,
+                      help=("A bam file containing all the DNase-seq or ATAC-seq reads."))
+    parser.add_option("--reads-file2", dest="reads_file2", type="string",
+                      metavar="FILE", default=None,
+                      help=("A bam file containing all the DNase-seq or ATAC-seq reads."))
     parser.add_option("--motif-file", dest="motif_file", type="string",
                       metavar="FILE", default=None,
                       help=("A bed file containing all motif-predicted binding sites (MPBSs)."
@@ -1972,7 +1979,10 @@ def print_lines():
                       action="store_true", default=False,
                       help=("If used, the plot containing the aggregated signal,"
                             "and strand-specific signal will be printed."))
-
+    parser.add_option("--print-atac-dnase-plot", dest="print_atac_dnase_plot",
+                      action="store_true", default=False,
+                      help=("If used, the plot containing the ATAC-seq and DNase-seq signal,"
+                            "will be printed."))
 
     options, arguments = parser.parse_args()
 
@@ -1989,6 +1999,8 @@ def print_lines():
         plot.line2()
     if options.print_bias_plot:
         plot.line3(options.bias_table1, options.bias_table2)
+    if options.print_atac_dnase_plot:
+        plot.line5(options.reads_file1, options.reads_file2, options.bias_table1, options.bias_table2)
 
     # TODO
     exit(0)
