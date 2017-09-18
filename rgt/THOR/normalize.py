@@ -214,7 +214,7 @@ def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_siz
 
     # print("Reading second input file...", file=sys.stderr)
     counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path, stop=stop)
-    #     print("...done", file=sys.stderr)
+    #     print("...done", file=sys.stderr)   chromosomes = chromosomes1 & chromosomes2
     chromosomes = chromosomes1 | chromosomes2
 
     # count_list1, count_list2 are dict like {'chr1': [10,2,0...], ...} describing the bins

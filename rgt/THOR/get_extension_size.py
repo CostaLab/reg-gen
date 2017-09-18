@@ -67,7 +67,10 @@ def get_read_size(filename):
 
 def init_cov(filename):
     file = pysam.Samfile(filename, "rb")
-
+    # error happens here, if we choose the first one
+    ## file.references is ('chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',....] all chromosomes in files,
+    # so we need to choose them according to different reference part, which is not right.
+    # if extension size is for each bam files, then we need to get all the data, so at least 1000 data to simulate them..
     for read in file.fetch(file.references[0]):
         if not read.is_unmapped:
             if not read.seq:
@@ -81,6 +84,47 @@ def init_cov(filename):
             else:
                 if not cov_f.has_key(pos):
                     cov_f[pos] = 1
+
+    if not cov_f and not cov_r:
+        return False
+    else:
+        return False
+
+
+def new_init(filename):
+    """:return boolean for reading cov_f and cov_r for each bam files; True, if cov_f reading right, else False
+        and the read length for each bamfiles
+       Maybe also the scale-factor.. but now it's all right
+    """
+    f = pysam.Samfile(filename, "rb")
+
+    s = []
+    chrom_sizes = [5000] * len(f.references)
+    for chrom_idx in range(len(f.references)):
+        i = 0
+        for read in f.fetch(f.references[chrom_idx]):
+            i += 1
+            if i == chrom_sizes[chrom_idx]:
+                break
+            if not read.is_unmapped:
+                s.append(read.rlen)
+                if not read.seq:
+                    h = 0
+                else:
+                    h = len(read.seq)
+                pos = read.pos + read.rlen - h if read.is_reverse else read.pos
+                if read.is_reverse:
+                    if not cov_r.has_key(pos):
+                        cov_r[pos] = 1
+                else:
+                    if not cov_f.has_key(pos):
+                        cov_f[pos] = 1
+
+    if not cov_f and not cov_r:
+        return False, -1
+    else:
+        read_len = sum(s) / len(s)
+        return True, read_len
 
 
 def ccf(k):
@@ -96,13 +140,18 @@ def ccf(k):
     return s, k
 
 
-def get_extension_size(filename, start=0, end=600, stepsize=5):
+def old_get_extension_size(filename, start=0, end=600, stepsize=5):
     """Return extension/shift size of reads and all computed values of the convolution. 
     Search value with a resolution of <stepsize> from start to end."""
     read_length = get_read_size(filename)
     start -= read_length
 
     init_cov(filename)
+
+    # if init_cov is empty, then we return empty.
+    if not init_cov(filename):
+        return None, None
+
 
     r = map(ccf, range(start, end, stepsize))
 
@@ -112,13 +161,23 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     return max(r[read_length / stepsize * 2:])[1], r
 
+def get_extension_size(filename, start=0, end=600, stepsize=5):
+
+    read_suc, read_length = new_init(filename)
+    # print(read_length)
+    start = max(0, start - read_length)
+
+    r = map(ccf, range(start, end, stepsize))
+
+    return max(r)[1], r
+
 
 if __name__ == '__main__':
     # a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = get_extension_size('/home/manuel/workspace/cluster_p/allhoff/project_THOR/data/payton/FL1_H3K27ac_input.bam')
+    a, b = get_extension_size('/home/kefang/programs/THOR_example_data/bug/debugData/newdata/inpt2_A.bam')
     print(a, b)
 
-    for el in b:
-        print(el[1], el[0], sep='\t')
+    #for el in b:
+    #    print(el[1], el[0], sep='\t')
 
 

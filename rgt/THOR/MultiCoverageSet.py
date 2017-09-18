@@ -39,7 +39,7 @@ VERBOSE = None
 class MultiCoverageSet(DualCoverageSet):
     def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
         """Return self.covs and self.inputs as CoverageSet"""
-        self.exts = exts
+        self.exts = exts  # before covs_init, we should judge the number of reads for that regions and save time for this.
         self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
         for i, c in enumerate(self.covs):
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
@@ -145,6 +145,7 @@ class MultiCoverageSet(DualCoverageSet):
             for i in it:
                 if cov_strand:
                     tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'cov'))
+                    ## tmp_el is data for one bamfiles, then combine into all for one condition.
                     tmp[k].append(tmp_el)
                  
                     tmp_el = map(lambda x: (x[0], x[1]), reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand')))
@@ -159,7 +160,7 @@ class MultiCoverageSet(DualCoverageSet):
             overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
             #list of matrices: #replicates (row) x #bins (columns)
             overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
-         
+            # overall_coverage combines two conditions together.
             return overall_coverage, overall_coverage_strand
         else:
             return [np.matrix(tmp[0]), np.matrix(tmp[1])]
@@ -250,7 +251,7 @@ class MultiCoverageSet(DualCoverageSet):
                     print("Normalize input of Signal %s, Rep %s with factor %s"\
                            %(sig, rep, round(n, ROUND_PRECISION)) , file=sys.stderr)
                     self.inputs[i].scale(n)
-                    
+                    ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
                     self.covs[i].subtract(self.inputs[i])
                     factors_inputs.append(n)
         
@@ -287,26 +288,35 @@ class MultiCoverageSet(DualCoverageSet):
     def _norm_TMM(self, overall_coverage, m_threshold, a_threshold):
         """Normalize with TMM approach, based on PePr"""
         scaling_factors_ip = []
+        # ref is used to pick up none zero bins, so not need to divide self.dim
+        # ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0), dtype='float')/ (self.dim_1 + self.dim_2)
+        # ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0))
+        # mask_ref = ref > 0
+        # ref = ref[mask_ref]
+        mask_ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0)) > 0
+
         for j, cond_max in enumerate([self.dim_1, self.dim_2]):
+            ref = (np.sum(overall_coverage[j][mask_ref], axis=0) + cond_max)/ float(cond_max)
             for i in range(cond_max): #normalize all replicates
-                ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0), dtype='float')/ (self.dim_1 + self.dim_2)
-                
-                mask_ref = ref > 0
-                ref = ref[mask_ref]
-                data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref]
+
+                data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref] + 1
                 tmp = zip(data_rep, ref, data_rep + ref)
+                # sort only costs a lot to get the optimal value
                 tmp.sort(key = lambda x: x[2], reverse=True)
+                # then it sorts data and use the smallest one as the index to choose the
                 tmp = tmp[:min(len(tmp), 10000)]
                 
                 data_rep = np.asarray(map(lambda x: x[0], tmp))
-                ref = np.asarray(map(lambda x: x[1], tmp))
-                assert len(data_rep) == len(ref)
+                # ref should be only under one condition, np.sum(overall_coverage[j], axis=0)
+                tmp_ref = np.asarray(map(lambda x: x[1], tmp))
+                assert len(data_rep) == len(tmp_ref)
                 m = data_rep > 0
                 data_rep = data_rep[m]
-                ref = ref[m]
-                
-                m_values = np.log(ref / data_rep)
-                a_values = 0.5 * np.log(data_rep * ref)
+                tmp_ref = tmp_ref[m]
+
+                # to avoid 0 zeros situation, we should add 1 to all data.
+                m_values = np.log(tmp_ref / data_rep)
+                a_values = 0.5 * np.log(data_rep * tmp_ref)
                 try:
                     m_values, a_values = self._trim4TMM(m_values, a_values, m_threshold, a_threshold)
                     f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))

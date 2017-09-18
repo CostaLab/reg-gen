@@ -33,6 +33,8 @@ from input_parser import input_parser
 from rgt.Util import which, npath
 from rgt import __version__
 
+import configuration
+
 # External
 from numpy import linspace
 from scipy.optimize import curve_fit
@@ -41,8 +43,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-
-FOLDER_REPORT = None
 
 np.random.rand(42)
 
@@ -95,7 +95,7 @@ def _func_quad_2p(x, a, c):
 def _write_emp_func_data(data, name):
     """Write mean and variance data"""
     assert len(data[0]) == len(data[1])
-    f = open(FOLDER_REPORT_DATA + name + '.data', 'w')
+    f = open(configuration.FOLDER_REPORT_DATA + name + '.data', 'w')
     for i in range(len(data[0])):
         print(data[0][i], data[1][i], sep='\t', file=f)
     f.close()
@@ -130,7 +130,7 @@ def _plot_func(plot_data, outputdir):
             plt.title('Estimated Mean-Variance Function')
             name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
             _write_emp_func_data(plot_data[i], name)
-            plt.savefig(FOLDER_REPORT_PICS + name + '.png')
+            plt.savefig(configuration.FOLDER_REPORT_PICS + name + '.png')
             plt.close()
 
 
@@ -141,7 +141,9 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
         h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
         cov = cov[:,h] #remove 0-columns
-
+        # cov now should contain the non-zero columns for each row.
+        print(cov.shape)
+        # sample from [0,1,2,..., cov.shape[1]], and make it a list of sample_size
         r = np.random.randint(cov.shape[1], size=sample_size)
         r.sort()
         cov = cov[:,r]
@@ -151,7 +153,7 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
         assert len(m) == len(n)
 
         data_rep.append(zip(m, n))
-        data_rep[i].append((0,0))
+        data_rep[i].append((0,0)) # it adds especially (0,0) to last ..
         data_rep[i] = np.asarray(data_rep[i])
         
     if debug:
@@ -159,8 +161,8 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
             np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
     
     for i in range(2):
-        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)]
-        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)]
+        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down
+        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down
     
     return data_rep
 
@@ -169,7 +171,7 @@ def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, repor
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
-        
+
     while not done:
         data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
         res = []
@@ -362,7 +364,7 @@ def _output_ext_data(ext_data_list, bamfiles):
     names = [splitext(basename(bamfile))[0] for bamfile in bamfiles]
 
     for k, ext_data in enumerate(ext_data_list):
-        f = open(FOLDER_REPORT_DATA + 'fragment_size_estimate_' + names[k] + '.data', 'w')
+        f = open(configuration.FOLDER_REPORT_DATA + 'fragment_size_estimate_' + names[k] + '.data', 'w')
         for d in ext_data:
             print(d[0], d[1], sep='\t', file=f)
         f.close()
@@ -377,7 +379,7 @@ def _output_ext_data(ext_data_list, bamfiles):
         plt.plot(d2, d1, label=names[i])
     
     ax.legend()
-    plt.savefig(FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
+    plt.savefig(configuration.FOLDER_REPORT_PICS + 'fragment_size_estimate.png')
     plt.close()
 
 
@@ -400,7 +402,10 @@ def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
         _output_ext_data(ext_data_list, bamfiles)
     
     if inputs and not exts_inputs:
-        exts_inputs = [5] * len(inputs)
+        ## here we need to calculate the extension for inputs too..
+        for bamfile in inputs:
+            ie, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
+            exts_inputs.append(ie)
 
     return exts, exts_inputs
 
@@ -442,7 +447,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
                                      save_wig=save_wig, strand_cov=True, housekeeping_genes=housekeeping_genes,
                                      tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content,
                                      gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw,
-                                     folder_report=FOLDER_REPORT, report=report, save_input=save_input,
+                                     folder_report=configuration.FOLDER_REPORT, report=report, save_input=save_input,
                                      m_threshold=m_threshold, a_threshold=a_threshold)
     return multi_cov_set
 
@@ -626,17 +631,11 @@ def handle_input():
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/'))
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/data/'))
 
-    global FOLDER_REPORT
-    global FOLDER_REPORT_PICS
-    global FOLDER_REPORT_DATA
-    global OUTPUTDIR
-    global NAME
-
-    FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
-    FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
-    FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
-    OUTPUTDIR = options.outputdir
-    NAME = options.name
+    configuration.FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
+    configuration.FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
+    configuration.FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
+    configuration.OUTPUTDIR = options.outputdir
+    configuration.NAME = options.name
 
     if not inputs:
         print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)

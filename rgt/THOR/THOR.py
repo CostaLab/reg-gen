@@ -35,6 +35,7 @@ from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
+import configuration
 # External
 
 
@@ -50,9 +51,9 @@ def _write_info(tracker, report, **data):
     #tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
     #tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
     #tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
-    
+    print(configuration.FOLDER_REPORT)
     if report:
-        tracker.make_html()
+        tracker.make_html(configuration.FOLDER_REPORT)
 
 
 def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker):
@@ -60,6 +61,7 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
     
     while True:
         train_regions = region_giver.get_training_regionset()
+        print(train_regions.sequences)
         exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions,
                               stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
                               exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,
@@ -159,3 +161,7 @@ def main():
     run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
+
+
+if __name__ == "__main__":
+    main()
