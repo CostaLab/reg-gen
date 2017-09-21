@@ -139,17 +139,15 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     data_rep = []
     for i in range(2):
         cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
-        h = np.invert((cov==0).all(axis=0)) #assign True to columns != (0,..,0)
-        cov = cov[:,h] #remove 0-columns
-        # cov now should contain the non-zero columns for each row.
+        cov = cov[:,(cov>0).all(axis=0)]
         print(cov.shape)
         # sample from [0,1,2,..., cov.shape[1]], and make it a list of sample_size
         r = np.random.randint(cov.shape[1], size=sample_size)
         r.sort()
         cov = cov[:,r]
 
-        m = list(np.squeeze(np.asarray(np.mean(cov*1.0, axis=0))))
-        n = list(np.squeeze(np.asarray(np.var(cov*1.0, axis=0))))
+        m = list(np.squeeze(np.asarray(np.mean(cov, axis=0))))
+        n = list(np.squeeze(np.asarray(np.var(cov, axis=0))))
         assert len(m) == len(n)
 
         data_rep.append(zip(m, n))
@@ -161,9 +159,13 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
             np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
     
     for i in range(2):
-        data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down
-        data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down
-    
+        data_rep[i] = data_rep[i][np.where(
+            np.logical_and(
+                data_rep[i][:, 0] < np.percentile(data_rep[i][:, 0], 99.75) * (data_rep[i][:, 0] > np.percentile(data_rep[i][:, 0], 1.25)),
+                data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))))]
+        # data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down, and m cut down greater than one value
+        # data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down between one interval..
+
     return data_rep
 
 
@@ -528,7 +530,7 @@ def handle_input():
     group.add_option("-t", "--threshold", dest="threshold", default=95, type="float",
                      help="Minimum signal support for differential peaks to define training set as percentage "
                           "(t_2, see paper). [default: %default]")
-    group.add_option("--size", dest="size_ts", default=10000, type="int",
+    group.add_option("--size", dest="size_ts", default=1000, type="int",
                      help="Number of bins the HMM's training set constists of. [default: %default]")
     group.add_option("--par", dest="par", default=1, type="int",
                      help="Percentile for p-value postprocessing filter. [default: %default]")

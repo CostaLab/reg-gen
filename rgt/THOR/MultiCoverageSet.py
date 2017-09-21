@@ -29,19 +29,23 @@ from normalize import get_normalization_factor
 from DualCoverageSet import DualCoverageSet
 from norm_genelevel import norm_gene_level
 from rgt.CoverageSet import CoverageSet, get_gc_context
-
-EPSILON = 1**-320
-ROUND_PRECISION = 3
-DEBUG = None
-VERBOSE = None
-
+import configuration
 
 class MultiCoverageSet(DualCoverageSet):
     def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
-        """Return self.covs and self.inputs as CoverageSet"""
+        """Return self.covs and self.inputs as CoverageSet
+        But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
+        Better we need to do is get all info of all fields, and extract data from it to combine the training fields.
+        Later we use the paras to estimate peaks.. Maybe according to regions
+        """
         self.exts = exts  # before covs_init, we should judge the number of reads for that regions and save time for this.
         self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
         for i, c in enumerate(self.covs):
+            # c.get_statistics(path_bamfiles[i]) do statistics on the data in one bamfile, and return it
+            # according to statistics, we decide if we continue later process
+            # e.g. only one chromosome in data, then we process it directly, get samples from it and do peak-calling in it
+            # if there are many chromosomes, we get samples according to these data and do peak-calling later.
+            # c.statistics = c.get_statistics(path_bamfiles[i])
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize, get_strand_info = strand_cov)
         self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
@@ -62,7 +66,8 @@ class MultiCoverageSet(DualCoverageSet):
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.norm_regions = None
-    
+
+
     def _get_covs(self, DCS, i):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
         cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
@@ -191,9 +196,9 @@ class MultiCoverageSet(DualCoverageSet):
         self.counter = counter
         self.no_data = False
         self.FOLDER_REPORT = folder_report
-        global DEBUG, VERBOSE
-        DEBUG = debug
-        VERBOSE = verbose
+
+        configuration.DEBUG = debug
+        configuration.VERBOSE = verbose
         
         #make data nice
         self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
@@ -229,11 +234,11 @@ class MultiCoverageSet(DualCoverageSet):
     def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs, save_input):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         
-        if VERBOSE:
+        if configuration.VERBOSE:
             print("Normalize input-DNA", file=sys.stderr)
         
         if factors_inputs:
-            if VERBOSE:
+            if configuration.VERBOSE:
                 print("Use with predefined factors", file=sys.stderr)
             for i in range(len(path_bamfiles)):
                 self.inputs[i].scale(factors_inputs[i])
@@ -246,10 +251,10 @@ class MultiCoverageSet(DualCoverageSet):
                 sig = 0 if i < self.dim_1 else 1
                 j = 0 if i < self.dim_1 else 1
                 _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
-                                                filename=name + '-norm' + str(i), debug=DEBUG, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
+                                                filename=name + '-norm' + str(i), debug=configuration.DEBUG, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
                 if n is not None:
                     print("Normalize input of Signal %s, Rep %s with factor %s"\
-                           %(sig, rep, round(n, ROUND_PRECISION)) , file=sys.stderr)
+                           %(sig, rep, round(n, configuration.ROUND_PRECISION)) , file=sys.stderr)
                     self.inputs[i].scale(n)
                     ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
                     self.covs[i].subtract(self.inputs[i])
@@ -261,11 +266,11 @@ class MultiCoverageSet(DualCoverageSet):
     def _trim4TMM(self, m_values, a_values, m_threshold=80, a_threshold=95):
         """q=20 or q=5"""
         assert len(m_values) == len(a_values)
-        
-        mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
-        
-        m_values = m_values[mask]
-        a_values = a_values[mask]
+        # np.isinf return an array to test if infinite, only two columns are not infinite we return False, after not x, we get True
+        # mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
+        # but after last step, we have make sure that there is no zeros, and no infinity, then we don't need the step to filter it.
+        # m_values = m_values[mask]
+        # a_values = a_values[mask]
         
         perc_m_l = np.percentile(m_values, 100-m_threshold)
         perc_m_h = np.percentile(m_values, m_threshold)
@@ -288,36 +293,21 @@ class MultiCoverageSet(DualCoverageSet):
     def _norm_TMM(self, overall_coverage, m_threshold, a_threshold):
         """Normalize with TMM approach, based on PePr"""
         scaling_factors_ip = []
-        # ref is used to pick up none zero bins, so not need to divide self.dim
-        # ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0), dtype='float')/ (self.dim_1 + self.dim_2)
-        # ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0))
-        # mask_ref = ref > 0
-        # ref = ref[mask_ref]
-        mask_ref = np.asarray(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1], axis=0)) > 0
-
+        # mask_ref filter out columns with zero at least for two samples.
+        mask_ref = np.all(np.all(np.asarray(overall_coverage) > 0, axis=0), axis=0)
         for j, cond_max in enumerate([self.dim_1, self.dim_2]):
-            ref = (np.sum(overall_coverage[j][mask_ref], axis=0) + cond_max)/ float(cond_max)
+            # ref get the mean of reads for data under same conditions
+            ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0)/ float(cond_max)))
             for i in range(cond_max): #normalize all replicates
-
-                data_rep = np.asarray(overall_coverage[j][i,:])[mask_ref] + 1
-                tmp = zip(data_rep, ref, data_rep + ref)
-                # sort only costs a lot to get the optimal value
-                tmp.sort(key = lambda x: x[2], reverse=True)
-                # then it sorts data and use the smallest one as the index to choose the
-                tmp = tmp[:min(len(tmp), 10000)]
-                
-                data_rep = np.asarray(map(lambda x: x[0], tmp))
-                # ref should be only under one condition, np.sum(overall_coverage[j], axis=0)
-                tmp_ref = np.asarray(map(lambda x: x[1], tmp))
-                assert len(data_rep) == len(tmp_ref)
-                m = data_rep > 0
-                data_rep = data_rep[m]
-                tmp_ref = tmp_ref[m]
-
-                # to avoid 0 zeros situation, we should add 1 to all data.
+                # get the data for each sample under each condition
+                data_rep = np.squeeze(np.asarray(overall_coverage[j][i,mask_ref]))
+                tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 10000)) # sampling data
+                tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
+                data_rep = data_rep[tmp_idx]
+                # calculate m_values and a_values
                 m_values = np.log(tmp_ref / data_rep)
                 a_values = 0.5 * np.log(data_rep * tmp_ref)
-                try:
+                try: # assume they have a relations and then plot them to get scale factor.
                     m_values, a_values = self._trim4TMM(m_values, a_values, m_threshold, a_threshold)
                     f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
                     scaling_factors_ip.append(f)
@@ -331,7 +321,7 @@ class MultiCoverageSet(DualCoverageSet):
                                  m_threshold, a_threshold):
         """Normalize signal"""
         
-        if VERBOSE:
+        if configuration.VERBOSE:
             print('Normalize ChIP-seq profiles', file=sys.stderr)
         
         if not scaling_factors_ip and housekeeping_genes:
@@ -354,8 +344,8 @@ class MultiCoverageSet(DualCoverageSet):
                 for i in range(cond): #normalize all replicates
                     k = i if j == 0 else i+self.dim_1
                     self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
-                    if DEBUG:
-                        print('Use scaling factor %s' %round(scaling_factors_ip[k], ROUND_PRECISION), file=sys.stderr)
+                    if configuration.DEBUG:
+                        print('Use scaling factor %s' %round(scaling_factors_ip[k], configuration.ROUND_PRECISION), file=sys.stderr)
         
         self.scaling_factors_ip = scaling_factors_ip
         
@@ -396,8 +386,12 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _compute_score(self):
         """Compute score for each observation (based on Xu et al.)"""
-        self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
-    
+        # after np.squeeze, we remove single-dimensional entry.. What does it make ??? seems nothing about process
+        # interest_region is column scores are greater than one values...
+        self.scores = np.sum(np.asarray([np.squeeze(np.asarray(self.overall_coverage[i][j])) /float(np.sum(self.overall_coverage[i][j])) for j in xrange(self.dim_2) for i in range(self.dim_1)]), axis=0)/self.dim_2
+
+        # self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
+
     def _get_bin_number(self):
         """Return number of bins"""
         return self.overall_coverage[0].shape[1]
@@ -409,20 +403,14 @@ class MultiCoverageSet(DualCoverageSet):
         
         try:
             self._compute_score()
-            self.indices_of_interest = np.where(self.scores > 0)[0] #2/(m*n)
+            threshold = 2.0 / (self.scores.shape[0])
+            self.indices_of_interest = np.where(self.scores > threshold)[0] #2/(m*n) thres = 2 /(self.scores.shape[0])
             tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 10)[0]
             tmp2 = np.intersect1d(self.indices_of_interest, tmp)
             self.indices_of_interest = tmp2
         except:
             self.indices_of_interest = None
-        #print(len(self.indices_of_interest), file=sys.stderr)
-        #tmp = set()
-        #for i in self.indices_of_interest:
-        #    for j in range(max(0, i-l), i+l+1):
-        #        tmp.add(j)
-        #tmp = list(tmp)
-        #tmp.sort()
-        #self.indices_of_interest = np.array(tmp)
+
          
     def write_test_samples(self, name, l):
         f = open(name, 'w')
@@ -443,8 +431,11 @@ class MultiCoverageSet(DualCoverageSet):
         self.write_test_samples(name + '-s1', s1_v)
         self.write_test_samples(name + '-s2', s2_v)
     
-    def get_training_set(self, test, exp_data, name, foldchange, min_t, y=5000, ex=2):
-        """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>."""
+    def get_training_set(self, test, exp_data, name, foldchange, min_t, y=1000, ex=2):
+        """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>.
+           If first sample can't represent data, we need to resample it from population, self.indices_of_interest..
+           Other way, we could build the samples for training, but then it will cause other troubles, maybe...
+        """
         threshold = foldchange
         diff_cov = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - \
                                             np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), min_t))
@@ -452,31 +443,47 @@ class MultiCoverageSet(DualCoverageSet):
         if test:
             diff_cov, threshold = 2, 1.5
         
-        if DEBUG:  
+        if configuration.DEBUG:
             print('Training set parameters: threshold: %s, diff_cov: %s' %(threshold, diff_cov), file=sys.stderr)
         
-        s0, s1, s2 = [], [], []
+        s0, s1, s2 , tmp = [], [], [], []
         
         #compute training set parameters, re-compute training set if criteria do not hold
+        print('The length of indices_of_interest')
+        print(len(self.indices_of_interest))
         rep=True
         while rep:
-            for i in sample(range(len(self.indices_of_interest)), min(y, len(self.indices_of_interest))):
+
+            if diff_cov == 1 and threshold == 1.1:
+                print("No differential peaks detected", file=sys.stderr)
+                sys.exit()
+            steps = 0
+            for i in sample(range(len(self.indices_of_interest)), len(self.indices_of_interest)):
                 cov1, cov2 = self._get_covs(exp_data, i)
-                
+                steps += 1
                 #apply criteria for initial peak calling
-                if (cov1 / max(float(cov2), 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
+                if ((cov1 +1 ) / (float(cov2) + 1) > threshold and cov1+cov2 > diff_cov/2) or cov1-cov2 > diff_cov:
                     s1.append((self.indices_of_interest[i], cov1, cov2))
-                elif (cov1 / max(float(cov2), 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
+                elif ((cov1 + 1) / (float(cov2) + 1) < 1/threshold and cov1+cov2 > diff_cov/2) or cov2-cov1 > diff_cov:
                     s2.append((self.indices_of_interest[i], cov1, cov2))
                 else:
                     s0.append((self.indices_of_interest[i], cov1, cov2))
             
-                if len(s0) > y and len(s1) > y and len(s2) > y:
-                    break
-            
-            if diff_cov == 1 and threshold == 1.1:
-                print("No differential peaks detected", file=sys.stderr)
-                sys.exit()
+                if steps % 500 == 0 and len(s0) > y and len(s1) > y and len(s2) > y:
+                    tmp = []
+                    for el in [s0, s1, s2]:
+                        el = np.asarray(el)
+                        if not test:
+                            el = el[np.where(
+                                np.logical_and(
+                                    el[:, 1] < np.percentile(el[:, 1], 95) * (el[:, 1] > np.percentile(el[:, 1], 5)),
+                                    el[:, 2] < np.percentile(el[:, 2], 95) * (el[:, 2] > np.percentile(el[:, 2], 5))))]
+
+                        tmp.append(el)
+
+                    l = np.min([len(tmp[0]), len(tmp[1]), len(tmp[2])])
+                    if l >= y:
+                        break
             
             if len(s1) < 100/2 and len(s2) > 2*100:
                 s1 = map(lambda x: (x[0], x[2], x[1]), s2)
@@ -491,31 +498,40 @@ class MultiCoverageSet(DualCoverageSet):
             else:
                 rep = False
         
-        if DEBUG:       
+        if configuration.DEBUG:
             print('Final training set parameters: threshold: %s, diff_cov: %s' %(threshold, diff_cov), file=sys.stderr)
         
         #optimize training set, extend each bin
+        # here we need to combine data to sample all data, if they are not meet our requirements, we need to sample from all population data
+        # and the population data are directly from interest_of_points..
+        if tmp == [] :
+            for el in [s0, s1, s2]:
+                el = np.asarray(el)
+                if not test:
+                    el = el[np.where(
+                        np.logical_and(el[:, 1] < np.percentile(el[:, 1], 95) * (el[:, 1] > np.percentile(el[:, 1], 5)),
+                                       el[:, 2] < np.percentile(el[:, 2], 95) * (el[:, 2] > np.percentile(el[:, 2], 5))))]
+
+                tmp.append(el)
+
+            l = np.min([len(tmp[0]), len(tmp[1]), len(tmp[2]), y])
+
+        print('the smallest length l is %d between %d, %d, %d'%(l,len(s0),len(s1),len(s2)))
+        s0 = sample(tmp[0], l)
+        s1 = sample(tmp[1], l)
+        s2 = sample(tmp[2], l)
+
         tmp = []
-        for i, el in enumerate([s0, s1, s2]):
-            el = np.asarray(el)
-            if not test:
-                el = el[el[:,1] < np.percentile(el[:,1], 90)]
-                el = el[el[:,2] < np.percentile(el[:,2], 90)]
-            tmp.append(el)
-        
-        s0 = tmp[0]
-        s1 = tmp[1]
-        s2 = tmp[2]
-        
-        l = np.min([len(s1), len(s2), len(s0), y])
-        
-        s0 = sample(s0, l)
-        s1 = sample(s1, l)
-        s2 = sample(s2, l)
-        
-        s0_v = map(lambda x: (x[1], x[2]), s0)
-        s1_v = map(lambda x: (x[1], x[2]), s1)
-        s2_v = map(lambda x: (x[1], x[2]), s2)
+        for ss in [s0, s1, s2]:
+            while np.any(np.sum(ss, axis=0) < len(ss)):
+                print('resample because data is not spatial')
+                ss = sample(ss, l)
+            tmp.append(ss)
+
+        s0_v = map(lambda x: (x[1], x[2]), tmp[0])
+        s1_v = map(lambda x: (x[1], x[2]), tmp[1])
+        s2_v = map(lambda x: (x[1], x[2]), tmp[2])
+
         
         extension_set = set()
         for i, _, _ in s0 + s1 + s2:
@@ -528,9 +544,7 @@ class MultiCoverageSet(DualCoverageSet):
         training_set = list(training_set)
         training_set.sort()
         
-        if DEBUG:
+        if configuration.DEBUG:
             self.output_training_set(name, training_set, s0_v, s1_v, s2_v)
         
         return training_set, s0_v, s1_v, s2_v
-        
-        

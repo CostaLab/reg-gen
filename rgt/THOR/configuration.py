@@ -5,3 +5,10 @@ global FOLDER_REPORT_PICS
 global FOLDER_REPORT_DATA
 global OUTPUTDIR
 global NAME
+
+global DEBUG
+global VERBOSE
+
+
+EPSILON = 1**-320
+ROUND_PRECISION = 3
