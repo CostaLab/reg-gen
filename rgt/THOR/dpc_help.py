@@ -138,8 +138,10 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     """Return list of (mean, var) points for samples 0 and 1"""
     data_rep = []
     for i in range(2):
-        cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins)
-        cov = cov[:,(cov>0).all(axis=0)]
+        cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins) # I don;t think there is a need to use matrix to represent data.
+        # cov = cov[:,(cov>0).all(axis=0)] # do we need all data over 0?? Or just sum of them be over zero.., If two many data are zeros on one part, then we have great chance to hav zeros
+        h = np.invert((cov == 0).all(axis=0))  # assign True to columns != (0,..,0)
+        cov = cov[:, h]  # remove 0-columns
         print(cov.shape)
         # sample from [0,1,2,..., cov.shape[1]], and make it a list of sample_size
         r = np.random.randint(cov.shape[1], size=sample_size)
@@ -159,10 +161,10 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
             np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
     
     for i in range(2):
-        data_rep[i] = data_rep[i][np.where(
+        data_rep[i] = data_rep[i][
             np.logical_and(
                 data_rep[i][:, 0] < np.percentile(data_rep[i][:, 0], 99.75) * (data_rep[i][:, 0] > np.percentile(data_rep[i][:, 0], 1.25)),
-                data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))))]
+                data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))),:]
         # data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down, and m cut down greater than one value
         # data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down between one interval..
 

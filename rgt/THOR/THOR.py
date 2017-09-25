@@ -51,7 +51,7 @@ def _write_info(tracker, report, **data):
     #tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
     #tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
     #tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
-    print(configuration.FOLDER_REPORT)
+    # print(configuration.FOLDER_REPORT)
     if report:
         tracker.make_html(configuration.FOLDER_REPORT)
 
@@ -61,7 +61,7 @@ def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs
     
     while True:
         train_regions = region_giver.get_training_regionset()
-        print(train_regions.sequences)
+        # print(train_regions.sequences)
         exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions,
                               stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
                               exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,

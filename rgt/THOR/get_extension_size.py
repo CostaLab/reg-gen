@@ -38,6 +38,8 @@ Return shift/extension size of reads descriebed by BAM file.
 
 from __future__ import print_function
 import pysam
+import numpy as np
+from rgt.THOR.RegionGiver import RegionGiver
 
 cov_f = {}
 cov_r = {}
@@ -88,24 +90,29 @@ def init_cov(filename):
     if not cov_f and not cov_r:
         return False
     else:
-        return False
+        return True
 
 
-def new_init(filename):
+def new_init(bam_filename, chrom_file_name):
     """:return boolean for reading cov_f and cov_r for each bam files; True, if cov_f reading right, else False
         and the read length for each bamfiles
-       Maybe also the scale-factor.. but now it's all right
+       Now there are some differences between old and new init.. I would use the old firstly and see how it's.
     """
-    f = pysam.Samfile(filename, "rb")
+    f = pysam.Samfile(bam_filename, "rb")
+
+    region_giver = RegionGiver(chrom_file_name, None)
+    chroms = np.intersect1d(region_giver.get_chrom_dict().keys(), f.references)
 
     s = []
-    chrom_sizes = [5000] * len(f.references)
-    for chrom_idx in range(len(f.references)):
+    #chrom_sizes = [5000] * len(f.references)
+    # here we only need to consider chromosomes in chromosomes files, so we need to change it..
+    for chrom_idx in range(len(chroms)):
         i = 0
-        for read in f.fetch(f.references[chrom_idx]):
+        print(chroms[chrom_idx])
+        for read in f.fetch(chroms[chrom_idx]):
             i += 1
-            if i == chrom_sizes[chrom_idx]:
-                break
+            #if i == chrom_sizes[chrom_idx]:
+            #    break
             if not read.is_unmapped:
                 s.append(read.rlen)
                 if not read.seq:
@@ -119,7 +126,7 @@ def new_init(filename):
                 else:
                     if not cov_f.has_key(pos):
                         cov_f[pos] = 1
-
+        print(i)
     if not cov_f and not cov_r:
         return False, -1
     else:
@@ -140,7 +147,7 @@ def ccf(k):
     return s, k
 
 
-def old_get_extension_size(filename, start=0, end=600, stepsize=5):
+def get_extension_size(filename, start=0, end=600, stepsize=5):
     """Return extension/shift size of reads and all computed values of the convolution. 
     Search value with a resolution of <stepsize> from start to end."""
     read_length = get_read_size(filename)
@@ -161,11 +168,12 @@ def old_get_extension_size(filename, start=0, end=600, stepsize=5):
 
     return max(r[read_length / stepsize * 2:])[1], r
 
-def get_extension_size(filename, start=0, end=600, stepsize=5):
+def new_get_extension_size(bam_filename, chrom_file_name, start=0, end=600, stepsize=5):
 
-    read_suc, read_length = new_init(filename)
-    # print(read_length)
+    read_suc, read_length = new_init(bam_filename, chrom_file_name)
+    print(read_length)
     start = max(0, start - read_length)
+
 
     r = map(ccf, range(start, end, stepsize))
 
@@ -174,7 +182,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
 if __name__ == '__main__':
     # a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = get_extension_size('/home/kefang/programs/THOR_example_data/bug/debugData/newdata/inpt2_A.bam')
+    a, b = new_get_extension_size('/home/kefang/programs/THOR_example_data/bug/test/FL8_H3K27ac.100k.bam','/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes')
     print(a, b)
 
     #for el in b:

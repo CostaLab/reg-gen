@@ -214,7 +214,8 @@ class MultiCoverageSet(DualCoverageSet):
         
         self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report,
                                       m_threshold, a_threshold)
-        
+        ## After this step, we have already normalized data, so we could output normalization data
+
         if output_bw:
             self._output_bw(name, chrom_sizes, save_wig, save_input) 
         
@@ -291,13 +292,18 @@ class MultiCoverageSet(DualCoverageSet):
             return np.asarray(m_values), np.asarray(a_values)
     
     def _norm_TMM(self, overall_coverage, m_threshold, a_threshold):
-        """Normalize with TMM approach, based on PePr"""
+        """Normalize with TMM approach, based on PePr
+          ref, we use the mean of two samples and compare to it
+          data_rep present the data.. But a
+        """
         scaling_factors_ip = []
-        # mask_ref filter out columns with zero at least for two samples.
+        # mask_ref filter out columns with zero at least for two samples..
         mask_ref = np.all(np.all(np.asarray(overall_coverage) > 0, axis=0), axis=0)
+        ref = np.squeeze(np.asarray(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref], axis=0)) / float(self.dim_1 + self.dim_2))
+
+        # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
         for j, cond_max in enumerate([self.dim_1, self.dim_2]):
-            # ref get the mean of reads for data under same conditions
-            ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0)/ float(cond_max)))
+
             for i in range(cond_max): #normalize all replicates
                 # get the data for each sample under each condition
                 data_rep = np.squeeze(np.asarray(overall_coverage[j][i,mask_ref]))
@@ -319,7 +325,7 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset, report,
                                  m_threshold, a_threshold):
-        """Normalize signal"""
+        """Normalize signal. comparing data to data"""
         
         if configuration.VERBOSE:
             print('Normalize ChIP-seq profiles', file=sys.stderr)
@@ -388,9 +394,9 @@ class MultiCoverageSet(DualCoverageSet):
         """Compute score for each observation (based on Xu et al.)"""
         # after np.squeeze, we remove single-dimensional entry.. What does it make ??? seems nothing about process
         # interest_region is column scores are greater than one values...
-        self.scores = np.sum(np.asarray([np.squeeze(np.asarray(self.overall_coverage[i][j])) /float(np.sum(self.overall_coverage[i][j])) for j in xrange(self.dim_2) for i in range(self.dim_1)]), axis=0)/self.dim_2
-
-        # self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
+        # self.scores = np.sum(np.asarray([np.squeeze(np.asarray(self.overall_coverage[i][j])) /float(np.sum(self.overall_coverage[i][j])) for j in xrange(self.dim_2) for i in range(self.dim_1)]), axis=0)/self.dim_2
+        # old methods to count interest regions
+        self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
 
     def _get_bin_number(self):
         """Return number of bins"""
@@ -403,7 +409,8 @@ class MultiCoverageSet(DualCoverageSet):
         
         try:
             self._compute_score()
-            threshold = 2.0 / (self.scores.shape[0])
+            # threshold = 2.0 / (self.scores.shape[0])  # before it's considered if it's zero, now add some thresholds.
+            threshold = 0.0
             self.indices_of_interest = np.where(self.scores > threshold)[0] #2/(m*n) thres = 2 /(self.scores.shape[0])
             tmp = np.where(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) + np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))) > 10)[0]
             tmp2 = np.intersect1d(self.indices_of_interest, tmp)
@@ -435,10 +442,11 @@ class MultiCoverageSet(DualCoverageSet):
         """Return HMM's training set (max <y> positions). Enlarge each contained bin by <ex>.
            If first sample can't represent data, we need to resample it from population, self.indices_of_interest..
            Other way, we could build the samples for training, but then it will cause other troubles, maybe...
+           we need to filter data, make diff_cov firstly non zeros and then get half part from it..s
         """
         threshold = foldchange
-        diff_cov = int(np.percentile(np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - \
-                                            np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0)))), min_t))
+        diff_cov = int(np.percentile(filter(lambda x: x>0, np.abs(np.squeeze(np.asarray(np.mean(self.overall_coverage[0], axis=0))) - \
+                                            np.squeeze(np.asarray(np.mean(self.overall_coverage[1], axis=0))))), min_t))
 
         if test:
             diff_cov, threshold = 2, 1.5
@@ -448,7 +456,7 @@ class MultiCoverageSet(DualCoverageSet):
         
         s0, s1, s2 , tmp = [], [], [], []
         
-        #compute training set parameters, re-compute training set if criteria do not hold
+        # compute training set parameters, re-compute training set if criteria do not hold
         print('The length of indices_of_interest')
         print(len(self.indices_of_interest))
         rep=True
@@ -474,10 +482,10 @@ class MultiCoverageSet(DualCoverageSet):
                     for el in [s0, s1, s2]:
                         el = np.asarray(el)
                         if not test:
-                            el = el[np.where(
+                            el = el[
                                 np.logical_and(
-                                    el[:, 1] < np.percentile(el[:, 1], 95) * (el[:, 1] > np.percentile(el[:, 1], 5)),
-                                    el[:, 2] < np.percentile(el[:, 2], 95) * (el[:, 2] > np.percentile(el[:, 2], 5))))]
+                                    el[:, 1] < np.percentile(el[:, 1], 97.5) * (el[:, 1] > np.percentile(el[:, 1], 2.5)),
+                                    el[:, 2] < np.percentile(el[:, 2], 97.5) * (el[:, 2] > np.percentile(el[:, 2], 2.5))),:]
 
                         tmp.append(el)
 
@@ -509,28 +517,28 @@ class MultiCoverageSet(DualCoverageSet):
                 el = np.asarray(el)
                 if not test:
                     el = el[np.where(
-                        np.logical_and(el[:, 1] < np.percentile(el[:, 1], 95) * (el[:, 1] > np.percentile(el[:, 1], 5)),
-                                       el[:, 2] < np.percentile(el[:, 2], 95) * (el[:, 2] > np.percentile(el[:, 2], 5))))]
+                        np.logical_and(el[:, 1] < np.percentile(el[:, 1], 97.5) * (el[:, 1] > np.percentile(el[:, 1], 2.5)),
+                                       el[:, 2] < np.percentile(el[:, 2], 97.5) * (el[:, 2] > np.percentile(el[:, 2], 2.5))))]
 
                 tmp.append(el)
 
             l = np.min([len(tmp[0]), len(tmp[1]), len(tmp[2]), y])
 
-        print('the smallest length l is %d between %d, %d, %d'%(l,len(s0),len(s1),len(s2)))
+        print('the smallest length l is %d between %d, %d, %d, %d'%(l,y, len(tmp[0]),len(tmp[1]),len(tmp[2])))
         s0 = sample(tmp[0], l)
         s1 = sample(tmp[1], l)
         s2 = sample(tmp[2], l)
 
-        tmp = []
-        for ss in [s0, s1, s2]:
+        tmp2 = []
+        for i, ss in enumerate([s0, s1, s2]):
             while np.any(np.sum(ss, axis=0) < len(ss)):
                 print('resample because data is not spatial')
-                ss = sample(ss, l)
-            tmp.append(ss)
+                ss = sample(tmp[i], l)
+            tmp2.append(ss)
 
-        s0_v = map(lambda x: (x[1], x[2]), tmp[0])
-        s1_v = map(lambda x: (x[1], x[2]), tmp[1])
-        s2_v = map(lambda x: (x[1], x[2]), tmp[2])
+        s0_v = map(lambda x: (x[1], x[2]), tmp2[0])
+        s1_v = map(lambda x: (x[1], x[2]), tmp2[1])
+        s2_v = map(lambda x: (x[1], x[2]), tmp2[2])
 
         
         extension_set = set()
