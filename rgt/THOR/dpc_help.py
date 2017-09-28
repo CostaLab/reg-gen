@@ -41,6 +41,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
+print(pysam.__version__)
 
 FOLDER_REPORT = None
 
