@@ -108,13 +108,13 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.14", "hmmlearn>=0.2", "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx==0.12.1"],
         []
     ),
     "THOR": (
         "rgt-THOR",
         "rgt.THOR.THOR:main",
-        ["scikit-learn>=0.17.1", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
     ),
@@ -158,8 +158,8 @@ class PassThroughOptionParser(OptionParser):
         while rargs:
             try:
                 OptionParser._process_args(self, largs, rargs, values)
-            except (BadOptionError, AmbiguousOptionError), e:
-                largs.append(e.opt_str)
+            except (BadOptionError, AmbiguousOptionError) as err:
+                largs.append(err.opt_str)
 
 
 # recursive_chown_chmod Function
@@ -181,18 +181,11 @@ def recursive_chown_chmod(path_to_walk, uid, gid, file_permission, path_permissi
 ###################################################################################################
 
 # Parameters
-rgt_data_base_name = "rgtdata"
 usage_message = "python setup.py install [python options] [RGT options]"
 version_message = "Regulatory Genomics Toolbox (RGT). Version: " + str(current_version)
 
 # Initializing Option Parser
 parser = PassThroughOptionParser(usage=usage_message, version=version_message)
-
-# Parameter: RGT Data Location
-param_rgt_data_location_name = "--rgt-data-path"
-parser.add_option(param_rgt_data_location_name, type="string", metavar="STRING",
-                  help="Path containing data used by RGT tool.",
-                  dest="param_rgt_data_location", default=path.join(getenv('HOME'), rgt_data_base_name))
 
 # Parameter: Tool
 param_rgt_tool_name = "--rgt-tool"
@@ -206,18 +199,12 @@ parser.add_option(param_rgt_tool_name, type="string", metavar="STRING",
 
 # Processing Options
 options, arguments = parser.parse_args()
-if path.basename(options.param_rgt_data_location) != rgt_data_base_name:
-    options.param_rgt_data_location = path.join(options.param_rgt_data_location, rgt_data_base_name)
-if options.param_rgt_data_location[0] == "~":
-    options.param_rgt_data_location = path.join(getenv('HOME'), options.param_rgt_data_location[2:])
 options.param_rgt_tool = options.param_rgt_tool.split(",")
 
 # Manually Removing Additional Options from sys.argv
 new_sys_argv = []
 for e in sys.argv:
-    if param_rgt_data_location_name == e[:len(param_rgt_data_location_name)]:
-        continue
-    elif param_rgt_tool_name == e[:len(param_rgt_tool_name)]:
+    if param_rgt_tool_name == e[:len(param_rgt_tool_name)]:
         continue
     new_sys_argv.append(e)
 
@@ -238,19 +225,22 @@ for tool_option in options.param_rgt_tool:
 # Creating Data Path
 ###################################################################################################
 
+# if the environment variable is set, use it; otherwise use the home directory as a default
+rgt_data_location = path.expanduser(getenv("RGTDATA", path.join(getenv("HOME"), "rgtdata")))
+
 # Creating Data Path
-if not path.exists(options.param_rgt_data_location):
-    makedirs(options.param_rgt_data_location)
+if not path.exists(rgt_data_location):
+    makedirs(rgt_data_location)
 
 # Creating data.config
-data_config_file_name = path.join(options.param_rgt_data_location, "data.config")
+data_config_file_name = path.join(rgt_data_location, "data.config")
 # if not os.path.isfile(data_config_file_name):
 data_config_file = open(data_config_file_name, "w")
 data_config_file.write("# Configuration file loaded at rgt startup. CAREFUL: any changes shall be overwritten\n"
                        "# whenever rgt is (re)installed. Use data.config.user for permanent changes.\n\n")
 
 genome = "mm9"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_mm9.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.mm9\n"))
@@ -260,7 +250,7 @@ data_config_file.write("annotation: " + path.join(genome_dir, "gencode.vM1.annot
 data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_mouse.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "mm10"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_mm10.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.mm10\n"))
@@ -269,7 +259,7 @@ data_config_file.write("genes_RefSeq: " + path.join(genome_dir, "genes_RefSeq_mm
 data_config_file.write("annotation: " + path.join(genome_dir, "gencode.vM11.annotation.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_mouse.txt\n\n"))
 genome = "hg19"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_hg19.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.hg19\n"))
@@ -279,7 +269,7 @@ data_config_file.write("annotation: " + path.join(genome_dir, "gencode.v19.annot
 data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "hg38"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_hg38.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.hg38\n"))
@@ -289,7 +279,7 @@ data_config_file.write("annotation: " + path.join(genome_dir, "gencode.v24.annot
 data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_human.txt\n\n"))
 data_config_file.write("repeat_maskers: " + path.join(genome_dir, "repeat_maskers\n\n"))
 genome = "zv9"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_zv9_ensembl_release_79.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.zv9\n"))
@@ -297,7 +287,7 @@ data_config_file.write("gene_regions: " + path.join(genome_dir, "genes_zv9.bed\n
 data_config_file.write("annotation: " + path.join(genome_dir, "Danio_rerio.Zv9.79.gtf\n"))
 data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.txt\n\n"))
 genome = "zv10"
-genome_dir = path.join(options.param_rgt_data_location, genome)
+genome_dir = path.join(rgt_data_location, genome)
 data_config_file.write("[" + genome + "]\n")
 data_config_file.write("genome: " + path.join(genome_dir, "genome_zv10_ensembl_release_84.fa\n"))
 data_config_file.write("chromosome_sizes: " + path.join(genome_dir, "chrom.sizes.zv10\n"))
@@ -326,13 +316,13 @@ data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
 data_config_file.write("[Library]\n")
-data_config_file.write("path_triplexator: " + path.join(options.param_rgt_data_location, triplexes_file) + "\n")
-data_config_file.write("path_c_rgt: " + path.join(options.param_rgt_data_location, "lib/" + libRGT) + "\n")
+data_config_file.write("path_triplexator: " + path.join(rgt_data_location, triplexes_file) + "\n")
+data_config_file.write("path_c_rgt: " + path.join(rgt_data_location, "lib/" + libRGT) + "\n")
 
 data_config_file.close()
 
 # Creating data.config.user, but only if not already present
-user_config_file_name = path.join(options.param_rgt_data_location, "data.config.user")
+user_config_file_name = path.join(rgt_data_location, "data.config.user")
 if not os.path.isfile(user_config_file_name):
     user_config_file = open(user_config_file_name, "w")
 
@@ -340,7 +330,7 @@ if not os.path.isfile(user_config_file_name):
                            "# be overwritten in any case, so if you are experiencing problems rename or remove this\n"
                            "# file. See data.config for how the file should be formatted.\n\n")
     genome = "self_defined"
-    genome_dir = path.join(options.param_rgt_data_location, genome)
+    genome_dir = path.join(rgt_data_location, genome)
     user_config_file.write("# Template to add a genomic section.\n")
     user_config_file.write("#[" + genome + "]\n")
     user_config_file.write("#genome: undefined\n")
@@ -349,12 +339,7 @@ if not os.path.isfile(user_config_file_name):
     user_config_file.write("#annotation: undefined\n")
     user_config_file.write("#gene_alias: undefined\n\n")
 
-# Creating data.config.path
 script_dir = path.dirname(path.abspath(__file__))
-data_config_path_file_name = path.join(script_dir, "rgt", "data.config.path")
-data_config_path_file = open(data_config_path_file_name, "w")
-data_config_path_file.write(data_config_file_name)
-data_config_path_file.close()
 
 # Copying data from package folder to installation folder
 """
@@ -382,7 +367,7 @@ copy_files_dictionary = {
             "tdf_logo.png", "viz_logo.png"],
 }
 for copy_folder in copy_files_dictionary.keys():
-    copy_dest_path = path.join(options.param_rgt_data_location, copy_folder)
+    copy_dest_path = path.join(rgt_data_location, copy_folder)
     if not path.exists(copy_dest_path): makedirs(copy_dest_path)
     for copy_file in copy_files_dictionary[copy_folder]:
         copy_source_file = path.join(script_dir, "data", copy_folder, copy_file)
@@ -412,7 +397,6 @@ keywords_list = ["ChIP-seq", "DNase-seq", "Peak Calling", "Motif Discovery", "Mo
 author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "Fabio Ticconi", "Ivan G. Costa"]
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
-package_data_dictionary = {"rgt": [path.basename(data_config_path_file_name)]}
 
 # External scripts
 external_scripts = []
@@ -440,7 +424,6 @@ setup(name="RGT",
       author_email=corresponding_mail,
       license=license_type,
       packages=find_packages(),
-      package_data=package_data_dictionary,
       entry_points=current_entry_points,
       install_requires=current_install_requires,
       scripts=external_scripts,
@@ -452,9 +435,6 @@ setup(name="RGT",
 # Termination
 ###################################################################################################
 
-# Removing data.config.path
-remove(data_config_path_file_name)
-
 # Modifying Permissions when Running Superuser/Admin
 # $SUDO_USER exists only if you are sudo, and returns the original user name
 current_user = getenv("SUDO_USER")
@@ -464,5 +444,5 @@ default_path_permission = 0755
 if current_user:
     current_user_uid = getpwnam(current_user).pw_uid
     current_user_gid = getpwnam(current_user).pw_gid
-    recursive_chown_chmod(options.param_rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
+    recursive_chown_chmod(rgt_data_location, current_user_uid, current_user_gid, default_file_permission,
                           default_path_permission)

@@ -24,21 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import print_function
 import string
-# from scipy.stats import binom
 from hmmlearn.hmm import _BaseHMM
 
 import sys
-# from time import time
-from math import fabs, log
-from sklearn.utils.extmath import logsumexp
+from math import fabs
+from scipy.misc import logsumexp
 
-# from scipy.stats import nbinom
-# from random import randint
-# from scipy.special import gamma
-# from operator import mul
-#
-# import scipy.special as special
-# import scipy.optimize as optimize
 import numpy as np
 from neg_bin import NegBin
 

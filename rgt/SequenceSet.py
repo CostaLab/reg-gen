@@ -123,6 +123,7 @@ class SequenceSet:
             -fasta_file -- The path to the FASTA file.
         """
         pre_seq = False
+        strand = None
         with open(fasta_file) as f:
             for line in f:
                 line = line.strip()
@@ -139,7 +140,11 @@ class SequenceSet:
                     try: seq = seq + line
                     except: seq = line
                     pre_seq = True
-            self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
+            if not strand:
+                print("Error: There is no header in "+fasta_file)
+                self.sequences.append(Sequence(seq=seq, strand=".", name=info))
+            else:
+                self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
     def read_regions(self, regionset, genome_fasta, ex=0):
         genome = pysam.Fastafile(genome_fasta)

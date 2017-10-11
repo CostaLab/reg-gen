@@ -197,6 +197,35 @@ class GenomicSignal:
         # Returning normalized and slope sequences
         return hon_signal_forward, slope_signal_forward, hon_signal_reverse, slope_signal_reverse
 
+    def get_signal_atac2(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
+                        initial_clip=50, per_norm=98, per_slope=98,
+                        bias_table=None, genome_file_name=None):
+
+        # Cleavage bias correction
+        bc_signal = self.bias_correction_atac2(bias_table, genome_file_name,
+                                            ref, start, end, forward_shift, reverse_shift)
+
+        # Boyle normalization (within-dataset normalization)
+        boyle_signal = array(self.boyle_norm(bc_signal))
+
+        # Hon normalization (between-dataset normalization)
+        perc = scoreatpercentile(boyle_signal, per_norm)
+        std = boyle_signal.std()
+        hon_signal = self.hon_norm_atac(boyle_signal, perc, std)
+
+        # Slope signal
+        slope_signal = self.slope(hon_signal, self.sg_coefs)
+
+        # Hon normalization (between-dataset normalization)
+        slope_signal = self.boyle_norm(slope_signal)
+
+        perc = scoreatpercentile(slope_signal, per_norm)
+        std = np.std(slope_signal)
+        slope_signal = self.hon_norm_atac(slope_signal, perc, std)
+
+        # Returning normalized and slope sequences
+        return hon_signal, slope_signal
+
     def bias_correction_dnase(self, signal, bias_table, genome_file_name, chrName, start, end,
                         forward_shift, reverse_shift):
 
@@ -277,8 +306,10 @@ class GenomicSignal:
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
-            zf = log(nf[i] + 1) - log(nhatf + 1)
-            zr = log(nr[i] + 1) - log(nhatr + 1)
+            #zf = log(nf[i] + 1) - log(nhatf + 1)
+            #zr = log(nr[i] + 1) - log(nhatr + 1)
+            zf = (nf[i] + 1) / (nhatf + 1)
+            zr = (nr[i] + 1) / (nhatr + 1)
             bias_corrected_signal.append(zf + zr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
@@ -387,6 +418,96 @@ class GenomicSignal:
         fastaFile.close()
         return bias_corrected_signal_forward, bias_corrected_signal_reverse
 
+    def bias_correction_atac2(self, bias_table, genome_file_name, chrName, start, end,
+                        forward_shift, reverse_shift):
+
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fastaFile = Fastafile(genome_file_name)
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(floor(k_nb / 2.))
+        p2_wk = p2_w + int(ceil(k_nb / 2.))
+        #if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+
+        # Raw counts
+        nf = [0.0] * (p2_w - p1_w)
+        nr = [0.0] * (p2_w - p1_w)
+        for read in self.bam.fetch(chrName, p1_w, p2_w):
+            if (not read.is_reverse):
+                cut_site = read.pos + forward_shift
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nf[cut_site - p1_w] += 1.0
+            else:
+                cut_site = read.aend + reverse_shift - 1
+                if cut_site >= p1_w and cut_site < p2_w:
+                    nr[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(nf[:window])
+        rSum = sum(nr[:window])
+        fLast = nf[0]
+        rLast = nr[0]
+        for i in range((window / 2), len(nf) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += nf[i + (window / 2)]
+            fLast = nf[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += nr[i + (window / 2)]
+            rLast = nr[i - (window / 2) + 1]
+
+        # Fetching sequence
+        currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+                                                                     p2_wk)).upper())
+
+        # Iterating on sequence to create signal
+        af = []
+        ar = []
+        for i in range(int(ceil(k_nb / 2.)), len(currStr) - int(floor(k_nb / 2)) + 1):
+            fseq = currStr[i - int(floor(k_nb / 2.)):i + int(ceil(k_nb / 2.))]
+            rseq = currRevComp[len(currStr) - int(ceil(k_nb / 2.)) - i:len(currStr) + int(floor(k_nb / 2.)) - i]
+            try:
+                af.append(fBiasDict[fseq])
+            except Exception:
+                af.append(defaultKmerValue)
+            try:
+                ar.append(rBiasDict[rseq])
+            except Exception:
+                ar.append(defaultKmerValue)
+
+        # Calculating bias and writing to wig file
+        fSum = sum(af[:window])
+        rSum = sum(ar[:window])
+        fLast = af[0]
+        rLast = ar[0]
+        bc_signal = []
+        for i in range((window / 2), len(af) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
+            bc_signal.append(nhatf + nhatr)
+            fSum -= fLast
+            fSum += af[i + (window / 2)]
+            fLast = af[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += ar[i + (window / 2)]
+            rLast = ar[i - (window / 2) + 1]
+
+        # Termination
+        fastaFile.close()
+        return bc_signal
 
     def hon_norm_atac(self, sequence, mean, std):
         """

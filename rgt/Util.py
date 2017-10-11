@@ -20,6 +20,10 @@ def npath(filename):
     return os.path.abspath(os.path.expanduser(filename))
 
 
+def get_rgtdata_path():
+    return os.path.expanduser(os.getenv("RGTDATA", os.path.join(os.getenv("HOME"), "rgtdata")))
+
+
 class ConfigurationFile:
     """Represent the data path configuration file (data.config). It serves as a superclass to classes that will contain default variables (such as paths, parameters to tools, etc.) for a certain purpose (genomic data, motif data, etc.).
 
@@ -33,11 +37,7 @@ class ConfigurationFile:
     def __init__(self):
         
         # Reading config file directory
-        root_dir = os.path.dirname(os.path.abspath(__file__))
-        data_config_path_file_name = os.path.join(root_dir, 'data.config.path')
-        data_config_path_file = open(data_config_path_file_name,"r")
-        data_config_file_name = data_config_path_file.readline().strip()
-        data_config_path_file.close()
+        data_config_file_name = os.path.join(get_rgtdata_path(), "data.config")
 
         # Parsing config file
         self.config = ConfigParser.ConfigParser()
@@ -368,10 +368,11 @@ class PassThroughOptionParser(HelpfulOptionParser):
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
-                HelpfulOptionParser._process_args(self,largs,rargs,values)
-            except (BadOptionError,AmbiguousOptionError), e:
+                HelpfulOptionParser._process_args(self, largs, rargs, values)
+            except (BadOptionError, AmbiguousOptionError) as err:
                 pass
-                #largs.append(e.opt_str)
+                #largs.append(err.opt_str)
+
 
 
 class ErrorHandler():
@@ -451,7 +452,7 @@ class ErrorHandler():
         self.warning_number = 0
         self.warning_message = 1
 
-    def throw_error(self, error_type, add_msg = ""):
+    def throw_error(self, error_type, add_msg=""):
         """Throws the specified error type. If the error type does not exist, throws a default error message and exits.
 
         *Keyword arguments:*
@@ -465,7 +466,7 @@ class ErrorHandler():
             error_number = self.error_dictionary[error_type][self.error_number]
             exit_status = self.error_dictionary[error_type][self.exit_status]
             error_message = self.error_dictionary[error_type][self.error_message]
-        except KeyError, IndexError:
+        except (KeyError, IndexError):
             error_number = self.error_dictionary["DEFAULT_ERROR"][self.error_number]
             exit_status = self.error_dictionary["DEFAULT_ERROR"][self.exit_status]
             error_message = self.error_dictionary["DEFAULT_ERROR"][self.error_message]
@@ -494,7 +495,7 @@ class ErrorHandler():
         try:
             warning_number = self.warning_dictionary[warning_type][self.warning_number]
             warning_message = self.warning_dictionary[warning_type][self.warning_message]
-        except KeyError, IndexError:
+        except (KeyError, IndexError):
             warning_number = self.warning_dictionary["DEFAULT_WARNING"][self.warning_number]
             warning_message = self.warning_dictionary["DEFAULT_WARNING"][self.warning_message]
 
@@ -896,8 +897,8 @@ class Html:
             - width -- Width (default = 800).
             - more_images -- Add more images (default = None).
         """        
-        if(isinstance(align,int)): img_str = "<p style=\"margin-left: "+str(align)+"\">"
-        elif(isinstance(align,str)): img_str = "<p align=\""+str(align)+"\">"
+        if isinstance(align, int): img_str = "<p style=\"margin-left: "+str(align)+"\">"
+        elif isinstance(align, str): img_str = "<p align=\""+str(align)+"\">"
         else: pass # TODO ERROR
         
         img_str += '<a href="'+figure_path+'"><img src="'+ figure_path +'" width='+width+'></a>'
@@ -910,16 +911,16 @@ class Html:
 
         self.document.append(img_str)
         if notes:
-            if(isinstance(align,int)): 
+            if isinstance(align,int):
                 note_str = "<p style=\"margin-left: "+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"
-            elif(isinstance(align,str)):
+            elif isinstance(align,str):
                 note_str = "<p align=\""+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"            
             else: pass # TODO ERROR
             
-            if(bold): note_str += "<b>"
+            if bold: note_str += "<b>"
             for line in notes:
                 note_str += line + "<br>" 
-            if(bold): note_str += "</b>"
+            if bold: note_str += "</b>"
             note_str += "</font></p>"
             self.document.append(note_str)
 

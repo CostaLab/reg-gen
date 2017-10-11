@@ -20,7 +20,8 @@ dir = os.getcwd()
 
 
 class Lineplot:
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss, df, dft, fields, test, sense):
+    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss,
+                 df, dft, fields, test, sense, strand):
 
         # Read the Experimental Matrix
         self.title = title
@@ -51,6 +52,7 @@ class Lineplot:
         self.df = df
         self.dft = dft
         self.sense = sense
+        self.strand = strand
 
     def relocate_bed(self):
         self.processed_beds = []
@@ -161,7 +163,12 @@ class Lineplot:
                     if not self.dft:
                         dfs = [c]
                     else:
-                        dfs = self.exps.fieldsDict[self.dft].keys()
+                        if self.dft =="regions":
+                            dfs = self.exps.get_regionsnames()
+                        elif self.dft == "reads":
+                            dfs = self.exps.get_readsnames()
+                        else:
+                            dfs = self.exps.fieldsDict[self.dft].keys()
                     for d in dfs:
                         data[s][g][c][d] = defaultdict(list)
                         for bed in self.cuebed.keys():
@@ -205,7 +212,7 @@ class Lineplot:
                                             elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
                                                 cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
                                             else:
-                                                if not self.sense:
+                                                if not self.sense and not self.strand:
                                                     cov.coverage_from_bam(bam_file=self.reads[j],
                                                                           extension_size=self.rs, binsize=self.bs,
                                                                           stepsize=self.ss)
@@ -213,7 +220,8 @@ class Lineplot:
                                                 else:  # Sense specific
                                                     cov.coverage_from_bam(bam_file=self.reads[j],
                                                                           extension_size=self.rs, binsize=self.bs,
-                                                                          stepsize=self.ss, get_sense_info=True,
+                                                                          stepsize=self.ss, get_sense_info=self.sense,
+                                                                          get_strand_info=self.strand,
                                                                           paired_reads=True)
                                                     cov.array_transpose()
                                                     if normRPM: cov.normRPM()
@@ -278,7 +286,7 @@ class Lineplot:
                                                         avearr = numpy.log2(avearr+1)
 
                                                     avearr = numpy.average(avearr, axis=0)
-                                                    if self.sense:
+                                                    if self.sense or self.strand:
                                                         if log:
                                                             sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
                                                             sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
@@ -289,7 +297,7 @@ class Lineplot:
                                                     avearr = avearr[cut_end:-cut_end]
                                                     data[s][g][c][d]["all"].append(avearr)
 
-                                                    if self.sense:
+                                                    if self.sense or self.strand:
                                                         sense_1 = sense_1[cut_end:-cut_end]
                                                         sense_2 = sense_2[cut_end:-cut_end]
                                                         data[s][g][c][d]["sense_1"].append(sense_1)
@@ -356,7 +364,7 @@ class Lineplot:
         for i, c in enumerate(self.color_tags):
             self.colors[c] = colors[i]
 
-    def plot(self, groupby, colorby, output, printtable=False, scol=False, srow=False, w=2, h=2):
+    def plot(self, output, printtable=False, scol=False, srow=False, w=2, h=2):
         linewidth = 1
 
         rot = 30
@@ -406,7 +414,7 @@ class Lineplot:
                         if not self.data[s][g][c][d]:
                             continue
                         else:
-                            if not self.sense:
+                            if not self.sense and not self.strand:
                                 if self.df: pt = self.data[s][g][c][d]["df"]
                                 else: pt = self.data[s][g][c][d]["all"]
 
@@ -425,10 +433,16 @@ class Lineplot:
                                     # Processing for future output
                                     if printtable: pArr.append([g, s, c, d] + list(y))
                             else:
-                                plt.text(0.5, 0.51, 'sense',transform=ax.transAxes,fontsize=ticklabelsize,
-                                         horizontalalignment='center', verticalalignment='bottom')
-                                plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
-                                         horizontalalignment='center', verticalalignment='top')
+                                if self.sense:
+                                    plt.text(0.5, 0.51, 'sense',transform=ax.transAxes,fontsize=ticklabelsize,
+                                             horizontalalignment='center', verticalalignment='bottom')
+                                    plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
+                                             horizontalalignment='center', verticalalignment='top')
+                                elif self.strand:
+                                    plt.text(0.5, 0.51, 'Forward strand', transform=ax.transAxes, fontsize=ticklabelsize,
+                                             horizontalalignment='center', verticalalignment='bottom')
+                                    plt.text(0.5, 0.49, 'Reverse strand', transform=ax.transAxes, fontsize=ticklabelsize,
+                                             horizontalalignment='center', verticalalignment='top')
                                 plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
                                 # print(self.data[s][g][c][d])
                                 for l, y in enumerate(self.data[s][g][c][d]["sense_1"]):
@@ -459,18 +473,14 @@ class Lineplot:
                 ax.set_xlim([-self.extend, self.extend])
                 plt.setp(ax.get_xticklabels(), fontsize=ticklabelsize, rotation=rot, ha='right')
                 plt.setp(ax.get_yticklabels(), fontsize=ticklabelsize)
-
-
                 ax.locator_params(axis='x', nbins=4)
                 ax.locator_params(axis='y', nbins=3)
-                # try:
-                #
-                # except:
-                #     ax.locator_params(axis='y', nbins=2)
-                #     pass
+
         if printtable:
             output_array(pArr, directory=output, folder=self.title, filename="plot_table.txt")
 
+        handles = []
+        labels =[]
         for it, ty in enumerate(self.data.keys()):
             try:
                 axs[it, 0].set_ylabel("{}".format(ty), fontsize=ticklabelsize + 1)
@@ -507,13 +517,15 @@ class Lineplot:
                     elif scol and srow: ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
                     else:
                         ymax = axx.get_ylim()[1]
-                    if self.sense: ymin = -ymax
+                    if self.sense or self.strand: ymin = -ymax
                     else: ymin = 0
 
                 try: axx.set_ylim([ymin, ymax])
                 except: pass
-
-        handles, labels = ax.get_legend_handles_labels()
+                hand, l = axx.get_legend_handles_labels()
+                handles += hand
+                labels += l
+        # handles, labels = ax.get_legend_handles_labels()
         uniq_labels = unique(labels)
 
         plt.legend([handles[labels.index(l)] for l in uniq_labels], uniq_labels, loc='center left', handlelength=1,
