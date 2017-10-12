@@ -99,16 +99,14 @@ def new_init(bam_filename, chrom_file_name):
        Now there are some differences between old and new init.. I would use the old firstly and see how it's.
     """
     f = pysam.Samfile(bam_filename, "rb")
-
+    # here we only need to consider chromosomes in chromosomes files
     region_giver = RegionGiver(chrom_file_name, None)
-    chroms = np.intersect1d(region_giver.get_chrom_dict().keys(), f.references)
-
+    chroms = list(set(region_giver.get_chrom_dict().keys()).intersection(f.references))
     s = []
-    #chrom_sizes = [5000] * len(f.references)
-    # here we only need to consider chromosomes in chromosomes files, so we need to change it..
+    #chrom_sizes = [5000] * len(chroms)
     for chrom_idx in range(len(chroms)):
         i = 0
-        print(chroms[chrom_idx])
+        # print(chroms[chrom_idx])
         for read in f.fetch(chroms[chrom_idx]):
             i += 1
             #if i == chrom_sizes[chrom_idx]:
@@ -126,7 +124,7 @@ def new_init(bam_filename, chrom_file_name):
                 else:
                     if not cov_f.has_key(pos):
                         cov_f[pos] = 1
-        print(i)
+        # print(i)
     if not cov_f and not cov_r:
         return False, -1
     else:
@@ -155,11 +153,6 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     init_cov(filename)
 
-    # if init_cov is empty, then we return empty.
-    if not init_cov(filename):
-        return None, None
-
-
     r = map(ccf, range(start, end, stepsize))
 
     r = map(lambda x: (x[0], x[1]), r)
@@ -172,20 +165,23 @@ def new_get_extension_size(bam_filename, chrom_file_name, start=0, end=600, step
 
     read_suc, read_length = new_init(bam_filename, chrom_file_name)
     print(read_length)
-    start = max(0, start - read_length)
+    start = max(0,start - read_length)
 
 
     r = map(ccf, range(start, end, stepsize))
 
-    return max(r)[1], r
+    # only depends on the max is kind of biased, we want to consider 3 data and find the better solution
+    tmp_r = [r[0]]
+    tmp_r.extend([(np.mean([r[i-1][0],r[i][0],r[i+1][0]]), r[i][1]) for i in range(1,len(r)-1)])
+    tmp_r.extend([r[-1]])
+    return max(tmp_r[read_length/stepsize*2:])[1], sorted(tmp_r)
+
+    # return max(r[read_length/stepsize*2:])[1], sorted(r)
 
 
 if __name__ == '__main__':
     # a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = new_get_extension_size('/home/kefang/programs/THOR_example_data/bug/test/FL8_H3K27ac.100k.bam','/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes')
+    a, b = new_get_extension_size('/home/kefang/programs/THOR_example_data/bug/test/CC4_H3K27ac.100k.bam','/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes')
     print(a, b)
-
-    #for el in b:
-    #    print(el[1], el[0], sep='\t')
 
 
