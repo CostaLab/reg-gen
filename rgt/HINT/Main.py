@@ -1983,6 +1983,11 @@ def print_lines():
                       action="store_true", default=False,
                       help=("If used, the plot containing the ATAC-seq and DNase-seq signal,"
                             "will be printed."))
+    parser.add_option("--print-distribution", dest="print_distribution",
+                      action="store_true", default=False,
+                      help=("If used, the plot containing the distribution of fragment length,"
+                            "will be printed."))
+
 
     options, arguments = parser.parse_args()
 
@@ -1994,13 +1999,17 @@ def print_lines():
 
     if options.print_strand_plot:
         #plot.line1()
-        plot.line4()
+        #plot.line4()
+        plot.line7()
     if options.print_corrected_plot:
         plot.line2()
     if options.print_bias_plot:
         plot.line3(options.bias_table1, options.bias_table2)
     if options.print_atac_dnase_plot:
         plot.line5(options.reads_file1, options.reads_file2, options.bias_table1, options.bias_table2)
+        #plot.line6(options.reads_file1, options.reads_file2)
+    if options.print_distribution:
+        plot.distribution_of_frag_length(options.reads_file, options.motif_file)
 
     # TODO
     exit(0)
