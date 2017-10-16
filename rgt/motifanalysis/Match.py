@@ -162,7 +162,7 @@ def main_matching():
         target_regions.name = "target_regions"
         target_regions.sort()
         output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
-        target_regions.write_bed(output_file_name)
+        target_regions.write(output_file_name)
 
         genomic_regions_dict[target_regions.name] = target_regions
 
@@ -177,7 +177,7 @@ def main_matching():
             background_regions.name = "background_regions"
             background_regions.sort()
             output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
-            background_regions.write_bed(output_file_name)
+            background_regions.write(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
 
@@ -197,7 +197,7 @@ def main_matching():
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
-            regions.read_bed(npath(input_filename))
+            regions.read(npath(input_filename))
 
             genomic_regions_dict[name] = regions
 
@@ -247,7 +247,7 @@ def main_matching():
         # Writing random regions
         output_file_name = npath(os.path.join(output_location, random_region_name))
         rand_bed_file_name = output_file_name + ".bed"
-        rand_region.write_bed(rand_bed_file_name)
+        rand_region.write(rand_bed_file_name)
 
         # Verifying condition to write bb
         if options.bigbed:
@@ -327,7 +327,7 @@ def main_matching():
             # TODO: measure and document speed/memory improvements, if any.
             # grs = match_multiple(motif_list, sequence, genomic_region)
 
-            grs.write_bed(output_bed_file, mode="a")
+            grs.write(output_bed_file, mode="a")
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
