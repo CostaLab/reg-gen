@@ -232,7 +232,7 @@ def main_enrichment():
             regions = GenomicRegionSet(name)
 
             try:
-                regions.read_bed(os.path.abspath(input_filename))
+                regions.read(os.path.abspath(input_filename))
             except:
                 err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
@@ -332,9 +332,9 @@ def main_enrichment():
     ###################################################################################################
 
     background = GenomicRegionSet("background")
-    background.read_bed(background_filename)
+    background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
-    background_mpbs.read_bed(background_mpbs_filename)
+    background_mpbs.read(background_mpbs_filename)
 
     # Evaluating background statistics
     bg_c_dict, bg_d_dict, _, _ = get_fisher_dict(motif_names, background, background_mpbs)
@@ -413,7 +413,7 @@ def main_enrichment():
                 continue
 
             curr_mpbs = GenomicRegionSet("curr_mpbs")
-            curr_mpbs.read_bed(curr_mpbs_bed_name)
+            curr_mpbs.read(curr_mpbs_bed_name)
             curr_mpbs.sort()
 
             ###################################################################################################
