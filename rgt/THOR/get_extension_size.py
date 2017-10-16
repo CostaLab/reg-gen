@@ -38,8 +38,6 @@ Return shift/extension size of reads descriebed by BAM file.
 
 from __future__ import print_function
 import pysam
-import numpy as np
-from rgt.THOR.RegionGiver import RegionGiver
 
 cov_f = {}
 cov_r = {}
@@ -69,10 +67,7 @@ def get_read_size(filename):
 
 def init_cov(filename):
     file = pysam.Samfile(filename, "rb")
-    # error happens here, if we choose the first one
-    ## file.references is ('chr1', 'chr2', 'chr3', 'chr4', 'chr5', 'chr6', 'chr7', 'chr8',....] all chromosomes in files,
-    # so we need to choose them according to different reference part, which is not right.
-    # if extension size is for each bam files, then we need to get all the data, so at least 1000 data to simulate them..
+
     for read in file.fetch(file.references[0]):
         if not read.is_unmapped:
             if not read.seq:
@@ -80,56 +75,13 @@ def init_cov(filename):
             else:
                 h = len(read.seq)
             pos = read.pos + read.rlen - h if read.is_reverse else read.pos
+            assert int(pos) == int(read.pos), "pos is %d , read.pos is %d"%(pos, read.pos)
             if read.is_reverse:
                 if not cov_r.has_key(pos):
                     cov_r[pos] = 1
             else:
                 if not cov_f.has_key(pos):
                     cov_f[pos] = 1
-
-    if not cov_f and not cov_r:
-        return False
-    else:
-        return True
-
-
-def new_init(bam_filename, chrom_file_name):
-    """:return boolean for reading cov_f and cov_r for each bam files; True, if cov_f reading right, else False
-        and the read length for each bamfiles
-       Now there are some differences between old and new init.. I would use the old firstly and see how it's.
-    """
-    f = pysam.Samfile(bam_filename, "rb")
-    # here we only need to consider chromosomes in chromosomes files
-    region_giver = RegionGiver(chrom_file_name, None)
-    chroms = list(set(region_giver.get_chrom_dict().keys()).intersection(f.references))
-    s = []
-    #chrom_sizes = [5000] * len(chroms)
-    for chrom_idx in range(len(chroms)):
-        i = 0
-        # print(chroms[chrom_idx])
-        for read in f.fetch(chroms[chrom_idx]):
-            i += 1
-            #if i == chrom_sizes[chrom_idx]:
-            #    break
-            if not read.is_unmapped:
-                s.append(read.rlen)
-                if not read.seq:
-                    h = 0
-                else:
-                    h = len(read.seq)
-                pos = read.pos + read.rlen - h if read.is_reverse else read.pos
-                if read.is_reverse:
-                    if not cov_r.has_key(pos):
-                        cov_r[pos] = 1
-                else:
-                    if not cov_f.has_key(pos):
-                        cov_f[pos] = 1
-        # print(i)
-    if not cov_f and not cov_r:
-        return False, -1
-    else:
-        read_len = sum(s) / len(s)
-        return True, read_len
 
 
 def ccf(k):
@@ -146,9 +98,10 @@ def ccf(k):
 
 
 def get_extension_size(filename, start=0, end=600, stepsize=5):
-    """Return extension/shift size of reads and all computed values of the convolution. 
+    """Return extension/shift size of reads and all computed values of the convolution.
     Search value with a resolution of <stepsize> from start to end."""
     read_length = get_read_size(filename)
+    print(read_length)
     start -= read_length
 
     init_cov(filename)
@@ -161,27 +114,11 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     return max(r[read_length / stepsize * 2:])[1], r
 
-def new_get_extension_size(bam_filename, chrom_file_name, start=0, end=600, stepsize=5):
-
-    read_suc, read_length = new_init(bam_filename, chrom_file_name)
-    print(read_length)
-    start = max(0,start - read_length)
-
-
-    r = map(ccf, range(start, end, stepsize))
-
-    # only depends on the max is kind of biased, we want to consider 3 data and find the better solution
-    tmp_r = [r[0]]
-    tmp_r.extend([(np.mean([r[i-1][0],r[i][0],r[i+1][0]]), r[i][1]) for i in range(1,len(r)-1)])
-    tmp_r.extend([r[-1]])
-    return max(tmp_r[read_length/stepsize*2:])[1], sorted(tmp_r)
-
-    # return max(r[read_length/stepsize*2:])[1], sorted(r)
-
 
 if __name__ == '__main__':
-    # a, b = get_extension_size('/home/manuel/workspace/cluster_p/blueprint/raw/input/C000S5H1.Input.bwa_filtered.20130415.bam')
-    a, b = new_get_extension_size('/home/kefang/programs/THOR_example_data/bug/test/CC4_H3K27ac.100k.bam','/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes')
+    fname = '/home/kefang/programs/THOR_example_data/bug/test/CC4_H3K27ac.100k.bam'
+    a, b = get_extension_size(fname)
     print(a, b)
 
-
+    for el in b:
+        print(el[1], el[0], sep='\t')
