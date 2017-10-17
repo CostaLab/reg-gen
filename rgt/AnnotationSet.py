@@ -9,6 +9,7 @@ AnnotationSet represent genomic annotation from genes.
 
 # Python
 from __future__ import print_function
+import os
 
 # Internal
 from rgt.GenomicRegionSet import *
