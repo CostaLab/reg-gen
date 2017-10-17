@@ -27,7 +27,7 @@ import sys
 import numpy as np
 from math import fabs
 import warnings
-warnings.filterwarnings('error')
+
 
 def _count(posts):
     c_1, c_2 = 1, 1
@@ -78,6 +78,8 @@ def _valid_posteriors(posteriors, obs, dim):
                         posteriors[i] = np.array([post_s0, post_s1, post_s2])
                     except RuntimeWarning:
                         print(posteriors[i], c1, c2, file=sys.stderr)
-    
+
+    warnings.resetwarnings()
+
     return posteriors
 
