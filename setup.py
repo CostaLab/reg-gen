@@ -76,7 +76,7 @@ Tools Dictionary Standard:
 common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=0.7.0",
-               "pysam==0.11.1",
+               "pysam>=0.12.0",
                "pyBigWig",
                "PyVCF"]
 
