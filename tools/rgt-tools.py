@@ -892,11 +892,12 @@ if __name__ == "__main__":
                 elif ".fa" in args.o:
                     if not r.orientation: r.orientation = "."
                     if not args.score:
-                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        print("> " + name + " " + r.toString() + " " + r.orientation, file=fasta)
                     else:
                         print("> " + name + " " + r.toString() + " " + r.orientation +
-                              " score=" + str(r.data.split()[0]), file=f)
+                              " score=" + str(r.data.split()[0]), file=fasta)
                     for seq in ss: print(seq, file=fasta)
+
         if ".fa" in args.o:
             fasta.close()
 
