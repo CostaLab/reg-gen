@@ -433,8 +433,8 @@ def main():
                                      prefix="target_regions", remove_temp=args.rt, dna_fine_posi=False)
 
         stat.tpxf = triplexes.get_tpx(rna_fasta_file=os.path.join(args.o,"rna_temp.fa"),
-                                        target_regions=tdf_input.dna.target_regions,
-                                        prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
+                                      target_regions=tdf_input.dna.target_regions,
+                                      prefix="target_regions_fine", remove_temp=args.rt, dna_fine_posi=True)
         t1 = time.time()
         print("\tRunning time: " + str(datetime.timedelta(seconds=round(t1 - t0))))
 
