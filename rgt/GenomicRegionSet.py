@@ -25,6 +25,9 @@ from .GeneSet import GeneSet
 from .GenomicRegion import GenomicRegion
 from .Util import GenomeData, OverlapType, Library_path
 
+# External
+from pysam import Fastafile
+
 random.seed(42)
 
 ###############################################################################
@@ -208,9 +211,20 @@ class GRSFileIO:
             raise NotImplementedError
 
     class Fasta:
+        # FIXME: this one is a bit strange. It's based on the assumption that the GRS has already been
+        # populated with GenomicRegions, and then it adds the corresponding DNA sequence to each of those.
+
         @staticmethod
         def read_to_grs(grs, filename):
-            raise NotImplementedError
+            fasta = Fastafile(filename)
+
+            for r in grs:
+                try:
+                    seq = str(fasta.fetch(r.chrom, r.initial, r.final))
+                    strand = r.orientation if r.orientation else "+"
+                    r.sequence = Sequence(seq=seq, name=str(r), strand=strand)
+                except:
+                    print("Warning: region '%s' is skipped" % r)
 
         @staticmethod
         def write_from_grs(grs, filename, mode="w"):
@@ -220,7 +234,7 @@ class GRSFileIO:
                         f.write(">" + r.chrom + ":" + str(r.initial) + "-" + str(r.final) + "-" +
                                 str(r.orientation) + "\n" + r.sequence.seq + "\n")
                     except:
-                        pass
+                        print("Warning: region '%s' is skipped" % r)
 
 
 class GenomicRegionSet:
@@ -401,7 +415,7 @@ class GenomicRegionSet:
                 b.add(self.sequences[i])
         return a, b
     
-    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
+    def gene_association(self, organism, gene_set=None, promoterLength=1000,
                         threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
@@ -577,14 +591,19 @@ class GenomicRegionSet:
     def filter_by_gene_association(self, gene_set = None, organism = "hg19", promoterLength = 1000, threshDist = 50000):
         """Updates self in order to keep only the coordinates associated to genes which are in gene_set.
         
-        It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX) or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported as mapped gene.
+        It also returns information regarding the mapped genes and proximity information (if mapped in proximal (PROX)
+        or distal (DIST) regions). If a region was associated with two genes, one in the gene_set and the other not in
+        gene_set, then the updated self still keeps information about both genes. However, the latter won't be reported
+        as mapped gene.
 
         *Keyword arguments:*
 
-            - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched. (default None)
+            - gene_set -- List of gene names as a GeneSet object. If None, then consider all genes to be enriched.
+              (default None)
             - organism -- Organism in order to fetch genomic data. (default hg19)
             - promoterLength -- Length of the promoter region. (default 1000)
-            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene. (default 50000)
+            - threshDist -- Threshold maximum distance for a coordinate to be considered associated with a gene.
+              (default 50000)
 
        *Return:*
 
@@ -592,7 +611,8 @@ class GenomicRegionSet:
             - all_genes = GeneSet that contains all genes associated with the coordinates
             - mapped_genes = GeneSet that contains the genes associated with the coordinates which are in gene_set
             - all_proxs = List that contains all the proximity information of genes associated with the coordinates
-            - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates which are in gene_set
+            - mapped_proxs = List that contains all the proximity information of genes associated with the coordinates
+              which are in gene_set
         """
 
         # Making association with gene_set
@@ -701,7 +721,6 @@ class GenomicRegionSet:
         """
 
         return self.intersect_c(y, mode, rm_duplicates)
-
 
     def intersect_python(self, y, mode=OverlapType.OVERLAP, rm_duplicates=False):
         z = GenomicRegionSet(self.name)
@@ -1069,7 +1088,9 @@ class GenomicRegionSet:
                 loop = False
             
     def window(self,y,adding_length = 1000):
-        """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs upstream and downstream of each region in self. In effect, this allows regions in y that are near regions in self to be detected.
+        """Return the overlapping regions of self and y with adding a specified number (1000, by default) of base pairs
+           upstream and downstream of each region in self. In effect, this allows regions in y that are near regions
+           in self to be detected.
         
         *Keyword arguments:*
 
@@ -1573,13 +1594,15 @@ class GenomicRegionSet:
     def random_regions(self, organism, total_size=None, multiply_factor=1, 
                        overlap_result=True, overlap_input=True, 
                        chrom_X=False, chrom_M=False, filter_path=None):
-        """Return a GenomicRegionSet which contains the random regions generated by given entries and given number on the given organism.
+        """Return a GenomicRegionSet which contains the random regions generated by given entries and given number
+           on the given organism.
         
         *Keyword arguments:*
 
             - organism -- Define organism's genome to use. (hg19, mm9)
             - total_size -- Given the number of result random regions.
-            - multiply_factor -- This factor multiplies to the number of entries is the number of exporting random regions. ** total_size has higher priority than multiply_factor. **
+            - multiply_factor -- This factor multiplies to the number of entries is the number of exporting random
+              regions. ** total_size has higher priority than multiply_factor. **
             - overlap_result -- The results whether overlap with each other or not. (True/False)
             - overlap_input -- The results whether overlap with input entries or not. (True/False)
             - chrom_X -- The result covers chromosome X or not. (True/False)
@@ -2585,3 +2608,11 @@ class GenomicRegionSet:
                 names.append(".")
 
             return names
+
+    def is_stranded(self):
+        """Check the GenomicRegionSet is stranded or not"""
+        if self.sequences[0].orientation == "+" or self.sequences[0].orientation == "-":
+            return True
+        else:
+            return False
+

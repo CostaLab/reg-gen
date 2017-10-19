@@ -276,7 +276,6 @@ class ImageData(ConfigurationFile):
         self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
         self.viz_logo = os.path.join(self.data_dir,"fig","viz_logo.png")
 
-
     def get_rgt_logo(self):
         """Returns the rgt logo image file location."""
         return self.rgt_logo
@@ -373,6 +372,7 @@ class PassThroughOptionParser(HelpfulOptionParser):
             except (BadOptionError, AmbiguousOptionError) as err:
                 pass
                 #largs.append(err.opt_str)
+
 
 
 class ErrorHandler():

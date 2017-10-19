@@ -443,6 +443,13 @@ if __name__ == "__main__":
     parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
     parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
 
+    ############### ENCODE Download #############################################
+    # python rgt-tools.py encode -i -o
+    parser_encode = subparsers.add_parser('encode',
+                                           help="[ENCODE] Download files from ENCODE database")
+    parser_encode.add_argument('-i', metavar='input', type=str, help="Input file list downloaded from ENCODE")
+    parser_encode.add_argument('-o', metavar='output', type=str, help="Output directory")
+
     ##########################################################################
     ##########################################################################
     ##########################################################################
@@ -885,11 +892,12 @@ if __name__ == "__main__":
                 elif ".fa" in args.o:
                     if not r.orientation: r.orientation = "."
                     if not args.score:
-                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        print("> " + name + " " + r.toString() + " " + r.orientation, file=fasta)
                     else:
                         print("> " + name + " " + r.toString() + " " + r.orientation +
-                              " score=" + str(r.data.split()[0]), file=f)
+                              " score=" + str(r.data.split()[0]), file=fasta)
                     for seq in ss: print(seq, file=fasta)
+
         if ".fa" in args.o:
             fasta.close()
 
@@ -1059,7 +1067,7 @@ if __name__ == "__main__":
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
 
-        non_available = None
+        non_available = 0
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
 
         def count_polyA_on_bam(bed, bam):
@@ -1101,7 +1109,7 @@ if __name__ == "__main__":
                                 if pileupread.alignment.query_sequence.endswith(pattern):
                                     # print(pileupread.alignment.query_sequence)
                                     all_a += 1
-
+                # Output: name, win_polyA, win_all_read, win_radio, whole_polyA, whole_read, whole_radio
                 if all_read == 0:
                     if all_r == 0:
                         res.append([r.name, count_polyA, all_read, non_available, all_a, all_r, non_available])
@@ -1141,11 +1149,11 @@ if __name__ == "__main__":
 
             for r in bed:
                 ar = numpy.array(col_res[r.name],dtype=numpy.float)
-                print(ar)
-                print(numpy.nanmean(ar, axis=1))
-                col_res[r.name] = numpy.nanmean(ar, axis=1).tolist()
-                print(col_res[r.name])
-                sys.exit(1)
+                # print(ar)
+                # print(numpy.nanmean(ar, axis=1))
+                col_res[r.name] = numpy.nanmean(ar, axis=0).tolist()
+                # print(col_res[r.name])
+                # sys.exit(1)
 
             with open(args.o, "w") as f:
                 print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave", "proportion_in_window",
@@ -1763,3 +1771,46 @@ if __name__ == "__main__":
         txp.write(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
         os.remove(tmp)
+
+
+
+    ############### ENCODE download #######################################
+    elif args.mode == "encode":
+        args.i = os.path.join(os.getcwd(), args.i)
+        cmd = "xargs -n 1 curl -O -L < " + args.i
+        os.system(cmd)
+        name_dict = {}
+        with open(os.path.join(args.o, "metadata.tsv")) as f:
+            for line in f:
+                if line.startswith("File accession"):
+                    continue
+                else:
+                    line = line.split("\t")
+                    # print(line)
+                    id = line[0]
+                    if line[29]:
+                        bp = line[29].replace(" ", "").replace(",","_")
+                        new_id = "_".join([line[4], line[6], line[16], line[42], bp])
+                    else:
+                        new_id = "_".join([line[4], line[6], line[16], line[42]])
+                    name_dict[id] = new_id
+                    # print(new_id)
+
+        import gzip
+        import shutil
+
+        for file in os.listdir(args.o):
+            id = os.path.basename(file).split(".")[0]
+            if id in name_dict.keys():
+                # print(file)
+                if file.endswith("gz"):
+                    formatf = file.split(".")[1]
+                    with gzip.open(os.path.join(args.o, file), 'rb') as infile:
+                        with open(os.path.join(args.o, name_dict[id]+"."+formatf), 'wb') as outfile:
+                            for line in infile:
+                                outfile.write(line)
+                    os.remove(os.path.join(args.o, file))
+                else:
+                    os.rename(os.path.join(args.o, file),
+                              os.path.join(args.o, name_dict[id] + "." + formatf))
+

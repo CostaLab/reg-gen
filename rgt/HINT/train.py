@@ -73,7 +73,7 @@ class TrainHMM:
         raw_signal = GenomicSignal(self.reads_file)
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = \
-            raw_signal.get_signal2(self.chrom, self.start, self.end,
+            raw_signal.get_signal(self.chrom, self.start, self.end,
                                    self.downstream_ext, self.upstream_ext,
                                    self.forward_shift, self.reverse_shift,
                                    bias_table=table, genome_file_name=genome_data.get_genome())
@@ -206,13 +206,13 @@ class TrainHMM:
             hmm_model.covs.append(covs_list)
 
         if self.estimate_bias_correction:
-            model_fname = os.path.join(self.output_locaiton, "{}_{}".format(self.k_nb, self.atac_forward_shift))
+            model_fname = os.path.join(self.output_location, "{}_{}".format(self.k_nb, self.atac_forward_shift))
         else:
-            model_fname = os.path.join(self.output_locaiton, self.output_fname)
+            model_fname = os.path.join(self.output_location, self.output_prefix)
         hmm_model.save_hmm(model_fname)
 
     def output_bed_file(self, states):
-        bed_fname = os.path.join(self.output_locaiton, self.output_fname)
+        bed_fname = os.path.join(self.output_location, self.output_prefix)
         bed_fname += ".bed"
 
         state_dict = dict([(0, "BACK"), (1, "UPD"), (2, "TOPD"), (3, "DOWND"), (4, "FP")])

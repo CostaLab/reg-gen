@@ -211,6 +211,7 @@ def main():
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
     parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific. (default: %(default)s)')
+    parser_lineplot.add_argument('-strand', action="store_true", help='Set the plot strand-specific. (default: %(default)s)')
     parser_lineplot.add_argument('-average', action="store_true", help='Show only the average of the replicates. (default: %(default)s)')
     
     ################### Heatmap ##########################################
@@ -620,19 +621,19 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
-            # if args.scol and args.srow:
-            #     print("** Err: -scol and -srow cannot be used simutaneously.")
-            #     sys.exit(1)
+            if args.scol and args.srow:
+                print("** Err: -scol and -srow cannot be used simutaneously.")
+                sys.exit(1)
 
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            # if "reads" not in (args.col, args.c, args.row):
-            #     print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
-            #     sys.exit(1)
-            # if "regions" not in (args.col, args.c, args.row):
-            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-            #     sys.exit(1)
+            if "reads" not in (args.col, args.c, args.row):
+                print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
+                sys.exit(1)
+            if "regions" not in (args.col, args.c, args.row):
+                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+                sys.exit(1)
 
             if not os.path.isfile(args.input):
                 print("Please check the input experimental matrix again. The given path is wrong.")
@@ -646,7 +647,7 @@ def main():
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
-                                test=args.test, sense=args.sense)
+                                test=args.test, sense=args.sense, strand=args.strand)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -664,7 +665,7 @@ def main():
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, 
+            lineplot.plot(output=args.o, printtable=args.table,
                           scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)

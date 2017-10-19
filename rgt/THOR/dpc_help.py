@@ -41,7 +41,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-
 FOLDER_REPORT = None
 
 np.random.rand(42)

@@ -6,4 +6,5 @@ pyBigWig
 pyVCF
 fisher
 HTSeq
+hmmlearn
 configparser

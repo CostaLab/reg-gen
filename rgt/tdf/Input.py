@@ -127,6 +127,8 @@ class Input(object):
             self.target_regions = GenomicRegionSet("targets")
             self.target_regions.read(bed)
             self.target_regions.remove_duplicates()
+
+            self.target_regions = self.target_regions.gene_association(organism=self.pars.organism)
             if self.pars.score:
                 self.scores = self.target_regions.get_score_dict()
 

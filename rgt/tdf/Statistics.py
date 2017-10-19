@@ -34,7 +34,7 @@ class Statistics(object):
                       "DBSs_target_DBD_sig": 0,
                       "DBSs_background_all": 0,
                       "DBSs_background_DBD_sig": 0,
-                      "p_value": "-",
+                      "p_value": "1",
                       "associated_gene": ".",
                       "expression": "n.a.",
                       "loci": "-",
@@ -143,11 +143,11 @@ class Statistics(object):
             os.remove(file_tpx_de)
         os.remove(file_tpx_nde)
 
-        target_regions.write(filename=os.path.join(self.pars.o, self.pars.rn + "_target_promoters.bed"))
+        # target_regions.write(filename=os.path.join(self.pars.o, self.pars.rn + "_target_promoters.bed"))
         self.tpx_de.write_bed(filename=os.path.join(self.pars.o, self.pars.rn + "_target_promoters_dbs.bed"),
                               associated=self.pars.organism)
-        self.tpx_def.write_bed(filename=os.path.join(self.pars.o, self.pars.rn + "_dbss.bed"),
-                               remove_duplicates=False, associated=self.pars.organism)
+        # self.tpx_def.write_bed(filename=os.path.join(self.pars.o, self.pars.rn + "_dbss.bed"),
+        #                        remove_duplicates=False, associated=self.pars.organism)
     def fisher_exact_de(self):
         """Return oddsratio and pvalue"""
         self.oddsratio = {}
@@ -261,6 +261,10 @@ class Statistics(object):
             rna_regionsets.load_from_list(input.rna.regions)
             autobinding_loci = tpx.get_overlapping_regions(regionset=rna_regionsets)
             autobinding_loci.write(filename=os.path.join(self.pars.o, self.pars.rn+"_autobinding.bed"))
+
+        tpx.write_bed(filename=os.path.join(self.pars.o, self.pars.rn + "_dbss.bed"),
+                      remove_duplicates=False, associated=self.pars.organism)
+
 
     def write_stat(self, filename):
         """Write the statistics into file"""

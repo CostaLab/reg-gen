@@ -12,7 +12,6 @@ from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
 p3_supported = False
 if not sys.version_info[0] == 2:
-    # sys.exit("Sorry, Python 3 is not supported (yet)")
     p3_supported = True
 
 """
@@ -78,7 +77,7 @@ Tools Dictionary Standard:
 common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=0.7.0",
-               "pysam==0.11.1",
+               "pysam>=0.12.0",
                "pyBigWig",
                "PyVCF"]
 
@@ -116,13 +115,13 @@ tools_dictionary = {
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.14", "hmmlearn>=0.2", "pyx" if p3_supported else "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx" if p3_supported else "pyx==0.12.1"],
         []
     ),
     "THOR": (
         "rgt-THOR",
         "rgt.THOR.THOR:main",
-        ["scikit-learn>=0.17.1", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "matplotlib>=1.1.0", "mpmath", "HTSeq"],
         ["data/bin/" + bin_dir + "/wigToBigWig", "data/bin/" + bin_dir + "/bigWigMerge",
          "data/bin/" + bin_dir + "/bedGraphToBigWig"]
     ),

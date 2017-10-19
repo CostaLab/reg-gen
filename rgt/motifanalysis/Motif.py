@@ -7,10 +7,9 @@
 from os.path import basename
 
 # Internal
-from ..Util import ErrorHandler
 
 # External
-from Bio import motifs
+from MOODS import tools, parsers
 
 ###################################################################################################
 # Classes
@@ -20,63 +19,54 @@ from Bio import motifs
 class Motif:
     """
     Represent a DNA binding affinity motif.
-
-    Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, input_file_name, pseudocounts, precision, fpr, thresholds):
+    def __init__(self, input_file_name, pseudocounts, fpr, thresholds):
         """ 
         Initializes Motif.
 
-        Variables:
+        Fields:
         pfm -- Position Frequency Matrix.
-        pwm -- Position Weight Matrix.
+        bg -- Background frequencies.
         pssm -- Position Specific Scoring Matrix.
+        alphabet -- A list of letters, eg ["A", "C", "G", "T"]
         threshold -- Motif matching threshold.
         len -- Length of the motif.
         max -- Maximum PSSM score possible.
         is_palindrome -- True if consensus is biologically palindromic.
         """
-
-        # Initializing error handler
-        err = ErrorHandler()
  
         # Initializing name
         self.name = ".".join(basename(input_file_name).split(".")[:-1])
         repository = input_file_name.split("/")[-2]
 
-        # Creating PFM & PWM
-        input_file = open(input_file_name, "r")
-        self.pfm = motifs.read(input_file, "pfm")
-        self.pwm = self.pfm.counts.normalize(pseudocounts)
-        input_file.close()
-        self.len = len(self.pfm)
+        # Creating PFM & PSSM
+        self.pfm = parsers.pfm(input_file_name)
+        self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
+        self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts, 2)
 
-        # Creating PSSM
-        background = {'A': 0.25, 'C': 0.25, 'G': 0.25, 'T': 0.25}
-        self.pssm = self.pwm.log_odds(background)
-        self.pssm_list = [self.pssm[e] for e in ["A", "C", "G", "T"]]
-        self.max = self.pssm.max
+        # maximum value found in the whole PSSM
+        self.len = len(self.pfm[0])
+        self.max = max([max(e) for e in self.pssm])
+
+        # we only support pure DNA or methylated DNA, for now.
+        self.alphabet = ["Aa", "Cc", "Gg", "Tt"]
+        if len(self.pfm) == 6:
+            self.alphabet += ["m", "1"]
 
         # Evaluating threshold
         try:
-            if pseudocounts != 0.1 or precision != 10000:
+            if pseudocounts != 1.0:
                 raise ValueError()
             self.threshold = thresholds.dict[repository][self.name][fpr]
         except Exception:
-            err.throw_warning("DEFAULT_WARNING", add_msg="Parameters not matching pre-computed Fpr data. "
-                                                         "Recalculating (might take a while)..")
-            try:
-                distribution = self.pssm.distribution(background=background, precision=precision)
-            except Exception:
-                err.throw_error("MM_PSEUDOCOUNT_0")
-            self.threshold = distribution.threshold_fpr(fpr)
+            # FIXME: this requires a modified version of MOODS. Not sure if we actually need it.
+            # self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr, 2000.0)  # 10000.0 would take too long
+            self.threshold = tools.threshold_from_p(self.pssm, self.bg, fpr)
+            print("pseudocounts != %f -> recomputing threshold for %s: %f" % (1.0, self.name, self.threshold))
 
         # Evaluating if motif is palindromic
-        if str(self.pfm.consensus) == str(self.pfm.consensus.reverse_complement()):
-            self.is_palindrome = True
-        else:
-            self.is_palindrome = False
+        self.is_palindrome = [max(e) for e in self.pssm] == [max(e) for e in reversed(self.pssm)]
 
 
 class Thresholds:

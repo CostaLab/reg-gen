@@ -1,20 +1,19 @@
+
 # Python Libraries
 from __future__ import print_function
 import copy
+
+# External
 import pysam
-# Local Libraries
 
-# Distal Libraries
 
-####################################################################################
-####################################################################################
 """
 Sequence
 ===================
 Sequence describes the sequence with ATCG as alphabets as well as its types.
 
 """
-class Sequence():
+class Sequence:
 
     def __init__(self, seq, strand, name=None):
         """*Keyword arguments:*
@@ -35,33 +34,29 @@ class Sequence():
         
     def dna_to_rna(self):
         """Convert the sequence from DNA sequence to RNA sequence."""
-        self.seq = self.seq.replace("T","U")
+        self.seq = self.seq.replace("T", "U")
         
     def rna_to_dna(self):
         """Convert the sequence from RNA sequence to DNA sequence."""
         self.seq = self.seq.replace("U", "T")
         
-    def GC_content(self):
+    def gc_content(self):
         """Return the ratio of GC content in this sequence."""
         gc = self.seq.count("G") + self.seq.count("C")
         return gc/float(len(self))
 
-    def methylated_sequence(self, CpG):
-#ALPHABET "DNA with covalent modifications" DNA-LIKE
+    def methylate(self, cpg_sites):
+        aux = list(self.seq)
 
-# Core symbols
-# A "Adenine" 8510A8 ~ T "Thymine" A89610
-# C "Cytosine" A50026 ~ G "Guanine" 313695
-# m "5-Methylcytosine" D73027 ~ 1 "Guanine:5-Methylcytosine" 4575B4
-        aux=list(self.seq)
-        for pos in CpG:
-          if self.seq[pos]=="C":
-            aux[pos]="m"
-          elif self.seq[pos]=="G":
-            aux[pos]="1"
-          else:
-            raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")         
-        self.seq="".join(aux)
+        for pos in cpg_sites:
+            if self.seq[pos] == "C":
+                aux[pos] = "m"
+            elif self.seq[pos] == "G":
+                aux[pos] = "1"
+            else:
+                raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")
+
+        self.seq = "".join(aux)
         
     def complement(self):
         """Return another Sequence which is the complement to original sequence."""
@@ -72,10 +67,12 @@ class Sequence():
         else: strand = "-"
         
         seq = copy.deepcopy(self.seq)
-        seq.replace("A","G")
-        seq.replace("G","A")
-        seq.replace("C","T")
-        seq.replace("T","C")
+        seq.replace("A", "G")
+        seq.replace("G", "A")
+        seq.replace("C", "T")
+        seq.replace("T", "C")
+        seq.replace("m", "1")
+        seq.replace("1", "m")
         
         s = Sequence(seq, name=self.name+"_complement",  strand=strand)
         return s
@@ -89,7 +86,6 @@ SequenceSet
 SequenceSet represents the collection of sequences and their functions.
 
 """
-
 class SequenceSet:
 
     def __init__(self, name, seq_type):
@@ -127,6 +123,7 @@ class SequenceSet:
             -fasta_file -- The path to the FASTA file.
         """
         pre_seq = False
+        strand = None
         with open(fasta_file) as f:
             for line in f:
                 line = line.strip()
@@ -143,8 +140,11 @@ class SequenceSet:
                     try: seq = seq + line
                     except: seq = line
                     pre_seq = True
-            self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
-
+            if not strand:
+                print("Error: There is no header in "+fasta_file)
+                self.sequences.append(Sequence(seq=seq, strand=".", name=info))
+            else:
+                self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
 
     def read_regions(self, regionset, genome_fasta, ex=0):
         genome = pysam.Fastafile(genome_fasta)

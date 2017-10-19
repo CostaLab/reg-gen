@@ -1011,7 +1011,7 @@ def integrate_stat(path):
                 for line in f:
                     l = line.strip().split("\t")
                     data[item][l[0]] = l[1]
-            print(data[item])
+            # print(data[item])
 
             data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
             data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)
@@ -1026,7 +1026,7 @@ def integrate_stat(path):
             # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
-def summerize_stat(target, link_d):
+def summerize_stat(target, link_d, score=True):
     base = os.path.basename(target)
     h = os.path.join(target, "index.html")
     stat = os.path.join(target, "statistics_" + base + ".txt")
@@ -1039,10 +1039,16 @@ def summerize_stat(target, link_d):
     type_list = 'sssssssssssss'
     col_size_list = [20] * 20
     c = 0
-    header_list = ["No.", "RNA", "Closest genes",
-                   "Exon", "Length", "Score*",
-                   "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
-                   "Organism", "Target region", "Rank*"]
+    if score:
+        header_list = ["No.", "RNA", "Closest genes",
+                       "Exon", "Length", "Score*",
+                       "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
+                       "Organism", "Target region", "Rank*"]
+    else:
+        header_list = ["No.", "RNA", "Closest genes",
+                       "Exon", "Length",
+                       "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
+                       "Organism", "Target region", "Rank*"]
 
     with open(stat) as f_stat:
         for line in f_stat:
@@ -1058,15 +1064,24 @@ def summerize_stat(target, link_d):
                     tag = l[0]
                 else:
                     tag = '<a href="' + hh + '">' + l[0] + "</a>"
-                data_table.append([str(c), tag, l[17],
-                                   l[3], l[4], l[18],
-                                   l[15], l[14], l[8], l[20],
-                                   l[2], l[5]])
+                if score:
+                    data_table.append([str(c), tag, l[17],
+                                       l[3], l[4], l[18],
+                                       l[15], l[14], l[8], l[20],
+                                       l[2], l[5]])
+                else:
+                    data_table.append([str(c), tag, l[17],
+                                       l[3], l[4],
+                                       l[15], l[14], l[8], l[20],
+                                       l[2], l[5]])
     # print(data_table)
     rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
     rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
-    rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
-    rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+    if score:
+        rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
+        rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+    else:
+        rank_sum = [x + y for x, y in zip(rank_dbd, rank_dbs)]
 
     for i, d in enumerate(data_table):
         d.append(str(rank_sum[i]))
@@ -1094,6 +1109,22 @@ def merge_DBD_regions(path):
     # print(len(dbd_pool))
     dbd_pool.write(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
 
+def merge_DBSs(path):
+    """Merge all available DBD regions in BED format. """
+    base = os.path.basename(path)
+    dir_name = os.path.basename(os.path.dirname(path))
+    dbss_pool = GenomicRegionSet(dir_name + "_" + base)
+    for rna in os.listdir(path):
+        if os.path.isdir(os.path.join(path, rna)):
+            f = os.path.join(path, rna, rna+"_dbss.bed")
+            if os.path.exists(f):
+                # print(f)
+                dbss = GenomicRegionSet(rna)
+                dbss.read(f)
+                for r in dbss: r.name = rna+"_"+r.name
+                dbss_pool.combine(dbss)
+    # print(len(dbd_pool))
+    dbss_pool.write(os.path.join(path, "DBSs_"+dir_name + "_" + base +".bed"))
 
 def save_profile(rna_regions, rna_name, organism, output, bed,\
                  stat, topDBD, sig_DBD, expression, geneset=None):
@@ -1181,7 +1212,10 @@ def integrate_html(target):
                         line = line.strip().split("\t")
                         if line[0] == "title": continue
                         nt += 1
-                        if float(line[13]) < 0.05: ns += 1
+                        if line[13] == "-":
+                            pass
+                        elif float(line[13]) < 0.05:
+                            ns += 1
                 # print([item, h, str(nt), str(ns)])
                 condition_list.append([item, h, str(nt), str(ns)])
 

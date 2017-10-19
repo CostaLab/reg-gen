@@ -96,32 +96,32 @@ def colormap(exps, colorby, definedinEM, annotation=None):
     """Generate the self.colors in the format which compatible with matplotlib"""
     if definedinEM:
         if colorby == "reads":
-            colors = []
+            color_res = []
             for i in exps.get_readsnames():
                 c = exps.get_type(i, "color")
                 if c[0] == "(":
                     rgb = [eval(j) for j in c.strip('()').split(',')]
-                    colors.append(rgb)
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
         elif colorby == "regions":
-            colors = []
+            color_res = []
             for i in exps.get_regionsnames():
                 c = exps.get_type(i, "color")
                 if c[0] == "(":
                     rgb = [eval(j) for j in c.strip('()').split(',')]
-                    colors.append([v / 255 for v in rgb])
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
         else:
-            colors = []
+            color_res = []
             for i in exps.fieldsDict[colorby].values():
                 c = exps.get_type(i[0], "color")
                 if c[0] == "(":
                     rgb = [float(j) for j in c.strip('()').split(',')]
-                    colors.append([v / 255 for v in rgb])
+                    color_res.append([v / 255 for v in rgb])
                 else:
-                    colors.append(c)
+                    color_res.append(c)
 
     else:
         if annotation:
@@ -156,8 +156,7 @@ def colormap(exps, colorby, definedinEM, annotation=None):
             #
             # np.linspace(0, 1, 9)
 
-
-
+    color_res = unique(color_res)
     return color_res
 
 
@@ -735,3 +734,14 @@ class NoDaemonProcess(multiprocessing.Process):
 # because the latter is only a wrapper function, not a proper class.
 class MyPool(multiprocessing.pool.Pool):
     Process = NoDaemonProcess
+
+
+def walklevel(some_dir, level=1):
+    some_dir = some_dir.rstrip(os.path.sep)
+    assert os.path.isdir(some_dir)
+    num_sep = some_dir.count(os.path.sep)
+    for root, dirs, files in os.walk(some_dir):
+        yield root, dirs, files
+        num_sep_this = root.count(os.path.sep)
+        if num_sep + level <= num_sep_this:
+            del dirs[:]
