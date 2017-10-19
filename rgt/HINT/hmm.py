@@ -314,7 +314,7 @@ def _log_multivariate_normal_density_full(X, means, covars, min_covar=1.e-7):
 
         cv_log_det = 2 * np.sum(np.log(np.diagonal(cv_chol)))
         cv_sol = linalg.solve_triangular(cv_chol, (X - mu).T, lower=True).T
-        log_prob[:, c] = - .5 * (np.sum(cv_sol ** 2, axis=1) +
+        log_prob[:, c] = - .5 * (np.sum(np.array(cv_sol) ** 2, axis=1) +
                                  n_dim * np.log(2 * np.pi) + cv_log_det)
 
     return log_prob
