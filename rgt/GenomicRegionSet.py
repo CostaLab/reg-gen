@@ -415,7 +415,7 @@ class GenomicRegionSet:
                 b.add(self.sequences[i])
         return a, b
     
-    def gene_association(self, gene_set=None, organism="hg19", promoterLength=1000,
+    def gene_association(self, organism, gene_set=None, promoterLength=1000,
                         threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 

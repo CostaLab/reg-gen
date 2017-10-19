@@ -424,7 +424,7 @@ class RNADNABindingSet:
         # reg = copy.deepcopy(region_set)
         # res = copy.deepcopy(name_replace)
         # reg = region_set
-        res = name_replace
+        # res = name_replace
 
         if not rbss:
             # Merge RBS
@@ -494,14 +494,15 @@ class RNADNABindingSet:
             for r in self.merged_dict:
                 if len(self.merged_dict[r]) < cutoff:
                     n = self.merged_dict.pop(r, None)
-        if res:
+        if name_replace:
             for r in self.merged_dict:
-                self.merged_dict[r].replace_region_name(regions=res)
+                self.merged_dict[r].replace_region_name(regions=name_replace)
         #self.merged_dict = new_dict
         elif asgene_organism:
             for r in self.merged_dict:
-                try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
-                except: pass
+                self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
+                # try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
+                # except: pass
 
     def read_tpx(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
