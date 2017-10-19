@@ -9,6 +9,7 @@ from collections import Counter
 
 from sklearn.externals import joblib
 from hmmlearn import hmm
+from scipy import linalg
 
 # Internal
 from ..Util import GenomeData
@@ -159,6 +160,12 @@ class TrainHMM:
 
         sequene = np.array(signal_list).T
         hmm_model.fit(sequene)
+
+        # make sure covariance is symmetric and positive-definite
+        for i in range(hmm_model.n_components):
+            if np.any(linalg.eigvalsh(hmm_model.covars_[i])) < 0:
+                hmm_model.covars_[i] = hmm_model.covars_[i] + 0.000001 * np.eye(3)
+
 
         output_fname = os.path.join(self.output_location, "{}.pkl".format(self.output_prefix))
         joblib.dump(hmm_model, output_fname)

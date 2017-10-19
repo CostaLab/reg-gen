@@ -33,6 +33,12 @@ from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
 from sklearn.externals import joblib
 
+# Test
+import numpy as np
+from pysam import Fastafile, Samfile
+from scipy.stats import scoreatpercentile
+from hmm import SemiSupervisedGaussianHMM
+
 """
 HINT - HMM-based Identification of TF Footprints.
 Finds transcription factor footprints given open chromatin data.
@@ -127,6 +133,8 @@ def main():
         histone_footprints()
     elif sys.argv[1] == "--dnase-histone-footprints":
         dnase_histone_footprints()
+    elif sys.argv[1] == "--atac-footprints-test":
+        atac_footprints_test()
 
 
     # Optional Input Options
@@ -968,6 +976,503 @@ def atac_footprints():
     # TODO
     exit(0)
 
+
+def atac_footprints_test():
+    """
+    Performs footprints identification from ATAC-seq.
+
+    Authors: Eduardo G. Gusmao, Zhijian Li.
+    """
+
+    ###################################################################################################
+    # Processing Input Arguments
+    ###################################################################################################
+
+    # Initializing Error Handler
+    err = ErrorHandler()
+
+    # Parameters
+    usage_message = "%prog --atac-footprints [options] [reads.bam regions.bed]"
+
+    # Initializing Option Parser
+    parser = PassThroughOptionParser(usage=usage_message)
+
+    parser.add_option("--hmm-file", dest="hmm_file", type="string",
+                      metavar="FILE", default=None,
+                      help=("If the argument is not given, then a default HMM will be used."))
+    parser.add_option("--bias-table", dest="bias_table", type="string",
+                      metavar="FILE_F,FILE_R", default=None,
+                      help=("List of files with all possible k-mers (for any k) and their bias estimates. "
+                            "Each line should contain a kmer and the bias estimate separated by tab."))
+    parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
+                      help=("Organism considered on the analysis. Check our full documentation for all available "
+                            "options. All default files such as genomes will be based on the chosen organism "
+                            "and the data.config file."))
+
+    # ATAC Hidden Options
+    parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+    parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--norm-per", dest="norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--slope-per", dest="slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+    parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--upstream-ext", dest="upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+    parser.add_option("--forward-shift", dest="forward_shift", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=-4,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8,
+                      help=SUPPRESS_HELP)
+
+    parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+                      help=SUPPRESS_HELP)
+    parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
+    parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+    parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
+    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
+
+    parser.add_option("--model", dest="model", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
+
+    parser.add_option("--unstrand-specific", dest="unstrand_specific",
+                      action="store_true", default=False, help=SUPPRESS_HELP)
+
+    # Output Options
+    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=getcwd(),
+                      help=("Path where the output bias table files will be written."))
+    parser.add_option("--output-prefix", dest="output_prefix", type="string", metavar="STRING", default=getcwd(),
+                      help=("The prefix for results files."))
+
+    # Processing Options
+    options, arguments = parser.parse_args()
+
+    if len(arguments) < 2:
+        err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
+
+    ########################################################################################################
+    # Global class initialization
+    genome_data = GenomeData(options.organism)
+    hmm_data = HmmData()
+
+    ###################################################################################################
+    # Fetching Bias Table
+    ###################################################################################################
+    if options.bias_table:
+        bias_table_list = options.bias_table.split(",")
+        bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
+                                            table_file_name_R=bias_table_list[1])
+    else:
+        table_F = hmm_data.get_default_bias_table_F_ATAC()
+        table_R = hmm_data.get_default_bias_table_R_ATAC()
+        bias_table = BiasTable().load_table(table_file_name_F=table_F,
+                                            table_file_name_R=table_R)
+
+    ###################################################################################################
+    # Creating HMMs
+    ###################################################################################################
+    hmm = None
+    if options.hmm_file:
+        hmm = joblib.load(options.hmm_file)
+    else:
+        hmm_file = hmm_data.get_default_hmm_atac_bc()
+        hmm = joblib.load(hmm_file)
+
+    # Initializing result set
+    footprints = GenomicRegionSet(options.output_prefix)
+
+    reads_file = GenomicSignal(arguments[0])
+    reads_file.load_sg_coefs(options.sg_window_size)
+
+    original_regions = GenomicRegionSet("regions")
+    original_regions.read(arguments[1])
+
+    regions = deepcopy(original_regions)
+    regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+    regions.merge()
+
+    bam = Samfile(arguments[0], "rb")
+    fasta = Fastafile(genome_data.get_genome())
+
+    if not options.unstrand_specific:
+        for region in regions:
+            p1 = region.initial
+            p2 = region.final
+
+            signal_bc_f_max_145, signal_bc_r_max_145 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=None, max_length=145, strand=True)
+            signal_bc_f_min_145, signal_bc_r_min_145 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=145, max_length=None, strand=True)
+            signal_bc_f_145_307, signal_bc_r_145_307 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=145, max_length=307, strand=True)
+            signal_bc_f_min_307, signal_bc_r_min_307 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=307, max_length=None, strand=True)
+            signal_bc_f_307_500, signal_bc_r_307_500 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=307, max_length=500, strand=True)
+            signal_bc_f_min_500, signal_bc_r_min_500 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                        bam=bam, fasta=fasta, bias_table=bias_table,
+                                                        forward_shift=options.forward_shift,
+                                                        reverse_shift=options.reverse_shift,
+                                                        min_length=500, max_length=None, strand=True)
+
+            input_sequence = list()
+            if options.model == "a":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+            elif options.model == "b":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                signal_bc_f_min_145 = reads_file.boyle_norm(signal_bc_f_min_145)
+                perc = scoreatpercentile(signal_bc_f_min_145, 98)
+                std = np.array(signal_bc_f_min_145).std()
+                signal_bc_f_min_145 = reads_file.hon_norm_atac(signal_bc_f_min_145, perc, std)
+                signal_bc_f_min_145_slope = reads_file.slope(signal_bc_f_min_145, reads_file.sg_coefs)
+
+                signal_bc_r_min_145 = reads_file.boyle_norm(signal_bc_r_min_145)
+                perc = scoreatpercentile(signal_bc_r_min_145, 98)
+                std = np.array(signal_bc_r_min_145).std()
+                signal_bc_r_min_145 = reads_file.hon_norm_atac(signal_bc_r_min_145, perc, std)
+                signal_bc_r_min_145_slope = reads_file.slope(signal_bc_r_min_145, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+
+                input_sequence.append(signal_bc_f_min_145)
+                input_sequence.append(signal_bc_f_min_145_slope)
+                input_sequence.append(signal_bc_r_min_145)
+                input_sequence.append(signal_bc_r_min_145_slope)
+            elif options.model == "c":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                signal_bc_f_145_307 = reads_file.boyle_norm(signal_bc_f_145_307)
+                perc = scoreatpercentile(signal_bc_f_145_307, 98)
+                std = np.array(signal_bc_f_145_307).std()
+                signal_bc_f_145_307 = reads_file.hon_norm_atac(signal_bc_f_145_307, perc, std)
+                signal_bc_f_145_307_slope = reads_file.slope(signal_bc_f_145_307, reads_file.sg_coefs)
+
+                signal_bc_r_145_307 = reads_file.boyle_norm(signal_bc_r_145_307)
+                perc = scoreatpercentile(signal_bc_r_145_307, 98)
+                std = np.array(signal_bc_r_145_307).std()
+                signal_bc_r_145_307 = reads_file.hon_norm_atac(signal_bc_r_145_307, perc, std)
+                signal_bc_r_145_307_slope = reads_file.slope(signal_bc_r_145_307, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+
+                input_sequence.append(signal_bc_f_145_307)
+                input_sequence.append(signal_bc_f_145_307_slope)
+                input_sequence.append(signal_bc_r_145_307)
+                input_sequence.append(signal_bc_r_145_307_slope)
+            elif options.model == "d":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                signal_bc_f_145_307 = reads_file.boyle_norm(signal_bc_f_145_307)
+                perc = scoreatpercentile(signal_bc_f_145_307, 98)
+                std = np.array(signal_bc_f_145_307).std()
+                signal_bc_f_145_307 = reads_file.hon_norm_atac(signal_bc_f_145_307, perc, std)
+                signal_bc_f_145_307_slope = reads_file.slope(signal_bc_f_145_307, reads_file.sg_coefs)
+
+                signal_bc_r_145_307 = reads_file.boyle_norm(signal_bc_r_145_307)
+                perc = scoreatpercentile(signal_bc_r_145_307, 98)
+                std = np.array(signal_bc_r_145_307).std()
+                signal_bc_r_145_307 = reads_file.hon_norm_atac(signal_bc_r_145_307, perc, std)
+                signal_bc_r_145_307_slope = reads_file.slope(signal_bc_r_145_307, reads_file.sg_coefs)
+
+                signal_bc_f_min_307 = reads_file.boyle_norm(signal_bc_f_min_307)
+                perc = scoreatpercentile(signal_bc_f_min_307, 98)
+                std = np.array(signal_bc_f_min_307).std()
+                signal_bc_f_min_307 = reads_file.hon_norm_atac(signal_bc_f_min_307, perc, std)
+                signal_bc_f_min_307_slope = reads_file.slope(signal_bc_f_min_307, reads_file.sg_coefs)
+
+                signal_bc_r_min_307 = reads_file.boyle_norm(signal_bc_r_min_307)
+                perc = scoreatpercentile(signal_bc_r_min_307, 98)
+                std = np.array(signal_bc_r_min_307).std()
+                signal_bc_r_min_307 = reads_file.hon_norm_atac(signal_bc_r_min_307, perc, std)
+                signal_bc_r_min_307_slope = reads_file.slope(signal_bc_r_min_307, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+
+                input_sequence.append(signal_bc_f_145_307)
+                input_sequence.append(signal_bc_f_145_307_slope)
+                input_sequence.append(signal_bc_r_145_307)
+                input_sequence.append(signal_bc_r_145_307_slope)
+
+                input_sequence.append(signal_bc_f_min_307)
+                input_sequence.append(signal_bc_f_min_307_slope)
+                input_sequence.append(signal_bc_r_min_307)
+                input_sequence.append(signal_bc_r_min_307_slope)
+            elif options.model == "e":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                signal_bc_f_145_307 = reads_file.boyle_norm(signal_bc_f_145_307)
+                perc = scoreatpercentile(signal_bc_f_145_307, 98)
+                std = np.array(signal_bc_f_145_307).std()
+                signal_bc_f_145_307 = reads_file.hon_norm_atac(signal_bc_f_145_307, perc, std)
+                signal_bc_f_145_307_slope = reads_file.slope(signal_bc_f_145_307, reads_file.sg_coefs)
+
+                signal_bc_r_145_307 = reads_file.boyle_norm(signal_bc_r_145_307)
+                perc = scoreatpercentile(signal_bc_r_145_307, 98)
+                std = np.array(signal_bc_r_145_307).std()
+                signal_bc_r_145_307 = reads_file.hon_norm_atac(signal_bc_r_145_307, perc, std)
+                signal_bc_r_145_307_slope = reads_file.slope(signal_bc_r_145_307, reads_file.sg_coefs)
+
+                signal_bc_f_307_500 = reads_file.boyle_norm(signal_bc_f_307_500)
+                perc = scoreatpercentile(signal_bc_f_307_500, 98)
+                std = np.array(signal_bc_f_307_500).std()
+                signal_bc_f_307_500 = reads_file.hon_norm_atac(signal_bc_f_307_500, perc, std)
+                signal_bc_f_307_500_slope = reads_file.slope(signal_bc_f_307_500, reads_file.sg_coefs)
+
+                signal_bc_r_307_500 = reads_file.boyle_norm(signal_bc_r_307_500)
+                perc = scoreatpercentile(signal_bc_r_307_500, 98)
+                std = np.array(signal_bc_r_307_500).std()
+                signal_bc_r_307_500 = reads_file.hon_norm_atac(signal_bc_r_307_500, perc, std)
+                signal_bc_r_307_500_slope = reads_file.slope(signal_bc_r_307_500, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+
+                input_sequence.append(signal_bc_f_145_307)
+                input_sequence.append(signal_bc_f_145_307_slope)
+                input_sequence.append(signal_bc_r_145_307)
+                input_sequence.append(signal_bc_r_145_307_slope)
+
+                input_sequence.append(signal_bc_f_307_500)
+                input_sequence.append(signal_bc_f_307_500_slope)
+                input_sequence.append(signal_bc_r_307_500)
+                input_sequence.append(signal_bc_r_307_500_slope)
+            elif options.model == "f":
+                signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+                perc = scoreatpercentile(signal_bc_f_max_145, 98)
+                std = np.array(signal_bc_f_max_145).std()
+                signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+                signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+                signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+                perc = scoreatpercentile(signal_bc_r_max_145, 98)
+                std = np.array(signal_bc_r_max_145).std()
+                signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+                signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+                signal_bc_f_145_307 = reads_file.boyle_norm(signal_bc_f_145_307)
+                perc = scoreatpercentile(signal_bc_f_145_307, 98)
+                std = np.array(signal_bc_f_145_307).std()
+                signal_bc_f_145_307 = reads_file.hon_norm_atac(signal_bc_f_145_307, perc, std)
+                signal_bc_f_145_307_slope = reads_file.slope(signal_bc_f_145_307, reads_file.sg_coefs)
+
+                signal_bc_r_145_307 = reads_file.boyle_norm(signal_bc_r_145_307)
+                perc = scoreatpercentile(signal_bc_r_145_307, 98)
+                std = np.array(signal_bc_r_145_307).std()
+                signal_bc_r_145_307 = reads_file.hon_norm_atac(signal_bc_r_145_307, perc, std)
+                signal_bc_r_145_307_slope = reads_file.slope(signal_bc_r_145_307, reads_file.sg_coefs)
+
+                signal_bc_f_307_500 = reads_file.boyle_norm(signal_bc_f_307_500)
+                perc = scoreatpercentile(signal_bc_f_307_500, 98)
+                std = np.array(signal_bc_f_307_500).std()
+                signal_bc_f_307_500 = reads_file.hon_norm_atac(signal_bc_f_307_500, perc, std)
+                signal_bc_f_307_500_slope = reads_file.slope(signal_bc_f_307_500, reads_file.sg_coefs)
+
+                signal_bc_r_307_500 = reads_file.boyle_norm(signal_bc_r_307_500)
+                perc = scoreatpercentile(signal_bc_r_307_500, 98)
+                std = np.array(signal_bc_r_307_500).std()
+                signal_bc_r_307_500 = reads_file.hon_norm_atac(signal_bc_r_307_500, perc, std)
+                signal_bc_r_307_500_slope = reads_file.slope(signal_bc_r_307_500, reads_file.sg_coefs)
+
+                signal_bc_f_min_500 = reads_file.boyle_norm(signal_bc_f_min_500)
+                perc = scoreatpercentile(signal_bc_f_min_500, 98)
+                std = np.array(signal_bc_f_min_500).std()
+                signal_bc_f_min_500 = reads_file.hon_norm_atac(signal_bc_f_min_500, perc, std)
+                signal_bc_f_min_500_slope = reads_file.slope(signal_bc_f_min_500, reads_file.sg_coefs)
+
+                signal_bc_r_min_500 = reads_file.boyle_norm(signal_bc_r_min_500)
+                perc = scoreatpercentile(signal_bc_r_min_500, 98)
+                std = np.array(signal_bc_r_min_500).std()
+                signal_bc_r_min_500 = reads_file.hon_norm_atac(signal_bc_r_min_500, perc, std)
+                signal_bc_r_min_500_slope = reads_file.slope(signal_bc_r_min_500, reads_file.sg_coefs)
+
+                input_sequence.append(signal_bc_f_max_145)
+                input_sequence.append(signal_bc_f_max_145_slope)
+                input_sequence.append(signal_bc_r_max_145)
+                input_sequence.append(signal_bc_r_max_145_slope)
+
+                input_sequence.append(signal_bc_f_145_307)
+                input_sequence.append(signal_bc_f_145_307_slope)
+                input_sequence.append(signal_bc_r_145_307)
+                input_sequence.append(signal_bc_r_145_307_slope)
+
+                input_sequence.append(signal_bc_f_307_500)
+                input_sequence.append(signal_bc_f_307_500_slope)
+                input_sequence.append(signal_bc_r_307_500)
+                input_sequence.append(signal_bc_r_307_500_slope)
+
+                input_sequence.append(signal_bc_f_min_500)
+                input_sequence.append(signal_bc_f_min_500_slope)
+                input_sequence.append(signal_bc_r_min_500)
+                input_sequence.append(signal_bc_r_min_500_slope)
+
+            posterior_list = hmm.predict(np.array(input_sequence).T)
+
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = options.fp_state
+            for k in range(p1, p1 + len(posterior_list)):
+                curr_index = k - p1
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(region.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
+            if (flag_start):
+                if (region.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(region.chrom, start_pos, region.final)
+                    footprints.add(fp)
+    else:
+        for r in regions:
+            atac_norm, atac_slope = \
+                reads_file.get_signal_atac2(r.chrom, r.initial, r.final, options.downstream_ext,
+                                           options.upstream_ext, options.forward_shift, options.reverse_shift,
+                                           options.initial_clip, options.norm_per, options.slope_per,
+                                           bias_table, genome_data.get_genome())
+            try:
+                input_sequence = array([atac_norm, atac_slope]).T
+            except Exception:
+                err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
+
+            # Applying HMM
+            try:
+                posterior_list = hmm.predict(input_sequence)
+                if options.fp_bed_fname:
+                    output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
+                                    output_fname=options.fp_bed_fname, fp_state=options.fp_state)
+            except Exception:
+                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
+                    r.final)]) + "). This iteration will be skipped.")
+                continue
+
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = options.fp_state
+            for k in range(r.initial, r.initial + len(posterior_list)):
+                curr_index = k - r.initial
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(r.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
+            if (flag_start):
+                if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(r.chrom, start_pos, r.final)
+                    footprints.add(fp)
+    ###################################################################################################
+    # Post-processing
+    ###################################################################################################
+
+    post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+                    fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+                    reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+                    forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+                    initial_clip=options.initial_clip, output_location=options.output_location,
+                    output_prefix=options.output_prefix)
+    # TODO
+    exit(0)
 
 def output_bed_file(chrom, start, end, states, output_fname, fp_state):
     #state_dict = dict([(0, "0"), (1, "1"), (2, "2"), (3, "3"), (4, "4")])
