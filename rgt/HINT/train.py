@@ -163,9 +163,8 @@ class TrainHMM:
 
         # make sure covariance is symmetric and positive-definite
         for i in range(hmm_model.n_components):
-            if np.any(linalg.eigvalsh(hmm_model.covars_[i])) < 0:
-                hmm_model.covars_[i] = hmm_model.covars_[i] + 0.000001 * np.eye(3)
-
+            while np.any(np.array(linalg.eigvalsh(hmm_model.covars_[i])) <= 0):
+                hmm_model.covars_[i] = hmm_model.covars_[i] + 0.000001 * np.eye(hmm_model.covars_[i].shape[0])
 
         output_fname = os.path.join(self.output_location, "{}.pkl".format(self.output_prefix))
         joblib.dump(hmm_model, output_fname)
