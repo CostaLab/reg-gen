@@ -14,8 +14,9 @@ from hmmlearn import hmm
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
 from rgt.GenomicRegionSet import GenomicRegionSet
-from hmm import HMM
+from hmm import HMM, SemiSupervisedGaussianHMM
 from biasTable import BiasTable
+
 
 """
 Train a hidden Markov model (HMM) based on the annotation data
@@ -142,75 +143,25 @@ class TrainHMM:
         output_fname = os.path.join(self.output_location, self.output_prefix)
         hmm_model.save_hmm(output_fname)
 
-    def train1(self):
-        # Estimate the HMM parameters using the maximum likelihood method.
-        states, norm_signal, slope_signal = self.read_states_signals()
-        hmm_model = HMM()
+    def train_semi_supervised(self, signal_file, num_states):
+        signal_list = list()
+        with open(signal_file) as f:
+            for line in f.readlines():
+                signal_list.append(map(float, line.strip().split("\t")))
 
-        hmm_model.dim = 3
-        # States number
-        state_list = [int(state) for state in list(states)]
-        hmm_model.states = len(np.unique(np.array(state_list)))
+        states_prior = np.zeros(len(signal_list[0]))
+        for i in range(495, 505):
+            states_prior[i] = 1
 
-        # Initial state probabilities vector
-        init_state = state_list[0]
-        hmm_model.pi = [0.0] * hmm_model.states
-        hmm_model.pi[init_state] = 1.0
+        hmm_model = SemiSupervisedGaussianHMM(n_components=num_states, random_state=42, n_iter=10,
+                                              covariance_type="full", states_prior=states_prior,
+                                              fp_state=num_states - 1)
 
-        # Transition
-        trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
-        for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
-            trans_matrix[x, y] = c
+        sequene = np.array(signal_list).T
+        hmm_model.fit(sequene)
 
-        for i in range(hmm_model.states):
-            trans_list = list()
-            for j in range(hmm_model.states):
-                trans_list.append(trans_matrix[i][j])
-            trans_sum = sum(trans_list) * 1.0
-            prob_list = [e / trans_sum for e in trans_list]
-
-            # make sure that the sum of this line converge to 1
-            total_prob = sum(prob_list)
-            if total_prob != 1.0:
-                prob_list[0] += (1.0 - total_prob)
-
-            hmm_model.A.append(prob_list)
-
-        # Emission
-        for i in range(hmm_model.states):
-            state_norm = list()
-            state_slope = list()
-            state_diff = list()
-            for j in range(len(state_list)):
-                if state_list[j] == i:
-                    state_norm.append(norm_signal[j])
-                    state_slope.append(slope_signal[j])
-                    state_diff.append(diff_signal[j])
-            # Compute the mean of norm and slope signal
-            means_list = list()
-            means_list.append(np.mean(state_norm))
-            means_list.append(np.mean(state_slope))
-            means_list.append(np.mean(state_diff))
-            hmm_model.means.append(means_list)
-
-            # Compute covariance matrix of norm, slope and subtrac signal
-            signal = list()
-            signal.append(state_norm)
-            signal.append(state_slope)
-            signal.append(state_diff)
-
-            covs_list = list()
-            covs_matrix = np.cov(np.array(signal))
-            for j in range(hmm_model.dim):
-                for k in range(hmm_model.dim):
-                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
-            hmm_model.covs.append(covs_list)
-
-        if self.estimate_bias_correction:
-            model_fname = os.path.join(self.output_location, "{}_{}".format(self.k_nb, self.atac_forward_shift))
-        else:
-            model_fname = os.path.join(self.output_location, self.output_prefix)
-        hmm_model.save_hmm(model_fname)
+        output_fname = os.path.join(self.output_location, "{}.pkl".format(self.output_prefix))
+        joblib.dump(hmm_model, output_fname)
 
     def output_bed_file(self, states):
         bed_fname = os.path.join(self.output_location, self.output_prefix)

@@ -40,13 +40,14 @@ class GenomicSignal:
     Authors: Eduardo G. Gusmao.
     """
 
-    def __init__(self, file_name = None):
+    def __init__(self, file_name=None):
         """ 
         Initializes GenomicSignal.
         """
         self.file_name = file_name
         self.sg_coefs = None
-        self.bam = Samfile(file_name, "rb")
+        if file_name is not None:
+            self.bam = Samfile(file_name, "rb")
 
     def load_sg_coefs(self, slope_window_size):
         """ 
@@ -144,7 +145,8 @@ class GenomicSignal:
         clip_signal = [min(e, mean + (10 * std)) for e in raw_signal]
 
         # Cleavage bias correction
-        bc_signal = self.bias_correction_dnase(clip_signal, bias_table, genome_file_name, ref, start, end, forward_shift, reverse_shift)
+        bc_signal = self.bias_correction_dnase(clip_signal, bias_table, genome_file_name, ref, start, end,
+                                               forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bc_signal))
@@ -166,7 +168,7 @@ class GenomicSignal:
 
         # Cleavage bias correction
         bc_signal_forward, bc_signal_reverse = self.bias_correction_atac(bias_table, genome_file_name,
-                                                                    ref, start, end, forward_shift, reverse_shift)
+                                                                         ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal_forward = array(self.boyle_norm(bc_signal_forward))
@@ -198,12 +200,12 @@ class GenomicSignal:
         return hon_signal_forward, slope_signal_forward, hon_signal_reverse, slope_signal_reverse
 
     def get_signal_atac2(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
-                        initial_clip=50, per_norm=98, per_slope=98,
-                        bias_table=None, genome_file_name=None):
+                         initial_clip=50, per_norm=98, per_slope=98,
+                         bias_table=None, genome_file_name=None):
 
         # Cleavage bias correction
         bc_signal = self.bias_correction_atac2(bias_table, genome_file_name,
-                                            ref, start, end, forward_shift, reverse_shift)
+                                               ref, start, end, forward_shift, reverse_shift)
 
         # Boyle normalization (within-dataset normalization)
         boyle_signal = array(self.boyle_norm(bc_signal))
@@ -227,7 +229,7 @@ class GenomicSignal:
         return hon_signal, slope_signal
 
     def bias_correction_dnase(self, signal, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift):
+                              forward_shift, reverse_shift):
 
         if not bias_table: return signal
         # Parameters
@@ -279,7 +281,7 @@ class GenomicSignal:
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
 
         # Iterating on sequence to create signal
@@ -306,8 +308,8 @@ class GenomicSignal:
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
-            #zf = log(nf[i] + 1) - log(nhatf + 1)
-            #zr = log(nr[i] + 1) - log(nhatr + 1)
+            # zf = log(nf[i] + 1) - log(nhatf + 1)
+            # zr = log(nr[i] + 1) - log(nhatr + 1)
             zf = (nf[i] + 1) / (nhatf + 1)
             zr = (nr[i] + 1) / (nhatr + 1)
             bias_corrected_signal.append(zf + zr)
@@ -318,13 +320,12 @@ class GenomicSignal:
             rSum += ar[i + (window / 2)]
             rLast = ar[i - (window / 2) + 1]
 
-
         # Termination
         fastaFile.close()
         return bias_corrected_signal
 
     def bias_correction_atac(self, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift):
+                             forward_shift, reverse_shift):
 
         # Parameters
         window = 50
@@ -341,7 +342,7 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        #if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
@@ -375,7 +376,7 @@ class GenomicSignal:
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
 
         # Iterating on sequence to create signal
@@ -403,8 +404,8 @@ class GenomicSignal:
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
-            #zf = log(nf[i] + 1) - log(nhatf + 1)
-            #zr = log(nr[i] + 1) - log(nhatr + 1)
+            # zf = log(nf[i] + 1) - log(nhatf + 1)
+            # zr = log(nr[i] + 1) - log(nhatr + 1)
             bias_corrected_signal_forward.append(nhatf)
             bias_corrected_signal_reverse.append(nhatr)
             fSum -= fLast
@@ -419,7 +420,7 @@ class GenomicSignal:
         return bias_corrected_signal_forward, bias_corrected_signal_reverse
 
     def bias_correction_atac2(self, bias_table, genome_file_name, chrName, start, end,
-                        forward_shift, reverse_shift):
+                              forward_shift, reverse_shift):
 
         # Parameters
         window = 50
@@ -436,7 +437,7 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        #if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
+        # if (p1 <= 0 or p1_w <= 0 or p2_wk <= 0): return signal
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
@@ -470,7 +471,7 @@ class GenomicSignal:
 
         # Fetching sequence
         currStr = str(fastaFile.fetch(chrName, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk  + 1,
+        currRevComp = AuxiliaryFunctions.revcomp(str(fastaFile.fetch(chrName, p1_wk + 1,
                                                                      p2_wk)).upper())
 
         # Iterating on sequence to create signal
@@ -545,18 +546,21 @@ class GenomicSignal:
         norm_seq -- Normalized sequence.
         """
 
-        #if std != 0:
+        # if std != 0:
         #    norm_seq = []
         #    for e in sequence:
         #        norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
         #    return norm_seq
-        #else:
+        # else:
         #    return sequence
         norm_seq = []
         for e in sequence:
-            if(e == 0.0): norm_seq.append(0.0)
-            elif(e > 0.0): norm_seq.append(1.0/(1.0+(exp(-(e-mean)/std))))
-            else: norm_seq.append(-1.0/(1.0+(exp(-(-e-mean)/std))))
+            if (e == 0.0):
+                norm_seq.append(0.0)
+            elif (e > 0.0):
+                norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
+            else:
+                norm_seq.append(-1.0 / (1.0 + (exp(-(-e - mean) / std))))
         return norm_seq
 
     def boyle_norm(self, sequence):
@@ -626,8 +630,8 @@ class GenomicSignal:
         return slope_seq
 
     def print_signal(self, ref, start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift,
-                   initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
-                   raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, strand_specific=False):
+                     initial_clip=1000, per_norm=98, per_slope=98, bias_table=None, genome_file_name=None,
+                     raw_signal_file=None, bc_signal_file=None, norm_signal_file=None, strand_specific=False):
 
         if raw_signal_file:
             pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
@@ -641,7 +645,7 @@ class GenomicSignal:
 
             f = open(raw_signal_file, "a")
             f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
-                    [str(e) for e in nan_to_num(raw_signal)]) + "\n")
+                [str(e) for e in nan_to_num(raw_signal)]) + "\n")
             f.close()
 
         if bc_signal_file or norm_signal_file:
@@ -782,3 +786,185 @@ class GenomicSignal:
                     f.write("fixedStep chrom=" + ref + " start=" + str(start + 1) + " step=1\n" + "\n".join(
                         [str(e) for e in nan_to_num(signal_norm_r)]) + "\n")
                     f.close()
+
+    def get_raw_signal_by_fragment_length(self, ref, start, end, bam,
+                                          forward_shift, reverse_shift, min_length=None, max_length=None,
+                                          strand=True):
+
+        p1 = start
+        p2 = end
+        raw_f = [0.0] * (p2 - p1)
+        raw_r = [0.0] * (p2 - p1)
+
+        if min_length is None and max_length is None:
+            for read in bam.fetch(ref, p1, p2):
+                if (not read.is_reverse):
+                    cut_site = read.pos + forward_shift
+                    if cut_site >= p1 and cut_site < p2:
+                        raw_f[cut_site - p1] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if cut_site >= p1 and cut_site < p2:
+                        raw_r[cut_site - p1] += 1.0
+        elif min_length is None and max_length is not None:
+            for read in bam.fetch(ref, p1, p2):
+                if abs(read.template_length) <= max_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_f[cut_site - p1] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_r[cut_site - p1] += 1.0
+        elif min_length is not None and max_length is None:
+            for read in bam.fetch(ref, p1, p2):
+                if abs(read.template_length) > min_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_f[cut_site - p1] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_r[cut_site - p1] += 1.0
+        elif min_length is not None and max_length is not None:
+            for read in bam.fetch(ref, p1, p2):
+                if min_length <= abs(read.template_length) <= max_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_f[cut_site - p1] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1 and cut_site < p2:
+                            raw_r[cut_site - p1] += 1.0
+        if strand:
+            return np.array(raw_f), np.array(raw_r)
+        else:
+            return np.add(np.array(raw_f), np.array(raw_r))
+
+    def get_bc_signal_by_fragment_length(self, ref, start, end, bam, fasta, bias_table,
+                                         forward_shift, reverse_shift, min_length=None, max_length=None,
+                                         strand=True):
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(k_nb / 2.)
+        p2_wk = p2_w + int(k_nb / 2.)
+
+        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+        # Iterating on sequence to create the bias signal
+        signal_bias_f = []
+        signal_bias_r = []
+        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+            try:
+                signal_bias_f.append(fBiasDict[fseq])
+            except Exception:
+                signal_bias_f.append(defaultKmerValue)
+            try:
+                signal_bias_r.append(rBiasDict[rseq])
+            except Exception:
+                signal_bias_r.append(defaultKmerValue)
+
+        # Raw counts
+        raw_f = [0.0] * (p2_w - p1_w)
+        raw_r = [0.0] * (p2_w - p1_w)
+
+        if min_length is None and max_length is None:
+            for read in bam.fetch(ref, p1_w, p2_w):
+                if (not read.is_reverse):
+                    cut_site = read.pos + forward_shift
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        raw_f[cut_site - p1_w] += 1.0
+                else:
+                    cut_site = read.aend + reverse_shift - 1
+                    if cut_site >= p1_w and cut_site < p2_w:
+                        raw_r[cut_site - p1_w] += 1.0
+        elif min_length is None and max_length is not None:
+            for read in bam.fetch(ref, p1_w, p2_w):
+                if abs(read.template_length) <= max_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_f[cut_site - p1_w] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_r[cut_site - p1_w] += 1.0
+        elif min_length is not None and max_length is None:
+            for read in bam.fetch(ref, p1_w, p2_w):
+                if abs(read.template_length) > min_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_f[cut_site - p1_w] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_r[cut_site - p1_w] += 1.0
+        elif min_length is not None and max_length is not None:
+            for read in bam.fetch(ref, p1_w, p2_w):
+                if min_length < abs(read.template_length) <= max_length:
+                    if (not read.is_reverse):
+                        cut_site = read.pos + forward_shift
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_f[cut_site - p1_w] += 1.0
+                    else:
+                        cut_site = read.aend + reverse_shift - 1
+                        if cut_site >= p1_w and cut_site < p2_w:
+                            raw_r[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(raw_f[:window])
+        rSum = sum(raw_r[:window])
+        fLast = raw_f[0]
+        rLast = raw_r[0]
+        for i in range((window / 2), len(raw_f) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += raw_f[i + (window / 2)]
+            fLast = raw_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += raw_r[i + (window / 2)]
+            rLast = raw_r[i - (window / 2) + 1]
+
+        # Calculating bias and writing to wig file
+        fSum = sum(signal_bias_f[:window])
+        rSum = sum(signal_bias_r[:window])
+        fLast = signal_bias_f[0]
+        rLast = signal_bias_r[0]
+        bc_f = []
+        bc_r = []
+        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            bc_f.append(nhatf)
+            bc_r.append(nhatr)
+            fSum -= fLast
+            fSum += signal_bias_f[i + (window / 2)]
+            fLast = signal_bias_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += signal_bias_r[i + (window / 2)]
+            rLast = signal_bias_r[i - (window / 2) + 1]
+
+        if strand:
+            return np.array(bc_f), np.array(bc_r)
+        else:
+            return np.add(np.array(bc_f), np.array(bc_r))

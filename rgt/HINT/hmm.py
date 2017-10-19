@@ -5,6 +5,11 @@
 # Python
 import warnings
 
+from hmmlearn.hmm import GaussianHMM
+from hmmlearn.base import ConvergenceMonitor
+from sklearn.utils import check_array
+from hmmlearn.utils import iter_from_X_lengths
+
 warnings.filterwarnings("ignore")
 
 # Internal
@@ -145,3 +150,82 @@ class HMM:
                 for e in self.covs[idx][1:]:
                     output_file.write(" " + str(round(e, precision)))
                 output_file.write("\n")
+
+
+class SemiSupervisedGaussianHMM(GaussianHMM):
+    def __init__(self, n_components=1, covariance_type='diag', min_covar=1e-3, startprob_prior=1.0,
+                 transmat_prior=1.0, means_prior=0, means_weight=0, covars_prior=1e-2, covars_weight=1,
+                 algorithm="viterbi", random_state=None, n_iter=10, tol=1e-2, verbose=False,
+                 params="stmc", init_params="stmc", states_prior=None, fp_state=None):
+        GaussianHMM.__init__(self, n_components=n_components, covariance_type=covariance_type,
+                             min_covar=min_covar, startprob_prior=startprob_prior, transmat_prior=transmat_prior,
+                             means_prior=means_prior, means_weight=means_weight,
+                             covars_prior=covars_prior, covars_weight=covars_weight,
+                             algorithm=algorithm, random_state=random_state,
+                             n_iter=n_iter, tol=tol, verbose=verbose,
+                             params=params, init_params=init_params)
+
+        self.covariance_type = covariance_type
+        self.min_covar = min_covar
+        self.means_prior = means_prior
+        self.means_weight = means_weight
+        self.covars_prior = covars_prior
+        self.covars_weight = covars_weight
+        self.states_prior = states_prior
+        self.fp_state = fp_state
+
+    def fit(self, X, lengths=None):
+        """Estimate model parameters.
+        An initialization step is performed before entering the
+        EM algorithm. If you want to avoid this step for a subset of
+        the parameters, pass proper ``init_params`` keyword argument
+        to estimator's constructor.
+        Parameters
+        ----------
+        X : array-like, shape (n_samples, n_features)
+            Feature matrix of individual samples.
+        lengths : array-like of integers, shape (n_sequences, )
+            Lengths of the individual sequences in ``X``. The sum of
+            these should be ``n_samples``.
+        Returns
+        -------
+        self : object
+            Returns self.
+        """
+        X = check_array(X)
+        self._init(X, lengths=lengths)
+        self._check()
+
+        self.monitor_ = ConvergenceMonitor(self.tol, self.n_iter, self.verbose)
+        for iter in range(self.n_iter):
+            stats = self._initialize_sufficient_statistics()
+            curr_logprob = 0
+            for i, j in iter_from_X_lengths(X, lengths):
+                framelogprob = self._compute_log_likelihood(X[i:j])
+                logprob, fwdlattice = self._do_forward_pass(framelogprob)
+                curr_logprob += logprob
+                bwdlattice = self._do_backward_pass(framelogprob)
+                posteriors = self._compute_posteriors(fwdlattice, bwdlattice)
+
+                # fix posteriors
+                if self.states_prior is not None and self.fp_state is not None:
+                    for k in range(len(self.states_prior)):
+                        if self.states_prior[k] == 0:
+                            # non footprint states
+                            posteriors[k][self.fp_state] = 0.0
+                            posteriors[k] = posteriors[k] / sum(posteriors[k])
+
+                        elif self.states_prior[k] == 1:
+                            # footprint states
+                            posteriors[k] = 0.0 / sum(posteriors[k])
+                            posteriors[k][self.fp_state] = 1.0
+
+                self._accumulate_sufficient_statistics(stats, X[i:j], framelogprob, posteriors, fwdlattice, bwdlattice)
+
+            self._do_mstep(stats)
+
+            self.monitor_.report(curr_logprob)
+            if self.monitor_.converged:
+                break
+
+        return self

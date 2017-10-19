@@ -1798,6 +1798,16 @@ def train_hmm():
                       metavar="INT", default=6,
                       help=("K-mers size used to estimate the bias"))
 
+    parser.add_option("--semi-learning", dest="semi_learning",
+                      action="store_true", default=False,
+                      help=("If used, HMM model will be trained using semi-supervised learning."))
+    parser.add_option("--signal-file", dest="signal_file", type="string",
+                      metavar="FILE", default=None,
+                      help=("The txt file containing the DNase-seq or ATAC-seq signals used to train HMM model."))
+    parser.add_option("--num-states", dest="num_states", type="int",
+                      metavar="INT", default=7,
+                      help=("The states number of HMM model."))
+
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
                       metavar="PATH", default=getcwd(),
@@ -1821,7 +1831,10 @@ def train_hmm():
                          start=options.start, end=options.end,
                          downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
                          forward_shift=options.forward_shift, reverse_shift=options.reverse_shift)
-    hmm_model.train()
+    if options.semi_learning:
+        hmm_model.train_semi_supervised(options.signal_file, options.num_states)
+    else:
+        hmm_model.train()
 
     # TODO
     exit(0)
@@ -2000,7 +2013,8 @@ def print_lines():
     if options.print_strand_plot:
         #plot.line1()
         #plot.line4()
-        plot.line7()
+        #plot.line7()
+        plot.line8(options.bias_table)
     if options.print_corrected_plot:
         plot.line2()
     if options.print_bias_plot:
@@ -2009,7 +2023,9 @@ def print_lines():
         plot.line5(options.reads_file1, options.reads_file2, options.bias_table1, options.bias_table2)
         #plot.line6(options.reads_file1, options.reads_file2)
     if options.print_distribution:
-        plot.distribution_of_frag_length(options.reads_file, options.motif_file)
+        #plot.distribution_of_frag_length(options.reads_file, options.motif_file)
+        #plot.distribution_of_frag_length_by_strand(options.reads_file, options.motif_file)
+        plot.distribution_of_frag_length_by_position(options.reads_file, options.motif_file)
 
     # TODO
     exit(0)
