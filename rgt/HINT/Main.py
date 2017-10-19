@@ -17,7 +17,7 @@ from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GenomicRegion import GenomicRegion
 from ..GenomicRegionSet import GenomicRegionSet
 from signalProcessing import GenomicSignal
-from hmm import HMM
+from hmm import HMM, _compute_log_likelihood
 from biasTable import BiasTable
 from evaluation import Evaluation
 from train import TrainHMM
@@ -852,6 +852,7 @@ def atac_footprints():
         hmm_file = hmm_data.get_default_hmm_atac_bc()
         hmm = joblib.load(hmm_file)
 
+    hmm._compute_log_likelihood = _compute_log_likelihood
     # Initializing result set
     footprints = GenomicRegionSet(options.output_prefix)
 
@@ -1123,6 +1124,7 @@ def dnase_footprints():
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
         scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        scikit_hmm._compute_log_likelihood = _compute_log_likelihood
     except Exception:
         err.throw_error("FP_HMM_FILES")
 
@@ -1278,6 +1280,7 @@ def histone_footprints():
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
         scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        scikit_hmm._compute_log_likelihood = _compute_log_likelihood
     except Exception:
         err.throw_error("FP_HMM_FILES")
 
@@ -1488,6 +1491,7 @@ def dnase_histone_footprints():
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
         scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        scikit_hmm._compute_log_likelihood = _compute_log_likelihood
     except Exception:
         err.throw_error("FP_HMM_FILES")
 
