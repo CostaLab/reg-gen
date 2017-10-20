@@ -41,8 +41,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-
 FOLDER_REPORT = None
+
+np.random.rand(42)
 
 
 def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
@@ -425,7 +426,7 @@ def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, ex
     
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
-        norm_regionset.read_bed(norm_regions)
+        norm_regionset.read(norm_regions)
     else:
         norm_regionset = None
         

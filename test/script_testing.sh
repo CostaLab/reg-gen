@@ -8,7 +8,7 @@ mkdir -p $DIR
 
 ################################################################
 # THOR
-#
+
 echo "**********************************************"
 echo "Testing THOR"
 mkdir -p ${DIR}/THOR
@@ -27,7 +27,7 @@ fi
 # Run test script
 cd THOR_example_data/
 rm -rf report_* sample-*
-rgt-THOR THOR.config -n sample --report
+rgt-THOR -n sample --report THOR.config
 
 echo "********* THOR test completed ****************"
 
@@ -51,14 +51,15 @@ fi
 # Run test script
 cd ${DIR}/TDF/TDF_examples/FENDRR_mm9/
 rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list.txt -organism mm9 -rn FENDRR -o promoter_test/
+rgt-TDF promotertest -r FENDRR.fasta -de fendrr_gene_list_fold_change.txt -score -organism mm9 -rn FENDRR -o promoter_test -t FENDRR_FC/
 
 cd ${DIR}/TDF/TDF_examples/TERC_hg19/
 rgt-TDF regiontest -r terc.fasta -bed terc_peaks.bed -rn TERC -f Nregions_hg19.bed -organism hg19 -l 15 -o genomic_region_test/ -n 100 -mp 5
 
 echo "********* TDF test completed ****************"
 
-#################################################################
-## Viz
+################################################################
+# Viz
 echo "**********************************************"
 echo "Testing Viz"
 mkdir -p ${DIR}/viz
@@ -69,9 +70,9 @@ cd ${DIR}/viz/
 file="${DIR}/viz/viz_examples/scripts.sh"
 if [ -f "$file" ]
 then
-	echo "Example data are loaded."
+    echo "Example data are loaded."
 else
-	echo "Downloading example files for rgt-viz"
+    echo "Downloading example files for rgt-viz"
     wget --no-check-certificate -qO- -O viz_examples.zip http://www.regulatory-genomics.org/wp-content/uploads/2016/09/rgt_viz_example.zip
     unzip -o viz_examples.zip
     rm viz_examples.zip
@@ -108,23 +109,26 @@ rgt-viz intersect -r Matrix_H3K4me3.txt -q Matrix_PU1.txt -o viz_results -t inte
 
 echo "********* viz test completed ****************"
 
-#################################################################
-## Motif Analysis
+################################################################
+# Motif Analysis
 echo "**********************************************"
 echo "Testing Motif Analysis"
 mkdir -p ${DIR}/motifanalysis
 
 cd ${DIR}/motifanalysis
 
+# full-site test
+echo "Full-Site Test:"
+
 url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_FullSiteTest.tar.gz"
 
 # Download the data
-file="${DIR}/motifanalysis/RGT_MotifAnalysis_Test/input_matrix.txt"
-if [ -f "$file" ]
+dir="${DIR}/motifanalysis/RGT_MotifAnalysis_FullSiteTest/"
+if [ -d "$dir" ]
 then
-    echo "$file found."
+    echo "dir found."
 else
-    echo "$file not found."
+    echo "$dir not found."
     wget -qO- -O RGT_MotifAnalysis_FullSiteTest.tar.gz $url && tar xvfz RGT_MotifAnalysis_FullSiteTest.tar.gz && rm RGT_MotifAnalysis_FullSiteTest.tar.gz
 fi
 
@@ -134,11 +138,58 @@ echo "Running matching.."
 rgt-motifanalysis --matching input/regions_K562.bed input/background.bed
 echo "Running enrichment.."
 rgt-motifanalysis --enrichment input/background.bed input/regions_K562.bed
+cd ..
+
+# Promoter test
+echo "Promoter Test:"
+
+url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_PromoterTest.tar.gz"
+
+# Download the data
+dir="${DIR}/motifanalysis/RGT_MotifAnalysis_PromoterTest"
+if [ -d "$dir" ]
+then
+    echo "dir found."
+else
+    echo "$dir not found."
+    wget -qO- -O RGT_MotifAnalysis_PromoterTest.tar.gz $url && tar xvfz RGT_MotifAnalysis_PromoterTest.tar.gz && rm RGT_MotifAnalysis_PromoterTest.tar.gz
+fi
+
+# Run test script
+cd RGT_MotifAnalysis_PromoterTest
+echo "Running matching.."
+rgt-motifanalysis --matching --gene-list input/genes.txt input/background.bed
+echo "Running enrichment.."
+rgt-motifanalysis --enrichment input/background.bed match/target_regions.bed
+cd ..
+
+# Gene-association test
+echo "Gene Association Test:"
+
+url="http://www.regulatory-genomics.org/wp-content/uploads/2017/03/RGT_MotifAnalysis_GeneAssocTest.tar.gz"
+
+# Download the data
+dir="${DIR}/motifanalysis/RGT_MotifAnalysis_GeneAssocTest"
+if [ -d "$dir" ]
+then
+    echo "dir found."
+else
+    echo "$dir not found."
+    wget -qO- -O RGT_MotifAnalysis_GeneAssocTest.tar.gz $url && tar xvfz RGT_MotifAnalysis_GeneAssocTest.tar.gz && rm RGT_MotifAnalysis_GeneAssocTest.tar.gz
+fi
+
+# Run test script
+cd RGT_MotifAnalysis_GeneAssocTest
+echo "Running matching.."
+rgt-motifanalysis --matching --input-matrix input_matrix.txt --rand-proportion 10
+echo "Running enrichment.."
+rgt-motifanalysis --enrichment --input-matrix input_matrix.txt match/random_regions.bed
+cd ..
 
 echo "********* Motif Analysis test completed ****************"
 
-##################################################################
-## HINT
+#################################################################
+# HINT
 echo "**********************************************"
 echo "Testing HINT"
 mkdir -p ${DIR}/HINT
@@ -180,3 +231,6 @@ mkdir output
 rgt-hint --atac-footprints --organism=mm10 input/B_ATAC_chr1.bam input/B_ATACPeaks_chr1.bed --output-location=output --output-prefix=B_ATAC_chr1_footprints
 
 echo "********* HINT test completed ****************"
+
+#################################################################
+# rgt-tools.py

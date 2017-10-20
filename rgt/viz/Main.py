@@ -21,6 +21,7 @@ from bed_profile import BED_profile
 from shared_function import check_dir, print2, output_parameters,\
                             copy_em, list_all_index, output
 from plotTools import Venn
+from rgt import __version__
 dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix
@@ -50,8 +51,11 @@ def main():
     helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helprow = "Group the data in rows by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helpmp = "Define the number of cores for parallel computation. (default: %(default)s)"
+
+    version_message = "viz - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
     parser = argparse.ArgumentParser(description='Provides various Statistical analysis methods and plotting tools for ExperimentalMatrix.\
-    \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=True)
+    \nAuthor: Joseph C.C. Kuo, Ivan Gesteira Costa Filho', formatter_class=argparse.ArgumentDefaultsHelpFormatter, add_help=True, version=version_message)
+
     subparsers = parser.add_subparsers(help='sub-command help', dest='mode')
 
     ################### BED profile ##########################################
@@ -207,6 +211,8 @@ def main():
     parser_lineplot.add_argument('-show', action="store_true", help='Show the figure in the screen. (default: %(default)s)')
     parser_lineplot.add_argument('-table', action="store_true", help='Store the tables of the figure in text format. (default: %(default)s)')
     parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific. (default: %(default)s)')
+    parser_lineplot.add_argument('-strand', action="store_true", help='Set the plot strand-specific. (default: %(default)s)')
+    parser_lineplot.add_argument('-average', action="store_true", help='Show only the average of the replicates. (default: %(default)s)')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
@@ -263,11 +269,14 @@ def main():
     # print(sys.argv)
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
+        sys.exit(0)
     elif len(sys.argv) == 2:
         if sys.argv[1] == "-h" or sys.argv[1] == "--help":
             parser.print_help()
-            sys.exit(1)
+            sys.exit(0)
+        elif sys.argv[1] == "-v" or sys.argv[1] == "--version":
+            print(version_message)
+            sys.exit(0)
         else:
             # retrieve subparsers from parser
             subparsers_actions = [action for action in parser._actions if isinstance(action, argparse._SubParsersAction)]
@@ -326,15 +335,21 @@ def main():
                 if args.strand:
                     strands = []
                     for i, bool in enumerate(args.strand.split(",")):
-                        if bool == "T": strands.append(True)
+                        if bool == "T":
+                            strands.append(True)
+                            args.labels[i] += "(strand-specific)"
                         elif bool == "F": strands.append(False)
                     args.strand = strands
+                else:
+                    args.strand = [True for i in args.labels]
                 if args.other:
                     others = []
                     for i, bool in enumerate(args.other.split(",")):
                         if bool == "T": others.append(True)
                         elif bool == "F": others.append(False)
                     args.other = others
+                else:
+                    args.other = [True for i in args.labels]
 
 
             bed_profile = BED_profile(args.i, args.organism, args)
@@ -606,19 +621,19 @@ def main():
 
         ################### Lineplot #########################################
         if args.mode == 'lineplot':
-            # if args.scol and args.srow:
-            #     print("** Err: -scol and -srow cannot be used simutaneously.")
-            #     sys.exit(1)
+            if args.scol and args.srow:
+                print("** Err: -scol and -srow cannot be used simutaneously.")
+                sys.exit(1)
 
             print("\n################ Lineplot #################")
             # Read experimental matrix
             t0 = time.time()
-            # if "reads" not in (args.col, args.c, args.row):
-            #     print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
-            #     sys.exit(1)
-            # if "regions" not in (args.col, args.c, args.row):
-            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-            #     sys.exit(1)
+            if "reads" not in (args.col, args.c, args.row):
+                print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
+                sys.exit(1)
+            if "regions" not in (args.col, args.c, args.row):
+                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+                sys.exit(1)
 
             if not os.path.isfile(args.input):
                 print("Please check the input experimental matrix again. The given path is wrong.")
@@ -632,7 +647,7 @@ def main():
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
-                                test=args.test, sense=args.sense)
+                                test=args.test, sense=args.sense, strand=args.strand)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -643,14 +658,14 @@ def main():
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
             lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
             lineplot.gen_cues()
-            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log)
+            lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log, average=args.average)
             t2 = time.time()
             print2(parameter, "\t--- finished in {0} (H:M:S)".format(str(datetime.timedelta(seconds=round(t2-t1)))))
             
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(groupby=args.col, colorby=args.c, output=args.o, printtable=args.table, 
+            lineplot.plot(output=args.o, printtable=args.table,
                           scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
             output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
             lineplot.gen_html(args.o, args.t)

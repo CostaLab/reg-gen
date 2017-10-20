@@ -21,7 +21,7 @@ def load_exon_sequence(bed, directory, genome_path):
 
     """
     regionset = GenomicRegionSet("bed")
-    regionset.read_bed(bed)
+    regionset.read(bed)
     regionset.sort()
 
     

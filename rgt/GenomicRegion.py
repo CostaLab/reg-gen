@@ -82,19 +82,37 @@ class GenomicRegion:
     def __eq__(self, other):
         return (self.chrom, self.initial, self.final, self.orientation) == (other.chrom, other.initial, other.final, other.orientation)
 
-    def toString(self, space=False, underline=False):
+    def toString(self, space=False, underline=False, strand=False):
         """Return a string of GenomicRegion by its position.
 
         *Keyword arguments:*
 
             - space -- insert spaces between the values.
         """
-        if space:
-            return "chr "+self.chrom[3:]+": "+str(self.initial)+"-"+str(self.final)
-        elif underline:
-            return self.chrom+"_"+str(self.initial)+"_"+str(self.final)
+        if strand:
+            if self.orientation == "+":
+                s = "_FWR"
+            elif self.orientation == "-":
+                s = "_REV"
+            else:
+                s = ""
         else:
-            return self.chrom+":"+str(self.initial)+"-"+str(self.final)
+            s = None
+
+        if s:
+            if space:
+                return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
+            elif underline:
+                return "_".join(["chr",self.chrom[3:],str(self.initial),str(self.final),s])
+            else:
+                return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final),s])
+        else:
+            if space:
+                return " ".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
+            elif underline:
+                return "_".join(["chr",self.chrom[3:],str(self.initial),str(self.final)])
+            else:
+                return "".join(["chr",self.chrom[3:]+":",str(self.initial),"-",str(self.final)])
 
     def extend(self, left, right, w_return=False):
         """Extend GenomicRegion on both sides.

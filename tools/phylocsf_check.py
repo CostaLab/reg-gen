@@ -27,7 +27,7 @@ parser.add_argument('-mafdir', metavar='  ', type=str, help="Define the director
 args = parser.parse_args()
 
 bed = GenomicRegionSet("input")
-bed.read_bed(args.i)
+bed.read(args.i)
 num = len(bed)
 
 organisms = { "hg18": "Human",
@@ -159,7 +159,7 @@ for i, rg in enumerate(bed):
     score = out.split("\t")[2]
     rg.data = "\t".join([score] + data[1:])
 
-bed.write_bed(args.o)
+bed.write(args.o)
 
     
 # 29/9/2015

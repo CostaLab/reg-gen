@@ -1,12 +1,9 @@
 # Python Libraries
 from __future__ import print_function
-from collections import *
 import numpy
-import pysam
 # Local Libraries
 
 # Distal Libraries
-from rgt.GenomicRegion import *
 from rgt.GenomicRegionSet import *
 from rgt.Util import OverlapType
 from BindingSiteSet import BindingSite, BindingSiteSet
@@ -427,7 +424,7 @@ class RNADNABindingSet:
         # reg = copy.deepcopy(region_set)
         # res = copy.deepcopy(name_replace)
         # reg = region_set
-        res = name_replace
+        # res = name_replace
 
         if not rbss:
             # Merge RBS
@@ -483,30 +480,31 @@ class RNADNABindingSet:
                     except: con_loop = False
 
         if region_set:
-            for r in self.merged_dict.keys():
+            for r in self.merged_dict:
                 s = region_set.intersect(self.merged_dict[r],
                                          mode=OverlapType.ORIGINAL,
                                          rm_duplicates=rm_duplicate)
                 self.merged_dict[r] = s
 
         if not region_set and rm_duplicate:
-            for r in self.merged_dict.keys():
+            for r in self.merged_dict:
                 self.merged_dict[r].remove_duplicates()
 
         if cutoff:
-            for r in self.merged_dict.keys():
+            for r in self.merged_dict:
                 if len(self.merged_dict[r]) < cutoff:
                     n = self.merged_dict.pop(r, None)
-        if res:
-            for r in self.merged_dict.keys():
-                self.merged_dict[r].replace_region_name(regions=res)
+        if name_replace:
+            for r in self.merged_dict:
+                self.merged_dict[r].replace_region_name(regions=name_replace)
         #self.merged_dict = new_dict
         elif asgene_organism:
-            for r in self.merged_dict.keys():
-                try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
-                except: pass
+            for r in self.merged_dict:
+                self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
+                # try: self.merged_dict[r] = self.merged_dict[r].gene_association(organism=asgene_organism)
+                # except: pass
 
-    def read_txp(self, filename, dna_fine_posi=False, shift=None, seq=False):
+    def read_tpx(self, filename, dna_fine_posi=False, shift=None, seq=False):
         """Read txp file to load all interactions. """
 
         with open(filename) as f:
@@ -656,7 +654,7 @@ class RNADNABindingSet:
             dbss = dbss.change_name_by_dict(convert_dict=convert_dict)
         if associated:
             dbss.add_associated_gene_data(organism=associated)
-        dbss.write_bed(filename)
+        dbss.write(filename)
 
     def get_overlapping_regions(self, regionset):
         """Return a GenomicRegionSet which overlapping the given regions"""
@@ -790,8 +788,8 @@ class RNADNABindingSet:
         if len(self) > 0:
             for s in self:
                 m = s.motif_statistics()
-                for mode in m.keys():
-                    for com in m[mode].keys():
+                for mode in m:
+                    for com in m[mode]:
                         self.motifs[mode][com] += m[mode][com]
         # print(self.motifs)
 

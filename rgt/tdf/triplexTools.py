@@ -159,7 +159,7 @@ def list_all_index(path, link_d=None):
 
     # sig_list = []
 
-    for i, exp in enumerate(profile.keys()):
+    for i, exp in enumerate(profile):
         c += 1
         if profile[exp][10] == "-":
             new_line = [str(c), exp, profile[exp][0]]
@@ -355,7 +355,7 @@ def gen_heatmap(path):
     # print(data.shape)
 
 
-    fig = plt.figure(figsize=(len(matrix.keys()) * 1.5, len(rnas) * 2.5))
+    fig = plt.figure(figsize=(len(matrix) * 1.5, len(rnas) * 2.5))
     # fig = plt.figure()
     # ax1 = fig.add_axes([0.09,0.2,0.2,0.6])
     # Y = sch.linkage(data, method='single')
@@ -539,6 +539,7 @@ def save_sequence(dir, filename, regions, genome_path):
     Fetch sequence into FASTA file according to the given BED file
     """
     genome = pysam.Fastafile(genome_path)
+    # print(regions)
     with open(os.path.join(dir, filename), 'w') as output:
         for region in regions:
             if "_" not in region.chrom:
@@ -568,8 +569,8 @@ def find_triplex(rna_fasta, dna_region, temp, organism, l, e, dna_fine_posi, gen
     txp.remove_duplicates()
 
     if remove_temp:
-        os.remove(os.path.join(temp,"dna_"+prefix+".fa"))
-        os.remove(os.path.join(temp,"dna_"+prefix+".txp"))
+        silentremove(os.path.join(temp,"dna_"+prefix+".fa"))
+        silentremove(os.path.join(temp,"dna_"+prefix+".txp"))
 
     return txp
 
@@ -614,40 +615,10 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
         arg_ptr[i + 1] = s
     # print(arg_ptr)
     triplex_lib.pyTriplexator(len(arg_strings) + 1, arg_ptr)
-    os.remove(os.path.join(output + ".summary"))
-    os.remove(os.path.join(output + ".log"))
+    silentremove(os.path.join(output + ".summary"))
+    silentremove(os.path.join(output + ".log"))
 
 
-def read_ac(path, cut_off, rnalen):
-    """Read the RNA accessibility file and output its positions and values
-
-    The file should be a simple table with two columns:
-    The first column is the position and the second one is the value
-    '#' will be skipped
-
-    """
-    access = []
-    with open(path) as f:
-        i = 0
-        while i < rnalen:
-            for line in f:
-                line = line.split()
-                if not line: continue
-                elif line[0][0] == "#": continue
-                elif len(line) < 2: continue
-                else:
-                    v = line[1]
-                    if v == "NA": 
-                        access.append(0)
-                    else: 
-                        try: v = 2**(-float(v))
-                        except: continue
-                        if v >= cut_off:
-                            access.append(1)
-                        else:
-                            access.append(0)
-                    i += 1
-    return access
 
 def region_link_internet(organism, region):
     ani = None
@@ -674,201 +645,7 @@ def region_link_internet(organism, region):
     return region_link
 
 
-def split_gene_name(gene_name, org):
-    
-    if gene_name == None:
-        return ""
-    if gene_name[0:2] == "chr":
-        return gene_name
 
-    if org=="hg19": ani = "Homo_sapiens"
-    elif org=="hg38": ani = "Homo_sapiens"
-    elif org=="mm9": ani = "Mus_musculus"
-    else: ani = None
-
-    if not ani:
-        if org == "tair10":
-            p1 = "".join(['<a href="https://www.arabidopsis.org/servlets/TairObject?name=', gene_name,
-                          '&type=locus" target="_blank">', gene_name, '</a>' ])
-            return p1
-        else:
-            return gene_name
-    else:    
-        p1 = '<a href="http://www.ensembl.org/'+ani+\
-             "/Gene/Summary?g="
-        p2 = '" target="_blank">'
-        p3 = '</a>'
-
-        if ":" in gene_name:
-            genes = gene_name.split(":")
-            genes = list(set(genes))
-            result = []
-            c = 0
-            for i, g in enumerate(genes):
-                if "(" in g:
-                    d = g.partition('(')[2].partition(')')[0]
-                    g = g.partition('(')[0]
-                    if "-" in d:
-                        result.insert(0, p1+g+p2+g+p3+"("+d+")")
-                    else:
-                        result.append(p1+g+p2+g+p3+"("+d+")")
-                else:
-                    c += 1
-                    if c < 6:
-                        result.append(p1 + g + p2 + g + p3)
-
-            result = ",".join(result)
-
-        elif gene_name == ".":
-            result = "none"
-
-        else:
-            if "(" in gene_name:
-                d = gene_name.partition('(')[2].partition(')')[0]
-                g = gene_name.partition('(')[0]
-                result = p1+g+p2+g+p3+"("+d+")"
-            else:
-                result = p1+gene_name+p2+gene_name+p3
-        
-        return result
-
-
-def lineplot(txp, rnalen, rnaname, dirp, sig_region, cut_off, log, ylabel, linelabel, 
-             filename, ac=None, showpa=False, exons=None):
-    # Plotting
-    f, ax = plt.subplots(1, 1, dpi=300, figsize=(6,4))
-
-    # Extract data points
-    x = range(rnalen)
-    #print(rnalen)
-    if log:
-        all_y = [1] * rnalen
-        p_y = [1] * rnalen
-        a_y = [1] * rnalen
-    else:
-        all_y = [0] * rnalen
-        p_y = [0] * rnalen
-        a_y = [0] * rnalen
-
-    txp.remove_duplicates_by_dbs()
-    for rd in txp:
-        #print(str(rd.rna.initial), str(rd.rna.final))
-        if rd.rna.orientation == "P":
-            for i in range(rd.rna.initial, rd.rna.final):
-                p_y[i] += 1
-                all_y[i] += 1
-        if rd.rna.orientation == "A":
-            for i in range(rd.rna.initial, rd.rna.final):
-                a_y[i] += 1
-                all_y[i] += 1
-    # Log
-    if log:
-        all_y = numpy.log(all_y)
-        p_y = numpy.log(p_y)
-        a_y = numpy.log(a_y)
-        max_y = max(all_y)+0.5
-        min_y = 1
-        ylabel += "(log10)"
-    else:
-        max_y = float(max(all_y) * 1.1)
-        min_y = 0
-
-    if ac:
-        min_y = float(max_y*(-0.09))
-    
-    
-    # Plotting
-    for rbs in sig_region:
-        rect = patches.Rectangle(xy=(rbs.initial,0), width=len(rbs), height=max_y, facecolor=sig_color, 
-                                 edgecolor="none", alpha=0.5, lw=None, label="Significant DBD")
-        ax.add_patch(rect)
-    
-    lw = 1.5
-    if showpa:
-        ax.plot(x, all_y, color=target_color, alpha=1, lw=lw, label="Parallel + Anti-parallel")
-        ax.plot(x, p_y, color="purple", alpha=1, lw=lw, label="Parallel")
-        ax.plot(x, a_y, color="dimgrey", alpha=.8, lw=lw, label="Anti-parallel")
-    else:
-        ax.plot(x, all_y, color="mediumblue", alpha=1, lw=lw, label=linelabel)
-
-    # RNA accessbility
-    if ac:
-        if isinstance(ac, list):
-            n_value = ac
-        else:
-            n_value = read_ac(ac, cut_off, rnalen=rnalen)
-        drawing = False
-        for i in x:
-            if n_value[i] > 0:
-                if drawing:
-                    continue
-                else:
-                    last_i = i
-                    drawing = True
-            elif drawing:
-                ax.add_patch(patches.Rectangle((last_i, min_y), i-last_i, -min_y,
-                            fill=True, color="silver", snap=False, linewidth=0, label="Autobinding"))
-                drawing = False
-            else:
-                continue
-
-    # Legend
-    handles, labels = ax.get_legend_handles_labels()
-    legend_h = []
-    legend_l = []
-    for uniqlabel in uniq(labels):
-        legend_h.append(handles[labels.index(uniqlabel)])
-        legend_l.append(uniqlabel)
-    ax.legend(legend_h, legend_l,
-              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0.,
-              prop={'size':9}, ncol=3)
-
-    # XY axis
-    ax.set_xlim(left=0, right=rnalen )
-    ax.set_ylim( [min_y, max_y] )
-    for tick in ax.xaxis.get_major_ticks(): tick.label.set_fontsize(9)
-    for tick in ax.yaxis.get_major_ticks(): tick.label.set_fontsize(9)
-    ax.set_xlabel(rnaname+" sequence (bp)", fontsize=9)
-
-    ax.set_ylabel(ylabel,fontsize=9, rotation=90)
-
-    if None:
-        if exons and len(exons) > 1:
-            w = 0
-            i = 0
-            h = (max_y - min_y)*0.02
-
-            for exon in exons:
-                l = abs(exon[2] - exon[1])
-                
-                #print([i,l,w])
-                #ax.axvline(x=w, color="gray", alpha=0.5, zorder=100)
-                if i % 2 == 0:
-                    rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="moccasin")
-                else:
-                    rect = matplotlib.patches.Rectangle((w,max_y-h),l,h, color="gold")
-                ax.add_patch(rect)
-                i += 1
-                w += l
-            ax.text(rnalen*0.01, max_y-2*h, "exon boundaries", fontsize=5, color='black')
-
-    f.tight_layout(pad=1.08, h_pad=None, w_pad=None)
-
-    f.savefig(os.path.join(dirp, filename), facecolor='w', edgecolor='w',  
-              bbox_extra_artists=(plt.gci()), bbox_inches='tight', dpi=300)
-    # PDF
-    for tick in ax.xaxis.get_major_ticks():
-        tick.label.set_fontsize(12) 
-    for tick in ax.yaxis.get_major_ticks():
-        tick.label.set_fontsize(12)
-    ax.xaxis.label.set_size(14)
-    ax.yaxis.label.set_size(14) 
-    ax.legend(legend_h, legend_l, 
-              bbox_to_anchor=(0., 1.02, 1., .102), loc=2, mode="expand", borderaxespad=0., 
-              prop={'size':12}, ncol=3)
-    # pp = PdfPages(os.path.splitext(os.path.join(dirp,filename))[0] +'.pdf')
-    # pp.savefig(f,  bbox_inches='tight') # bbox_extra_artists=(plt.gci()),
-    # pp.close()
 
 def load_dump(path, filename):
     file = open(os.path.join(path,filename),'r')
@@ -1044,11 +821,11 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
                         
                     loop = False
         if not out_file:
-            dbd.write_bed(filename=os.path.join(output, rna_name+"_DBDs.bed"))
+            dbd.write(filename=os.path.join(output, rna_name+"_DBDs.bed"))
         else:
             # print(dbd)
             # print(dbd.sequences[0])
-            dbd.write_bed(filename=output)
+            dbd.write(filename=output)
     # FASTA
     if fasta:
         #print(dbdmap)
@@ -1062,9 +839,11 @@ def dbd_regions(exons, sig_region, rna_name, output,out_file=False, temp=None, f
         with open(fasta_f, 'w') as fasta:
             for rbs in sig_region:
                 print(">"+ rna_name +":"+str(rbs.initial)+"-"+str(rbs.final), file=fasta)
-                s = seq.fetch(rbs.chrom, max(0, rbs.initial), rbs.final)
+                s = seq.fetch(rna_name, max(0, rbs.initial), rbs.final)
                 for ss in [s[i:i + 80] for i in range(0, len(s), 80)]:
                     print(ss, file=fasta)
+
+        seq.close()
 
 def connect_rna(rna, temp, rna_name):
     """Generate FASTA file merging all exons and return the number of exons and sequence length"""
@@ -1086,7 +865,7 @@ def connect_rna(rna, temp, rna_name):
 
 def get_dbss(input_BED,output_BED,rna_fasta,output_rbss,organism,l,e,c,fr,fm,of,mf,rm,temp):
     regions = GenomicRegionSet("Target")
-    regions.read_bed(input_BED)
+    regions.read(input_BED)
     regions.gene_association(organism=organism, show_dis=True)
 
     connect_rna(rna_fasta, temp=temp, rna_name="RNA")
@@ -1161,8 +940,6 @@ def get_rna_region_str(rna):
                             r = [c, s, e, sign]
                         if score:
                             r.append(score)
-                        else:
-                            print(line)
                     except:
                         break
 
@@ -1171,15 +948,11 @@ def get_rna_region_str(rna):
                 # Score
                 if r:
                     rna_regions.append(r)
-    # if rna_regions:
-    #     rna_regions.sort(key=lambda x: x[1])
-    #     if rna_regions[0][3] == "-":
-    #         rna_regions = rna_regions[::-1]
 
     return rna_regions
 
 
-def no_binding_response(args, rna_regions, rna_name, organism, stat, expression):
+def no_binding_response(args, stat):
     print("*** Find no DBD having DBS with cutoff = "+str(args.ccf))
 
     # pro_path = os.path.join(os.path.dirname(args.o), "profile.txt")
@@ -1209,10 +982,10 @@ def no_binding_response(args, rna_regions, rna_name, organism, stat, expression)
     # shutil.rmtree(args.o)
     for f in os.listdir(args.o):
         if os.path.isfile(os.path.join(args.o, f)):
-            os.remove(os.path.join(args.o, f))
+            silentremove(os.path.join(args.o, f))
 
     write_stat(stat, os.path.join(args.o, "stat.txt"))
-    sys.exit(1)
+    # sys.exit(0)
 
 def write_stat(stat, filename):
     """Write the statistics into file"""
@@ -1236,8 +1009,9 @@ def integrate_stat(path):
             data[item] = {}
             with open(pro) as f:
                 for line in f:
-                    l = line.strip().split()
+                    l = line.strip().split("\t")
                     data[item][l[0]] = l[1]
+            # print(data[item])
 
             data[item]["Norm_DBD"] = value2str(float(data[item]["DBD_all"]) / int(data[item]["seq_length"]) * 1000)
             data[item]["Norm_DBS"] = value2str(float(data[item]["DBSs_target_all"]) / int(data[item]["seq_length"]) * 1000)
@@ -1247,12 +1021,12 @@ def integrate_stat(path):
     with open(os.path.join(path, "statistics_"+base+".txt"), "w") as g:
         print("\t".join(order_stat), file=g)
 
-        for item in data.keys():
+        for item in data:
             # print(item)
             # print([data[item][o] for o in order_stat])
             print("\t".join([data[item][o] for o in order_stat]), file=g)
 
-def summerize_stat(target, link_d):
+def summerize_stat(target, link_d, score=True):
     base = os.path.basename(target)
     h = os.path.join(target, "index.html")
     stat = os.path.join(target, "statistics_" + base + ".txt")
@@ -1265,10 +1039,16 @@ def summerize_stat(target, link_d):
     type_list = 'sssssssssssss'
     col_size_list = [20] * 20
     c = 0
-    header_list = ["No.", "RNA", "Closest genes",
-                   "Exon", "Length", "Score*",
-                   "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
-                   "Organism", "Target region", "Rank*"]
+    if score:
+        header_list = ["No.", "RNA", "Closest genes",
+                       "Exon", "Length", "Score*",
+                       "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
+                       "Organism", "Target region", "Rank*"]
+    else:
+        header_list = ["No.", "RNA", "Closest genes",
+                       "Exon", "Length",
+                       "Norm DBS*", "Norm DBD*", "Number sig_DBD", "Autobinding",
+                       "Organism", "Target region", "Rank*"]
 
     with open(stat) as f_stat:
         for line in f_stat:
@@ -1284,15 +1064,24 @@ def summerize_stat(target, link_d):
                     tag = l[0]
                 else:
                     tag = '<a href="' + hh + '">' + l[0] + "</a>"
-                data_table.append([str(c), tag, l[17],
-                                   l[3], l[4], l[18],
-                                   l[15], l[14], l[8], l[20],
-                                   l[2], l[5]])
+                if score:
+                    data_table.append([str(c), tag, l[17],
+                                       l[3], l[4], l[18],
+                                       l[15], l[14], l[8], l[20],
+                                       l[2], l[5]])
+                else:
+                    data_table.append([str(c), tag, l[17],
+                                       l[3], l[4],
+                                       l[15], l[14], l[8], l[20],
+                                       l[2], l[5]])
     # print(data_table)
     rank_dbd = len(data_table) - rank_array([float(x[7]) for x in data_table])
     rank_dbs = len(data_table) - rank_array([float(x[6]) for x in data_table])
-    rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
-    rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+    if score:
+        rank_exp = len(data_table) - rank_array([0 if x[5] == "n.a." else abs(float(x[5])) for x in data_table])
+        rank_sum = [x + y + z for x, y, z in zip(rank_dbd, rank_dbs, rank_exp)]
+    else:
+        rank_sum = [x + y for x, y in zip(rank_dbd, rank_dbs)]
 
     for i, d in enumerate(data_table):
         d.append(str(rank_sum[i]))
@@ -1312,14 +1101,30 @@ def merge_DBD_regions(path):
         if os.path.isdir(os.path.join(path, rna)):
             f = os.path.join(path, rna, rna+"_DBDs.bed")
             if os.path.exists(f):
-                print(f)
+                # print(f)
                 dbd = GenomicRegionSet(rna)
-                dbd.read_bed(f)
+                dbd.read(f)
                 for r in dbd: r.name = rna+"_"+r.name
                 dbd_pool.combine(dbd)
-    print(len(dbd_pool))
-    dbd_pool.write_bed(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
+    # print(len(dbd_pool))
+    dbd_pool.write(os.path.join(path, "DBD_"+dir_name + "_" + base +".bed"))
 
+def merge_DBSs(path):
+    """Merge all available DBD regions in BED format. """
+    base = os.path.basename(path)
+    dir_name = os.path.basename(os.path.dirname(path))
+    dbss_pool = GenomicRegionSet(dir_name + "_" + base)
+    for rna in os.listdir(path):
+        if os.path.isdir(os.path.join(path, rna)):
+            f = os.path.join(path, rna, rna+"_dbss.bed")
+            if os.path.exists(f):
+                # print(f)
+                dbss = GenomicRegionSet(rna)
+                dbss.read(f)
+                for r in dbss: r.name = rna+"_"+r.name
+                dbss_pool.combine(dbss)
+    # print(len(dbd_pool))
+    dbss_pool.write(os.path.join(path, "DBSs_"+dir_name + "_" + base +".bed"))
 
 def save_profile(rna_regions, rna_name, organism, output, bed,\
                  stat, topDBD, sig_DBD, expression, geneset=None):
@@ -1407,7 +1212,10 @@ def integrate_html(target):
                         line = line.strip().split("\t")
                         if line[0] == "title": continue
                         nt += 1
-                        if float(line[13]) < 0.05: ns += 1
+                        if line[13] == "-":
+                            pass
+                        elif float(line[13]) < 0.05:
+                            ns += 1
                 # print([item, h, str(nt), str(ns)])
                 condition_list.append([item, h, str(nt), str(ns)])
 
@@ -1437,3 +1245,10 @@ def integrate_html(target):
                              sortable=True, clean=True)
         html.add_fixed_rank_sortable()
         html.write(os.path.join(target, "index.html"))
+
+def shorten_dir(path):
+    if path.count("/") < 3:
+        return path
+    else:
+        n = path.count("/") - 3 + 1
+        return path.split("/",n)[-1]

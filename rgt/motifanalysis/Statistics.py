@@ -104,7 +104,7 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
 
     # Fetching motif
     mpbs_motif = GenomicRegionSet(name="mpbs_motif")
-    for region in mpbs.sequences:
+    for region in mpbs:
         if motif_name in region.name:
             mpbs_motif.add(region)
 
@@ -118,7 +118,7 @@ def fisher_table(motif_name, regions, mpbs, gene_set=False, mpbs_set=False):
         # Fetching genes
         if gene_set:
             gene_set_res = GeneSet(motif_name)
-            for genomic_region in intersect_original.sequences:
+            for genomic_region in intersect_original:
                 if genomic_region.name:
                     gene_list = [e if e[0] != "." else e[1:] for e in genomic_region.name.split(":")]
                     for g in gene_list:

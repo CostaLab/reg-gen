@@ -67,63 +67,106 @@ class ExperimentalMatrix:
 
         base_dir = ""
         for line in f:
-            # Neglect comment lines
             line = line.strip()
+            # Neglect comment lines
             if not line: continue
             elif line[0] == "#": continue
-            
-            # Read header
-            elif line[:4] == "name":
-                header = line.split()
-                assert(header[0] == "name")
-                assert(header[1] == "type")
-                assert(header[2] == "file")
-                self.fields = header
-                
-                #initialize further header files        
-                for fi in range(3,len(header)):
-                    self.fieldsDict[ header[fi] ] = OrderedDict()
-                
+
             # Read further information    
             else:
                 line = line.split()
-                if line[0].startswith("BASE_DIR"):
-                    base_dir = line[1]
                 if len(line) < 3:  # Skip the row which has insufficient information
-                    #print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
+                    print("Ignore line, as tab-separated number of fields < 3s: %s" %line, file=sys.stderr)
                     continue
-                if verbose: print("Reading: ", line, file=sys.stderr)
-                
-                self.names.append(line[0])
-                self.files[line[0]] = os.path.join(base_dir,line[2]) #dict: filename -> filepath
-                self.types.append(line[1])
-                
-                curr_id = None
-                for fi in range(3, len(self.fields)): #read further information
-                    d = self.fieldsDict[ self.fields[fi] ]
-                    # print(line[fi])
-                    if "," in line[fi] and "(" not in line[fi]:
-                        for t in line[fi].split(","):
-                            try: d[t].append(line[0]+t)
-                            except: d[t] = [line[0]+t]
-                            self.names.append(line[0]+t)
-                            self.files[line[0]+t] = line[2]
-                            self.types.append(line[1])
-                            for f in range(3, len(self.fields)):
-                                if f != fi:
-                                    try: self.fieldsDict[ self.fields[f] ][line[f]].append(line[0]+t)
-                                    except: self.fieldsDict[ self.fields[f] ][line[f]] = [line[0]+t]
-                            if line[0] not in self.trash: 
-                                self.trash.append(line[0])
-                            
-                    else:
-                        if curr_id:
-                            try: d[line[fi]] += curr_id
-                            except: d[line[fi]] = curr_id
+                # Read the header
+                if "name" in line and "type" in line and "file" in line:
+                    self.fields = line
+                    # initialize further header files
+                    for fi in line:
+                        if fi not in ["name", "type", "file"]:
+                            self.fieldsDict[fi] = OrderedDict()
+                else:
+
+                    if line[0].startswith("BASE_DIR"):
+                        base_dir = line[1]
+
+                    if verbose: print("Reading: ", line, file=sys.stderr)
+
+                    for i, f in enumerate(self.fields):
+                        if f == "type":
+                            self.types.append(line[i])
+                        elif f == "name":
+                            name = line[i]
+                            self.names.append(name)
+                        elif f == "file":
+                            self.files[name] = os.path.join(base_dir,line[i])
                         else:
-                            try: d[line[fi]].append(line[0])
-                            except: d[line[fi]] = [line[0]]
-                            
+
+                            curr_id = None
+
+                            d = self.fieldsDict[f]
+                            if "," in line[i] and "(" not in line[i]:
+                                for t in line[i].split(","):
+                                    nt = name + "_" + t
+                                    try:
+                                        d[t].append(nt)
+                                    except:
+                                        d[t] = [nt]
+                                    self.names.append(nt)
+                                    self.files[nt] = self.files[name]
+                                    self.types.append(self.types[-1])
+
+                                    for j, nt_f in enumerate(self.fields):
+                                        if nt_f not in ["name", "type", "file"]:
+                                            try:
+                                                self.fieldsDict[nt_f][line[j]].append(nt)
+                                            except:
+                                                self.fieldsDict[nt_f][line[j]] = [nt]
+                                    # if name not in self.trash:
+                                    #     self.trash.append(line[0])
+
+                            else:
+                                if curr_id:
+                                    try:
+                                        d[line[i]] += curr_id
+                                    except:
+                                        d[line[i]] = curr_id
+                                else:
+                                    try:
+                                        d[line[i]].append(name)
+                                    except:
+                                        d[line[i]] = [name]
+                #
+                # self.names.append(line[0])
+                # self.files[line[0]] = os.path.join(base_dir,line[2]) #dict: filename -> filepath
+                # self.types.append(line[1])
+                #
+                # curr_id = None
+                # for fi in range(3, len(self.fields)): #read further information
+                #     d = self.fieldsDict[ self.fields[fi] ]
+                #     # print(line[fi])
+                #     if "," in line[fi] and "(" not in line[fi]:
+                #         for t in line[fi].split(","):
+                #             try: d[t].append(line[0]+t)
+                #             except: d[t] = [line[0]+t]
+                #             self.names.append(line[0]+t)
+                #             self.files[line[0]+t] = line[2]
+                #             self.types.append(line[1])
+                #             for f in range(3, len(self.fields)):
+                #                 if f != fi:
+                #                     try: self.fieldsDict[ self.fields[f] ][line[f]].append(line[0]+t)
+                #                     except: self.fieldsDict[ self.fields[f] ][line[f]] = [line[0]+t]
+                #             if line[0] not in self.trash:
+                #                 self.trash.append(line[0])
+                #
+                #     else:
+                #         if curr_id:
+                #             try: d[line[fi]] += curr_id
+                #             except: d[line[fi]] = curr_id
+                #         else:
+                #             try: d[line[fi]].append(line[0])
+                #             except: d[line[fi]] = [line[0]]
+
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
         self.remove_name()
@@ -169,9 +212,9 @@ class ExperimentalMatrix:
             if t == "regions":
                 regions = GenomicRegionSet(self.names[i])
                 if is_bedgraph:
-                    regions.read_bedgraph(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]), io=GRSFileIO.BedGraph)
                 else:
-                    regions.read_bed(os.path.abspath(self.files[self.names[i]]))
+                    regions.read(os.path.abspath(self.files[self.names[i]]))
                     regions.sort()
                     if test: regions.sequences = regions.sequences[0:11]
                 self.objectsDict[self.names[i]] = regions
@@ -193,7 +236,7 @@ class ExperimentalMatrix:
         if field == "regions" or field == "reads":
             field = "factor"
         
-        for t in self.fieldsDict[field].keys():
+        for t in self.fieldsDict[field]:
             if name in self.fieldsDict[field][t]:
                 return t
         
@@ -205,8 +248,8 @@ class ExperimentalMatrix:
             - name -- Name to return.
         """
         result = []
-        for f in self.fieldsDict.keys():
-            for t in self.fieldsDict[f].keys():
+        for f in self.fieldsDict:
+            for t in self.fieldsDict[f]:
                 if skip_all and t == "ALL": continue
                 elif name in self.fieldsDict[f][t]:
                     result.append(t)
@@ -227,8 +270,8 @@ class ExperimentalMatrix:
             del self.names[i]
             self.files.pop(name, None)
 
-            for f in self.fieldsDict.keys():
-                for t in self.fieldsDict[f].keys(): 
+            for f in self.fieldsDict:
+                for t in self.fieldsDict[f]:
                     # try:
                     if name in self.fieldsDict[f][t]:
                         self.fieldsDict[f][t].remove(name)
@@ -238,7 +281,7 @@ class ExperimentalMatrix:
             except: pass
         self.trash = []
 
-    def match_ms_tags(self,field, test=False):
+    def match_ms_tags(self, field, test=False):
         """Add more entries to match the missing tags of the given field. For example, there are tags for cell like 'cell_A' and 'cell_B' for reads, but no these tag for regions. Then the regions are repeated for each tags from reads to match all reads.
 
         *Keyword arguments:*
@@ -263,7 +306,7 @@ class ExperimentalMatrix:
                     # print("************")
                     # print(types)
 
-                    for f in self.fields[3:]:
+                    for f in self.fieldsDict:
                         if f == field: 
                             try: self.fieldsDict[f][t].append(n)
                             except: self.fieldsDict[f][t] = [n]
@@ -276,7 +319,7 @@ class ExperimentalMatrix:
                     #         except: pass
                     if self.types[i] == "regions":
                         g = GenomicRegionSet(n)
-                        g.read_bed(self.files[name])
+                        g.read(self.files[name])
                         if test: g.sequences = g.sequences[0:11]
                         self.objectsDict[n] = g
                     self.trash.append(name)

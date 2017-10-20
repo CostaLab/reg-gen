@@ -13,7 +13,7 @@ import natsort
 from rgt.Util import Html
 from rgt.CoverageSet import *
 from rgt.ExperimentalMatrix import *
-from shared_function import shiftedColorMap
+from shared_function import shiftedColorMap, walklevel
 # Local test
 dir = os.getcwd()
 
@@ -29,12 +29,12 @@ class BED_profile:
         if os.path.isdir(input_path):
             self.beds = []
             self.bednames = []
-            for dirpath, dnames, fnames in os.walk(input_path):
+            for dirpath, dnames, fnames in walklevel(input_path, level=0):
                 for f in fnames:
                     if f.endswith(".bed"):
                         name = os.path.basename(f).replace(".bed", "")
                         bed = GenomicRegionSet(name)
-                        bed.read_bed(os.path.join(dirpath, f))
+                        bed.read(os.path.join(dirpath, f))
                         bed.sort()
                         self.beds.append(bed)
                         self.bednames.append(name)
@@ -47,7 +47,7 @@ class BED_profile:
             if input_path.endswith(".bed"):
                 name = os.path.basename(input_path).replace(".bed", "")
                 bed = GenomicRegionSet(name)
-                bed.read_bed(input_path)
+                bed.read(input_path)
                 bed.sort()
                 self.beds = [bed]
                 self.bednames = [name]
@@ -269,14 +269,14 @@ class BED_profile:
                 if f.endswith(".bed"):
                     name = os.path.basename(f).replace(".bed", "")
                     bed = GenomicRegionSet(name)
-                    bed.read_bed(os.path.join(ref_dir, f))
+                    bed.read(os.path.join(ref_dir, f))
                     # bed.merge()
                     refs.append(bed)
                     refs_names.append(name)
         elif os.path.isfile(ref_dir) and ref_dir.endswith(".bed"):
             name = os.path.basename(ref_dir).replace(".bed", "")
             bed = GenomicRegionSet(name)
-            bed.read_bed(ref_dir)
+            bed.read(ref_dir)
             # bed.merge()
             refs.append(bed)
             refs_names.append(name)
@@ -340,7 +340,10 @@ class BED_profile:
                 proportion = []
                 for counts in overlapping_counts:
                     ss = sum(counts)
-                    proportion.append([x/ss * 100 for x in counts])
+                    if ss > 0:
+                        proportion.append([x/ss * 100 for x in counts])
+                    else:
+                        proportion.append([0 for x in counts])
                 # print(proportion)
                 ptable = []
                 for j in range(len(refs_names)):

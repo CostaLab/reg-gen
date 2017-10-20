@@ -62,7 +62,7 @@ class Projection:
 
     def set_background(self, bed_path):
         bg = GenomicRegionSet("background")
-        bg.read_bed(bed_path)
+        bg.read(bed_path)
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg

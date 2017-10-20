@@ -17,7 +17,7 @@ backGroundPeaks=False
 if len(sys.argv) > 5:
   backGroundPeaksName = sys.argv[6]
   backBed=GenomicRegionSet("BACK")
-  backBed.read_bed(backGroundPeaksName)  
+  backBed.read(backGroundPeaksName)  
   backGroundPeaks=True
    
 distance=50000
@@ -39,7 +39,7 @@ geneLists=[]
 
 #this should be improved
 bedGenes = GenomicRegionSet(geneFile)
-bedGenes.read_bed(geneFile)
+bedGenes.read(geneFile)
 allgenes=[]
 for r in bedGenes:
  allgenes.append(r.name)
@@ -64,7 +64,7 @@ for region in exps.get_regionsets():
             else:
               br=region.random_regions('hg19',total_size=len(region),overlap_result=True, overlap_input=True)
 
-            #br.write_bed(str(j)+"random.bed")
+            #br.write(str(j)+"random.bed")
             random_regions.append(br)
     for g in genesets:
         region_aux=deepcopy(region)
@@ -80,7 +80,7 @@ for region in exps.get_regionsets():
 
         randomRes=[]
         #backBed=GenomicRegionSet("BACK")    
-        #backBed.read_bed(backGroundPeaks)
+        #backBed.read(backGroundPeaks)
         for br in random_regions:
           random=deepcopy(br)
           [back_all_genes,back_mapped_genes,back_all_proxs,back_mapped_proxs] = random.filter_by_gene_association(gene_set=g,organism=genomeName,threshDist=distance)
@@ -98,5 +98,5 @@ for region in exps.get_regionsets():
 
         #if len(outdir)>0:
         #  outGene.write(region.name+"\t"+g.name+"\t"+("\t".join(bed.genes))+"\n")  
-        #  bed.write_bed(outdir+"/"+g.name+"_"+region.name+".bed")  
+        #  bed.write(outdir+"/"+g.name+"_"+region.name+".bed")  
 
