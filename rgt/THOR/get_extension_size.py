@@ -67,8 +67,10 @@ def get_read_size(filename):
 
 def init_cov(filename):
     file = pysam.Samfile(filename, "rb")
-
+    # print(file.references[0])
+    i = 0
     for read in file.fetch(file.references[0]):
+        i += 1
         if not read.is_unmapped:
             if not read.seq:
                 h = 0
@@ -82,7 +84,7 @@ def init_cov(filename):
             else:
                 if not cov_f.has_key(pos):
                     cov_f[pos] = 1
-
+    # print(i)
 
 def ccf(k):
     """Return value of cross-correlation function"""
@@ -104,6 +106,9 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     print(read_length)
     start -= read_length
 
+    cov_f.clear()
+    cov_r.clear()
+
     init_cov(filename)
 
     r = map(ccf, range(start, end, stepsize))
@@ -112,13 +117,16 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     # print('extension size is %s' %max(r[read_length/stepsize*2:])[1])
 
-    return max(r[read_length / stepsize * 2:])[1], r
+    return read_length, max(r[read_length / stepsize * 2:])[1], r
 
 
 if __name__ == '__main__':
-    fname = '/home/kefang/programs/THOR_example_data/bug/test/CC4_H3K27ac.100k.bam'
-    a, b = get_extension_size(fname)
-    print(a, b)
+    fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_207.bam'
+    read_len, a, b = get_extension_size(fname)
+    print(a+ read_len, b)
 
-    for el in b:
-        print(el[1], el[0], sep='\t')
+    fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_317.bam'
+    read_len, a, b = get_extension_size(fname)
+    print(a + read_len, b)
+    #for el in b:
+    #    print(el[1], el[0], sep='\t')

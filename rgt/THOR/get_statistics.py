@@ -6,9 +6,12 @@
  """
 from __future__ import print_function
 import pysam
+import matplotlib.pyplot as plt
 import numpy as np
-from rgt.THOR.RegionGiver import RegionGiver
+import os
 
+from rgt.THOR.RegionGiver import RegionGiver
+from get_extension_size import get_extension_size
 
 def get_read_statistics(fname, chrom_fname):
     """ return how many chromosomes are in each files and how many reads are correspondes to each file
@@ -76,7 +79,7 @@ def init(bam_filename, stats_data):
      cov_r reverse coverage, right-most position
     """
     cov_f, cov_r = {},{} # store forward and reverse strand data
-    sample_dis = get_sample_dis(stats_data, 5000)
+    sample_dis = get_sample_dis(stats_data, 10000)
 
     f = pysam.Samfile(bam_filename, "rb")
 
@@ -141,9 +144,106 @@ def get_fragment_size(fname, stats_data, start=0, end=600, stepsize=5):
     return None, None
 
 
+def generate_test_files(whole_bamfile):
+    """we need to get test files according to specific fragment sizes from whole bam file
+    fragment_sizes is a list of fragment size
+    """
+    f = pysam.Samfile(whole_bamfile, "rb")
+    print('read while right')
+    # we need to create from 40 to 500 bam files and open it..
+    files_seq = [pysam.Samfile('test_'+str(idx)+'.bam', 'wb',template=f) for idx in range(40,501,1)]
+    for read in f.fetch():
+        fs = abs(read.tlen)
+        if fs >39 and fs< 501:
+            files_seq[fs-40].write(read)
+
+    for idx, file in enumerate(files_seq):
+        # print('index output file %d'%(idx+40))
+        file.close()
+        pysam.index('test_'+str(idx+40)+'.bam')
+    f.close()
+
+
+def generate_test_result_plot(result_file):
+    """generate test result plot by given results text file with three columns"""
+    true_fsize =  []
+    m_fsize, m_rsize =[],[]
+    d_fsize , d_rsize= [],[]
+
+    with open(result_file) as f:
+        for line in f:
+            ll = line.split()
+            true_fsize.append(int(ll[0]))
+            d_fsize.append(int(ll[1]))
+            m_fsize.append(int(ll[4]))
+            d_rsize.append(int(ll[3]))
+            m_rsize.append(int(ll[2]))
+
+    print('the most varied data from true fragment size ')
+    dif = np.asarray(true_fsize) - np.asarray(d_fsize)
+    zidx = np.argsort(abs(dif))[-10:]
+    for item in zip(zidx, dif[zidx],np.asarray(true_fsize)[zidx],np.asarray(d_fsize)[zidx]):
+        print(item)
+
+    x= range(40, 40 + len(true_fsize))
+
+    fig = plt.figure(2)
+    fig1 = fig.add_subplot(211)
+
+    plt.gca().set_color_cycle(['black','red', 'green', 'blue', 'yellow'])
+    fig1.plot(x,true_fsize)
+    fig1.plot(x, d_fsize)
+    fig1.plot(x, m_fsize)
+    fig1.legend(['true_fsize', 'd_fsize', 'm_fsize'], loc='upper left')
+    ## for read_size, we could print out in another figure
+    fig2 = fig.add_subplot(212)
+    plt.plot(x, d_rsize)
+    plt.plot(x, m_rsize)
+
+    fig2.legend([ 'd_rsize','m_rsize'], loc='upper left')
+
+    plt.show()
+
+
+def test():
+    """generate result and plot it"""
+    # open all data
+    chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
+
+    result = open('extension_result2.txt','a',1)
+    #result.write('#true fragment size\tD_fsize\tM_fsize\tD_rsize\tM_rsize\n')
+
+    for idx in range(40, 501):
+        fname = 'test_' + str(idx) + '.bam'
+        stats_total, stats_data = get_read_statistics(fname, chrom_fname)
+        read_size = get_read_size(fname, stats_data)
+        fragment_size, fragments = get_fragment_size(fname, stats_data)
+        read_size2, extension_size, _ = get_extension_size(fname)
+
+        # print('%d\t%d\t%d\t%d\t%d\n'%(idx,fragment_size, extension_size + read_size2, read_size, read_size2))
+        result.write('%d\t%d\t%d\t%d\t%d\n'%(idx,fragment_size, extension_size + read_size2, read_size,read_size2))
+
+    result.close()
+    # generate_test_result_plot('extension_result.txt')
+
+
 if __name__ == "__main__":
     # unit test of codes.
-    fname = '/home/kefang/programs/THOR_example_data/bug/test/CC4_H3K27ac.100k.bam'
+    # get all bam names in current directory
+    os.chdir('/home/kefang/programs/THOR_example_data/bug/extension_size/')
+    test()
+    # fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_172.bam'
+    # read_size2, extension_size, _ = get_extension_size(fname)
+
+    # generate_test_result_plot('extension_result.txt')
+
+    """
+    wname = 'ATAC.bam'
+    generate_test_files(wname)
+    print('end')
+
+    
+    fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_172.bam'
     chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
     stats_total, stats_data = get_read_statistics(fname, chrom_fname)
 
@@ -153,8 +253,8 @@ if __name__ == "__main__":
     # hold on, one question, f = extension_size + read_size, what we get is actually fragment_size, not extension size
     fragment_size, fragments = get_fragment_size(fname,stats_data)
     print(fragment_size)
-    print(fragments)
+    # print(fragments)
 
     extension_size = fragment_size - read_size
     print(extension_size)
-
+    """
