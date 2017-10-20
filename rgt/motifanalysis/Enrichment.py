@@ -423,8 +423,9 @@ def main_enrichment():
             if curr_input.gene_set:
 
                 # Performing association of input region with gene_set
-                grs = grs.gene_association(curr_input.gene_set, options.organism, options.promoter_length,
-                                           options.maximum_association_length)
+                grs = grs.gene_association(organism=options.organism, gene_set=curr_input.gene_set,
+                                           promoterLength=options.promoter_length,
+                                           threshDist=options.maximum_association_length)
 
                 # Writing gene-coordinate association
                 output_file_name = npath(os.path.join(curr_output_folder_name, output_association_name + ".bed"))
@@ -604,8 +605,9 @@ def main_enrichment():
             else:
 
                 # Association still needs to be done with all genes in order to print gene list
-                grs = grs.gene_association(None, options.organism, options.promoter_length,
-                                           options.maximum_association_length)
+                grs = grs.gene_association(organism=options.organism, gene_set=None,
+                                           promoterLength=options.promoter_length,
+                                           threshDist=options.maximum_association_length)
 
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
