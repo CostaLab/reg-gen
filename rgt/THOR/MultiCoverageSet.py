@@ -32,11 +32,12 @@ from rgt.CoverageSet import CoverageSet, get_gc_context
 import configuration
 
 class MultiCoverageSet(DualCoverageSet):
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov):
+    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov, mask_file=None):
         """Return self.covs and self.inputs as CoverageSet
         But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
         Better we need to do is get all info of all fields, and extract data from it to combine the training fields.
         Later we use the paras to estimate peaks.. Maybe according to regions
+        mask_file is used to filter data before we do other operations.
         """
         self.exts = exts  # before covs_init, we should judge the number of reads for that regions and save time for this.
         self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
@@ -47,7 +48,7 @@ class MultiCoverageSet(DualCoverageSet):
             # if there are many chromosomes, we get samples according to these data and do peak-calling later.
             # c.statistics = c.get_statistics(path_bamfiles[i])
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, get_strand_info = strand_cov)
+                                stepsize=stepsize, mask_file=mask_file, get_strand_info = strand_cov)
         self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
         if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]

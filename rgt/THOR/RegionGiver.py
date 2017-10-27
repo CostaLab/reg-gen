@@ -32,11 +32,14 @@ class RegionGiver:
     regionset = GenomicRegionSet('')
     chrom_sizes_dict = {}
     
-    def __init__(self, chrom_sizes, regions=None):
+    def __init__(self, chrom_file, regions_file=None):
         self.counter = 0
-        if regions is not None:
-            print("Call DPs on specified regions.", file=sys.stderr)
-            with open(regions) as f:
+        if regions_file is not None:
+            # how to delete this information, because at first we don't want it
+            # but maybe later, we need it.. At what time? How to combine them together?
+            # we can make a test before we initialize RegionGiver and print info out
+            # print("Call DPs on specified regions.", file=sys.stderr)
+            with open(regions_file) as f:
                 for line in f:
                     if line:
                         line = line.strip()
@@ -46,8 +49,8 @@ class RegionGiver:
                         self.regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
                         self.chrom_sizes_dict[c] = e
         else:
-            print("Call DPs on whole genome.", file=sys.stderr)
-            with open(chrom_sizes) as f:
+            # print("Call DPs on whole genome.", file=sys.stderr)
+            with open(chrom_file) as f:
                 for line in f:
                     line = line.strip()
                     line = line.split('\t')

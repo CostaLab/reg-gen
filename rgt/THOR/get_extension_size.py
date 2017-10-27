@@ -38,6 +38,7 @@ Return shift/extension size of reads descriebed by BAM file.
 
 from __future__ import print_function
 import pysam
+import numpy as np
 
 cov_f = {}
 cov_r = {}
@@ -84,7 +85,7 @@ def init_cov(filename):
             else:
                 if not cov_f.has_key(pos):
                     cov_f[pos] = 1
-    # print(i)
+    print(i)
 
 def ccf(k):
     """Return value of cross-correlation function"""
@@ -99,11 +100,28 @@ def ccf(k):
     return s, k
 
 
+def ccf_d(k, small_step=1):
+    """Return value of cross-correlation function"""
+    sums = np.zeros(small_step*2 +1)
+    forward_keys = set(cov_f.keys())
+
+    for idx in range(-small_step, small_step+1, 1):
+        new_k = k + idx
+        reverse_keys = set(map(lambda x: x - new_k, cov_r.keys()))
+        keys = forward_keys & reverse_keys  # union of positions
+
+        for p in keys:
+            # sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
+            sums[idx + small_step] += get_value(cov_f, p) & get_value(cov_r, p + new_k)
+
+    return np.mean(sums), k
+
+
 def get_extension_size(filename, start=0, end=600, stepsize=5):
     """Return extension/shift size of reads and all computed values of the convolution.
     Search value with a resolution of <stepsize> from start to end."""
     read_length = get_read_size(filename)
-    print(read_length)
+    # print(read_length)
     start -= read_length
 
     cov_f.clear()
@@ -112,6 +130,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
     init_cov(filename)
 
     r = map(ccf, range(start, end, stepsize))
+    # r = map(ccf_d, range(start, end, stepsize))
 
     r = map(lambda x: (x[0], x[1]), r)
 
@@ -119,7 +138,7 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     return read_length, max(r[read_length / stepsize * 2:])[1], r
 
-
+"""
 if __name__ == '__main__':
     fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_207.bam'
     read_len, a, b = get_extension_size(fname)
@@ -130,3 +149,4 @@ if __name__ == '__main__':
     print(a + read_len, b)
     #for el in b:
     #    print(el[1], el[0], sep='\t')
+"""

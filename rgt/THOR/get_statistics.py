@@ -6,12 +6,9 @@
  """
 from __future__ import print_function
 import pysam
-import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 from rgt.THOR.RegionGiver import RegionGiver
-from get_extension_size import get_extension_size
 
 def get_read_statistics(fname, chrom_fname):
     """ return how many chromosomes are in each files and how many reads are correspondes to each file
@@ -58,7 +55,12 @@ def get_sample_dis(stats_data, sample_size=None):
 def get_read_size(fname, stats_data):
     """to get  read size for each files by using statistical data for each file """
     # sample len w.r.t distribution of reads in file
-    sample_dis = get_sample_dis(stats_data, 1000)
+    # sample_dis = get_sample_dis(stats_data, 500)
+    # sample_dis = get_sample_dis(stats_data, 1000)
+    # sample_dis = get_sample_dis(stats_data, 2500)
+    sample_dis = get_sample_dis(stats_data, 5000)
+    # sample_dis = get_sample_dis(stats_data, 10000)
+    # sample_dis = get_sample_dis(stats_data, 20000)
     f = pysam.Samfile(fname, "rb")
     s = []
 
@@ -79,20 +81,28 @@ def init(bam_filename, stats_data):
      cov_r reverse coverage, right-most position
     """
     cov_f, cov_r = {},{} # store forward and reverse strand data
-    sample_dis = get_sample_dis(stats_data, 10000)
+    # sample_dis = get_sample_dis(stats_data, 1000)
+    # sample_dis = get_sample_dis(stats_data, 500)
+    # sample_dis = get_sample_dis(stats_data, 2500)
+    sample_dis = get_sample_dis(stats_data, 5000)
+    # sample_dis = get_sample_dis(stats_data, 10000)
+    # sample_dis = get_sample_dis(stats_data, 20000)
+
+    print(sum(sample_dis))
 
     f = pysam.Samfile(bam_filename, "rb")
 
     for chrom_idx in range(len(stats_data)):
         i = 0
         for read in f.fetch(stats_data[chrom_idx][0]):
+            # print(stats_data[chrom_idx][0])
             i += 1
-            if i == sample_dis[chrom_idx]:
+            if i >= sample_dis[chrom_idx]:
                 break
             if not read.is_unmapped:
                 if read.is_reverse: # choose right-most pos for reverse strand
-                    pos = read.pos + read.rlen - 1
-                    cov_r[pos] = 1
+                    # pos = read.pos + read.rlen - 1 # for right_most position
+                    cov_r[read.pos] = 1
                 else:
                     cov_f[read.pos] = 1
         # print(i)
@@ -102,16 +112,18 @@ def init(bam_filename, stats_data):
         return cov_f, cov_r
 
 
-def get_hvalue(cov, pos):
-    """
-    if cov_f.has_key(pos) and cov_r.has_key(pos):
+def get_hvalue(cov,  pos):
+
+    return cov[pos] if cov.has_key(pos) else 0
+
+
+def get_hvalue2(cov_f, pos_f, cov_r, pos_r):
+    if cov_f.has_key(pos_f) and cov_r.has_key(pos_r):
         return 2
-    elif not cov_f.has_key(pos) and not cov_r.has_key(pos):
+    elif not cov_f.has_key(pos_f) and not cov_r.has_key(pos_r):
         return 0
     else:
         return 1
-    """
-    return cov[pos] if cov.has_key(pos) else 0
 
 
 def ccf(cov_f, cov_r, k, small_step=1):
@@ -122,126 +134,71 @@ def ccf(cov_f, cov_r, k, small_step=1):
     for idx in range(-small_step, small_step+1, 1):
         new_k = k + idx
         reverse_keys = set(map(lambda x: x - new_k, cov_r.keys()))
-        keys = forward_keys | reverse_keys  # union of positions
+        keys = forward_keys & reverse_keys  # union of positions
 
         for p in keys:
-            sums[idx + small_step] += get_hvalue(cov_f, p) * get_hvalue(cov_r, p + new_k)
+            # sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
+            sums[idx + small_step] += get_hvalue2(cov_f, p, cov_r, p+new_k)
 
     return np.mean(sums), k
 
 
+def ccf2(cov_f, cov_r, k):
+    """Return value of cross-correlation function"""
+    sums = 0
+    forward_keys = set(cov_f.keys())
+    reverse_keys = set(map(lambda x: x - k, cov_r.keys()))
+    keys = forward_keys & reverse_keys  # union of positions
+
+    for p in keys:
+        # sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
+        sums += get_hvalue2(cov_f, p, cov_r, p+k)
+
+    return np.mean(sums), k
+
+
+
+def ccf3(cov_f, cov_r, k):
+    """Return value of cross-correlation function"""
+    sums = 0
+    forward_keys = set(cov_f.keys())
+    reverse_keys = set(map(lambda x: x - k, cov_r.keys()))
+    keys = forward_keys & reverse_keys  # union of positions
+
+    for p in keys:
+        # sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
+        sums += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + k)
+
+    return sums, k
+
+
+
 def get_fragment_size(fname, stats_data, start=0, end=600, stepsize=5):
     """return extension size for each bam files.. But it should be independent"""
-
     cov_f, cov_r = init(fname, stats_data)
     if cov_f and cov_r:
         read_size = get_read_size(fname, stats_data)
+        # start = max(read_size, start - read_size)
         start = max(0, start - read_size)
         # start -= read_size
         r = [ccf(cov_f,cov_r,k) for k in range(start, end, stepsize)]
-        return max(r)[1], sorted(r)
-
-    return None, None
-
-
-def generate_test_files(whole_bamfile):
-    """we need to get test files according to specific fragment sizes from whole bam file
-    fragment_sizes is a list of fragment size
-    """
-    f = pysam.Samfile(whole_bamfile, "rb")
-    print('read while right')
-    # we need to create from 40 to 500 bam files and open it..
-    files_seq = [pysam.Samfile('test_'+str(idx)+'.bam', 'wb',template=f) for idx in range(40,501,1)]
-    for read in f.fetch():
-        fs = abs(read.tlen)
-        if fs >39 and fs< 501:
-            files_seq[fs-40].write(read)
-
-    for idx, file in enumerate(files_seq):
-        # print('index output file %d'%(idx+40))
-        file.close()
-        pysam.index('test_'+str(idx+40)+'.bam')
-    f.close()
-
-
-def generate_test_result_plot(result_file):
-    """generate test result plot by given results text file with three columns"""
-    true_fsize =  []
-    m_fsize, m_rsize =[],[]
-    d_fsize , d_rsize= [],[]
-
-    with open(result_file) as f:
-        for line in f:
-            ll = line.split()
-            true_fsize.append(int(ll[0]))
-            d_fsize.append(int(ll[1]))
-            m_fsize.append(int(ll[4]))
-            d_rsize.append(int(ll[3]))
-            m_rsize.append(int(ll[2]))
-
-    print('the most varied data from true fragment size ')
-    dif = np.asarray(true_fsize) - np.asarray(d_fsize)
-    zidx = np.argsort(abs(dif))[-10:]
-    for item in zip(zidx, dif[zidx],np.asarray(true_fsize)[zidx],np.asarray(d_fsize)[zidx]):
-        print(item)
-
-    x= range(40, 40 + len(true_fsize))
-
-    fig = plt.figure(2)
-    fig1 = fig.add_subplot(211)
-
-    plt.gca().set_color_cycle(['black','red', 'green', 'blue', 'yellow'])
-    fig1.plot(x,true_fsize)
-    fig1.plot(x, d_fsize)
-    fig1.plot(x, m_fsize)
-    fig1.legend(['true_fsize', 'd_fsize', 'm_fsize'], loc='upper left')
-    ## for read_size, we could print out in another figure
-    fig2 = fig.add_subplot(212)
-    plt.plot(x, d_rsize)
-    plt.plot(x, m_rsize)
-
-    fig2.legend([ 'd_rsize','m_rsize'], loc='upper left')
-
-    plt.show()
-
-
-def test():
-    """generate result and plot it"""
-    # open all data
-    chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
-
-    result = open('extension_result2.txt','a',1)
-    #result.write('#true fragment size\tD_fsize\tM_fsize\tD_rsize\tM_rsize\n')
-
-    for idx in range(40, 501):
-        fname = 'test_' + str(idx) + '.bam'
-        stats_total, stats_data = get_read_statistics(fname, chrom_fname)
-        read_size = get_read_size(fname, stats_data)
-        fragment_size, fragments = get_fragment_size(fname, stats_data)
-        read_size2, extension_size, _ = get_extension_size(fname)
-
-        # print('%d\t%d\t%d\t%d\t%d\n'%(idx,fragment_size, extension_size + read_size2, read_size, read_size2))
-        result.write('%d\t%d\t%d\t%d\t%d\n'%(idx,fragment_size, extension_size + read_size2, read_size,read_size2))
-
-    result.close()
-    # generate_test_result_plot('extension_result.txt')
+        # r = [ccf2(cov_f,cov_r,k) for k in range(start, end, stepsize)]
+        # r = [ccf3(cov_f, cov_r, k) for k in range(start, end, stepsize)]
+        cov_f.clear()
+        cov_r.clear()
+        return read_size, max(r)[1], sorted(r)
+    else:
+        cov_r.clear()
+        cov_f.clear()
+        return None, None, None
 
 
 if __name__ == "__main__":
-    # unit test of codes.
-    # get all bam names in current directory
-    os.chdir('/home/kefang/programs/THOR_example_data/bug/extension_size/')
-    test()
-    # fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_172.bam'
-    # read_size2, extension_size, _ = get_extension_size(fname)
-
-    # generate_test_result_plot('extension_result.txt')
-
     """
     wname = 'ATAC.bam'
     generate_test_files(wname)
     print('end')
-
+    """
     
     fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_172.bam'
     chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
@@ -257,4 +214,4 @@ if __name__ == "__main__":
 
     extension_size = fragment_size - read_size
     print(extension_size)
-    """
+    # """
