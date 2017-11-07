@@ -1813,4 +1813,3 @@ if __name__ == "__main__":
                 else:
                     os.rename(os.path.join(args.o, file),
                               os.path.join(args.o, name_dict[id] + "." + formatf))
-
