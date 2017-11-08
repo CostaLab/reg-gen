@@ -339,7 +339,7 @@ class CoverageSet:
 
         self._init_read_number(bam_file)
         
-        #check whether one should mask
+        # check whether mask file exists
         next_it = True
         if mask_file is not None and os.path.exists(mask_file):
             mask = True

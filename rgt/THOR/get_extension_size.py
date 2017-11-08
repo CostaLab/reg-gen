@@ -39,6 +39,7 @@ Return shift/extension size of reads descriebed by BAM file.
 from __future__ import print_function
 import pysam
 import numpy as np
+import os
 
 cov_f = {}
 cov_r = {}
@@ -73,12 +74,13 @@ def init_cov(filename):
     for read in file.fetch(file.references[0]):
         i += 1
         if not read.is_unmapped:
-            if not read.seq:
-                h = 0
-            else:
-                h = len(read.seq)
-            pos = read.pos + read.rlen - h if read.is_reverse else read.pos
-            assert int(pos) == int(read.pos), "pos is %d , read.pos is %d"%(pos, read.pos)
+            #if not read.seq:
+            #    h = 0
+            #else:
+            #    h = len(read.seq)
+            # pos = read.pos + read.rlen - h if read.is_reverse else read.pos
+            # assert int(pos) == int(read.pos), "pos is %d , read.pos is %d"%(pos, read.pos)
+            pos = read.pos
             if read.is_reverse:
                 if not cov_r.has_key(pos):
                     cov_r[pos] = 1
@@ -138,15 +140,21 @@ def get_extension_size(filename, start=0, end=600, stepsize=5):
 
     return read_length, max(r[read_length / stepsize * 2:])[1], r
 
-"""
-if __name__ == '__main__':
-    fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_207.bam'
-    read_len, a, b = get_extension_size(fname)
-    print(a+ read_len, b)
 
-    fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_317.bam'
-    read_len, a, b = get_extension_size(fname)
-    print(a + read_len, b)
+if __name__ == '__main__':
+
+    os.chdir("/home/kefang/programs/THOR_example_data/bug/test")
+    path = "/home/kefang/programs/THOR_example_data/bug/test/"
+
+    signal_files = ["FL5_H3K27ac.100k.bam", "FL8_H3K27ac.100k.bam", "CC4_H3K27ac.100k.bam", "CC5_H3K27ac.100k.bam"]
+    for fname in signal_files:
+        print(fname)
+        read_len, a, b = get_extension_size(fname)
+        print(read_len, a, b)
+
+
+    #fname = '/home/kefang/programs/THOR_example_data/bug/extension_size/test_317.bam'
+    #read_len, a, b = get_extension_size(fname)
+    #print(a + read_len, b)
     #for el in b:
     #    print(el[1], el[0], sep='\t')
-"""

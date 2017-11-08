@@ -5,8 +5,8 @@ import numpy as np
 import pysam
 import os
 import time
-from get_statistics import get_fragment_size, get_read_statistics
-from get_extension_size import get_extension_size
+from get_statistics import get_extension_size, get_read_statistics
+# from get_extension_size import get_extension_size
 
 def generate_test_files(whole_bamfile):
     """we need to get test files according to specific fragment sizes from whole bam file
@@ -95,21 +95,27 @@ def generate_test_result_plot(result_file):
     plt.show()
 
 
+def simulate_cross_correlation(cov_f, cov_r):
+    """generate simulation data and then find the extension size by using cross correlation"""
+
+
+
+
 def test():
     """generate result and plot it"""
     # open all data
     chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
 
-    result = open('extension_result_merged_sample_2_2500.txt','a',1)
+    result = open('extension_result_merged_len3.txt','a',1)
     #result.write('#true fragment size\tD_fsize\tM_fsize\tD_rsize\tM_rsize\n')
 
     for idx in range(45, 121,5):
 
         fname = 'test_merged_' + str(idx) + '.bam'
         start_time_d = time.time()
-        stats_total, stats_data = get_read_statistics(fname, chrom_fname)
+        stats_total, stats_data, isspatial = get_read_statistics(fname, chrom_fname)
         # read_size = get_read_size(fname, stats_data)
-        read_size, de_size,  frag_data = get_fragment_size(fname, stats_data)
+        read_size, de_size,  frag_data = get_extension_size(fname, stats_data)
         end_time_d = time.time() - start_time_d
         #start_time_m = time.time()
         #read_size2, extension_size, _ = get_extension_size(fname)
@@ -119,7 +125,6 @@ def test():
         #result.write('%d\t%d\t%d\t%f\t%d\t%d\t%f \n'%(idx,de_size + read_size, read_size, end_time_d, extension_size + read_size2,  read_size2, end_time_m))
         #result.write('%d\t%d\n'%(idx, extension_size + read_size2))
         result.write('%d\t%d\t%d\t%f\n' % (idx, de_size + read_size, read_size, end_time_d))
-        # break
 
     result.close()
     # generate_test_result_plot('extension_result.txt')

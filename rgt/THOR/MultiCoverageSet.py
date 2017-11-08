@@ -32,7 +32,7 @@ from rgt.CoverageSet import CoverageSet, get_gc_context
 import configuration
 
 class MultiCoverageSet(DualCoverageSet):
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov, mask_file=None):
+    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov, ignored_regions=None):
         """Return self.covs and self.inputs as CoverageSet
         But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
         Better we need to do is get all info of all fields, and extract data from it to combine the training fields.
@@ -48,13 +48,13 @@ class MultiCoverageSet(DualCoverageSet):
             # if there are many chromosomes, we get samples according to these data and do peak-calling later.
             # c.statistics = c.get_statistics(path_bamfiles[i])
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, mask_file=mask_file, get_strand_info = strand_cov)
+                                stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
         self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
         if path_inputs:
             self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], extension_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, get_strand_info = strand_cov)
+                                stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.inputs = []
@@ -63,7 +63,7 @@ class MultiCoverageSet(DualCoverageSet):
             self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
             for i, c in enumerate(self.norm_regions):
                 c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                    stepsize=stepsize, get_strand_info = strand_cov)
+                                    stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
             self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
         else:
             self.norm_regions = None
@@ -178,8 +178,9 @@ class MultiCoverageSet(DualCoverageSet):
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
                  factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
-                 folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95):
+                 folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95, ignored_regions=None):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
+        # one improvement is to make the left one key_word parameter and we parse it, not like this, all in a list
         self.genomicRegions = regions
         self.binsize = binsize
         self.stepsize = stepsize
@@ -197,6 +198,8 @@ class MultiCoverageSet(DualCoverageSet):
         self.counter = counter
         self.no_data = False
         self.FOLDER_REPORT = folder_report
+        # new-added feature: ignored regions
+        self.ignored_regions = ignored_regions
 
         configuration.DEBUG = debug
         configuration.VERBOSE = verbose
