@@ -29,36 +29,67 @@ from rgt.GenomicRegionSet import GenomicRegionSet
 # from os.path import splitext, basename
 
 class RegionGiver:
-    regionset = GenomicRegionSet('')
-    chrom_sizes_dict = {}
-    
-    def __init__(self, chrom_file, regions_file=None):
+    """ provide Region to analyse or masked
+    regionset = region_giver.region
+    regionset.sequences.sort()
+    chrom_sizes = region_giver.get_chrom_sizes
+    chrom_sizes_dict = chrom_sizes.get_chrom_sizes_dict()
+
+    region_giver = RegionGiver(chrom_sizes, options.regions)
+
+    For this regions we should have valid_regions which is chrom region with non_zeros data
+    For zero chroms regions we don't consider it ...
+    we have statistical information in format ['chrm1',size, read_nums,unmapped_read_nums]
+
+    """
+    # why here to use class paramter, it belong to whole class not instance.
+    # However we don't need to create new object form it
+    # from simple ones begin !!!
+    def __init__(self, chrom_file, regions_file=None, file_statics=None, ignored_regions_file=None):
         self.counter = 0
-        if regions_file is not None:
-            # how to delete this information, because at first we don't want it
-            # but maybe later, we need it.. At what time? How to combine them together?
-            # we can make a test before we initialize RegionGiver and print info out
-            # print("Call DPs on specified regions.", file=sys.stderr)
+
+        self.chrom_sizes_file = chrom_file
+        self.regionset = GenomicRegionSet('')
+
+        self.ignored_region_file = ignored_regions_file
+        self.ignored_regionset = GenomicRegionSet('Ignored_regions')
+
+        self.chrom_sizes_dict = {}
+        ## stats_data in dictionary format
+        # valid_chroms are union of chroms from stats_data, then we get data from them and initalize data for training
+        valid_chroms = set(tmp[0] for each_statics in file_statics for tmp in each_statics)
+        if regions_file:
             with open(regions_file) as f:
                 for line in f:
                     if line:
                         line = line.strip()
                         line = line.split()
-                        c, s, e = line[0], int(line[1]), int(line[2])
-                #if c in contained_chrom:
-                        self.regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
-                        self.chrom_sizes_dict[c] = e
+                        chrom, start, end = line[0], int(line[1]), int(line[2])
+                        if chrom in valid_chroms:
+                            self.regionset.add(GenomicRegion(chrom=chrom, initial=start, final=end))
+                            self.chrom_sizes_dict[chrom] = end
         else:
-            # print("Call DPs on whole genome.", file=sys.stderr)
+            print("Call DPs on whole genome.", file=sys.stderr)
             with open(chrom_file) as f:
                 for line in f:
                     line = line.strip()
                     line = line.split('\t')
                     chrom, end = line[0], int(line[1])
-            #if chrom in contained_chrom:
-                    self.regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                    self.chrom_sizes_dict[chrom] = end
-        
+                    if chrom in valid_chroms:
+                        self.regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                        self.chrom_sizes_dict[chrom] = end
+
+
+        """
+        if  ignored_regions_file: 
+            with open( ignored_regions_file) as f:
+                for line in f:
+                    if line:
+                        line = line.strip()
+                        line = line.split()
+                        c, s, e = line[0], int(line[1]), int(line[2])
+                        self.ignored_regionset.add(GenomicRegion(chrom=c, initial=s, final=e))
+        """
         if not self.regionset.sequences:
             print('something wrong here', file=sys.stderr)
             sys.exit(2)

@@ -27,7 +27,7 @@ from datetime import datetime
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.THOR.get_extension_size import get_extension_size
+from rgt.THOR.get_statistics import compute_extension_sizes
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
 from input_parser import input_parser
 from rgt.Util import which, npath
@@ -387,33 +387,6 @@ def _output_ext_data(ext_data_list, bamfiles):
     plt.close()
 
 
-def _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report):
-    """Compute Extension sizes for bamfiles and input files"""
-    start = 0
-    end = 600
-    ext_stepsize = 5
-    
-    ext_data_list = []
-    #compute extension size
-    if not exts:
-        print("Computing read extension sizes for ChIP-seq profiles", file=sys.stderr)
-        for bamfile in bamfiles:
-            e, ext_data = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
-            exts.append(e)
-            ext_data_list.append(ext_data)
-    
-    if report and ext_data_list:
-        _output_ext_data(ext_data_list, bamfiles)
-    
-    if inputs and not exts_inputs:
-        ## here we need to calculate the extension for inputs too..
-        for bamfile in inputs:
-            ie, _ = get_extension_size(bamfile, start=start, end=end, stepsize=ext_stepsize)
-            exts_inputs.append(ie)
-
-    return exts, exts_inputs
-
-
 def get_all_chrom(bamfiles):
     chrom = set()
     for bamfile in bamfiles:
@@ -425,28 +398,30 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(name, dims, genome_path, regions, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, chrom_sizes, verbose, no_gc_content, \
+def initialize(name, dims, genome_path, region_giver, stepsize, binsize, bamfiles, exts, \
+               inputs, exts_inputs, factors_inputs, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
-               test, report, chrom_sizes_dict, counter, end, gc_content_cov=None, avg_gc_content=None, \
+               test, report, counter, end, gc_content_cov=None, avg_gc_content=None, \
                gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
-    """Initialize the MultiCoverageSet"""
-    regionset = regions
-    regionset.sequences.sort()
-    
+    """Initialize the MultiCoverageSet
+    Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
+    Use sampling methods to initialize certain part of data
+    Get exp_data, we have one pattern, 0.1
+    """
+
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
         norm_regionset.read(norm_regions)
     else:
         norm_regionset = None
-        
-    exts, exts_inputs = _compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
-    
-    multi_cov_set = MultiCoverageSet(name=name, regions=regionset, dims=dims, genome_path=genome_path,
+
+    signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes = compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
+
+    multi_cov_set = MultiCoverageSet(name=name, region_giver=region_giver, dims=dims, genome_path=genome_path,
                                      binsize=binsize, stepsize=stepsize, rmdup=rmdup, path_bamfiles=bamfiles,
-                                     path_inputs=inputs, exts=exts, exts_inputs=exts_inputs,
-                                     factors_inputs=factors_inputs, chrom_sizes=chrom_sizes, verbose=verbose,
-                                     no_gc_content=no_gc_content, chrom_sizes_dict=chrom_sizes_dict, debug=debug,
+                                     path_inputs=inputs, exts=signal_extension_sizes, exts_inputs=inputs_extension_sizes,
+                                     factors_inputs=factors_inputs,  verbose=verbose,
+                                     no_gc_content=no_gc_content, debug=debug,
                                      norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip,
                                      save_wig=save_wig, strand_cov=True, housekeeping_genes=housekeeping_genes,
                                      tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content,
@@ -581,9 +556,10 @@ def handle_input():
     if options.scaling_factors_ip and len(options.scaling_factors_ip) != len(bamfiles):
         parser.error("Number of scaling factors for IP must equal number of bamfiles")
 
-    for bamfile in bamfiles:
-        if not isfile(bamfile):
-            parser.error("BAM file %s does not exist!" % bamfile)
+    for each_sample in bamfiles:
+        for bamfile in each_sample:
+            if not isfile(bamfile):
+                parser.error("BAM file %s does not exist!" % bamfile)
 
     if not inputs and options.factors_inputs:
         print("As no input-DNA, do not use input-DNA factors", file=sys.stderr)

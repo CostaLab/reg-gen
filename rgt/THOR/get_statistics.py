@@ -9,8 +9,6 @@ import pysam
 import sys
 import os
 import numpy as np
-import time
-from scipy.signal import correlate
 
 from rgt.THOR.RegionGiver import RegionGiver
 
@@ -26,15 +24,12 @@ def get_read_statistics(fname, chrom_fname):
     """
     # in pysam 0.9, it uses idxstats...
     # f = pysam.Samfile(fname, "rb")
-    # print(fname)
-    # print(os.path.isfile(fname))
     stats_string = pysam.idxstats(fname)  # return in a string form and each info (chrom_name, total_length, mapped, unmapped) separated by '\n'
     stats_tmp = stats_string.split('\n')  # separate each info
     # using stats, we initialize the distribution of sample data, all we use is read_mapped data
-    chroms = RegionGiver(chrom_fname, None).get_chrom_dict().keys()
+    chroms = RegionGiver(chrom_fname).get_chrom_dict().keys()
     # change stats into dictionary list with only chromosome in chroms
     stats_total = [] # whole information in file including 0 reads
-    stats_data = []  # with none zero data statistic
 
     isspatial = False
     isspatial_sum = 0
@@ -56,11 +51,30 @@ def get_read_statistics(fname, chrom_fname):
          isspatial = True
          # data is spatial, and we use biggest 5 stats_data as new stats_data
          new_stats_nums = [tmp[2] for tmp in stats_total]
-         idxs = np.argsort(new_stats_nums)[-1:]
+         idxs = np.argsort(new_stats_nums)[-3:]
          stats_data = [stats_total[idx] for idx in idxs]
     else:
          stats_data = stats_total
     return stats_total, stats_data, isspatial
+
+
+def get_file_statistics(fnames, chrom_fname):
+    """ get read statistical data for a file list, return a dictionary for each file"""
+
+
+    if isinstance(fnames[0], list):
+        file_dimension = (len(fnames), len(fnames[0]))
+    else:
+        file_dimension = len(fnames)
+
+    statics = []
+    for i in range(file_dimension[0]):
+        statics.append([])
+        for j in range(file_dimension[1]):
+            stats_total, stats_data, isspatial = get_read_statistics(fnames[i][j], chrom_fname)
+            statics[i].append({'fname':fnames[i][j], 'stats_total':stats_total,'stats_data':stats_data, 'isspatial':isspatial})
+    # we could get different stats_data and we need to unify them...
+    return {'data':statics, 'dim':file_dimension}
 
 
 def get_sample_dis(stats_data, sample_size=None, data_spatial=False):
@@ -73,7 +87,7 @@ def get_sample_dis(stats_data, sample_size=None, data_spatial=False):
         num = min(read_sum * 0.7, sample_size)
     else:
         num = read_sum * 0.7
-    print(num)
+    # print(num)
     sample_dis = [int(x * num) for x in read_dis]
     return sample_dis
 
@@ -81,13 +95,9 @@ def get_sample_dis(stats_data, sample_size=None, data_spatial=False):
 def get_read_size(fname, stats_data):
     """to get  read size for each files by using statistical data for each file """
     # sample len w.r.t distribution of reads in file
-    # sample_dis = get_sample_dis(stats_data, 500)
-    # sample_dis = get_sample_dis(stats_data, 1000)
-    # sample_dis = get_sample_dis(stats_data, 2500)
-    print('get read_size')
+
+    # print('get read_size')
     sample_dis = get_sample_dis(stats_data, 10000)
-    # sample_dis = get_sample_dis(stats_data, 10000)
-    # sample_dis = get_sample_dis(stats_data, 20000)
     f = pysam.Samfile(fname, "rb")
     s = []
 
@@ -131,64 +141,7 @@ def init(bam_filename, stats_data):
         return cov_f, cov_r
 
 
-def get_hvalue(cov,  pos):
-
-    return cov[pos] if cov.has_key(pos) else 0
-
-
-def get_hvalue2(cov_f, cov_r, pos_f, pos_r):
-    if cov_f.has_key(pos_f) and cov_r.has_key(pos_r):
-        return 2
-    elif not cov_f.has_key(pos_f) and not cov_r.has_key(pos_r):
-        return 0
-    else:
-        return 1
-
-
-def get_hvalue3(cov_f, cov_r, pos):
-    """define function for cross correlation"""
-    if cov_f.has_key(pos) and cov_r.has_key(pos):
-        return 2
-    elif not cov_f.has_key(pos) and not cov_r.has_key(pos):
-        return 0
-    else:
-        return 1
-
-
-def ccf(cov_f, cov_r, k, small_step=1):
-    """Return value of cross-correlation function"""
-    sums = np.zeros(small_step*2 +1)
-    forward_keys = set(cov_f.keys())
-
-    for idx in range(-small_step, small_step+1, 1):
-        new_k = k + idx
-        reverse_keys = set(map(lambda x: x - new_k, cov_r.keys()))
-        keys = forward_keys & reverse_keys  # union of positions
-        # I think we need at least 1000 data here to get proper result
-        # print(len(keys))
-        #for p in keys:
-        #    sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
-            # sums[idx + small_step] += get_hvalue2(cov_f, p, cov_r, p+new_k)
-        # assert len(keys) == sums[idx + small_step], 'equal ??'
-        sums[idx + small_step] = len(keys)
-
-    return np.mean(sums), k
-
-
-def ccf2(cov_f, cov_r, k):
-    """Return value of cross-correlation function, return is then for fragment size"""
-    sums = 0
-    keys = set(cov_f.keys()) | set(cov_r.keys())  # union of positions
-    # print(len(keys))
-
-    for p in keys:
-        # sums[idx + small_step] += get_hvalue(cov_f, p) & get_hvalue(cov_r, p + new_k)
-        tmp = get_hvalue2(cov_f, cov_r, p, p+k)
-        sums += tmp
-    return sums, k
-
-
-def ccf3(cov_f, cov_r, k):
+def ccf(cov_f, cov_r, k):
     """Return value of cross-correlation function"""
     #sums = 0
     forward_keys = set(cov_f.keys())
@@ -208,10 +161,7 @@ def get_extension_size(fname, stats_data, start=0, end=600, stepsize=3):
         read_size = get_read_size(fname, stats_data)
         # start = max(read_size, start - read_size)
         start = max(0, start - read_size)
-        # start -= read_size
-        # r = [ccf(cov_f,cov_r,k) for k in range(start, end, stepsize)]
-        # r = [ccf2(cov_f,cov_r,k) for k in range(start, end, stepsize)]
-        r = [ccf3(cov_f, cov_r, k) for k in range(start, end, stepsize)]
+        r = [ccf(cov_f, cov_r, k) for k in range(start, end, stepsize)]
         cov_f.clear()
         cov_r.clear()
         return read_size, max(r)[1], sorted(r, reverse=True)
@@ -221,50 +171,72 @@ def get_extension_size(fname, stats_data, start=0, end=600, stepsize=3):
         return None, None, None
 
 
-def compute_extension_sizes(signal_files, signal_extension_sizes, inputs_files, inputs_extension_sizes, report):
-    """Compute Extension sizes for bamfiles and input files"""
+def compute_extension_sizes(signal_statics, inputs_statics, report):
+    """Compute Extension sizes for bamfiles and input files
+    Argument: signal_files are in a list format are: [[sample1_file1, sample1_file2], [sample2_file1, sample2_file2]]
+          inputs_files are in the same format
+    Return:
+        signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes
+
+    signal_statics includes stats, fname data, and dimesions, the same as inputs_statics
+    """
     start = 0
     end = 600
-    ext_stepsize = 5
-
+    ext_stepsize = 3
     ext_data_list = []
-    read_sizes, inputs_read_sizes = [],[]
+    file_dimension = 0
+    signal_extension_sizes, read_sizes = None, None
+    inputs_extension_sizes, inputs_read_sizes = None, None
 
-    # chrom_fname = '/home/kefang/programs/THOR_example_data/bug/debugData/GRCh38_no_alt_analysis_set.sizes.genome.txt'
-    chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
     # compute extension size for all signal files
-    if not signal_extension_sizes:
+    if signal_statics:
         print("Computing read extension sizes for ChIP-seq profiles", file=sys.stderr)
-        for bamfile in signal_files:
-            start_time = time.time()
-            stats_total, stats_data, isspatial = get_read_statistics(bamfile, chrom_fname)
-            print(stats_data)
-            read_size, e, ext_data = get_extension_size(bamfile, stats_data,  start=start, end=end, stepsize=ext_stepsize)
-            read_sizes.append(read_size)
-            signal_extension_sizes.append(e)
-            ext_data_list.append(ext_data)
-            end_time = time.time() - start_time
-            print('used time: ', end_time)
-            print(ext_data)
+        file_dimension = signal_statics['dim']
+        signal_extension_sizes = np.ones(file_dimension, int) * -1
+        read_sizes = np.ones(file_dimension, int) * -1
 
+        for i in range(file_dimension[0]):
+            for j in range(file_dimension[1]):
+
+                read_size, e, ext_data = get_extension_size(signal_statics[i][j]['data']['fname'], signal_statics[i][j]['data']['stats_data'],  start=start, end=end, stepsize=ext_stepsize)
+                read_sizes[i][j] = read_size
+                signal_extension_sizes[i][j] = e
+                ext_data_list.append(ext_data)
+                signal_statics['data']['read_size'] = read_size
+                signal_statics['data']['extension_size'] = e
+
+    if inputs_statics:
+
+        inputs_extension_sizes = np.ones(file_dimension, int) * (-1)
+        inputs_read_sizes = np.ones(file_dimension, int) * -1
+
+        for i in range(file_dimension[0]):
+            for j in range(file_dimension[1]):
+
+                read_size, ie, scores = get_extension_size(inputs_statics[i][j]['data']['fname'], inputs_statics[i][j]['data']['fname'], start=start, end=end, stepsize=ext_stepsize)
+                inputs_extension_sizes[i][j] = ie
+                inputs_read_sizes[i][j] = read_size
+
+                if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j]) * 0.3:
+                    # we need to make sure how many files for one sample, it's on dims and divide it
+                    inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - \
+                                                   inputs_read_sizes[i][j]
+                    print('adjust input extension size')
+                inputs_statics['data']['read_size'] = read_size
+                inputs_statics['data']['extension_size'] = inputs_extension_sizes[i][j]
+        """
+        for i in range(file_dimension[0]):
+            for j in range(file_dimension[1]): 
+                if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j]) * 0.3:
+                    # we need to make sure how many files for one sample, it's on dims and divide it
+                    inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - \
+                                                   inputs_read_sizes[i][j]
+        """
     if report and ext_data_list:
         print(ext_data_list, signal_files)
-    print('for input file')
-    if inputs_files and not inputs_extension_sizes:
-        for bamfile in inputs_files:
-            start_time = time.time()
-            stats_total, stats_data, isspatial = get_read_statistics(bamfile, chrom_fname)
 
-            print(stats_data)
-
-            read_size, ie, scores = get_extension_size(bamfile, stats_data, start=start, end=end, stepsize=ext_stepsize)
-            inputs_extension_sizes.append(ie)
-            inputs_read_sizes.append(read_size)
-            end_time = time.time() - start_time
-            print('used time: ', end_time)
-            print(scores)
-
-    return signal_extension_sizes, read_sizes, inputs_extension_sizes,inputs_read_sizes
+    # when data is in same format, we choose to use np.array to save it
+    return signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes
 
 
 if __name__ == "__main__":
@@ -294,17 +266,22 @@ if __name__ == "__main__":
 
     """
     os.chdir("/home/kefang/programs/THOR_example_data/bug/evaluate_extension_size")
+    chrom_fname = '/home/kefang/programs/THOR_example_data/bug/test/hg19.chrom.sizes'
     # path = "/home/kefang/programs/THOR_example_data/bug/test/"
 
     # test compute_extension_sizes for signal files and inputs files
     # signal_files = ["rep1_A.bam","rep1_B.bam","rep2_A.bam","rep2_B.bam"]
-    signal_files = ['cDC_WT_H3K27ac_1.bam','cDC_WT_H3K27ac_2.bam' ,'CDP_WT_H3K27ac_1.bam','CDP_WT_H3K27ac_2.bam']
+    signal_files = [['cDC_WT_H3K27ac_1.bam','cDC_WT_H3K27ac_2.bam'] ,['CDP_WT_H3K27ac_1.bam','CDP_WT_H3K27ac_2.bam']]
+
+    stats = get_file_statistics(signal_files,chrom_fname)
+    print(stats)
     # inputs_files = ["inpt1_A.bam","inpt1_B.bam"]  # ,"inpt2_A.bam","inpt2_B.bam"
     # signal_files = ["FL5_H3K27ac.100k.bam", "FL8_H3K27ac.100k.bam", "CC4_H3K27ac.100k.bam", "CC5_H3K27ac.100k.bam"]
     # signal_files = [path + tmp for tmp in signal_files]
     # signal_files = []
-    inputs_files = ['Input_cDC_H3K27ac.bam', 'Input_CDP_H3K27ac.bam']
-    # inputs_files = []
+    """
+    inputs_files = [['Input_cDC_H3K27ac.bam','Input_cDC_H3K27ac.bam'], ['Input_CDP_H3K27ac.bam','Input_CDP_H3K27ac.bam']]
+    inputs_files = []
     signal_extension_sizes = []
     inputs_extension_sizes = []
     report = True
@@ -314,6 +291,19 @@ if __name__ == "__main__":
     print(inputs_extension_sizes)
     print(read_sizes)
     print(inputs_read_sizes)
+
+    dims = (2,2)
+    for i in range(dims[0]):
+        for j in range(dims[1]):
+            if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j])*0.3:
+                # we need to make sure how many files for one sample, it's on dims and divide it
+                inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - inputs_read_sizes[i][j]
+
+    print(signal_extension_sizes)
+    print(inputs_extension_sizes)
+    print(read_sizes)
+    print(inputs_read_sizes)
+
     # """
 
 

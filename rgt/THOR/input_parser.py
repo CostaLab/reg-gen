@@ -73,14 +73,14 @@ def input_parser(filepath):
     inputs2 = get_data_block(filepath, "inputs2")
     inputs2 = map(npath, inputs2)
 
-    dims = [len(bamfiles_1), len(bamfiles_2)]
+    dims = [2, len(bamfiles_1)]
     
     if not inputs1 and not inputs2:
         inputs = None
     else:
-        inputs = inputs1 + inputs2
+        inputs = [inputs1, inputs2]
 
-    return bamfiles_1 + bamfiles_2, genome, chrom_sizes, inputs, dims
+    return [bamfiles_1, bamfiles_2], genome, chrom_sizes, inputs, dims
 
 
 

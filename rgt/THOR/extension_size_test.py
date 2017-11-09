@@ -6,7 +6,7 @@ import pysam
 import os
 import time
 from get_statistics import get_extension_size, get_read_statistics
-# from get_extension_size import get_extension_size
+
 
 def generate_test_files(whole_bamfile):
     """we need to get test files according to specific fragment sizes from whole bam file

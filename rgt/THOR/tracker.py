@@ -45,7 +45,7 @@ class Tracker:
         self.chrom_sizes = chrom_sizes
         self.dims = dims
         self.inputs = inputs
-        self.samples = map(lambda x: path.splitext(path.basename(x))[0], bamfiles)
+        self.samples = [path.splitext(path.basename(x))[0] for each_sample in bamfiles for x in each_sample]# map(lambda x: path.splitext(path.basename(x))[0], bamfiles)
         self.options = options
         self.version = version
     
@@ -144,8 +144,9 @@ class Tracker:
     def make_ext_config(self, html):
         """make table about configuration: feature, path"""
         b = []
-        for el in self.bamfiles:
-            b += [el, '<br>']
+        for each_sample in self.bamfiles:
+            for el in each_sample:
+                b += [el, '<br>']
         
         b = b[:len(b) - 1]
         b = " ".join(b)

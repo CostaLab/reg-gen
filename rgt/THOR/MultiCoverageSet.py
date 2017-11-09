@@ -31,8 +31,10 @@ from norm_genelevel import norm_gene_level
 from rgt.CoverageSet import CoverageSet, get_gc_context
 import configuration
 
+
 class MultiCoverageSet(DualCoverageSet):
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, regions, norm_regionset, strand_cov, ignored_regions=None):
+
+    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, region_giver, norm_regionset, strand_cov):
         """Return self.covs and self.inputs as CoverageSet
         But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
         Better we need to do is get all info of all fields, and extract data from it to combine the training fields.
@@ -40,22 +42,23 @@ class MultiCoverageSet(DualCoverageSet):
         mask_file is used to filter data before we do other operations.
         """
         self.exts = exts  # before covs_init, we should judge the number of reads for that regions and save time for this.
-        self.covs = [CoverageSet('file' + str(i), regions) for i in range(dim)]
+        self.covs = [CoverageSet('file_' + str(i)+'_'+str(j), region_giver.regionset) for i in range(dim[0]) for j in range(dim[1])]
         for i, c in enumerate(self.covs):
             # c.get_statistics(path_bamfiles[i]) do statistics on the data in one bamfile, and return it
             # according to statistics, we decide if we continue later process
             # e.g. only one chromosome in data, then we process it directly, get samples from it and do peak-calling in it
             # if there are many chromosomes, we get samples according to these data and do peak-calling later.
             # c.statistics = c.get_statistics(path_bamfiles[i])
+            # to make sure mask_file or mask_regions
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
-        self.covs_avg = [CoverageSet('cov_avg'  + str(i) , regions) for i in range(2)]
+                                stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
+        self.covs_avg = [CoverageSet('cov_avg'  + str(i) , region_giver.regionset) for i in range(2)]
         if path_inputs:
-            self.inputs = [CoverageSet('input' + str(i), regions) for i in range(len(path_inputs))]
+            self.inputs = [CoverageSet('input' + str(i), region_giver.regionset) for i in range(len(path_inputs))]
             for i, c in enumerate(self.inputs):
                 c.coverage_from_bam(bam_file=path_inputs[i], extension_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
-            self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
+                                stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
+            self.input_avg = [CoverageSet('input_avg'  + str(i), region_giver.regionset) for i in range(2)]
         else:
             self.inputs = []
             
@@ -63,8 +66,8 @@ class MultiCoverageSet(DualCoverageSet):
             self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
             for i, c in enumerate(self.norm_regions):
                 c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                    stepsize=stepsize, mask_file=ignored_regions, get_strand_info = strand_cov)
-            self.input_avg = [CoverageSet('input_avg'  + str(i), regions) for i in range(2)]
+                                    stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
+            self.input_avg = [CoverageSet('input_avg'  + str(i), region_giver.regionset) for i in range(2)]
         else:
             self.norm_regions = None
 
@@ -76,7 +79,7 @@ class MultiCoverageSet(DualCoverageSet):
     
         return cov1, cov2
     
-    def _compute_gc_content(self, no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict):
+    def _compute_gc_content(self, no_gc_content, path_inputs, stepsize, binsize, genome_path, name, region_giver):
         """Compute GC-content"""
         if not no_gc_content and path_inputs and self.gc_content_cov is None:
             print("Compute GC-content", file=sys.stderr)
@@ -84,7 +87,7 @@ class MultiCoverageSet(DualCoverageSet):
                 inputfile = self.inputs[i] #1 to 1 mapping between input and cov
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 1 if i < self.dim_1 else 2
-                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, chrom_sizes_dict)
+                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, region_giver.get_chrom_dict())
                 self._norm_gc_content(cov.coverage, self.gc_content_cov, self.avg_gc_content)
                 self._norm_gc_content(inputfile.coverage, self.gc_content_cov, self.avg_gc_content)
             
@@ -174,18 +177,23 @@ class MultiCoverageSet(DualCoverageSet):
     def count_positive_signal(self):
         return np.sum([self.covs[i].coverage for i in range(self.dim_1 + self.dim_2)])
     
-    def __init__(self, name, dims, regions, genome_path, binsize, stepsize, chrom_sizes, norm_regionset, \
+    def __init__(self, name, dims, region_giver, genome_path, binsize, stepsize, norm_regionset, \
                  verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
-                 factors_inputs, chrom_sizes_dict, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
+                 factors_inputs, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
                  folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95, ignored_regions=None):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         # one improvement is to make the left one key_word parameter and we parse it, not like this, all in a list
-        self.genomicRegions = regions
+        """    
+        regionset = region_giver.regionset
+        chrom_sizes = region_giver.chrom_sizes_file
+        chrom_sizes_dict = region_giver.get_chrom_dict()
+        """
+
+        self.genomicRegions = region_giver.regionset
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
-        self.chrom_sizes_dict = chrom_sizes_dict
         self.dim_1, self.dim_2 = dims
         self.exts = exts
         self.exts_inputs = exts_inputs
@@ -198,21 +206,19 @@ class MultiCoverageSet(DualCoverageSet):
         self.counter = counter
         self.no_data = False
         self.FOLDER_REPORT = folder_report
-        # new-added feature: ignored regions
-        self.ignored_regions = ignored_regions
 
         configuration.DEBUG = debug
         configuration.VERBOSE = verbose
         
         #make data nice
-        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims), regions, norm_regionset, strand_cov = strand_cov)
+        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims),region_giver, norm_regionset, strand_cov = strand_cov)
         if self.count_positive_signal() < 1:
             self.no_data = True
             return None
-        self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, chrom_sizes, chrom_sizes_dict)
+        self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, region_giver)
         self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs, save_input)
         if save_input:
-            self._output_input_bw(name, chrom_sizes, save_wig) 
+            self._output_input_bw(name, region_giver.chrom, save_wig)
             
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
         
@@ -221,7 +227,7 @@ class MultiCoverageSet(DualCoverageSet):
         ## After this step, we have already normalized data, so we could output normalization data
 
         if output_bw:
-            self._output_bw(name, chrom_sizes, save_wig, save_input) 
+            self._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
         
         self.scores = np.zeros(len(self.overall_coverage[0]))
         self.indices_of_interest = []

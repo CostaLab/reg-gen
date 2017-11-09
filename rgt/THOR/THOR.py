@@ -36,6 +36,7 @@ from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
 import configuration
+from get_statistics import get_file_statistics
 # External
 
 
@@ -56,27 +57,36 @@ def _write_info(tracker, report, **data):
         tracker.make_html(configuration.FOLDER_REPORT)
 
 
-def train_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker):
-    """Train HMM"""
-    
-    while True:
-        train_regions = region_giver.get_training_regionset()
+def train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker):
+    """Train HMM
+    Firstly, we get training set: exp_data, and then estimate parameter
+    get training data: we need to consider all file data;
+        -- get estimate extension size for all files w.r.t to whole data: bt on the other hand, we see it's an attribute for bamfile
+        But actually we could subtract it from train_HMM, because we need it also other parts
+        -- choose samples w.r.t to sample distribution to get exp_data, but according to data, we could choose different len of samples
+    estimate parameters: all data included
+
+    Return: distribution parameters
+    """
+    # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
+
+    #while True:
+        #train_regions = region_giver.get_training_regionset()
         # print(train_regions.sequences)
-        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=train_regions,
-                              stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
-                              exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,
-                              debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
-                              factors_inputs=options.factors_inputs, chrom_sizes=chrom_sizes,
-                              tracker=tracker, norm_regions=options.norm_regions,
-                              scaling_factors_ip=options.scaling_factors_ip, save_wig=options.save_wig,
-                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report,
-                              chrom_sizes_dict=region_giver.get_chrom_dict(), end=True, counter=0, output_bw=False,
-                              save_input=options.save_input, m_threshold=options.m_threshold,
-                              a_threshold=options.a_threshold, rmdup=options.rmdup)
-        if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
-            tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
-            tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
-            break
+    exp_data = initialize(name=options.name, dims=dims, genome_path=genome, region_giver=region_giver,
+                          stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
+                          exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,
+                          debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
+                          factors_inputs=options.factors_inputs, tracker=tracker, norm_regions=options.norm_regions,
+                          scaling_factors_ip=options.scaling_factors_ip, save_wig=options.save_wig,
+                          housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report, end=True, counter=0, output_bw=False,
+                          save_input=options.save_input, m_threshold=options.m_threshold,
+                          a_threshold=options.a_threshold, rmdup=options.rmdup)
+    # test if exp_data satisfies conditions to be good enough
+    #if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
+    #    tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
+    #    tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
+        # break
     
     func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
@@ -151,14 +161,27 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
 
 
 def main():
-    options, bamfiles, genome, chrom_sizes, dims, inputs = handle_input()
+    options, bamfiles, genome, chrom_sizes_file, dims, inputs = handle_input()
 
-    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes, dims, inputs, options, __version__)
-    region_giver = RegionGiver(chrom_sizes, options.regions)
-    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome,
-                                                                   chrom_sizes, dims, inputs, tracker)
-    
-    run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr)
+    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes_file, dims, inputs, options, __version__)
+    # get statistical data for all files and compare them to create one big files..
+    region_giver = RegionGiver(chrom_sizes_file, options.regions)
+    # get statistic information for each file
+    # stats_total, stats_data, read_size, and other parts..
+
+    signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
+    region_giver.update_regions(signal_statics)
+
+    # but how about input files, if we want extension size, then they are connected..But we could extract them outside
+
+    # compute extension size if option.ext are not given
+
+
+    # pass stats_total, stats_data, extension sizes to train_HMM
+    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker)
+
+    # we need to change region_giver and update the valid_regions
+    run_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
 
