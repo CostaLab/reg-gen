@@ -26,7 +26,6 @@ import sys
 # from rgt.CoverageSet import CoverageSet
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
-# from os.path import splitext, basename
 
 class RegionGiver:
     """ provide Region to analyse or masked
@@ -42,43 +41,45 @@ class RegionGiver:
     we have statistical information in format ['chrm1',size, read_nums,unmapped_read_nums]
 
     """
-    # why here to use class paramter, it belong to whole class not instance.
-    # However we don't need to create new object form it
-    # from simple ones begin !!!
-    def __init__(self, chrom_file, regions_file=None, file_statics=None, ignored_regions_file=None):
+    # use class attributes to create common regions
+    regionset = None
+    chrom_sizes_file = None
+    mask_file = None
+    chrom_sizes_dict = {}
+
+    def __init__(self, chrom_file, regions_file=None, mask_file=None):
         self.counter = 0
 
         self.chrom_sizes_file = chrom_file
         self.regionset = GenomicRegionSet('')
 
-        self.ignored_region_file = ignored_regions_file
+        self.mask_file = mask_file
         self.ignored_regionset = GenomicRegionSet('Ignored_regions')
 
-        self.chrom_sizes_dict = {}
-        ## stats_data in dictionary format
-        # valid_chroms are union of chroms from stats_data, then we get data from them and initalize data for training
-        valid_chroms = set(tmp[0] for each_statics in file_statics for tmp in each_statics)
-        if regions_file:
+        ## instance attribute
+        self.valid_regionset = self.regionset
+        self.valid_chrom_sizes = self.chrom_sizes_dict
+
+        if regions_file and not self.regionset:
+            self.regionset = GenomicRegionSet('')
             with open(regions_file) as f:
                 for line in f:
                     if line:
                         line = line.strip()
                         line = line.split()
                         chrom, start, end = line[0], int(line[1]), int(line[2])
-                        if chrom in valid_chroms:
-                            self.regionset.add(GenomicRegion(chrom=chrom, initial=start, final=end))
-                            self.chrom_sizes_dict[chrom] = end
-        else:
+                        self.regionset.add(GenomicRegion(chrom=chrom, initial=start, final=end))
+                        self.chrom_sizes_dict[chrom] = end
+        elif not self.regionset:
+            self.regionset = GenomicRegionSet('')
             print("Call DPs on whole genome.", file=sys.stderr)
             with open(chrom_file) as f:
                 for line in f:
                     line = line.strip()
                     line = line.split('\t')
                     chrom, end = line[0], int(line[1])
-                    if chrom in valid_chroms:
-                        self.regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-                        self.chrom_sizes_dict[chrom] = end
-
+                    self.regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
+                    self.chrom_sizes_dict[chrom] = end
 
         """
         if  ignored_regions_file: 
@@ -95,38 +96,42 @@ class RegionGiver:
             sys.exit(2)
     
     def __len__(self):
-        return len(self.regionset)
+        return len(self.valid_regionset)
     
     def __iter__(self):
-        for el in self.regionset:
+        for el in self.valid_regionset:
             tmp = GenomicRegionSet('')
             tmp.add(el)
             yield tmp
         #return iter(self.regionset)
     
     def get_regionset(self):
-        return self.regionset
+        return self.valid_regionset
     
     def get_chrom_dict(self):
-        return self.chrom_sizes_dict
+        return self.valid_chrom_sizes
     
     
     def get_training_regionset(self):
         r = GenomicRegionSet('')
-        r.add(self.regionset[self.counter])
+        r.add(self.valid_regionset[self.counter])
         
-        if self.counter == len(self.chrom_sizes_dict):
+        if self.counter == len(self.valid_chrom_sizes):
             return None
         else:
             self.counter += 1
             return r
-        
-            
-            
-#if regions option is set, take the values, otherwise the whole set of 
-    #chromosomes as region to search for DPs
-#     if test:
-#         contained_chrom = ['chr1', 'chr2']
-#     else:
-#         #contained_chrom = get_all_chrom(bamfiles)
-#         contained_chrom = ['chr1', 'chr2']
+
+    def update_regions(self, signal_statics):
+        """this function update regionset from signal_statics and only consider the valid regionset"""
+        valid_chroms = set()
+        self.valid_regionset = GenomicRegionSet('valid_regionset')
+        self.valid_chrom_sizes = {}
+        for i in range(signal_statics['dim'][0]):
+            for j in range(signal_statics['dim'][1]):
+                valid_chroms |= set(tmp[0] for tmp in  signal_statics['data'][i][j]['stats_data'])
+
+        for region in self.regionset:
+            if region.chrom in valid_chroms:
+                self.valid_regionset.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final))
+                self.valid_chrom_sizes[region.chrom] = region.final

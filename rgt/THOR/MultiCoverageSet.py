@@ -34,15 +34,18 @@ import configuration
 
 class MultiCoverageSet(DualCoverageSet):
 
-    def _help_init(self, path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, dim, region_giver, norm_regionset, strand_cov):
+    def _help_init(self, signal_statics, inputs_statics, region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov):
         """Return self.covs and self.inputs as CoverageSet
+        self._help_init(signal_statics, inputs_statics,region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov = strand_cov)
         But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
         Better we need to do is get all info of all fields, and extract data from it to combine the training fields.
         Later we use the paras to estimate peaks.. Maybe according to regions
         mask_file is used to filter data before we do other operations.
         """
-        self.exts = exts  # before covs_init, we should judge the number of reads for that regions and save time for this.
-        self.covs = [CoverageSet('file_' + str(i)+'_'+str(j), region_giver.regionset) for i in range(dim[0]) for j in range(dim[1])]
+        # here we make covs into 2-D list
+        self.covs = []
+        self.covs_avg = []
+        """
         for i, c in enumerate(self.covs):
             # c.get_statistics(path_bamfiles[i]) do statistics on the data in one bamfile, and return it
             # according to statistics, we decide if we continue later process
@@ -52,16 +55,30 @@ class MultiCoverageSet(DualCoverageSet):
             # to make sure mask_file or mask_regions
             c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
-        self.covs_avg = [CoverageSet('cov_avg'  + str(i) , region_giver.regionset) for i in range(2)]
-        if path_inputs:
-            self.inputs = [CoverageSet('input' + str(i), region_giver.regionset) for i in range(len(path_inputs))]
-            for i, c in enumerate(self.inputs):
-                c.coverage_from_bam(bam_file=path_inputs[i], extension_size=exts_inputs[i], rmdup=rmdup, binsize=binsize,\
+        self.covs_avg = [CoverageSet('cov_avg' + str(i), region_giver.regionset) for i in range(2)]
+        """
+        for i in range(signal_statics['dim'][0]):
+            self.covs.append([])
+            self.covs_avg.append(CoverageSet('cov_avg' + str(i), region_giver.valid_regionset))
+            for j in range(signal_statics['dim'][1]):
+                self.covs[i].append(CoverageSet('file_' + str(i)+'_'+str(j), region_giver.valid_regionset))
+                self.covs[i][j].coverage_from_bam(bam_file=signal_statics['data'][i][j]['fname'], extension_size=signal_statics['data'][i][j]['extension_size'], rmdup=rmdup, binsize=binsize,\
                                 stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
-            self.input_avg = [CoverageSet('input_avg'  + str(i), region_giver.regionset) for i in range(2)]
+
+        if inputs_statics:
+            self.inputs_covs = []
+            self.inputs_covs_avg = []
+
+            for i in range(inputs_statics['dim'][0]):
+                self.inputs_covs.append([])
+                self.inputs_covs_avg.append(CoverageSet('inputs_cov_avg' + str(i), region_giver.valid_regionset))
+                for j in range(inputs_statics['dim'][1]):
+                    self.inputs_covs[i].append(CoverageSet('file_' + str(i) + '_' + str(j), region_giver.valid_regionset))
+                    self.inputs_covs[i][j].coverage_from_bam(bam_file=inputs_statics['data'][i][j]['fname'],extension_size=inputs_statics['data'][i][j]['extension_size'],
+                                                      rmdup=rmdup, binsize=binsize, stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info=strand_cov)
         else:
-            self.inputs = []
-            
+            self.inputs_covs = []
+        """
         if norm_regionset:
             self.norm_regions = [CoverageSet('norm_region' + str(i), norm_regionset) for i in range(dim)]
             for i, c in enumerate(self.norm_regions):
@@ -70,7 +87,7 @@ class MultiCoverageSet(DualCoverageSet):
             self.input_avg = [CoverageSet('input_avg'  + str(i), region_giver.regionset) for i in range(2)]
         else:
             self.norm_regions = None
-
+        """
 
     def _get_covs(self, DCS, i):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
@@ -79,17 +96,15 @@ class MultiCoverageSet(DualCoverageSet):
     
         return cov1, cov2
     
-    def _compute_gc_content(self, no_gc_content, path_inputs, stepsize, binsize, genome_path, name, region_giver):
-        """Compute GC-content"""
-        if not no_gc_content and path_inputs and self.gc_content_cov is None:
+    def _compute_gc_content(self, no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver):
+        """Compute GC-content, please pay attension to dimension changes!!!"""
+        if not no_gc_content and inputs_statics and self.gc_content_cov is None:
             print("Compute GC-content", file=sys.stderr)
             for i, cov in enumerate(self.covs):
-                inputfile = self.inputs[i] #1 to 1 mapping between input and cov
-                rep = i if i < self.dim_1 else i-self.dim_1
-                sig = 1 if i < self.dim_1 else 2
-                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputfile.coverage, region_giver.get_chrom_dict())
+                inputs_cov = self.inputs_covs[i] #1 to 1 mapping between input and cov
+                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputs_cov.coverage, region_giver.get_chrom_dict())
                 self._norm_gc_content(cov.coverage, self.gc_content_cov, self.avg_gc_content)
-                self._norm_gc_content(inputfile.coverage, self.gc_content_cov, self.avg_gc_content)
+                self._norm_gc_content(inputs_cov.coverage, self.gc_content_cov, self.avg_gc_content)
             
                 #if VERBOSE:
                 #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
@@ -97,11 +112,12 @@ class MultiCoverageSet(DualCoverageSet):
         
     
     def _output_input_bw(self, name, chrom_sizes, save_wig):
+        """print inputs bw"""
         for i in range(len(self.covs)):
             rep = i if i < self.dim_1 else i-self.dim_1
             sig = 1 if i < self.dim_1 else 2
-            if self.inputs:
-                self.inputs[i].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
+            if self.inputs_covs:
+                self.inputs_covs[i].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
     
     def _output_bw(self, name, chrom_sizes, save_wig, save_input):
         """Output bigwig files"""
@@ -126,9 +142,9 @@ class MultiCoverageSet(DualCoverageSet):
         
         self.covs_avg = None
         self.input_avg = None
-        if self.inputs:
+        if self.inputs_covs:
             for i in range(len(self.covs)):
-                self.inputs[i] = None #last time that we need this information, delete it
+                self.inputs_covs[i] = None #last time that we need this information, delete it
         gc.collect()
         
     
@@ -175,10 +191,10 @@ class MultiCoverageSet(DualCoverageSet):
             return [np.matrix(tmp[0]), np.matrix(tmp[1])]
     
     def count_positive_signal(self):
-        return np.sum([self.covs[i].coverage for i in range(self.dim_1 + self.dim_2)])
+        return np.sum([self.covs[i][j].coverage for j in range(self.dim[1]) for i in range(self.dim[0])])
     
-    def __init__(self, name, dims, region_giver, genome_path, binsize, stepsize, norm_regionset, \
-                 verbose, debug, no_gc_content, rmdup, path_bamfiles, exts, path_inputs, exts_inputs, \
+    def __init__(self, name, region_giver, genome_path, binsize, stepsize, norm_regionset, \
+                 verbose, debug, no_gc_content, rmdup, signal_statics, inputs_statics, \
                  factors_inputs, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
                  folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95, ignored_regions=None):
@@ -189,21 +205,18 @@ class MultiCoverageSet(DualCoverageSet):
         chrom_sizes = region_giver.chrom_sizes_file
         chrom_sizes_dict = region_giver.get_chrom_dict()
         """
-
-        self.genomicRegions = region_giver.regionset
+        self.region_giver = region_giver
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
-        self.dim_1, self.dim_2 = dims
-        self.exts = exts
-        self.exts_inputs = exts_inputs
+        self.dim = signal_statics['dim']
         self.gc_content_cov = gc_content_cov
         self.avg_gc_content = avg_gc_content
         self.gc_hist = gc_hist
         self.scaling_factors_ip = scaling_factors_ip
         self.factors_inputs = factors_inputs
         self.end = end
-        self.counter = counter
+        self.counter = counter # use of counter ???
         self.no_data = False
         self.FOLDER_REPORT = folder_report
 
@@ -211,19 +224,20 @@ class MultiCoverageSet(DualCoverageSet):
         configuration.VERBOSE = verbose
         
         #make data nice
-        self._help_init(path_bamfiles, exts, rmdup, binsize, stepsize, path_inputs, exts_inputs, sum(dims),region_giver, norm_regionset, strand_cov = strand_cov)
+        self._help_init(signal_statics, inputs_statics,region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov = strand_cov)
         if self.count_positive_signal() < 1:
             self.no_data = True
             return None
-        self._compute_gc_content(no_gc_content, path_inputs, stepsize, binsize, genome_path, name, region_giver)
-        self._normalization_by_input(path_bamfiles, path_inputs, name, factors_inputs, save_input)
+        self._compute_gc_content(no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver)
+        self._normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
         if save_input:
             self._output_input_bw(name, region_giver.chrom, save_wig)
             
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
-        
-        self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report,
-                                      m_threshold, a_threshold)
+
+        # much complex, so we decay to change it
+        #self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report,
+        #                              m_threshold, a_threshold)
         ## After this step, we have already normalized data, so we could output normalization data
 
         if output_bw:
@@ -242,7 +256,7 @@ class MultiCoverageSet(DualCoverageSet):
             for i in range(self.overall_coverage[j].shape[1]):
                 print(self.overall_coverage[j][:,i].T, file=f)
     
-    def _normalization_by_input(self, path_bamfiles, path_inputs, name, factors_inputs, save_input):
+    def _normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs, save_input):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         
         if configuration.VERBOSE:
@@ -251,12 +265,15 @@ class MultiCoverageSet(DualCoverageSet):
         if factors_inputs:
             if configuration.VERBOSE:
                 print("Use with predefined factors", file=sys.stderr)
-            for i in range(len(path_bamfiles)):
-                self.inputs[i].scale(factors_inputs[i])
-                self.covs[i].subtract(self.inputs[i])
-        elif path_inputs:
+            for i in range(signal_statics['dim'][0]):
+                for j in range(signal_statics['dim'][1]):
+                    self.inputs_covs[i][j].scale(factors_inputs[i][i])
+                    self.covs[i][j].subtract(self.inputs_covs[i][j])
+        elif inputs_statics:
             factors_inputs = []
             print("Compute factors", file=sys.stderr)
+
+            """  
             for i in range(len(path_bamfiles)):
                 rep = i if i < self.dim_1 else i-self.dim_1
                 sig = 0 if i < self.dim_1 else 1
@@ -266,11 +283,25 @@ class MultiCoverageSet(DualCoverageSet):
                 if n is not None:
                     print("Normalize input of Signal %s, Rep %s with factor %s"\
                            %(sig, rep, round(n, configuration.ROUND_PRECISION)) , file=sys.stderr)
-                    self.inputs[i].scale(n)
+                    self.inputs_covs[i].scale(n)
                     ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
-                    self.covs[i].subtract(self.inputs[i])
+                    self.covs[i].subtract(self.inputs_covs[i])
                     factors_inputs.append(n)
-        
+            """
+            for i in range(signal_statics['dim'][0]):
+                factors_inputs.append([])
+                for j in range(signal_statics['dim'][1]):
+                    _, n = get_normalization_factor(signal_statics['data'][i][j]['fname'], inputs_statics['data'][i][j]['fname'], step_width=1000, zero_counts=0, \
+                                                    filename=name + '-norm' + str(i), debug=configuration.DEBUG,
+                                                    chrom_sizes_dict=self.region_giver.get_chrom_dict(), two_sample=False, stop=True)
+                if n:
+                    print("Normalize input of Signal %s, Rep %s with factor %s" \
+                          % (i, j, round(n, configuration.ROUND_PRECISION)), file=sys.stderr)
+                    self.inputs_covs[i][j].scale(n)
+                    ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
+                    self.covs[i][j].subtract(self.inputs_covs[i][j])
+                    factors_inputs[i].append(n)
+
         self.factors_inputs = factors_inputs
         
                     
@@ -356,9 +387,9 @@ class MultiCoverageSet(DualCoverageSet):
             self.covs[i].scale(scaling_factors_ip[i]) 
         
         if scaling_factors_ip:
-            for j, cond in enumerate([self.dim_1, self.dim_2]):
+            for j, cond in enumerate([self.dim[0], self.dim[1]]):
                 for i in range(cond): #normalize all replicates
-                    k = i if j == 0 else i+self.dim_1
+                    k = i if j == 0 else i+self.dim[0]
                     self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
                     if configuration.DEBUG:
                         print('Use scaling factor %s' %round(scaling_factors_ip[k], configuration.ROUND_PRECISION), file=sys.stderr)
@@ -428,7 +459,7 @@ class MultiCoverageSet(DualCoverageSet):
         except:
             self.indices_of_interest = None
 
-         
+
     def write_test_samples(self, name, l):
         f = open(name, 'w')
         

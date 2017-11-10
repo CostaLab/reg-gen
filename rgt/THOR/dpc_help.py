@@ -22,6 +22,7 @@ from operator import add
 from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
+import shutil
 
 # Internal
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
@@ -398,8 +399,7 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(name, dims, genome_path, region_giver, stepsize, binsize, bamfiles, exts, \
-               inputs, exts_inputs, factors_inputs, verbose, no_gc_content, \
+def initialize(name, genome_path, region_giver, stepsize, binsize, signal_statics, inputs_statics, factors_inputs, verbose, no_gc_content, \
                tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
                test, report, counter, end, gc_content_cov=None, avg_gc_content=None, \
                gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
@@ -415,11 +415,8 @@ def initialize(name, dims, genome_path, region_giver, stepsize, binsize, bamfile
     else:
         norm_regionset = None
 
-    signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes = compute_extension_sizes(bamfiles, exts, inputs, exts_inputs, report)
-
-    multi_cov_set = MultiCoverageSet(name=name, region_giver=region_giver, dims=dims, genome_path=genome_path,
-                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, path_bamfiles=bamfiles,
-                                     path_inputs=inputs, exts=signal_extension_sizes, exts_inputs=inputs_extension_sizes,
+    multi_cov_set = MultiCoverageSet(name=name, region_giver=region_giver, genome_path=genome_path,
+                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics,inputs_statics=inputs_statics,
                                      factors_inputs=factors_inputs,  verbose=verbose,
                                      no_gc_content=no_gc_content, debug=debug,
                                      norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip,
@@ -592,8 +589,9 @@ def handle_input():
         options.outputdir = npath(options.outputdir)
         if isdir(options.outputdir) and sum(
                 map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
-            parser.error("Output directory exists and contains files with names starting with your chosen experiment "
-                         "name! Do nothing to prevent file overwriting!")
+            shutil.rmtree(options.outputdir)
+            #parser.error("Output directory exists and contains files with names starting with your chosen experiment "
+            #             "name! Do nothing to prevent file overwriting!")
         if not exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:

@@ -13,7 +13,7 @@ import numpy as np
 from rgt.THOR.RegionGiver import RegionGiver
 
 
-def get_read_statistics(fname, chrom_fname):
+def get_read_statistics(fname, chroms):
     """ return how many chromosomes are in each files and how many reads are correspondes to each file
     it should return a dictionary, mapped information
     use pysam 0.12. there is function,
@@ -27,7 +27,6 @@ def get_read_statistics(fname, chrom_fname):
     stats_string = pysam.idxstats(fname)  # return in a string form and each info (chrom_name, total_length, mapped, unmapped) separated by '\n'
     stats_tmp = stats_string.split('\n')  # separate each info
     # using stats, we initialize the distribution of sample data, all we use is read_mapped data
-    chroms = RegionGiver(chrom_fname).get_chrom_dict().keys()
     # change stats into dictionary list with only chromosome in chroms
     stats_total = [] # whole information in file including 0 reads
 
@@ -60,18 +59,17 @@ def get_read_statistics(fname, chrom_fname):
 
 def get_file_statistics(fnames, chrom_fname):
     """ get read statistical data for a file list, return a dictionary for each file"""
-
-
     if isinstance(fnames[0], list):
         file_dimension = (len(fnames), len(fnames[0]))
     else:
         file_dimension = len(fnames)
 
     statics = []
+    chroms = RegionGiver(chrom_fname).get_chrom_dict().keys()
     for i in range(file_dimension[0]):
         statics.append([])
         for j in range(file_dimension[1]):
-            stats_total, stats_data, isspatial = get_read_statistics(fnames[i][j], chrom_fname)
+            stats_total, stats_data, isspatial = get_read_statistics(fnames[i][j], chroms)
             statics[i].append({'fname':fnames[i][j], 'stats_total':stats_total,'stats_data':stats_data, 'isspatial':isspatial})
     # we could get different stats_data and we need to unify them...
     return {'data':statics, 'dim':file_dimension}
@@ -171,7 +169,7 @@ def get_extension_size(fname, stats_data, start=0, end=600, stepsize=3):
         return None, None, None
 
 
-def compute_extension_sizes(signal_statics, inputs_statics, report):
+def compute_extension_sizes(signal_statics, inputs_statics, report=True):
     """Compute Extension sizes for bamfiles and input files
     Argument: signal_files are in a list format are: [[sample1_file1, sample1_file2], [sample2_file1, sample2_file2]]
           inputs_files are in the same format
@@ -198,12 +196,12 @@ def compute_extension_sizes(signal_statics, inputs_statics, report):
         for i in range(file_dimension[0]):
             for j in range(file_dimension[1]):
 
-                read_size, e, ext_data = get_extension_size(signal_statics[i][j]['data']['fname'], signal_statics[i][j]['data']['stats_data'],  start=start, end=end, stepsize=ext_stepsize)
+                read_size, e, ext_data = get_extension_size(signal_statics['data'][i][j]['fname'], signal_statics['data'][i][j]['stats_data'],  start=start, end=end, stepsize=ext_stepsize)
                 read_sizes[i][j] = read_size
                 signal_extension_sizes[i][j] = e
                 ext_data_list.append(ext_data)
-                signal_statics['data']['read_size'] = read_size
-                signal_statics['data']['extension_size'] = e
+                signal_statics['data'][i][j]['read_size'] = read_size
+                signal_statics['data'][i][j]['extension_size'] = e
 
     if inputs_statics:
 
@@ -213,7 +211,7 @@ def compute_extension_sizes(signal_statics, inputs_statics, report):
         for i in range(file_dimension[0]):
             for j in range(file_dimension[1]):
 
-                read_size, ie, scores = get_extension_size(inputs_statics[i][j]['data']['fname'], inputs_statics[i][j]['data']['fname'], start=start, end=end, stepsize=ext_stepsize)
+                read_size, ie, scores = get_extension_size(inputs_statics['data'][i][j]['fname'], inputs_statics['data'][i][j]['stats_data'], start=start, end=end, stepsize=ext_stepsize)
                 inputs_extension_sizes[i][j] = ie
                 inputs_read_sizes[i][j] = read_size
 
@@ -222,8 +220,8 @@ def compute_extension_sizes(signal_statics, inputs_statics, report):
                     inputs_extension_sizes[i][j] = np.mean(signal_extension_sizes[i] + read_sizes[i]) - \
                                                    inputs_read_sizes[i][j]
                     print('adjust input extension size')
-                inputs_statics['data']['read_size'] = read_size
-                inputs_statics['data']['extension_size'] = inputs_extension_sizes[i][j]
+                inputs_statics['data'][i][j]['read_size'] = read_size
+                inputs_statics['data'][i][j]['extension_size'] = inputs_extension_sizes[i][j]
         """
         for i in range(file_dimension[0]):
             for j in range(file_dimension[1]): 
@@ -233,10 +231,22 @@ def compute_extension_sizes(signal_statics, inputs_statics, report):
                                                    inputs_read_sizes[i][j]
         """
     if report and ext_data_list:
-        print(ext_data_list, signal_files)
+        print(ext_data_list, signal_extension_sizes)
 
     # when data is in same format, we choose to use np.array to save it
     return signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes
+
+
+def update_statics_extension_sizes(statics, exts_list):
+    """update extension sizes for statics data from given 1-D list"""
+    if exts_list:
+        for i in range(statics['dim'][0]):
+            for j in range(statics['dim'][1]):
+                statics['data'][i][j]['extension_size'] = exts_list[i*statics['dim'][1] + j]
+
+
+def get_bamfiles(statics):
+    pass
 
 
 if __name__ == "__main__":

@@ -36,7 +36,7 @@ from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
 import configuration
-from get_statistics import get_file_statistics
+from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes
 # External
 
 
@@ -57,7 +57,7 @@ def _write_info(tracker, report, **data):
         tracker.make_html(configuration.FOLDER_REPORT)
 
 
-def train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker):
+def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker):
     """Train HMM
     Firstly, we get training set: exp_data, and then estimate parameter
     get training data: we need to consider all file data;
@@ -73,9 +73,8 @@ def train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker):
     #while True:
         #train_regions = region_giver.get_training_regionset()
         # print(train_regions.sequences)
-    exp_data = initialize(name=options.name, dims=dims, genome_path=genome, region_giver=region_giver,
-                          stepsize=options.stepsize, binsize=options.binsize, bamfiles=bamfiles,
-                          exts=options.exts, inputs=inputs, exts_inputs=options.exts_inputs,
+    exp_data = initialize(name=options.name, genome_path=genome, region_giver=region_giver,
+                          stepsize=options.stepsize, binsize=options.binsize, signal_statics=signal_statics,inputs_statics=inputs_statics,
                           debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
                           factors_inputs=options.factors_inputs, tracker=tracker, norm_regions=options.norm_regions,
                           scaling_factors_ip=options.scaling_factors_ip, save_wig=options.save_wig,
@@ -97,7 +96,7 @@ def train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker):
     training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange,
                                                          options.threshold, options.size_ts, 3)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
-    m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=dims[0], dim_cond_2=dims[1], func=func)
+    m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
     training_set_obs = exp_data.get_observation(training_set)
      
     print('Train HMM', file=sys.stderr)
@@ -107,7 +106,7 @@ def train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker):
     return m, exp_data, func_para, init_mu, init_alpha, distr
 
 
-def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, tracker, exp_data, m, distr):
+def run_HMM(region_giver, options, signal_statics,  inputs_statics, genome, tracker, exp_data, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
     output, pvalues, ratios, no_bw_files = [], [], [], []
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
@@ -116,16 +115,14 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
         end = True if i == len(region_giver) - 1 else False
         print("- taking into account %s" % r.sequences[0].chrom, file=sys.stderr)
         
-        exp_data = initialize(name=options.name, dims=dims, genome_path=genome, regions=r,
+        exp_data = initialize(name=options.name, genome_path=genome, regions=r,
                               stepsize=options.stepsize, binsize=options.binsize,
-                              bamfiles=bamfiles, exts=exp_data.exts, inputs=inputs,
-                              exts_inputs=exp_data.exts_inputs, debug=options.debug,
+                              signal_statics=signal_statics, inputs_statics=None, debug=options.debug,
                               verbose=False, no_gc_content=options.no_gc_content,
-                              factors_inputs=exp_data.factors_inputs, chrom_sizes=chrom_sizes,
+                              factors_inputs=exp_data.factors_inputs,
                               tracker=tracker, norm_regions=options.norm_regions,
                               scaling_factors_ip=exp_data.scaling_factors_ip, save_wig=options.save_wig,
-                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=False,
-                              chrom_sizes_dict=region_giver.get_chrom_dict(), gc_content_cov=exp_data.gc_content_cov,
+                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=False, gc_content_cov=exp_data.gc_content_cov,
                               avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist,
                               end=end, counter=i, m_threshold=options.m_threshold, a_threshold=options.a_threshold,
                               rmdup=options.rmdup)
@@ -157,7 +154,7 @@ def run_HMM(region_giver, options, bamfiles, genome, chrom_sizes, dims, inputs, 
     _output_BED(options.name, res_output, res_pvalues, res_filter_pass)
     _output_narrowPeak(options.name, res_output, res_pvalues, res_filter_pass)
     
-    merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes)
+    merge_output(signal_statics,  options, no_bw_files, region_giver.chrom_sizes_file)
 
 
 def main():
@@ -172,16 +169,20 @@ def main():
     signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
     region_giver.update_regions(signal_statics)
 
+    inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
 
     # compute extension size if option.ext are not given
-
+    if options.exts:
+        update_statics_extension_sizes(signal_statics, options.exts)
+    else:
+        compute_extension_sizes(signal_statics, inputs_statics)
 
     # pass stats_total, stats_data, extension sizes to train_HMM
-    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker)
+    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 
     # we need to change region_giver and update the valid_regions
-    run_HMM(region_giver, options, bamfiles, genome, dims, inputs, tracker, exp_data, m, distr)
+    run_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker, exp_data, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
 
