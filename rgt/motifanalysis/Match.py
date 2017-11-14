@@ -320,14 +320,15 @@ def main_matching():
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
             grs = GenomicRegionSet("tmp")
-
-            for motif in motif_list:
-                match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=grs)
+            # for motif in motif_list:
+            #     match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=grs)
 
             # TODO: measure and document speed/memory improvements, if any.
-            # grs = match_multiple(motif_list, sequence, genomic_region)
+            grs = match_multiple(motif_list, sequence, genomic_region)
 
             grs.write(output_bed_file, mode="a")
+
+            del grs.sequences[:]
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
