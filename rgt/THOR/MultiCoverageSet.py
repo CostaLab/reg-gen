@@ -25,7 +25,7 @@ import sys
 import gc
 from random import sample
 import numpy as np
-from normalize import get_normalization_factor
+from normalize import get_normalization_factor_by_cov, get_norm_TMM_factor
 from DualCoverageSet import DualCoverageSet
 from norm_genelevel import norm_gene_level
 from rgt.CoverageSet import CoverageSet, get_gc_context
@@ -45,30 +45,17 @@ class MultiCoverageSet(DualCoverageSet):
         # here we make covs into 2-D list
         self.covs = []
         self.covs_avg = []
-        """
-        for i, c in enumerate(self.covs):
-            # c.get_statistics(path_bamfiles[i]) do statistics on the data in one bamfile, and return it
-            # according to statistics, we decide if we continue later process
-            # e.g. only one chromosome in data, then we process it directly, get samples from it and do peak-calling in it
-            # if there are many chromosomes, we get samples according to these data and do peak-calling later.
-            # c.statistics = c.get_statistics(path_bamfiles[i])
-            # to make sure mask_file or mask_regions
-            c.coverage_from_bam(bam_file=path_bamfiles[i], extension_size=exts[i], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
-        self.covs_avg = [CoverageSet('cov_avg' + str(i), region_giver.regionset) for i in range(2)]
-        """
         for i in range(signal_statics['dim'][0]):
             self.covs.append([])
             self.covs_avg.append(CoverageSet('cov_avg' + str(i), region_giver.valid_regionset))
             for j in range(signal_statics['dim'][1]):
                 self.covs[i].append(CoverageSet('file_' + str(i)+'_'+str(j), region_giver.valid_regionset))
                 self.covs[i][j].coverage_from_bam(bam_file=signal_statics['data'][i][j]['fname'], extension_size=signal_statics['data'][i][j]['extension_size'], rmdup=rmdup, binsize=binsize,\
-                                stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info = strand_cov)
+                                stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info=strand_cov)
 
         if inputs_statics:
             self.inputs_covs = []
             self.inputs_covs_avg = []
-
             for i in range(inputs_statics['dim'][0]):
                 self.inputs_covs.append([])
                 self.inputs_covs_avg.append(CoverageSet('inputs_cov_avg' + str(i), region_giver.valid_regionset))
@@ -93,39 +80,37 @@ class MultiCoverageSet(DualCoverageSet):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
         cov1 = int(np.mean(DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]))
         cov2 = int(np.mean(DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]))
-    
+
         return cov1, cov2
     
     def _compute_gc_content(self, no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver):
         """Compute GC-content, please pay attension to dimension changes!!!"""
         if not no_gc_content and inputs_statics and self.gc_content_cov is None:
             print("Compute GC-content", file=sys.stderr)
-            for i, cov in enumerate(self.covs):
-                inputs_cov = self.inputs_covs[i] #1 to 1 mapping between input and cov
-                self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputs_cov.coverage, region_giver.get_chrom_dict())
-                self._norm_gc_content(cov.coverage, self.gc_content_cov, self.avg_gc_content)
-                self._norm_gc_content(inputs_cov.coverage, self.gc_content_cov, self.avg_gc_content)
-            
+            for i in range(self.dim[0]):
+                for j in range(self.dim[1]):
+                    inputs_cov = self.inputs_covs[i][j] #1 to 1 mapping between input and cov
+                    self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputs_cov.coverage, region_giver.valid_chrom_sizes)
+                    self._norm_gc_content(inputs_cov[i][j].coverage, self.gc_content_cov, self.avg_gc_content)
+                    self._norm_gc_content(inputs_cov.coverage, self.gc_content_cov, self.avg_gc_content)
+
                 #if VERBOSE:
                 #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
                 #    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
-        
-    
+
     def _output_input_bw(self, name, chrom_sizes, save_wig):
         """print inputs bw"""
-        for i in range(len(self.covs)):
-            rep = i if i < self.dim_1 else i-self.dim_1
-            sig = 1 if i < self.dim_1 else 2
-            if self.inputs_covs:
-                self.inputs_covs[i].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
-    
+        for sig in range(self.dim[0]):
+            for rep in range(self.dim[1]):
+                if self.inputs_covs:
+                    self.inputs_covs[sig][rep].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
+
     def _output_bw(self, name, chrom_sizes, save_wig, save_input):
         """Output bigwig files"""
-        for i in range(len(self.covs)):
-            rep = i if i < self.dim_1 else i-self.dim_1
-            sig = 1 if i < self.dim_1 else 2
+        for sig in range(self.dim[0]):
+            for rep in range(self.dim[1]):
             
-            self.covs[i].write_bigwig(name + '-' + str(self.counter) + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
+                self.covs[sig][rep].write_bigwig(name + '-' + str(self.counter) + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
         
         #ra = [self.covs_avg, self.input_avg] if self.inputs else [self.covs_avg]
         #for k, d in enumerate(ra):
@@ -146,8 +131,7 @@ class MultiCoverageSet(DualCoverageSet):
             for i in range(len(self.covs)):
                 self.inputs_covs[i] = None #last time that we need this information, delete it
         gc.collect()
-        
-    
+
     def _help_get_data(self, i, type):
         if type != 'normregion':
             for j in range(len(self.covs[i].genomicRegions)):
@@ -161,36 +145,25 @@ class MultiCoverageSet(DualCoverageSet):
     
     def _help_init_overall_coverage(self, cov_strand=True):
         """Convert coverage data (and optionally strand data) to matrix list"""
-        
-        tmp = [[], []]
-        tmp2 = [[[], []], [[], []]]
-        
-        for k in range(2):
-            it = range(self.dim_1) if k == 0 else range(self.dim_1, self.dim_1 + self.dim_2)
-            for i in it:
-                if cov_strand:
-                    tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'cov'))
-                    ## tmp_el is data for one bamfiles, then combine into all for one condition.
-                    tmp[k].append(tmp_el)
-                 
-                    tmp_el = map(lambda x: (x[0], x[1]), reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'strand')))
-                    tmp2[k][0].append(map(lambda x: x[0], tmp_el))
-                    tmp2[k][1].append(map(lambda x: x[1], tmp_el))
-                else:
-                    tmp_el = reduce(lambda x,y: np.concatenate((x,y)), self._help_get_data(i, 'normregion'))
-                    tmp[k].append(tmp_el)
-
+        # overall_coverage format are [[coverage_0_0 , coverage_0_1 ], [ coverage_1_0, coverag_1_1 ]]
+        overall_coverage = []
+        for i in range(self.dim[0]):
+            overall_coverage.append([])
+            for j in range(self.dim[1]):
+                overall_coverage[i].append(self.covs[i][j].overall_cov)
         if cov_strand:
-            #1. or 2. signal -> pos/neg strand -> matrix with rep x bins
-            overall_coverage_strand = [[np.matrix(tmp2[0][0]), np.matrix(tmp2[0][1])], [np.matrix(tmp2[1][0]), np.matrix(tmp2[0][1])]]
-            #list of matrices: #replicates (row) x #bins (columns)
-            overall_coverage = [np.matrix(tmp[0]), np.matrix(tmp[1])]
-            # overall_coverage combines two conditions together.
-            return overall_coverage, overall_coverage_strand
+            overall_coverage_strand = []
+            for i in range(self.dim[0]):
+                overall_coverage_strand.append([])
+                for j in range(self.dim[1]):
+                    overall_coverage_strand[i].append(self.covs[i][j].cov_strand_all)
+            return np.asarray(overall_coverage), np.asarray(overall_coverage_strand)
         else:
-            return [np.matrix(tmp[0]), np.matrix(tmp[1])]
-    
+            return np.asarray(overall_coverage)
+
     def count_positive_signal(self):
+        """get num of all read in coverage; to judge the data validation, if it's too small then we dispose it for training,
+        maybe we don't need it; if wa can be sure that training samples are over it, from statistics data!!!"""
         return np.sum([self.covs[i][j].coverage for j in range(self.dim[1]) for i in range(self.dim[0])])
     
     def __init__(self, name, region_giver, genome_path, binsize, stepsize, norm_regionset, \
@@ -206,6 +179,8 @@ class MultiCoverageSet(DualCoverageSet):
         chrom_sizes_dict = region_giver.get_chrom_dict()
         """
         self.region_giver = region_giver
+        binsize = 1000
+        stepsize = 500
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
@@ -224,10 +199,12 @@ class MultiCoverageSet(DualCoverageSet):
         configuration.VERBOSE = verbose
         
         #make data nice
-        self._help_init(signal_statics, inputs_statics,region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov = strand_cov)
-        if self.count_positive_signal() < 1:
-            self.no_data = True
-            return None
+        # we can put help_init codes here and for compute_gc_content or normalization we see it as a process and do it outside the class
+        # This is only data; MCV model
+        self._help_init(signal_statics, inputs_statics,region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov=strand_cov)
+        #if self.count_positive_signal() < 1:
+        #    self.no_data = True
+        #    return None
         self._compute_gc_content(no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver)
         self._normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
         if save_input:
@@ -236,18 +213,21 @@ class MultiCoverageSet(DualCoverageSet):
         self.overall_coverage, self.overall_coverage_strand = self._help_init_overall_coverage(cov_strand=True)
 
         # much complex, so we decay to change it
-        #self._normalization_by_signal(name, scaling_factors_ip, path_bamfiles, housekeeping_genes, tracker, norm_regionset, report,
-        #                              m_threshold, a_threshold)
-        ## After this step, we have already normalized data, so we could output normalization data
+        self._normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
+                                      m_threshold, a_threshold)
 
+        ## After this step, we have already normalized data, so we could output normalization data
         if output_bw:
             self._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
-        
-        self.scores = np.zeros(len(self.overall_coverage[0]))
+
+        self.scores = np.zeros(len(self.covs[0][0].overall_cov))
+        # this step we could use sparse matrix, it shows automatically the indices of non-zeros bins
+        # but one thing is indices_of_interest needs more processes;
         self.indices_of_interest = []
     
     def get_max_colsum(self):
         """Sum over all columns and add maximum"""
+        # how to change it to self.cov ???
         return self.overall_coverage[0].sum(axis=0).max() + self.overall_coverage[1].sum(axis=0).max()
     
     def output_overall_coverage(self, path):
@@ -267,138 +247,59 @@ class MultiCoverageSet(DualCoverageSet):
                 print("Use with predefined factors", file=sys.stderr)
             for i in range(signal_statics['dim'][0]):
                 for j in range(signal_statics['dim'][1]):
-                    self.inputs_covs[i][j].scale(factors_inputs[i][i])
+                    self.inputs_covs[i][j].scale(factors_inputs[i][j])
                     self.covs[i][j].subtract(self.inputs_covs[i][j])
         elif inputs_statics:
             factors_inputs = []
             print("Compute factors", file=sys.stderr)
 
-            """  
-            for i in range(len(path_bamfiles)):
-                rep = i if i < self.dim_1 else i-self.dim_1
-                sig = 0 if i < self.dim_1 else 1
-                j = 0 if i < self.dim_1 else 1
-                _, n = get_normalization_factor(path_bamfiles[i], path_inputs[i], step_width=1000, zero_counts=0, \
-                                                filename=name + '-norm' + str(i), debug=configuration.DEBUG, chrom_sizes_dict=self.chrom_sizes_dict, two_sample=False, stop=True)
-                if n is not None:
-                    print("Normalize input of Signal %s, Rep %s with factor %s"\
-                           %(sig, rep, round(n, configuration.ROUND_PRECISION)) , file=sys.stderr)
-                    self.inputs_covs[i].scale(n)
-                    ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
-                    self.covs[i].subtract(self.inputs_covs[i])
-                    factors_inputs.append(n)
-            """
             for i in range(signal_statics['dim'][0]):
                 factors_inputs.append([])
                 for j in range(signal_statics['dim'][1]):
-                    _, n = get_normalization_factor(signal_statics['data'][i][j]['fname'], inputs_statics['data'][i][j]['fname'], step_width=1000, zero_counts=0, \
-                                                    filename=name + '-norm' + str(i), debug=configuration.DEBUG,
-                                                    chrom_sizes_dict=self.region_giver.get_chrom_dict(), two_sample=False, stop=True)
-                if n:
-                    print("Normalize input of Signal %s, Rep %s with factor %s" \
-                          % (i, j, round(n, configuration.ROUND_PRECISION)), file=sys.stderr)
-                    self.inputs_covs[i][j].scale(n)
-                    ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
-                    self.covs[i][j].subtract(self.inputs_covs[i][j])
-                    factors_inputs[i].append(n)
+                # get_normalization_factor is 1-to-1 so, we use only covs, step_times is the times of original coverage bin size
+                    _, factor = get_normalization_factor_by_cov(self.covs[i][j], self.inputs_covs[i][j], step_times=3, zero_counts=0, \
+                                                    filename=name + '-norm' + str(i), debug=configuration.DEBUG,two_samples=False)
+                    if factor:
+                        print("Normalize input of Signal %s, Rep %s with factor %s" \
+                              % (i, j, round(factor, configuration.ROUND_PRECISION)), file=sys.stderr)
+                        self.inputs_covs[i][j].scale(factor)
+                        ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
+                        self.covs[i][j].subtract(self.inputs_covs[i][j])
+                        factors_inputs[i].append(factor)
 
         self.factors_inputs = factors_inputs
-        
-                    
-    def _trim4TMM(self, m_values, a_values, m_threshold=80, a_threshold=95):
-        """q=20 or q=5"""
-        assert len(m_values) == len(a_values)
-        # np.isinf return an array to test if infinite, only two columns are not infinite we return False, after not x, we get True
-        # mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
-        # but after last step, we have make sure that there is no zeros, and no infinity, then we don't need the step to filter it.
-        # m_values = m_values[mask]
-        # a_values = a_values[mask]
-        
-        perc_m_l = np.percentile(m_values, 100-m_threshold)
-        perc_m_h = np.percentile(m_values, m_threshold)
-        perc_a_l = np.percentile(a_values, 100-a_threshold)
-        perc_a_h = np.percentile(a_values, a_threshold)
-        
-        try:
-            res = filter(lambda x: not(x[0]>perc_m_h or x[0]<perc_m_l),\
-                     filter(lambda x: not(x[1]>perc_a_h or x[1]<perc_a_l), zip(list(m_values.squeeze()),list(a_values.squeeze()))))
-        except:
-            print('something wrong %s %s' %(len(m_values), len(a_values)), file=sys.stderr)
-            return np.asarray(m_values), np.asarray(a_values)
-        
-        if res:
-            return np.asarray(map(lambda x: x[0], res)), np.asarray(map(lambda x: x[1], res))
-        else:
-            print('TMM normalization: nothing trimmed...', file=sys.stderr)
-            return np.asarray(m_values), np.asarray(a_values)
-    
-    def _norm_TMM(self, overall_coverage, m_threshold, a_threshold):
-        """Normalize with TMM approach, based on PePr
-          ref, we use the mean of two samples and compare to it
-          data_rep present the data.. But a
-        """
-        scaling_factors_ip = []
-        # mask_ref filter out columns with zero at least for two samples..
-        mask_ref = np.all(np.all(np.asarray(overall_coverage) > 0, axis=0), axis=0)
-        ref = np.squeeze(np.asarray(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref], axis=0)) / float(self.dim_1 + self.dim_2))
 
-        # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
-        for j, cond_max in enumerate([self.dim_1, self.dim_2]):
-
-            for i in range(cond_max): #normalize all replicates
-                # get the data for each sample under each condition
-                data_rep = np.squeeze(np.asarray(overall_coverage[j][i,mask_ref]))
-                tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 10000)) # sampling data
-                tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
-                data_rep = data_rep[tmp_idx]
-                # calculate m_values and a_values
-                m_values = np.log(tmp_ref / data_rep)
-                a_values = 0.5 * np.log(data_rep * tmp_ref)
-                try: # assume they have a relations and then plot them to get scale factor.
-                    m_values, a_values = self._trim4TMM(m_values, a_values, m_threshold, a_threshold)
-                    f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
-                    scaling_factors_ip.append(f)
-                except:
-                    print('TMM normalization not successfully performed, do not normalize data', file=sys.stderr)
-                    scaling_factors_ip.append(1)
-                
-        return scaling_factors_ip
-    
-    def _normalization_by_signal(self, name, scaling_factors_ip, bamfiles, housekeeping_genes, tracker, norm_regionset, report,
+    def _normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
                                  m_threshold, a_threshold):
         """Normalize signal. comparing data to data"""
         
         if configuration.VERBOSE:
             print('Normalize ChIP-seq profiles', file=sys.stderr)
         
-        if not scaling_factors_ip and housekeeping_genes:
+        if not factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
-            scaling_factors_ip, _ = norm_gene_level(bamfiles, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT, report=report)
-        elif not scaling_factors_ip:
+            factors_ip, _ = norm_gene_level(signal_statics, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT, report=report)
+        elif not factors_ip:
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)
                 norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
-                scaling_factors_ip = self._norm_TMM(norm_regionset_coverage,m_threshold, a_threshold)
+                factors_ip = get_norm_TMM_factor(norm_regionset_coverage,m_threshold, a_threshold)
             else:
                 print('Use global TMM approach ', file=sys.stderr)
-                scaling_factors_ip = self._norm_TMM(self.overall_coverage, m_threshold, a_threshold) #TMM approach
+                factors_ip = get_norm_TMM_factor(self.overall_coverage, m_threshold, a_threshold) #TMM approach
         
-        for i in range(len(scaling_factors_ip)):
-            self.covs[i].scale(scaling_factors_ip[i]) 
-        
-        if scaling_factors_ip:
-            for j, cond in enumerate([self.dim[0], self.dim[1]]):
-                for i in range(cond): #normalize all replicates
-                    k = i if j == 0 else i+self.dim[0]
-                    self.overall_coverage[j][i,:] *= scaling_factors_ip[k]
+        if factors_ip:
+            for i in range(self.dim[0]):
+                for j in range(self.dim[1]):
+                    self.covs[i][j].scale(factors_ip[i][j])
+                    # this is actually one redundant step, if overall_coverage[i][j] from covs[i][j]
+                    # so if we change covs[i][j], it should change..
+                    self.overall_coverage[i][j] *= factors_ip[i][j]
                     if configuration.DEBUG:
-                        print('Use scaling factor %s' %round(scaling_factors_ip[k], configuration.ROUND_PRECISION), file=sys.stderr)
+                        print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
         
-        self.scaling_factors_ip = scaling_factors_ip
-        
-        
-        
-                
+        self.factors_ip = factors_ip
+
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""
         iter = self.genomicRegions.__iter__()

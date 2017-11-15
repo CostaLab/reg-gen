@@ -52,6 +52,7 @@ def get_experimental_matrix(bams, bed):
     
     return m
 
+
 def get_factor_matrix(d, colnames, folder, samples, verbose, report):
     """Give matrix describing factors between genes. Idealy, factors in a column should be approx. the same."""
     res = []
@@ -101,6 +102,7 @@ def get_factor_matrix(d, colnames, folder, samples, verbose, report):
     if report:
         f_gene.close()
         f_sample.close()
+
      
 def output_R_file(name, res, colnames):
     """"Write R code to file to check whether genes give same signal among the samples"""
@@ -120,7 +122,6 @@ def output_R_file(name, res, colnames):
     print('barplot(d, beside = TRUE, names.arg = names, las=2, main="Housekeeping Genes Ratio", ylab="Signal")', file=f)
     
 
-
 def get_factors(data):
     #normalize: increase values to highest value
     d = deepcopy(data)  
@@ -130,6 +131,7 @@ def get_factors(data):
             d[i,j] = colmax[:,j][0,0]/d[i,j]
     
     return list(np.array(np.mean(d, axis=1)).reshape(-1))
+
 
 def norm_gene_level(bams, bed, name, verbose, folder, report):
     """Normalize bam files on a gene level. Give out list of normalization factors."""
@@ -168,7 +170,8 @@ def norm_gene_level(bams, bed, name, verbose, folder, report):
     
     #print("factors")
     return get_factors(d), samples
-    
+
+
 def output(input, bed):
     factors, samples = norm_gene_level(input, bed, 'testname', True)
     

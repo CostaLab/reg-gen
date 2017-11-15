@@ -24,7 +24,7 @@ from os import path
 from random import sample
 from rgt.CoverageSet import CoverageSet
 from rgt.CoverageSet import get_gc_context
-from normalize import get_normalization_factor
+from normalize import get_normalization_factor_by_cov
 
 EPSILON=1e-320
 
@@ -115,6 +115,7 @@ class DualCoverageSet():
         self.scores = np.zeros(len(self.first_overall_coverage))
         self.indices_of_interest = []
 
+    """
     def normalization(self, map_input, i, norm_strategy, norm_done, name, debug, factor_input_1, factor_input_2,
                       chrom_sizes_dict, tracker):
         input = map_input[i]
@@ -167,16 +168,12 @@ class DualCoverageSet():
         # diaz and naive
         if i != 1 and norm_strategy == 5:
             # apply diaz
-            _, map_input[1]['input_factor'] = get_normalization_factor(map_input[1]['ip'], map_input[1]['input'],
-                                                                       step_width=1000, zero_counts=0, \
-                                                                       filename=name + '-norm' + str(i), debug=debug,
-                                                                       chrom_sizes_dict=chrom_sizes_dict,
-                                                                       two_sample=False)
-            _, map_input[2]['input_factor'] = get_normalization_factor(map_input[2]['ip'], map_input[2]['input'],
-                                                                       step_width=1000, zero_counts=0, \
-                                                                       filename=name + '-norm' + str(i), debug=debug,
-                                                                       chrom_sizes_dict=chrom_sizes_dict,
-                                                                       two_sample=False)
+            _, map_input[1]['input_factor'] = get_normalization_factor_by_cov(map_input[1]['ip'], map_input[1]['input'],
+                                                                        zero_counts=0,filename=name + '-norm' + str(i), debug=debug,
+                                                                       step_times=10,two_sample=False)
+            _, map_input[2]['input_factor'] = get_normalization_factor_by_cov(map_input[2]['ip'], map_input[2]['input'],
+                                                                              zero_counts=0, filename=name + '-norm' + str(i),
+                                                                              debug=debug,step_times=10, two_sample=False)
 
             print("Normalize input with factor %s and %s" % (
             round(map_input[1]['input_factor'], 3), round(map_input[2]['input_factor'], 3)), file=sys.stderr)
@@ -215,7 +212,8 @@ class DualCoverageSet():
                 print("Normalize file 2 by signal with given factor %s " % round(factor_input_2, 3), file=sys.stderr)
                 tracker.write(text=str(round(factor_input_2, 3)), header="Normalization factor of signal 2")
         return norm_done
-
+    
+    """
     def print_gc_hist(self, name, gc_hist):
         f = open(name + '-gc-content.data', 'w')
         for i in range(len(gc_hist)):

@@ -158,9 +158,9 @@ def run_HMM(region_giver, options, signal_statics,  inputs_statics, genome, trac
 
 
 def main():
-    options, bamfiles, genome, chrom_sizes_file, dims, inputs = handle_input()
+    options, bamfiles, genome, chrom_sizes_file, dims, inputs_files = handle_input()
 
-    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes_file, dims, inputs, options, __version__)
+    tracker = Tracker(options.name + '-setup.info', bamfiles, genome, chrom_sizes_file, dims, inputs_files, options, __version__)
     # get statistical data for all files and compare them to create one big files..
     region_giver = RegionGiver(chrom_sizes_file, options.regions)
     # get statistic information for each file
@@ -169,15 +169,23 @@ def main():
     signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
     region_giver.update_regions(signal_statics)
 
-    inputs_statics = None
+    # inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-
+    inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
+    region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
+    # for testing..
+    options.exts = [225,225,225,228]
+    options.inputs_exts = [228,228,231,231]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
+        # less one step how to get inputs size and then give it
+        update_statics_extension_sizes(inputs_statics,options.inputs_exts)
     else:
         compute_extension_sizes(signal_statics, inputs_statics)
-
+    # one function to transform these parameters, after we read and do it into callback function??
+    options.factors_inputs = [[0.727, 0.715], [0.722,0.707]]
+    options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 

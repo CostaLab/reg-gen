@@ -25,12 +25,18 @@ Features must have same length in both input files.
 @author: Manuel Allhoff
 """
 
+## This file could be used to write all normalization methods
+## 1. normalization by inputs
+## 2. normalization by signal files
+### In MultiCoverageSet, only accept the factors and process w.r.t the factors
+
 from __future__ import print_function
 from optparse import OptionParser
-from HTSeq import GenomicPosition, GenomicArray, GenomicInterval
 from math import fabs
-import pysam, sys, operator, os.path
-from itertools import chain
+import sys, operator
+import numpy as np
+from random import sample
+from scipy import sparse
 
 
 class HelpfulOptionParser(OptionParser):
@@ -52,76 +58,6 @@ def _accumulate(iterable):
         yield [total[0], total[1]]
 
 
-def get_feature_len(path):
-    """Return length of reads"""
-    filename, fileextension = os.path.splitext(path)
-
-    if fileextension == '.bed':
-        with open(path, 'r') as f:
-            for line in f:
-                tmp = line.split('\t')
-                return int(tmp[2]) - int(tmp[1])
-    elif fileextension == '.bam':
-        samfile = pysam.Samfile(path, "rb")
-        for read in samfile.fetch():
-            if not read.is_unmapped:
-                return read.alen
-
-
-def _get_read_info(path):
-    """Yield tuple (chr, pos) for different fileformats."""
-    filename, fileextension = os.path.splitext(path)
-
-    if fileextension == '.bed':
-        with open(path, 'r') as f:
-            for line in f:
-                tmp = line.split('\t')
-                yield tmp[0], int(tmp[1])
-    elif fileextension == '.bam':
-        samfile = pysam.Samfile(path, "rb")
-        for read in samfile.fetch():
-            if not read.is_unmapped:
-                yield samfile.getrname(read.tid), read.pos
-
-
-def get_count_list(CHROM_LEN, path, stop=False):
-    """Compute list of read's starting positions based on HTSeq's genomic array."""
-    genomic_array = GenomicArray(CHROM_LEN, stranded=False, typecode='i', storage='step')
-    i = 0
-    chromosomes = set()
-    for chrom, pos in _get_read_info(path):
-        i += 1
-
-        if stop and i == 5000000:
-            break
-
-        if not chrom.startswith("chr"):
-            chrom = "chr" + chrom
-
-        if chrom not in chromosomes:
-            chromosomes.add(chrom)
-
-        # ignore reads that fall out of chromosome borders, should not be necassary!
-        if chrom not in CHROM_LEN.keys() or pos >= CHROM_LEN[chrom] or pos < 0:
-            # print("illegal read on chromosome %s at positions %s not"%(chrom, pos), file=sys.stderr)
-            continue
-
-        genomic_array[GenomicPosition(chrom, pos)] += 1
-
-    # print('count_list', i, file=sys.stderr)
-
-    return genomic_array, chromosomes
-
-
-def _get_overrun(chrom, i, end, step_width, count_list, feature_len):
-    """Return overrun of reads that fall in two bins"""
-    help_c1 = filter(lambda x: x[0].start + feature_len > end and x[1] is not 0,
-                     list(count_list[GenomicInterval(chrom, i, end)].steps()))
-    overrun = 0 if not help_c1 else sum(map(lambda x: x[1], help_c1))
-
-    return overrun
-
-
 def write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename):
     """Write p,q-list to file"""
     if pq_list:
@@ -132,37 +68,27 @@ def write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename):
                 print(p, q, file=f)
 
 
-def get_bins(chrom_len, chromosomes, count_list, step_width, feature_len):
-    """Creates list of bins of length <step_width> with values describing 
-    the number of reads that fall into a bin.
-    <count_list> has to be created with 'get_count_list' 
-    It returns a dict like: {'chr1' [0,10,2,0,...], 'chr2' ...} 
-    where the first list entry gives the first bin and so on."""
-    result = {}
-    for chrom in chromosomes:
-        overrun = 0
-        if not chrom_len.has_key(chrom):
-            #             print("Warning: %s not found, do not consider" %chrom, file=sys.stderr)
-            pass
-        else:
-            # print("... considering %s..."%chrom, file=sys.stderr)
-            for i in range(0, chrom_len[chrom], step_width):
-                end = min(i + step_width, chrom_len[chrom])
-                counts = reduce(lambda x, y: x + y, count_list[GenomicInterval(chrom, i, end)])
-                count_list[GenomicInterval(chrom, i, end)] = 0
-                counts += overrun
+def get_bin_from_covs(cov, step_times=10):
+    """
+    We need to check the requirmetns for Diaz method; It's for non-overlapping bins
+    Arguments:
+        cov: [[chr1] , [chr2], [chr3]...]  [chr1]: [ 2,3,7,10,....]; If we store it as matrix, then we could get dimension information
+    # here how could we get the bins for coverage if we use sm_coverage representation??
+    Still we could use the todense function to tansform it, or to use sparse matrix generate new bins;
+    Can we do it ???
+    """
+    # we use list to store them then we transfer them into array...
+    cov_counts = []
+    # so first we need to dig into cov and then get the that sizes
+    tmp_cov = np.ravel(cov.overall_cov.todense()) # into one-dimension view
+    step_size = (cov.binsize/cov.stepsize) * step_times
+    # one problem is range of it, at end, we also want to get the last bin sizes then,
+    for bin_idx in range(0, len(tmp_cov), step_size):
+        bin_sum = sum(tmp_cov[bin_idx:(bin_idx+step_size):(cov.binsize/cov.stepsize)])
+        cov_counts.append(bin_sum)
+    return cov_counts
 
-                if chrom in result.keys():
-                    result[chrom].append(counts)
-                else:
-                    result[chrom] = [counts]
-
-                overrun = _get_overrun(chrom, i, end, step_width, count_list, feature_len)
-
-    return result
-
-
-def _get_lists(count_list, zero_counts, two_sample=False):
+def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
     if two_sample:
         count_list.sort(key=lambda x: x[0] + x[1])
         if not zero_counts:
@@ -185,74 +111,30 @@ def _get_lists(count_list, zero_counts, two_sample=False):
            float(pq_list[max_index][1]) / pq_list[max_index][0]
 
 
-def get_binstats(chrom_len, count_list_1, count_list_2, feature_len, chromosomes, step_width=1000, zero_counts=True,
-                 two_sample=False):
-    """Compute p,q-list from Diaz et al., 2012 with k, a and coressponding factors
-    for normalization.
-    Also give list of tuples (x,y) describing bins where x,y are the values for each bin."""
-    # create dict of counts
-    # print("Dividing genome into bins...", file=sys.stderr)
-    if set(chrom_len.keys()) & chromosomes == set():  # if chrom in input does not overlap chrom in IP channel
-        return None, None, None, None, None
+def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,step_times=10,two_samples=False):
+    """ cov and inputs_cov are coverage for signal and input, step_times is the times of original step width of coverage;
+    zero_counts are 0, but the purpose???
+    New method: to generate new bin statics from cov and input coves, cause they are corresponding before;
+     pq_list, max_index,max_value and factor1 for each inputs file
+        covs, inputs_cov should include binsize and step_size such information and then combine with step_times to get more information"""
 
-    counts_dict_2 = get_bins(chrom_len, chromosomes, count_list_2, step_width, feature_len)
-    counts_dict_1 = get_bins(chrom_len, chromosomes, count_list_1, step_width, feature_len)
-    # merge values with zip, obtain [ [(),()...], [(),(),..] ]
-    tmp_list = [zip(counts_dict_1[chrom], counts_dict_2[chrom]) for chrom in counts_dict_2.keys()]
-    # convert tmp_list to [[],[],[]...]
-    count_list = map(lambda x: list(x), list(chain.from_iterable(tmp_list)))
-
-    return _get_lists(count_list, zero_counts, two_sample)
-
-
-def work(first_path, second_path, step_width, zero_counts, two_sample, chrom_sizes_dict, stop):
-    """work"""
-    CHROM_LEN = chrom_sizes_dict  # CHROM_LEN_HUMAN if genome == 'hg19' else CHROM_LEN_MOUSE
-    # counts_1, counts_1 is a genomicarray (HTSeq) describing chr und pos of reads
-    # print("Reading first input file...", file=sys.stderr)
-    counts_1, chromosomes1 = get_count_list(CHROM_LEN, first_path, stop=stop)
-
-    # print("Reading second input file...", file=sys.stderr)
-    counts_2, chromosomes2 = get_count_list(CHROM_LEN, second_path, stop=stop)
-    #     print("...done", file=sys.stderr)   chromosomes = chromosomes1 & chromosomes2
-    chromosomes = chromosomes1 | chromosomes2
-
-    # count_list1, count_list2 are dict like {'chr1': [10,2,0...], ...} describing the bins
-    pq_list, max_index, max_value, factor1, factor2 \
-        = get_binstats(CHROM_LEN, counts_1, counts_2, \
-                       get_feature_len(first_path), chromosomes, step_width, zero_counts, two_sample)
-
-    return pq_list, max_index, max_value, factor1, factor2, chromosomes
-
-
-def get_normalization_factor(first_path, second_path, step_width, zero_counts, filename, debug, chrom_sizes_dict,
-                             two_sample=False, stop=False):
-    """Return normalization factor (see Diaz et al) for the input
-    if two_sample is True: compare sample with index of 0.15"""
-    # take two largest chromosomes for analysis:
-    # tmp = chrom_sizes_dict.items()
-    # tmp.sort(key=lambda x: x[1], reverse=True)
-    # tmp = dict(tmp[:min(len(tmp), 5)])
-    tmp = {}
-    for k in chrom_sizes_dict.keys():
-        new_k = k if k.startswith('chr') else 'chr' + k
-        tmp[new_k] = chrom_sizes_dict[k]
-    # tmp = chrom_sizes_dict
-    # print("For input normalization consider chromosomes: %s" %(", ".join(tmp.keys())), file=sys.stderr)
-
-    pq_list, max_index, max_value, factor1, factor2, chromosomes = \
-        work(first_path, second_path, step_width, zero_counts, two_sample, tmp, stop)
-
+    # first get new bin from cov
+    cov_counts = get_bin_from_covs(cov, step_times=step_times)
+    inputs_cov_counts = get_bin_from_covs(inputs_cov, step_times=step_times)
+    # combine them together by zip
+    count_list = zip(cov_counts, inputs_cov_counts)
+    count_list = map(list, count_list)
+    # after using zip, it creats a list but we can't change it, it's sad; So we need to change it
+    # Maybe we don't need to use zip...
+    # then count pq_list after it we get other features
+    pq_list, max_index, max_value, factor1, factor2 = _get_lists_from_cov(count_list, zero_counts, two_samples)
     if debug:
         write_pq_list(pq_list, max_index, max_value, factor1, factor2, filename + '-pqlist')
 
-    # print("norm sums 1 : ", sum([i for (i,j) in pq_list]), file=sys.stderr)
-    # print("norm sums 2 : ", sum([j for (i,j) in pq_list]), file=sys.stderr)
-
-    if pq_list == None:
+    if not pq_list:
         return None, None
 
-    if two_sample:
+    if two_samples:
         l = 0.5
         s1 = sum([i for (i, j) in pq_list[:int(len(pq_list) * l)]])
         s2 = sum([j for (i, j) in pq_list[:int(len(pq_list) * l)]])
@@ -265,3 +147,148 @@ def get_normalization_factor(first_path, second_path, step_width, zero_counts, f
             return 1, factor1
     else:
         return -1, factor1
+
+
+## get signal normalization factors
+def trim4TMM( m_values, a_values, m_threshold=80, a_threshold=95):
+    """q=20 or q=5"""
+    assert len(m_values) == len(a_values)
+    # np.isinf return an array to test if infinite, only two columns are not infinite we return False, after not x, we get True
+    # mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
+    # but after last step, we have make sure that there is no zeros, and no infinity, then we don't need the step to filter it.
+    # m_values = m_values[mask]
+    # a_values = a_values[mask]
+
+    perc_m_l = np.percentile(m_values, 100 - m_threshold)
+    perc_m_h = np.percentile(m_values, m_threshold)
+    perc_a_l = np.percentile(a_values, 100 - a_threshold)
+    perc_a_h = np.percentile(a_values, a_threshold)
+
+    try:
+        res = filter(lambda x: not (x[0] > perc_m_h or x[0] < perc_m_l), \
+                     filter(lambda x: not (x[1] > perc_a_h or x[1] < perc_a_l),
+                            zip(list(m_values.squeeze()), list(a_values.squeeze()))))
+    except:
+        print('something wrong %s %s' % (len(m_values), len(a_values)), file=sys.stderr)
+        return np.asarray(m_values), np.asarray(a_values)
+
+    if res:
+        return np.asarray(map(lambda x: x[0], res)), np.asarray(map(lambda x: x[1], res))
+    else:
+        print('TMM normalization: nothing trimmed...', file=sys.stderr)
+        return np.asarray(m_values), np.asarray(a_values)
+
+
+## overall_coverage should be the all coverage for signal files ...
+def get_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
+    """Normalize with TMM approach, based on PePr
+      ref, we use the mean of two samples and compare to it
+      data_rep present the data..
+      we accept overall_coverage as one parameter, and deal with it;
+      coverall_coverage [ signal_0[ file_0, file_1, file_2], signal_1[ file_0, file_1, file_2] ]
+      it's in form of array
+    """
+    scaling_factors = []
+    dim = overall_coverage.shape
+    # at least one file has one read in it...
+    # or we could get mask_ref with all data are over 0
+    mask_ref = np.all(overall_coverage[0],axis=0) & np.all(overall_coverage[1],axis=0)
+    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0))
+    # ref = np.squeeze(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1],axis=0))
+    # mask_ref = ref > 0
+
+    # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
+    for i in range(dim[0]):
+        scaling_factors.append([])
+        for j in range(dim[1]):  # normalize all replicates
+            # get the data for each sample under each condition
+            data_rep = np.squeeze(np.asarray(overall_coverage[i][j, mask_ref]))
+            # here we sample data but in Manuel method, he uses the biggest ones...
+            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
+            tmp_ref = ref[tmp_idx]/float(dim[0]*dim[1])  # use index to make ref and data correspond
+            data_rep = data_rep[tmp_idx]
+            # calculate m_values and a_values
+            m_values = np.log(tmp_ref / data_rep)
+            a_values = 0.5 * np.log(data_rep * tmp_ref)
+            try:  # assume they have a relations and then plot them to get scale factor.
+                m_values, a_values = trim4TMM(m_values, a_values, m_threshold, a_threshold)
+                f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
+                scaling_factors[i].append(f)
+            except:
+                print('TMM normalization not successfully performed, do not normalize data', file=sys.stderr)
+                scaling_factors[i].append(1)
+
+    return scaling_factors
+
+
+## overall_coverage should be the all coverage for signal files, but signal file are now in format sparse matrix ...
+#  cuase we need to use sum and duplicate then we need to use sparse matrix, better ?? Then we could change it here
+def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
+    """Normalize with TMM approach, based on PePr
+      ref, we use the mean of two samples and compare to it
+      data_rep present the data..
+      we accept overall_coverage as one parameter, and deal with it;
+      coverall_coverage [ signal_0[ file_0, file_1, file_2], signal_1[ file_0, file_1, file_2] ]
+      But each file is sparse_matrix, and now we need to get non-zeros columns, we need to
+    """
+    factors_signal = []
+    dim = overall_coverage.shape
+    # at least one file has one read in it...
+    # or we could get mask_ref with all data are over 0
+    mask_ref = np.all(overall_coverage[0],axis=0) & np.all(overall_coverage[1],axis=0)
+    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0))
+    # ref = np.squeeze(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1],axis=0))
+    # mask_ref = ref > 0
+
+    # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
+    for i in range(dim[0]):
+        factors_signal.append([])
+        for j in range(dim[1]):  # normalize all replicates
+            # get the data for each sample under each condition
+            data_rep = np.squeeze(np.asarray(overall_coverage[i][j, mask_ref]))
+            # here we sample data but in Manuel method, he uses the biggest ones...
+            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
+            tmp_ref = ref[tmp_idx]/float(dim[0]*dim[1])  # use index to make ref and data correspond
+            data_rep = data_rep[tmp_idx]
+            # calculate m_values and a_values
+            m_values = np.log(tmp_ref / data_rep)
+            a_values = 0.5 * np.log(data_rep * tmp_ref)
+            try:  # assume they have a relations and then plot them to get scale factor.
+                m_values, a_values = trim4TMM(m_values, a_values, m_threshold, a_threshold)
+                f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
+                factors_signal[i].append(f)
+            except:
+                print('TMM normalization not successfully performed, do not normalize data', file=sys.stderr)
+                factors_signal[i].append(1)
+
+    return factors_signal
+
+
+if __name__ == "__main__":
+    ## test correctness of this function compared to old method
+    # old method
+
+    # new method
+
+    class Cov(object):
+        pass
+    cov = Cov()
+    cov.binsize = 100
+    cov.stepsize = 50
+    s = [0, 0, 1, 3, 5, 7, 0, 3, 2, 0, 0, 0]
+    cov.overall_cov = sparse.csr_matrix(s)
+
+    inputs_cov = Cov()
+    inputs_cov.binsize = 100
+    inputs_cov.stepsize = 50
+    t = [0, 0, 1, 3, 0, 1, 0, 3, 2, 0, 6, 0]
+    inputs_cov.overall_cov = sparse.csr_matrix(t)
+    #cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,5,7,0,3,2,0,0,0]}
+    #inputs_cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,0,1,0,3,2,0,6,0]}
+    get_normalization_factor_by_cov(cov, inputs_cov, 0, 'test', True, step_times=2, two_samples=False)
+    """
+    # test normalization factor by signal
+    overall_cov = np.asarray([[[0,0,4,3,5,7,0,3,2,0,0,0], [0,0,1,2,5,5,0,3,0,0,0,0]],[[0,0,1,3,0,1,0,3,2,0,6,0], [2,0,1,3,0,1,0,1,2,0,0,3]]])
+    get_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
+    """
+

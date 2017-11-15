@@ -65,7 +65,7 @@ def get_file_statistics(fnames, chrom_fname):
         file_dimension = len(fnames)
 
     statics = []
-    chroms = RegionGiver(chrom_fname).get_chrom_dict().keys()
+    chroms = RegionGiver.chrom_sizes_dict.keys()
     for i in range(file_dimension[0]):
         statics.append([])
         for j in range(file_dimension[1]):
@@ -202,9 +202,10 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
                 ext_data_list.append(ext_data)
                 signal_statics['data'][i][j]['read_size'] = read_size
                 signal_statics['data'][i][j]['extension_size'] = e
+        print('end of compute extension size for signal files ', file=sys.stderr)
 
     if inputs_statics:
-
+        print("Computing inputs read extension sizes for ChIP-seq profiles", file=sys.stderr)
         inputs_extension_sizes = np.ones(file_dimension, int) * (-1)
         inputs_read_sizes = np.ones(file_dimension, int) * -1
 
@@ -222,6 +223,8 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
                     print('adjust input extension size')
                 inputs_statics['data'][i][j]['read_size'] = read_size
                 inputs_statics['data'][i][j]['extension_size'] = inputs_extension_sizes[i][j]
+
+        print('end of compute extension size for inputs files ', file=sys.stderr)
         """
         for i in range(file_dimension[0]):
             for j in range(file_dimension[1]): 

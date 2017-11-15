@@ -566,9 +566,10 @@ def handle_input():
         parser.error("factors for input-DNA must equal number of BAM files!")
 
     if inputs:
-        for bamfile in inputs:
-            if not isfile(bamfile):
-                parser.error("BAM file %s does not exist!" % bamfile)
+        for each_sample in inputs:
+            for bamfile in each_sample:
+                if not isfile(bamfile):
+                    parser.error("BAM file %s does not exist!" % bamfile)
 
     if options.regions:
         if not isfile(options.regions):

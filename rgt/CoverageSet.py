@@ -11,6 +11,7 @@ import sys
 import pysam
 import numpy as np
 import pyBigWig
+from scipy import sparse
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -83,7 +84,7 @@ class CoverageSet:
         *Keyword arguments:*
         
         - factor -- float
-        
+
         """
         for i in range(len(self.coverage)):
             self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
@@ -329,6 +330,7 @@ class CoverageSet:
         log_aver = False
         self.binsize = binsize
         self.stepsize = stepsize
+        # self.coverage we will use sparse matrix
         self.coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
@@ -372,6 +374,8 @@ class CoverageSet:
                 for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
                     if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
                     j += 1
+                    if j == 1000:
+                        break
                     read_length = read.rlen
                     if not read.is_unmapped:
                         # pos = read.pos - extension_size if read.is_reverse else read.pos
@@ -426,14 +430,14 @@ class CoverageSet:
             # elif maxdup == 0: # Remove all duplicates
             # else: # 
 
-            if rmdup:
+            if rmdup: # remove duplicate reads
                 positions = list(set(positions))
-                
-            positions.sort()
-            positions.reverse()
+            # positions are begin positions for forward and reverse strands; we need to add some strand info..Maybe
+            positions.sort() # in ascending order
+            positions.reverse() # positions in descending order
             i = 0
             while positions:
-                win_s = max(0, i * stepsize - binsize*0.5) + region.initial
+                win_s = max(0, i * stepsize - binsize*0.5) + region.initial # but this one is from smaller bin and to bigger bins
                 win_e = i * stepsize + binsize*0.5 + region.initial 
                 c = 0
                 if get_strand_info:
@@ -443,7 +447,7 @@ class CoverageSet:
                 
                 taken = []
                 while True:
-                    s = positions.pop()
+                    s = positions.pop() # pop from end of list, so the first one is the smallest
                     
                     taken.append(s)
                     if s < win_e: #read within window
@@ -459,8 +463,8 @@ class CoverageSet:
                                 pass
                     if s >= win_e or not positions:
                         taken.reverse()
-                        for s in taken:
-                            if s + extension_size + read_length >= win_s: #consider read in next iteration
+                        for s in taken: # anyway the test here are not meaningful, since win_e > win_s , so we just append positions again.
+                            if s + extension_size + read_length >= win_s: #consider read in next iteration but why it is win_s, next iteration should be win_s + step_size
                                 positions.append(s)
                             else:
                                 break #as taken decreases monotonously
@@ -482,14 +486,25 @@ class CoverageSet:
 
             if get_strand_info:
                 self.cov_strand_all.append(np.array(cov_strand))
+                self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
             if get_sense_info:
                 self.cov_sense_all.append(np.array(cov_sense))
+                self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
             # print(np.array(cov_sense))
             
         self.coverageorig = self.coverage[:]
         self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
         if mask: f.close()
 
+        self.coverage = self.cov_to_smatrix(self.coverage)
+        self.coverageorig = self.cov_to_smatrix(self.coverageorig)
+        self.overall_cov = self.cov_to_smatrix(self.overall_cov)
+
+
+    def cov_to_smatrix(self, coverage):
+        """change list of coverage into sparse matrix by using scipy"""
+        cov_mtx = sparse.csr_matrix(coverage)
+        return cov_mtx
 
     def array_transpose(self, flip=False):
         """Transpose the arrays in strand coverage"""
