@@ -74,7 +74,8 @@ def main():
     else:
         err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
-    print("Completed in", time.time() - start, "seconds")
+    print()
+    print("[total time:", time.time() - start, "seconds]")
 
     ###################################################################################################
     # Heatmap

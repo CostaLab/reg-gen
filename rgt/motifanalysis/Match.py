@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 from glob import glob
 from optparse import OptionGroup
+import time
 
 # Internal
 from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, npath
@@ -322,7 +323,8 @@ def main_matching():
     # Iterating on list of genomic regions
     for genomic_region_set in regions_to_match:
 
-        print("### matching regions for", genomic_region_set.name, "(", len(genomic_region_set), ") ###")
+        start = time.time()
+        print("### matching all regions of", genomic_region_set.name, "(", len(genomic_region_set), ") ###")
 
         # Initializing output bed file
         output_bed_file = os.path.join(output_location, genomic_region_set.name + "_mpbs.bed")
@@ -352,6 +354,9 @@ def main_matching():
 
             # removing BED file
             os.remove(output_bed_file)
+
+        print("[completed in", time.time() - start, "seconds]")
+        print()
 
 
 # TODO must double-check/fix the normalisation.
