@@ -340,9 +340,6 @@ def main_matching():
             grs = match_multiple(scanner, motif_list, sequence, genomic_region)
             grs.write(output_bed_file, mode="a")
 
-            # let's help the garbage collection a bit
-            del grs.sequences[:]
-
         del genomic_region_set.sequences[:]
 
         # Verifying condition to write bb
