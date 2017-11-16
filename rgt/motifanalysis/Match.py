@@ -109,6 +109,11 @@ def main_matching():
         options.rand_proportion = None
         options.input_matrix = None
 
+    # FIXME remove later, only for debug
+    import psutil
+
+    print("start:", psutil.virtual_memory())
+
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -141,6 +146,8 @@ def main_matching():
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
             err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+
+    print("init:", psutil.virtual_memory())
 
     ###################################################################################################
     # Reading Input Regions
@@ -229,6 +236,12 @@ def main_matching():
                 max_region_len = curr_len
                 max_region = curr_genomic_region
 
+    print("input loaded:", psutil.virtual_memory())
+
+    del genomic_regions_dict
+
+    print("del genomic_regions_dict:", psutil.virtual_memory())
+
     ###################################################################################################
     # Creating random regions
     ###################################################################################################
@@ -296,6 +309,8 @@ def main_matching():
     else:
         unique_threshold = None
 
+    print("loaded motifs:", psutil.virtual_memory())
+
     ###################################################################################################
     # Motif Matching
     ###################################################################################################
@@ -305,6 +320,8 @@ def main_matching():
 
     # Iterating on list of genomic regions
     for genomic_region_set in regions_to_match:
+
+        print("### matching regions for", genomic_region_set.name, "(", len(genomic_region_set), ") ###")
 
         # Initializing output bed file
         output_bed_file = os.path.join(output_location, genomic_region_set.name + "_mpbs.bed")
@@ -326,13 +343,19 @@ def main_matching():
             # TODO: measure and document speed/memory improvements, if any.
             # grs = match_multiple(motif_list, sequence, genomic_region)
 
+            print("match done:", psutil.virtual_memory())
+
             grs.write(output_bed_file, mode="a")
 
             del grs.sequences[:]
             del grs
             del genomic_region
 
+            print("dels:", psutil.virtual_memory())
+
         del genomic_region_set
+
+        print("inner loop over, del genomic_region_set:", psutil.virtual_memory())
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
@@ -344,6 +367,8 @@ def main_matching():
 
             # removing BED file
             os.remove(output_bed_file)
+
+    print("loop over:", psutil.virtual_memory())
 
 
 def match_single(motif, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):
