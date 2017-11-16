@@ -82,5 +82,3 @@ def input_parser(filepath):
 
     return [bamfiles_1, bamfiles_2], genome, chrom_sizes, inputs, dims
 
-
-

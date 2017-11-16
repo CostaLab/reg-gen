@@ -38,6 +38,8 @@ import numpy as np
 from random import sample
 from scipy import sparse
 
+import dpc_help
+
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -294,8 +296,8 @@ if __name__ == "__main__":
     """
     # test normalization factor by signal
     orig_cov = np.asarray([[[0,0,4,3,5,7,0,3,2,0,0,0], [0,0,1,2,5,5,0,3,0,0,0,0]],[[0,0,1,3,0,1,0,3,2,0,6,0], [2,0,1,3,0,1,0,1,2,0,0,3]]])
-    z = get_norm_TMM_factor(orig_cov, m_threshold=80, a_threshold=95)
-    print(z)
+    #z = get_norm_TMM_factor(orig_cov, m_threshold=80, a_threshold=95)
+    #print(z)
     print('new method')
     overall_cov = []
     for i in range(orig_cov.shape[0]):
@@ -304,7 +306,7 @@ if __name__ == "__main__":
             tmp = sparse.csr_matrix(orig_cov[i][j])
             overall_cov[i].append(tmp)
 
-    s = get_sm_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
-    print(s)
+    #s = get_sm_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
+    #print(s)
 
-
+    dpc_help.fit_mean_var_distr(overall_cov, 'fun-var-test', True, False, 'test', False, True, sample_size=5000)

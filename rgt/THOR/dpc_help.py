@@ -17,13 +17,14 @@ import os
 import sys
 import pysam
 import numpy as np
+from random import sample
 from math import fabs, log, ceil
 from operator import add
 from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
 import shutil
-
+from scipy import sparse
 # Internal
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
@@ -172,13 +173,71 @@ def _get_data_rep(overall_coverage, name, debug, sample_size):
     return data_rep
 
 
-def _fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
+def sm_var(sm, axis=None):
+    """get variance of one sparse matrix in axis
+    if axis=None, then for whole data
+    if axis=0, for column
+    if axis=1 for row
+    """
+    # get shape of sm_var and axis
+    if axis is None:
+        tmp = sm.data **2
+        return np.mean(tmp) - (sm.mean()) ** 2
+    elif axis == 0:
+        # in column order, but now it's 1_D array
+        tmp = sm[:,:] # create a new sparse-matrix
+        tmp.data **= 2
+        e_x2 = tmp.mean(axis=0)
+        return e_x2 - np.square(sm.mean(axis=0))
+
+
+def _get_sm_data_rep(overall_coverage, name, debug, sample_size):
+    """Return list of (mean, var) points for samples 0 and 1
+    overall_coverage is a list of sparse matrix
+    """
+    data_rep = []
+    dim = overall_coverage.shape
+    for i in range(dim[0]):
+        # firstly to get union of non-zeros columns
+        tmp_cov = sum(overall_coverage[i])
+        # sample indices and then sample it
+        idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
+        cov = sparse.vstack([overall_coverage[i][j][:,idx] for j in range(dim[1])])
+        # count the mean and var of it
+        m = cov.mean(axis=0)
+        n = sm_var(cov,axis=0)
+        # return data_rep
+        m = np.squeeze(np.asarray(m))
+        n = np.squeeze(np.asarray(n))
+        data_rep.append(zip(m, n))
+        data_rep[i].append((0, 0))  # it adds especially (0,0) to last ..
+        data_rep[i] = np.asarray(data_rep[i])
+
+    if debug:
+        for i in range(dim[0]):
+            np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
+
+    for i in range(2):
+        data_rep[i] = data_rep[i][
+                      np.logical_and(
+                          data_rep[i][:, 0] < np.percentile(data_rep[i][:, 0], 99.75) * (
+                          data_rep[i][:, 0] > np.percentile(data_rep[i][:, 0], 1.25)),
+                          data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (
+                          data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))), :]
+        # data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down, and m cut down greater than one value
+        # data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down between one interval..
+
+    return data_rep
+
+
+def fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
     """Estimate empirical distribution (quadr.) based on empirical distribution"""
     done = False
     plot_data = [] #means, vars, paras
 
     while not done:
-        data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
+        # data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
+        data_rep = _get_sm_data_rep(overall_coverage, name, debug, sample_size)
         res = []
         for i in range(2):
             try:

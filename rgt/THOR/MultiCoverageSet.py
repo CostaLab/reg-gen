@@ -223,7 +223,7 @@ class MultiCoverageSet(DualCoverageSet):
 
         # this step we could use sparse matrix, it shows automatically the indices of non-zeros bins
         # but one thing is indices_of_interest needs more processes;
-        self.scores = np.zeros(len(self.covs[0][0].overall_cov))
+        # self.scores = np.zeros(len(self.covs[0][0].overall_cov))
 
         self.indices_of_interest = []
     
@@ -295,8 +295,8 @@ class MultiCoverageSet(DualCoverageSet):
                 for j in range(self.dim[1]):
                     self.covs[i][j].sm_scale(factors_ip[i][j])
                     # this is actually one redundant step, if overall_coverage[i][j] from covs[i][j]
-                    # so if we change covs[i][j], it should change..
-                    self.overall_coverage[i][j].sm_scale(factors_ip[i][j])
+                    # so if we change covs[i][j], it should change.. cause overall_coverage is not Coverage Set, so we can't use method sm_scale
+                    self.overall_coverage[i][j].data *= factors_ip[i][j]
                     if configuration.DEBUG:
                         print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
         
@@ -360,9 +360,6 @@ class MultiCoverageSet(DualCoverageSet):
             else:
                 self.scores += signal_rate
 
-    def transform_to_sm(self, overall_coverage):
-        """transform overall_coverage in list format into sparse matrix format"""
-        pass
 
     def _get_bin_number(self):
         """Return number of bins"""
@@ -394,7 +391,9 @@ class MultiCoverageSet(DualCoverageSet):
             # threshold = 2.0 / (self.scores.shape[0])  # before it's considered if it's zero, now add some thresholds.
             threshold = 0.0
             # if we use the method before , we could see, all scores are from data greater than 0
-            self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (self.scores > l).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
+            # second condition, we need average reads in one column bigger than l
+            signal_avg = sum([self.overall_coverage[i]/self.dim[1] for i in range(self.dim[0])])
+            self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_avg > l).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
         except:
             self.indices_of_interest = None
 

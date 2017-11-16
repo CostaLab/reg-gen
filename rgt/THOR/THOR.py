@@ -27,7 +27,7 @@ from __future__ import print_function
 import sys
 
 # Internal
-from dpc_help import get_peaks, _fit_mean_var_distr, initialize, merge_output, handle_input
+from dpc_help import get_peaks, fit_mean_var_distr, initialize, merge_output, handle_input
 from tracker import Tracker
 from postprocessing import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
@@ -87,7 +87,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     #    tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
         # break
     
-    func, func_para = _fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
+    func, func_para = fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
                                           report=options.report, poisson=options.poisson)
     exp_data.compute_sm_putative_region_index()
