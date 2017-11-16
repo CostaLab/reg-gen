@@ -109,11 +109,6 @@ def main_matching():
         options.rand_proportion = None
         options.input_matrix = None
 
-    # FIXME remove later, only for debug
-    import psutil
-
-    print("start:", psutil.virtual_memory())
-
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -146,8 +141,6 @@ def main_matching():
                 selected_motifs = filter(None, selected_motifs)
         except Exception:
             err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
-
-    print("init:", psutil.virtual_memory())
 
     ###################################################################################################
     # Reading Input Regions
@@ -236,12 +229,6 @@ def main_matching():
                 max_region_len = curr_len
                 max_region = curr_genomic_region
 
-    print("input loaded:", psutil.virtual_memory())
-
-    del genomic_regions_dict
-
-    print("del genomic_regions_dict:", psutil.virtual_memory())
-
     ###################################################################################################
     # Creating random regions
     ###################################################################################################
@@ -309,7 +296,21 @@ def main_matching():
     else:
         unique_threshold = None
 
-    print("loaded motifs:", psutil.virtual_memory())
+    scanner = scan.Scanner(7)
+    pssm_list = []
+    thresholds = []
+    for motif in motif_list:
+        if unique_threshold:
+            thresholds.append(0.0)
+        else:
+            thresholds.append(motif.threshold)
+            pssm_list.append(motif.pssm)
+
+    # Performing motif matching
+    # TODO: we can expand this to use bg from sequence, for example,
+    # or from organism.
+    bg = tools.flat_bg(4)
+    scanner.set_motifs(pssm_list, bg, thresholds)
 
     ###################################################################################################
     # Motif Matching
@@ -336,24 +337,13 @@ def main_matching():
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
 
-            grs = GenomicRegionSet("tmp")
-            for motif in motif_list:
-                match_single(motif, sequence, genomic_region, unique_threshold, options.normalize_bitscore, output=grs)
-
-            # TODO: measure and document speed/memory improvements, if any.
-            # grs = match_multiple(motif_list, sequence, genomic_region)
-
+            grs = match_multiple(scanner, motif_list, sequence, genomic_region)
             grs.write(output_bed_file, mode="a")
 
+            # let's help the garbage collection a bit
             del grs.sequences[:]
-            del grs
-            del genomic_region
 
-            print("dels:", psutil.virtual_memory())
-
-        del genomic_region_set
-
-        print("inner loop over, del genomic_region_set:", psutil.virtual_memory())
+        del genomic_region_set.sequences[:]
 
         # Verifying condition to write bb
         if options.bigbed and options.normalize_bitscore:
@@ -366,92 +356,14 @@ def main_matching():
             # removing BED file
             os.remove(output_bed_file)
 
-    print("loop over:", psutil.virtual_memory())
-
-
-def match_single(motif, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):
-    """
-    Performs motif matching given sequence and the motif.pssm passed as parameter.
-    The genomic_region is needed to evaluate the correct binding position.
-
-    Keyword arguments:
-    motif -- a Motif object to use for genome scanning.
-    sequence -- A DNA sequence (string).
-    genomic_region -- A GenomicRegion.
-    unique_threshold -- If this argument is provided, the motif search will be made using a threshold of 0 and
-                        then accepting only the motif matches with bitscore/motif_length >= unique_threshold.
-    normalize_bitscore -- If True, it normalises the scores between 0 and 1000. Necessary for bigbed conversion.
-    output -- A GenomicRegionSet where all matching GenomicRegions will be appended.
-        
-    Return:
-    Either the "output" GenomicRegionSet if provided, or a newly-instantiated one.
-    """
-
-    # Establishing threshold
-    if unique_threshold:
-        current_threshold = 0.0
-        threshold = unique_threshold
-        motif_max = motif.max / motif.len
-    else:
-        current_threshold = motif.threshold
-        threshold = motif.threshold
-        motif_max = motif.max
-
-    # Performing motif matching
-    results = scan.scan(sequence, [motif.pssm], motif.bg, [current_threshold], 7, motif.alphabet)
-
-    if output is None:
-        output = GenomicRegionSet("mpbs")
-
-    pos_start = genomic_region.initial
-    chrom = genomic_region.chrom
-
-    for search_result in results:
-        for r in search_result:
-            position = r.pos
-            score = r.score
-
-            score_len = score / motif.len
-
-            # Verifying unique threshold acceptance
-            if unique_threshold and score_len < unique_threshold:
-                continue
-
-            # If match forward strand
-            if position >= 0:
-                p1 = pos_start + position
-                strand = "+"
-            # If match reverse strand
-            elif not motif.is_palindrome:
-                p1 = pos_start - position
-                strand = "-"
-            else:
-                continue
-
-            # Evaluating p2
-            p2 = p1 + motif.len
-
-            # Evaluating score (integer between 0 and 1000 -- needed for bigbed transformation)
-            if normalize_bitscore:
-                # Normalized bitscore = standardize to integer between 0 and 1000 (needed for bigbed transformation)
-                if motif_max > threshold:
-                    score = int(((score - threshold) * 1000.0) / (motif_max - threshold))
-                else:
-                    score = 1000
-            elif unique_threshold:
-                score = score_len
-
-            output.add(GenomicRegion(chrom, int(p1), int(p2), name=motif.name, orientation=strand, data=str(score)))
-
-    return output
-
 
 # TODO must double-check/fix the normalisation.
-def match_multiple(motifs, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):
+def match_multiple(scanner, motifs, sequence, genomic_region, unique_threshold=None, normalize_bitscore=False, output=None):
     """
-    More efficient than calling match_single on every motif.
+    Efficient matching of a set of motifs against a single DNA sequence.
 
     Keyword arguments:
+    scanner -- a MOODS.scan.Scanner instance with all properties already set.
     motifs -- a list of Motif objects to use for genome scanning.
     sequence -- A DNA sequence (string).
     genomic_region -- A GenomicRegion.
@@ -464,20 +376,7 @@ def match_multiple(motifs, sequence, genomic_region, unique_threshold=None, norm
     Either the "output" GenomicRegionSet if provided, or a newly-instantiated one.
     """
 
-    pssm_list = []
-    thresholds = []
-    for motif in motifs:
-        if unique_threshold:
-            thresholds.append(0.0)
-        else:
-            thresholds.append(motif.threshold)
-            pssm_list.append(motif.pssm)
-
-    # Performing motif matching
-    # TODO: we can expand this to use bg from sequence, for example,
-    # or from organism.
-    bg = tools.flat_bg(4)
-    results = scan.scan_dna(sequence, pssm_list, bg, thresholds, 7)
+    results = scanner.scan(sequence)
 
     if output is None:
         output = GenomicRegionSet("mpbs")
