@@ -343,8 +343,6 @@ def main_matching():
             # TODO: measure and document speed/memory improvements, if any.
             # grs = match_multiple(motif_list, sequence, genomic_region)
 
-            print("match done:", psutil.virtual_memory())
-
             grs.write(output_bed_file, mode="a")
 
             del grs.sequences[:]
