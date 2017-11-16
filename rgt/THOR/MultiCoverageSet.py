@@ -150,7 +150,8 @@ class MultiCoverageSet(DualCoverageSet):
         for i in range(self.dim[0]):
             overall_coverage.append([])
             for j in range(self.dim[1]):
-                overall_coverage[i].append(self.covs[i][j].overall_cov)
+                # make it use sparse matrix
+                overall_coverage[i].append(self.covs[i][j].sm_overall_cov)
         if cov_strand:
             overall_coverage_strand = []
             for i in range(self.dim[0]):
@@ -220,9 +221,10 @@ class MultiCoverageSet(DualCoverageSet):
         if output_bw:
             self._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
 
-        self.scores = np.zeros(len(self.covs[0][0].overall_cov))
         # this step we could use sparse matrix, it shows automatically the indices of non-zeros bins
         # but one thing is indices_of_interest needs more processes;
+        self.scores = np.zeros(len(self.covs[0][0].overall_cov))
+
         self.indices_of_interest = []
     
     def get_max_colsum(self):
@@ -247,8 +249,8 @@ class MultiCoverageSet(DualCoverageSet):
                 print("Use with predefined factors", file=sys.stderr)
             for i in range(signal_statics['dim'][0]):
                 for j in range(signal_statics['dim'][1]):
-                    self.inputs_covs[i][j].scale(factors_inputs[i][j])
-                    self.covs[i][j].subtract(self.inputs_covs[i][j])
+                    self.inputs_covs[i][j].sm_scale(factors_inputs[i][j])
+                    self.covs[i][j].sm_subtract(self.inputs_covs[i][j])
         elif inputs_statics:
             factors_inputs = []
             print("Compute factors", file=sys.stderr)
@@ -262,9 +264,9 @@ class MultiCoverageSet(DualCoverageSet):
                     if factor:
                         print("Normalize input of Signal %s, Rep %s with factor %s" \
                               % (i, j, round(factor, configuration.ROUND_PRECISION)), file=sys.stderr)
-                        self.inputs_covs[i][j].scale(factor)
+                        self.inputs_covs[i][j].sm_scale(factor)
                         ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
-                        self.covs[i][j].subtract(self.inputs_covs[i][j])
+                        self.covs[i][j].sm_subtract(self.inputs_covs[i][j])
                         factors_inputs[i].append(factor)
 
         self.factors_inputs = factors_inputs
@@ -291,10 +293,10 @@ class MultiCoverageSet(DualCoverageSet):
         if factors_ip:
             for i in range(self.dim[0]):
                 for j in range(self.dim[1]):
-                    self.covs[i][j].scale(factors_ip[i][j])
+                    self.covs[i][j].sm_scale(factors_ip[i][j])
                     # this is actually one redundant step, if overall_coverage[i][j] from covs[i][j]
                     # so if we change covs[i][j], it should change..
-                    self.overall_coverage[i][j] *= factors_ip[i][j]
+                    self.overall_coverage[i][j].sm_scale(factors_ip[i][j])
                     if configuration.DEBUG:
                         print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
         
@@ -340,6 +342,28 @@ class MultiCoverageSet(DualCoverageSet):
         # old methods to count interest regions
         self.scores = sum([np.squeeze(np.asarray(np.mean(self.overall_coverage[i], axis=0))) / float(np.mean(self.overall_coverage[i])) for i in range(2)])
 
+    def _compute_sm_score(self):
+        """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it"""
+        # we use sparse-matrix to get scores
+        # return a sum list of rates for each bin compared with average bins..
+        # when it is is for whole overall_coverage..
+        # Firstly to get average of two sparse matrix for one signal
+        # we see overall_coverage is alreday in saprse matrix
+        self.scores = None
+        for i in range(self.dim[0]):
+            # get signal_avg for all data
+            signal_avg = sum([self.overall_coverage[i][j].mean() for j in range(self.dim[1])])
+            # use signal_avg to compare to each element in overall_coverage columns
+            signal_rate = sum(self.overall_coverage[i])/(self.dim[1] * (signal_avg))
+            if self.scores is None:
+                self.scores = signal_rate
+            else:
+                self.scores += signal_rate
+
+    def transform_to_sm(self, overall_coverage):
+        """transform overall_coverage in list format into sparse matrix format"""
+        pass
+
     def _get_bin_number(self):
         """Return number of bins"""
         return self.overall_coverage[0].shape[1]
@@ -360,6 +384,19 @@ class MultiCoverageSet(DualCoverageSet):
         except:
             self.indices_of_interest = None
 
+    def compute_sm_putative_region_index(self, l=5):
+        """Compute putative differential peak regions as follows:
+        - score must be > 0, i.e. everthing
+        - overall coverage in library 1 and 2 must be > 3"""
+
+        try:
+            self._compute_sm_score()
+            # threshold = 2.0 / (self.scores.shape[0])  # before it's considered if it's zero, now add some thresholds.
+            threshold = 0.0
+            # if we use the method before , we could see, all scores are from data greater than 0
+            self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (self.scores > l).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
+        except:
+            self.indices_of_interest = None
 
     def write_test_samples(self, name, l):
         f = open(name, 'w')

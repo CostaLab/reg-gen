@@ -153,11 +153,6 @@ def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,s
 def trim4TMM( m_values, a_values, m_threshold=80, a_threshold=95):
     """q=20 or q=5"""
     assert len(m_values) == len(a_values)
-    # np.isinf return an array to test if infinite, only two columns are not infinite we return False, after not x, we get True
-    # mask = np.asarray([not x for x in np.isinf(m_values) + np.isinf(a_values)])
-    # but after last step, we have make sure that there is no zeros, and no infinity, then we don't need the step to filter it.
-    # m_values = m_values[mask]
-    # a_values = a_values[mask]
 
     perc_m_l = np.percentile(m_values, 100 - m_threshold)
     perc_m_h = np.percentile(m_values, m_threshold)
@@ -193,7 +188,7 @@ def get_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     # at least one file has one read in it...
     # or we could get mask_ref with all data are over 0
     mask_ref = np.all(overall_coverage[0],axis=0) & np.all(overall_coverage[1],axis=0)
-    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0))
+    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0)) /float(dim[0]*dim[1])
     # ref = np.squeeze(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1],axis=0))
     # mask_ref = ref > 0
 
@@ -205,7 +200,7 @@ def get_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
             data_rep = np.squeeze(np.asarray(overall_coverage[i][j, mask_ref]))
             # here we sample data but in Manuel method, he uses the biggest ones...
             tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
-            tmp_ref = ref[tmp_idx]/float(dim[0]*dim[1])  # use index to make ref and data correspond
+            tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]
             # calculate m_values and a_values
             m_values = np.log(tmp_ref / data_rep)
@@ -229,26 +224,36 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
       data_rep present the data..
       we accept overall_coverage as one parameter, and deal with it;
       coverall_coverage [ signal_0[ file_0, file_1, file_2], signal_1[ file_0, file_1, file_2] ]
-      But each file is sparse_matrix, and now we need to get non-zeros columns, we need to
+      But each file is sparse_matrix, and now we need to get non-zeros columns
+
     """
     factors_signal = []
-    dim = overall_coverage.shape
+    dim = [2,2]
     # at least one file has one read in it...
     # or we could get mask_ref with all data are over 0
-    mask_ref = np.all(overall_coverage[0],axis=0) & np.all(overall_coverage[1],axis=0)
-    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0))
-    # ref = np.squeeze(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1],axis=0))
-    # mask_ref = ref > 0
+    # non_zeros columns for all coverage from each file
+    # but we should change the value of overall_coverage; we just need to get factors
+    valid_indices = None
+    for i in range(dim[0]):
+        for j in range(dim[1]):
+            if valid_indices is None:
+                valid_indices = set(overall_coverage[i][j].indices)
+            else:
+                valid_indices &= set(overall_coverage[i][j].indices)
+    #mask_ref = reduce(lambda x, y: set(x) & set(y),
+    #                         [overall_coverage[i][j].indices for j in range(dim[1]) for i in range(dim[0])])
+    mask_ref = list(valid_indices)
+    sm_ref = reduce(lambda x,y: x+y, [overall_coverage[i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
+    ref = sm_ref.data/float(dim[0]*dim[1])
 
-    # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
     for i in range(dim[0]):
         factors_signal.append([])
         for j in range(dim[1]):  # normalize all replicates
             # get the data for each sample under each condition
-            data_rep = np.squeeze(np.asarray(overall_coverage[i][j, mask_ref]))
+            data_rep = overall_coverage[i][j][:, mask_ref].data
             # here we sample data but in Manuel method, he uses the biggest ones...
             tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
-            tmp_ref = ref[tmp_idx]/float(dim[0]*dim[1])  # use index to make ref and data correspond
+            tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]
             # calculate m_values and a_values
             m_values = np.log(tmp_ref / data_rep)
@@ -269,7 +274,7 @@ if __name__ == "__main__":
     # old method
 
     # new method
-
+    """
     class Cov(object):
         pass
     cov = Cov()
@@ -288,7 +293,18 @@ if __name__ == "__main__":
     get_normalization_factor_by_cov(cov, inputs_cov, 0, 'test', True, step_times=2, two_samples=False)
     """
     # test normalization factor by signal
-    overall_cov = np.asarray([[[0,0,4,3,5,7,0,3,2,0,0,0], [0,0,1,2,5,5,0,3,0,0,0,0]],[[0,0,1,3,0,1,0,3,2,0,6,0], [2,0,1,3,0,1,0,1,2,0,0,3]]])
-    get_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
-    """
+    orig_cov = np.asarray([[[0,0,4,3,5,7,0,3,2,0,0,0], [0,0,1,2,5,5,0,3,0,0,0,0]],[[0,0,1,3,0,1,0,3,2,0,6,0], [2,0,1,3,0,1,0,1,2,0,0,3]]])
+    z = get_norm_TMM_factor(orig_cov, m_threshold=80, a_threshold=95)
+    print(z)
+    print('new method')
+    overall_cov = []
+    for i in range(orig_cov.shape[0]):
+        overall_cov.append([])
+        for j in range(orig_cov.shape[1]):
+            tmp = sparse.csr_matrix(orig_cov[i][j])
+            overall_cov[i].append(tmp)
+
+    s = get_sm_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
+    print(s)
+
 

@@ -55,7 +55,25 @@ class CoverageSet:
             except ValueError:
                 pass
             i += 1
-    
+
+    def sm_substract(self,sm_cs):
+        """subtract coverage set in sparse matrix format"""
+        # firstly test if they have same region; else not do it!!
+        assert set(self.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
+        # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
+        # self.sm_overall_cov is 1-D array
+        self.sm_overall_cov -= sm_cs.sm_overall_cov
+        self.sm_overall_cov.data = np.clip(self.sm_overall_cov, 0, self.sm_overall_cov.max()) # make negative into zeros
+        self.sm_overall_cov.eliminate_zeros() # eliminate zeros elements in matrix
+
+    def sm_add(self, sm_cs):
+        """subtract coverage set in sparse matrix format"""
+        # firstly test if they have same region; else not do it!!
+        assert set(self.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
+        # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
+        # self.sm_overall_cov is 1-D array
+        self.sm_overall_cov += sm_cs.sm_overall_cov # we could assume all values are non-negative
+
     def add(self, cs):
         """Add CoverageSet <cs>.
         
@@ -88,6 +106,10 @@ class CoverageSet:
         """
         for i in range(len(self.coverage)):
             self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
+
+    def sm_scale(self,factor):
+        """we scale sparse matrix representation with factor"""
+        self.sm_overall_cov *= factor
 
     def normRPM(self):
         """Normalize to read per million (RPM)."""
@@ -479,6 +501,7 @@ class CoverageSet:
                 i += 1
 
             if not log_aver:
+                # cov represents bins for one region, here we want to store it directly as sparse matrix
                 self.coverage.append(np.array(cov))
             else:
                 cov = [x + 1 for x in cov]
@@ -486,20 +509,19 @@ class CoverageSet:
 
             if get_strand_info:
                 self.cov_strand_all.append(np.array(cov_strand))
-                self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
+                # self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
             if get_sense_info:
                 self.cov_sense_all.append(np.array(cov_sense))
-                self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
+                # self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
             # print(np.array(cov_sense))
             
-        self.coverageorig = self.coverage[:]
+        # self.coverageorig = self.coverage[:] # we don't use it
         self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
         if mask: f.close()
 
-        self.coverage = self.cov_to_smatrix(self.coverage)
-        self.coverageorig = self.cov_to_smatrix(self.coverageorig)
-        self.overall_cov = self.cov_to_smatrix(self.overall_cov)
-
+        # self.coverage = self.cov_to_smatrix(self.coverage)
+        # self.coverageorig = self.cov_to_smatrix(self.coverageorig)
+        self.sm_overall_cov = self.cov_to_smatrix(self.overall_cov)
 
     def cov_to_smatrix(self, coverage):
         """change list of coverage into sparse matrix by using scipy"""
