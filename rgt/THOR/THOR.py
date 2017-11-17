@@ -27,7 +27,7 @@ from __future__ import print_function
 import sys
 
 # Internal
-from dpc_help import get_peaks, fit_mean_var_distr, initialize, merge_output, handle_input
+from dpc_help import get_peaks, fit_sm_mean_var_distr, initialize, merge_output, handle_input
 from tracker import Tracker
 from postprocessing import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
@@ -70,9 +70,6 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     """
     # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
 
-    #while True:
-        #train_regions = region_giver.get_training_regionset()
-        # print(train_regions.sequences)
     exp_data = initialize(name=options.name, genome_path=genome, region_giver=region_giver,
                           stepsize=options.stepsize, binsize=options.binsize, signal_statics=signal_statics,inputs_statics=inputs_statics,
                           debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
@@ -86,14 +83,15 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     #    tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
     #    tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
         # break
+    ## here we need to use tracker to record
     
-    func, func_para = fit_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
+    func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
                                           report=options.report, poisson=options.poisson)
     exp_data.compute_sm_putative_region_index()
      
     print('Compute HMM\'s training set', file=sys.stderr)
-    training_set, s0, s1, s2 = exp_data.get_training_set(TEST, exp_data, options.name, options.foldchange,
+    training_set, s0, s1, s2 = exp_data.get_training_set(TEST, options.name, options.foldchange,
                                                          options.threshold, options.size_ts, 3)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
@@ -169,10 +167,10 @@ def main():
     signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
     region_giver.update_regions(signal_statics)
 
-    # inputs_statics = None
+    inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-    inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
-    region_giver.update_regions(inputs_statics)
+    #inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
+    #region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
     options.exts = [225,225,225,228]

@@ -136,43 +136,6 @@ def _plot_func(plot_data, outputdir):
             plt.close()
 
 
-def _get_data_rep(overall_coverage, name, debug, sample_size):
-    """Return list of (mean, var) points for samples 0 and 1"""
-    data_rep = []
-    for i in range(2):
-        cov = np.asarray(overall_coverage[i]) #matrix: (#replicates X #bins) # I don;t think there is a need to use matrix to represent data.
-        # cov = cov[:,(cov>0).all(axis=0)] # do we need all data over 0?? Or just sum of them be over zero.., If two many data are zeros on one part, then we have great chance to hav zeros
-        h = np.invert((cov == 0).all(axis=0))  # assign True to columns != (0,..,0)
-        cov = cov[:, h]  # remove 0-columns
-        print(cov.shape)
-        # sample from [0,1,2,..., cov.shape[1]], and make it a list of sample_size
-        r = np.random.randint(cov.shape[1], size=sample_size)
-        r.sort()
-        cov = cov[:,r]
-
-        m = list(np.squeeze(np.asarray(np.mean(cov, axis=0))))
-        n = list(np.squeeze(np.asarray(np.var(cov, axis=0))))
-        assert len(m) == len(n)
-
-        data_rep.append(zip(m, n))
-        data_rep[i].append((0,0)) # it adds especially (0,0) to last ..
-        data_rep[i] = np.asarray(data_rep[i])
-        
-    if debug:
-        for i in range(2):
-            np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
-    
-    for i in range(2):
-        data_rep[i] = data_rep[i][
-            np.logical_and(
-                data_rep[i][:, 0] < np.percentile(data_rep[i][:, 0], 99.75) * (data_rep[i][:, 0] > np.percentile(data_rep[i][:, 0], 1.25)),
-                data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))),:]
-        # data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down, and m cut down greater than one value
-        # data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down between one interval..
-
-    return data_rep
-
-
 def sm_var(sm, axis=None):
     """get variance of one sparse matrix in axis
     if axis=None, then for whole data
@@ -191,88 +154,81 @@ def sm_var(sm, axis=None):
         return e_x2 - np.square(sm.mean(axis=0))
 
 
-def _get_sm_data_rep(overall_coverage, name, debug, sample_size):
+def _get_sm_data_rep(one_sample_cov, sample_size):
     """Return list of (mean, var) points for samples 0 and 1
     overall_coverage is a list of sparse matrix
     """
-    data_rep = []
-    dim = overall_coverage.shape
-    for i in range(dim[0]):
-        # firstly to get union of non-zeros columns
-        tmp_cov = sum(overall_coverage[i])
-        # sample indices and then sample it
-        idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
-        cov = sparse.vstack([overall_coverage[i][j][:,idx] for j in range(dim[1])])
-        # count the mean and var of it
-        m = cov.mean(axis=0)
-        n = sm_var(cov,axis=0)
-        # return data_rep
-        m = np.squeeze(np.asarray(m))
-        n = np.squeeze(np.asarray(n))
-        data_rep.append(zip(m, n))
-        data_rep[i].append((0, 0))  # it adds especially (0,0) to last ..
-        data_rep[i] = np.asarray(data_rep[i])
+    # data_rep = []
+    # firstly to get union of non-zeros columns
+    tmp_cov = sum(one_sample_cov)
+    # sample indices and then sample it
+    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
+    idx.sort()
+    cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])
+    # count the mean and var of it
+    ms = cov.mean(axis=0)
+    vars = sm_var(cov,axis=0)
+    ms = np.insert(np.squeeze(np.asarray(ms)), len(idx),0)
+    vars = np.insert(np.squeeze(np.asarray(vars)),len(idx),0)
+    # we add 0 to ms and vars, but consider computation time, could we find a better way??
+    idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
+                      vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
+    final_ms = ms[idx]
+    final_vars = vars[idx]
 
-    if debug:
-        for i in range(dim[0]):
-            np.save(str(name) + "-emp-data" + str(i) + ".npy", data_rep[i])
-
-    for i in range(2):
-        data_rep[i] = data_rep[i][
-                      np.logical_and(
-                          data_rep[i][:, 0] < np.percentile(data_rep[i][:, 0], 99.75) * (
-                          data_rep[i][:, 0] > np.percentile(data_rep[i][:, 0], 1.25)),
-                          data_rep[i][:, 1] < np.percentile(data_rep[i][:, 1], 99.75) * (
-                          data_rep[i][:, 1] > np.percentile(data_rep[i][:, 1], 1.25))), :]
-        # data_rep[i] = data_rep[i][data_rep[i][:,0] < np.percentile(data_rep[i][:,0], 99.75)] # m cut down, and m cut down greater than one value
-        # data_rep[i] = data_rep[i][data_rep[i][:,1] < np.percentile(data_rep[i][:,1], 99.75)] # variance, n, cut down between one interval..
-
-    return data_rep
+    # we need to return mean and var list, maybe one by one, we could filter data
+    return final_ms, final_vars
 
 
-def fit_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
-    """Estimate empirical distribution (quadr.) based on empirical distribution"""
+def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
+    """Estimate empirical distribution (quadr.) based on empirical distribution
+    On paper, it says for smaller samples, we use this, but for big samples, should we change methods ???
+    change this method and combine it with get_data_rep;
+    main thing is repeat to get data
+    """
+    plot_data = []  # means, vars, paras
+    dim = overall_coverage['dim'] # now it's a list, so we can't do it , but we could use dictionary and add dimension into it
     done = False
-    plot_data = [] #means, vars, paras
-
+    # for this function, if we get bad result, we do it again, to get better samples again
+    # and fit it again...until a good fit
     while not done:
-        # data_rep = _get_data_rep(overall_coverage, name, debug, sample_size)
-        data_rep = _get_sm_data_rep(overall_coverage, name, debug, sample_size)
         res = []
-        for i in range(2):
+        for i in range(dim[0]):
             try:
-                m = np.asarray(map(lambda x: x[0], data_rep[i])) #means list
-                v = np.asarray(map(lambda x: x[1], data_rep[i])) #vars list
-                
-                if len(m) > 0 and len(v) > 0: 
+                m, v = _get_sm_data_rep(overall_coverage['data'][i], sample_size)
+
+                if debug:
+                    np.save(str(name) + "-emp-data" + str(i) + ".npy", zip(m,v))
+
+                if len(m) > 0 and len(v) > 0:
                     try:
-                        p, _ = curve_fit(_func_quad_2p, m, v) #fit quad. function to empirical data
+                        p, _ = curve_fit(_func_quad_2p, m, v)  # fit quad. function to empirical data
                     except:
                         print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
-                        break #restart for loop
-                else:
+                        break  # restart for loop
+                else: # one length is zero, it means??
                     p = np.array([0, 1])
-                
+
                 res.append(p)
                 plot_data.append((m, v, p))
-                if i == 1:
-                    done = True
+
             except RuntimeError:
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
-                break #restart for loop
-    
+                break  # restart for loop
+        # after loop successfully ends, we are done
+        done = True
     if report:
         _plot_func(plot_data, outputdir)
-    
+
     if poisson:
         print("Use Poisson distribution as emission", file=sys.stderr)
         p[0] = 0
-        p[1] = 0
+        p[1] = 0 # here it should be 0, we assume var = mean
         res = [np.array([0, 0]), np.array([0, 0])]
-    
+
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
 
-    
+
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     print("Computing info...", file=sys.stderr)
     f = open(name + '-posts.bed', 'w')
@@ -474,7 +430,7 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
     else:
         norm_regionset = None
 
-    multi_cov_set = MultiCoverageSet(name=name, region_giver=region_giver, genome_path=genome_path,
+    cov_set = MultiCoverageSet(name=name, region_giver=region_giver, genome_path=genome_path,
                                      binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics,inputs_statics=inputs_statics,
                                      factors_inputs=factors_inputs,  verbose=verbose,
                                      no_gc_content=no_gc_content, debug=debug,
@@ -484,6 +440,33 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
                                      gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw,
                                      folder_report=configuration.FOLDER_REPORT, report=report, save_input=save_input,
                                      m_threshold=m_threshold, a_threshold=a_threshold)
+    # actually here, after coverage initialization, we can process MultiCoverageSet here;
+    # do normalization of inputs
+    # do normalization of signals
+    cov_set._compute_gc_content(no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver)
+    if inputs_statics:
+        cov_set._normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
+    if save_input:
+        cov_set._output_input_bw(name, region_giver.chrom, save_wig)
+
+    # much complex, so we decay to change it
+    cov_set._normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset,
+                                  report,
+                                  m_threshold, a_threshold)
+
+    ## After this step, we have already normalized data, so we could output normalization data
+    if output_bw:
+        cov_set._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
+
+    # count_scores and other things, not in _init_ function ;;
+
+    # then later we could split functions into different files;
+    ## input + output
+
+    ## fit-mean-var
+
+    ## get-peaks
+
     return multi_cov_set
 
 

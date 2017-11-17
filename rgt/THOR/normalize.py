@@ -90,6 +90,7 @@ def get_bin_from_covs(cov, step_times=10):
         cov_counts.append(bin_sum)
     return cov_counts
 
+
 def _get_lists_from_cov(count_list, zero_counts, two_sample=False):
     if two_sample:
         count_list.sort(key=lambda x: x[0] + x[1])
@@ -230,7 +231,7 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
 
     """
     factors_signal = []
-    dim = [2,2]
+    dim = overall_coverage['dim']
     # at least one file has one read in it...
     # or we could get mask_ref with all data are over 0
     # non_zeros columns for all coverage from each file
@@ -239,20 +240,20 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     for i in range(dim[0]):
         for j in range(dim[1]):
             if valid_indices is None:
-                valid_indices = set(overall_coverage[i][j].indices)
+                valid_indices = set(overall_coverage['data'][i][j].indices)
             else:
-                valid_indices &= set(overall_coverage[i][j].indices)
+                valid_indices &= set(overall_coverage['data'][i][j].indices)
     #mask_ref = reduce(lambda x, y: set(x) & set(y),
     #                         [overall_coverage[i][j].indices for j in range(dim[1]) for i in range(dim[0])])
     mask_ref = list(valid_indices)
-    sm_ref = reduce(lambda x,y: x+y, [overall_coverage[i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
+    sm_ref = reduce(lambda x,y: x+y, [overall_coverage['data'][i][j][:, mask_ref] for i in range(dim[0]) for j in range(dim[1])])
     ref = sm_ref.data/float(dim[0]*dim[1])
 
     for i in range(dim[0]):
         factors_signal.append([])
         for j in range(dim[1]):  # normalize all replicates
             # get the data for each sample under each condition
-            data_rep = overall_coverage[i][j][:, mask_ref].data
+            data_rep = overall_coverage['data'][i][j][:, mask_ref].data
             # here we sample data but in Manuel method, he uses the biggest ones...
             tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
             tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
@@ -308,5 +309,8 @@ if __name__ == "__main__":
 
     #s = get_sm_norm_TMM_factor(overall_cov, m_threshold=80,a_threshold=95)
     #print(s)
-
-    dpc_help.fit_mean_var_distr(overall_cov, 'fun-var-test', True, False, 'test', False, True, sample_size=5000)
+    cov = {'dim':[2,2], 'data':overall_cov}
+    z1 = dpc_help.fit_sm_mean_var_distr(cov, 'fun-var-test', True, False, 'test', False, False, sample_size=5000)
+    #z2 = dpc_help.fit_mean_var_distr(orig_cov, 'fun-var-test', True, False, 'test', False, False, sample_size=5000)
+    print(z1)
+    # print(z2)

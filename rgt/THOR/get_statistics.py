@@ -242,7 +242,7 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
 
 def update_statics_extension_sizes(statics, exts_list):
     """update extension sizes for statics data from given 1-D list"""
-    if exts_list:
+    if statics and exts_list:
         for i in range(statics['dim'][0]):
             for j in range(statics['dim'][1]):
                 statics['data'][i][j]['extension_size'] = exts_list[i*statics['dim'][1] + j]
