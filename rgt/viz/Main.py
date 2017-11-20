@@ -182,7 +182,7 @@ def main():
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends','upstream','downstream'] 
+    choice_center = ['midpoint',"midpoint_sense", 'bothends','upstream','downstream']
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_lineplot.add_argument('input', help=helpinput)
@@ -213,11 +213,12 @@ def main():
     parser_lineplot.add_argument('-sense', action="store_true", help='Set the plot sense-specific. (default: %(default)s)')
     parser_lineplot.add_argument('-strand', action="store_true", help='Set the plot strand-specific. (default: %(default)s)')
     parser_lineplot.add_argument('-average', action="store_true", help='Show only the average of the replicates. (default: %(default)s)')
+    parser_lineplot.add_argument('-flip_negative', action="store_true", default=False, help='Flip the negative strand (default: %(default)s)')
     
     ################### Heatmap ##########################################
     parser_heatmap = subparsers.add_parser('heatmap', help='Generate heatmap with various modes.')
     
-    choice_center = ['midpoint','leftend','rightend','bothends', 'upstream', 'downstream'] 
+    choice_center = ['midpoint','bothends', 'upstream', 'downstream']
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_heatmap.add_argument('input', help=helpinput)
@@ -647,7 +648,7 @@ def main():
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
-                                test=args.test, sense=args.sense, strand=args.strand)
+                                test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
             lineplot.relocate_bed()

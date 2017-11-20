@@ -465,6 +465,7 @@ class GenomicRegionSet:
 
             if not genes.sorted: genes.sort()
 
+
             last_j = len(genes) - 1
             j = 0
             if strand_specific:

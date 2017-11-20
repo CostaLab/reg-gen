@@ -21,7 +21,7 @@ dir = os.getcwd()
 
 class Lineplot:
     def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss,
-                 df, dft, fields, test, sense, strand):
+                 df, dft, fields, test, sense, strand, flipnegative):
 
         # Read the Experimental Matrix
         self.title = title
@@ -53,6 +53,7 @@ class Lineplot:
         self.dft = dft
         self.sense = sense
         self.strand = strand
+        self.flipnegative = flipnegative
 
     def relocate_bed(self):
         self.processed_beds = []
@@ -77,10 +78,10 @@ class Lineplot:
                 newbedF = allbed.filter_strand(strand="-")
                 self.processed_bedsF.append(newbedF)
             else:
-                newbed = bed.relocate_regions(center=self.center,
+                allbed = bed.relocate_regions(center=self.center,
                                               left_length=self.extend + int(0.5 * self.bs) + 2 * self.ss,
                                               right_length=self.extend + int(0.5 * self.bs) + 2 * self.ss)
-                self.processed_beds.append(newbed)
+                self.processed_beds.append(allbed)
 
     def group_tags(self, groupby, sortby, colorby):
         """Generate the tags for the grouping of plot
@@ -226,6 +227,13 @@ class Lineplot:
                                                     cov.array_transpose()
                                                     if normRPM: cov.normRPM()
 
+                                            if self.center == "midpoint" and self.flipnegative:
+                                                for k, r in enumerate(self.processed_beds[i]):
+                                                    if r.orientation == "-":
+                                                        # print(k)
+                                                        # print(cov.coverage[k])
+                                                        cov.coverage[k] = cov.coverage[k][::-1]
+
                                             # When bothends, consider the fliping end
                                             if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
                                                 if "Conservation" in [s,g,c,d]:
@@ -356,6 +364,7 @@ class Lineplot:
                             else:
                                 print("Warning: There is no repetitive reads for calculating difference.\n"
                                       "         Please add one more entry in experimental matrix.")
+
         self.data = data
 
     def colormap(self, colorby, definedinEM):

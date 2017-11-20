@@ -94,7 +94,7 @@ class Input(object):
                 #######################
                 # Non DE genes
                 self.nde_genes = GeneSet("nde genes")
-                if self.pars.bg.endswith(".txt"):
+                if self.pars.bg and self.pars.bg.endswith(".txt"):
                     self.nde_genes.read(self.pars.bg)
                 else:
                     self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
