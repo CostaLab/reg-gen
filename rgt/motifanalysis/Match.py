@@ -6,11 +6,11 @@
 from __future__ import print_function
 import os
 from glob import glob
-from optparse import OptionGroup
 import time
+import sys
 
 # Internal
-from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, npath
+from rgt.Util import ErrorHandler, MotifData, GenomeData, npath
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -28,7 +28,61 @@ from MOODS import tools, scan
 # Functions
 ###################################################################################################
 
-def main_matching():
+def matching_options(parser):
+    # Parameters Options
+    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
+                        help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
+                             "Common choices are hg19 or hg38.")
+    parser.add_argument("--fpr", type=float, metavar="FLOAT", default=0.0001,
+                        help="False positive rate cutoff.")
+    parser.add_argument("--pseudocounts", type=float, metavar="FLOAT", default=1.0,
+                        help="Pseudocounts to be added to raw counts of each PFM.")
+    parser.add_argument("--rand-proportion", type=float, metavar="FLOAT",
+                        help="If set, a random regions file will be created (eg, for later enrichment analysis). "
+                             "The number of coordinates will be equal to this value times the size of the input"
+                             "regions. We advise you use a value of at least 10.")
+    parser.add_argument("--norm-threshold", action="store_true", default=False,
+                        help="If this option is used, the thresholds for all PWMs will be normalized by their length. "
+                             "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr. "
+                             "Then, all thresholds are divided by the length of the motif. The final threshold "
+                             "consists of the average between all normalized motif thresholds. This single threshold "
+                             "will be applied to all motifs.")
+    parser.add_argument("--use-only-motifs", dest="selected_motifs_filename", type=str, metavar="PATH",
+                        help="Only use the motifs contained within this file (one for each line).")
+    parser.add_argument("--input-matrix", type=str, metavar="PATH",
+                        help="If an experimental matrix is provided, the input arguments will be ignored.")
+
+    # Promoter-matching args
+    group = parser.add_argument_group("Promoter-regions matching",
+                                      "Takes a list of genes, extracts their promoter regions and performs motif "
+                                      "matching on these. ")
+    group.add_argument("--gene-list", dest="promoter_genes_filename", type=str, metavar="PATH",
+                       help="List of genes (one per line) to get the promoter regions from. "
+                            "If provided, any input file or experimental matrix will be ignored")
+    group.add_argument("--make-background", dest="promoter_make_background", action="store_true", default=False,
+                       help="If set, it will perform motif matching on the 'background regions', composed of "
+                            "the promoters of all available genes. It doesn't require --gene-list.")
+    group.add_argument("--promoter-length", type=int, metavar="INT", default=1000,
+                       help="Length of the promoter region (in bp) to be extracted from each gene.")
+
+    # Output args
+    group = parser.add_argument_group("Output",
+                                      "Where to put the output files and how to post-process them.")
+    group.add_argument("--output-location", type=str, metavar="PATH",
+                       help="Path where the output MPBS files will be written. Defaults to 'match' in the "
+                            "current directory.")
+    group.add_argument("--bigbed", action="store_true", default=False,
+                       help="If this option is used, all bed files will be written as bigbed.")
+    group.add_argument("--normalize-bitscore", action="store_true", default=False,
+                       help="In order to print bigbed files the scores need to be normalized between 0 and 1000. "
+                            "Don't use this option if real bitscores should be printed in the resulting bed file. "
+                            "Without this option, bigbed files will never be created.")
+
+    parser.add_argument('input_files', metavar='regions.bed', type=str, nargs='*',
+                        help='BED files to perform motif matching on')
+
+
+def main_matching(args):
     """
     Performs motif matching.
     """
@@ -40,83 +94,23 @@ def main_matching():
     # Initializing Error Handler
     err = ErrorHandler()
 
-    # Parameters
-    usage_message = "%prog --matching [options] [input1.bed input2.bed ..]"
-
-    # Initializing Option Parser
-    parser = PassThroughOptionParser(usage=usage_message)
-
-    # Parameters Options
-    parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
-                      help="Organism considered on the analysis. Check our full documentation for all available "
-                           "options. All default files such as genomes will be based on the chosen organism "
-                           "and the data.config file.")
-    parser.add_option("--fpr", dest="fpr", type="float", metavar="FLOAT", default=0.0001,
-                      help="False positive rate cutoff for motif matching.")
-    parser.add_option("--pseudocounts", dest="pseudocounts", type="float", metavar="FLOAT", default=1.0,
-                      help="Pseudocounts to be added to raw counts of each PFM.")
-    parser.add_option("--rand-proportion", dest="rand_proportion", type="float", metavar="FLOAT",
-                      help="If set, a random regions file will be created (eg, for later enrichment analysis). "
-                           "The number of coordinates will be equal to this value times the size of the input regions. "
-                           "We advise you use a value of at least 10.")
-    parser.add_option("--norm-threshold", dest="norm_threshold", action="store_true", default=False,
-                      help="If this option is used, the thresholds for all PWMs will be normalized by their length. "
-                           "In this scheme, the threshold cutoff is evaluated in the regular way by the given fpr. "
-                           "Then, all thresholds are divided by the length of the motif. The final threshold "
-                           "consists of the average between all normalized motif thresholds. This single threshold "
-                           "will be applied to all motifs.")
-    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
-                      help="Only use the motifs contained within this file (one for each line).")
-    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
-                      help="If an experimental matrix is provided, the input arguments will be ignored.")
-
-    # Promoter-matching options
-    group = OptionGroup(parser, "Promoter-regions matching options",
-                        "Takes a list of genes, extracts their promoter regions and performs motif matching on these. "
-                        "If a genes file is provided, the input files and experimental matrix will be ignored.")
-    group.add_option("--gene-list", dest="promoter_genes_filename", type="string", metavar="PATH",
-                     help="List of genes (one per line) to get the promoter regions from.")
-    group.add_option("--make-background", dest="promoter_make_background", action="store_true", default=False,
-                     help="If set, it will perform motif matching on the 'background regions', composed of "
-                          "the promoters of all available genes. It doesn't require --gene-list.")
-    group.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
-                     help="Length of the promoter region (in bp) to be extracted from each gene.")
-    parser.add_option_group(group)
-
-    # Output options
-    group = OptionGroup(parser, "Output options",
-                        "Where to put the output files and how to post-process them.")
-    group.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                     help="Path where the output MPBS files will be written. Defaults to 'match' in the "
-                          "current directory.")
-    group.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
-                     help="If this option is used, all bed files will be written as bigbed.")
-    group.add_option("--normalize-bitscore", dest="normalize_bitscore", action="store_true", default=False,
-                     help="In order to print bigbed files the scores need to be normalized between 0 and 1000. "
-                          "Don't use this option if real bitscores should be printed in the resulting bed file. "
-                          "Without this option, bigbed files will never be created.")
-    parser.add_option_group(group)
-
-    # Processing Options
-    options, arguments = parser.parse_args()
-
     # Additional Parameters
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
     # we take care of conflicting parameters before going into the core of the method
-    if options.promoter_genes_filename:
+    if args.promoter_genes_filename:
         # disable random regions and input matrix
-        options.rand_proportion = None
-        options.input_matrix = None
+        args.rand_proportion = None
+        args.input_matrix = None
 
     ###################################################################################################
     # Initializations
     ###################################################################################################
 
     # Output folder
-    if options.output_location:
-        output_location = options.output_location
+    if args.output_location:
+        output_location = args.output_location
     else:
         output_location = npath(matching_folder_name)
 
@@ -127,21 +121,26 @@ def main_matching():
         err.throw_error("MM_OUT_FOLDER_CREATION")
 
     # Default genomic data
-    genome_data = GenomeData(options.organism)
+    genome_data = GenomeData(args.organism)
+
+    print(">> genome:", genome_data.organism)
 
     # Default motif data
     motif_data = MotifData()
 
+    print(">> motif repositories:", motif_data.repositories_list)
+
     # Reading motif file
     selected_motifs = []
 
-    if options.selected_motifs_filename:
+    if args.selected_motifs_filename:
         try:
-            with open(options.selected_motifs_filename) as f:
+            with open(args.selected_motifs_filename) as f:
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
+                print(">> motif file loaded:", len(selected_motifs), "motifs")
         except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
     ###################################################################################################
     # Reading Input Regions
@@ -151,15 +150,15 @@ def main_matching():
 
     # get promoter regions from list of genes (both target and background)
     # TODO: should be more clever, allow precomputed regions etc
-    if options.promoter_genes_filename:
-        annotation = AnnotationSet(options.organism, alias_source=options.organism,
+    if args.promoter_genes_filename:
+        annotation = AnnotationSet(args.organism, alias_source=args.organism,
                                    protein_coding=True, known_only=True)
 
         target_genes = GeneSet("target_genes")
-        target_genes.read(options.promoter_genes_filename)
+        target_genes.read(args.promoter_genes_filename)
 
         # TODO what do we do with unmapped genes? maybe just print them out
-        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=options.promoter_length)
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=args.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
         output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
@@ -167,14 +166,14 @@ def main_matching():
 
         genomic_regions_dict[target_regions.name] = target_regions
 
-        if options.promoter_make_background:
+        if args.promoter_make_background:
             # background is made of all genes minus the target genes
             background_genes = GeneSet("background_genes")
-            background_genes.get_all_genes(organism=options.organism)
+            background_genes.get_all_genes(organism=args.organism)
             background_genes.subtract(target_genes)
 
             background_regions = annotation.get_promoters(gene_set=background_genes,
-                                                          promoterLength=options.promoter_length)
+                                                          promoterLength=args.promoter_length)
             background_regions.name = "background_regions"
             background_regions.sort()
             output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
@@ -182,19 +181,21 @@ def main_matching():
 
             genomic_regions_dict[background_regions.name] = background_regions
 
+            print(">> promoter background created:", len(background_regions), "regions")
+
     # get experimental matrix, if available
-    if options.input_matrix:
+    if args.input_matrix:
         try:
             exp_matrix = ExperimentalMatrix()
-            exp_matrix.read(options.input_matrix)
+            exp_matrix.read(args.input_matrix)
 
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
-    elif arguments:
+    elif args.input_files:
         # get input files, if available
-        for input_filename in arguments:
+        for input_filename in args.input_files:
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
@@ -235,10 +236,10 @@ def main_matching():
     ###################################################################################################
 
     # if a random proportion is set, create random regions
-    if options.rand_proportion:
+    if args.rand_proportion:
 
         # Create random coordinates and name it random_regions
-        rand_region = max_region.random_regions(options.organism, multiply_factor=options.rand_proportion, chrom_X=True)
+        rand_region = max_region.random_regions(args.organism, multiply_factor=args.rand_proportion, chrom_X=True)
         rand_region.sort()
         rand_region.name = random_region_name
 
@@ -251,7 +252,7 @@ def main_matching():
         rand_region.write(rand_bed_file_name)
 
         # Verifying condition to write bb
-        if options.bigbed:
+        if args.bigbed:
 
             # Fetching file with chromosome sizes
             chrom_sizes_file = genome_data.get_chromosome_sizes()
@@ -264,6 +265,8 @@ def main_matching():
                 os.remove(rand_bed_file_name)
             except Exception:
                 err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
+
+        print(">> random regions file created:", len(rand_region), "regions")
 
     ###################################################################################################
     # Creating PWMs
@@ -288,10 +291,10 @@ def main_matching():
     # Iterating on grouped file name list
     for motif_file_name in motif_file_names:
         # Append motif motif_list
-        motif_list.append(Motif(motif_file_name, options.pseudocounts, options.fpr, thresholds))
+        motif_list.append(Motif(motif_file_name, args.pseudocounts, args.fpr, thresholds))
 
     # Performing normalized threshold strategy if requested
-    if options.norm_threshold:
+    if args.norm_threshold:
         threshold_list = [motif.threshold / motif.len for motif in motif_list]
         unique_threshold = sum(threshold_list) / len(threshold_list)
     else:
@@ -320,21 +323,24 @@ def main_matching():
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
 
+    print()
+
     # Iterating on list of genomic regions
-    for genomic_region_set in regions_to_match:
+    for grs in regions_to_match:
 
         start = time.time()
-        print("### matching all regions of", genomic_region_set.name, "(", len(genomic_region_set), ") ###")
+        print(">>> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
+        sys.stdout.flush()
 
         # Initializing output bed file
-        output_bed_file = os.path.join(output_location, genomic_region_set.name + "_mpbs.bed")
+        output_bed_file = os.path.join(output_location, grs.name + "_mpbs.bed")
 
         # must remove it because we append the MPBS
         if os.path.isfile(output_bed_file):
             os.remove(output_bed_file)
 
         # Iterating on genomic regions
-        for genomic_region in genomic_region_set:
+        for genomic_region in grs:
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
@@ -342,10 +348,10 @@ def main_matching():
             grs = match_multiple(scanner, motif_list, sequence, genomic_region)
             grs.write(output_bed_file, mode="a")
 
-        del genomic_region_set.sequences[:]
+        del grs.sequences[:]
 
         # Verifying condition to write bb
-        if options.bigbed and options.normalize_bitscore:
+        if args.bigbed and args.normalize_bitscore:
             # Fetching file with chromosome sizes
             chrom_sizes_file = genome_data.get_chromosome_sizes()
 
@@ -355,8 +361,8 @@ def main_matching():
             # removing BED file
             os.remove(output_bed_file)
 
-        print("[completed in", time.time() - start, "seconds]")
-        print()
+        secs = time.time() - start
+        print("[", "%02.3f" % secs, " seconds]", sep="")
 
 
 # TODO must double-check/fix the normalisation.

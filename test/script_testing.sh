@@ -135,9 +135,9 @@ fi
 # Run test script
 cd RGT_MotifAnalysis_FullSiteTest
 echo "Running matching.."
-rgt-motifanalysis --matching input/regions_K562.bed input/background.bed
+rgt-motifanalysis matching --organism hg19 input/regions_K562.bed input/background.bed
 echo "Running enrichment.."
-rgt-motifanalysis --enrichment input/background.bed input/regions_K562.bed
+rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
 cd ..
 
 # Promoter test
@@ -158,9 +158,9 @@ fi
 # Run test script
 cd RGT_MotifAnalysis_PromoterTest
 echo "Running matching.."
-rgt-motifanalysis --matching --gene-list input/genes.txt input/background.bed
+rgt-motifanalysis matching --organism hg19 --gene-list input/genes.txt input/background.bed
 echo "Running enrichment.."
-rgt-motifanalysis --enrichment input/background.bed match/target_regions.bed
+rgt-motifanalysis enrichment --organism hg19 input/background.bed match/target_regions.bed
 cd ..
 
 # Gene-association test
@@ -181,9 +181,9 @@ fi
 # Run test script
 cd RGT_MotifAnalysis_GeneAssocTest
 echo "Running matching.."
-rgt-motifanalysis --matching --input-matrix input_matrix.txt --rand-proportion 10
+rgt-motifanalysis matching --organism hg19 --input-matrix input_matrix.txt --rand-proportion 10
 echo "Running enrichment.."
-rgt-motifanalysis --enrichment --input-matrix input_matrix.txt match/random_regions.bed
+rgt-motifanalysis enrichment --organism hg19 --input-matrix input_matrix.txt match/random_regions.bed
 cd ..
 
 echo "********* Motif Analysis test completed ****************"

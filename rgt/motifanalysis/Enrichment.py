@@ -8,9 +8,10 @@ import os
 import sys
 from glob import glob
 from shutil import copy
+import time
 
 # Internal
-from rgt.Util import PassThroughOptionParser, ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from rgt.Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from rgt.GeneSet import GeneSet
 from rgt.GenomicRegionSet import GenomicRegionSet
@@ -22,69 +23,64 @@ from Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_c
 from fisher import pvalue
 
 
-def main_enrichment():
+###################################################################################################
+# Functions
+###################################################################################################
+
+def enrichment_options(parser):
+    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
+                        help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
+                             "Common choices are hg19 or hg38.")
+    parser.add_argument("--matching-location", type=str, metavar="PATH",
+                        help="Directory where the matching output containing the MPBS files resides. "
+                             "Defaults to 'match' in the current directory.")
+    parser.add_argument("--use-only-motifs", dest="selected_motifs_filename", type=str, metavar="PATH",
+                        help="Only use the motifs contained within this file (one for each line).")
+    parser.add_argument("--input-matrix", type=str, metavar="PATH",
+                        help="If an experimental matrix is provided, the input arguments will be ignored.")
+    parser.add_argument("--multiple-test-alpha", type=float, metavar="FLOAT", default=0.05,
+                        help="Alpha value for multiple test.")
+
+    group = parser.add_argument_group("Promoter-regions enrichment",
+                                      "Can only work through the experimental matrix. See documentation.")
+    group.add_argument("--promoter-length", type=int, metavar="INT", default=1000,
+                       help="Length of the promoter region (in bp) to be extracted from each gene.")
+    group.add_argument("--maximum-association-length", type=int, metavar="INT", default=50000,
+                       help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
+                            "be considered associated with the latter.")
+
+    # Output Options
+    group = parser.add_argument_group("Output",
+                                      "Where to put the output files and how to post-process them.")
+    group.add_argument("--output-location", type=str, metavar="PATH",
+                       help="Path where the output MPBS files will be written. Defaults to 'enrichment' in the "
+                            "current directory.")
+    group.add_argument("--print-thresh", type=float, metavar="FLOAT", default=0.05,
+                       help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
+                            "this option are printed. Use 1.0 to print all MPBSs.")
+    group.add_argument("--bigbed", action="store_true", default=False,
+                       help="If this option is used, all bed files will be written as bigbed.")
+    group.add_argument("--no-copy-logos", action="store_true", default=False,
+                       help="If set, the logos to be showed on the enrichment statistics page will NOT be "
+                            "copied to a local directory; instead, the HTML result file will contain absolute "
+                            "paths to the logos in your RGTDATA folder.")
+
+    parser.add_argument('background_file', metavar='background.bed', type=str,
+                        help='BED file containing background regions.')
+    parser.add_argument('input_files', metavar='input.bed', type=str, nargs='*',
+                        help='BED files to be enriched against the background.')
+
+
+def main_enrichment(args):
     """
     Performs motif enrichment.
     """
 
-    ###################################################################################################
-    # Processing Input Arguments
-    ###################################################################################################
-
     # Initializing Error Handler
     err = ErrorHandler()
 
-    # Parameters
-    usage_message = "%prog --enrichment [options] <background_bed_file> [input1.bed input2.bed ..]"
-
-    # Initializing Option Parser
-    parser = PassThroughOptionParser(usage=usage_message)
-
-    # Parameters Options
-    parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
-                      help="Organism considered on the analysis. Check our full documentation for all available "
-                           "options. All default files such as genomes will be based on the chosen organism "
-                           "and the data.config file.")
-    parser.add_option("--promoter-length", dest="promoter_length", type="int", metavar="INT", default=1000,
-                      help="Length of the promoter region (in bp) considered on the creation of the "
-                           "regions-gene association.")
-    parser.add_option("--maximum-association-length", dest="maximum_association_length", type="int", metavar="INT",
-                      default=50000,
-                      help="Maximum distance between a coordinate and a gene (in bp) in order for the former to "
-                           "be considered associated with the latter.")
-    parser.add_option("--multiple-test-alpha", dest="multiple_test_alpha", type="float", metavar="FLOAT", default=0.05,
-                      help="Alpha value for multiple test.")
-    parser.add_option("--use-only-motifs", dest="selected_motifs_filename", type="string", metavar="PATH",
-                      help="Only use the motifs contained within this file (one for each line).")
-    parser.add_option("--matching-location", dest="match_location", type="string", metavar="PATH",
-                      help="Directory where the matching output containing the MPBS files resides. "
-                           "Defaults to 'match' in the current directory.")
-    parser.add_option("--input-matrix", dest="input_matrix", type="string", metavar="PATH",
-                      help="If an experimental matrix is provided, the input arguments will be ignored.")
-
-    # Output Options
-    parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH",
-                      help="Path where the output MPBS files will be written. Defaults to 'enrichment' in the "
-                           "current directory.")
-    parser.add_option("--print-thresh", dest="print_thresh", type="float", metavar="FLOAT", default=0.05,
-                      help="Only MPBSs whose factor's enrichment corrected p-value are less than equal "
-                           "this option are printed. Use 1.0 to print all MPBSs.")
-    parser.add_option("--bigbed", dest="bigbed", action="store_true", default=False,
-                      help="If this option is used, all bed files will be written as bigbed.")
-    parser.add_option("--no-copy-logos", dest="no_copy_logos", action="store_true", default=False,
-                      help="If set, the logos to be showed on the enrichment statistics page will NOT be "
-                           "copied to a local directory; instead, the HTML result file will contain absolute "
-                           "paths to the logos in your rgtdata folder.")
-
-    # Processing Options
-    options, arguments = parser.parse_args()
-
-    if len(arguments) < 1:
-        print(usage_message)
-        sys.exit(1)
-
-    background_filename = arguments[0]
-    input_files = arguments[1:]  # empty list if no input files
+    background_filename = args.background_file
+    input_files = args.input_files  # empty list if no input files
 
     # Additional Parameters
     matching_folder_name = "match"
@@ -103,7 +99,7 @@ def main_enrichment():
                    "BACKGROUND FREQUENCY", "GO"]
     html_type_list = "sissssssssl"
     logo_width = 200
-    if "hg" in options.organism:
+    if "hg" in args.organism:
         gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=hsapiens&query="
     else:
         gprofiler_link = "http://biit.cs.ut.ee/gprofiler/index.cgi?significant=1&sort_by_structure=1&ordered_query=0&organism=mmusculus&query="
@@ -114,8 +110,8 @@ def main_enrichment():
     ###################################################################################################
 
     # Output folder
-    if options.output_location:
-        output_location = options.output_location
+    if args.output_location:
+        output_location = args.output_location
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
 
@@ -127,8 +123,8 @@ def main_enrichment():
         err.throw_error("ME_OUT_FOLDER_CREATION")
 
     # Matching folder
-    if options.match_location:
-        match_location = options.match_location
+    if args.matching_location:
+        match_location = args.matching_location
     else:
         match_location = os.path.join(os.getcwd(), matching_folder_name)
 
@@ -175,21 +171,26 @@ def main_enrichment():
         err.throw_error("DEFAULT_ERROR", add_msg="Background MPBS file must be in either BED or BigBed format.")
 
     # Default genomic data
-    genome_data = GenomeData(options.organism)
+    genome_data = GenomeData(args.organism)
+
+    print(">> genome:", genome_data.organism)
 
     # Default motif data
     motif_data = MotifData()
 
+    print(">> motif repositories:", motif_data.repositories_list)
+
     # Reading motif file
     selected_motifs = []
 
-    if options.selected_motifs_filename:
+    if args.selected_motifs_filename:
         try:
-            with open(options.selected_motifs_filename) as f:
+            with open(args.selected_motifs_filename) as f:
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
+                print(">> motif file loaded:", len(selected_motifs), "motifs")
         except Exception:
-            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=options.selected_motifs_filename)
+            err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
     # Default image data
     image_data = ImageData()
@@ -205,10 +206,10 @@ def main_enrichment():
     ###################################################################################################
 
     # get experimental matrix, if available
-    if options.input_matrix:
+    if args.input_matrix:
         try:
             exp_matrix = ExperimentalMatrix()
-            exp_matrix.read(options.input_matrix)
+            exp_matrix.read(args.input_matrix)
 
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
@@ -331,6 +332,12 @@ def main_enrichment():
     # Background Statistics
     ###################################################################################################
 
+    print()
+
+    start = time.time()
+    print(">> collecting background statistics...", sep="", end="")
+    sys.stdout.flush()
+
     background = GenomicRegionSet("background")
     background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
@@ -346,8 +353,13 @@ def main_enrichment():
         os.remove(background_mpbs_filename)
 
     # scheduling region sets for garbage collection
+    del background.sequences[:]
     del background
+    del background_mpbs.sequences[:]
     del background_mpbs
+
+    secs = time.time() - start
+    print("[", "%02.3f" % secs, " seconds]", sep="")
 
     ###################################################################################################
     # Enrichment Statistics
@@ -369,11 +381,17 @@ def main_enrichment():
                 link_name = grs.name
                 sitetest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_fulltest + ".html")
 
+    print()
+
     # Iterating on each input object
     for curr_input in input_list:
 
         # Iterating on each input genomic region set
         for grs in curr_input.region_list:
+
+            start = time.time()
+            print(">>> enriching [", grs.name, "], ", len(grs), " regions...", end="", sep="")
+            sys.stdout.flush()
 
             # Initialization
             original_name = grs.name
@@ -423,9 +441,9 @@ def main_enrichment():
             if curr_input.gene_set:
 
                 # Performing association of input region with gene_set
-                grs = grs.gene_association(organism=options.organism, gene_set=curr_input.gene_set,
-                                           promoterLength=options.promoter_length,
-                                           threshDist=options.maximum_association_length)
+                grs = grs.gene_association(organism=args.organism, gene_set=curr_input.gene_set,
+                                           promoterLength=args.promoter_length,
+                                           threshDist=args.maximum_association_length)
 
                 # Writing gene-coordinate association
                 output_file_name = npath(os.path.join(curr_output_folder_name, output_association_name + ".bed"))
@@ -441,7 +459,7 @@ def main_enrichment():
                         curr_name = ":".join([e[0] + "_" + e[1] for e in zip(curr_gene_list, curr_prox_list)])
                     output_file.write("\t".join([str(e) for e in [gr.chrom, gr.initial, gr.final, curr_name]]) + "\n")
                 output_file.close()
-                if options.bigbed:
+                if args.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     try:
                         bed_to_bb(output_file_name, chrom_sizes_file)
@@ -489,7 +507,7 @@ def main_enrichment():
 
                 # Performing multiple test correction
                 multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
-                                                                                 alpha=options.multiple_test_alpha,
+                                                                                 alpha=args.multiple_test_alpha,
                                                                                  method='indep')
                 corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
                 for i in range(0, len(multiple_corr_list)):
@@ -513,14 +531,14 @@ def main_enrichment():
                 ev_mpbs_grs_filtered = GenomicRegionSet("ev_mpbs_filtered")
                 for m, ev_mpbs_grs in ev_mpbs_dict.items():
                     for region in ev_mpbs_grs:
-                        if corr_pvalue_dict[m] <= options.print_thresh:
+                        if corr_pvalue_dict[m] <= args.print_thresh:
                             ev_mpbs_grs_filtered.add(region)
                 del ev_mpbs_dict
 
                 nev_mpbs_grs_filtered = GenomicRegionSet("nev_mpbs_filtered")
                 for m, nev_mpbs_grs in nev_mpbs_dict.items():
                     for region in nev_mpbs_grs:
-                        if corr_pvalue_dict[m] <= options.print_thresh:
+                        if corr_pvalue_dict[m] <= args.print_thresh:
                             nev_mpbs_grs_filtered.add(region)
                 del nev_mpbs_dict
 
@@ -537,7 +555,7 @@ def main_enrichment():
                 del nev_mpbs_grs_filtered
 
                 # Converting ev and nev mpbs to bigbed
-                if options.bigbed:
+                if args.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
                     try:
                         # create big bed files
@@ -559,7 +577,7 @@ def main_enrichment():
                 output_file.close()
 
                 # unless explicitly forbidden, we copy the logo images locally
-                if not options.no_copy_logos:
+                if not args.no_copy_logos:
                     logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
@@ -574,7 +592,7 @@ def main_enrichment():
                         logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                         if os.path.isfile(logo_file_name):
-                            if not options.no_copy_logos:
+                            if not args.no_copy_logos:
                                 copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                                 # use relative paths in the html
@@ -593,7 +611,7 @@ def main_enrichment():
                 fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
-                                 "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
+                                                                     "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
                                  "</b>",
                                  align="center", bold=False)
                 html.add_heading("* This gene test considered regions associated to the given "
@@ -605,9 +623,9 @@ def main_enrichment():
             else:
 
                 # Association still needs to be done with all genes in order to print gene list
-                grs = grs.gene_association(organism=options.organism, gene_set=None,
-                                           promoterLength=options.promoter_length,
-                                           threshDist=options.maximum_association_length)
+                grs = grs.gene_association(organism=args.organism, gene_set=None,
+                                           promoterLength=args.promoter_length,
+                                           threshDist=args.maximum_association_length)
 
                 # Calculating statistics
                 a_dict, b_dict, ev_genes_dict, ev_mpbs_dict = get_fisher_dict(motif_names, grs, curr_mpbs,
@@ -638,7 +656,7 @@ def main_enrichment():
 
             # Performing multiple test correction
             multiple_corr_rej, multiple_corr_list = multiple_test_correction([e.p_value for e in result_list],
-                                                                             alpha=options.multiple_test_alpha,
+                                                                             alpha=args.multiple_test_alpha,
                                                                              method='indep')
             corr_pvalue_dict = dict()  # Needed to filter the mpbs in a fast way
             for i in range(0, len(multiple_corr_list)):
@@ -666,7 +684,7 @@ def main_enrichment():
 
                 for m, ev_mpbs_grs in ev_mpbs_dict.items():
                     for region in ev_mpbs_grs:
-                        if corr_pvalue_dict[m] <= options.print_thresh:
+                        if corr_pvalue_dict[m] <= args.print_thresh:
                             ev_mpbs_grs_filtered.add(region)
                 del ev_mpbs_dict
 
@@ -679,7 +697,7 @@ def main_enrichment():
                 del ev_mpbs_grs_filtered
 
                 # Converting ev mpbs to bigbed
-                if options.bigbed:
+                if args.bigbed:
                     chrom_sizes_file = genome_data.get_chromosome_sizes()
 
                     try:
@@ -700,7 +718,7 @@ def main_enrichment():
             output_file.close()
 
             # unless explicitly forbidden, we copy the logo images locally
-            if not options.no_copy_logos:
+            if not args.no_copy_logos:
                 logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
@@ -715,7 +733,7 @@ def main_enrichment():
                     logo_file_name = npath(os.path.join(rep, r.name + ".png"))
 
                     if os.path.isfile(logo_file_name):
-                        if not options.no_copy_logos:
+                        if not args.no_copy_logos:
                             copy(logo_file_name, npath(os.path.join(logo_dir_path, r.name + ".png")))
 
                             # use relative paths in the html
@@ -750,3 +768,6 @@ def main_enrichment():
             # Removing files
             for e in to_remove_list:
                 os.remove(e)
+
+            secs = time.time() - start
+            print("[", "%02.3f" % secs, " seconds]", sep="")
