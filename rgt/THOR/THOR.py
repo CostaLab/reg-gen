@@ -27,7 +27,8 @@ from __future__ import print_function
 import sys
 
 # Internal
-from dpc_help import get_peaks, fit_sm_mean_var_distr, initialize, merge_output, handle_input
+from dpc_help import get_peaks, initialize, merge_output, handle_input
+from help_hmm import fit_sm_mean_var_distr
 from tracker import Tracker
 from postprocessing import _output_BED, _output_narrowPeak
 from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
@@ -167,10 +168,10 @@ def main():
     signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
     region_giver.update_regions(signal_statics)
 
-    inputs_statics = None
+    # inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-    #inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
-    #region_giver.update_regions(inputs_statics)
+    inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
+    region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
     options.exts = [225,225,225,228]

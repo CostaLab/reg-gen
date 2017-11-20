@@ -80,12 +80,12 @@ def merge_delete(ext_size, merge, peak_list, pvalue_list):
         if end - start > ext_size:
             if strand == '+':
                 if last_orientation == '+':
-                    region_plus.add(r)
+                    regions_plus.add(r)
                 else:
                     regions_unmergable.add(r)
             elif strand == '-':
                 if last_orientation == '-':
-                    region_mins.add(r)
+                    regions_minus.add(r)
                 else:
                     regions_unmergable.add(r)
                     

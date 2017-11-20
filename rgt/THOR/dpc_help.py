@@ -17,19 +17,17 @@ import os
 import sys
 import pysam
 import numpy as np
-from random import sample
-from math import fabs, log, ceil
+from math import log, ceil
 from operator import add
 from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
 from datetime import datetime
 import shutil
-from scipy import sparse
+
 # Internal
 from rgt.THOR.postprocessing import merge_delete, filter_deadzones
 from MultiCoverageSet import MultiCoverageSet
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.THOR.get_statistics import compute_extension_sizes
 from rgt.THOR.get_fast_gen_pvalue import get_log_pvalue_new
 from input_parser import input_parser
 from rgt.Util import which, npath
@@ -37,16 +35,12 @@ from rgt import __version__
 
 import configuration
 
-# External
-from numpy import linspace
-from scipy.optimize import curve_fit
+np.random.rand(42)
+
 import matplotlib as mpl
 #see http://stackoverflow.com/questions/4931376/generating-matplotlib-graphs-without-a-running-x-server
 mpl.use('Agg')
 import matplotlib.pyplot as plt
-
-
-np.random.rand(42)
 
 
 def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
@@ -81,161 +75,13 @@ def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
                 os.system(c)
 
 
-def _func_quad_2p(x, a, c):
-    """Return y-value of y=max(|a|*x^2 + x + |c|, 0),
-    x may be an array or a single float"""
-    res = []
-    if type(x) is np.ndarray:
-        for el in x:
-            res.append(max(el, fabs(a) * el**2 + el + fabs(c)))
-            
-        return np.asarray(res)
-    else:
-        return max(x, fabs(a) * x**2 + x + fabs(c))
-
-
-def _write_emp_func_data(data, name):
-    """Write mean and variance data"""
-    assert len(data[0]) == len(data[1])
-    f = open(configuration.FOLDER_REPORT_DATA + name + '.data', 'w')
-    for i in range(len(data[0])):
-        print(data[0][i], data[1][i], sep='\t', file=f)
-    f.close()
-
-
-def _plot_func(plot_data, outputdir):
-    """Plot estimated and empirical function"""
-
-    maxs = [] #max for x (mean), max for y (var)
-    for i in range(2): 
-        tmp = np.concatenate((plot_data[0][i], plot_data[1][i])) #plot_data [(m, v, p)], 2 elements
-        maxs.append(max(tmp[tmp < np.percentile(tmp, 90)]))
-
-    for i in range(2):
-        x = linspace(0, max(plot_data[i][0]), int(ceil(max(plot_data[i][0]))))
-        y = _func_quad_2p(x, plot_data[i][2][0], plot_data[i][2][1])
-        
-        for j in range(2):
-            #use matplotlib to plot function and datapoints
-            #and save datapoints to files
-            ext = 'original'
-            if j == 1:
-                plt.xlim([0, maxs[0]])
-                plt.ylim([0, maxs[1]])
-                ext = 'norm'
-            ax = plt.subplot(111)
-            plt.plot(x, y, 'r', label = 'fitted polynomial') #plot polynom
-            plt.scatter(plot_data[i][0], plot_data[i][1], label = 'empirical datapoints') #plot datapoints
-            ax.legend()
-            plt.xlabel('mean')
-            plt.ylabel('variance')
-            plt.title('Estimated Mean-Variance Function')
-            name = "_".join(['mean', 'variance', 'func', 'cond', str(i), ext])
-            _write_emp_func_data(plot_data[i], name)
-            plt.savefig(configuration.FOLDER_REPORT_PICS + name + '.png')
-            plt.close()
-
-
-def sm_var(sm, axis=None):
-    """get variance of one sparse matrix in axis
-    if axis=None, then for whole data
-    if axis=0, for column
-    if axis=1 for row
-    """
-    # get shape of sm_var and axis
-    if axis is None:
-        tmp = sm.data **2
-        return np.mean(tmp) - (sm.mean()) ** 2
-    elif axis == 0:
-        # in column order, but now it's 1_D array
-        tmp = sm[:,:] # create a new sparse-matrix
-        tmp.data **= 2
-        e_x2 = tmp.mean(axis=0)
-        return e_x2 - np.square(sm.mean(axis=0))
-
-
-def _get_sm_data_rep(one_sample_cov, sample_size):
-    """Return list of (mean, var) points for samples 0 and 1
-    overall_coverage is a list of sparse matrix
-    """
-    # data_rep = []
-    # firstly to get union of non-zeros columns
-    tmp_cov = sum(one_sample_cov)
-    # sample indices and then sample it
-    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
-    idx.sort()
-    cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])
-    # count the mean and var of it
-    ms = cov.mean(axis=0)
-    vars = sm_var(cov,axis=0)
-    ms = np.insert(np.squeeze(np.asarray(ms)), len(idx),0)
-    vars = np.insert(np.squeeze(np.asarray(vars)),len(idx),0)
-    # we add 0 to ms and vars, but consider computation time, could we find a better way??
-    idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
-                      vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
-    final_ms = ms[idx]
-    final_vars = vars[idx]
-
-    # we need to return mean and var list, maybe one by one, we could filter data
-    return final_ms, final_vars
-
-
-def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
-    """Estimate empirical distribution (quadr.) based on empirical distribution
-    On paper, it says for smaller samples, we use this, but for big samples, should we change methods ???
-    change this method and combine it with get_data_rep;
-    main thing is repeat to get data
-    """
-    plot_data = []  # means, vars, paras
-    dim = overall_coverage['dim'] # now it's a list, so we can't do it , but we could use dictionary and add dimension into it
-    done = False
-    # for this function, if we get bad result, we do it again, to get better samples again
-    # and fit it again...until a good fit
-    while not done:
-        res = []
-        for i in range(dim[0]):
-            try:
-                m, v = _get_sm_data_rep(overall_coverage['data'][i], sample_size)
-
-                if debug:
-                    np.save(str(name) + "-emp-data" + str(i) + ".npy", zip(m,v))
-
-                if len(m) > 0 and len(v) > 0:
-                    try:
-                        p, _ = curve_fit(_func_quad_2p, m, v)  # fit quad. function to empirical data
-                    except:
-                        print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
-                        break  # restart for loop
-                else: # one length is zero, it means??
-                    p = np.array([0, 1])
-
-                res.append(p)
-                plot_data.append((m, v, p))
-
-            except RuntimeError:
-                print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
-                break  # restart for loop
-        # after loop successfully ends, we are done
-        done = True
-    if report:
-        _plot_func(plot_data, outputdir)
-
-    if poisson:
-        print("Use Poisson distribution as emission", file=sys.stderr)
-        p[0] = 0
-        p[1] = 0 # here it should be 0, we assume var = mean
-        res = [np.array([0, 0]), np.array([0, 0])]
-
-    return lambda x: _func_quad_2p(x, p[0], p[1]), res
-
-
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
     print("Computing info...", file=sys.stderr)
     f = open(name + '-posts.bed', 'w')
     g = open(name + '-states-viterbi.bed', 'w')
     
     for i in range(len(DCS.indices_of_interest)):
-        cov1, cov2 = _get_covs(DCS, i)
+        cov1, cov2 = DCS._get_sm_covs(i)
         p1, p2, p3 = posteriors[i][0], posteriors[i][1], posteriors[i][2]
         chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
         
@@ -306,9 +152,9 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
 
     return pvalues, peaks
     
-
+"""
 def _get_covs(DCS, i, as_list=False):
-    """For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i"""
+    # For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i
     if not as_list:
         cov1 = int(np.mean(DCS.overall_coverage[0][:, DCS.indices_of_interest[i]]))
         cov2 = int(np.mean(DCS.overall_coverage[1][:, DCS.indices_of_interest[i]]))
@@ -319,7 +165,7 @@ def _get_covs(DCS, i, as_list=False):
         cov2 = map(lambda x: x[0], np.asarray((cov2)))
     
     return cov1, cov2
-
+"""
 
 def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
@@ -332,7 +178,7 @@ def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correcti
             continue #ignore background states
 
         strand = '+' if states[i] == 1 else '-'
-        cov1, cov2 = _get_covs(DCS, i, as_list=True)
+        cov1, cov2 = DCS._get_sm_covs(i) # (DCS, i, as_list=True)
         
         cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
@@ -423,7 +269,6 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
     Use sampling methods to initialize certain part of data
     Get exp_data, we have one pattern, 0.1
     """
-
     if norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
         norm_regionset.read(norm_regions)
@@ -431,7 +276,7 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
         norm_regionset = None
 
     cov_set = MultiCoverageSet(name=name, region_giver=region_giver, genome_path=genome_path,
-                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics,inputs_statics=inputs_statics,
+                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
                                      factors_inputs=factors_inputs,  verbose=verbose,
                                      no_gc_content=no_gc_content, debug=debug,
                                      norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip,
@@ -443,31 +288,22 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
     # actually here, after coverage initialization, we can process MultiCoverageSet here;
     # do normalization of inputs
     # do normalization of signals
-    cov_set._compute_gc_content(no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver)
+    no_gc_content = False
+    if not no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
+        cov_set.normalization_by_gc_content(no_gc_content, inputs_statics, genome_path, delta=0.2)
     if inputs_statics:
-        cov_set._normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
+        cov_set.normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
     if save_input:
-        cov_set._output_input_bw(name, region_giver.chrom, save_wig)
-
+        cov_set.output_input_bw(name, region_giver.chrom, save_wig)
     # much complex, so we decay to change it
-    cov_set._normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset,
-                                  report,
-                                  m_threshold, a_threshold)
+    cov_set.normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset,
+                                  report, m_threshold, a_threshold)
 
     ## After this step, we have already normalized data, so we could output normalization data
     if output_bw:
         cov_set._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
 
-    # count_scores and other things, not in _init_ function ;;
-
-    # then later we could split functions into different files;
-    ## input + output
-
-    ## fit-mean-var
-
-    ## get-peaks
-
-    return multi_cov_set
+    return cov_set
 
 
 class HelpfulOptionParser(OptionParser):

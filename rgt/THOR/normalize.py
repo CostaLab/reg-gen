@@ -37,6 +37,7 @@ import sys, operator
 import numpy as np
 from random import sample
 from scipy import sparse
+import pysam
 
 import dpc_help
 
@@ -272,12 +273,73 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     return factors_signal
 
 
+def get_gc_factor(cov, delta, genome_fpath):
+    """ compute gc_content_factor from one input coverage(control coverage) just to get hv and T
+    Return:
+        for each bins ?? No, we can compute and then change it , no need to store it !!
+            # compute_gc_proportion we have one bin, and we want to get gc_content_factor:
+            # coverage region, chrom, genome it uses but we could get before we do this step;;
+            # it means if we make sure it is from chrom-sizes files and then references to it
+        h(v) for range from delta  [0, delta, 2 delta, ... , 1- delta]
+        T  T for sum of h(v)
+
+    Arguments:
+        coverage: input coverage in sm_format, only coverage without chroms information??? We should have it !!
+        delta: to control gc-proportion
+        genome: we need to get the genome from chroms-sizes
+    """
+    # initialize gc-proportion array including 1.0;; and then we need to
+    hv = {}
+    for prop in np.arange(0, 1.0, delta, dtype=float):
+        hv[prop]=[]
+
+    # reading genome from file
+    genome_fasta = pysam.Fastafile(genome_fpath)
+    # fetch genome w.r.t. chromsome
+    chroms= cov.genomicRegions.get_chrom()
+    # chroms=['chr1','chr2','chr3']
+
+    # coverage separated by chroms regions; so we need to find out first what it belongs to
+    for i in range(len(chroms)):
+        chrom_genome = genome_fasta.fetch(reference=chroms[i])
+
+        for bin_idx in cov.sm_coverage[i].indices:
+            s = bin_idx * cov.stepsize
+            e = s + cov.binsize
+            prop = get_gc_content_proportion(chrom_genome,s,e)
+            # how to make prop proper to access hv?? We could change the length and other staff;
+            if prop is not None:
+                # if prop is zeros, it's fine
+                prop_key = int(prop / delta) * delta
+                hv[prop_key].append(cov.sm_coverage[i][:,bin_idx].data) # put one bin num into hv w.r.t props
+
+    avg_T = 0.0
+    for prop, nums in hv.items():
+        # problem if hv.item is empty; and also, if
+        if nums:
+            hv[prop] = sum(nums)/float(len(nums))
+            avg_T += hv[prop]
+    avg_T *= delta
+
+    return hv, avg_T
+
+
+def get_gc_content_proportion(genome, start, end):
+    """according to one genome we get the gc-content for one bin """
+    seq = genome[start: end + 1]
+    seq = seq.upper()
+    count = seq.count("C") + seq.count("G")
+    if len(seq) > 0:
+        return float(count) / len(seq)
+    else:
+        return None
+
 if __name__ == "__main__":
     ## test correctness of this function compared to old method
     # old method
 
     # new method
-    """
+
     class Cov(object):
         pass
     cov = Cov()
@@ -291,9 +353,25 @@ if __name__ == "__main__":
     inputs_cov.stepsize = 50
     t = [0, 0, 1, 3, 0, 1, 0, 3, 2, 0, 6, 0]
     inputs_cov.overall_cov = sparse.csr_matrix(t)
+
+    ## test count gc-content
+    cov.coverage = [s[:],t[:],s[:5]]
+    inputs_cov.coverage = [t[:], s[:], t[:5]]
+
+    cov.sm_coverage = []
+    for i in range(len(cov.coverage)):
+        cov.sm_coverage.append(sparse.csr_matrix(cov.coverage[i]))
+    inputs_cov.sm_coverage = []
+    for i in range(len(inputs_cov.coverage)):
+        inputs_cov.sm_coverage.append(sparse.csr_matrix(inputs_cov.coverage[i]))
+
+    genome_fpath= "/home/kefang/programs/THOR_example_data/refactor/genome_hg19.fa"
+
+    hv, avg_T = get_gc_factor(cov, 0.2, genome_fpath)
+    print(avg_T)
     #cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,5,7,0,3,2,0,0,0]}
     #inputs_cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,0,1,0,3,2,0,6,0]}
-    get_normalization_factor_by_cov(cov, inputs_cov, 0, 'test', True, step_times=2, two_samples=False)
+    # get_normalization_factor_by_cov(cov, inputs_cov, 0, 'test', True, step_times=2, two_samples=False)
     """
     # test normalization factor by signal
     orig_cov = np.asarray([[[0,0,4,3,5,7,0,3,2,0,0,0], [0,0,1,2,5,5,0,3,0,0,0,0]],[[0,0,1,3,0,1,0,3,2,0,6,0], [2,0,1,3,0,1,0,1,2,0,0,3]]])
@@ -314,3 +392,4 @@ if __name__ == "__main__":
     #z2 = dpc_help.fit_mean_var_distr(orig_cov, 'fun-var-test', True, False, 'test', False, False, sample_size=5000)
     print(z1)
     # print(z2)
+    """

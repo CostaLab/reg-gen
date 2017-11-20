@@ -24,10 +24,11 @@ class CoverageSet:
         """Initialize CoverageSet <name>."""
         self.name = name
         self.genomicRegions = GenomicRegionSet
+        # here we improve it by using sparse matrix
         self.coverage = [] #coverage data for genomicRegions
-        self.binsize = 100
         self.mapped_reads = None #number of mapped read
         self.reads = None #number of reads
+        self.binsize = 100
         self.stepsize = 50
     
     def subtract(self, cs):
@@ -56,7 +57,7 @@ class CoverageSet:
                 pass
             i += 1
 
-    def sm_substract(self,sm_cs):
+    def sm_subtract(self,sm_cs):
         """subtract coverage set in sparse matrix format"""
         # firstly test if they have same region; else not do it!!
         assert set(self.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
@@ -354,6 +355,7 @@ class CoverageSet:
         self.stepsize = stepsize
         # self.coverage we will use sparse matrix
         self.coverage = []
+        self.sm_coverage = []
         
         bam = pysam.Samfile(bam_file, "rb" )
         
@@ -506,26 +508,24 @@ class CoverageSet:
             else:
                 cov = [x + 1 for x in cov]
                 self.coverage.append(np.log(np.array(cov)))
+            self.sm_coverage.append(self.cov_to_smatrix(cov))
 
             if get_strand_info:
-                self.cov_strand_all.append(np.array(cov_strand))
-                # self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
+                # self.cov_strand_all.append(np.array(cov_strand))
+                self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
             if get_sense_info:
-                self.cov_sense_all.append(np.array(cov_sense))
-                # self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
-            # print(np.array(cov_sense))
+                # self.cov_sense_all.append(np.array(cov_sense))
+                self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
             
-        # self.coverageorig = self.coverage[:] # we don't use it
+        self.coverageorig = self.coverage[:] # we don't use it
         self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
-        if mask: f.close()
-
-        # self.coverage = self.cov_to_smatrix(self.coverage)
-        # self.coverageorig = self.cov_to_smatrix(self.coverageorig)
         self.sm_overall_cov = self.cov_to_smatrix(self.overall_cov)
+        if mask: f.close()
+        del self.coverage
 
     def cov_to_smatrix(self, coverage):
         """change list of coverage into sparse matrix by using scipy"""
-        cov_mtx = sparse.csr_matrix(coverage)
+        cov_mtx = sparse.csr_matrix(coverage,dtype=float)
         return cov_mtx
 
     def array_transpose(self, flip=False):
@@ -701,51 +701,81 @@ class CoverageSet:
         return len(reads)
 
 
-
-    def norm_gc_content(self, cov, genome_path, chrom_sizes):
-        chrom_sizes_dict = {}
-
-        with open(chrom_sizes) as f:
-            for line in f:
-                line = line.strip()
-                line = line.split('\t')
-                c, e = line[0], int(line[1])
-                chrom_sizes_dict[c] = e
-
-        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
-
+    def normalization_by_gc_content(self, hv, avg_T, genome_fpath,delta=0.2):
+        """After we get gc-factor from one input-coverage, and then we apply it on the signal file
+        """
         import warnings  # todo: ugly, why do warnings occur?
         warnings.filterwarnings("ignore")
-
+        """
         for i in range(len(self.coverage)):
-            assert len(self.coverage[i]) == len(gc_cov[i])
             self.coverage[i] = np.array(self.coverage[i])
             gc_cov[i] = np.array(gc_cov[i])
             gc_cov[i][gc_cov[i] < 10 * -300] = gc_avg  # sometimes zeros occur, do not consider
             self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
             self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0))  # neg. values to 0
             self.coverage[i] = self.coverage[i].astype(int)
+        """
+        genome_fasta = pysam.Fastafile(genome_fpath)
+        # fetch genome w.r.t. chromsome
+        chroms = self.genomicRegions.get_chrom()
+
+        # coverage separated by chroms regions; so we need to find out first what it belongs to
+        for i in range(len(chroms)):
+            chrom_genome = genome_fasta.fetch(reference=chroms[i])
+            for bin_idx in self.sm_coverage[i].indices:
+                s = bin_idx * self.stepsize
+                e = s + self.binsize
+                prop = get_gc_content_proportion(chrom_genome, s, e)
+                # but we need to make prop in range of delta range
+                prop_key = int(prop / delta) * delta
+                if hv[prop_key]: # sometimes zeros occur, do not consider
+                    self.sm_coverage[i][:,bin_idx].data *= (avg_T/hv[prop_key])
+
+
+def get_gc_content_proportion(genome, start, end):
+    """according to one genome we get the gc-content for one bin """
+    seq = genome[start: end + 1]
+    seq = seq.upper()
+    count = seq.count("C") + seq.count("G")
+    if len(seq) > 0:
+        return float(count) / len(seq)
+    else:
+        return None
+
 
 def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
-    """Get GC content"""
+    """Get GC content, get_ge_context is for coverage, so it belongs to coverage set as a method
+    the way we compute it :
+      # get genome and get chroms
+          But for conntent, it has limit 101 ?? Why?
+      # cov_list is coverage for several regions, for cov in cov_list is one bin, but then
+      cov is a list for one region;; then we uses step-bin size to get gc-content from references genome
+      we use range(len(cov)) and then for i to get bins,
+      then we refer genome but get GC counts;
+      content.add(cov[i], gc_content)
+
+      # average value for it;
+      # but for each bin in sparse matrix
+
+    """
     class help_content():
         def __init__(self):
-            self.content = [[] for _ in range(101)]
+            self.content = [[] for _ in range(101)] # it means a list for  proportion [0,100]
             self.g_gc = []
             self.g = -1
 
         def add(self, d, c):
-            self.content[int(c * 100)].append(round(float(d), 2))
+            self.content[int(c * 100)].append(round(float(d), 2)) # add reads num to corresponding gc-proportion
 
         def _compute(self):
             for l in self.content:
                 r = sum(l) / float(len(l)) if len(l) > 0 else 0
-                self.g_gc.append(r)
+                self.g_gc.append(r) # compute for each h(v) and add it
 
             self.g = sum(self.g_gc) / float(len(self.g_gc))
 
         def _map(self, x):
-            return self.g_gc[x]
+            return self.g_gc[x] # indexing h(v)
 
     # chromosomes = []
     # get first chromosome, typically chr1
@@ -770,10 +800,10 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
             seq = seq.upper()
             count = seq.count("C") + seq.count("G")
             if len(seq) > 0:
-                gc_content = float(count) / len(seq)
+                gc_content = float(count) / len(seq) # compute gc-content proportion
                 # print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
-                content.add(cov[i], gc_content)
-                cur_gc_value.append(int(gc_content * 100))
+                content.add(cov[i], gc_content) # add num to proportion gc-content (factor)
+                cur_gc_value.append(int(gc_content * 100)) # add gc factor into gc-value
             else:
                 #                print("Bins exceed genome (%s - %s), add pseudo counts" %(s, e), file=sys.stderr)
                 #                     content.add(cov[i], 0.5)
@@ -785,6 +815,6 @@ def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
     r = []
     for l in gc_content_cov:
         tmp = map(content._map, l)
-        r.append(tmp)
+        r.append(tmp) # for each chrom to get gc-factor for each bin
 
     return r, content.g, content.g_gc

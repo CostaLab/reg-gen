@@ -25,14 +25,14 @@ import sys
 import gc
 from random import sample
 import numpy as np
-from normalize import get_normalization_factor_by_cov, get_sm_norm_TMM_factor
-from DualCoverageSet import DualCoverageSet
+from normalize import get_normalization_factor_by_cov, get_sm_norm_TMM_factor,get_gc_factor
 from norm_genelevel import norm_gene_level
-from rgt.CoverageSet import CoverageSet, get_gc_context
+from rgt.CoverageSet import CoverageSet
 import configuration
 
 
-class MultiCoverageSet(DualCoverageSet):
+class MultiCoverageSet(): # DualCoverageSet
+    """Not inherit from DualCoveragSet, instead we can use it to represent DualCoverageSet"""
 
     def _init_coverage(self, statics, region_giver,rmdup, binsize, stepsize, strand_cov):
         """Return covs in list as CoverageSet for one statics
@@ -73,7 +73,7 @@ class MultiCoverageSet(DualCoverageSet):
         #else:
         #    return self.overall_coverage
 
-    def is_cov_valid(self, statics, covs):
+    def _is_cov_valid(self, statics, covs):
         """test if data coverage valid
             # statics is not None but covs are None or not big enough, return False
             # How to judge that data are big enough?? We could get chroms_length from statics
@@ -122,10 +122,10 @@ class MultiCoverageSet(DualCoverageSet):
         self.covs = self._init_coverage(signal_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov)
         self.inputs_covs = self._init_coverage(inputs_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov)
 
-        if not self.is_cov_valid(signal_statics, self.covs) or not self.covs:
+        if not self._is_cov_valid(signal_statics, self.covs) or not self.covs:
             self.data_valid = False
             return None
-        if not self.is_cov_valid(inputs_statics, self.inputs_covs):
+        if not self._is_cov_valid(inputs_statics, self.inputs_covs):
             self.data_valid = False
             return None
         # init overall_coverage for signal fiels
@@ -133,27 +133,12 @@ class MultiCoverageSet(DualCoverageSet):
         self.indices_of_interest = []
 
     def _get_sm_covs(self, idx):
-        """For a multivariant Coverageset, return coverage cov1 and cov2 at position i"""
+        """For a multivariant Coverageset, return coverage cov1 and cov2 at position i in integer?? or in float?? """
         cov1 = int(sum([self.overall_coverage['data'][0][j][:,idx] for j in range(self.dim[1])]).toarray()/self.dim[1])
         cov2 = int(sum([self.overall_coverage['data'][1][j][:,idx] for j in range(self.dim[1])]).toarray()/self.dim[1])
         return cov1, cov2
-    
-    def _compute_gc_content(self, no_gc_content, inputs_statics, stepsize, binsize, genome_path, name, region_giver):
-        """Compute GC-content, please pay attension to dimension changes!!!"""
-        if not no_gc_content and inputs_statics and self.gc_content_cov is None:
-            print("Compute GC-content", file=sys.stderr)
-            for i in range(self.dim[0]):
-                for j in range(self.dim[1]):
-                    inputs_cov = self.inputs_covs[i][j] #1 to 1 mapping between input and cov
-                    self.gc_content_cov, self.avg_gc_content, self.gc_hist = get_gc_context(stepsize, binsize, genome_path, inputs_cov.coverage, region_giver.valid_chrom_sizes)
-                    self._norm_gc_content(inputs_cov[i][j].coverage, self.gc_content_cov, self.avg_gc_content)
-                    self._norm_gc_content(inputs_cov.coverage, self.gc_content_cov, self.avg_gc_content)
 
-                #if VERBOSE:
-                #    self.print_gc_hist(name + '-s%s-rep%s-' %(sig, rep), gc_hist)
-                #    cov.write_bigwig(name + '-s%s-rep%s-gc.bw' %(sig, rep), chrom_sizes)
-
-    def _output_input_bw(self, name, chrom_sizes, save_wig):
+    def output_input_bw(self, name, chrom_sizes, save_wig):
         """print inputs bw"""
         for sig in range(self.dim[0]):
             for rep in range(self.dim[1]):
@@ -197,8 +182,18 @@ class MultiCoverageSet(DualCoverageSet):
             f = open(path + str(j), 'w')
             for i in range(self.overall_coverage[j].shape[1]):
                 print(self.overall_coverage[j][:,i].T, file=f)
-    
-    def _normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs, save_input):
+
+    def normalization_by_gc_content(self, no_gc_content, inputs_statics, genome_fpath, delta):
+        """normalization by gc-content, applied on both inputs and output data"""
+        if not no_gc_content and inputs_statics and self.gc_content_cov is None:
+            print("Compute GC-content", file=sys.stderr)
+            for i in range(self.dim[0]):
+                for j in range(self.dim[1]):
+                    hv, avg_T = get_gc_factor(self.inputs_covs[i][j], delta, genome_fpath)
+                    self.covs[i][j].normalization_by_gc_content(hv, avg_T, genome_fpath, delta)
+                    self.inputs_covs[i][j].normalization_by_gc_content(hv, avg_T, genome_fpath, delta)
+
+    def normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs, save_input):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         
         if configuration.VERBOSE:
@@ -231,7 +226,7 @@ class MultiCoverageSet(DualCoverageSet):
 
         self.factors_inputs = factors_inputs
 
-    def _normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
+    def normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
                                  m_threshold, a_threshold):
         """Normalize signal. comparing data to data"""
         
@@ -291,7 +286,6 @@ class MultiCoverageSet(DualCoverageSet):
         if not mask.size:
             mask = np.array([True]*self._get_bin_number())
         return np.asarray(np.concatenate((self.overall_coverage[0][:,mask].T, self.overall_coverage[1][:,mask].T), axis=1))
-    
 
     def _compute_sm_score(self):
         """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it"""
@@ -310,7 +304,6 @@ class MultiCoverageSet(DualCoverageSet):
                 self.scores = signal_rate
             else:
                 self.scores += signal_rate
-
 
     def _get_bin_number(self):
         """Return number of bins"""
