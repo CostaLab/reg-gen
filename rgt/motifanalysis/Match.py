@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 from glob import glob
 import time
+import sys
 
 # Internal
 from rgt.Util import ErrorHandler, MotifData, GenomeData, npath
@@ -29,7 +30,7 @@ from MOODS import tools, scan
 
 def matching_options(parser):
     # Parameters Options
-    parser.add_argument("--organism", type=str, metavar="STRING", required=True,
+    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
     parser.add_argument("--fpr", type=float, metavar="FLOAT", default=0.0001,
@@ -122,10 +123,12 @@ def main_matching(args):
     # Default genomic data
     genome_data = GenomeData(args.organism)
 
+    print(">> genome:", genome_data.organism)
+
     # Default motif data
     motif_data = MotifData()
 
-    print("")
+    print(">> motif repositories:", motif_data.repositories_list)
 
     # Reading motif file
     selected_motifs = []
@@ -135,6 +138,7 @@ def main_matching(args):
             with open(args.selected_motifs_filename) as f:
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
+                print(">> motif file loaded:", len(selected_motifs), "motifs")
         except Exception:
             err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
@@ -176,6 +180,8 @@ def main_matching(args):
             background_regions.write(output_file_name)
 
             genomic_regions_dict[background_regions.name] = background_regions
+
+            print(">> promoter background created:", len(background_regions), "regions")
 
     # get experimental matrix, if available
     if args.input_matrix:
@@ -260,6 +266,8 @@ def main_matching(args):
             except Exception:
                 err.throw_warning("DEFAULT_WARNING")  # FIXME: maybe error instead?
 
+        print(">> random regions file created:", len(rand_region), "regions")
+
     ###################################################################################################
     # Creating PWMs
     ###################################################################################################
@@ -315,22 +323,24 @@ def main_matching(args):
     # Creating genome file
     genome_file = Fastafile(genome_data.get_genome())
 
+    print()
+
     # Iterating on list of genomic regions
-    for genomic_region_set in regions_to_match:
+    for grs in regions_to_match:
 
         start = time.time()
-        print(">>> matching [", genomic_region_set.name, "], ",
-              len(genomic_region_set), " regions... ", end='', sep="")
+        print(">>> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
+        sys.stdout.flush()
 
         # Initializing output bed file
-        output_bed_file = os.path.join(output_location, genomic_region_set.name + "_mpbs.bed")
+        output_bed_file = os.path.join(output_location, grs.name + "_mpbs.bed")
 
         # must remove it because we append the MPBS
         if os.path.isfile(output_bed_file):
             os.remove(output_bed_file)
 
         # Iterating on genomic regions
-        for genomic_region in genomic_region_set:
+        for genomic_region in grs:
 
             # Reading sequence associated to genomic_region
             sequence = str(genome_file.fetch(genomic_region.chrom, genomic_region.initial, genomic_region.final))
@@ -338,7 +348,7 @@ def main_matching(args):
             grs = match_multiple(scanner, motif_list, sequence, genomic_region)
             grs.write(output_bed_file, mode="a")
 
-        del genomic_region_set.sequences[:]
+        del grs.sequences[:]
 
         # Verifying condition to write bb
         if args.bigbed and args.normalize_bitscore:
@@ -352,7 +362,7 @@ def main_matching(args):
             os.remove(output_bed_file)
 
         secs = time.time() - start
-        print("[", "%02.3f" % (secs), " seconds]", sep="")
+        print("[", "%02.3f" % secs, " seconds]", sep="")
 
 
 # TODO must double-check/fix the normalisation.

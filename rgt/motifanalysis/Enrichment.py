@@ -5,8 +5,10 @@
 # Python
 from __future__ import print_function
 import os
+import sys
 from glob import glob
 from shutil import copy
+import time
 
 # Internal
 from rgt.Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
@@ -26,7 +28,7 @@ from fisher import pvalue
 ###################################################################################################
 
 def enrichment_options(parser):
-    parser.add_argument("--organism", type=str, metavar="STRING", required=True,
+    parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
     parser.add_argument("--matching-location", type=str, metavar="PATH",
@@ -171,8 +173,12 @@ def main_enrichment(args):
     # Default genomic data
     genome_data = GenomeData(args.organism)
 
+    print(">> genome:", genome_data.organism)
+
     # Default motif data
     motif_data = MotifData()
+
+    print(">> motif repositories:", motif_data.repositories_list)
 
     # Reading motif file
     selected_motifs = []
@@ -182,6 +188,7 @@ def main_enrichment(args):
             with open(args.selected_motifs_filename) as f:
                 selected_motifs = f.read().splitlines()
                 selected_motifs = filter(None, selected_motifs)
+                print(">> motif file loaded:", len(selected_motifs), "motifs")
         except Exception:
             err.throw_error("MM_MOTIFS_NOTFOUND", add_msg=args.selected_motifs_filename)
 
@@ -325,6 +332,12 @@ def main_enrichment(args):
     # Background Statistics
     ###################################################################################################
 
+    print()
+
+    start = time.time()
+    print(">> collecting background statistics...", sep="", end="")
+    sys.stdout.flush()
+
     background = GenomicRegionSet("background")
     background.read(background_filename)
     background_mpbs = GenomicRegionSet("background_mpbs")
@@ -340,8 +353,13 @@ def main_enrichment(args):
         os.remove(background_mpbs_filename)
 
     # scheduling region sets for garbage collection
+    del background.sequences[:]
     del background
+    del background_mpbs.sequences[:]
     del background_mpbs
+
+    secs = time.time() - start
+    print("[", "%02.3f" % secs, " seconds]", sep="")
 
     ###################################################################################################
     # Enrichment Statistics
@@ -363,11 +381,17 @@ def main_enrichment(args):
                 link_name = grs.name
                 sitetest_link_dict[link_name] = os.path.join(link_location, link_name, output_stat_fulltest + ".html")
 
+    print()
+
     # Iterating on each input object
     for curr_input in input_list:
 
         # Iterating on each input genomic region set
         for grs in curr_input.region_list:
+
+            start = time.time()
+            print(">>> enriching [", grs.name, "], ", len(grs), " regions...", end="", sep="")
+            sys.stdout.flush()
 
             # Initialization
             original_name = grs.name
@@ -587,7 +611,7 @@ def main_enrichment(args):
                 fig_path = npath(os.path.join(output_location, "fig"))
                 html = Html("Motif Enrichment Analysis", genetest_link_dict, fig_dir=fig_path)
                 html.add_heading("Results for <b>" + original_name + "</b> "
-                                 "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
+                                                                     "region <b>Gene Test*</b> using genes from <b>" + curr_input.gene_set.name +
                                  "</b>",
                                  align="center", bold=False)
                 html.add_heading("* This gene test considered regions associated to the given "
@@ -744,3 +768,6 @@ def main_enrichment(args):
             # Removing files
             for e in to_remove_list:
                 os.remove(e)
+
+            secs = time.time() - start
+            print("[", "%02.3f" % secs, " seconds]", sep="")
