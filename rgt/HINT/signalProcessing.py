@@ -308,10 +308,10 @@ class GenomicSignal:
         for i in range((window / 2), len(af) - (window / 2)):
             nhatf = Nf[i - (window / 2)] * (af[i] / fSum)
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
-            # zf = log(nf[i] + 1) - log(nhatf + 1)
-            # zr = log(nr[i] + 1) - log(nhatr + 1)
-            zf = (nf[i] + 1) / (nhatf + 1)
-            zr = (nr[i] + 1) / (nhatr + 1)
+            zf = log(nf[i] + 1) - log(nhatf + 1)
+            zr = log(nr[i] + 1) - log(nhatr + 1)
+            # zf = (nf[i] + 1) / (nhatf + 1)
+            # zr = (nr[i] + 1) / (nhatr + 1)
             bias_corrected_signal.append(zf + zr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
@@ -968,3 +968,92 @@ class GenomicSignal:
             return np.array(bc_f), np.array(bc_r)
         else:
             return np.add(np.array(bc_f), np.array(bc_r))
+
+    def get_bias_raw_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift):
+        # Parameters
+        window = 50
+        defaultKmerValue = 1.0
+
+        # Initialization
+        fBiasDict = bias_table[0]
+        rBiasDict = bias_table[1]
+        k_nb = len(fBiasDict.keys()[0])
+        p1 = start
+        p2 = end
+        p1_w = p1 - (window / 2)
+        p2_w = p2 + (window / 2)
+        p1_wk = p1_w - int(k_nb / 2.)
+        p2_wk = p2_w + int(k_nb / 2.)
+
+        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
+        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+
+        # Iterating on sequence to create the bias signal
+        signal_bias_f = []
+        signal_bias_r = []
+        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
+            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
+            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
+            try:
+                signal_bias_f.append(fBiasDict[fseq])
+            except Exception:
+                signal_bias_f.append(defaultKmerValue)
+            try:
+                signal_bias_r.append(rBiasDict[rseq])
+            except Exception:
+                signal_bias_r.append(defaultKmerValue)
+
+        # Raw counts
+        signal_raw_f = [0.0] * (p2_w - p1_w)
+        signal_raw_r = [0.0] * (p2_w - p1_w)
+        for read in bam.fetch(ref, p1_w, p2_w):
+            if (not read.is_reverse):
+                cut_site = read.pos + forward_shift
+                if cut_site >= p1_w and cut_site < p2_w:
+                    signal_raw_f[cut_site - p1_w] += 1.0
+            else:
+                cut_site = read.aend + reverse_shift - 1
+                if cut_site >= p1_w and cut_site < p2_w:
+                    signal_raw_r[cut_site - p1_w] += 1.0
+
+        # Smoothed counts
+        Nf = []
+        Nr = []
+        fSum = sum(signal_raw_f[:window])
+        rSum = sum(signal_raw_r[:window])
+        fLast = signal_raw_f[0]
+        rLast = signal_raw_r[0]
+        for i in range((window / 2), len(signal_raw_f) - (window / 2)):
+            Nf.append(fSum)
+            Nr.append(rSum)
+            fSum -= fLast
+            fSum += signal_raw_f[i + (window / 2)]
+            fLast = signal_raw_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += signal_raw_r[i + (window / 2)]
+            rLast = signal_raw_r[i - (window / 2) + 1]
+
+        # Calculating bias and writing to wig file
+        fSum = sum(signal_bias_f[:window])
+        rSum = sum(signal_bias_r[:window])
+        fLast = signal_bias_f[0]
+        rLast = signal_bias_r[0]
+        bias_f = []
+        bias_r = []
+        raw = []
+        bc = []
+        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
+            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
+            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
+            bias_f.append(signal_bias_f[i])
+            bias_r.append(signal_bias_r[i])
+            raw.append(signal_raw_f[i] + signal_raw_r[i])
+            bc.append(nhatf + nhatr)
+            fSum -= fLast
+            fSum += signal_bias_f[i + (window / 2)]
+            fLast = signal_bias_f[i - (window / 2) + 1]
+            rSum -= rLast
+            rSum += signal_bias_r[i + (window / 2)]
+            rLast = signal_bias_r[i - (window / 2) + 1]
+
+        return bias_f, bias_r, raw, bc

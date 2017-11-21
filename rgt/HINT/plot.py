@@ -7,12 +7,13 @@ import os
 import numpy as np
 from pysam import Fastafile, Samfile
 from Bio import motifs
+
 import matplotlib
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 import pyx
-from math import log, ceil, floor, isnan
 # Internal
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
@@ -22,6 +23,7 @@ from ..Util import AuxiliaryFunctions
 import collections
 from scipy.signal import savgol_filter
 from scipy.stats import scoreatpercentile
+
 
 class Plot:
     """
@@ -45,13 +47,16 @@ class Plot:
         self.output_loc = output_loc
         self.output_prefix = output_prefix
 
-    def line1(self):
-        signal = GenomicSignal(self.reads_file)
-        signal.load_sg_coefs(slope_window_size=9)
-        bias_table = BiasTable()
-        bias_table_list = self.bias_table.split(",")
-        table = bias_table.load_table(table_file_name_F=bias_table_list[0],
-                                      table_file_name_R=bias_table_list[1])
+    def strand_line(self):
+        genomic_signal = GenomicSignal(self.reads_file)
+        genomic_signal.load_sg_coefs(slope_window_size=9)
+
+        table = None
+        if self.bias_table is not None:
+            bias_table = BiasTable()
+            bias_table_list = self.bias_table.split(",")
+            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                          table_file_name_R=bias_table_list[1])
 
         genome_data = GenomeData(self.organism)
         fasta = Fastafile(genome_data.get_genome())
@@ -61,43 +66,35 @@ class Plot:
         mpbs_regions.read(self.motif_file)
         bam = Samfile(self.reads_file, "rb")
 
-        mean_norm_signal = None
-        mean_norm_signal_f = None
-        mean_norm_signal_r = None
+        mean_signal_f = np.zeros(self.window_size)
+        mean_signal_r = np.zeros(self.window_size)
 
         pwm_dict = None
-
-        size = 0
         for region in mpbs_regions:
             if str(region.name).split(":")[-1] == "Y":
                 # Extend by 50 bp
-                # mid = (region.initial + region.final) / 2
-                # p1 = mid - (self.window_size / 2)
-                # p2 = mid + (self.window_size / 2)
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
 
-                p1 = region.initial - (self.window_size / 2)
-                p2 = region.final + (self.window_size / 2)
-
-                size = p2 - p1
-                # Fetch raw signal
-                norm_signal, norm_signal_f, norm_signal_r = \
-                    self.get_signal1(ref=region.chrom, start=p1, end=p2, bam=bam, fasta=fasta, bias_table=table,
-                                     signal=signal)
+                if self.bias_table is not None:
+                    signal_f, signal_r = genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1,
+                                                                                         end=p2,
+                                                                                         bam=bam, fasta=fasta,
+                                                                                         bias_table=table,
+                                                                                         forward_shift=self.forward_shift,
+                                                                                         reverse_shift=self.reverse_shift)
+                else:
+                    signal_f, signal_r = genomic_signal.get_raw_signal_by_fragment_length(ref=region.chrom, start=p1,
+                                                                                          end=p2,
+                                                                                          bam=bam,
+                                                                                          forward_shift=self.forward_shift,
+                                                                                          reverse_shift=self.reverse_shift)
 
                 num_sites += 1
 
-                if mean_norm_signal is None:
-                    mean_norm_signal = np.zeros(p2 - p1)
-
-                if mean_norm_signal_f is None:
-                    mean_norm_signal_f = np.zeros(p2 - p1)
-
-                if mean_norm_signal_r is None:
-                    mean_norm_signal_r = np.zeros(p2 - p1)
-
-                mean_norm_signal = np.add(mean_norm_signal, norm_signal)
-                mean_norm_signal_f = np.add(mean_norm_signal_f, norm_signal_f)
-                mean_norm_signal_r = np.add(mean_norm_signal_r, norm_signal_r)
+                mean_signal_f = np.add(mean_signal_f, signal_f)
+                mean_signal_r = np.add(mean_signal_r, signal_r)
 
                 # Update pwm
 
@@ -119,56 +116,29 @@ class Plot:
                     for i in range(0, len(dna_seq_rev)):
                         pwm_dict[dna_seq_rev[i]][i] += 1
 
-        # mean_norm_signal = mean_norm_signal / num_sites
-        # mean_norm_signal_f = mean_norm_signal_f / num_sites
-        # mean_norm_signal_r = mean_norm_signal_r / num_sites
+        mean_signal_f = mean_signal_f / num_sites
+        mean_signal_r = mean_signal_r / num_sites
 
-        mean_norm_signal_f = self.rescaling(mean_norm_signal_f)
-        mean_norm_signal_r = self.rescaling(mean_norm_signal_r)
+        mean_norm_signal_f = genomic_signal.boyle_norm(mean_signal_f)
+        perc = scoreatpercentile(mean_norm_signal_f, 98)
+        std = np.std(mean_norm_signal_f)
+        mean_norm_signal_f = genomic_signal.hon_norm_atac(mean_norm_signal_f, perc, std)
 
-        # mean_norm_signal = signal.boyle_norm(mean_norm_signal)
-        # perc = scoreatpercentile(mean_norm_signal, 98)
-        # std = np.std(mean_norm_signal)
-        # mean_norm_signal = signal.hon_norm_atac(mean_norm_signal, perc, std)
+        mean_norm_signal_r = genomic_signal.boyle_norm(mean_signal_r)
+        perc = scoreatpercentile(mean_norm_signal_r, 98)
+        std = np.std(mean_norm_signal_r)
+        mean_norm_signal_r = genomic_signal.hon_norm_atac(mean_norm_signal_r, perc, std)
 
-        # mean_norm_signal_f = signal.boyle_norm(mean_norm_signal_f)
-        # perc = scoreatpercentile(mean_norm_signal_f, 98)
-        # std = np.std(mean_norm_signal_f)
-        # mean_norm_signal_f = signal.hon_norm_atac(mean_norm_signal_f, perc, std)
-
-        # mean_norm_signal_r = signal.boyle_norm(mean_norm_signal_r)
-        # perc = scoreatpercentile(mean_norm_signal_r, 98)
-        # std = np.std(mean_norm_signal_r)
-        # mean_norm_signal_r = signal.hon_norm_atac(mean_norm_signal_r, perc, std)
-
-        # mean_slope_signal = signal.slope(mean_norm_signal, signal.sg_coefs)
-        # mean_slope_signal_f = signal.slope(mean_norm_signal_f, signal.sg_coefs)
-        # mean_slope_signal_r = signal.slope(mean_norm_signal_r, signal.sg_coefs)
-
-        # mean_slope_signal = signal.boyle_norm(mean_slope_signal)
-        # perc = scoreatpercentile(mean_slope_signal, 98)
-        # std = np.std(mean_slope_signal)
-        # mean_slope_signal = signal.hon_norm_atac(mean_slope_signal, perc, std)
-
-        # mean_slope_signal_f = signal.boyle_norm(mean_slope_signal_f)
-        # perc = scoreatpercentile(mean_slope_signal_f, 98)
-        # std = np.std(mean_slope_signal_f)
-        # mean_slope_signal_f = signal.hon_norm_atac(mean_slope_signal_f, perc, std)
-
-        # mean_slope_signal_r = signal.boyle_norm(mean_slope_signal_r)
-        # perc = scoreatpercentile(mean_slope_signal_r, 98)
-        # std = np.std(mean_slope_signal_r)
-        # mean_slope_signal_r = signal.hon_norm_atac(mean_slope_signal_r, perc, std)
+        mean_slope_signal_f = genomic_signal.slope(mean_norm_signal_f, genomic_signal.sg_coefs)
+        mean_slope_signal_r = genomic_signal.slope(mean_norm_signal_r, genomic_signal.sg_coefs)
 
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        # f.write("\t".join((map(str, mean_norm_signal))) + "\n")
-        # f.write("\t".join((map(str, mean_slope_signal))) + "\n")
         f.write("\t".join((map(str, mean_norm_signal_f))) + "\n")
-        # f.write("\t".join((map(str, mean_slope_signal_f))) + "\n")
+        f.write("\t".join((map(str, mean_slope_signal_f))) + "\n")
         f.write("\t".join((map(str, mean_norm_signal_r))) + "\n")
-        # f.write("\t".join((map(str, mean_slope_signal_r))) + "\n")
+        f.write("\t".join((map(str, mean_slope_signal_r))) + "\n")
         f.close()
 
         # Output PWM and create logo
@@ -180,24 +150,22 @@ class Plot:
 
         logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
         pwm = motifs.read(open(pwm_fname), "pfm")
-        pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(size),
+        pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
                     color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
-                    show_xaxis=True, xaxis_label="", show_yaxis=False, yaxis_label="",
+                    show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                     show_fineprint=False, show_ends=False)
 
-        start = -(size / 2)
-        end = (size / 2) - 1
-        x = np.linspace(start, end, num=size)
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
 
         fig = plt.figure(figsize=(8, 4))
         ax2 = fig.add_subplot(111)
 
-        min_signal = min(min(mean_norm_signal_f), min(mean_norm_signal_r))
-        max_signal = max(max(mean_norm_signal_f), max(mean_norm_signal_r))
-        ax2.plot(x, mean_norm_signal_f, color='red', label='Forward')
-        ax2.plot(x, mean_norm_signal_r, color='green', label='Reverse')
-        # ax2.plot(x, mean_norm_signal_f, color='red')
-        # ax2.plot(x, mean_norm_signal_r, color='green')
+        min_signal = min(min(mean_signal_f), min(mean_signal_r))
+        max_signal = max(max(mean_signal_f), max(mean_signal_r))
+        ax2.plot(x, mean_signal_f, color='red', label='Forward')
+        ax2.plot(x, mean_signal_r, color='green', label='Reverse')
         ax2.set_title(self.output_prefix, fontweight='bold')
 
         ax2.xaxis.set_ticks_position('bottom')
@@ -215,8 +183,6 @@ class Plot:
         ax2.legend(loc="upper right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        # ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        # ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -227,7 +193,7 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(1.48, 0.92, logo_fname, width=18.5, height=1.75))
+        c.insert(pyx.epsfile.epsfile(1.31, 0.89, logo_fname, width=18.5, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -235,99 +201,159 @@ class Plot:
 
         # os.remove(pwm_fname)
         os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
-        # os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
-        # os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
 
-    def get_signal1(self, ref, start, end, bam, fasta, bias_table, signal):
-        # Parameters
-        window = 50
-        defaultKmerValue = 1.0
+    def unstrand_line(self):
+        genomic_signal = GenomicSignal(self.reads_file)
+        genomic_signal.load_sg_coefs(slope_window_size=9)
 
-        # Initialization
-        fBiasDict = bias_table[0]
-        rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
-        p1 = start
-        p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
-        p1_wk = p1_w - int(k_nb / 2.)
-        p2_wk = p2_w + int(k_nb / 2.)
+        table = None
+        if self.bias_table is not None:
+            bias_table = BiasTable()
+            bias_table_list = self.bias_table.split(",")
+            table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                          table_file_name_R=bias_table_list[1])
 
-        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
+        genome_data = GenomeData(self.organism)
+        fasta = Fastafile(genome_data.get_genome())
 
-        # Iterating on sequence to create the bias signal
-        signal_bias_f = []
-        signal_bias_r = []
-        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
-            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
-            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
-            try:
-                signal_bias_f.append(fBiasDict[fseq])
-            except Exception:
-                signal_bias_f.append(defaultKmerValue)
-            try:
-                signal_bias_r.append(rBiasDict[rseq])
-            except Exception:
-                signal_bias_r.append(defaultKmerValue)
+        num_sites = 0
+        mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs_regions.read(self.motif_file)
+        bam = Samfile(self.reads_file, "rb")
 
-        # Raw counts
-        signal_raw_f = [0.0] * (p2_w - p1_w)
-        signal_raw_r = [0.0] * (p2_w - p1_w)
-        for read in bam.fetch(ref, p1_w, p2_w):
-            if (not read.is_reverse):
-                cut_site = read.pos + self.forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
-                    signal_raw_f[cut_site - p1_w] += 1.0
-            else:
-                cut_site = read.aend + self.reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
-                    signal_raw_r[cut_site - p1_w] += 1.0
+        mean_signal = np.zeros(self.window_size)
 
-        # Smoothed counts
-        Nf = []
-        Nr = []
-        fSum = sum(signal_raw_f[:window])
-        rSum = sum(signal_raw_r[:window])
-        fLast = signal_raw_f[0]
-        rLast = signal_raw_r[0]
-        for i in range((window / 2), len(signal_raw_f) - (window / 2)):
-            Nf.append(fSum)
-            Nr.append(rSum)
-            fSum -= fLast
-            fSum += signal_raw_f[i + (window / 2)]
-            fLast = signal_raw_f[i - (window / 2) + 1]
-            rSum -= rLast
-            rSum += signal_raw_r[i + (window / 2)]
-            rLast = signal_raw_r[i - (window / 2) + 1]
+        pwm_dict = None
+        for region in mpbs_regions:
+            if str(region.name).split(":")[-1] == "Y":
+                # Extend by 50 bp
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
 
-        # Calculating bias and writing to wig file
-        fSum = sum(signal_bias_f[:window])
-        rSum = sum(signal_bias_r[:window])
-        fLast = signal_bias_f[0]
-        rLast = signal_bias_r[0]
-        signal_bc = []
-        signal_bc_f = []
-        signal_bc_r = []
-        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
-            signal_bc.append(nhatf + nhatr)
-            signal_bc_f.append(nhatf)
-            signal_bc_r.append(nhatr)
-            fSum -= fLast
-            fSum += signal_bias_f[i + (window / 2)]
-            fLast = signal_bias_f[i - (window / 2) + 1]
-            rSum -= rLast
-            rSum += signal_bias_r[i + (window / 2)]
-            rLast = signal_bias_r[i - (window / 2) + 1]
+                if self.bias_table is not None:
+                    signal = genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                             bam=bam, fasta=fasta,
+                                                                             bias_table=table,
+                                                                             forward_shift=self.forward_shift,
+                                                                             reverse_shift=self.reverse_shift,
+                                                                             strand=False)
+                else:
+                    signal = genomic_signal.get_raw_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                              bam=bam,
+                                                                              forward_shift=self.forward_shift,
+                                                                              reverse_shift=self.reverse_shift,
+                                                                              strand=False)
 
-        return signal_bc, signal_bc_f, signal_bc_r
+                num_sites += 1
 
-    def line2(self):
+                mean_signal = np.add(mean_signal, signal)
+
+                # Update pwm
+
+                if pwm_dict is None:
+                    pwm_dict = dict([("A", [0.0] * (p2 - p1)), ("C", [0.0] * (p2 - p1)),
+                                     ("G", [0.0] * (p2 - p1)), ("T", [0.0] * (p2 - p1)),
+                                     ("N", [0.0] * (p2 - p1))])
+
+                aux_plus = 1
+                dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
+                if (region.final - region.initial) % 2 == 0:
+                    aux_plus = 0
+                dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
+                                                                         p1 + aux_plus, p2 + aux_plus)).upper())
+                if region.orientation == "+":
+                    for i in range(0, len(dna_seq)):
+                        pwm_dict[dna_seq[i]][i] += 1
+                elif region.orientation == "-":
+                    for i in range(0, len(dna_seq_rev)):
+                        pwm_dict[dna_seq_rev[i]][i] += 1
+
+        mean_signal = mean_signal / num_sites
+
+        mean_norm_signal = genomic_signal.boyle_norm(mean_signal)
+        perc = scoreatpercentile(mean_norm_signal, 98)
+        std = np.std(mean_norm_signal)
+        mean_norm_signal = genomic_signal.hon_norm_atac(mean_norm_signal, perc, std)
+
+        mean_slope_signal = genomic_signal.slope(mean_norm_signal, genomic_signal.sg_coefs)
+
+        # Output the norm and slope signal
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
+        f = open(output_fname, "w")
+        f.write("\t".join((map(str, mean_norm_signal))) + "\n")
+        f.write("\t".join((map(str, mean_slope_signal))) + "\n")
+        f.close()
+
+        # Output PWM and create logo
+        pwm_fname = os.path.join(self.output_loc, "{}.pwm".format(self.output_prefix))
+        pwm_file = open(pwm_fname, "w")
+        for e in ["A", "C", "G", "T"]:
+            pwm_file.write(" ".join([str(int(f)) for f in pwm_dict[e]]) + "\n")
+        pwm_file.close()
+
+        logo_fname = os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix))
+        pwm = motifs.read(open(pwm_fname), "pfm")
+        pwm.weblogo(logo_fname, format="eps", stack_width="large", stacks_per_line=str(self.window_size),
+                    color_scheme="color_classic", unit_name="", show_errorbars=False, logo_title="",
+                    show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
+                    show_fineprint=False, show_ends=False)
+
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
+
+        fig = plt.figure(figsize=(8, 4))
+        ax2 = fig.add_subplot(111)
+
+        min_signal = min(mean_signal)
+        max_signal = max(mean_signal)
+        ax2.plot(x, mean_signal, color='red')
+        ax2.set_title(self.output_prefix, fontweight='bold')
+
+        ax2.xaxis.set_ticks_position('bottom')
+        ax2.yaxis.set_ticks_position('left')
+        ax2.spines['top'].set_visible(False)
+        ax2.spines['right'].set_visible(False)
+        ax2.spines['left'].set_position(('outward', 15))
+        ax2.tick_params(direction='out')
+        ax2.set_xticks([start, 0, end])
+        ax2.set_xticklabels([str(start), 0, str(end)])
+        ax2.set_yticks([min_signal, max_signal])
+        ax2.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax2.set_xlim(start, end)
+        ax2.set_ylim([min_signal, max_signal])
+        ax2.legend(loc="upper right", frameon=False)
+
+        ax2.spines['bottom'].set_position(('outward', 40))
+
+        figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
+        fig.savefig(figure_name, format="eps", dpi=300)
+
+        # Creating canvas and printing eps / pdf with merged results
+        output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
+        c = pyx.canvas.canvas()
+        c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
+        c.insert(pyx.epsfile.epsfile(1.31, 0.89, logo_fname, width=18.5, height=1.75))
+        c.writeEPSfile(output_fname)
+        os.system("epstopdf " + figure_name)
+        os.system("epstopdf " + logo_fname)
+        os.system("epstopdf " + output_fname)
+
+        # os.remove(pwm_fname)
+        os.remove(os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.eps".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
+        os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
+
+    def bias_raw_bc_line(self):
         signal = GenomicSignal(self.reads_file)
         signal.load_sg_coefs(slope_window_size=9)
         bias_table = BiasTable()
@@ -360,7 +386,9 @@ class Plot:
                 p2 = mid + (self.window_size / 2)
 
                 signal_bias_f, signal_bias_r, signal_raw, signal_bc = \
-                    self.get_signal2(ref=region.chrom, start=p1, end=p2, bam=bam, fasta=fasta, bias_table=table)
+                    signal.get_bias_raw_bc_signal(ref=region.chrom, start=p1, end=p2, bam=bam,
+                                                  fasta=fasta, bias_table=table,
+                                                  forward_shift=self.forward_shift, reverse_shift=self.reverse_shift)
 
                 num_sites += 1
                 mean_signal_bias_f = np.add(mean_signal_bias_f, np.array(signal_bias_f))
@@ -387,8 +415,8 @@ class Plot:
         mean_signal_raw = mean_signal_raw / num_sites
         mean_signal_bc = mean_signal_bc / num_sites
 
-        mean_signal_raw = self.rescaling(mean_signal_raw)
-        mean_signal_bc = self.rescaling(mean_signal_bc)
+        # mean_signal_raw = self.rescaling(mean_signal_raw)
+        # mean_signal_bc = self.rescaling(mean_signal_bc)
 
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
@@ -414,7 +442,7 @@ class Plot:
                     show_xaxis=False, xaxis_label="", show_yaxis=False, yaxis_label="",
                     show_fineprint=False, show_ends=False)
 
-        fig, (ax1, ax2) = plt.subplots(2, figsize=(10, 5))
+        fig, (ax1, ax2) = plt.subplots(2, figsize=(8, 4))
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
@@ -426,8 +454,6 @@ class Plot:
         max_ = max(max(mean_signal_bias_f), max(mean_signal_bias_r))
         ax1.plot(x, mean_signal_bias_f, color='purple', label='Forward')
         ax1.plot(x, mean_signal_bias_r, color='green', label='Reverse')
-        # ax1.plot(x, mean_signal_bias_f, color='purple')
-        # ax1.plot(x, mean_signal_bias_r, color='green')
         ax1.xaxis.set_ticks_position('bottom')
         ax1.yaxis.set_ticks_position('left')
         ax1.spines['top'].set_visible(False)
@@ -443,7 +469,6 @@ class Plot:
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_, max_])
         ax1.legend(loc="upper right", frameon=False)
-        # ax1.set_ylabel("Bias Signal", rotation=90, fontweight='bold')
         ####################################################################
 
         #####################################################################
@@ -452,8 +477,6 @@ class Plot:
         max_ = max(max(mean_signal_raw), max(mean_signal_bc))
         ax2.plot(x, mean_signal_raw, color='blue', label='Uncorrected')
         ax2.plot(x, mean_signal_bc, color='red', label='Corrected')
-        # ax2.plot(x, mean_signal_raw, color='blue')
-        # ax2.plot(x, mean_signal_bc, color='red')
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
         ax2.spines['top'].set_visible(False)
@@ -469,9 +492,6 @@ class Plot:
         ax2.legend(loc="upper right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        # ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        # ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
-        ###################################################################################
 
         ###############################################################################
         # merge the above figures
@@ -484,8 +504,7 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        # c.insert(pyx.epsfile.epsfile(1.10, 0.92, logo_fname, width=23.35, height=1.75))
-        c.insert(pyx.epsfile.epsfile(1.60, 0.92, logo_fname, width=23.35, height=1.75))
+        c.insert(pyx.epsfile.epsfile(1.51, 0.89, logo_fname, width=18.3, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
@@ -497,95 +516,6 @@ class Plot:
         os.remove(os.path.join(self.output_loc, "{}.line.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
-
-    def get_signal2(self, ref, start, end, bam, fasta, bias_table):
-        # Parameters
-        window = 50
-        defaultKmerValue = 1.0
-
-        # Initialization
-        fBiasDict = bias_table[0]
-        rBiasDict = bias_table[1]
-        k_nb = len(fBiasDict.keys()[0])
-        p1 = start
-        p2 = end
-        p1_w = p1 - (window / 2)
-        p2_w = p2 + (window / 2)
-        p1_wk = p1_w - int(k_nb / 2.)
-        p2_wk = p2_w + int(k_nb / 2.)
-
-        currStr = str(fasta.fetch(ref, p1_wk, p2_wk - 1)).upper()
-        currRevComp = AuxiliaryFunctions.revcomp(str(fasta.fetch(ref, p1_wk + 1, p2_wk)).upper())
-
-        # Iterating on sequence to create the bias signal
-        signal_bias_f = []
-        signal_bias_r = []
-        for i in range(int(k_nb / 2.), len(currStr) - int(k_nb / 2) + 1):
-            fseq = currStr[i - int(k_nb / 2.):i + int(k_nb / 2.)]
-            rseq = currRevComp[len(currStr) - int(k_nb / 2.) - i:len(currStr) + int(k_nb / 2.) - i]
-            try:
-                signal_bias_f.append(fBiasDict[fseq])
-            except Exception:
-                signal_bias_f.append(defaultKmerValue)
-            try:
-                signal_bias_r.append(rBiasDict[rseq])
-            except Exception:
-                signal_bias_r.append(defaultKmerValue)
-
-        # Raw counts
-        signal_raw_f = [0.0] * (p2_w - p1_w)
-        signal_raw_r = [0.0] * (p2_w - p1_w)
-        for read in bam.fetch(ref, p1_w, p2_w):
-            if (not read.is_reverse):
-                cut_site = read.pos + self.forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
-                    signal_raw_f[cut_site - p1_w] += 1.0
-            else:
-                cut_site = read.aend + self.reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
-                    signal_raw_r[cut_site - p1_w] += 1.0
-
-        # Smoothed counts
-        Nf = []
-        Nr = []
-        fSum = sum(signal_raw_f[:window])
-        rSum = sum(signal_raw_r[:window])
-        fLast = signal_raw_f[0]
-        rLast = signal_raw_r[0]
-        for i in range((window / 2), len(signal_raw_f) - (window / 2)):
-            Nf.append(fSum)
-            Nr.append(rSum)
-            fSum -= fLast
-            fSum += signal_raw_f[i + (window / 2)]
-            fLast = signal_raw_f[i - (window / 2) + 1]
-            rSum -= rLast
-            rSum += signal_raw_r[i + (window / 2)]
-            rLast = signal_raw_r[i - (window / 2) + 1]
-
-        # Calculating bias and writing to wig file
-        fSum = sum(signal_bias_f[:window])
-        rSum = sum(signal_bias_r[:window])
-        fLast = signal_bias_f[0]
-        rLast = signal_bias_r[0]
-        signal_bias_forward = []
-        signal_bias_reverse = []
-        signal_raw = []
-        signal_bc = []
-        for i in range((window / 2), len(signal_bias_f) - (window / 2)):
-            nhatf = Nf[i - (window / 2)] * (signal_bias_f[i] / fSum)
-            nhatr = Nr[i - (window / 2)] * (signal_bias_r[i] / rSum)
-            signal_bias_forward.append(signal_bias_f[i])
-            signal_bias_reverse.append(signal_bias_r[i])
-            signal_raw.append(signal_raw_f[i] + signal_raw_r[i])
-            signal_bc.append(nhatf + nhatr)
-            fSum -= fLast
-            fSum += signal_bias_f[i + (window / 2)]
-            fLast = signal_bias_f[i - (window / 2) + 1]
-            rSum -= rLast
-            rSum += signal_bias_r[i + (window / 2)]
-            rLast = signal_bias_r[i - (window / 2) + 1]
-
-        return signal_bias_forward, signal_bias_reverse, signal_raw, signal_bc
 
     def line3(self, bias_table1, bias_table2):
         signal = GenomicSignal(self.reads_file)
@@ -980,7 +910,7 @@ class Plot:
         os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
 
-    def line5(self, reads_file1, reads_file2, bias_table1, bias_table2):
+    def atac_dnase_bc_line(self, reads_file1, reads_file2, bias_table1, bias_table2):
         genome_data = GenomeData(self.organism)
         fasta = Fastafile(genome_data.get_genome())
         pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
@@ -1013,13 +943,13 @@ class Plot:
                 p2 = mid + (self.window_size / 2)
 
                 # Fetch raw signal
-                signal_atac = self.get_signal5(ref=region.chrom, start=p1, end=p2, bam=bam_atac,
-                                               fasta=fasta, bias_table=table1,
-                                               forward_shift=5, reverse_shift=-4)
+                signal_atac = self.get_bc_signal(ref=region.chrom, start=p1, end=p2, bam=bam_atac,
+                                                 fasta=fasta, bias_table=table1,
+                                                 forward_shift=5, reverse_shift=-4)
 
-                signal_dnase = self.get_signal5(ref=region.chrom, start=p1, end=p2, bam=bam_dnase,
-                                                fasta=fasta, bias_table=table2,
-                                                forward_shift=0, reverse_shift=0)
+                signal_dnase = self.get_bc_signal(ref=region.chrom, start=p1, end=p2, bam=bam_dnase,
+                                                  fasta=fasta, bias_table=table2,
+                                                  forward_shift=0, reverse_shift=0)
 
                 num_sites += 1
 
@@ -1093,8 +1023,6 @@ class Plot:
         # ax2.legend(loc="lower right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        # ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        # ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -1118,7 +1046,7 @@ class Plot:
         os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
 
-    def get_signal5(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift):
+    def get_bc_signal(self, ref, start, end, bam, fasta, bias_table, forward_shift, reverse_shift):
         # Parameters
         window = 50
         defaultKmerValue = 1.0
@@ -1201,7 +1129,7 @@ class Plot:
 
         return signal_bc
 
-    def line6(self, reads_file1, reads_file2):
+    def atac_dnase_raw_line(self, reads_file1, reads_file2):
         genome_data = GenomeData(self.organism)
         fasta = Fastafile(genome_data.get_genome())
         pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
@@ -1312,11 +1240,8 @@ class Plot:
         ax2.set_xlim(start, end)
         ax2.set_ylim([min_signal, max_signal])
         ax2.legend(loc="upper right", frameon=False)
-        # ax2.legend(loc="lower right", frameon=False)
 
         ax2.spines['bottom'].set_position(('outward', 40))
-        # ax2.set_xlabel("Coordinates from Motif Center", fontweight='bold')
-        # ax2.set_ylabel("Average Signal", rotation=90, fontweight='bold')
 
         figure_name = os.path.join(self.output_loc, "{}.line.eps".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -1340,44 +1265,24 @@ class Plot:
         os.remove(os.path.join(self.output_loc, "{}.logo.pdf".format(self.output_prefix)))
         os.remove(os.path.join(self.output_loc, "{}.eps".format(self.output_prefix)))
 
-    def line7(self):
-        genome_data = GenomeData(self.organism)
-        fasta = Fastafile(genome_data.get_genome())
-
+    def fragment_size_raw_line(self):
         mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
         mpbs_regions.read(self.motif_file)
         bam = Samfile(self.reads_file, "rb")
 
-        pwm_dict = dict([("A", [0.0] * self.window_size), ("C", [0.0] * self.window_size),
-                         ("G", [0.0] * self.window_size), ("T", [0.0] * self.window_size),
-                         ("N", [0.0] * self.window_size)])
+        signal_f_max_145 = np.zeros(self.window_size)
+        signal_r_max_145 = np.zeros(self.window_size)
 
-        signal_raw_f_145 = np.zeros(self.window_size)
-        signal_raw_r_145 = np.zeros(self.window_size)
+        signal_f_146_307 = np.zeros(self.window_size)
+        signal_r_146_307 = np.zeros(self.window_size)
 
-        signal_raw_f_146_307 = np.zeros(self.window_size)
-        signal_raw_r_146_307 = np.zeros(self.window_size)
+        signal_f_min_307 = np.zeros(self.window_size)
+        signal_r_min_307 = np.zeros(self.window_size)
 
-        signal_raw_f_308_500 = np.zeros(self.window_size)
-        signal_raw_r_308_500 = np.zeros(self.window_size)
+        signal_f = np.zeros(self.window_size)
+        signal_r = np.zeros(self.window_size)
 
-        signal_raw_f_501 = np.zeros(self.window_size)
-        signal_raw_r_501 = np.zeros(self.window_size)
-
-        signal_raw_f_read_1 = np.zeros(self.window_size)
-        signal_raw_r_read_1 = np.zeros(self.window_size)
-
-        signal_raw_f_read_2 = np.zeros(self.window_size)
-        signal_raw_r_read_2 = np.zeros(self.window_size)
-
-        signal_raw_f = np.zeros(self.window_size)
-        signal_raw_r = np.zeros(self.window_size)
-
-        signal_raw = np.zeros(self.window_size)
-
-        num_sites = 0
         for region in mpbs_regions:
-            if region.orientation == "+": continue
             if str(region.name).split(":")[-1] == "Y":
                 # Extend by 50 bp
                 mid = (region.initial + region.final) / 2
@@ -1386,310 +1291,369 @@ class Plot:
 
                 # Fetch raw signal
                 for read in bam.fetch(region.chrom, p1, p2):
+                    # All reads
                     if (not read.is_reverse):
                         cut_site = read.pos + self.forward_shift
                         if cut_site >= p1 and cut_site < p2:
-                            signal_raw_f[cut_site - p1] += 1.0
-                            signal_raw[cut_site - p1] += 1.0
+                            signal_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + self.reverse_shift - 1
                         if cut_site >= p1 and cut_site < p2:
-                            signal_raw_r[cut_site - p1] += 1.0
-                            signal_raw[cut_site - p1] += 1.0
+                            signal_r[cut_site - p1] += 1.0
 
+                    # length <= 145
                     if abs(read.template_length) <= 145:
                         if (not read.is_reverse):
                             cut_site = read.pos + self.forward_shift
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_145[cut_site - p1] += 1.0
+                                signal_f_max_145[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_145[cut_site - p1] += 1.0
+                                signal_r_max_145[cut_site - p1] += 1.0
 
+                    # length > 145 and <= 307
                     if abs(read.template_length) > 145 and abs(read.template_length) <= 307:
                         if (not read.is_reverse):
                             cut_site = read.pos + self.forward_shift
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_146_307[cut_site - p1] += 1.0
+                                signal_f_146_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_146_307[cut_site - p1] += 1.0
+                                signal_r_146_307[cut_site - p1] += 1.0
 
-                    if abs(read.template_length) > 307 and abs(read.template_length) <= 500:
+                    # length > 307
+                    if abs(read.template_length) > 307:
                         if (not read.is_reverse):
                             cut_site = read.pos + self.forward_shift
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_308_500[cut_site - p1] += 1.0
+                                signal_f_min_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
                             if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_308_500[cut_site - p1] += 1.0
-
-                    if abs(read.template_length) > 500:
-                        if (not read.is_reverse):
-                            cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_501[cut_site - p1] += 1.0
-                        else:
-                            cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_501[cut_site - p1] += 1.0
-
-                    if read.is_read1:
-                        if (not read.is_reverse):
-                            cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_read_1[cut_site - p1] += 1.0
-                        else:
-                            cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_read_1[cut_site - p1] += 1.0
-
-                    if read.is_read2:
-                        if (not read.is_reverse):
-                            cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_f_read_2[cut_site - p1] += 1.0
-                        else:
-                            cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
-                                signal_raw_r_read_2[cut_site - p1] += 1.0
-
-                num_sites += 1
-
-                # Update pwm
-                aux_plus = 1
-                dna_seq = str(fasta.fetch(region.chrom, p1, p2)).upper()
-                if (region.final - region.initial) % 2 == 0:
-                    aux_plus = 0
-                dna_seq_rev = AuxiliaryFunctions.revcomp(str(fasta.fetch(region.chrom,
-                                                                         p1 + aux_plus, p2 + aux_plus)).upper())
-                if region.orientation == "+":
-                    for i in range(0, len(dna_seq)):
-                        pwm_dict[dna_seq[i]][i] += 1
-                elif region.orientation == "-":
-                    for i in range(0, len(dna_seq_rev)):
-                        pwm_dict[dna_seq_rev[i]][i] += 1
-
-        # Apply a Savitzky-Golay filter to an array.
-        # signal_raw = savgol_filter(signal_raw, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f = savgol_filter(signal_raw_f, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r = savgol_filter(signal_raw_r, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_145 = savgol_filter(signal_raw_f_145, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_145 = savgol_filter(signal_raw_r_145, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_146_307 = savgol_filter(signal_raw_f_146_307, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_146_307 = savgol_filter(signal_raw_r_146_307, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_308_500 = savgol_filter(signal_raw_f_308_500, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_308_500 = savgol_filter(signal_raw_r_308_500, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_501 = savgol_filter(signal_raw_f_501, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_501 = savgol_filter(signal_raw_r_501, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_read_1 = savgol_filter(signal_raw_f_read_1, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_read_1 = savgol_filter(signal_raw_r_read_1, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_f_read_2 = savgol_filter(signal_raw_f_read_2, window_length=11, polyorder=2, mode='nearest')
-        # signal_raw_r_read_2 = savgol_filter(signal_raw_r_read_2, window_length=11, polyorder=2, mode='nearest')
+                                signal_r_min_307[cut_site - p1] += 1.0
 
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         f = open(output_fname, "w")
-        f.write("\t".join((map(str, signal_raw))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_145))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_145))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_146_307))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_308_500))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_308_500))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_501))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_501))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_read_1))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_read_1))) + "\n")
-        f.write("\t".join((map(str, signal_raw_f_read_2))) + "\n")
-        f.write("\t".join((map(str, signal_raw_r_read_2))) + "\n")
+        f.write("\t".join((map(str, signal_f))) + "\n")
+        f.write("\t".join((map(str, signal_r))) + "\n")
+        f.write("\t".join((map(str, signal_f_max_145))) + "\n")
+        f.write("\t".join((map(str, signal_r_max_145))) + "\n")
+        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+        f.close()
+
+        # find out the linker position
+        pos_f_1, pos_r_1, pos_f_2, pos_r_2 = self.get_linkers_position(signal_f_146_307,
+                                                                       signal_r_146_307,
+                                                                       signal_f_min_307,
+                                                                       signal_r_min_307)
+        p1 = (pos_f_1 - pos_f_2) / 2 + pos_f_2
+        p2 = p1 + 180
+        p3 = self.window_size - p2
+        p4 = self.window_size - p1
+
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8))
+
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
+        x_ticks = [start, p1 - 500, p2 - 500, 0, p3 - 500, p4 - 500, end]
+
+        self.update_axes_for_fragment_size_line(ax1, x, x_ticks, start, end, signal_f, signal_r, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax2, x, x_ticks, start, end, signal_f_max_145, signal_r_max_145, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax3, x, x_ticks, start, end, signal_f_146_307, signal_r_146_307, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax4, x, x_ticks, start, end, signal_f_min_307, signal_r_min_307, p1, p2,
+                                                p3, p4)
+
+        figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
+        fig.savefig(figure_name, format="pdf", dpi=300)
+
+    def fragment_size_bc_line(self, bias_table_files):
+        mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs_regions.read(self.motif_file)
+
+        genomic_signal = GenomicSignal(self.reads_file)
+        genomic_signal.load_sg_coefs(11)
+        bam = Samfile(self.reads_file, "rb")
+        genome_data = GenomeData(self.organism)
+        fasta = Fastafile(genome_data.get_genome())
+
+        bias_table = BiasTable()
+        bias_table_list = bias_table_files.split(",")
+        table = bias_table.load_table(table_file_name_F=bias_table_list[0],
+                                      table_file_name_R=bias_table_list[1])
+
+        signal_f_max_145 = np.zeros(self.window_size)
+        signal_r_max_145 = np.zeros(self.window_size)
+
+        signal_f_146_307 = np.zeros(self.window_size)
+        signal_r_146_307 = np.zeros(self.window_size)
+
+        signal_f_min_307 = np.zeros(self.window_size)
+        signal_r_min_307 = np.zeros(self.window_size)
+
+        signal_f = np.zeros(self.window_size)
+        signal_r = np.zeros(self.window_size)
+
+        for region in mpbs_regions:
+            if str(region.name).split(":")[-1] == "Y":
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
+
+                # All reads
+                signal_bc_f, signal_bc_r = \
+                    genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                    bam=bam, fasta=fasta,
+                                                                    bias_table=table,
+                                                                    forward_shift=self.forward_shift,
+                                                                    reverse_shift=self.reverse_shift,
+                                                                    min_length=None, max_length=None,
+                                                                    strand=True)
+                # length <= 145
+                signal_bc_max_145_f, signal_bc_max_145_r = \
+                    genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                    bam=bam, fasta=fasta,
+                                                                    bias_table=table,
+                                                                    forward_shift=self.forward_shift,
+                                                                    reverse_shift=self.reverse_shift,
+                                                                    min_length=None, max_length=145,
+                                                                    strand=True)
+                # length > 145 and <= 307
+                signal_bc_146_307_f, signal_bc_146_307_r = \
+                    genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                    bam=bam, fasta=fasta,
+                                                                    bias_table=table,
+                                                                    forward_shift=self.forward_shift,
+                                                                    reverse_shift=self.reverse_shift,
+                                                                    min_length=145, max_length=307,
+                                                                    strand=True)
+                # length > 307
+                signal_bc_min_307_f, signal_bc_min_307_r = \
+                    genomic_signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                                    bam=bam, fasta=fasta,
+                                                                    bias_table=table,
+                                                                    forward_shift=self.forward_shift,
+                                                                    reverse_shift=self.reverse_shift,
+                                                                    min_length=307, max_length=None,
+                                                                    strand=True)
+
+                signal_f = np.add(signal_f, np.array(signal_bc_f))
+                signal_r = np.add(signal_r, np.array(signal_bc_r))
+                signal_f_max_145 = np.add(signal_f_max_145, np.array(signal_bc_max_145_f))
+                signal_r_max_145 = np.add(signal_r_max_145, np.array(signal_bc_max_145_r))
+                signal_f_146_307 = np.add(signal_f_146_307, np.array(signal_bc_146_307_f))
+                signal_r_146_307 = np.add(signal_r_146_307, np.array(signal_bc_146_307_r))
+                signal_f_min_307 = np.add(signal_f_min_307, np.array(signal_bc_min_307_f))
+                signal_r_min_307 = np.add(signal_r_min_307, np.array(signal_bc_min_307_r))
+
+        # Output the norm and slope signal
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
+        f = open(output_fname, "w")
+        f.write("\t".join((map(str, signal_f))) + "\n")
+        f.write("\t".join((map(str, signal_r))) + "\n")
+        f.write("\t".join((map(str, signal_f_max_145))) + "\n")
+        f.write("\t".join((map(str, signal_r_max_145))) + "\n")
+        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+        f.close()
+
+        # find out the linker position
+        pos_f_1, pos_r_1, pos_f_2, pos_r_2 = self.get_linkers_position(signal_f_146_307,
+                                                                       signal_r_146_307,
+                                                                       signal_f_min_307,
+                                                                       signal_r_min_307)
+        p1 = (pos_f_1 - pos_f_2) / 2 + pos_f_2
+        p2 = p1 + 180
+        p3 = self.window_size - p2
+        p4 = self.window_size - p1
+
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8))
+
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
+        x_ticks = [start, p1 - 500, p2 - 500, 0, p3 - 500, p4 - 500, end]
+
+        self.update_axes_for_fragment_size_line(ax1, x, x_ticks, start, end, signal_f, signal_r, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax2, x, x_ticks, start, end, signal_f_max_145, signal_r_max_145, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax3, x, x_ticks, start, end, signal_f_146_307, signal_r_146_307, p1, p2,
+                                                p3, p4)
+        self.update_axes_for_fragment_size_line(ax4, x, x_ticks, start, end, signal_f_min_307, signal_r_min_307, p1, p2,
+                                                p3, p4)
+
+        figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
+        fig.savefig(figure_name, format="pdf", dpi=300)
+
+    def slope_of_reads_number(self):
+        genome_data = GenomeData(self.organism)
+        mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs_regions.read(self.motif_file)
+        bam = Samfile(self.reads_file, "rb")
+
+        signal_f_146_307 = np.zeros(self.window_size)
+        signal_r_146_307 = np.zeros(self.window_size)
+
+        signal_f_min_307 = np.zeros(self.window_size)
+        signal_r_min_307 = np.zeros(self.window_size)
+
+        for region in mpbs_regions:
+            if str(region.name).split(":")[-1] == "Y":
+                # Extend by 50 bp
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
+
+                # Fetch raw signal
+                for read in bam.fetch(region.chrom, p1, p2):
+                    # length > 145 and <= 307
+                    if abs(read.template_length) > 145 and abs(read.template_length) <= 307:
+                        if (not read.is_reverse):
+                            cut_site = read.pos + self.forward_shift
+                            if cut_site >= p1 and cut_site < p2:
+                                signal_f_146_307[cut_site - p1] += 1.0
+                        else:
+                            cut_site = read.aend + self.reverse_shift - 1
+                            if cut_site >= p1 and cut_site < p2:
+                                signal_r_146_307[cut_site - p1] += 1.0
+
+                    # length > 307
+                    if abs(read.template_length) > 307:
+                        if (not read.is_reverse):
+                            cut_site = read.pos + self.forward_shift
+                            if cut_site >= p1 and cut_site < p2:
+                                signal_f_min_307[cut_site - p1] += 1.0
+                        else:
+                            cut_site = read.aend + self.reverse_shift - 1
+                            if cut_site >= p1 and cut_site < p2:
+                                signal_r_min_307[cut_site - p1] += 1.0
+
+        # Apply a Savitzky-Golay filter to an array.
+        smooth_signal_f_146_307 = savgol_filter(signal_f_146_307, window_length=51, polyorder=2)
+        smooth_signal_r_146_307 = savgol_filter(signal_r_146_307, window_length=51, polyorder=2)
+        smooth_signal_f_min_307 = savgol_filter(signal_f_min_307, window_length=51, polyorder=2)
+        smooth_signal_r_min_307 = savgol_filter(signal_r_min_307, window_length=51, polyorder=2)
+
+        # Output the norm and slope signal
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
+        f = open(output_fname, "w")
+        f.write("\t".join((map(str, signal_f_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_146_307))) + "\n")
+        f.write("\t".join((map(str, smooth_signal_f_146_307))) + "\n")
+        f.write("\t".join((map(str, smooth_signal_r_146_307))) + "\n")
+        f.write("\t".join((map(str, signal_f_min_307))) + "\n")
+        f.write("\t".join((map(str, signal_r_min_307))) + "\n")
+        f.write("\t".join((map(str, smooth_signal_f_min_307))) + "\n")
+        f.write("\t".join((map(str, smooth_signal_r_min_307))) + "\n")
         f.close()
 
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
         x = np.linspace(start, end, num=self.window_size)
 
-        fig, ((ax1, ax2), (ax3, ax4), (ax5, ax6), (ax7, ax8)) = plt.subplots(4, 2, figsize=(12, 12))
+        fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 8))
 
-        min_signal = min(signal_raw)
-        max_signal = max(signal_raw)
-        ax1.plot(x, signal_raw, color='red')
+        min_signal = min(min(signal_f_146_307), min(signal_r_146_307))
+        max_signal = max(max(signal_f_146_307), max(signal_r_146_307))
+        ax1.plot(x, signal_f_146_307, color='red', label='Forward')
+        ax1.plot(x, signal_r_146_307, color='green', label='Reverse')
         ax1.xaxis.set_ticks_position('bottom')
         ax1.yaxis.set_ticks_position('left')
         ax1.spines['top'].set_visible(False)
         ax1.spines['right'].set_visible(False)
         ax1.spines['left'].set_position(('outward', 15))
         ax1.tick_params(direction='out')
-        ax1.set_title(self.output_prefix + " of all reads", fontweight='bold')
+        ax1.set_title("Raw reads number of 1N", fontweight='bold')
         ax1.set_xticks([start, 0, end])
         ax1.set_xticklabels([str(start), 0, str(end)])
         ax1.set_yticks([min_signal, max_signal])
-        ax1.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax1.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
         ax1.set_xlim(start, end)
         ax1.set_ylim([min_signal, max_signal])
 
-        min_signal = min(min(signal_raw_f), min(signal_raw_r))
-        max_signal = max(max(signal_raw_f), max(signal_raw_r))
-        ax2.plot(x, signal_raw_f, color='red', label='Forward')
-        ax2.plot(x, signal_raw_r, color='green', label='Reverse')
+        min_signal = min(min(smooth_signal_f_146_307), min(smooth_signal_r_146_307))
+        max_signal = max(max(smooth_signal_f_146_307), max(smooth_signal_r_146_307))
+        ax2.plot(x, smooth_signal_f_146_307, color='red', label='Forward')
+        ax2.plot(x, smooth_signal_r_146_307, color='green', label='Reverse')
         ax2.xaxis.set_ticks_position('bottom')
         ax2.yaxis.set_ticks_position('left')
         ax2.spines['top'].set_visible(False)
         ax2.spines['right'].set_visible(False)
         ax2.spines['left'].set_position(('outward', 15))
         ax2.tick_params(direction='out')
-        ax2.set_title(self.output_prefix + " of all reads", fontweight='bold')
-        ax2.set_xticks([start, 0, end])
-        ax2.set_xticklabels([str(start), 0, str(end)])
+        ax2.set_title("Smooth reads number of 1N", fontweight='bold')
         ax2.set_yticks([min_signal, max_signal])
-        ax2.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax2.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
         ax2.set_xlim(start, end)
         ax2.set_ylim([min_signal, max_signal])
-        ax2.legend(loc="upper right", frameon=False)
 
-        min_signal = min(min(signal_raw_f_145), min(signal_raw_r_145))
-        max_signal = max(max(signal_raw_f_145), max(signal_raw_r_145))
-        max_f_index = np.argmax(signal_raw_f_145) - 500
-        max_r_index = np.argmax(signal_raw_r_145) - 500
-        ax3.vlines(max_r_index, min_signal, max_signal)
-        ax3.vlines(max_f_index, min_signal, max_signal)
-        ax3.plot(x, signal_raw_f_145, color='red', label='Forward')
-        ax3.plot(x, signal_raw_r_145, color='green', label='Reverse')
+        id_max_f_1 = np.argmax(smooth_signal_f_146_307[:500]) - 500
+        id_max_r_1 = np.argmax(smooth_signal_r_146_307[500:])
+        ax2.axvline(x=id_max_f_1)
+        ax2.axvline(x=id_max_r_1)
+        x_tick_labels = [str(start), str(id_max_f_1), 0, str(id_max_r_1), str(end)]
+        ax2.set_xticks(map(int, x_tick_labels))
+        ax2.set_xticklabels(x_tick_labels, rotation=90)
+
+        min_signal = min(min(signal_f_min_307), min(signal_r_min_307))
+        max_signal = max(max(signal_f_min_307), max(signal_r_min_307))
+        ax3.plot(x, signal_f_min_307, color='red', label='Forward')
+        ax3.plot(x, signal_r_min_307, color='green', label='Reverse')
         ax3.xaxis.set_ticks_position('bottom')
         ax3.yaxis.set_ticks_position('left')
         ax3.spines['top'].set_visible(False)
         ax3.spines['right'].set_visible(False)
         ax3.spines['left'].set_position(('outward', 15))
         ax3.tick_params(direction='out')
-        ax3.set_title(self.output_prefix + " of length <= 145", fontweight='bold')
-        ax3.set_xticks([start, max_f_index, 0, max_r_index, end])
-        ax3.set_xticklabels([str(start), str(max_f_index), 0, str(max_r_index), str(end)])
+        ax3.set_title("Raw reads number of +2N", fontweight='bold')
+        ax3.set_xticks([start, 0, end])
+        ax3.set_xticklabels([str(start), 0, str(end)])
         ax3.set_yticks([min_signal, max_signal])
-        ax3.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax3.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
         ax3.set_xlim(start, end)
         ax3.set_ylim([min_signal, max_signal])
 
-        ax3.legend(loc="upper right", frameon=False)
-
-        min_signal = min(min(signal_raw_f_146_307), min(signal_raw_r_146_307))
-        max_signal = max(max(signal_raw_f_146_307), max(signal_raw_r_146_307))
-        max_f_index_1 = np.argmax(signal_raw_f_146_307[:self.window_size / 2]) - 500
-        max_f_index_2 = np.argmax(signal_raw_f_146_307[self.window_size / 2:])
-        max_r_index_1 = np.argmax(signal_raw_r_146_307[:self.window_size / 2]) - 500
-        max_r_index_2 = np.argmax(signal_raw_r_146_307[self.window_size / 2:])
-        ax4.vlines(max_f_index_1, min_signal, max_signal)
-        ax4.vlines(max_f_index_2, min_signal, max_signal)
-        ax4.vlines(max_r_index_1, min_signal, max_signal)
-        ax4.vlines(max_r_index_2, min_signal, max_signal)
-
-        ax4.plot(x, signal_raw_f_146_307, color='red', label='Forward')
-        ax4.plot(x, signal_raw_r_146_307, color='green', label='Reverse')
+        min_signal = min(min(smooth_signal_f_min_307), min(smooth_signal_r_min_307))
+        max_signal = max(max(smooth_signal_f_min_307), max(smooth_signal_r_min_307))
+        ax4.plot(x, smooth_signal_f_min_307, color='red', label='Forward')
+        ax4.plot(x, smooth_signal_r_min_307, color='green', label='Reverse')
         ax4.xaxis.set_ticks_position('bottom')
         ax4.yaxis.set_ticks_position('left')
         ax4.spines['top'].set_visible(False)
         ax4.spines['right'].set_visible(False)
         ax4.spines['left'].set_position(('outward', 15))
         ax4.tick_params(direction='out')
-        ax4.set_title(self.output_prefix + " of length > 145 and <=307", fontweight='bold')
-        ax4.set_xticks([start, max_f_index_1, max_r_index_1, 0, max_f_index_2, max_r_index_2, end])
-        ax4.set_xticklabels(
-            [str(start), str(max_f_index_1), str(max_r_index_1), 0, str(max_f_index_2), str(max_r_index_2), str(end)])
+        ax4.set_title("Smooth reads number of +2N", fontweight='bold')
         ax4.set_yticks([min_signal, max_signal])
-        ax4.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax4.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
         ax4.set_xlim(start, end)
         ax4.set_ylim([min_signal, max_signal])
-        ax4.legend(loc="upper right", frameon=False)
 
-        min_signal = min(min(signal_raw_f_308_500), min(signal_raw_r_308_500))
-        max_signal = max(max(signal_raw_f_308_500), max(signal_raw_r_308_500))
-        max_f_index_1 = np.argmax(signal_raw_f_308_500[:self.window_size / 2]) - 500
-        max_f_index_2 = np.argmax(signal_raw_f_308_500[self.window_size / 2:])
-        max_r_index_1 = np.argmax(signal_raw_r_308_500[:self.window_size / 2]) - 500
-        max_r_index_2 = np.argmax(signal_raw_r_308_500[self.window_size / 2:])
-        ax5.vlines(max_f_index_1, min_signal, max_signal)
-        ax5.vlines(max_f_index_2, min_signal, max_signal)
-        ax5.vlines(max_r_index_1, min_signal, max_signal)
-        ax5.vlines(max_r_index_2, min_signal, max_signal)
-
-        ax5.plot(x, signal_raw_f_308_500, color='red', label='Forward')
-        ax5.plot(x, signal_raw_r_308_500, color='green', label='Reverse')
-        ax5.xaxis.set_ticks_position('bottom')
-        ax5.yaxis.set_ticks_position('left')
-        ax5.spines['top'].set_visible(False)
-        ax5.spines['right'].set_visible(False)
-        ax5.spines['left'].set_position(('outward', 15))
-        ax5.tick_params(direction='out')
-        ax5.set_title(self.output_prefix + " of length > 307 and <= 500", fontweight='bold')
-        ax5.set_xticks([start, max_f_index_1, max_r_index_1, 0, max_f_index_2, max_r_index_2, end])
-        ax5.set_xticklabels(
-            [str(start), str(max_f_index_1), str(max_r_index_1), 0, str(max_f_index_2), str(max_r_index_2), str(end)])
-        ax5.set_yticks([min_signal, max_signal])
-        ax5.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-        ax5.set_xlim(start, end)
-        ax5.set_ylim([min_signal, max_signal])
-        ax5.legend(loc="upper right", frameon=False)
-
-        min_signal = min(min(signal_raw_f_501), min(signal_raw_r_501))
-        max_signal = max(max(signal_raw_f_501), max(signal_raw_r_501))
-        ax6.plot(x, signal_raw_f_501, color='red', label='Forward')
-        ax6.plot(x, signal_raw_r_501, color='green', label='Reverse')
-        ax6.xaxis.set_ticks_position('bottom')
-        ax6.yaxis.set_ticks_position('left')
-        ax6.spines['top'].set_visible(False)
-        ax6.spines['right'].set_visible(False)
-        ax6.spines['left'].set_position(('outward', 15))
-        ax6.tick_params(direction='out')
-        ax6.set_title(self.output_prefix + " of length > 500", fontweight='bold')
-        ax6.set_xticks([start, 0, end])
-        ax6.set_xticklabels([str(start), 0, str(end)])
-        ax6.set_yticks([min_signal, max_signal])
-        ax6.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-        ax6.set_xlim(start, end)
-        ax6.set_ylim([min_signal, max_signal])
-        ax6.legend(loc="upper right", frameon=False)
-
-        min_signal = min(min(signal_raw_f_read_1), min(signal_raw_r_read_1))
-        max_signal = max(max(signal_raw_f_read_1), max(signal_raw_r_read_1))
-        ax7.plot(x, signal_raw_f_read_1, color='red', label='Forward')
-        ax7.plot(x, signal_raw_r_read_1, color='green', label='Reverse')
-        ax7.xaxis.set_ticks_position('bottom')
-        ax7.yaxis.set_ticks_position('left')
-        ax7.spines['top'].set_visible(False)
-        ax7.spines['right'].set_visible(False)
-        ax7.spines['left'].set_position(('outward', 15))
-        ax7.tick_params(direction='out')
-        ax7.set_title(self.output_prefix + " of read 1", fontweight='bold')
-        ax7.set_xticks([start, 0, end])
-        ax7.set_xticklabels([str(start), 0, str(end)])
-        ax7.set_yticks([min_signal, max_signal])
-        ax7.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-        ax7.set_xlim(start, end)
-        ax7.set_ylim([min_signal, max_signal])
-        ax7.legend(loc="upper right", frameon=False)
-
-        min_signal = min(min(signal_raw_f_read_2), min(signal_raw_r_read_2))
-        max_signal = max(max(signal_raw_f_read_2), max(signal_raw_r_read_2))
-        ax8.plot(x, signal_raw_f_read_2, color='red', label='Forward')
-        ax8.plot(x, signal_raw_r_read_2, color='green', label='Reverse')
-        ax8.xaxis.set_ticks_position('bottom')
-        ax8.yaxis.set_ticks_position('left')
-        ax8.spines['top'].set_visible(False)
-        ax8.spines['right'].set_visible(False)
-        ax8.spines['left'].set_position(('outward', 15))
-        ax8.tick_params(direction='out')
-        ax8.set_title(self.output_prefix + " of read 2", fontweight='bold')
-        ax8.set_xticks([start, 0, end])
-        ax8.set_xticklabels([str(start), 0, str(end)])
-        ax8.set_yticks([min_signal, max_signal])
-        ax8.set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
-        ax8.set_xlim(start, end)
-        ax8.set_ylim([min_signal, max_signal])
-        ax8.legend(loc="upper right", frameon=False)
+        id_max_f = np.argmax(smooth_signal_f_146_307[:500])
+        id_max_r = np.argmax(smooth_signal_r_146_307[500:]) + 500
+        id_max_f_2 = np.argmax(smooth_signal_f_min_307[:id_max_f]) - 500
+        id_max_r_2 = np.argmax(smooth_signal_r_min_307[id_max_r:]) + id_max_r - 500
+        ax4.axvline(x=id_max_f_2)
+        ax4.axvline(x=id_max_r_2)
+        x_tick_labels = [str(start), str(id_max_f_2), 0, str(id_max_r_2), str(end)]
+        ax4.set_xticks(map(int, x_tick_labels))
+        ax4.set_xticklabels(x_tick_labels, rotation=90)
 
         figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -1828,8 +1792,6 @@ class Plot:
         # Output the norm and slope signal
         output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
         with open(output_fname, "w") as f:
-            f.write("\t".join((map(str, signal_bc))) + "\n")
-            f.write("\t".join((map(str, signal_bc_slope))) + "\n")
             f.write("\t".join((map(str, signal_bc_f))) + "\n")
             f.write("\t".join((map(str, signal_bc_f_slope))) + "\n")
             f.write("\t".join((map(str, signal_bc_r))) + "\n")
@@ -1991,7 +1953,6 @@ class Plot:
             f.write("\t".join((map(str, signal_bc_r_min_500))) + "\n")
             f.write("\t".join((map(str, signal_bc_r_min_500_slope))) + "\n")
 
-
         start = -(self.window_size / 2)
         end = (self.window_size / 2) - 1
         x = np.linspace(start, end, num=self.window_size)
@@ -2072,7 +2033,6 @@ class Plot:
         ax[1, 1].set_ylim([min_signal, max_signal])
         ax[1, 1].legend(loc="upper right", frameon=False)
 
-
         min_signal = min(min(signal_bc_f_145_307), min(signal_bc_r_145_307))
         max_signal = max(max(signal_bc_f_145_307), max(signal_bc_r_145_307))
         ax[2, 0].plot(x, signal_bc_f_145_307, color='red', label='Forward')
@@ -2148,6 +2108,344 @@ class Plot:
         ax[3, 1].set_xlim(start, end)
         ax[3, 1].set_ylim([min_signal, max_signal])
         ax[3, 1].legend(loc="upper right", frameon=False)
+
+        figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
+        fig.savefig(figure_name, format="pdf", dpi=300)
+
+    def line9(self, bias_tables):
+        genome_data = GenomeData(self.organism)
+        fasta = Fastafile(genome_data.get_genome())
+
+        mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs_regions.read(self.motif_file)
+        bam = Samfile(self.reads_file, "rb")
+
+        table = BiasTable()
+        bias_table_list = bias_tables.split(",")
+        bias_table = table.load_table(table_file_name_F=bias_table_list[0],
+                                      table_file_name_R=bias_table_list[1])
+
+        signal = GenomicSignal()
+        signal.load_sg_coefs(9)
+
+        signal_bc_max_145 = np.zeros(self.window_size)
+
+        signal_bc_min_145 = np.zeros(self.window_size)
+
+        signal_bc_145_307 = np.zeros(self.window_size)
+
+        signal_bc_min_307 = np.zeros(self.window_size)
+
+        signal_bc_307_500 = np.zeros(self.window_size)
+
+        signal_bc_min_500 = np.zeros(self.window_size)
+
+        signal_bc = np.zeros(self.window_size)
+
+        for region in mpbs_regions:
+            if str(region.name).split(":")[-1] == "Y":
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
+
+                bc_max_145 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=None, max_length=145, strand=False)
+                bc_min_145 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=145, max_length=None, strand=False)
+                bc_145_307 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=145, max_length=307, strand=False)
+                bc_min_307 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=307, max_length=None, strand=False)
+                bc_307_500 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=307, max_length=500, strand=False)
+                bc_min_500 = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=500, max_length=None, strand=False)
+
+                bc = \
+                    signal.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=self.forward_shift,
+                                                            reverse_shift=self.reverse_shift,
+                                                            min_length=None, max_length=None, strand=False)
+
+                signal_bc_max_145 = np.add(signal_bc_max_145, bc_max_145)
+                signal_bc_min_145 = np.add(signal_bc_min_145, bc_min_145)
+                signal_bc_145_307 = np.add(signal_bc_145_307, bc_145_307)
+                signal_bc_min_307 = np.add(signal_bc_min_307, bc_min_307)
+                signal_bc_307_500 = np.add(signal_bc_307_500, bc_307_500)
+                signal_bc_min_500 = np.add(signal_bc_min_500, bc_min_500)
+                signal_bc = np.add(signal_bc, bc)
+
+        # Pre-process signal
+        signal_bc = signal.boyle_norm(signal_bc)
+        perc = scoreatpercentile(signal_bc, 98)
+        std = np.array(signal_bc).std()
+        signal_bc = signal.hon_norm_atac(signal_bc, perc, std)
+        signal_bc_slope = signal.slope(signal_bc, signal.sg_coefs)
+
+        # Output the norm and slope signal
+        output_fname = os.path.join(self.output_loc, "{}.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc))) + "\n")
+            f.write("\t".join((map(str, signal_bc_slope))) + "\n")
+
+        # Output signal of class a
+        signal_bc_max_145 = signal.boyle_norm(signal_bc_max_145)
+        perc = scoreatpercentile(signal_bc_max_145, 98)
+        std = np.array(signal_bc_max_145).std()
+        signal_bc_max_145 = signal.hon_norm_atac(signal_bc_max_145, perc, std)
+        signal_bc_max_145_slope = signal.slope(signal_bc_max_145, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_a.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+
+        # Output signal of class b
+        signal_bc_min_145 = signal.boyle_norm(signal_bc_min_145)
+        perc = scoreatpercentile(signal_bc_min_145, 98)
+        std = np.array(signal_bc_min_145).std()
+        signal_bc_min_145 = signal.hon_norm_atac(signal_bc_min_145, perc, std)
+        signal_bc_min_145_slope = signal.slope(signal_bc_min_145, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_b.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_145_slope))) + "\n")
+
+        # Output signal of class c
+        signal_bc_145_307 = signal.boyle_norm(signal_bc_145_307)
+        perc = scoreatpercentile(signal_bc_145_307, 98)
+        std = np.array(signal_bc_145_307).std()
+        signal_bc_145_307 = signal.hon_norm_atac(signal_bc_145_307, perc, std)
+        signal_bc_145_307_slope = signal.slope(signal_bc_145_307, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_c.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
+
+        # Output signal of class d
+        signal_bc_min_307 = signal.boyle_norm(signal_bc_min_307)
+        perc = scoreatpercentile(signal_bc_min_307, 98)
+        std = np.array(signal_bc_min_307).std()
+        signal_bc_min_307 = signal.hon_norm_atac(signal_bc_min_307, perc, std)
+        signal_bc_min_307_slope = signal.slope(signal_bc_min_307, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_d.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_307))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_307_slope))) + "\n")
+
+        # Output signal of class e
+        signal_bc_307_500 = signal.boyle_norm(signal_bc_307_500)
+        perc = scoreatpercentile(signal_bc_307_500, 98)
+        std = np.array(signal_bc_307_500).std()
+        signal_bc_307_500 = signal.hon_norm_atac(signal_bc_307_500, perc, std)
+        signal_bc_307_500_slope = signal.slope(signal_bc_307_500, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_e.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_307_500))) + "\n")
+            f.write("\t".join((map(str, signal_bc_307_500_slope))) + "\n")
+
+        # Output signal of class f
+        signal_bc_min_500 = signal.boyle_norm(signal_bc_min_500)
+        perc = scoreatpercentile(signal_bc_min_500, 98)
+        std = np.array(signal_bc_min_500).std()
+        signal_bc_min_500 = signal.hon_norm_atac(signal_bc_min_500, perc, std)
+        signal_bc_min_500_slope = signal.slope(signal_bc_min_500, signal.sg_coefs)
+
+        output_fname = os.path.join(self.output_loc, "{}_f.txt".format(self.output_prefix))
+        with open(output_fname, "w") as f:
+            f.write("\t".join((map(str, signal_bc_max_145))) + "\n")
+            f.write("\t".join((map(str, signal_bc_max_145_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307))) + "\n")
+            f.write("\t".join((map(str, signal_bc_145_307_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_307_500))) + "\n")
+            f.write("\t".join((map(str, signal_bc_307_500_slope))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_500))) + "\n")
+            f.write("\t".join((map(str, signal_bc_min_500_slope))) + "\n")
+
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
+
+        fig, ax = plt.subplots(4, 2, figsize=(12, 12))
+
+        min_signal = min(signal_bc)
+        max_signal = max(signal_bc)
+        ax[0, 0].plot(x, signal_bc, color='red')
+        ax[0, 0].xaxis.set_ticks_position('bottom')
+        ax[0, 0].yaxis.set_ticks_position('left')
+        ax[0, 0].spines['top'].set_visible(False)
+        ax[0, 0].spines['right'].set_visible(False)
+        ax[0, 0].spines['left'].set_position(('outward', 15))
+        ax[0, 0].tick_params(direction='out')
+        ax[0, 0].set_title(self.output_prefix + " of all reads", fontweight='bold')
+        ax[0, 0].set_xticks([start, 0, end])
+        ax[0, 0].set_xticklabels([str(start), 0, str(end)])
+        ax[0, 0].set_yticks([min_signal, max_signal])
+        ax[0, 0].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[0, 0].set_xlim(start, end)
+        ax[0, 0].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc)
+        max_signal = max(signal_bc)
+        ax[0, 1].plot(x, signal_bc, color='red')
+        ax[0, 1].xaxis.set_ticks_position('bottom')
+        ax[0, 1].yaxis.set_ticks_position('left')
+        ax[0, 1].spines['top'].set_visible(False)
+        ax[0, 1].spines['right'].set_visible(False)
+        ax[0, 1].spines['left'].set_position(('outward', 15))
+        ax[0, 1].tick_params(direction='out')
+        ax[0, 1].set_title(self.output_prefix + " of all reads", fontweight='bold')
+        ax[0, 1].set_xticks([start, 0, end])
+        ax[0, 1].set_xticklabels([str(start), 0, str(end)])
+        ax[0, 1].set_yticks([min_signal, max_signal])
+        ax[0, 1].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[0, 1].set_xlim(start, end)
+        ax[0, 1].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_max_145)
+        max_signal = max(signal_bc_max_145)
+        ax[1, 0].plot(x, signal_bc_max_145, color='red')
+        ax[1, 0].xaxis.set_ticks_position('bottom')
+        ax[1, 0].yaxis.set_ticks_position('left')
+        ax[1, 0].spines['top'].set_visible(False)
+        ax[1, 0].spines['right'].set_visible(False)
+        ax[1, 0].spines['left'].set_position(('outward', 15))
+        ax[1, 0].tick_params(direction='out')
+        ax[1, 0].set_title(self.output_prefix + " from fragment length <= 145 ", fontweight='bold')
+        ax[1, 0].set_xticks([start, 0, end])
+        ax[1, 0].set_xticklabels([str(start), 0, str(end)])
+        ax[1, 0].set_yticks([min_signal, max_signal])
+        ax[1, 0].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[1, 0].set_xlim(start, end)
+        ax[1, 0].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_min_145)
+        max_signal = max(signal_bc_min_145)
+        ax[1, 1].plot(x, signal_bc_min_145, color='red')
+        ax[1, 1].xaxis.set_ticks_position('bottom')
+        ax[1, 1].yaxis.set_ticks_position('left')
+        ax[1, 1].spines['top'].set_visible(False)
+        ax[1, 1].spines['right'].set_visible(False)
+        ax[1, 1].spines['left'].set_position(('outward', 15))
+        ax[1, 1].tick_params(direction='out')
+        ax[1, 1].set_title(self.output_prefix + " from fragment length > 145 ", fontweight='bold')
+        ax[1, 1].set_xticks([start, 0, end])
+        ax[1, 1].set_xticklabels([str(start), 0, str(end)])
+        ax[1, 1].set_yticks([min_signal, max_signal])
+        ax[1, 1].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[1, 1].set_xlim(start, end)
+        ax[1, 1].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_145_307)
+        max_signal = max(signal_bc_145_307)
+        ax[2, 0].plot(x, signal_bc_145_307, color='red')
+        ax[2, 0].xaxis.set_ticks_position('bottom')
+        ax[2, 0].yaxis.set_ticks_position('left')
+        ax[2, 0].spines['top'].set_visible(False)
+        ax[2, 0].spines['right'].set_visible(False)
+        ax[2, 0].spines['left'].set_position(('outward', 15))
+        ax[2, 0].tick_params(direction='out')
+        ax[2, 0].set_title(self.output_prefix + " from fragment length > 145 and <= 307 ", fontweight='bold')
+        ax[2, 0].set_xticks([start, 0, end])
+        ax[2, 0].set_xticklabels([str(start), 0, str(end)])
+        ax[2, 0].set_yticks([min_signal, max_signal])
+        ax[2, 0].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[2, 0].set_xlim(start, end)
+        ax[2, 0].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_min_307)
+        max_signal = max(signal_bc_min_307)
+        ax[2, 1].plot(x, signal_bc_min_307, color='red')
+        ax[2, 1].xaxis.set_ticks_position('bottom')
+        ax[2, 1].yaxis.set_ticks_position('left')
+        ax[2, 1].spines['top'].set_visible(False)
+        ax[2, 1].spines['right'].set_visible(False)
+        ax[2, 1].spines['left'].set_position(('outward', 15))
+        ax[2, 1].tick_params(direction='out')
+        ax[2, 1].set_title(self.output_prefix + " from fragment length > 307 ", fontweight='bold')
+        ax[2, 1].set_xticks([start, 0, end])
+        ax[2, 1].set_xticklabels([str(start), 0, str(end)])
+        ax[2, 1].set_yticks([min_signal, max_signal])
+        ax[2, 1].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[2, 1].set_xlim(start, end)
+        ax[2, 1].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_307_500)
+        max_signal = max(signal_bc_307_500)
+        ax[3, 0].plot(x, signal_bc_307_500, color='red')
+        ax[3, 0].xaxis.set_ticks_position('bottom')
+        ax[3, 0].yaxis.set_ticks_position('left')
+        ax[3, 0].spines['top'].set_visible(False)
+        ax[3, 0].spines['right'].set_visible(False)
+        ax[3, 0].spines['left'].set_position(('outward', 15))
+        ax[3, 0].tick_params(direction='out')
+        ax[3, 0].set_title(self.output_prefix + " from fragment length > 307 and <= 500 ", fontweight='bold')
+        ax[3, 0].set_xticks([start, 0, end])
+        ax[3, 0].set_xticklabels([str(start), 0, str(end)])
+        ax[3, 0].set_yticks([min_signal, max_signal])
+        ax[3, 0].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[3, 0].set_xlim(start, end)
+        ax[3, 0].set_ylim([min_signal, max_signal])
+
+        min_signal = min(signal_bc_min_500)
+        max_signal = max(signal_bc_min_500)
+        ax[3, 1].plot(x, signal_bc_min_500, color='red')
+        ax[3, 1].xaxis.set_ticks_position('bottom')
+        ax[3, 1].yaxis.set_ticks_position('left')
+        ax[3, 1].spines['top'].set_visible(False)
+        ax[3, 1].spines['right'].set_visible(False)
+        ax[3, 1].spines['left'].set_position(('outward', 15))
+        ax[3, 1].tick_params(direction='out')
+        ax[3, 1].set_title(self.output_prefix + " from fragment length > 500 ", fontweight='bold')
+        ax[3, 1].set_xticks([start, 0, end])
+        ax[3, 1].set_xticklabels([str(start), 0, str(end)])
+        ax[3, 1].set_yticks([min_signal, max_signal])
+        ax[3, 1].set_yticklabels([str(round(min_signal, 2)), str(round(max_signal, 2))], rotation=90)
+        ax[3, 1].set_xlim(start, end)
+        ax[3, 1].set_ylim([min_signal, max_signal])
 
         figure_name = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
         fig.subplots_adjust(bottom=.2, hspace=.5)
@@ -2325,6 +2623,197 @@ class Plot:
             for key in sort_keys:
                 f.write(str(key) + "\t" + str(length_f_dict[key]) + "\t" + str(length_r_dict[key]) + "\n")
 
+    def signal_by_position(self, reads_file=None, motif_file=None):
+        bam = Samfile(self.reads_file, "rb")
+
+        def update_signal(length_f, length_r, signal_f, signal_r, read, p1, p2):
+            if not read.is_reverse:
+                length_f.append(abs(read.template_length))
+                cut_site = read.pos + self.forward_shift
+                if cut_site >= p1 and cut_site < p2:
+                    signal_f[cut_site - p1] += 1.0
+            else:
+                length_r.append(abs(read.template_length))
+                cut_site = read.aend + self.reverse_shift - 1
+                if cut_site >= p1 and cut_site < p2:
+                    signal_r[cut_site - p1] += 1.0
+
+        def output2file(output_loc, output_prefix, outputs):
+            fname = os.path.join(output_loc, "{}.txt".format(output_prefix))
+            with open(fname, "w") as f:
+                f.write("values" + "\t" + output_prefix + "\n")
+                for out in outputs:
+                    f.write(str(out) + "\t" + output_prefix + "\n")
+
+        length_f_Nfr_I = list()
+        length_r_Nfr_I = list()
+        length_f_Nfr_II = list()
+        length_r_Nfr_II = list()
+
+        length_f_1N_I = list()
+        length_r_1N_I = list()
+        length_f_1N_II = list()
+        length_r_1N_II = list()
+        length_f_1N_III = list()
+        length_r_1N_III = list()
+
+        length_f_2N_I = list()
+        length_r_2N_I = list()
+        length_f_2N_II = list()
+        length_r_2N_II = list()
+        length_f_2N_III = list()
+        length_r_2N_III = list()
+
+        signal_f_Nfr_I = np.zeros(self.window_size)
+        signal_r_Nfr_I = np.zeros(self.window_size)
+        signal_f_Nfr_II = np.zeros(self.window_size)
+        signal_r_Nfr_II = np.zeros(self.window_size)
+
+        signal_f_1N_I = np.zeros(self.window_size)
+        signal_r_1N_I = np.zeros(self.window_size)
+        signal_f_1N_II = np.zeros(self.window_size)
+        signal_r_1N_II = np.zeros(self.window_size)
+        signal_f_1N_III = np.zeros(self.window_size)
+        signal_r_1N_III = np.zeros(self.window_size)
+
+        signal_f_2N_I = np.zeros(self.window_size)
+        signal_r_2N_I = np.zeros(self.window_size)
+        signal_f_2N_II = np.zeros(self.window_size)
+        signal_r_2N_II = np.zeros(self.window_size)
+        signal_f_2N_III = np.zeros(self.window_size)
+        signal_r_2N_III = np.zeros(self.window_size)
+
+        mpbs_regions = GenomicRegionSet("Motif Predicted Binding Sites")
+        mpbs_regions.read(self.motif_file)
+
+        for region in mpbs_regions:
+            if str(region.name).split(":")[-1] == "Y":
+                mid = (region.initial + region.final) / 2
+                p1 = mid - (self.window_size / 2)
+                p2 = mid + (self.window_size / 2)
+
+                for read in bam.fetch(region.chrom, p1, p2):
+                    if not read.is_read1: continue
+                    if not read.is_reverse:
+                        start = read.pos - mid
+                        end = read.pos + abs(read.template_length) - mid
+                    else:
+                        start = read.aend - abs(read.template_length) - mid
+                        end = read.aend - mid
+
+                    # Nucleosome free I
+                    if abs(read.template_length) <= 146:
+                        if (start in range(-142, 0) and end in range(-142, 0)) or (
+                                            start in range(0, 142) and end in range(0, 142)):
+                            update_signal(length_f_Nfr_I, length_r_Nfr_I, signal_f_Nfr_I, signal_r_Nfr_I, read, p1, p2)
+
+                        # Nucleosome free II
+                        elif start in range(-142, 0) and end in range(0, 142):
+                            update_signal(length_f_Nfr_II, length_r_Nfr_II, signal_f_Nfr_II, signal_r_Nfr_II, read, p1, p2)
+
+                    elif 146 < abs(read.template_length) <= 307:
+                        # 1 Nucleosome I
+                        if (start in range(-322, -142) and end in range(-142, 0)) or (
+                                start in range(0, 142) and end in range(142, 322)):
+                            update_signal(length_f_1N_I, length_r_1N_I, signal_f_1N_I, signal_r_1N_I, read, p1, p2)
+
+                        # 1 Nucleosome II
+                        elif (start in range(-322, -142) and end in range(0, 142)) or (
+                                start in range(-142, 0) and end in range(142, 322)):
+                            update_signal(length_f_1N_II, length_r_1N_II, signal_f_1N_II, signal_r_1N_II, read, p1, p2)
+
+                        # 1 Nucleosome III
+                        elif (start in range(-500, -322) and end in range(-322, -142)) or (
+                                start in range(142, 322) and end in range(322, 500)):
+                            update_signal(length_f_1N_III, length_r_1N_III, signal_f_1N_III, signal_r_1N_III, read, p1, p2)
+
+                    elif 307 < abs(read.template_length):
+                        # 2 Nucleosome I
+                        if (start in range(-500, -322) and end in range(-142, 0)) or (
+                                start in range(0, 142) and end in range(322, 500)):
+                            update_signal(length_f_2N_I, length_r_2N_I, signal_f_2N_I, signal_r_2N_I, read, p1, p2)
+
+                        # 2 Nucleosome II
+                        elif (start in range(-500, -322) and end in range(0, 142)) or (
+                                start in range(-142, 0) and end in range(322, 500)):
+                            update_signal(length_f_2N_II, length_r_2N_II, signal_f_2N_II, signal_r_2N_II, read, p1, p2)
+
+                        # 2 Nucleosome III
+                        elif (start in range(-322, -142) and end in range(142, 322)):
+                            update_signal(length_f_2N_III, length_r_2N_III, signal_f_2N_III, signal_r_2N_III, read, p1, p2)
+
+
+        fig, ax = plt.subplots(8, 2, figsize=(10, 15))
+        p1, p2, p3, p4 = 178, 358, 642, 822
+        start = -(self.window_size / 2)
+        end = (self.window_size / 2) - 1
+        x = np.linspace(start, end, num=self.window_size)
+        x_ticks = [start, p1 - 500, p2 - 500, 0, p3 - 500, p4 - 500, end]
+
+        self.update_axes_for_density(ax[0, 0], length_f_Nfr_I, length_r_Nfr_I, "Nucleosome free I")
+        self.update_axes_for_density(ax[1, 0], length_f_Nfr_II, length_r_Nfr_II, "Nucleosome free II")
+        self.update_axes_for_density(ax[2, 0], length_f_1N_I, length_r_1N_I, "1 Nucleosome I")
+        self.update_axes_for_density(ax[3, 0], length_f_1N_II, length_r_1N_II, "1 Nucleosome II")
+        self.update_axes_for_density(ax[4, 0], length_f_1N_III, length_r_1N_III, "1 Nucleosome III")
+        self.update_axes_for_density(ax[5, 0], length_f_2N_I, length_r_2N_I, "2 Nucleosome I")
+        self.update_axes_for_density(ax[6, 0], length_f_2N_II, length_r_2N_II, "2 Nucleosome II")
+        self.update_axes_for_density(ax[7, 0], length_f_2N_III, length_r_2N_III, "2 Nucleosome III")
+        self.update_axes_for_signal_by_position(ax[0, 1], x, x_ticks, start, end, signal_f_Nfr_I, signal_r_Nfr_I, p1, p2,
+                                                p3, p4, "Nucleosome free I")
+        self.update_axes_for_signal_by_position(ax[1, 1], x, x_ticks, start, end, signal_f_Nfr_II, signal_r_Nfr_II, p1, p2,
+                                                p3, p4, "Nucleosome free II")
+        self.update_axes_for_signal_by_position(ax[2, 1], x, x_ticks, start, end, signal_f_1N_I, signal_r_1N_I, p1, p2,
+                                                p3, p4, "1 Nucleosome I")
+        self.update_axes_for_signal_by_position(ax[3, 1], x, x_ticks, start, end, signal_f_1N_II, signal_r_1N_II, p1, p2,
+                                                p3, p4, "1 Nucleosome II")
+        self.update_axes_for_signal_by_position(ax[4, 1], x, x_ticks, start, end, signal_f_1N_III, signal_r_1N_III, p1, p2,
+                                                p3, p4, "1 Nucleosome III")
+        self.update_axes_for_signal_by_position(ax[5, 1], x, x_ticks, start, end, signal_f_2N_I, signal_r_2N_I, p1, p2,
+                                                p3, p4, "2 Nucleosome I")
+        self.update_axes_for_signal_by_position(ax[6, 1], x, x_ticks, start, end, signal_f_2N_II, signal_r_2N_II, p1, p2,
+                                                p3, p4, "2 Nucleosome II")
+        self.update_axes_for_signal_by_position(ax[7, 1], x, x_ticks, start, end, signal_f_2N_III, signal_r_2N_III, p1, p2,
+                                                p3, p4, "2 Nucleosome III")
+        figure_fname = os.path.join(self.output_loc, "{}.pdf".format(self.output_prefix))
+        fig.subplots_adjust(bottom=.2, hspace=.5)
+        fig.tight_layout()
+        fig.savefig(figure_fname, format="pdf", dpi=300)
+
+        output2file(self.output_loc, "{}_length_f_Nfr_I".format(self.output_prefix), length_f_Nfr_I)
+        output2file(self.output_loc, "{}_length_r_Nfr_I".format(self.output_prefix), length_r_Nfr_I)
+        output2file(self.output_loc, "{}_length_f_Nfr_II".format(self.output_prefix), length_f_Nfr_II)
+        output2file(self.output_loc, "{}_length_r_Nfr_II".format(self.output_prefix), length_r_Nfr_II)
+        output2file(self.output_loc, "{}_length_f_1N_I".format(self.output_prefix), length_f_1N_I)
+        output2file(self.output_loc, "{}_length_r_1N_I".format(self.output_prefix), length_r_1N_I)
+        output2file(self.output_loc, "{}_length_f_1N_II".format(self.output_prefix), length_f_1N_II)
+        output2file(self.output_loc, "{}_length_r_1N_II".format(self.output_prefix), length_r_1N_II)
+        output2file(self.output_loc, "{}_length_f_1N_III".format(self.output_prefix), length_f_1N_III)
+        output2file(self.output_loc, "{}_length_r_1N_III".format(self.output_prefix), length_r_1N_III)
+        output2file(self.output_loc, "{}_length_f_2N_I".format(self.output_prefix), length_f_2N_I)
+        output2file(self.output_loc, "{}_length_r_2N_I".format(self.output_prefix), length_r_2N_I)
+        output2file(self.output_loc, "{}_length_f_2N_II".format(self.output_prefix), length_f_2N_II)
+        output2file(self.output_loc, "{}_length_r_2N_II".format(self.output_prefix), length_r_2N_II)
+        output2file(self.output_loc, "{}_length_f_2N_III".format(self.output_prefix), length_f_2N_III)
+        output2file(self.output_loc, "{}_length_r_2N_III".format(self.output_prefix), length_r_2N_III)
+
+        output2file(self.output_loc, "{}_signal_f_Nfr_I".format(self.output_prefix), np.roll(signal_f_Nfr_I, -4))
+        output2file(self.output_loc, "{}_signal_r_Nfr_I".format(self.output_prefix), np.roll(signal_r_Nfr_I, 4))
+        output2file(self.output_loc, "{}_signal_f_Nfr_II".format(self.output_prefix), np.roll(signal_f_Nfr_II, -4))
+        output2file(self.output_loc, "{}_signal_r_Nfr_II".format(self.output_prefix), np.roll(signal_r_Nfr_II, 4))
+        output2file(self.output_loc, "{}_signal_f_1N_I".format(self.output_prefix), np.roll(signal_f_1N_I, -4))
+        output2file(self.output_loc, "{}_signal_r_1N_I".format(self.output_prefix), np.roll(signal_r_1N_I, 4))
+        output2file(self.output_loc, "{}_signal_f_1N_II".format(self.output_prefix), np.roll(signal_f_1N_II, -4))
+        output2file(self.output_loc, "{}_signal_r_1N_II".format(self.output_prefix), np.roll(signal_r_1N_II, 4))
+        output2file(self.output_loc, "{}_signal_f_1N_III".format(self.output_prefix), np.roll(signal_f_1N_III, -4))
+        output2file(self.output_loc, "{}_signal_r_1N_III".format(self.output_prefix), np.roll(signal_r_1N_III, 4))
+        output2file(self.output_loc, "{}_signal_f_2N_I".format(self.output_prefix), np.roll(signal_f_2N_I, -4))
+        output2file(self.output_loc, "{}_signal_r_2N_I".format(self.output_prefix), np.roll(signal_r_2N_I, 4))
+        output2file(self.output_loc, "{}_signal_f_2N_II".format(self.output_prefix), np.roll(signal_f_2N_II, -4))
+        output2file(self.output_loc, "{}_signal_r_2N_II".format(self.output_prefix), np.roll(signal_r_2N_II, 4))
+        output2file(self.output_loc, "{}_signal_f_2N_III".format(self.output_prefix), np.roll(signal_f_2N_III, -4))
+        output2file(self.output_loc, "{}_signal_r_2N_III".format(self.output_prefix), np.roll(signal_r_2N_III, 4))
+
+
     def distribution_of_frag_length_by_position(self, reads_file=None, motif_file=None):
         bam = Samfile(self.reads_file, "rb")
         lengths = list()
@@ -2375,16 +2864,17 @@ class Plot:
                             signal_raw_r[cut_site - p1] += 1.0
 
                     if length <= 145:
-                        # class 1
+                        # nucleosome free
                         if not read.is_reverse:
-                            if mid - 73 < read.pos < mid + 73 and mid - 73 < read.pos + length < mid + 73:
+                            if mid - 142 < read.pos < mid < read.pos + length < mid + 142:
                                 lengths_class_1.append(length)
                                 lengths_class_1_f.append(length)
                                 cut_site = read.pos + self.forward_shift
                                 if cut_site >= p1 and cut_site < p2:
                                     signal_raw_class_1_f[cut_site - p1] += 1.0
                         else:
-                            if mid - 73 < read.aend < mid + 73 and mid - 73 < read.aend - length < mid + 73:
+                            # if mid - 142 < read.pos < mid < read.pos + length < mid + 142:
+                            if mid - 142 < read.aend - length < mid < read.aend < mid + 142:
                                 lengths_class_1.append(length)
                                 lengths_class_1_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
@@ -2392,56 +2882,36 @@ class Plot:
                                     signal_raw_class_1_r[cut_site - p1] += 1.0
 
                     elif 145 < length <= 307:
-                        # class 2
+                        # nucleosome only
                         if not read.is_reverse:
-                            if read.pos < mid - 73 and mid - 73 <= read.pos + length <= mid:
-                                lengths_class_2.append(length)
-                                lengths_class_2_f.append(length)
-                                cut_site = read.pos + self.forward_shift
-                                if cut_site >= p1 and cut_site < p2:
-                                    signal_raw_class_2_f[cut_site - p1] += 1.0
-                            elif mid <= read.pos <= mid + 73 and read.pos + length > mid + 73:
+                            if (mid - 248 < read.pos < mid - 142 and mid - 142 <= read.pos + length <= mid) or \
+                                    (mid < read.pos <= mid + 142 and mid + 142 < read.pos + length < mid + 284):
                                 lengths_class_2.append(length)
                                 lengths_class_2_f.append(length)
                                 cut_site = read.pos + self.forward_shift
                                 if cut_site >= p1 and cut_site < p2:
                                     signal_raw_class_2_f[cut_site - p1] += 1.0
                         else:
-                            if mid - 73 <= read.aend <= mid and read.aend - length < mid - 73:
-                                lengths_class_2.append(length)
-                                lengths_class_2_r.append(length)
-                                cut_site = read.aend + self.reverse_shift - 1
-                                if cut_site >= p1 and cut_site < p2:
-                                    signal_raw_class_2_r[cut_site - p1] += 1.0
-                            elif mid <= read.aend - length <= mid + 73 and read.aend > mid + 73:
+                            if (mid - 248 < read.aend - length < mid - 142 and mid - 142 <= read.aend <= mid) or \
+                                    (mid < read.aend - length <= mid + 142 and mid + 142 < read.aend < mid + 284):
                                 lengths_class_2.append(length)
                                 lengths_class_2_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
                                 if cut_site >= p1 and cut_site < p2:
                                     signal_raw_class_2_r[cut_site - p1] += 1.0
 
-                        # class 3
+                        # nucleosome and TF
                         if not read.is_reverse:
-                            if read.pos <= mid - 73 and mid <= read.pos + length <= mid + 73:
-                                lengths_class_3.append(length)
-                                lengths_class_3_f.append(length)
-                                cut_site = read.pos + self.forward_shift
-                                if cut_site >= p1 and cut_site < p2:
-                                    signal_raw_class_3_f[cut_site - p1] += 1.0
-                            elif mid - 73 <= read.pos <= mid and read.pos + length >= mid + 73:
+                            if read.pos < mid - 142 <= read.pos + length > mid or \
+                                    (mid - 142 <= read.pos <= mid and read.pos + length > mid + 142):
                                 lengths_class_3.append(length)
                                 lengths_class_3_f.append(length)
                                 cut_site = read.pos + self.forward_shift
                                 if cut_site >= p1 and cut_site < p2:
                                     signal_raw_class_3_f[cut_site - p1] += 1.0
                         else:
-                            if mid <= read.aend <= mid + 73 and read.aend - length <= mid - 73:
-                                lengths_class_3.append(length)
-                                lengths_class_3_r.append(length)
-                                cut_site = read.aend + self.reverse_shift - 1
-                                if cut_site >= p1 and cut_site < p2:
-                                    signal_raw_class_3_r[cut_site - p1] += 1.0
-                            elif read.aend >= mid + 73 and mid - 73 <= read.aend - length <= mid:
+                            if (read.aend - length < mid - 142 and mid <= read.aend < mid + 142) or \
+                                    (read.aend > mid + 142 and mid - 142 <= read.aend - length < mid):
                                 lengths_class_3.append(length)
                                 lengths_class_3_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
@@ -2461,8 +2931,6 @@ class Plot:
                             if cut_site >= p1 and cut_site < p2:
                                 signal_raw_class_4_r[cut_site - p1] += 1.0
 
-
-
         # output the plot
         unique, counts = np.unique(lengths, return_counts=True)
         count_list = list()
@@ -2479,17 +2947,16 @@ class Plot:
         end = (self.window_size / 2) - 1
         x = np.linspace(start, end, num=self.window_size)
 
-
         mean = np.mean(lengths)
         std = np.std(lengths)
         ax[0, 0].plot(unique, counts)
         ax[0, 0].set_title("Histogram of all fragment length", fontweight='bold')
         ax[0, 0].text(0.7, 0.9, "number of fragments:{}".format(str(len(lengths))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
         ax[0, 0].text(0.8, 0.8, "mean:{}".format(str(round(mean, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
         ax[0, 0].text(0.8, 0.7, "std:{}".format(str(round(std, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[0, 0].transAxes, fontsize=12)
         ax[0, 1].plot(x, signal_raw_f, color='red', label='Forward')
         ax[0, 1].plot(x, signal_raw_r, color='green', label='Reverse')
         ax[0, 1].text(0.2, 0.7, "#forward:{}".format(str(sum(signal_raw_f[:self.window_size / 2]))),
@@ -2517,14 +2984,14 @@ class Plot:
         ax[1, 0].plot(unique, counts, color='green', label='Reverse')
         ax[1, 0].legend(loc="lower left", frameon=False)
 
-        ax[1, 0].set_title("Histogram of Class 1", fontweight='bold')
+        ax[1, 0].set_title("Histogram of Nucleosome free", fontweight='bold')
         ax[1, 0].text(0.7, 0.9, "number of fragments:{}".format(str(len(lengths_class_1))),
-                   verticalalignment='center',
-                   horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
+                      verticalalignment='center',
+                      horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
         ax[1, 0].text(0.8, 0.8, "mean:{}".format(str(round(mean, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
         ax[1, 0].text(0.8, 0.7, "std:{}".format(str(round(std, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[1, 0].transAxes, fontsize=12)
         ax[1, 1].plot(x, signal_raw_class_1_f, color='red', label='Forward')
         ax[1, 1].plot(x, signal_raw_class_1_r, color='green', label='Reverse')
         ax[1, 1].text(0.2, 0.7, "#forward:{}".format(str(sum(signal_raw_class_1_f[:self.window_size / 2]))),
@@ -2552,14 +3019,14 @@ class Plot:
         ax[2, 0].plot(unique, counts, color='green', label='Reverse')
         ax[2, 0].legend(loc="lower left", frameon=False)
 
-        ax[2, 0].set_title("Histogram of Class 2", fontweight='bold')
+        ax[2, 0].set_title("Histogram of Nucleosome I", fontweight='bold')
         ax[2, 0].text(0.7, 0.9, "number of fragments:{}".format(str(len(lengths_class_2))),
-                   verticalalignment='center',
-                   horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
+                      verticalalignment='center',
+                      horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
         ax[2, 0].text(0.8, 0.8, "mean:{}".format(str(round(mean, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
         ax[2, 0].text(0.8, 0.7, "std:{}".format(str(round(std, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[2, 0].transAxes, fontsize=12)
         ax[2, 1].plot(x, signal_raw_class_2_f, color='red', label='Forward')
         ax[2, 1].plot(x, signal_raw_class_2_r, color='green', label='Reverse')
         ax[2, 1].text(0.2, 0.7, "#forward:{}".format(str(sum(signal_raw_class_2_f[:self.window_size / 2]))),
@@ -2588,14 +3055,14 @@ class Plot:
         ax[3, 0].plot(unique, counts, color='green', label='Reverse')
         ax[3, 0].legend(loc="lower left", frameon=False)
 
-        ax[3, 0].set_title("Histogram of Class 3", fontweight='bold')
+        ax[3, 0].set_title("Histogram of Nucleosome II", fontweight='bold')
         ax[3, 0].text(0.7, 0.9, "number of fragments:{}".format(str(len(lengths_class_3))),
-                   verticalalignment='center',
-                   horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
+                      verticalalignment='center',
+                      horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
         ax[3, 0].text(0.8, 0.8, "mean:{}".format(str(round(mean, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
         ax[3, 0].text(0.8, 0.7, "std:{}".format(str(round(std, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[3, 0].transAxes, fontsize=12)
         ax[3, 1].plot(x, signal_raw_class_3_f, color='red', label='Forward')
         ax[3, 1].plot(x, signal_raw_class_3_r, color='green', label='Reverse')
         ax[3, 1].text(0.2, 0.7, "#forward:{}".format(str(sum(signal_raw_class_3_f[:self.window_size / 2]))),
@@ -2612,7 +3079,6 @@ class Plot:
                       horizontalalignment='center', transform=ax[3, 1].transAxes, fontsize=12)
         ax[3, 1].legend(loc="upper right", frameon=False)
 
-
         mean = np.mean(lengths_class_4)
         std = np.std(lengths_class_4)
 
@@ -2624,14 +3090,14 @@ class Plot:
         ax[4, 0].plot(unique, counts, color='green', label='Reverse')
         ax[4, 0].legend(loc="lower left", frameon=False)
 
-        ax[4, 0].set_title("Histogram of Class 4", fontweight='bold')
+        ax[4, 0].set_title("Histogram of Nucleosome III", fontweight='bold')
         ax[4, 0].text(0.7, 0.9, "number of fragments:{}".format(str(len(lengths_class_4))),
-                   verticalalignment='center',
-                   horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
+                      verticalalignment='center',
+                      horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
         ax[4, 0].text(0.8, 0.8, "mean:{}".format(str(round(mean, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
         ax[4, 0].text(0.8, 0.7, "std:{}".format(str(round(std, 2))), verticalalignment='center',
-                   horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
+                      horizontalalignment='center', transform=ax[4, 0].transAxes, fontsize=12)
         ax[4, 1].plot(x, signal_raw_class_4_f, color='red', label='Forward')
         ax[4, 1].plot(x, signal_raw_class_4_r, color='green', label='Reverse')
         ax[4, 1].text(0.2, 0.7, "#forward:{}".format(str(sum(signal_raw_class_4_f[:self.window_size / 2]))),
@@ -2652,6 +3118,143 @@ class Plot:
         fig.subplots_adjust(bottom=.2, hspace=.5)
         fig.tight_layout()
         fig.savefig(figure_fname, format="pdf", dpi=300)
+
+    def get_linkers_position(self, signal_f_146_307, signal_r_146_307, signal_f_min_307, signal_r_min_307):
+        smooth_signal_f_146_307 = savgol_filter(signal_f_146_307, window_length=51, polyorder=2)
+        smooth_signal_r_146_307 = savgol_filter(signal_r_146_307, window_length=51, polyorder=2)
+        smooth_signal_f_min_307 = savgol_filter(signal_f_min_307, window_length=51, polyorder=2)
+        smooth_signal_r_min_307 = savgol_filter(signal_r_min_307, window_length=51, polyorder=2)
+
+        position_f_1 = np.argmax(smooth_signal_f_146_307[:400])
+        position_f_2 = np.argmax(smooth_signal_f_min_307[:position_f_1])
+
+        position_r_1 = np.argmax(smooth_signal_r_146_307[600:]) + 600
+        position_r_2 = np.argmax(smooth_signal_r_min_307[position_r_1:]) + position_r_1
+
+        return position_f_1, position_r_1, position_f_2, position_r_2
+
+    def update_axes_for_fragment_size_line(self, ax, x, x_ticks, start, end, signal_f, signal_r, p1, p2,
+                                           p3, p4):
+        max_signal = max(max(signal_f), max(signal_r))
+        min_signal = min(min(signal_f), min(signal_r))
+        ax.plot(x, signal_f, color='red', label='Forward')
+        ax.plot(x, signal_r, color='green', label='Reverse')
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_position(('outward', 15))
+        ax.tick_params(direction='out')
+        ax.set_xticks(x_ticks)
+        ax.set_xticklabels(map(str, x_ticks))
+        ax.set_xlim(start, end)
+        ax.set_yticks([min_signal, max_signal])
+        ax.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
+        ax.set_ylim([min_signal, max_signal])
+        ax.legend().set_visible(False)
+        f_1, r_1 = sum(signal_f[:p1]) / sum(signal_r), sum(signal_r[:p1]) / sum(signal_r)
+        f_2, r_2 = sum(signal_f[p1:p2]) / sum(signal_r), sum(signal_r[p1:p2]) / sum(signal_r)
+        f_3, r_3 = sum(signal_f[p2:500]) / sum(signal_r), sum(signal_r[p2:500]) / sum(signal_r)
+        f_4, r_4 = sum(signal_f[500:p3]) / sum(signal_r), sum(signal_r[500:p3]) / sum(signal_r)
+        f_5, r_5 = sum(signal_f[p3:p4]) / sum(signal_r), sum(signal_r[p3:p4]) / sum(signal_r)
+        f_6, r_6 = sum(signal_f[p4:]) / sum(signal_r), sum(signal_r[p4:]) / sum(signal_r)
+        text_x_1 = ((p1 - 0) / 2.0 + 0) / 1000
+        text_x_2 = ((p2 - p1) / 2.0 + p1) / 1000
+        text_x_3 = ((500 - p2) / 2.0 + p2) / 1000
+        text_x_4 = ((p3 - 500) / 2.0 + 500) / 1000
+        text_x_5 = ((p4 - p3) / 2.0 + p3) / 1000
+        text_x_6 = ((1000 - p4) / 2.0 + p4) / 1000
+        ax.text(text_x_1, 1.0, str(round(f_1, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_1, 0.9, str(round(r_1, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_2, 1.0, str(round(f_2, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_2, 0.9, str(round(r_2, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_3, 1.0, str(round(f_3, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_3, 0.9, str(round(r_3, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_4, 1.0, str(round(f_4, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_4, 0.9, str(round(r_4, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_5, 1.0, str(round(f_5, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_5, 0.9, str(round(r_5, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_6, 1.0, str(round(f_6, 2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+        ax.text(text_x_6, 0.9, str(round(r_6, 2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=12)
+
+    def update_axes_for_signal_by_position(self, ax, x, x_ticks, start, end, signal_f_1, signal_r_1, p1, p2,
+                                           p3, p4, title):
+
+        signal_f = np.roll(signal_f_1, -4)
+        signal_r = np.roll(signal_r_1, 4)
+        max_signal = max(max(signal_f), max(signal_r))
+        min_signal = min(min(signal_f), min(signal_r))
+        ax.plot(x, signal_f, color='red', label='Forward')
+        ax.plot(x, signal_r, color='green', label='Reverse')
+        ax.xaxis.set_ticks_position('bottom')
+        ax.yaxis.set_ticks_position('left')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_position(('outward', 15))
+        ax.tick_params(direction='out')
+        ax.set_xticks(x_ticks)
+        ax.set_xticklabels(map(str, x_ticks))
+        ax.set_xlim(start, end)
+        ax.set_yticks([min_signal, max_signal])
+        ax.set_yticklabels([str(int(min_signal)), str(int(max_signal))], rotation=90)
+        ax.set_ylim([min_signal, max_signal])
+        ax.legend().set_visible(False)
+        ax.set_title(title, fontweight='bold')
+        f_1, r_1 = sum(signal_f[:p1]), sum(signal_r[:p1])
+        f_2, r_2 = sum(signal_f[p1:p2]), sum(signal_r[p1:p2])
+        f_3, r_3 = sum(signal_f[p2:500]), sum(signal_r[p2:500])
+        f_4, r_4 = sum(signal_f[500:p3]), sum(signal_r[500:p3])
+        f_5, r_5 = sum(signal_f[p3:p4]), sum(signal_r[p3:p4])
+        f_6, r_6 = sum(signal_f[p4:]), sum(signal_r[p4:])
+        text_x_1 = ((p1 - 0) / 2.0 + 0) / 1000
+        text_x_2 = ((p2 - p1) / 2.0 + p1) / 1000
+        text_x_3 = ((500 - p2) / 2.0 + p2) / 1000
+        text_x_4 = ((p3 - 500) / 2.0 + 500) / 1000
+        text_x_5 = ((p4 - p3) / 2.0 + p3) / 1000
+        text_x_6 = ((1000 - p4) / 2.0 + p4) / 1000
+        ax.text(text_x_1, 1.0, str(int(f_1)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_1, 0.9, str(int(r_1)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_2, 1.0, str(int(f_2)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_2, 0.9, str(int(r_2)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_3, 1.0, str(int(f_3)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_3, 0.9, str(int(r_3)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_4, 1.0, str(int(f_4)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_4, 0.9, str(int(r_4)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_5, 1.0, str(int(f_5)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_5, 0.9, str(int(r_5)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_6, 1.0, str(int(f_6)), verticalalignment='center', color='red',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+        ax.text(text_x_6, 0.9, str(int(r_6)), verticalalignment='center', color='green',
+                horizontalalignment='center', transform=ax.transAxes, fontsize=8)
+
+    def update_axes_for_density(self, ax, length_f, length_r, title):
+        unique, counts = np.unique(length_f, return_counts=True)
+        ax.hist(length_f, bins=unique, color='red', label='Forward', alpha=1)
+        unique, counts = np.unique(length_r, return_counts=True)
+        ax.hist(length_r, bins=unique, color='green', label='Reverse', alpha=0.5)
+        ax.legend(loc="upper right", frameon=False)
 
     def rescaling(self, vector):
         maxN = max(vector)
