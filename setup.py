@@ -76,7 +76,7 @@ Tools Dictionary Standard:
 common_deps = ["cython",
                "numpy>=1.4.0",
                "scipy>=0.7.0",
-               "pysam==0.11.1",
+               "pysam>=0.12.0",
                "pyBigWig",
                "PyVCF"]
 
@@ -298,7 +298,7 @@ data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.t
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
-data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
+data_config_file.write("repositories: hocomoco\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")

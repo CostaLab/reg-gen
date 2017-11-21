@@ -17,7 +17,7 @@ from ..ExperimentalMatrix import ExperimentalMatrix
 from ..GenomicRegion import GenomicRegion
 from ..GenomicRegionSet import GenomicRegionSet
 from signalProcessing import GenomicSignal
-from hmm import HMM
+from hmm import HMM, _compute_log_likelihood
 from biasTable import BiasTable
 from evaluation import Evaluation
 from train import TrainHMM
@@ -28,6 +28,7 @@ from diff_footprints import DiffFootprints
 # External
 import os
 import sys
+import types
 import pysam
 from numpy import array, sum, isnan, subtract, absolute
 from hmmlearn.hmm import GaussianHMM
@@ -413,6 +414,7 @@ def atac_footprints_test():
         hmm_file = hmm_data.get_default_hmm_atac_bc()
         hmm = joblib.load(hmm_file)
 
+    hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, hmm)
     # Initializing result set
     footprints = GenomicRegionSet(options.output_prefix)
 
@@ -1278,6 +1280,7 @@ def dnase_footprints():
         hmm_scaffold = HMM()
         hmm_scaffold.load_hmm(hmm_file)
         scikit_hmm = GaussianHMM(n_components=hmm_scaffold.states, covariance_type="full")
+        scikit_hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, scikit_hmm)
         scikit_hmm.startprob_ = array(hmm_scaffold.pi)
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
@@ -1437,6 +1440,7 @@ def histone_footprints():
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
         scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        scikit_hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, scikit_hmm)
     except Exception:
         err.throw_error("FP_HMM_FILES")
 
@@ -1647,6 +1651,7 @@ def dnase_histone_footprints():
         scikit_hmm.transmat_ = array(hmm_scaffold.A)
         scikit_hmm.means_ = array(hmm_scaffold.means)
         scikit_hmm.covars_ = array(hmm_scaffold.covs)
+        scikit_hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, scikit_hmm)
     except Exception:
         err.throw_error("FP_HMM_FILES")
 

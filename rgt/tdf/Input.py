@@ -85,19 +85,22 @@ class Input(object):
                                     protein_coding=self.pars.protein_coding,
                                     known_only=self.pars.known_only)
                 self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl,
-                                                      gene_set=self.de_genes,
-                                                      regiondata=self.pars.score,
-                                                      unmaplist=True, variants=False)
+                                                                  gene_set=self.de_genes,
+                                                                  regiondata=self.pars.score,
+                                                                  unmaplist=True, variants=False)
                 if self.pars.score:
                     self.scores = self.target_regions.get_score_dict()
 
                 #######################
                 # Non DE genes
                 self.nde_genes = GeneSet("nde genes")
-                self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
+                if self.pars.bg and self.pars.bg.endswith(".txt"):
+                    self.nde_genes.read(self.pars.bg)
+                else:
+                    self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
 
                 self.nontarget_regions = ann.get_promoters(promoterLength=self.pars.pl,
-                                                       gene_set=self.nde_genes, unmaplist=False)
+                                                           gene_set=self.nde_genes, unmaplist=False)
                 # print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
                 self.nontarget_regions.merge(namedistinct=True)
 
@@ -127,6 +130,8 @@ class Input(object):
             self.target_regions = GenomicRegionSet("targets")
             self.target_regions.read(bed)
             self.target_regions.remove_duplicates()
+
+            self.target_regions = self.target_regions.gene_association(organism=self.pars.organism)
             if self.pars.score:
                 self.scores = self.target_regions.get_score_dict()
 

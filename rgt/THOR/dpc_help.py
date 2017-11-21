@@ -41,10 +41,9 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-
 FOLDER_REPORT = None
 
-np.random.rand(42)
+np.random.seed(42)
 
 
 def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):

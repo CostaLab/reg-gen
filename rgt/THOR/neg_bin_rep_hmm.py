@@ -34,7 +34,7 @@ import numpy as np
 from neg_bin import NegBin
 
 import warnings
-warnings.filterwarnings('error')
+
 
 def _get_pvalue_distr(mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
@@ -258,7 +258,9 @@ class NegBinRepHMM(_BaseHMM):
                             posteriors[i] = np.array([post_s0, post_s1, post_s2])
                         except RuntimeWarning:
                             print(posteriors[i], c1, c2, file=sys.stderr)
-        
+
+        warnings.resetwarnings()
+
         return posteriors
 
     def _accumulate_sufficient_statistics(self, stats, obs, framelogprob,

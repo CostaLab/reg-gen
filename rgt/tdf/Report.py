@@ -9,12 +9,10 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MaxNLocator
 from collections import OrderedDict
-from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter
 from rgt.SequenceSet import SequenceSet
-from rgt.SequenceSet import SequenceType
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import Html
+from rgt.Util import Html, SequenceType
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -791,7 +789,7 @@ class Report(object):
                       ["Merge features", "-mf", str(self.pars.mf)]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, clean=True)
-        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
+        # html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(self.pars.o, "parameters.html"))
 
     def gen_html_genes(self, align = 50, nonDE=False):
@@ -1485,5 +1483,5 @@ class Report(object):
                       ["Merge features", "-mf", str(self.pars.mf)]]
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left",
                              auto_width=True, clean=True)
-        html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
+        # html.add_free_content(['<a href="summary.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(self.pars.o, "parameters.html"))

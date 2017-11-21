@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Python Libraries
 from __future__ import print_function
 import os
@@ -318,6 +320,7 @@ if __name__ == "__main__":
     parser_adddata.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_adddata.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_adddata.add_argument('-t', metavar='target', type=str, help="Target BED file")
+    parser_adddata.add_argument('-s', metavar='strand', type=str, default=None, help="same or opposite")
 
     ############### BED sampling regions randomly ################################
     parser_sampling = subparsers.add_parser('bed_sampling',
@@ -332,6 +335,15 @@ if __name__ == "__main__":
     parser_bed12tobed6.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bed12tobed6.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bed12tobed6.add_argument('-e', action="store_true", help="Add exon number or not")
+
+    ############### BED check up stream ################################
+    parser_bedcheckup = subparsers.add_parser('bed_check_up',
+                                               help="[BED] Convert BED12 to BED6")
+    parser_bedcheckup.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedcheckup.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedcheckup.add_argument('-t',  metavar='target', type=str, help="Target BED file")
+    parser_bedcheckup.add_argument('-l', type=int, default=1000, help="Define the length (bp) to detect")
+    parser_bedcheckup.add_argument('-organism', type=str, help="Define the organism")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-tools.py divideBED -bed -t -o1 -o1 -c -m
@@ -442,6 +454,13 @@ if __name__ == "__main__":
                                            help="[BED] Convert TXP file into BED format")
     parser_txp2bed.add_argument('-i', metavar='input', type=str, help="Input TXP file")
     parser_txp2bed.add_argument('-o', metavar='output', type=str, help="Output BED file")
+
+    ############### ENCODE Download #############################################
+    # python rgt-tools.py encode -i -o
+    parser_encode = subparsers.add_parser('encode',
+                                           help="[ENCODE] Download files from ENCODE database")
+    parser_encode.add_argument('-i', metavar='input', type=str, help="Input file list downloaded from ENCODE")
+    parser_encode.add_argument('-o', metavar='output', type=str, help="Output directory")
 
     ##########################################################################
     ##########################################################################
@@ -885,11 +904,12 @@ if __name__ == "__main__":
                 elif ".fa" in args.o:
                     if not r.orientation: r.orientation = "."
                     if not args.score:
-                        print("> " + name + " " + r.toString() + " " + r.orientation, file=f)
+                        print("> " + name + " " + r.toString() + " " + r.orientation, file=fasta)
                     else:
                         print("> " + name + " " + r.toString() + " " + r.orientation +
-                              " score=" + str(r.data.split()[0]), file=f)
+                              " score=" + str(r.data.split()[0]), file=fasta)
                     for seq in ss: print(seq, file=fasta)
+
         if ".fa" in args.o:
             fasta.close()
 
@@ -1059,7 +1079,7 @@ if __name__ == "__main__":
     ############### BED Detect polyA reads ###########################
     elif args.mode == "bed_polya":
 
-        non_available = None
+        non_available = 0
         print(tag + ": [BED] Detect the reads with poly-A tail on the regions")
 
         def count_polyA_on_bam(bed, bam):
@@ -1101,7 +1121,7 @@ if __name__ == "__main__":
                                 if pileupread.alignment.query_sequence.endswith(pattern):
                                     # print(pileupread.alignment.query_sequence)
                                     all_a += 1
-
+                # Output: name, win_polyA, win_all_read, win_radio, whole_polyA, whole_read, whole_radio
                 if all_read == 0:
                     if all_r == 0:
                         res.append([r.name, count_polyA, all_read, non_available, all_a, all_r, non_available])
@@ -1141,11 +1161,11 @@ if __name__ == "__main__":
 
             for r in bed:
                 ar = numpy.array(col_res[r.name],dtype=numpy.float)
-                print(ar)
-                print(numpy.nanmean(ar, axis=1))
-                col_res[r.name] = numpy.nanmean(ar, axis=1).tolist()
-                print(col_res[r.name])
-                sys.exit(1)
+                # print(ar)
+                # print(numpy.nanmean(ar, axis=1))
+                col_res[r.name] = numpy.nanmean(ar, axis=0).tolist()
+                # print(col_res[r.name])
+                # sys.exit(1)
 
             with open(args.o, "w") as f:
                 print("\t".join(["name", "polyA_reads_in_window_ave", "all_reads_in_window_ave", "proportion_in_window",
@@ -1286,8 +1306,14 @@ if __name__ == "__main__":
                         line = line.strip()
                         l = line.split()
                         overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
+                        # print(l[5])
                         if len(overlapping) > 0:
-                            print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
+                            if not args.s:
+                                print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
+                            elif args.s == "same":
+                                print(line + "\t" + ",".join([g.name for g in overlapping if g.orientation == l[5]]), file=fout)
+                            elif args.s == "opposite":
+                                print(line + "\t" + ",".join([g.name for g in overlapping if g.orientation != l[5]]), file=fout)
                         else:
                             print(line + "\t.", file=fout)
 
@@ -1309,6 +1335,21 @@ if __name__ == "__main__":
         bed = GenomicRegionSet(args.i)
         bed.read(args.i, io=GRSFileIO.Bed12)
         bed.write(args.o)
+
+
+
+    ############### BED bed_check_up ###########################
+    #
+    elif args.mode == "bed_check_up":
+        print(tag + ": [BED] Check the upstream region overlapping target BED file")
+        bed = GenomicRegionSet(args.i)
+        bed.read(args.i, io=GRSFileIO.Bed)
+        target = GenomicRegionSet(args.t)
+        target.read(args.t, io=GRSFileIO.Bed)
+
+        res = bed.gene_association(organism=args.organism, target_regions=target, promoterLength=args.l,
+                                   threshDist=0, show_dis=False, strand_specific=False, add_data=True)
+        res.write(args.o)
 
 
     ############### BAM filtering by BED ###########################
@@ -1480,7 +1521,12 @@ if __name__ == "__main__":
 
         for region in bed2:
             data = region.data.split()
-            stat = data[5].split(";")
+            # print(data)
+            # sys.exit(1)
+            if ";" in data[4]:
+                stat = data[4].split(";")
+            else:
+                stat = data[5].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
@@ -1493,7 +1539,12 @@ if __name__ == "__main__":
 
         for region in bed2:
             l = region.data.split()
-            s = l[5].split(";")
+            # print(l)
+            # sys.exit(1)
+            if ";" in l[4]:
+                s = l[4].split(";")
+            else:
+                s = l[5].split(";")
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
 
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
@@ -1763,3 +1814,45 @@ if __name__ == "__main__":
         txp.write(filename=tmp)
         os.system("sort -k1,1V -k2,2n " + tmp + " > " + args.o)
         os.remove(tmp)
+
+
+
+    ############### ENCODE download #######################################
+    elif args.mode == "encode":
+        args.i = os.path.join(os.getcwd(), args.i)
+        cmd = "xargs -n 1 curl -O -L < " + args.i
+        os.system(cmd)
+        name_dict = {}
+        with open(os.path.join(args.o, "metadata.tsv")) as f:
+            for line in f:
+                if line.startswith("File accession"):
+                    continue
+                else:
+                    line = line.split("\t")
+                    # print(line)
+                    id = line[0]
+                    if line[29]:
+                        bp = line[29].replace(" ", "").replace(",","_")
+                        new_id = "_".join([line[4], line[6], line[16], line[42], bp])
+                    else:
+                        new_id = "_".join([line[4], line[6], line[16], line[42]])
+                    name_dict[id] = new_id
+                    # print(new_id)
+
+        import gzip
+        import shutil
+
+        for file in os.listdir(args.o):
+            id = os.path.basename(file).split(".")[0]
+            if id in name_dict.keys():
+                # print(file)
+                if file.endswith("gz"):
+                    formatf = file.split(".")[1]
+                    with gzip.open(os.path.join(args.o, file), 'rb') as infile:
+                        with open(os.path.join(args.o, name_dict[id]+"."+formatf), 'wb') as outfile:
+                            for line in infile:
+                                outfile.write(line)
+                    os.remove(os.path.join(args.o, file))
+                else:
+                    os.rename(os.path.join(args.o, file),
+                              os.path.join(args.o, name_dict[id] + "." + formatf))
