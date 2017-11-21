@@ -164,8 +164,8 @@ class Plot:
 
         min_signal = min(min(mean_signal_f), min(mean_signal_r))
         max_signal = max(max(mean_signal_f), max(mean_signal_r))
-        ax2.plot(x, mean_signal_f, color='red', label='Forward')
-        ax2.plot(x, mean_signal_r, color='green', label='Reverse')
+        ax2.plot(x, mean_signal_f, color='darkblue', label='Forward')
+        ax2.plot(x, mean_signal_r, color='darkred', label='Reverse')
         ax2.set_title(self.output_prefix, fontweight='bold')
 
         ax2.xaxis.set_ticks_position('bottom')
@@ -193,7 +193,7 @@ class Plot:
         output_fname = os.path.join(self.output_loc, "{}.eps".format(self.output_prefix))
         c = pyx.canvas.canvas()
         c.insert(pyx.epsfile.epsfile(0, 0, figure_name, scale=1.0))
-        c.insert(pyx.epsfile.epsfile(1.31, 0.89, logo_fname, width=18.5, height=1.75))
+        c.insert(pyx.epsfile.epsfile(1.37, 0.89, logo_fname, width=18.5, height=1.75))
         c.writeEPSfile(output_fname)
         os.system("epstopdf " + figure_name)
         os.system("epstopdf " + logo_fname)
