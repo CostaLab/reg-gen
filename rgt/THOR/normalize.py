@@ -39,8 +39,6 @@ from random import sample
 from scipy import sparse
 import pysam
 
-import dpc_help
-
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -289,9 +287,10 @@ def get_gc_factor(cov, delta, genome_fpath):
         genome: we need to get the genome from chroms-sizes
     """
     # initialize gc-proportion array including 1.0;; and then we need to
-    hv = {}
+    hv, lens = {}, {}
     for prop in np.arange(0, 1.0, delta, dtype=float):
-        hv[prop]=[]
+        hv[prop] = []
+        lens[prop] = 0
 
     # reading genome from file
     genome_fasta = pysam.Fastafile(genome_fpath)
@@ -301,38 +300,41 @@ def get_gc_factor(cov, delta, genome_fpath):
 
     # coverage separated by chroms regions; so we need to find out first what it belongs to
     for i in range(len(chroms)):
-        chrom_genome = genome_fasta.fetch(reference=chroms[i])
-
-        for bin_idx in cov.sm_coverage[i].indices:
+        # here we need to count all, too slow;; we need sample
+        for bin_idx in cov.sm_coverage[i].indices: # for only bins with non zeros reads
+        # for bin_idx in range(cov.sm_coverage[i].shape[-1]): # for all bins
             s = bin_idx * cov.stepsize
             e = s + cov.binsize
-            prop = get_gc_content_proportion(chrom_genome,s,e)
+            genome_seq = genome_fasta.fetch(reference=chroms[i], start=s, end=e)
+            prop = get_gc_content_proportion(genome_seq)
             # how to make prop proper to access hv?? We could change the length and other staff;
             if prop is not None:
                 # if prop is zeros, it's fine
                 prop_key = int(prop / delta) * delta
-                hv[prop_key].append(cov.sm_coverage[i][:,bin_idx].data) # put one bin num into hv w.r.t props
+                lens[prop_key] += 1
+                if cov.sm_coverage[i][:,bin_idx].getnnz() > 0 :
+                    hv[prop_key].append(cov.sm_coverage[i][:,bin_idx].data) # put one bin num into hv w.r.t props
 
     avg_T = 0.0
     for prop, nums in hv.items():
         # problem if hv.item is empty; and also, if
         if nums:
-            hv[prop] = sum(nums)/float(len(nums))
+            hv[prop] = float(sum(nums))/lens[prop]
             avg_T += hv[prop]
     avg_T *= delta
 
     return hv, avg_T
 
 
-def get_gc_content_proportion(genome, start, end):
+def get_gc_content_proportion(seq):
     """according to one genome we get the gc-content for one bin """
-    seq = genome[start: end + 1]
     seq = seq.upper()
     count = seq.count("C") + seq.count("G")
     if len(seq) > 0:
         return float(count) / len(seq)
     else:
         return None
+
 
 if __name__ == "__main__":
     ## test correctness of this function compared to old method
@@ -346,13 +348,13 @@ if __name__ == "__main__":
     cov.binsize = 100
     cov.stepsize = 50
     s = [0, 0, 1, 3, 5, 7, 0, 3, 2, 0, 0, 0]
-    cov.overall_cov = sparse.csr_matrix(s)
+    # cov.overall_cov = sparse.csr_matrix(s)
 
     inputs_cov = Cov()
     inputs_cov.binsize = 100
     inputs_cov.stepsize = 50
     t = [0, 0, 1, 3, 0, 1, 0, 3, 2, 0, 6, 0]
-    inputs_cov.overall_cov = sparse.csr_matrix(t)
+    # inputs_cov.overall_cov = sparse.csr_matrix(t)
 
     ## test count gc-content
     cov.coverage = [s[:],t[:],s[:5]]
@@ -361,14 +363,16 @@ if __name__ == "__main__":
     cov.sm_coverage = []
     for i in range(len(cov.coverage)):
         cov.sm_coverage.append(sparse.csr_matrix(cov.coverage[i]))
+
     inputs_cov.sm_coverage = []
     for i in range(len(inputs_cov.coverage)):
         inputs_cov.sm_coverage.append(sparse.csr_matrix(inputs_cov.coverage[i]))
 
     genome_fpath= "/home/kefang/programs/THOR_example_data/refactor/genome_hg19.fa"
 
-    hv, avg_T = get_gc_factor(cov, 0.2, genome_fpath)
+    hv, avg_T = get_gc_factor(inputs_cov, 0.01, genome_fpath)
     print(avg_T)
+
     #cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,5,7,0,3,2,0,0,0]}
     #inputs_cov = {'binsize':100, 'stepsize':50,'overall_cov':[0,0,1,3,0,1,0,3,2,0,6,0]}
     # get_normalization_factor_by_cov(cov, inputs_cov, 0, 'test', True, step_times=2, two_samples=False)

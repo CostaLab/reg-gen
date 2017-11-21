@@ -274,26 +274,29 @@ def initialize(name, genome_path, region_giver, stepsize, binsize, signal_static
         norm_regionset.read(norm_regions)
     else:
         norm_regionset = None
-
-    cov_set = MultiCoverageSet(name=name, region_giver=region_giver, genome_path=genome_path,
-                                     binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
-                                     factors_inputs=factors_inputs,  verbose=verbose,
-                                     no_gc_content=no_gc_content, debug=debug,
-                                     norm_regionset=norm_regionset, scaling_factors_ip=scaling_factors_ip,
-                                     save_wig=save_wig, strand_cov=True, housekeeping_genes=housekeeping_genes,
+    binsize = 1000
+    stepsize = 500
+    cov_set = MultiCoverageSet(name=name, region_giver=region_giver, binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
+                                     verbose=verbose, debug=debug, norm_regionset=norm_regionset, save_wig=save_wig, strand_cov=True,
                                      tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content,
                                      gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw,
-                                     folder_report=configuration.FOLDER_REPORT, report=report, save_input=save_input,
-                                     m_threshold=m_threshold, a_threshold=a_threshold)
-    # actually here, after coverage initialization, we can process MultiCoverageSet here;
-    # do normalization of inputs
-    # do normalization of signals
+                                     folder_report=configuration.FOLDER_REPORT, report=report, save_input=save_input, use_sm=True)
+
     no_gc_content = False
     if not no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
-        cov_set.normalization_by_gc_content(no_gc_content, inputs_statics, genome_path, delta=0.2)
+        if configuration.VERBOSE:
+            print("Compute GC-content", file=sys.stderr)
+        cov_set.normalization_by_gc_content(no_gc_content, inputs_statics, genome_path, delta=0.01)
+
+    cov_set.init_overall_coverage(strand_cov=True)
+
     if inputs_statics:
+        if configuration.VERBOSE:
+            print("Normalize input-DNA", file=sys.stderr)
         cov_set.normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
     if save_input:
+        if configuration.VERBOSE:
+            print('Normalize ChIP-seq profiles', file=sys.stderr)
         cov_set.output_input_bw(name, region_giver.chrom, save_wig)
     # much complex, so we decay to change it
     cov_set.normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset,

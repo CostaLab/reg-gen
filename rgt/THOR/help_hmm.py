@@ -230,8 +230,9 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
             except RuntimeError:
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break  # restart for loop
-        # after loop successfully ends, we are done
-        done = True
+        # after loop successfully ends, we are done; but when exception happens, we can't make it end
+        if len(res) == 2:
+            done = True
     if report:
         _plot_func(plot_data, outputdir)
 

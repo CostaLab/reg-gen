@@ -34,7 +34,7 @@ import configuration
 class MultiCoverageSet(): # DualCoverageSet
     """Not inherit from DualCoveragSet, instead we can use it to represent DualCoverageSet"""
 
-    def _init_coverage(self, statics, region_giver,rmdup, binsize, stepsize, strand_cov):
+    def _init_coverage(self, statics, region_giver,rmdup, binsize, stepsize, strand_cov,use_sm=False):
         """Return covs in list as CoverageSet for one statics
         self._help_init(signal_statics, inputs_statics,region_giver, norm_regionset, rmdup, binsize, stepsize, strand_cov = strand_cov)
         But before we need to do statistics about the file, get information, how much read for this regions are in this fields..
@@ -49,19 +49,20 @@ class MultiCoverageSet(): # DualCoverageSet
                 for j in range(statics['dim'][1]):
                     covs[i].append(CoverageSet('file_' + str(i)+'_'+str(j), region_giver.valid_regionset))
                     covs[i][j].coverage_from_bam(bam_file=statics['data'][i][j]['fname'], extension_size=statics['data'][i][j]['extension_size'], rmdup=rmdup, binsize=binsize, \
-                                    stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info=strand_cov)
+                                    stepsize=stepsize, mask_file=region_giver.mask_file, get_strand_info=strand_cov, use_sm=use_sm)
             return covs
         else:
             return None
 
-    def _init_overall_coverage(self, strand_cov=True):
+    def init_overall_coverage(self, strand_cov=True):
         """Convert coverage data (and optionally strand data) to matrix list"""
         # overall_coverage format are [[coverage_0_0 , coverage_0_1 ], [ coverage_1_0, coverag_1_1 ]]
         self.overall_coverage = {'dim':self.dim, 'data':[]} # here we could add bins size into dim
         for i in range(self.dim[0]):
             self.overall_coverage['data'].append([])
             for j in range(self.dim[1]):
-                # make it use sparse matrix
+                # make it use sparse matrix; but here we need to consider how to achieve it??
+                # also, what we can do is normalization_by_inputs;; here what we can do is ??
                 self.overall_coverage['data'][i].append(self.covs[i][j].sm_overall_cov)
         if strand_cov:
             self.overall_coverage_strand = {'dim':self.dim, 'data':[]}
@@ -69,9 +70,6 @@ class MultiCoverageSet(): # DualCoverageSet
                 self.overall_coverage_strand['data'].append([])
                 for j in range(self.dim[1]):
                     self.overall_coverage_strand['data'][i].append(self.covs[i][j].cov_strand_all)
-        #   return self.overall_coverage, self.overall_coverage_strand
-        #else:
-        #    return self.overall_coverage
 
     def _is_cov_valid(self, statics, covs):
         """test if data coverage valid
@@ -90,16 +88,13 @@ class MultiCoverageSet(): # DualCoverageSet
                         return False
         return True
 
-    def __init__(self, name, region_giver, genome_path, binsize, stepsize, norm_regionset, \
-                 verbose, debug, no_gc_content, rmdup, signal_statics, inputs_statics, \
-                 factors_inputs, scaling_factors_ip, save_wig, strand_cov, housekeeping_genes,\
+    def __init__(self, name, region_giver, binsize, stepsize, norm_regionset, \
+                 verbose, debug, rmdup, signal_statics, inputs_statics,  save_wig, strand_cov,
                  tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
-                 folder_report=None, report=None, save_input=False, m_threshold=80, a_threshold=95, ignored_regions=None):
+                 folder_report=None, report=None, save_input=False, ignored_regions=None, use_sm=False):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         # one improvement is to make the left one key_word parameter and we parse it, not like this, all in a list
         self.region_giver = region_giver
-        binsize = 1000
-        stepsize = 500
         self.binsize = binsize
         self.stepsize = stepsize
         self.name = name
@@ -107,8 +102,6 @@ class MultiCoverageSet(): # DualCoverageSet
         self.gc_content_cov = gc_content_cov
         self.avg_gc_content = avg_gc_content
         self.gc_hist = gc_hist
-        self.scaling_factors_ip = scaling_factors_ip
-        self.factors_inputs = factors_inputs
         self.end = end
         self.counter = counter # use of counter ???
         self.no_data = False
@@ -119,8 +112,8 @@ class MultiCoverageSet(): # DualCoverageSet
 
         # here we need to judge if the coverage fine, or not; Actually before we have read statitics data,so it's fine
         # could give info about doing what; reading signal files, reading inputs files
-        self.covs = self._init_coverage(signal_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov)
-        self.inputs_covs = self._init_coverage(inputs_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov)
+        self.covs = self._init_coverage(signal_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
+        self.inputs_covs = self._init_coverage(inputs_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
 
         if not self._is_cov_valid(signal_statics, self.covs) or not self.covs:
             self.data_valid = False
@@ -129,7 +122,7 @@ class MultiCoverageSet(): # DualCoverageSet
             self.data_valid = False
             return None
         # init overall_coverage for signal fiels
-        self._init_overall_coverage(strand_cov=strand_cov)
+        # self._init_overall_coverage(strand_cov=strand_cov)
         self.indices_of_interest = []
 
     def _get_sm_covs(self, idx):
@@ -186,7 +179,6 @@ class MultiCoverageSet(): # DualCoverageSet
     def normalization_by_gc_content(self, no_gc_content, inputs_statics, genome_fpath, delta):
         """normalization by gc-content, applied on both inputs and output data"""
         if not no_gc_content and inputs_statics and self.gc_content_cov is None:
-            print("Compute GC-content", file=sys.stderr)
             for i in range(self.dim[0]):
                 for j in range(self.dim[1]):
                     hv, avg_T = get_gc_factor(self.inputs_covs[i][j], delta, genome_fpath)
@@ -195,10 +187,6 @@ class MultiCoverageSet(): # DualCoverageSet
 
     def normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs, save_input):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
-        
-        if configuration.VERBOSE:
-            print("Normalize input-DNA", file=sys.stderr)
-        
         if factors_inputs:
             if configuration.VERBOSE:
                 print("Use with predefined factors", file=sys.stderr)
@@ -229,17 +217,13 @@ class MultiCoverageSet(): # DualCoverageSet
     def normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
                                  m_threshold, a_threshold):
         """Normalize signal. comparing data to data"""
-        
-        if configuration.VERBOSE:
-            print('Normalize ChIP-seq profiles', file=sys.stderr)
-        
         if not factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
             factors_ip, _ = norm_gene_level(signal_statics, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT, report=report)
         elif not factors_ip:
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)
-                norm_regionset_coverage = self._help_init_overall_coverage(cov_strand=False) #TMM approach based on peaks
+                norm_regionset_coverage = self.init_overall_coverage(cov_strand=False) #TMM approach based on peaks
                 factors_ip = get_sm_norm_TMM_factor(norm_regionset_coverage,m_threshold, a_threshold)
             else:
                 print('Use global TMM approach ', file=sys.stderr)
