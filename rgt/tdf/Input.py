@@ -84,7 +84,7 @@ class Input(object):
                                     filter_havana=self.pars.filter_havana,
                                     protein_coding=self.pars.protein_coding,
                                     known_only=self.pars.known_only)
-                self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl,
+                self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl, tss=self.pars.tss,
                                                                   gene_set=self.de_genes,
                                                                   regiondata=self.pars.score,
                                                                   unmaplist=True, variants=False)
