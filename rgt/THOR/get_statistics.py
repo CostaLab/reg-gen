@@ -57,7 +57,7 @@ def get_read_statistics(fname, chroms):
     return stats_total, stats_data, isspatial
 
 
-def get_file_statistics(fnames, chrom_fname):
+def get_file_statistics(fnames,region_giver):
     """ get read statistical data for a file list, return a dictionary for each file"""
     if isinstance(fnames[0], list):
         file_dimension = (len(fnames), len(fnames[0]))
@@ -65,7 +65,7 @@ def get_file_statistics(fnames, chrom_fname):
         file_dimension = len(fnames)
 
     statics = []
-    chroms = RegionGiver.chrom_sizes_dict.keys()
+    chroms = region_giver.chrom_sizes_dict.keys()
     for i in range(file_dimension[0]):
         statics.append([])
         for j in range(file_dimension[1]):

@@ -260,54 +260,53 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(name, genome_path, region_giver, stepsize, binsize, signal_statics, inputs_statics, factors_inputs, verbose, no_gc_content, \
-               tracker, debug, norm_regions, scaling_factors_ip, save_wig, housekeeping_genes, \
-               test, report, counter, end, gc_content_cov=None, avg_gc_content=None, \
-               gc_hist=None, output_bw=True, save_input=False, m_threshold=80, a_threshold=95, rmdup=False):
+def initialize(options, genome_path, region_giver, signal_statics, inputs_statics,
+               tracker,test, counter, end, output_bw=True):
     """Initialize the MultiCoverageSet
     Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
     Use sampling methods to initialize certain part of data
     Get exp_data, we have one pattern, 0.1
     """
-    if norm_regions:
+    if options.norm_regions:
         norm_regionset = GenomicRegionSet('norm_regions')
-        norm_regionset.read(norm_regions)
+        norm_regionset.read(options.norm_regions)
     else:
         norm_regionset = None
-    binsize = 1000
-    stepsize = 500
-    cov_set = MultiCoverageSet(name=name, region_giver=region_giver, binsize=binsize, stepsize=stepsize, rmdup=rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
-                                     verbose=verbose, debug=debug, norm_regionset=norm_regionset, save_wig=save_wig, strand_cov=True,
-                                     tracker=tracker, gc_content_cov=gc_content_cov, avg_gc_content=avg_gc_content,
-                                     gc_hist=gc_hist, end=end, counter=counter, output_bw=output_bw,
-                                     folder_report=configuration.FOLDER_REPORT, report=report, save_input=save_input, use_sm=True)
+    options.binsize = 1000
+    options.stepsize = 500
+    cov_set = MultiCoverageSet(name=options.name, region_giver=region_giver, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
+                                     verbose=options.verbose, debug=options.debug, norm_regionset=norm_regionset, save_wig=options.save_wig, strand_cov=True,
+                                     tracker=tracker, end=end, counter=counter, output_bw=output_bw,
+                                     folder_report=configuration.FOLDER_REPORT, report=options.report, save_input=options.save_input, use_sm=True)
 
-    no_gc_content = False
-    if not no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
+    options.no_gc_content = True
+    if not options.no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
         if configuration.VERBOSE:
             print("Compute GC-content", file=sys.stderr)
-        cov_set.normalization_by_gc_content(no_gc_content, inputs_statics, genome_path, delta=0.01)
+        options.gc_hv = None
+        options.gc_avg_T = None
+        options.gc_hv, options.gc_avg_T = cov_set.normalization_by_gc_content(inputs_statics, genome_path, options.gc_hv, options.gc_avg_T, delta=0.01)
+        # we need to save values for it for return ?? If we use another; [avg_T, hv] for each inputs files.
 
     cov_set.init_overall_coverage(strand_cov=True)
 
     if inputs_statics:
         if configuration.VERBOSE:
             print("Normalize input-DNA", file=sys.stderr)
-        cov_set.normalization_by_input(signal_statics, inputs_statics, name, factors_inputs, save_input)
-    if save_input:
+        options.factors_inputs = cov_set.normalization_by_input(signal_statics, inputs_statics, options.name, options.factors_inputs)
+    if options.save_input:
         if configuration.VERBOSE:
             print('Normalize ChIP-seq profiles', file=sys.stderr)
-        cov_set.output_input_bw(name, region_giver.chrom, save_wig)
+        cov_set.output_input_bw(options.name, region_giver.chrom, options.save_wig)
     # much complex, so we decay to change it
-    cov_set.normalization_by_signal(name, scaling_factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset,
-                                  report, m_threshold, a_threshold)
+    options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes, tracker, norm_regionset,
+                                    options.report, options.m_threshold, options.a_threshold)
 
     ## After this step, we have already normalized data, so we could output normalization data
     if output_bw:
-        cov_set._output_bw(name, region_giver.chrom_sizes_file, save_wig, save_input)
+        cov_set._output_bw(options.name, region_giver.chrom_sizes_file, options.save_wig, options.save_input)
 
     return cov_set
-
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""
@@ -404,7 +403,7 @@ def handle_input():
     (options, args) = parser.parse_args()
     options.save_wig = False
     options.exts_inputs = None
-    options.verbose = False
+    options.verbose = True
     options.hmm_free_para = False
 
     if options.version:

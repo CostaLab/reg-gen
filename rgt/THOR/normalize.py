@@ -81,7 +81,8 @@ def get_bin_from_covs(cov, step_times=10):
     # we use list to store them then we transfer them into array...
     cov_counts = []
     # so first we need to dig into cov and then get the that sizes
-    tmp_cov = np.ravel(cov.overall_cov.todense()) # into one-dimension view
+    # here if we use sparse matrix, could we also do this ??
+    tmp_cov = np.ravel(cov.sm_overall_cov.todense()) # into one-dimension view
     step_size = (cov.binsize/cov.stepsize) * step_times
     # one problem is range of it, at end, we also want to get the last bin sizes then,
     for bin_idx in range(0, len(tmp_cov), step_size):
@@ -176,48 +177,6 @@ def trim4TMM( m_values, a_values, m_threshold=80, a_threshold=95):
         return np.asarray(m_values), np.asarray(a_values)
 
 
-## overall_coverage should be the all coverage for signal files ...
-def get_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
-    """Normalize with TMM approach, based on PePr
-      ref, we use the mean of two samples and compare to it
-      data_rep present the data..
-      we accept overall_coverage as one parameter, and deal with it;
-      coverall_coverage [ signal_0[ file_0, file_1, file_2], signal_1[ file_0, file_1, file_2] ]
-      it's in form of array
-    """
-    scaling_factors = []
-    dim = overall_coverage.shape
-    # at least one file has one read in it...
-    # or we could get mask_ref with all data are over 0
-    mask_ref = np.all(overall_coverage[0],axis=0) & np.all(overall_coverage[1],axis=0)
-    ref = np.squeeze(np.sum(overall_coverage[0][:,mask_ref], axis=0) + np.sum(overall_coverage[1][:,mask_ref],axis=0)) /float(dim[0]*dim[1])
-    # ref = np.squeeze(np.sum(overall_coverage[0], axis=0) + np.sum(overall_coverage[1],axis=0))
-    # mask_ref = ref > 0
-
-    # ref = np.squeeze(np.asarray(np.sum(overall_coverage[j][:, mask_ref], axis=0) / float(cond_max)))
-    for i in range(dim[0]):
-        scaling_factors.append([])
-        for j in range(dim[1]):  # normalize all replicates
-            # get the data for each sample under each condition
-            data_rep = np.squeeze(np.asarray(overall_coverage[i][j, mask_ref]))
-            # here we sample data but in Manuel method, he uses the biggest ones...
-            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
-            tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
-            data_rep = data_rep[tmp_idx]
-            # calculate m_values and a_values
-            m_values = np.log(tmp_ref / data_rep)
-            a_values = 0.5 * np.log(data_rep * tmp_ref)
-            try:  # assume they have a relations and then plot them to get scale factor.
-                m_values, a_values = trim4TMM(m_values, a_values, m_threshold, a_threshold)
-                f = 2 ** (np.sum(m_values * a_values) / np.sum(a_values))
-                scaling_factors[i].append(f)
-            except:
-                print('TMM normalization not successfully performed, do not normalize data', file=sys.stderr)
-                scaling_factors[i].append(1)
-
-    return scaling_factors
-
-
 ## overall_coverage should be the all coverage for signal files, but signal file are now in format sparse matrix ...
 #  cuase we need to use sum and duplicate then we need to use sparse matrix, better ?? Then we could change it here
 def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
@@ -271,7 +230,7 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
     return factors_signal
 
 
-def get_gc_factor(cov, delta, genome_fpath):
+def get_gc_factor(cov, delta, genome_fpath, sample_size=10000):
     """ compute gc_content_factor from one input coverage(control coverage) just to get hv and T
     Return:
         for each bins ?? No, we can compute and then change it , no need to store it !!
@@ -301,7 +260,7 @@ def get_gc_factor(cov, delta, genome_fpath):
     # coverage separated by chroms regions; so we need to find out first what it belongs to
     for i in range(len(chroms)):
         # here we need to count all, too slow;; we need sample
-        for bin_idx in cov.sm_coverage[i].indices: # for only bins with non zeros reads
+        for bin_idx in sample(cov.sm_coverage[i].indices, k=min(len(cov.sm_coverage[i].indices), sample_size)): # for only bins with non zeros reads
         # for bin_idx in range(cov.sm_coverage[i].shape[-1]): # for all bins
             s = bin_idx * cov.stepsize
             e = s + cov.binsize

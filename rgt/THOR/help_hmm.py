@@ -177,14 +177,28 @@ def _get_sm_data_rep(one_sample_cov, sample_size):
     # firstly to get union of non-zeros columns
     tmp_cov = sum(one_sample_cov)
     # sample indices and then sample it
-    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
+    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices))+1)
     idx.sort()
-    cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])
+    """
+    cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])  # for two data
     # count the mean and var of it
     ms = cov.mean(axis=0)
     vars = sm_var(cov,axis=0)
     ms = np.insert(np.squeeze(np.asarray(ms)), len(idx),0)
     vars = np.insert(np.squeeze(np.asarray(vars)),len(idx),0)
+    """
+    # we combine several bins together and build them; like [idx0, idx1, idx2....]
+    # we build values from [idx0, idx1], [idx1, idx2] , [idx2,idx3].... to the end of of one idx
+    # our data are not from tmp_cov but from ons_sample_cov and we need it
+    cov=[]
+    for i in range(len(idx)-1):
+        tmp = np.concatenate([one_sample_cov[j][:,idx[i]:idx[i+1]].data for j in range(len(one_sample_cov))])
+        cov.append(tmp)
+    # we can use np.array to present it then less trouble to present man-var,
+    # but with a list, a list with contrain the number of it
+    ms = np.asarray(map(np.mean, cov))
+    vars = np.asarray(map(np.var, cov))
+
     # we add 0 to ms and vars, but consider computation time, could we find a better way??
     idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
                       vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
@@ -206,8 +220,10 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
     done = False
     # for this function, if we get bad result, we do it again, to get better samples again
     # and fit it again...until a good fit
+    loop_num = 10
     while not done:
         res = []
+        loop_num -= 1
         for i in range(dim[0]):
             try:
                 m, v = _get_sm_data_rep(overall_coverage['data'][i], sample_size)
@@ -231,7 +247,7 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
                 print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                 break  # restart for loop
         # after loop successfully ends, we are done; but when exception happens, we can't make it end
-        if len(res) == 2:
+        if len(res) == 2 or not loop_num:
             done = True
     if report:
         _plot_func(plot_data, outputdir)

@@ -90,7 +90,7 @@ class MultiCoverageSet(): # DualCoverageSet
 
     def __init__(self, name, region_giver, binsize, stepsize, norm_regionset, \
                  verbose, debug, rmdup, signal_statics, inputs_statics,  save_wig, strand_cov,
-                 tracker, end, counter, gc_content_cov=None, avg_gc_content=None, gc_hist=None, output_bw=True,\
+                 tracker, end, counter, hv=None, avg_T=None, gc_hist=None, output_bw=True,\
                  folder_report=None, report=None, save_input=False, ignored_regions=None, use_sm=False):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         # one improvement is to make the left one key_word parameter and we parse it, not like this, all in a list
@@ -99,8 +99,8 @@ class MultiCoverageSet(): # DualCoverageSet
         self.stepsize = stepsize
         self.name = name
         self.dim = signal_statics['dim']
-        self.gc_content_cov = gc_content_cov
-        self.avg_gc_content = avg_gc_content
+        self.hv = hv
+        self.avg_T = avg_T
         self.gc_hist = gc_hist
         self.end = end
         self.counter = counter # use of counter ???
@@ -112,8 +112,13 @@ class MultiCoverageSet(): # DualCoverageSet
 
         # here we need to judge if the coverage fine, or not; Actually before we have read statitics data,so it's fine
         # could give info about doing what; reading signal files, reading inputs files
-        self.covs = self._init_coverage(signal_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
-        self.inputs_covs = self._init_coverage(inputs_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
+        if signal_statics:
+            print("Reading CHIP bamfiles", file=sys.stderr)
+            self.covs = self._init_coverage(signal_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
+
+        if inputs_statics:
+            print("Reading inputs bamfiles", file=sys.stderr)
+            self.inputs_covs = self._init_coverage(inputs_statics, region_giver, rmdup, binsize, stepsize, strand_cov=strand_cov, use_sm=use_sm)
 
         if not self._is_cov_valid(signal_statics, self.covs) or not self.covs:
             self.data_valid = False
@@ -176,16 +181,27 @@ class MultiCoverageSet(): # DualCoverageSet
             for i in range(self.overall_coverage[j].shape[1]):
                 print(self.overall_coverage[j][:,i].T, file=f)
 
-    def normalization_by_gc_content(self, no_gc_content, inputs_statics, genome_fpath, delta):
+    def normalization_by_gc_content(self, inputs_statics, genome_fpath, gc_hv, gc_avg_T, delta):
         """normalization by gc-content, applied on both inputs and output data"""
-        if not no_gc_content and inputs_statics and self.gc_content_cov is None:
+        if inputs_statics and gc_hv is None:
+            print("Compute gc factors including gv_hv and gc_avg_T", file=sys.stderr)
+            gc_hv, gc_avg_T = [], []
             for i in range(self.dim[0]):
+                gc_hv.append([])
+                gc_avg_T.append([])
                 for j in range(self.dim[1]):
                     hv, avg_T = get_gc_factor(self.inputs_covs[i][j], delta, genome_fpath)
-                    self.covs[i][j].normalization_by_gc_content(hv, avg_T, genome_fpath, delta)
-                    self.inputs_covs[i][j].normalization_by_gc_content(hv, avg_T, genome_fpath, delta)
+                    gc_hv[i].append(hv)
+                    gc_avg_T[i].append(avg_T)
+        for i in range(self.dim[0]):
+            for j in range(self.dim[1]):
+                self.covs[i][j].normalization_by_gc_content(gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
+                self.inputs_covs[i][j].normalization_by_gc_content(gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
+        self.hv = gc_hv
+        self.avg_T = gc_avg_T
+        return gc_hv, gc_avg_T
 
-    def normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs, save_input):
+    def normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
         if factors_inputs:
             if configuration.VERBOSE:
@@ -213,6 +229,7 @@ class MultiCoverageSet(): # DualCoverageSet
                         factors_inputs[i].append(factor)
 
         self.factors_inputs = factors_inputs
+        return factors_inputs
 
     def normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
                                  m_threshold, a_threshold):
@@ -223,8 +240,9 @@ class MultiCoverageSet(): # DualCoverageSet
         elif not factors_ip:
             if norm_regionset:
                 print('Use TMM approach based on peaks', file=sys.stderr)
-                norm_regionset_coverage = self.init_overall_coverage(cov_strand=False) #TMM approach based on peaks
-                factors_ip = get_sm_norm_TMM_factor(norm_regionset_coverage,m_threshold, a_threshold)
+                # what to do with norm_regionset??
+                # norm_regionset_coverage = self.init_overall_coverage(cov_strand=True) #TMM approach based on peaks
+                # factors_ip = get_sm_norm_TMM_factor(norm_regionset_coverage,m_threshold, a_threshold)
             else:
                 print('Use global TMM approach ', file=sys.stderr)
                 factors_ip = get_sm_norm_TMM_factor(self.overall_coverage, m_threshold, a_threshold) #TMM approach
@@ -236,8 +254,8 @@ class MultiCoverageSet(): # DualCoverageSet
                     self.overall_coverage['data'][i][j].data *= factors_ip[i][j]
                     if configuration.DEBUG:
                         print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
-        
         self.factors_ip = factors_ip
+        return factors_ip
 
     def _index2coordinates(self, index):
         """Translate index within coverage array to genomic coordinates."""

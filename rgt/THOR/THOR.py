@@ -71,14 +71,9 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     """
     # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
 
-    exp_data = initialize(name=options.name, genome_path=genome, region_giver=region_giver,
-                          stepsize=options.stepsize, binsize=options.binsize, signal_statics=signal_statics,inputs_statics=inputs_statics,
-                          debug=options.debug, verbose=options.verbose, no_gc_content=options.no_gc_content,
-                          factors_inputs=options.factors_inputs, tracker=tracker, norm_regions=options.norm_regions,
-                          scaling_factors_ip=options.scaling_factors_ip, save_wig=options.save_wig,
-                          housekeeping_genes=options.housekeeping_genes, test=TEST, report=options.report, end=True, counter=0, output_bw=False,
-                          save_input=options.save_input, m_threshold=options.m_threshold,
-                          a_threshold=options.a_threshold, rmdup=options.rmdup)
+    exp_data = initialize(options=options, genome_path=genome, region_giver=region_giver,
+                          signal_statics=signal_statics, inputs_statics=inputs_statics,
+                          tracker=tracker, test=TEST, end=True, counter=0, output_bw=False)
     # test if exp_data satisfies conditions to be good enough
     #if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
     #    tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
@@ -114,17 +109,9 @@ def run_HMM(region_giver, options, signal_statics,  inputs_statics, genome, trac
         end = True if i == len(region_giver) - 1 else False
         print("- taking into account %s" % r.sequences[0].chrom, file=sys.stderr)
         
-        exp_data = initialize(name=options.name, genome_path=genome, regions=r,
-                              stepsize=options.stepsize, binsize=options.binsize,
+        exp_data = initialize(options=options, genome_path=genome,
                               signal_statics=signal_statics, inputs_statics=None, debug=options.debug,
-                              verbose=False, no_gc_content=options.no_gc_content,
-                              factors_inputs=exp_data.factors_inputs,
-                              tracker=tracker, norm_regions=options.norm_regions,
-                              scaling_factors_ip=exp_data.scaling_factors_ip, save_wig=options.save_wig,
-                              housekeeping_genes=options.housekeeping_genes, test=TEST, report=False, gc_content_cov=exp_data.gc_content_cov,
-                              avg_gc_content=exp_data.avg_gc_content, gc_hist=exp_data.gc_hist,
-                              end=end, counter=i, m_threshold=options.m_threshold, a_threshold=options.a_threshold,
-                              rmdup=options.rmdup)
+                              tracker=tracker, test=TEST, end=end, counter=i)
         if exp_data.no_data:
             continue
         
@@ -165,12 +152,12 @@ def main():
     # get statistic information for each file
     # stats_total, stats_data, read_size, and other parts..
 
-    signal_statics = get_file_statistics(bamfiles, chrom_sizes_file)
+    signal_statics = get_file_statistics(bamfiles, region_giver)
     region_giver.update_regions(signal_statics)
 
     # inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-    inputs_statics = get_file_statistics(inputs_files, chrom_sizes_file)
+    inputs_statics = get_file_statistics(inputs_files, region_giver)
     region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
@@ -183,8 +170,8 @@ def main():
     else:
         compute_extension_sizes(signal_statics, inputs_statics)
     # one function to transform these parameters, after we read and do it into callback function??
-    options.factors_inputs = [[0.727, 0.715], [0.722,0.707]]
-    options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
+    options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
+    # options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 
