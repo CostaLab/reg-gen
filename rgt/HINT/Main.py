@@ -12,10 +12,10 @@ warnings.filterwarnings("ignore")
 
 # Internal
 from rgt import __version__
-from ..Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
+from rgt.Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
 from ..ExperimentalMatrix import ExperimentalMatrix
-from ..GenomicRegion import GenomicRegion
-from ..GenomicRegionSet import GenomicRegionSet
+from rgt.GenomicRegion import GenomicRegion
+from rgt.GenomicRegionSet import GenomicRegionSet
 from signalProcessing import GenomicSignal
 from hmm import HMM, _compute_log_likelihood
 from biasTable import BiasTable
@@ -235,12 +235,14 @@ def atac_footprints():
     ###################################################################################################
     # Creating HMMs
     ###################################################################################################
+    hmm = None
     if options.hmm_file:
         hmm = joblib.load(options.hmm_file)
     elif options.paired_end:
         hmm_file = hmm_data.get_default_hmm_atac_bc()
         hmm = joblib.load(hmm_file)
 
+    hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, hmm)
     # Initializing result set
     footprints = GenomicRegionSet(options.output_prefix)
 
@@ -254,7 +256,7 @@ def atac_footprints():
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
     regions.merge()
 
-    if options.paired_end:
+    if not options.paired_end:
         for r in regions:
             atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
                 reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
@@ -1489,8 +1491,8 @@ def histone_footprints():
         fp_state_nb = 4
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
-            if (flag_start):
-                if (posterior_list[curr_index] != fp_state_nb):
+            if flag_start:
+                if posterior_list[curr_index] != fp_state_nb:
                     if (k - start_pos < options.fp_limit_size):
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
@@ -1499,7 +1501,7 @@ def histone_footprints():
                 if (posterior_list[curr_index] == fp_state_nb):
                     flag_start = True
                     start_pos = k
-        if (flag_start):
+        if flag_start:
             fp = GenomicRegion(r.chrom, start_pos, r.final)
             footprints.add(fp)
 
@@ -1761,7 +1763,7 @@ def post_processing(footprints, original_regions, fp_limit, fp_ext, genome_data,
 
     # Extending footprints
     for f in footprints_overlap.sequences:
-        if (f.final - f.initial < fp_limit):
+        if f.final - f.initial < fp_limit:
             f.initial = max(0, f.initial - fp_ext)
             f.final = f.final + fp_ext
 
