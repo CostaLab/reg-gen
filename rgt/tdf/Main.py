@@ -267,11 +267,11 @@ def main():
         if not args.organism: 
             print("Please define the organism. (hg19 or mm9)")
             sys.exit(1)
-        if not args.rn and not args.rl: 
+        if not args.rn:
             print("Please define RNA sequence name.")
             sys.exit(1)
-        if args.r and args.rl:
-            print("Both -r and -rl are given. TDF will skip -r and process -rl ")
+        # if args.r and args.rl:
+        #     print("Both -r and -rl are given. TDF will skip -r and process -rl ")
         # if args.rl:
         #     with open(args.rl) as f:
         #         for line in f:
