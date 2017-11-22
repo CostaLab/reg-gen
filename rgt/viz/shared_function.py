@@ -50,7 +50,7 @@ def purge(dir, pattern):
             os.remove(os.path.join(dir, f))
 
 
-def gen_tags(exps, tag):
+def gen_tags(exps, tag, region_len=False):
     """Generate the unique tags from the EM according to the given tag. """
     if "factor" not in exps.fields:
         exps.add_factor_col()
@@ -61,11 +61,15 @@ def gen_tags(exps, tag):
             # print("You must define 'factor' column in experimental matrix for grouping.")
             sys.exit(1)
     elif tag == "regions":
-        try:
+        # try:
+        if not region_len:
             l = [exps.get_type(i, "factor") for i in exps.get_regionsnames()]
-        except:
-            # print("You must define 'factor' column in experimental matrix for grouping.")
-            sys.exit(1)
+        else:
+            l = [exps.get_type(n, "factor")+"("+str(len(exps.get_regionsets()[i]))+")" for i,n in enumerate(exps.get_regionsnames())]
+
+        # except:
+        #     # print("You must define 'factor' column in experimental matrix for grouping.")
+        #     sys.exit(1)
     else:
         l = exps.fieldsDict[tag]
         try:

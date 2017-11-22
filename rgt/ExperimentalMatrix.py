@@ -43,7 +43,7 @@ class ExperimentalMatrix:
         self.objectsDict = {}
         self.trash = []
         
-    def read(self, file_path, is_bedgraph=False, verbose=False, test=False):
+    def read(self, file_path, is_bedgraph=False, verbose=False, test=False, add_region_len=False):
         """Read Experimental matrix file.
 
         *Keyword arguments:*
@@ -169,9 +169,19 @@ class ExperimentalMatrix:
 
         # self.types = numpy.array(self.types)
         # self.names = numpy.array(self.names)
+
+
         self.remove_name()
         self.load_bed_url(".")
         self.load_objects(is_bedgraph, verbose=verbose, test=test)
+
+        if add_region_len:
+            for i, bed in enumerate(self.get_regionsnames()):
+                l = str(len(self.get_regionsets()[i]))
+                for k in self.fieldsDict["factor"].keys():
+                    if bed in self.fieldsDict["factor"][k]:
+                        self.fieldsDict["factor"][k+"("+l+")"] = self.fieldsDict["factor"][k]
+                        del self.fieldsDict["factor"][k]
 
         
     def get_genesets(self):

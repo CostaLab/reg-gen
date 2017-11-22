@@ -26,7 +26,7 @@ class Lineplot:
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(EMpath, test=test)
+        self.exps.read(EMpath, test=test, add_region_len=True)
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f, test=test)
@@ -98,21 +98,21 @@ class Lineplot:
         elif groupby == "regions" and self.annotation:
             self.group_tags = self.bednames
         else:
-            self.group_tags = gen_tags(self.exps, groupby)
+            self.group_tags = gen_tags(self.exps, groupby,region_len=False)
 
         if sortby == "None":
             self.sort_tags = [""]
         elif sortby == "regions" and self.annotation:
             self.sort_tags = self.bednames
         else:
-            self.sort_tags = gen_tags(self.exps, sortby)
+            self.sort_tags = gen_tags(self.exps, sortby,region_len=False)
 
         if colorby == "None":
             self.color_tags = [""]
         elif colorby == "regions" and self.annotation:
             self.color_tags = self.bednames
         else:
-            self.color_tags = gen_tags(self.exps, colorby)
+            self.color_tags = gen_tags(self.exps, colorby,region_len=False)
 
         print("\tColumn labels:\t" + ",".join(self.group_tags))
         print("\tRow labels:\t" + ",".join(self.sort_tags))
@@ -133,6 +133,7 @@ class Lineplot:
         # else:
         for bed in self.bednames:
             self.cuebed[bed] = set(tag_from_r(self.exps, self.tag_type, bed))
+            # print(self.cuebed[bed])
             try:
                 self.cuebed[bed].remove("None")
             except:
