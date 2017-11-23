@@ -137,7 +137,7 @@ class Evaluation:
             curve_name = "PRC"
             self.plot_curve(recall, precision, prc_auc_100, label_x, label_y, self.output_prefix, curve_name)
 
-        #self.output_points(self.output_prefix, fpr, tpr, recall, precision)
+        self.output_points(self.output_prefix, fpr, tpr, recall, precision)
 
     def plot_curve(self, data_x, data_y, stats, label_x, label_y, tf_name, curve_name):
         color_list = ["#000000", "#000099", "#006600", "#990000", "#660099", "#CC00CC", "#222222", "#CC9900",

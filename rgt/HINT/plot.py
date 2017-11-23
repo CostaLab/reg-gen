@@ -71,7 +71,8 @@ class Plot:
 
         pwm_dict = None
         for region in mpbs_regions:
-            if str(region.name).split(":")[-1] == "Y":
+            #if str(region.name).split(":")[-1] == "Y":
+            if True:
                 # Extend by 50 bp
                 mid = (region.initial + region.final) / 2
                 p1 = mid - (self.window_size / 2)
@@ -116,8 +117,8 @@ class Plot:
                     for i in range(0, len(dna_seq_rev)):
                         pwm_dict[dna_seq_rev[i]][i] += 1
 
-        mean_signal_f = mean_signal_f / num_sites
-        mean_signal_r = mean_signal_r / num_sites
+        #mean_signal_f = mean_signal_f / num_sites
+        #mean_signal_r = mean_signal_r / num_sites
 
         mean_norm_signal_f = genomic_signal.boyle_norm(mean_signal_f)
         perc = scoreatpercentile(mean_norm_signal_f, 98)
@@ -2812,7 +2813,6 @@ class Plot:
         output2file(self.output_loc, "{}_signal_r_2N_II".format(self.output_prefix), np.roll(signal_r_2N_II, 4))
         output2file(self.output_loc, "{}_signal_f_2N_III".format(self.output_prefix), np.roll(signal_f_2N_III, -4))
         output2file(self.output_loc, "{}_signal_r_2N_III".format(self.output_prefix), np.roll(signal_r_2N_III, 4))
-
 
     def distribution_of_frag_length_by_position(self, reads_file=None, motif_file=None):
         bam = Samfile(self.reads_file, "rb")

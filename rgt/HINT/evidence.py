@@ -14,19 +14,19 @@ Authors: Eduardo G. Gusmao, Zhijian Li
 """
 class Evidence:
 
-    def __init__(self, mpbs_file, tfbs_summit_file, peak_ext, output_location, output_prefix):
+    def __init__(self, mpbs_file, chip_file, peak_ext, output_location, output_prefix):
         self.mpbs_file = mpbs_file
-        self.tfbs_summit_file = tfbs_summit_file
+        self.chip_file = chip_file
         self.peak_ext = peak_ext
         self.output_location = output_location
         self.output_prefix = output_prefix
 
     def create_file(self):
         # Expanding summits
-        tfbs_summit_regions = GenomicRegionSet("TFBS Summit Regions")
-        tfbs_summit_regions.read(self.tfbs_summit_file)
+        chip_summit_regions = GenomicRegionSet("TFBS Summit Regions")
+        chip_summit_regions.read(self.chip_file)
 
-        for region in iter(tfbs_summit_regions):
+        for region in iter(chip_summit_regions):
             summit = int(region.data.split()[-1]) + region.initial
             region.initial = max(summit - (self.peak_ext / 2), 0)
             region.final = summit + (self.peak_ext / 2)
@@ -35,11 +35,11 @@ class Evidence:
         mpbs_regions = GenomicRegionSet("MPBS Regions")
         mpbs_regions.read(self.mpbs_file)
 
-        tfbs_summit_regions.sort()
+        chip_summit_regions.sort()
         mpbs_regions.sort()
 
-        with_overlap_regions = mpbs_regions.intersect(tfbs_summit_regions, mode=OverlapType.ORIGINAL)
-        without_overlap_regions = mpbs_regions.subtract(tfbs_summit_regions, whole_region=True)
+        with_overlap_regions = mpbs_regions.intersect(chip_summit_regions, mode=OverlapType.ORIGINAL)
+        without_overlap_regions = mpbs_regions.subtract(chip_summit_regions, whole_region=True)
         tfbs_regions = GenomicRegionSet("TFBS Regions")
 
         for region in iter(with_overlap_regions):

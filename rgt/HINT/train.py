@@ -151,8 +151,10 @@ class TrainHMM:
                 signal_list.append(map(float, line.strip().split("\t")))
 
         states_prior = np.zeros(len(signal_list[0]))
-        for i in range(496, 505):
-            states_prior[i] = 1
+        min_idx = np.argmin(signal_list[0][496:505]) + 496
+        states_prior[min_idx-1:min_idx+1] = 1
+        #for i in range(496, 505):
+        #    states_prior[i] = 1
 
         hmm_model = SemiSupervisedGaussianHMM(n_components=num_states, random_state=42, n_iter=10,
                                               covariance_type="full", states_prior=states_prior,

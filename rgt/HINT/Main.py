@@ -13,7 +13,6 @@ warnings.filterwarnings("ignore")
 # Internal
 from rgt import __version__
 from rgt.Util import PassThroughOptionParser, ErrorHandler, HmmData, GenomeData, OverlapType
-from ..ExperimentalMatrix import ExperimentalMatrix
 from rgt.GenomicRegion import GenomicRegion
 from rgt.GenomicRegionSet import GenomicRegionSet
 from signalProcessing import GenomicSignal
@@ -72,10 +71,6 @@ def main():
     ###################################################################################################
     # Processing Input Arguments
     ###################################################################################################
-
-    # Initializing ErrorHandler
-    error_handler = ErrorHandler()
-
     # Parameters
     usage_message = ("\n--------------------------------------------------\n"
                      "The 'hint' program predicts TFBSs given open chromatin data.\n"
@@ -100,9 +95,6 @@ def main():
                      "--------------------------------------------------\n\n"
                      )
     version_message = "HINT - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
-
-    # Initializing Option Parser
-    parser = PassThroughOptionParser(usage=usage_message, version=version_message)
 
     # Processing Help/Version Options
     if len(sys.argv) <= 1 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
@@ -142,6 +134,183 @@ def main():
     else:
         err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
 
+# def atac_footprints():
+#     """
+#     Performs footprints identification from ATAC-seq.
+#
+#     Authors: Eduardo G. Gusmao, Zhijian Li.
+#     """
+#
+#     ###################################################################################################
+#     # Processing Input Arguments
+#     ###################################################################################################
+#
+#     # Initializing Error Handler
+#     err = ErrorHandler()
+#
+#     # Parameters
+#     usage_message = "%prog --atac-footprints [options] [reads.bam regions.bed]"
+#
+#     # Initializing Option Parser
+#     parser = PassThroughOptionParser(usage=usage_message)
+#
+#     parser.add_option("--hmm-file", dest="hmm_file", type="string",
+#                       metavar="FILE", default=None,
+#                       help=("If the argument is not given, then a default HMM will be used."))
+#     parser.add_option("--bias-table", dest="bias_table", type="string",
+#                       metavar="FILE_F,FILE_R", default=None,
+#                       help=("List of files with all possible k-mers (for any k) and their bias estimates. "
+#                             "Each line should contain a kmer and the bias estimate separated by tab."))
+#     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
+#                       help=("Organism considered on the analysis. Check our full documentation for all available "
+#                             "options. All default files such as genomes will be based on the chosen organism "
+#                             "and the data.config file."))
+#
+#     # ATAC Hidden Options
+#     parser.add_option("--initial-clip", dest="initial_clip", type="int", metavar="INT", default=50, help=SUPPRESS_HELP)
+#     parser.add_option("--sg-window-size", dest="sg_window_size", type="int", metavar="INT", default=9,
+#                       help=SUPPRESS_HELP)
+#     parser.add_option("--norm-per", dest="norm_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+#     parser.add_option("--slope-per", dest="slope_per", type="float", metavar="INT", default=98, help=SUPPRESS_HELP)
+#     parser.add_option("--downstream-ext", dest="downstream_ext", type="int", metavar="INT", default=1,
+#                       help=SUPPRESS_HELP)
+#     parser.add_option("--upstream-ext", dest="upstream_ext", type="int", metavar="INT", default=0, help=SUPPRESS_HELP)
+#     parser.add_option("--forward-shift", dest="forward_shift", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+#     parser.add_option("--reverse-shift", dest="reverse_shift", type="int", metavar="INT", default=-4,
+#                       help=SUPPRESS_HELP)
+#     parser.add_option("--bias-correction-k", dest="bias_correction_k", type="int", metavar="INT", default=8,
+#                       help=SUPPRESS_HELP)
+#
+#     parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
+#                       help=SUPPRESS_HELP)
+#     parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+#                       help=SUPPRESS_HELP)
+#     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+#     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
+#     parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
+#     parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
+#     parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
+#
+#     parser.add_option("--paired-end", dest="paired_end",
+#                       action="store_true", default=False, help=SUPPRESS_HELP)
+#
+#     # Output Options
+#     parser.add_option("--output-location", dest="output_location", type="string", metavar="PATH", default=getcwd(),
+#                       help=("Path where the output bias table files will be written."))
+#     parser.add_option("--output-prefix", dest="output_prefix", type="string", metavar="STRING", default=getcwd(),
+#                       help=("The prefix for results files."))
+#
+#     # Processing Options
+#     options, arguments = parser.parse_args()
+#
+#     if len(arguments) < 2:
+#         err.throw_error("ME_FEW_ARG", add_msg="You must specify reads and regions file.")
+#
+#     ########################################################################################################
+#     # Global class initialization
+#     genome_data = GenomeData(options.organism)
+#     hmm_data = HmmData()
+#
+#     ###################################################################################################
+#     # Fetching Bias Table
+#     ###################################################################################################
+#     if options.bias_table:
+#         bias_table_list = options.bias_table.split(",")
+#         bias_table = BiasTable().load_table(table_file_name_F=bias_table_list[0],
+#                                             table_file_name_R=bias_table_list[1])
+#     else:
+#         table_F = hmm_data.get_default_bias_table_F_ATAC()
+#         table_R = hmm_data.get_default_bias_table_R_ATAC()
+#         bias_table = BiasTable().load_table(table_file_name_F=table_F,
+#                                             table_file_name_R=table_R)
+#
+#     ###################################################################################################
+#     # Creating HMMs
+#     ###################################################################################################
+#     hmm = None
+#     if options.hmm_file:
+#         hmm = joblib.load(options.hmm_file)
+#     elif options.paired_end:
+#         hmm_file = hmm_data.get_default_hmm_atac_bc()
+#         hmm = joblib.load(hmm_file)
+#
+#     # Initializing result set
+#     footprints = GenomicRegionSet(options.output_prefix)
+#
+#     reads_file = GenomicSignal(arguments[0])
+#     reads_file.load_sg_coefs(options.sg_window_size)
+#
+#     original_regions = GenomicRegionSet("regions")
+#     original_regions.read(arguments[1])
+#
+#     regions = deepcopy(original_regions)
+#     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
+#     regions.merge()
+#
+#     if options.paired_end:
+#         for region in regions:
+#             input_sequence = list()
+#
+#             signal_bc_f_max_145, signal_bc_r_max_145 = \
+#                 reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+#                                                             bam=bam, fasta=fasta, bias_table=bias_table,
+#                                                             forward_shift=options.forward_shift,
+#                                                             reverse_shift=options.reverse_shift,
+#                                                             min_length=None, max_length=145, strand=True)
+#             signal_bc_f_min_145, signal_bc_r_min_145 = \
+#                 reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
+#                                                             bam=bam, fasta=fasta, bias_table=bias_table,
+#                                                             forward_shift=options.forward_shift,
+#                                                             reverse_shift=options.reverse_shift,
+#                                                             min_length=145, max_length=None, strand=True)
+#
+#             signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+#             perc = scoreatpercentile(signal_bc_f_max_145, 98)
+#             std = np.array(signal_bc_f_max_145).std()
+#             signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+#             signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+#
+#             signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+#             perc = scoreatpercentile(signal_bc_r_max_145, 98)
+#             std = np.array(signal_bc_r_max_145).std()
+#             signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+#             signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+#
+#             signal_bc_f_min_145 = reads_file.boyle_norm(signal_bc_f_min_145)
+#             perc = scoreatpercentile(signal_bc_f_min_145, 98)
+#             std = np.array(signal_bc_f_min_145).std()
+#             signal_bc_f_min_145 = reads_file.hon_norm_atac(signal_bc_f_min_145, perc, std)
+#             signal_bc_f_min_145_slope = reads_file.slope(signal_bc_f_min_145, reads_file.sg_coefs)
+#
+#             signal_bc_r_min_145 = reads_file.boyle_norm(signal_bc_r_min_145)
+#             perc = scoreatpercentile(signal_bc_r_min_145, 98)
+#             std = np.array(signal_bc_r_min_145).std()
+#             signal_bc_r_min_145 = reads_file.hon_norm_atac(signal_bc_r_min_145, perc, std)
+#             signal_bc_r_min_145_slope = reads_file.slope(signal_bc_r_min_145, reads_file.sg_coefs)
+#
+#             input_sequence.append(signal_bc_f_max_145)
+#             input_sequence.append(signal_bc_f_max_145_slope)
+#             input_sequence.append(signal_bc_r_max_145)
+#             input_sequence.append(signal_bc_r_max_145_slope)
+#
+#             input_sequence.append(signal_bc_f_min_145)
+#             input_sequence.append(signal_bc_f_min_145_slope)
+#             input_sequence.append(signal_bc_r_min_145)
+#             input_sequence.append(signal_bc_r_min_145_slope)
+#     ###################################################################################################
+#     # Post-processing
+#     ###################################################################################################
+#
+#     post_processing(footprints=footprints, original_regions=original_regions, fp_limit=options.fp_limit,
+#                     fp_ext=options.fp_ext, genome_data=genome_data, tc_ext=options.tc_ext,
+#                     reads_file=reads_file, downstream_ext=options.downstream_ext, upstream_ext=options.upstream_ext,
+#                     forward_shift=options.forward_shift, reverse_shift=options.reverse_shift,
+#                     initial_clip=options.initial_clip, output_location=options.output_location,
+#                     output_prefix=options.output_prefix)
+#     # TODO
+#     exit(0)
+
+
 def atac_footprints():
     """
     Performs footprints identification from ATAC-seq.
@@ -164,7 +333,7 @@ def atac_footprints():
 
     parser.add_option("--hmm-file", dest="hmm_file", type="string",
                       metavar="FILE", default=None,
-                      help=("If the argument is not given, then a default HMM will be used."))
+                      help="If the argument is not given, then a default HMM will be used.")
     parser.add_option("--bias-table", dest="bias_table", type="string",
                       metavar="FILE_F,FILE_R", default=None,
                       help=("List of files with all possible k-mers (for any k) and their bias estimates. "
@@ -191,13 +360,14 @@ def atac_footprints():
 
     parser.add_option("--region-total-ext", dest="region_total_ext", type="int", metavar="INT", default=10000,
                       help=SUPPRESS_HELP)
-    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=50,
+    parser.add_option("--fp-limit-size", dest="fp_limit_size", type="int", metavar="INT", default=35,
                       help=SUPPRESS_HELP)
     parser.add_option("--fp-ext", dest="fp_ext", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--tc-ext", dest="tc_ext", type="int", metavar="INT", default=100, help=SUPPRESS_HELP)
     parser.add_option("--fp-limit", dest="fp_limit", type="int", metavar="INT", default=5, help=SUPPRESS_HELP)
     parser.add_option("--fp-state", dest="fp_state", type="int", metavar="INT", default=6, help=SUPPRESS_HELP)
-    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None, help=SUPPRESS_HELP)
+    parser.add_option("--fp-bed-fname", dest="fp_bed_fname", type="string", metavar="STRING", default=None,
+                      help=SUPPRESS_HELP)
 
     parser.add_option("--paired-end", dest="paired_end",
                       action="store_true", default=False, help=SUPPRESS_HELP)
@@ -235,12 +405,15 @@ def atac_footprints():
     ###################################################################################################
     # Creating HMMs
     ###################################################################################################
-    hmm = None
     if options.hmm_file:
         hmm = joblib.load(options.hmm_file)
-    elif options.paired_end:
-        hmm_file = hmm_data.get_default_hmm_atac_bc()
-        hmm = joblib.load(hmm_file)
+    else:
+        if options.paired_end:
+            hmm_file = hmm_data.get_default_hmm_atac_paired()
+            hmm = joblib.load(hmm_file)
+        else:
+            hmm_file = hmm_data.get_default_hmm_atac_single()
+            hmm = joblib.load(hmm_file)
 
     hmm._compute_log_likelihood = types.MethodType(_compute_log_likelihood, hmm)
     # Initializing result set
@@ -256,41 +429,72 @@ def atac_footprints():
     regions.extend(int(options.region_total_ext / 2), int(options.region_total_ext / 2))  # Extending
     regions.merge()
 
-    if not options.paired_end:
-        for r in regions:
-            atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
-                reads_file.get_signal_atac(r.chrom, r.initial, r.final, options.downstream_ext,
-                                           options.upstream_ext, options.forward_shift, options.reverse_shift,
-                                           options.initial_clip, options.norm_per, options.slope_per,
-                                           bias_table, genome_data.get_genome())
-            try:
-                input_sequence = array([atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r]).T
-            except Exception:
-                err.throw_warning("FP_SEQ_FORMAT", add_msg="for region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
-                continue
+    bam = Samfile(arguments[0], "rb")
+    fasta = Fastafile(genome_data.get_genome())
 
-            # Applying HMM
-            try:
-                posterior_list = hmm.predict(input_sequence)
-                if options.fp_bed_fname:
-                    output_bed_file(chrom=r.chrom, start=r.initial, end=r.final, states=posterior_list,
-                                    output_fname=options.fp_bed_fname, fp_state=options.fp_state)
-            except Exception:
-                err.throw_warning("FP_HMM_APPLIC", add_msg="in region (" + ",".join([r.chrom, str(r.initial), str(
-                    r.final)]) + "). This iteration will be skipped.")
-                continue
+    if options.paired_end:
+        for region in regions:
+            input_sequence = list()
+
+            signal_bc_f_max_145, signal_bc_r_max_145 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=options.forward_shift,
+                                                            reverse_shift=options.reverse_shift,
+                                                            min_length=None, max_length=145, strand=True)
+            signal_bc_f_min_145, signal_bc_r_min_145 = \
+                reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=region.initial, end=region.final,
+                                                            bam=bam, fasta=fasta, bias_table=bias_table,
+                                                            forward_shift=options.forward_shift,
+                                                            reverse_shift=options.reverse_shift,
+                                                            min_length=145, max_length=None, strand=True)
+
+            signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)
+            perc = scoreatpercentile(signal_bc_f_max_145, 98)
+            std = np.array(signal_bc_f_max_145).std()
+            signal_bc_f_max_145 = reads_file.hon_norm_atac(signal_bc_f_max_145, perc, std)
+            signal_bc_f_max_145_slope = reads_file.slope(signal_bc_f_max_145, reads_file.sg_coefs)
+
+            signal_bc_r_max_145 = reads_file.boyle_norm(signal_bc_r_max_145)
+            perc = scoreatpercentile(signal_bc_r_max_145, 98)
+            std = np.array(signal_bc_r_max_145).std()
+            signal_bc_r_max_145 = reads_file.hon_norm_atac(signal_bc_r_max_145, perc, std)
+            signal_bc_r_max_145_slope = reads_file.slope(signal_bc_r_max_145, reads_file.sg_coefs)
+
+            signal_bc_f_min_145 = reads_file.boyle_norm(signal_bc_f_min_145)
+            perc = scoreatpercentile(signal_bc_f_min_145, 98)
+            std = np.array(signal_bc_f_min_145).std()
+            signal_bc_f_min_145 = reads_file.hon_norm_atac(signal_bc_f_min_145, perc, std)
+            signal_bc_f_min_145_slope = reads_file.slope(signal_bc_f_min_145, reads_file.sg_coefs)
+
+            signal_bc_r_min_145 = reads_file.boyle_norm(signal_bc_r_min_145)
+            perc = scoreatpercentile(signal_bc_r_min_145, 98)
+            std = np.array(signal_bc_r_min_145).std()
+            signal_bc_r_min_145 = reads_file.hon_norm_atac(signal_bc_r_min_145, perc, std)
+            signal_bc_r_min_145_slope = reads_file.slope(signal_bc_r_min_145, reads_file.sg_coefs)
+
+            input_sequence.append(signal_bc_f_max_145)
+            input_sequence.append(signal_bc_f_max_145_slope)
+            input_sequence.append(signal_bc_r_max_145)
+            input_sequence.append(signal_bc_r_max_145_slope)
+
+            input_sequence.append(signal_bc_f_min_145)
+            input_sequence.append(signal_bc_f_min_145_slope)
+            input_sequence.append(signal_bc_r_min_145)
+            input_sequence.append(signal_bc_r_min_145_slope)
+
+            posterior_list = hmm.predict(np.array(input_sequence).T)
 
             # Formatting results
             start_pos = 0
             flag_start = False
             fp_state_nb = options.fp_state
-            for k in range(r.initial, r.initial + len(posterior_list)):
-                curr_index = k - r.initial
+            for k in range(region.initial, region.initial + len(posterior_list)):
+                curr_index = k - region.initial
                 if (flag_start):
                     if (posterior_list[curr_index] != fp_state_nb):
                         if (k - start_pos < options.fp_limit_size):
-                            fp = GenomicRegion(r.chrom, start_pos, k)
+                            fp = GenomicRegion(region.chrom, start_pos, k)
                             footprints.add(fp)
                         flag_start = False
                 else:
@@ -298,9 +502,47 @@ def atac_footprints():
                         flag_start = True
                         start_pos = k
             if (flag_start):
-                if (r.initial + len(posterior_list) - start_pos < options.fp_limit_size):
-                    fp = GenomicRegion(r.chrom, start_pos, r.final)
+                if (region.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(region.chrom, start_pos, region.final)
                     footprints.add(fp)
+    else:
+        for region in regions:
+
+            input_sequence = list()
+            atac_norm_f, atac_slope_f, atac_norm_r, atac_slope_r = \
+                reads_file.get_signal_atac(region.chrom, region.initial, region.final, options.downstream_ext,
+                                           options.upstream_ext, options.forward_shift, options.reverse_shift,
+                                           options.initial_clip, options.norm_per, options.slope_per,
+                                           bias_table, genome_data.get_genome())
+
+            input_sequence.append(atac_norm_f)
+            input_sequence.append(atac_slope_f)
+            input_sequence.append(atac_norm_r)
+            input_sequence.append(atac_slope_r)
+
+            posterior_list = hmm.predict(np.array(input_sequence).T)
+
+            # Formatting results
+            start_pos = 0
+            flag_start = False
+            fp_state_nb = options.fp_state
+            for k in range(region.initial, region.initial + len(posterior_list)):
+                curr_index = k - region.initial
+                if (flag_start):
+                    if (posterior_list[curr_index] != fp_state_nb):
+                        if (k - start_pos < options.fp_limit_size):
+                            fp = GenomicRegion(region.chrom, start_pos, k)
+                            footprints.add(fp)
+                        flag_start = False
+                else:
+                    if (posterior_list[curr_index] == fp_state_nb):
+                        flag_start = True
+                        start_pos = k
+            if (flag_start):
+                if (region.initial + len(posterior_list) - start_pos < options.fp_limit_size):
+                    fp = GenomicRegion(region.chrom, start_pos, region.final)
+                    footprints.add(fp)
+
     ###################################################################################################
     # Post-processing
     ###################################################################################################
@@ -1849,42 +2091,42 @@ def estimate_bias():
 
     # Input Options
     parser.add_option("--organism", dest="organism", type="string", metavar="STRING", default="hg19",
-                      help=("Organism considered on the analysis. Check our full documentation for all available "
+                      help="Organism considered on the analysis. Check our full documentation for all available "
                             "options. All default files such as genomes will be based on the chosen organism "
-                            "and the data.config file."))
+                            "and the data.config file.")
     parser.add_option("--bias-type", dest="bias_type", type="string",
                       metavar="STRING", default=None,
-                      help=("The methods that used to estimate the bias table "
-                            "Available options are: 'KMER', 'PPM' and 'LSlim"))
+                      help="The methods that used to estimate the bias table "
+                            "Available options are: 'KMER', 'PPM' and 'LSlim")
     parser.add_option("--reads-file", dest="reads_file", type="string",
                       metavar="FILE", default=None,
-                      help=("The BAM file containing the DNase-seq or ATAC-seq reads"))
+                      help="The BAM file containing the DNase-seq or ATAC-seq reads")
     parser.add_option("--regions-file", dest="regions_file", type="string",
                       metavar="FILE", default=None,
-                      help=("BED file of the regions you want to estimate the bias"))
+                      help="BED file of the regions you want to estimate the bias")
     parser.add_option("--downstream-ext", dest="downstream_ext", type="int",
                       metavar="INT", default=1,
-                      help=("Number of bps to extend towards the downstream region"))
+                      help="Number of bps to extend towards the downstream region")
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to extend towards the upstream region"))
+                      help="Number of bps to extend towards the upstream region")
     parser.add_option("--forward-shift", dest="forward_shift", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to shift the reads aligned to the forward strand"))
+                      help="Number of bps to shift the reads aligned to the forward strand")
     parser.add_option("--reverse-shift", dest="reverse_shift", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to shift the reads aligned to the reverse strand"))
+                      help="Number of bps to shift the reads aligned to the reverse strand")
     parser.add_option("--k-nb", dest="k_nb", type="int",
                       metavar="INT", default=6,
-                      help=("K-mers size used to estimate the bias"))
+                      help="K-mers size used to estimate the bias")
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
                       metavar="PATH", default=getcwd(),
-                      help=("Path where the output bias table files will be written."))
+                      help="Path where the output bias table files will be written.")
     parser.add_option("--output-prefix", dest="output_prefix", type="string",
                       metavar="STRING", default=getcwd(),
-                      help=("The prefix for results files."))
+                      help="The prefix for results files.")
 
     options, arguments = parser.parse_args()
 
@@ -1925,67 +2167,67 @@ def train_hmm():
     # Input Options
     parser.add_option("--organism", dest="organism", type="string",
                       metavar="STRING", default="hg19",
-                      help=("Organism considered on the analysis. Check our full documentation for all available "
+                      help="Organism considered on the analysis. Check our full documentation for all available "
                             "options. All default files such as genomes will be based on the chosen organism "
-                            "and the data.config file."))
+                            "and the data.config file.")
     parser.add_option("--reads-file", dest="reads_file", type="string",
                       metavar="FILE", default=None,
-                      help=("The BAM file containing the DNase-seq or ATAC-seq reads"))
+                      help="The BAM file containing the DNase-seq or ATAC-seq reads")
     parser.add_option("--chrom", dest="chrom", type="string",
                       metavar="STRING", default="chr1",
-                      help=("The name of chromosome used to train HMM"))
+                      help="The name of chromosome used to train HMM")
     parser.add_option("--start", dest="start", type="int",
                       metavar="INT", default=211428000)
     parser.add_option("--end", dest="end", type="int",
                       metavar="INT", default=211438000)
     parser.add_option("--annotate-file", dest="annotate_file", type="string", metavar="STRING",
                       default=None,
-                      help=("A annotate file containing all the states."))
+                      help="A annotate file containing all the states.")
     parser.add_option("--bias-table", dest="bias_table", type="string",
                       metavar="FILE1_F,FILE1_R[;...;FILEM_F,FILEM_R]", default=None,
-                      help=("List of files (for each input group; separated by semicolon) with all "
+                      help="List of files (for each input group; separated by semicolon) with all "
                             "possible k-mers (for any k) and their bias estimates. Each input group"
                             "should have two files: one for the forward and one for the reverse strand. "
                             "Each line should contain a kmer and the bias estimate separated by tab. "
-                            "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3."))
+                            "Leave an empty set for histone-only analysis groups. Eg. FILE1;;FILE3.")
     parser.add_option("--downstream-ext", dest="downstream_ext", type="int",
                       metavar="INT", default=1,
-                      help=("Number of bps to extend towards the downstream region"))
+                      help="Number of bps to extend towards the downstream region")
     parser.add_option("--upstream-ext", dest="upstream_ext", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to extend towards the upstream region"))
+                      help="Number of bps to extend towards the upstream region")
     parser.add_option("--forward-shift", dest="forward_shift", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to shift the reads aligned to the forward strand"))
+                      help="Number of bps to shift the reads aligned to the forward strand")
     parser.add_option("--reverse-shift", dest="reverse_shift", type="int",
                       metavar="INT", default=0,
-                      help=("Number of bps to shift the reads aligned to the reverse strand"))
+                      help="Number of bps to shift the reads aligned to the reverse strand")
     parser.add_option("--k-nb", dest="k_nb", type="int",
                       metavar="INT", default=6,
-                      help=("K-mers size used to estimate the bias"))
+                      help="K-mers size used to estimate the bias")
 
     parser.add_option("--semi-learning", dest="semi_learning",
                       action="store_true", default=False,
-                      help=("If used, HMM model will be trained using semi-supervised learning."))
+                      help="If used, HMM model will be trained using semi-supervised learning.")
     parser.add_option("--signal-file", dest="signal_file", type="string",
                       metavar="FILE", default=None,
-                      help=("The txt file containing the DNase-seq or ATAC-seq signals used to train HMM model."))
+                      help="The txt file containing the DNase-seq or ATAC-seq signals used to train HMM model.")
     parser.add_option("--num-states", dest="num_states", type="int",
                       metavar="INT", default=7,
-                      help=("The states number of HMM model."))
+                      help="The states number of HMM model.")
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
                       metavar="PATH", default=getcwd(),
-                      help=("Path where the output bias table files will be written."))
+                      help="Path where the output bias table files will be written.")
     parser.add_option("--output-prefix", dest="output_prefix", type="string",
                       metavar="STRING", default=getcwd(),
-                      help=("The prefix for results files."))
+                      help="The prefix for results files.")
     parser.add_option("--print-bed-file", dest="print_bed_file",
                       action="store_true", default=False,
-                      help=("If used, HINT will output the bed file containing "
+                      help="If used, HINT will output the bed file containing "
                             "the annotated regions, so that you can visualize "
-                            "you HMM annotation for potential errors"))
+                            "you HMM annotation for potential errors")
 
     options, arguments = parser.parse_args()
 
@@ -2029,21 +2271,21 @@ def evaluate_footprints():
     # Input Options
     parser.add_option("--tfbs-file", dest="tfbs_file", type="string",
                       metavar="FILE", default=None,
-                      help=("A bed file containing all motif-predicted binding sites (MPBSs)."
+                      help="A bed file containing all motif-predicted binding sites (MPBSs)."
                             "The values in the bed SCORE field will be used to rank the MPBSs."
-                            "The extension must be (.bed)."))
+                            "The extension must be (.bed).")
     parser.add_option("--footprint-file", dest="footprint_file", type="string",
                       metavar="FILE1,FILE2,FILE3,FILE4...", default=None,
-                      help=("The bed files containing the footprint predictions."
-                            "The extension must be (.bed)."))
+                      help="The bed files containing the footprint predictions."
+                            "The extension must be (.bed).")
     parser.add_option("--footprint-name", dest="footprint_name", type="string",
                       metavar="NAME1,NAME2,NAME3,NAME4...", default=None,
-                      help=("The name used to distinguish different footprint files."
-                            "The number of methods name must be consistent with that of footprint files"))
+                      help="The name used to distinguish different footprint files."
+                            "The number of methods name must be consistent with that of footprint files")
     parser.add_option("--footprint-type", dest="footprint_type", type="string",
                       metavar="TYPE1,TYPE2,TYPE3,TYPE4...", default=None,
-                      help=("The methods type used to predicted the footprint."
-                            "Must be SC (site centric) or SEG (segmentation approach)"))
+                      help="The methods type used to predicted the footprint."
+                            "Must be SC (site centric) or SEG (segmentation approach)")
 
     # Output Options
     parser.add_option("--output-location", dest="output_location", type="string",
@@ -2422,7 +2664,7 @@ def create_evidence():
     parser.add_option("--mpbs-file", dest="mpbs_file", type="string",
                       metavar="FILE", default=None,
                       help=("motif predicted binding sites file"))
-    parser.add_option("--tfbs-summit-file", dest="tfbs_summit_file", type="string",
+    parser.add_option("--chip-file", dest="chip_file", type="string",
                       metavar="FILE", default=None,
                       help=("the ChIP-seq peak files"))
     parser.add_option("--peak-ext", dest="peak_ext", type="int",
@@ -2439,7 +2681,7 @@ def create_evidence():
 
     options, arguments = parser.parse_args()
 
-    evidence = Evidence(options.mpbs_file, options.tfbs_summit_file, options.peak_ext,
+    evidence = Evidence(options.mpbs_file, options.chip_file, options.peak_ext,
                         options.output_location, options.output_prefix)
     evidence.create_file()
 

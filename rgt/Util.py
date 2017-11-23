@@ -187,8 +187,8 @@ class HmmData(ConfigurationFile):
         ConfigurationFile.__init__(self)
         self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
         self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
-        self.default_hmm_atac = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac'))
-        self.default_hmm_atac_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_bc'))
+        self.default_hmm_atac_paired = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_paired'))
+        self.default_hmm_atac_single = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_single'))
         self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
         self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
         self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
@@ -209,13 +209,13 @@ class HmmData(ConfigurationFile):
         """Returns the current default DNase only hmm."""
         return self.default_hmm_dnase_bc
 
-    def get_default_hmm_atac(self):
+    def get_default_hmm_atac_paired(self):
         """Returns the current default atac only hmm."""
-        return self.default_hmm_atac
+        return self.default_hmm_atac_paired
 
-    def get_default_hmm_atac_bc(self):
+    def get_default_hmm_atac_single(self):
         """Returns the current default atac only hmm."""
-        return self.default_hmm_atac_bc
+        return self.default_hmm_atac_single
 
     def get_default_hmm_histone(self):
         """Returns the current default Histone only hmm."""

@@ -302,8 +302,8 @@ data_config_file.write("repositories: hocomoco\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
-data_config_file.write("default_hmm_atac: fp_hmms/atac.hmm\n")
-data_config_file.write("default_hmm_atac_bc: fp_hmms/atac.pkl\n")
+data_config_file.write("default_hmm_atac_paired: fp_hmms/atac_paired.pkl\n")
+data_config_file.write("default_hmm_atac_single: fp_hmms/atac_single.pkl\n")
 data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
@@ -358,7 +358,7 @@ copy_files_dictionary = {
     "zv9": ["genes_zv9.bed", "chrom.sizes.zv9", "alias_zebrafish.txt"],
     "zv10": ["genes_zv10.bed", "chrom.sizes.zv10", "alias_zebrafish.txt"],
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
-                "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.pkl", "atac.hmm", "atac_bc.hmm",
+                "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac_paired.pkl", "atac_single.pkl",
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
                 "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
     "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr",
