@@ -667,7 +667,7 @@ def main():
             # Plotting
             print2(parameter, "\nStep 3/3: Plotting the lineplots")
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
-            lineplot.plot(output=args.o, printtable=args.table,
+            lineplot.plot(output=args.o, printtable=args.table, ylog=args.log,
                           scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
             for i, f in enumerate(lineplot.fig):
                 output(f=f, directory = args.o, folder = args.t, filename="lineplot_"+lineplot.group_tags[i],extra=plt.gci(),pdf=True,show=args.show)

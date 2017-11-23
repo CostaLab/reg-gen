@@ -291,7 +291,7 @@ class Lineplot:
                                                                 try: avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
                                                                 except: print(bed+"."+bam+"."+str(i))
                                                         if log:
-                                                            avearr = numpy.log2(avearr+1)
+                                                            avearr = numpy.log10(avearr+1)
 
                                                         avearr = numpy.average(avearr, axis=0)
                                                         if self.sense or self.strand:
@@ -374,7 +374,7 @@ class Lineplot:
         for i, c in enumerate(self.color_tags):
             self.colors[c] = colors[i]
 
-    def plot(self, output, printtable=False, scol=False, srow=False, w=2, h=2):
+    def plot(self, output, printtable=False, scol=False, srow=False, w=2, h=2, ylog=False):
         linewidth = 1
         self.fig = []
 
@@ -495,13 +495,21 @@ class Lineplot:
             handles = []
             labels =[]
             for ir, r in enumerate(self.data[g].keys()):
+                if ylog:
+                    nr = r + " (log10)"
+                else:
+                    nr = r
                 try:
-                    axs[ir, 0].set_ylabel("{}".format(r), fontsize=ticklabelsize + 1)
+                    axs[ir, 0].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                    axs[ir, 0].get_yaxis().set_label_coords(-0.1, 0.5)
                 except:
                     try:
-                        axs[ir].set_ylabel("{}".format(r), fontsize=ticklabelsize + 1)
+                        axs[ir].set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                        axs[ir].get_yaxis().set_label_coords(-0.1, 0.5)
                     except:
-                        axs.set_ylabel("{}".format(r), fontsize=ticklabelsize + 1)
+                        axs.set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
+                        axs.get_yaxis().set_label_coords(-0.1, 0.5)
+
 
                 for ic, c in enumerate(self.data[g][r].keys()):
                     try: axx = axs[ir, ic]
