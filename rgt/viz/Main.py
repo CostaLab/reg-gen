@@ -182,7 +182,7 @@ def main():
     ################### Lineplot ##########################################
     parser_lineplot = subparsers.add_parser('lineplot', help='Generate lineplot with various modes.')
     
-    choice_center = ['midpoint',"midpoint_sense", 'bothends','upstream','downstream']
+    choice_center = ['midpoint', 'bothends','upstream','downstream']
     # Be consist as the arguments of GenomicRegionSet.relocate_regions
     
     parser_lineplot.add_argument('input', help=helpinput)
@@ -190,6 +190,7 @@ def main():
     parser_lineplot.add_argument('-ga', action="store_true", help="Use genetic annotation data as input regions (e.g. TSS, TTS, exons and introns) instead of the BED files in the input matrix.")
     parser_lineplot.add_argument('-t', metavar='  ', default='lineplot', help=helptitle)
     parser_lineplot.add_argument('-center', metavar='  ', choices=choice_center, default='midpoint', help='Define the center to calculate coverage on the regions. Options are: '+', '.join(choice_center) + '. (default: %(default)s) The bothend mode will flap the right end region for calculation.')
+    parser_lineplot.add_argument('-g', metavar='  ', default='None', help=helpgroup)
     parser_lineplot.add_argument('-row', metavar='  ', default='None', help=helprow)
     parser_lineplot.add_argument('-col', metavar='  ', default='regions', help=helpcol)
     parser_lineplot.add_argument('-c', metavar='  ', default='reads', help=helpcolor)
@@ -632,9 +633,9 @@ def main():
             if "reads" not in (args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.col, args.c, args.row):
-                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
+            # if "regions" not in (args.col, args.c, args.row):
+            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
 
             if not os.path.isfile(args.input):
                 print("Please check the input experimental matrix again. The given path is wrong.")
@@ -647,7 +648,7 @@ def main():
             
             lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
-                                bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.col,args.row,args.c],
+                                bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.g,args.col,args.row,args.c],
                                 test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/3: Processing regions by given parameters")
@@ -657,7 +658,7 @@ def main():
             
             if args.mp > 0: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging with multiprocessing ")
             else: print2(parameter, "\nStep 2/3: Calculating the coverage to all reads and averaging")
-            lineplot.group_tags(groupby=args.col, sortby=args.row, colorby=args.c)
+            lineplot.group_tags(groupby=args.g, rowby=args.row, columnby=args.col, colorby=args.c)
             lineplot.gen_cues()
             lineplot.coverage(sortby=args.row, mp=args.mp, log=args.log, average=args.average)
             t2 = time.time()
@@ -668,7 +669,9 @@ def main():
             lineplot.colormap(colorby = args.c, definedinEM = args.color)
             lineplot.plot(output=args.o, printtable=args.table,
                           scol=args.scol, srow=args.srow, w=args.pw, h=args.ph)
-            output(f=lineplot.fig, directory = args.o, folder = args.t, filename="lineplot",extra=plt.gci(),pdf=True,show=args.show)
+            for i, f in enumerate(lineplot.fig):
+                output(f=f, directory = args.o, folder = args.t, filename="lineplot_"+lineplot.group_tags[i],extra=plt.gci(),pdf=True,show=args.show)
+
             lineplot.gen_html(args.o, args.t)
             t3 = time.time()
             print2(parameter, "\t--- finished in {0} secs".format(str(round(t3-t2))))
@@ -685,12 +688,12 @@ def main():
             # Read experimental matrix
             t0 = time.time()
 
-            if "reads" not in (args.col, args.c, args.row):
+            if "reads" not in (args.g, args.col, args.c, args.row):
                 print("Please add 'reads' tag as one of grouping, sorting, or coloring argument.")
                 sys.exit(1)
-            if "regions" not in (args.col, args.c, args.row):
-                print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
-                sys.exit(1)
+            # if "regions" not in (args.g, args.col, args.c, args.row):
+            #     print("Please add 'regions' tag as one of grouping, sorting, or coloring argument.")
+            #     sys.exit(1)
             print2(parameter, "Parameters:\tExtend length:\t"+str(args.e))
             print2(parameter, "\t\tRead size:\t"+str(args.rs))
             print2(parameter, "\t\tBin size:\t"+str(args.bs))

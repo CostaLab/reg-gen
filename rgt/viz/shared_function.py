@@ -65,7 +65,7 @@ def gen_tags(exps, tag, region_len=False):
         if not region_len:
             l = [exps.get_type(i, "factor") for i in exps.get_regionsnames()]
         else:
-            l = [exps.get_type(n, "factor")+"("+str(len(exps.get_regionsets()[i]))+")" for i,n in enumerate(exps.get_regionsnames())]
+            l = [exps.get_type(i, "factor")+"("+str(len(exps.get_regionsets()[i]))+")" for i,n in enumerate(exps.get_regionsnames())]
 
         # except:
         #     # print("You must define 'factor' column in experimental matrix for grouping.")
