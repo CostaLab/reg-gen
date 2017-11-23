@@ -38,6 +38,7 @@ from rgt import __version__
 
 import configuration
 from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes
+from MultiCoverageSet import get_training_set
 # External
 
 
@@ -87,14 +88,14 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     exp_data.compute_sm_putative_region_index()
      
     print('Compute HMM\'s training set', file=sys.stderr)
-    training_set, s0, s1, s2 = exp_data.get_training_set(TEST, options.name, options.foldchange,
-                                                         options.threshold, options.size_ts, 3)
+    ## or here we do loops if the training_set doesn't fit data requests?
+    training_data, s0, s1, s2 = get_training_set(exp_data, True, options.name, options.foldchange,
+                                                       options.threshold, options.size_ts, 3)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
-    training_set_obs = exp_data.get_observation(training_set)
-     
+
     print('Train HMM', file=sys.stderr)
-    m.fit([training_set_obs], options.hmm_free_para)
+    m.fit([training_data], options.hmm_free_para)
     distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
          
     return m, exp_data, func_para, init_mu, init_alpha, distr
@@ -155,10 +156,10 @@ def main():
     signal_statics = get_file_statistics(bamfiles, region_giver)
     region_giver.update_regions(signal_statics)
 
-    # inputs_statics = None
+    inputs_statics = None
     # but how about input files, if we want extension size, then they are connected..But we could extract them outside
-    inputs_statics = get_file_statistics(inputs_files, region_giver)
-    region_giver.update_regions(inputs_statics)
+    # inputs_statics = get_file_statistics(inputs_files, region_giver)
+    # region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
     options.exts = [225,225,225,228]
@@ -170,8 +171,8 @@ def main():
     else:
         compute_extension_sizes(signal_statics, inputs_statics)
     # one function to transform these parameters, after we read and do it into callback function??
-    options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
-    # options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
+    # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
+    options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 

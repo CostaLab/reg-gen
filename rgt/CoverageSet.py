@@ -402,8 +402,8 @@ class CoverageSet:
                 for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
                     if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
                     j += 1
-                    if j == 1000:
-                        break
+                    # if j == 1000:
+                    #    break
                     read_length = read.rlen
                     if not read.is_unmapped:
                         # pos = read.pos - extension_size if read.is_reverse else read.pos

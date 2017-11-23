@@ -15,6 +15,7 @@ conditions. Please see LICENSE file for details.
 from __future__ import print_function
 import os
 import sys
+import time
 import pysam
 import numpy as np
 from math import log, ceil
@@ -274,18 +275,27 @@ def initialize(options, genome_path, region_giver, signal_statics, inputs_static
         norm_regionset = None
     options.binsize = 1000
     options.stepsize = 500
+    print("Begin reading", file=sys.stderr)
+    start = time.time()
     cov_set = MultiCoverageSet(name=options.name, region_giver=region_giver, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
                                      verbose=options.verbose, debug=options.debug, norm_regionset=norm_regionset, save_wig=options.save_wig, strand_cov=True,
                                      tracker=tracker, end=end, counter=counter, output_bw=output_bw,
                                      folder_report=configuration.FOLDER_REPORT, report=options.report, save_input=options.save_input, use_sm=True)
 
+    elapsed_time = time.time() - start
+    print("End reading using time %.3f s"%(elapsed_time), file=sys.stderr)
+
     options.no_gc_content = True
     if not options.no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
-        if configuration.VERBOSE:
-            print("Compute GC-content", file=sys.stderr)
+        start = time.time()
         options.gc_hv = None
         options.gc_avg_T = None
         options.gc_hv, options.gc_avg_T = cov_set.normalization_by_gc_content(inputs_statics, genome_path, options.gc_hv, options.gc_avg_T, delta=0.01)
+        elapsed_time = time.time() - start
+
+        if configuration.VERBOSE:
+            print("Compute GC-content using time%.3f s"%(elapsed_time), file=sys.stderr)
+
         # we need to save values for it for return ?? If we use another; [avg_T, hv] for each inputs files.
 
     cov_set.init_overall_coverage(strand_cov=True)
@@ -307,6 +317,7 @@ def initialize(options, genome_path, region_giver, signal_statics, inputs_static
         cov_set._output_bw(options.name, region_giver.chrom_sizes_file, options.save_wig, options.save_input)
 
     return cov_set
+
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors."""

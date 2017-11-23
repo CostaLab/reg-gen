@@ -176,7 +176,7 @@ class NegBinRepHMM(_BaseHMM):
             row = []
             for i in range(self.n_components): #over number of HMM's state
                 r_sum = 0
-                for j in range(self.n_features): #over dim
+                for j in range(self.n_features): #over dim # to fit different dimension, we need to change it , but now it's ok
                     it = range(self.dim[0]) if j == 0 else range(self.dim[0], self.dim[0] + self.dim[1]) #grab proper ob
                     for k in it:
                         index = (int(x[k]), i, j)
