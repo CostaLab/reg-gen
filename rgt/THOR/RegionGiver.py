@@ -110,8 +110,7 @@ class RegionGiver:
     
     def get_chrom_dict(self):
         return self.valid_chrom_sizes
-    
-    
+
     def get_training_regionset(self):
         r = GenomicRegionSet('')
         r.add(self.valid_regionset[self.counter])
@@ -135,3 +134,7 @@ class RegionGiver:
             if region.chrom in valid_chroms:
                 self.valid_regionset.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final))
                 self.valid_chrom_sizes[region.chrom] = region.final
+
+    def reset_regions(self):
+        self.valid_regionset = self.regionset
+        self.valid_chrom_sizes = self.chrom_sizes_dict

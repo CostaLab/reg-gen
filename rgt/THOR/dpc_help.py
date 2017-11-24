@@ -152,39 +152,30 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     assert len(pvalues) == len(peaks)
 
     return pvalues, peaks
-    
-"""
-def _get_covs(DCS, i, as_list=False):
-    # For a multivariant Coverageset, return mean coverage cov1 and cov2 at position i
-    if not as_list:
-        cov1 = int(np.mean(DCS.overall_coverage[0][:, DCS.indices_of_interest[i]]))
-        cov2 = int(np.mean(DCS.overall_coverage[1][:, DCS.indices_of_interest[i]]))
-    else:
-        cov1 = DCS.overall_coverage[0][:,DCS.indices_of_interest[i]]
-        cov1 = map(lambda x: x[0], np.asarray((cov1)))
-        cov2 = DCS.overall_coverage[1][:,DCS.indices_of_interest[i]]
-        cov2 = map(lambda x: x[0], np.asarray((cov2)))
-    
-    return cov1, cov2
-"""
 
-def get_peaks(name, DCS, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
+
+def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     exts = np.mean(exts)
     tmp_peaks = []
     tmp_data = []
     
-    for i in range(len(DCS.indices_of_interest)):
+    for i in range(len(cov_set.indices_of_interest)):
         if states[i] not in [1,2]:
             continue #ignore background states
-
+        idx = cov_set.indices_of_interest[i]
         strand = '+' if states[i] == 1 else '-'
-        cov1, cov2 = DCS._get_sm_covs(i) # (DCS, i, as_list=True)
+        covs_list, strand_covs_list = cov_set.get_sm_covs(idx,True)  # only return data not indices
+        cov1 = np.mean(covs_list[0])  # use avg to present covs
+        cov2 = np.mean(covs_list[1])
         
-        cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
-        cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
-        
-        chrom, start, end = DCS._index2coordinates(DCS.indices_of_interest[i])
+        # cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
+        # cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
+        ## here we need to set another function to get the cov_strand information
+        cov1_strand = np.mean(strand_covs_list[0])
+        cov2_strand = np.mean(strand_covs_list[1])
+        ## get genome information from idx, to get chrom, end and start
+        chrom, start, end = cov_set.sm_index2coordinates(idx)
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
         side = 'l' if strand == '+' else 'r'
@@ -261,8 +252,8 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(options, genome_path, region_giver, signal_statics, inputs_statics,
-               tracker,test, counter, end, output_bw=True):
+def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics,
+               tracker, counter,test, end, output_bw=True):
     """Initialize the MultiCoverageSet
     Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
     Use sampling methods to initialize certain part of data
@@ -277,8 +268,8 @@ def initialize(options, genome_path, region_giver, signal_statics, inputs_static
     options.stepsize = 500
     print("Begin reading", file=sys.stderr)
     start = time.time()
-    cov_set = MultiCoverageSet(name=options.name, region_giver=region_giver, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
-                                     verbose=options.verbose, debug=options.debug, norm_regionset=norm_regionset, save_wig=options.save_wig, strand_cov=True,
+    cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
+                                     verbose=options.verbose, debug=options.debug, norm_regionset=norm_regionset, save_wig=options.save_wig, strand_cov=strand_cov,
                                      tracker=tracker, end=end, counter=counter, output_bw=output_bw,
                                      folder_report=configuration.FOLDER_REPORT, report=options.report, save_input=options.save_input, use_sm=True)
 
@@ -286,35 +277,39 @@ def initialize(options, genome_path, region_giver, signal_statics, inputs_static
     print("End reading using time %.3f s"%(elapsed_time), file=sys.stderr)
 
     options.no_gc_content = True
-    if not options.no_gc_content: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
+    if not options.no_gc_content and genome_path: # maybe we could use samples to get values not all data;; samples from indices, and around 1000 for it
         start = time.time()
         options.gc_hv = None
         options.gc_avg_T = None
         options.gc_hv, options.gc_avg_T = cov_set.normalization_by_gc_content(inputs_statics, genome_path, options.gc_hv, options.gc_avg_T, delta=0.01)
         elapsed_time = time.time() - start
-
         if configuration.VERBOSE:
-            print("Compute GC-content using time%.3f s"%(elapsed_time), file=sys.stderr)
+            print("Compute GC-content using time %.3f s"%(elapsed_time), file=sys.stderr)
 
         # we need to save values for it for return ?? If we use another; [avg_T, hv] for each inputs files.
 
-    cov_set.init_overall_coverage(strand_cov=True)
+    cov_set.init_overall_coverage(strand_cov=strand_cov)
 
-    if inputs_statics:
-        if configuration.VERBOSE:
-            print("Normalize input-DNA", file=sys.stderr)
+    if inputs_statics: # only inputs_statics exist we do it;
+        start = time.time()
         options.factors_inputs = cov_set.normalization_by_input(signal_statics, inputs_statics, options.name, options.factors_inputs)
-    if options.save_input:
+        elapsed_time = time.time() - start
         if configuration.VERBOSE:
-            print('Normalize ChIP-seq profiles', file=sys.stderr)
-        cov_set.output_input_bw(options.name, region_giver.chrom, options.save_wig)
+            print("Normalize input-DNA using time %.3f s"%(elapsed_time), file=sys.stderr)
+
+    if options.save_input: # !!! sth changes about parameters
+        cov_set.output_input_bw(options.name, regionset, options.save_wig)
     # much complex, so we decay to change it
+    start = time.time()
     options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes, tracker, norm_regionset,
                                     options.report, options.m_threshold, options.a_threshold)
+    elapsed_time = time.time() - start
+    if configuration.VERBOSE:
+        print('Normalize ChIP-seq profiles using time %.3f s' % (elapsed_time), file=sys.stderr)
 
     ## After this step, we have already normalized data, so we could output normalization data
-    if output_bw:
-        cov_set._output_bw(options.name, region_giver.chrom_sizes_file, options.save_wig, options.save_input)
+    if output_bw:  # !!!!  sth changes about parameters
+        cov_set._output_bw(options.name, regionset, options.save_wig, options.save_input)
 
     return cov_set
 

@@ -38,7 +38,7 @@ from rgt import __version__
 
 import configuration
 from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes
-from MultiCoverageSet import get_training_set
+from MultiCoverageSet import get_training_set, transform_data_for_HMM
 # External
 
 
@@ -72,7 +72,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     """
     # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
 
-    exp_data = initialize(options=options, genome_path=genome, region_giver=region_giver,
+    exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
                           signal_statics=signal_statics, inputs_statics=inputs_statics,
                           tracker=tracker, test=TEST, end=True, counter=0, output_bw=False)
     # test if exp_data satisfies conditions to be good enough
@@ -88,9 +88,9 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     exp_data.compute_sm_putative_region_index()
      
     print('Compute HMM\'s training set', file=sys.stderr)
-    ## or here we do loops if the training_set doesn't fit data requests?
+
     training_data, s0, s1, s2 = get_training_set(exp_data, True, options.name, options.foldchange,
-                                                       options.threshold, options.size_ts, 3)
+                                                       options.threshold, options.size_ts, 0)
     init_alpha, init_mu = get_init_parameters(s0, s1, s2)
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
 
@@ -101,31 +101,32 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     return m, exp_data, func_para, init_mu, init_alpha, distr
 
 
-def run_HMM(region_giver, options, signal_statics,  inputs_statics, genome, tracker, exp_data, m, distr):
+def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr):
     """Run trained HMM chromosome-wise on genomic signal and call differential peaks"""
     output, pvalues, ratios, no_bw_files = [], [], [], []
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
     
-    for i, r in enumerate(region_giver):
+    for i, regionset in enumerate(region_giver):
         end = True if i == len(region_giver) - 1 else False
-        print("- taking into account %s" % r.sequences[0].chrom, file=sys.stderr)
-        
-        exp_data = initialize(options=options, genome_path=genome,
-                              signal_statics=signal_statics, inputs_statics=None, debug=options.debug,
-                              tracker=tracker, test=TEST, end=end, counter=i)
+        ## at first the len(region_giver changes)
+        print("- taking into account %s" % regionset.sequences[0].chrom, file=sys.stderr)
+
+        exp_data = initialize(options=options, strand_cov=True, genome_path=genome, regionset=regionset, mask_file=region_giver.mask_file,
+                              signal_statics=signal_statics, inputs_statics=inputs_statics,
+                              tracker=tracker, test=TEST, end=end, counter=i, output_bw=False)
         if exp_data.no_data:
             continue
         
         no_bw_files.append(i)
-        exp_data.compute_putative_region_index()
+        exp_data.compute_sm_putative_region_index()
 
         if exp_data.indices_of_interest is None:
             continue
+        cov_data = exp_data.get_sm_covs(exp_data.indices_of_interest)
+        states = m.predict(transform_data_for_HMM(cov_data))
         
-        states = m.predict(exp_data.get_observation(exp_data.indices_of_interest))
-        
-        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, DCS=exp_data,
-                                                           distr=distr, merge=options.merge, exts=exp_data.exts,
+        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, cov_set=exp_data,
+                                                           distr=distr, merge=options.merge, exts=options.exts,
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
                                                            merge_bin=options.merge_bin, deadzones=options.deadzones)
@@ -177,7 +178,8 @@ def main():
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 
     # we need to change region_giver and update the valid_regions
-    run_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker, exp_data, m, distr)
+    region_giver.reset_regions()
+    run_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker, m, distr)
     
     _write_info(tracker, options.report, func_para=func_para, init_mu=init_mu, init_alpha=init_alpha, m=m)
 

@@ -402,8 +402,8 @@ class CoverageSet:
                 for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
                     if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
                     j += 1
-                    # if j == 1000:
-                    #    break
+                    if j == 2000:
+                        break
                     read_length = read.rlen
                     if not read.is_unmapped:
                         # pos = read.pos - extension_size if read.is_reverse else read.pos
@@ -506,22 +506,22 @@ class CoverageSet:
                         cov_sense[i] = sum_sense_info
                 i += 1
 
-            if  log_aver:
+            if log_aver:
                 cov = np.log(np.array(cov) + 1)
 
             if use_sm:
                 self.sm_coverage.append(self.cov_to_smatrix(cov))
+                if get_strand_info:
+                    self.sm_cov_strand_all = self.cov_to_smatrix(cov_strand)
+                if get_sense_info:
+                    self.sm_cov_sense_all = self.cov_to_smatrix(cov_sense)
             else:
                 self.coverage.append(np.asarray(cov))
+                if get_strand_info:
+                    self.cov_strand_all.append(np.array(cov_strand))
+                if get_sense_info:
+                    self.cov_sense_all.append(np.array(cov_sense))
 
-            if get_strand_info:
-                # self.cov_strand_all.append(np.array(cov_strand))
-                self.cov_strand_all = self.cov_to_smatrix(self.cov_strand_all)
-            if get_sense_info:
-                # self.cov_sense_all.append(np.array(cov_sense))
-                self.cov_sense_all = self.cov_to_smatrix(self.cov_sense_all)
-
-        # self.coverageori = self.coverage[:] # we don't use it
         self.update_overall_cov(True)
         if mask: f.close()
 

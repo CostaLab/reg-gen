@@ -50,13 +50,14 @@ def get_init_parameters(s0, s1, s2, **info):
     """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
+        ## here feel something not correct
         mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
 
     alpha = (var - mu) / np.square(mu)
 
     # alpha[np.isnan(alpha)] = 0.001
-
+    ## what means when alpha is smaller than 0???  Can we convert them if all of them is zero???
     alpha[alpha < 0] = 0.001
 
     for el in [mu, alpha]:
