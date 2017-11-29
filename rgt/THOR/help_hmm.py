@@ -177,9 +177,9 @@ def _get_sm_data_rep(one_sample_cov, sample_size):
     # firstly to get union of non-zeros columns
     tmp_cov = sum(one_sample_cov)
     # sample indices and then sample it
-    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices))+1)
+    idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
     idx.sort()
-    """
+    # """
     cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])  # for two data
     # count the mean and var of it
     ms = cov.mean(axis=0)
@@ -198,7 +198,7 @@ def _get_sm_data_rep(one_sample_cov, sample_size):
     # but with a list, a list with contrain the number of it
     ms = np.asarray(map(np.mean, cov))
     vars = np.asarray(map(np.var, cov))
-
+    """
     # we add 0 to ms and vars, but consider computation time, could we find a better way??
     idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
                       vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))

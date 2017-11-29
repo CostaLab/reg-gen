@@ -81,7 +81,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     #    tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
         # break
     ## here we need to use tracker to record
-    
+    ## per bins mean, var
     func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
                                           report=options.report, poisson=options.poisson)
@@ -110,11 +110,15 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
         end = True if i == len(region_giver) - 1 else False
         ## at first the len(region_giver changes)
         print("- taking into account %s" % regionset.sequences[0].chrom, file=sys.stderr)
+        ## before how could we judge the data in this signal_statics and make sure if we use it or not
+        ## regionset in signal_statics to test if the number is quite good or not
+        ## If they are too less, then we don'y need to go into this steps.
 
         exp_data = initialize(options=options, strand_cov=True, genome_path=genome, regionset=regionset, mask_file=region_giver.mask_file,
                               signal_statics=signal_statics, inputs_statics=inputs_statics,
-                              tracker=tracker, test=TEST, end=end, counter=i, output_bw=False)
-        if exp_data.no_data:
+                              tracker=tracker, test=TEST, end=end, counter=i, output_bw=True)
+        if not exp_data.data_valid:
+            print('less data and then consider next chromasome',file=sys.stderr)
             continue
         
         no_bw_files.append(i)
@@ -163,17 +167,21 @@ def main():
     # region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
-    options.exts = [225,225,225,228]
-    options.inputs_exts = [228,228,231,231]
+    options.exts = [72,96,114,204]
+    # options.inputs_exts = [228,228,231,231]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
-        # less one step how to get inputs size and then give it
-        update_statics_extension_sizes(inputs_statics,options.inputs_exts)
     else:
-        compute_extension_sizes(signal_statics, inputs_statics)
+        options.exts, _ = compute_extension_sizes(signal_statics)
+
+    if options.exts_inputs:
+        # less one step how to get inputs size and then give it
+        update_statics_extension_sizes(inputs_statics,options.exts_inputs)
+    else:
+        options.exts_inputs, _ = compute_extension_sizes(inputs_statics)
     # one function to transform these parameters, after we read and do it into callback function??
     # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
-    options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
+    # options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
 

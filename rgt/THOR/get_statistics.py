@@ -169,7 +169,7 @@ def get_extension_size(fname, stats_data, start=0, end=600, stepsize=3):
         return None, None, None
 
 
-def compute_extension_sizes(signal_statics, inputs_statics, report=True):
+def compute_extension_sizes(signal_statics, report=True):
     """Compute Extension sizes for bamfiles and input files
     Argument: signal_files are in a list format are: [[sample1_file1, sample1_file2], [sample2_file1, sample2_file2]]
           inputs_files are in the same format
@@ -182,13 +182,12 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
     end = 600
     ext_stepsize = 3
     ext_data_list = []
-    file_dimension = 0
     signal_extension_sizes, read_sizes = None, None
-    inputs_extension_sizes, inputs_read_sizes = None, None
+    # inputs_extension_sizes, inputs_read_sizes = None, None
 
     # compute extension size for all signal files
     if signal_statics:
-        print("Computing read extension sizes for ChIP-seq profiles", file=sys.stderr)
+        print("Computing read extension sizes", file=sys.stderr)
         file_dimension = signal_statics['dim']
         signal_extension_sizes = np.ones(file_dimension, int) * -1
         read_sizes = np.ones(file_dimension, int) * -1
@@ -203,7 +202,7 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
                 signal_statics['data'][i][j]['read_size'] = read_size
                 signal_statics['data'][i][j]['extension_size'] = e
         print('end of compute extension size for signal files ', file=sys.stderr)
-
+    """
     if inputs_statics:
         print("Computing inputs read extension sizes for ChIP-seq profiles", file=sys.stderr)
         inputs_extension_sizes = np.ones(file_dimension, int) * (-1)
@@ -225,7 +224,7 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
                 inputs_statics['data'][i][j]['extension_size'] = inputs_extension_sizes[i][j]
 
         print('end of compute extension size for inputs files ', file=sys.stderr)
-        """
+
         for i in range(file_dimension[0]):
             for j in range(file_dimension[1]): 
                 if inputs_extension_sizes[i][j] + inputs_read_sizes[i][j] < (signal_extension_sizes[i][j] + read_sizes[i][j]) * 0.3:
@@ -237,7 +236,7 @@ def compute_extension_sizes(signal_statics, inputs_statics, report=True):
         print(ext_data_list, signal_extension_sizes)
 
     # when data is in same format, we choose to use np.array to save it
-    return signal_extension_sizes, read_sizes, inputs_extension_sizes, inputs_read_sizes
+    return signal_extension_sizes, read_sizes
 
 
 def update_statics_extension_sizes(statics, exts_list):

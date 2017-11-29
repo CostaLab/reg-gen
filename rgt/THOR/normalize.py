@@ -119,7 +119,9 @@ def get_normalization_factor_by_cov(cov, inputs_cov,zero_counts,filename,debug,s
     zero_counts are 0, but the purpose???
     New method: to generate new bin statics from cov and input coves, cause they are corresponding before;
      pq_list, max_index,max_value and factor1 for each inputs file
-        covs, inputs_cov should include binsize and step_size such information and then combine with step_times to get more information"""
+        covs, inputs_cov should include binsize and step_size such information and then combine with step_times to get more information
+    normalization to inputs and get factors
+        """
 
     # first get new bin from cov
     cov_counts = get_bin_from_covs(cov, step_times=step_times)

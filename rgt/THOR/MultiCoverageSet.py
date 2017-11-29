@@ -102,7 +102,7 @@ class MultiCoverageSet(): # DualCoverageSet
         self.gc_hist = gc_hist
         self.end = end
         self.counter = counter # use of counter ???
-        self.no_data = False
+        self.data_valid = True
         self.FOLDER_REPORT = folder_report
 
         configuration.DEBUG = debug
@@ -254,7 +254,7 @@ class MultiCoverageSet(): # DualCoverageSet
         chrm_name = self.regionset[order].chrom
         # use binsize and step.size to get i
         start = index * self.stepsize
-        end = min(index * self.stepsize + self.binsize, self.regionset[order].final)
+        end = min(start + self.binsize, self.regionset[order].final)
         return chrm_name, start, end
 
     def get_sm_covs(self, indices, strand_cov=False):
@@ -434,9 +434,12 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
         el = np.asarray(el)
         if not test:
             # here the condition we can't judge if it's good
+            """
             el = el[np.where(
                 np.logical_and(el[:, 1] < np.percentile(el[:, 1], 98.5) * (el[:, 1] > np.percentile(el[:, 1], 1.5)),
                                el[:, 2] < np.percentile(el[:, 2], 98.5) * (el[:, 2] > np.percentile(el[:, 2], 1.5))))]
+            """
+            el = el[np.where(np.logical_and(el[:, 1]<np.percentile(el[:, 1], 98), el[:, 2]<np.percentile(el[:, 2], 98)))]
 
         all_data.append(el)
 

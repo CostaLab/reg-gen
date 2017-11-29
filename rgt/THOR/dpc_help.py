@@ -15,6 +15,7 @@ conditions. Please see LICENSE file for details.
 from __future__ import print_function
 import os
 import sys
+import re
 import time
 import pysam
 import numpy as np
@@ -44,36 +45,37 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 
 
-def merge_output(bamfiles, dims, options, no_bw_files, chrom_sizes):
-    for i in range(len(bamfiles)):
-        rep = i if i < dims[0] else i - dims[0]
-        sig = 1 if i < dims[0] else 2
+def merge_output(signal_statics, options, no_bw_files, chrom_sizes):
+    dim = signal_statics['dim']
 
-        temp_bed = npath(options.name + '-s%s-rep%s_temp.bed' % (sig, rep))
+    for i in range(dim[0]):
+        for j in range(dim[1]):
+            ## here are to output bed files for each signal file and output files
+            temp_bed = npath(options.name + '-s%s-rep%s_temp.bed'% (i, j))
 
-        files = [options.name + '-' + str(j) + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
-        if len(no_bw_files) > len(bamfiles):
-            files = filter(lambda x: isfile(x), files)
-            t = ['bigWigMerge'] + files + [temp_bed]
-            c = " ".join(t)
-            os.system(c)
-
-            os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + temp_bed + ' > ' + temp_bed +'.sort')
-
-            t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' % (sig, rep)]
-            c = " ".join(t)
-            os.system(c)
-
-            for f in files:
-                os.remove(f)
-            os.remove(temp_bed)
-            os.remove(temp_bed + ".sort")
-        else:
-            ftarget = [options.name + '-s%s-rep%s.bw' %(sig, rep) for j in no_bw_files]
-            for i in range(len(ftarget)):
-                c = ['mv', files[i], ftarget[i]]
-                c = " ".join(c)
+            files = [options.name + '-' + str(j) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
+            if len(no_bw_files) > dim[0]*dim[1]:
+                files = filter(lambda x: isfile(x), files)
+                t = ['bigWigMerge'] + files + [temp_bed]
+                c = " ".join(t)
                 os.system(c)
+
+                os.system("LC_COLLATE=C sort -k1,1 -k2,2n " + temp_bed + ' > ' + temp_bed +'.sort')
+
+                t = ['bedGraphToBigWig', temp_bed + '.sort', chrom_sizes, options.name + '-s%s-rep%s.bw' % (i, j)]
+                c = " ".join(t)
+                os.system(c)
+
+                for f in files:
+                    os.remove(f)
+                os.remove(temp_bed)
+                os.remove(temp_bed + ".sort")
+            else:
+                ftarget = [options.name + '-s%s-rep%s.bw' %(i, j) for num in no_bw_files]
+                for i in range(len(ftarget)):
+                    c = ['mv', files[i], ftarget[i]]
+                    c = " ".join(c)
+                    os.system(c)
 
 
 def dump_posteriors_and_viterbi(name, posteriors, DCS, states):
@@ -165,21 +167,21 @@ def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_corr
             continue #ignore background states
         idx = cov_set.indices_of_interest[i]
         strand = '+' if states[i] == 1 else '-'
-        covs_list, strand_covs_list = cov_set.get_sm_covs(idx,True)  # only return data not indices
-        cov1 = np.mean(covs_list[0])  # use avg to present covs
-        cov2 = np.mean(covs_list[1])
+        covs_list, strand_covs_list = cov_set.get_sm_covs(idx, strand_cov=True)  # only return data not indices
+        cov1 = covs_list[0]  #np.mean(covs_list[0])  # use avg to present covs
+        cov2 = covs_list[1]  #np.mean(covs_list[1])
         
         # cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
         # cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
         ## here we need to set another function to get the cov_strand information
-        cov1_strand = np.mean(strand_covs_list[0])
-        cov2_strand = np.mean(strand_covs_list[1])
+        cov1_strand = np.sum(strand_covs_list[0])
+        cov2_strand = np.sum(strand_covs_list[1])
         ## get genome information from idx, to get chrom, end and start
         chrom, start, end = cov_set.sm_index2coordinates(idx)
         
         tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
         side = 'l' if strand == '+' else 'r'
-        tmp_data.append((sum(cov1), sum(cov2), side, distr))
+        tmp_data.append((np.sum(cov1), np.sum(cov2), side, distr))
     
     if not tmp_data:
         print('no data', file=sys.stderr)
@@ -264,8 +266,8 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         norm_regionset.read(options.norm_regions)
     else:
         norm_regionset = None
-    options.binsize = 1000
-    options.stepsize = 500
+    # options.binsize = 1000
+    # options.stepsize = 500
     print("Begin reading", file=sys.stderr)
     start = time.time()
     cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
@@ -319,6 +321,46 @@ class HelpfulOptionParser(OptionParser):
     def error(self, msg):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
+
+
+def confirm(prompt=None, resp=False):
+    """prompts for yes or no response from the user. Returns True for yes and
+    False for no.
+
+    'resp' should be set to the default value assumed by the caller when
+    user simply types ENTER.
+
+    >>> confirm(prompt='Create Directory?', resp=True)
+    Create Directory? [y]|n:
+    True
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y:
+    False
+    >>> confirm(prompt='Create Directory?', resp=False)
+    Create Directory? [n]|y: y
+    True
+
+    """
+
+    if prompt is None:
+        prompt = 'Confirm'
+
+    if resp:
+        prompt = '%s [%s]|%s: ' % (prompt, 'y', 'n')
+    else:
+        prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
+
+    while True:
+        ans = raw_input(prompt)
+        if not ans:
+            return resp
+        if ans not in ['y', 'Y', 'n', 'N']:
+            print('please enter y or n.')
+            continue
+        if ans == 'y' or ans == 'Y':
+            return True
+        if ans == 'n' or ans == 'N':
+            return False
 
 
 def _callback_list(option, opt, value, parser):
@@ -474,11 +516,18 @@ def handle_input():
 
     if options.outputdir:
         options.outputdir = npath(options.outputdir)
-        if isdir(options.outputdir) and sum(
-                map(lambda x: x.startswith(options.name), os.listdir(options.outputdir))) > 0:
-            shutil.rmtree(options.outputdir)
-            #parser.error("Output directory exists and contains files with names starting with your chosen experiment "
-            #             "name! Do nothing to prevent file overwriting!")
+        # if exist then we judge if there exists one file with peak amd if it's then we save it;
+        # else, we will delete the files
+        if isdir(options.outputdir):
+            if np.any(map(lambda x: re.search(r".*diffpeaks.bed$", x),os.listdir(options.outputdir))):
+                if confirm(prompt="delete existing results?", resp=True):
+                    shutil.rmtree(options.outputdir)
+                else:
+                    parser.error("Output directory exists and contains files with names starting with your chosen experiment name! "
+                                 "Do nothing to prevent file overwriting!")
+            else:
+                shutil.rmtree(options.outputdir)
+
         if not exists(options.outputdir):
             os.mkdir(options.outputdir)
     else:
