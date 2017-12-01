@@ -21,11 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-import sys
-import gc
-from random import sample
-import numpy as np
-from normalize import get_normalization_factor_by_cov, get_sm_norm_TMM_factor,get_gc_factor
+import os
+from normalize import *
 from norm_genelevel import norm_gene_level
 from rgt.CoverageSet import CoverageSet
 import configuration
@@ -49,7 +46,17 @@ class MultiCoverageSet(): # DualCoverageSet
                 for j in range(statics['dim'][1]):
                     covs[i].append(CoverageSet('file_' + str(i)+'_'+str(j), valid_regionset))
                     covs[i][j].coverage_from_bam(bam_file=statics['data'][i][j]['fname'], extension_size=statics['data'][i][j]['extension_size'], rmdup=rmdup, binsize=binsize, \
-                                    stepsize=stepsize, mask_file=mask_file, get_strand_info=strand_cov, use_sm=use_sm)
+                                    stepsize=stepsize, mask_file=mask_file, get_strand_info=strand_cov)
+                    if use_sm: # maybe one thiing is how to deal with different operation on sparse matrix
+                        tmp = [cov_to_smatrix(chrom_cov) for chrom_cov in covs[i][j].coverage]
+                        covs[i][j].sm_cov_strand_all = [cov_to_smatrix(chrom_cov_strand) for chrom_cov_strand in
+                                                        covs[i][j].cov_strand_all]
+
+                        del covs[i][j].coverage, covs[i][j].coverageorig, covs[i][j].overall_cov, covs[i][j].cov_strand_all
+                        # want to save memory spaces but should we also delete coveragerig??
+                        covs[i][j].coverage = tmp
+                        covs[i][j].sm_overall_cov = sparse.hstack(covs[i][j].coverage, format='csr')
+
             return covs
         else:
             return None
@@ -86,27 +93,20 @@ class MultiCoverageSet(): # DualCoverageSet
                         return False
         return True
 
-    def __init__(self, name, regionset, mask_file, binsize, stepsize, norm_regionset, \
-                 verbose, debug, rmdup, signal_statics, inputs_statics,  save_wig, strand_cov,
-                 tracker, end, counter, hv=None, avg_T=None, gc_hist=None, output_bw=True,\
-                 folder_report=None, report=None, save_input=False, ignored_regions=None, use_sm=False):
+    def __init__(self, name, regionset, mask_file, binsize, stepsize, rmdup, signal_statics, inputs_statics, strand_cov, hv=None, avg_T=None, use_sm=False):
         """Compute CoverageSets, GC-content and normalize input-DNA and IP-channel"""
         # one improvement is to make the left one key_word parameter and we parse it, not like this, all in a list
+        self.name = name
         self.regionset = regionset
+        self.maskfile = mask_file
         self.binsize = binsize
         self.stepsize = stepsize
-        self.name = name
+        self.rmdup = rmdup # bool if remove duplicate
+
         self.dim = signal_statics['dim']
         self.hv = hv
         self.avg_T = avg_T
-        self.gc_hist = gc_hist
-        self.end = end
-        self.counter = counter # use of counter ???
         self.data_valid = True
-        self.FOLDER_REPORT = folder_report
-
-        configuration.DEBUG = debug
-        configuration.VERBOSE = verbose
 
         # here we need to judge if the coverage fine, or not; Actually before we have read statitics data,so it's fine
         # could give info about doing what; reading signal files, reading inputs files
@@ -129,39 +129,10 @@ class MultiCoverageSet(): # DualCoverageSet
             self.data_valid = False
             return None
 
-    def output_input_bw(self, name, chrom_sizes, save_wig):
-        """print inputs bw"""
-        for sig in range(self.dim[0]):
-            for rep in range(self.dim[1]):
-                if self.inputs_covs:
-                    self.inputs_covs[sig][rep].write_bigwig(name + '-' + str(self.counter) + '-input-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
-
-    def _output_bw(self, name, chrom_sizes, save_wig, save_input):
-        """Output bigwig files"""
-        for sig in range(self.dim[0]):
-            for rep in range(self.dim[1]):
-            
-                self.covs[sig][rep].write_bigwig(name + '-' + str(self.counter) + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes, save_wig=save_wig, end=self.end)
-        self.covs_avg = None
-        self.input_avg = None
-        if self.inputs_covs:
-            for i in range(len(self.covs)):
-                self.inputs_covs[i] = None #last time that we need this information, delete it
-        gc.collect()
-
-    def get_max_colsum(self):
-        """Sum over all columns and add maximum"""
-        # how to change it to self.cov ???
-        return self.overall_coverage[0].sum(axis=0).max() + self.overall_coverage[1].sum(axis=0).max()
-    
-    def output_overall_coverage(self, path):
-        for j in range(2):
-            f = open(path + str(j), 'w')
-            for i in range(self.overall_coverage[j].shape[1]):
-                print(self.overall_coverage[j][:,i].T, file=f)
-
     def normalization_by_gc_content(self, inputs_statics, genome_fpath, gc_hv, gc_avg_T, delta):
-        """normalization by gc-content, applied on both inputs and output data"""
+        """normalization by gc-content, applied on both inputs and output data
+        actually we need to do it in class CoverageSet , but now we need to build sth on it, so we need to change methods
+        """
         if inputs_statics and gc_hv is None:
             print("Compute gc factors including gv_hv and gc_avg_T", file=sys.stderr)
             gc_hv, gc_avg_T = [], []
@@ -174,22 +145,16 @@ class MultiCoverageSet(): # DualCoverageSet
                     gc_avg_T[i].append(avg_T)
         for i in range(self.dim[0]):
             for j in range(self.dim[1]):
-                self.covs[i][j].normalization_by_gc_content(gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
-                self.inputs_covs[i][j].normalization_by_gc_content(gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
+                cov_normalization_by_gc_content(self.covs[i][j], gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
+                cov_normalization_by_gc_content(self.inputs_covs[i][j], gc_hv[i][j], gc_avg_T[i][j], genome_fpath, delta)
         self.hv = gc_hv
         self.avg_T = gc_avg_T
         return gc_hv, gc_avg_T
 
     def normalization_by_input(self, signal_statics, inputs_statics, name, factors_inputs):
         """Normalize input-DNA. Use predefined factors or follow Diaz et al, 2012"""
-        if factors_inputs:
-            if configuration.VERBOSE:
-                print("Use with predefined factors", file=sys.stderr)
-            for i in range(signal_statics['dim'][0]):
-                for j in range(signal_statics['dim'][1]):
-                    self.inputs_covs[i][j].sm_scale(factors_inputs[i][j])
-                    self.covs[i][j].sm_subtract(self.inputs_covs[i][j])
-        elif inputs_statics:
+
+        if inputs_statics and not factors_inputs:
             factors_inputs = []
             print("Compute factors", file=sys.stderr)
 
@@ -199,40 +164,38 @@ class MultiCoverageSet(): # DualCoverageSet
                 # get_normalization_factor is 1-to-1 so, we use only covs, step_times is the times of original coverage bin size
                     _, factor = get_normalization_factor_by_cov(self.covs[i][j], self.inputs_covs[i][j], step_times=3, zero_counts=0, \
                                                     filename=name + '-norm' + str(i), debug=configuration.DEBUG,two_samples=False)
-                    if factor:
-                        print("Normalize input of Signal %s, Rep %s with factor %s" \
-                              % (i, j, round(factor, configuration.ROUND_PRECISION)), file=sys.stderr)
-                        self.inputs_covs[i][j].sm_scale(factor)
-                        ## this is where we should look into the codes.... If after doing inputs, all data turn into zeros...
-                        self.covs[i][j].sm_subtract(self.inputs_covs[i][j])
-                        factors_inputs[i].append(factor)
+                    factors_inputs[i].append(factor)
 
-        self.factors_inputs = factors_inputs
+        if factors_inputs:
+            for i in range(signal_statics['dim'][0]):
+                for j in range(signal_statics['dim'][1]):
+                    if configuration.VERBOSE:
+                        print("Normalize input of Signal %s, Rep %s with factor %s" \
+                              % (i, j, round(factors_inputs[i][j], configuration.ROUND_PRECISION)), file=sys.stderr)
+                    sm_scale(self.inputs_covs[i][j], factors_inputs[i][j])
+                    sm_subtract(self.covs[i][j],self.inputs_covs[i][j])
+
         return factors_inputs
 
-    def normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, tracker, norm_regionset, report,
+    def normalization_by_signal(self, name, factors_ip, signal_statics, housekeeping_genes, report,
                                  m_threshold, a_threshold):
         """Normalize signal. comparing data to data"""
         if not factors_ip and housekeeping_genes:
             print('Use housekeeping gene approach', file=sys.stderr)
-            factors_ip, _ = norm_gene_level(signal_statics, housekeeping_genes, name, verbose=True, folder = self.FOLDER_REPORT, report=report)
+            factors_ip, _ = norm_gene_level(signal_statics, housekeeping_genes, name, verbose=True, folder=configuration.FOLDER_REPORT, report=report)
+
         elif not factors_ip:
-            if norm_regionset:
-                print('Use TMM approach based on peaks', file=sys.stderr)
-                # what to do with norm_regionset??
-                # norm_regionset_coverage = self.init_overall_coverage(cov_strand=True) #TMM approach based on peaks
-                # factors_ip = get_sm_norm_TMM_factor(norm_regionset_coverage,m_threshold, a_threshold)
-            else:
-                print('Use global TMM approach ', file=sys.stderr)
-                factors_ip = get_sm_norm_TMM_factor(self.overall_coverage, m_threshold, a_threshold) #TMM approach
+            print('Use global TMM approach ', file=sys.stderr)
+            factors_ip = get_sm_norm_TMM_factor(self.overall_coverage, m_threshold, a_threshold) #TMM approach
         
         if factors_ip:
             for i in range(self.dim[0]):
                 for j in range(self.dim[1]):
-                    self.covs[i][j].sm_scale(factors_ip[i][j])
-                    self.overall_coverage['data'][i][j].data *= factors_ip[i][j]
-                    if configuration.DEBUG:
+                    if configuration.VERBOSE:
                         print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
+
+                    sm_scale(self.covs[i][j], factors_ip[i][j])
+                    self.overall_coverage['data'][i][j].data *= factors_ip[i][j]
         self.factors_ip = factors_ip
         return factors_ip
 
@@ -243,13 +206,13 @@ class MultiCoverageSet(): # DualCoverageSet
         """
         # judge order and len of chroms in regionset or we can use information of covs to get it
         # judge idx in which covs field, result is order; less than or greater than covs.shape[-1]
-        order = 0 # len(self.covs[0][0].sm_coverage)
-        index -= self.covs[0][0].sm_coverage[order].shape[-1]
+        order = 0 # len(self.covs[0][0].coverage)
+        index -= self.covs[0][0].coverage[order].shape[-1]
         while index >= 0:
             order += 1
-            index -= self.covs[0][0].sm_coverage[order].shape[-1]
+            index -= self.covs[0][0].coverage[order].shape[-1]
         # when it stops index < 0
-        index += self.covs[0][0].sm_coverage[order].shape[-1]
+        index += self.covs[0][0].coverage[order].shape[-1]
         # get regionset[order] and then use idx to subtract it len, we get initial idx for it
         chrm_name = self.regionset[order].chrom
         # use binsize and step.size to get i
@@ -270,21 +233,13 @@ class MultiCoverageSet(): # DualCoverageSet
             return [cov1, cov2], [strand_cov1, strand_cov2]
         else:
             return [cov1, cov2]
-    
-    def get_observation(self, mask=np.array([])):
-        """Return indices of observations. Do not consider indices contained in <mask> array"""
-        mask = np.asarray(mask)
-        if not mask.size:
-            mask = np.array([True]*self._get_bin_number())
-        return np.asarray(np.concatenate((self.overall_coverage[0][:,mask].T, self.overall_coverage[1][:,mask].T), axis=1))
 
     def _compute_sm_score(self):
-        """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it"""
-        # we use sparse-matrix to get scores
-        # return a sum list of rates for each bin compared with average bins..
-        # when it is is for whole overall_coverage..
-        # Firstly to get average of two sparse matrix for one signal
-        # we see overall_coverage is alreday in saprse matrix
+        """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it
+            # return a sum list of rates for each bin compared with average bins..
+            # when it is is for whole overall_coverage..
+            # Firstly to get average of two sparse matrix for one signal
+        """
         self.scores = None
         for i in range(self.dim[0]):
             # get signal_avg for all data in one sample # here maybe sth wrong
@@ -295,10 +250,6 @@ class MultiCoverageSet(): # DualCoverageSet
                 self.scores = signal_rate
             else:
                 self.scores += signal_rate
-
-    def _get_bin_number(self):
-        """Return number of bins"""
-        return self.overall_coverage[0].shape[1]
 
     def compute_sm_putative_region_index(self, l=3, eta=1):
         """Compute putative differential peak regions as follows:
@@ -313,30 +264,85 @@ class MultiCoverageSet(): # DualCoverageSet
             signal_sum = 0
             for i in range(self.dim[0]):
                 signal_sum += sum(self.overall_coverage['data'][i])
-
-            # signal_avg_sum /= (self.dim[1])
             self.indices_of_interest = np.intersect1d((self.scores > threshold).indices, (signal_sum > l*self.dim[1]).indices)  # 2/(m*n) thres = 2 /(self.scores.shape[0])
         except:
             self.indices_of_interest = None
 
-    def write_test_samples(self, name, l):
-        f = open(name, 'w')
-        
-        for el1, el2 in l:
-            print(el1, el2, sep='\t', file=f)
-        f.close()
-    
-    def output_training_set(self, name, training_set, s0_v, s1_v, s2_v):
-        """Output debug info for training_set computation."""
-        f=open(name + '-trainingset.bed', 'w')
-        for l in training_set:
-            chrom, s, e = self._index2coordinates(l)
-            print(chrom, s, e, sep ='\t', file=f)
-        f.close()
-        
-        self.write_test_samples(name + '-s0', s0_v)
-        self.write_test_samples(name + '-s1', s1_v)
-        self.write_test_samples(name + '-s2', s2_v)
+    def output_input_bw(self, filename, chrom_sizes_file, save_wig):
+        """output inputs as bigwig file"""
+        for sig in range(self.dim[0]):
+            for rep in range(self.dim[1]):
+
+                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep) + '.wig'
+                write_wig(self.inputs_covs[sig][rep], tmp_path)
+                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
+                c = " ".join(t)
+                os.system(c)
+                if not save_wig:
+                    os.remove(tmp_path)
+
+    def output_signal_bw(self, filename, chrom_sizes_file, save_wig):
+        """Output signal files as bigwig files"""
+        for sig in range(self.dim[0]):
+            for rep in range(self.dim[1]):
+                # self.covs[sig][rep].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes_file, save_wig=save_wig)
+                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep) + '.wig'
+                write_wig(self.covs[sig][rep], tmp_path)
+                t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
+                c = " ".join(t)
+                os.system(c)
+                if not save_wig:
+                    os.remove(tmp_path)
+
+
+def cov_to_smatrix(cov):
+    """change list of coverage into sparse matrix by using scipy"""
+    cov_mtx = sparse.csr_matrix(cov, dtype=float)
+    return cov_mtx
+
+
+def sm_scale(cov, factor):
+    """we scale sparse matrix representation with factor"""
+    cov.sm_overall_cov *= factor
+
+
+def sm_add(cov, sm_cs):
+    """subtract coverage set in sparse matrix format"""
+    # firstly test if they have same region; else not do it!!
+    assert set(cov.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
+    # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
+    # self.sm_overall_cov is 1-D array
+    cov.sm_overall_cov += sm_cs.sm_overall_cov  # we could assume all values are non-negative
+
+
+def sm_subtract(cov, sm_cs):
+    """subtract coverage set in sparse matrix format"""
+    # firstly test if they have same region; else not do it!!
+    assert set(cov.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
+    cov.sm_overall_cov -= sm_cs.sm_overall_cov
+    cov.sm_overall_cov.data = np.clip(cov.sm_overall_cov.data, 0,
+                                      cov.sm_overall_cov.max())  # make negative into zeros
+    cov.sm_overall_cov.eliminate_zeros()  # eliminate zeros elements in matrix
+
+
+def cov_normalization_by_gc_content(cov, hv, avg_T, genome_fpath,delta=0.2):
+    """After we get gc-factor from one input-coverage, and then we apply it on coverage from one signal file
+    """
+    genome_fasta = pysam.Fastafile(genome_fpath)
+    # fetch genome w.r.t. chromsome
+    chroms = cov.genomicRegions.get_chrom()
+
+    # coverage separated by chroms regions; so we need to find out first what it belongs to
+    for i in range(len(chroms)):
+        for bin_idx in cov.coverage[i].indices:
+            s = bin_idx * cov.stepsize
+            e = s + cov.binsize
+            genome_seq = genome_fasta.fetch(reference=chroms[i], start=s, end=e)
+            prop = get_gc_content_proportion(genome_seq)
+            # but we need to make prop in range of delta range
+            prop_key = int(prop / delta) * delta
+            if hv[prop_key]: # sometimes zeros occur, do not consider
+                cov.coverage[i][:,bin_idx] *= (avg_T/hv[prop_key])
 
 
 def isvalid_training_data(state_data, threshold):
@@ -474,7 +480,34 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
     s2_v = map(lambda x: (x[1], x[2]), all_data[2])
 
     if configuration.DEBUG:
-        exp_data.output_training_set(name, training_indices, s0_v, s1_v, s2_v)
+        output_training_set(name, s0_v, s1_v, s2_v)
 
     return training_data, s0_v, s1_v, s2_v
 
+
+def write_test_samples( name, l):
+    f = open(name, 'w')
+
+    for el1, el2 in l:
+        print(el1, el2, sep='\t', file=f)
+    f.close()
+
+
+def output_training_set(name, s0_v, s1_v, s2_v):
+    """Output debug info for training_set computation."""
+    write_test_samples(name + '-s0', s0_v)
+    write_test_samples(name + '-s1', s1_v)
+    write_test_samples(name + '-s2', s2_v)
+
+
+def write_wig(sm_cov, filename):
+    """Output coverage in filename of wig format."""
+    f = open(filename, 'w')
+    i = 0
+    for region in sm_cov.genomicRegions:
+        print('variableStep chrom=' + str(region.chrom) + ' span=' + str(sm_cov.stepsize), file=f)
+        c = sm_cov.coverage[i]
+        i += 1
+        for j in c.indices:
+            print(j * sm_cov.stepsize + ((sm_cov.binsize-sm_cov.stepsize)/2), c[:,j], file=f)
+    f.close()

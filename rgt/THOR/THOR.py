@@ -37,7 +37,7 @@ from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
 import configuration
-from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes
+from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes, is_stats_valid
 from MultiCoverageSet import get_training_set, transform_data_for_HMM
 # External
 
@@ -73,8 +73,7 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     # stats_total, stats_data, isspatial = get_read_statistics(signal_files[i][j], chrom_fname)
 
     exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
-                          signal_statics=signal_statics, inputs_statics=inputs_statics,
-                          tracker=tracker, test=TEST, end=True, counter=0, output_bw=False)
+                          signal_statics=signal_statics, inputs_statics=inputs_statics)
     # test if exp_data satisfies conditions to be good enough
     #if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
     #    tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
@@ -107,20 +106,24 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
     print("Compute HMM's posterior probabilities and Viterbi path to call differential peaks", file=sys.stderr)
     
     for i, regionset in enumerate(region_giver):
-        end = True if i == len(region_giver) - 1 else False
-        ## at first the len(region_giver changes)
-        print("- taking into account %s" % regionset.sequences[0].chrom, file=sys.stderr)
-        ## before how could we judge the data in this signal_statics and make sure if we use it or not
-        ## regionset in signal_statics to test if the number is quite good or not
-        ## If they are too less, then we don'y need to go into this steps.
+        chrom = regionset.sequences[0].chrom
+        ## before we test if data is big enough
+        if not is_stats_valid(signal_statics,chrom):
+            print("- not taking into account %s, since too less data" % chrom, file=sys.stderr)
+            continue
 
+        print("- taking into account %s" %chrom , file=sys.stderr)
         exp_data = initialize(options=options, strand_cov=True, genome_path=genome, regionset=regionset, mask_file=region_giver.mask_file,
-                              signal_statics=signal_statics, inputs_statics=inputs_statics,
-                              tracker=tracker, test=TEST, end=end, counter=i, output_bw=True)
+                              signal_statics=signal_statics, inputs_statics=inputs_statics)
         if not exp_data.data_valid:
             print('less data and then consider next chromasome',file=sys.stderr)
             continue
-        
+
+        ## After this step, we have already normalized data, so we could output normalization data
+        if options.save_input:
+            exp_data.output_input_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file, options.save_wig)
+        exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file, options.save_wig)
+
         no_bw_files.append(i)
         exp_data.compute_sm_putative_region_index()
 

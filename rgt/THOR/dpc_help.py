@@ -19,7 +19,7 @@ import re
 import time
 import pysam
 import numpy as np
-from math import log, ceil
+from math import log
 from operator import add
 from os.path import splitext, basename, join, isfile, isdir, exists
 from optparse import OptionParser, OptionGroup
@@ -254,8 +254,7 @@ def get_all_chrom(bamfiles):
     return chrom
 
 
-def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics,
-               tracker, counter,test, end, output_bw=True):
+def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_statics, inputs_statics):
     """Initialize the MultiCoverageSet
     Region_giver includes: regions to be analysed + regions to be masked + chrom_sizes file name + chrom_sizes_dict
     Use sampling methods to initialize certain part of data
@@ -271,9 +270,7 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
     print("Begin reading", file=sys.stderr)
     start = time.time()
     cov_set = MultiCoverageSet(name=options.name, regionset=regionset,mask_file=mask_file, binsize=options.binsize, stepsize=options.stepsize, rmdup=options.rmdup, signal_statics=signal_statics, inputs_statics=inputs_statics,
-                                     verbose=options.verbose, debug=options.debug, norm_regionset=norm_regionset, save_wig=options.save_wig, strand_cov=strand_cov,
-                                     tracker=tracker, end=end, counter=counter, output_bw=output_bw,
-                                     folder_report=configuration.FOLDER_REPORT, report=options.report, save_input=options.save_input, use_sm=True)
+                                      strand_cov=strand_cov, use_sm=True)
 
     elapsed_time = time.time() - start
     print("End reading using time %.3f s"%(elapsed_time), file=sys.stderr)
@@ -299,19 +296,13 @@ def initialize(options, strand_cov, genome_path, regionset, mask_file, signal_st
         if configuration.VERBOSE:
             print("Normalize input-DNA using time %.3f s"%(elapsed_time), file=sys.stderr)
 
-    if options.save_input: # !!! sth changes about parameters
-        cov_set.output_input_bw(options.name, regionset, options.save_wig)
     # much complex, so we decay to change it
     start = time.time()
-    options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes, tracker, norm_regionset,
+    options.scaling_factors_ip = cov_set.normalization_by_signal(options.name, options.scaling_factors_ip, signal_statics, options.housekeeping_genes,
                                     options.report, options.m_threshold, options.a_threshold)
     elapsed_time = time.time() - start
     if configuration.VERBOSE:
         print('Normalize ChIP-seq profiles using time %.3f s' % (elapsed_time), file=sys.stderr)
-
-    ## After this step, we have already normalized data, so we could output normalization data
-    if output_bw:  # !!!!  sth changes about parameters
-        cov_set._output_bw(options.name, regionset, options.save_wig, options.save_input)
 
     return cov_set
 

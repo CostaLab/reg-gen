@@ -37,6 +37,7 @@ def get_read_statistics(fname, chroms):
     for chrom in chroms:
         for each_stats in stats_tmp:
             tmp = each_stats.split()  # transform string into separate list
+            # tmp in format [[chrom],[gene_len],[mapped_read_num],[unmapped_read_nums]]
             tmp[1:] = map(int, tmp[1:]) # change num from string to int
             if chrom in tmp:
                 if tmp[2] > 0: # read_mapped data >0 will be recorded in stats_data
@@ -73,6 +74,26 @@ def get_file_statistics(fnames,region_giver):
             statics[i].append({'fname':fnames[i][j], 'stats_total':stats_total,'stats_data':stats_data, 'isspatial':isspatial})
     # we could get different stats_data and we need to unify them...
     return {'data':statics, 'dim':file_dimension}
+
+
+def is_chrom_valid(stats_total,chrom):
+    """judge if it's valid to use this chromsome to get data for one file;
+    how about many files??? If one is not valid, will it affect the other tests??
+    If four are 0 reads we ignore it, else we still initialize it
+    """
+    for stat_data in stats_total:
+        if chrom == stat_data[0] and stat_data[2] > stat_data[1] * 0.00001:
+            return True
+    return False
+
+
+def is_stats_valid(statics, chrom):
+    valid = False
+    if statics:
+        for i in range(statics['dim'][0]):
+            for j in range(statics['dim'][1]):
+                valid |= is_chrom_valid(statics['data'][i][j]['stats_total'], chrom)
+    return valid
 
 
 def get_sample_dis(stats_data, sample_size=None, data_spatial=False):

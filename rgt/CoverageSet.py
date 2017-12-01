@@ -11,7 +11,6 @@ import sys
 import pysam
 import numpy as np
 import pyBigWig
-from scipy import sparse
 
 class CoverageSet:
     """*Keyword arguments:*
@@ -19,33 +18,32 @@ class CoverageSet:
         - name -- names.
         - genomicRegions -- instance of GenomicRegionSet
     """
-    
+
     def __init__(self, name, GenomicRegionSet):
         """Initialize CoverageSet <name>."""
         self.name = name
         self.genomicRegions = GenomicRegionSet
-        # here we improve it by using sparse matrix
         self.coverage = [] #coverage data for genomicRegions
+        self.binsize = 100
         self.mapped_reads = None #number of mapped read
         self.reads = None #number of reads
-        self.binsize = 100
         self.stepsize = 50
-    
+
     def subtract(self, cs):
         """Substract CoverageSet <cs>.
-        
+
         *Keyword arguments:*
-        
+
         - cs -- instance of CoverageSet
-        
+
         .. note::
             negative values are set to 0.
         """
-        
+
         cs_chroms = cs.genomicRegions.get_chrom()
         assert len(cs_chroms) == len(set(cs_chroms)) #no double entries
         assert len(self.genomicRegions.get_chrom()) == len(set(self.genomicRegions.get_chrom()))
-        
+
         i = 0
         for c in self.genomicRegions.get_chrom(): #c corresponds to self.coverage[i]
             try:
@@ -56,25 +54,6 @@ class CoverageSet:
             except ValueError:
                 pass
             i += 1
-
-    def sm_subtract(self,sm_cs):
-        """subtract coverage set in sparse matrix format"""
-        # firstly test if they have same region; else not do it!!
-        assert set(self.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
-        # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
-        # self.sm_overall_cov is 1-D array
-        self.sm_overall_cov -= sm_cs.sm_overall_cov
-        self.sm_overall_cov.data = np.clip(self.sm_overall_cov.data, 0, self.sm_overall_cov.max()) # make negative into zeros
-        self.sm_overall_cov.eliminate_zeros() # eliminate zeros elements in matrix
-        ## one thing if sm_overall_cov changes, sm_coverage should change
-
-    def sm_add(self, sm_cs):
-        """subtract coverage set in sparse matrix format"""
-        # firstly test if they have same region; else not do it!!
-        assert set(self.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
-        # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
-        # self.sm_overall_cov is 1-D array
-        self.sm_overall_cov += sm_cs.sm_overall_cov # we could assume all values are non-negative
 
     def add(self, cs):
         """Add CoverageSet <cs>.
@@ -108,10 +87,6 @@ class CoverageSet:
         """
         for i in range(len(self.coverage)):
             self.coverage[i] = np.rint(self.coverage[i] * float(factor)).astype(int)
-
-    def sm_scale(self,factor):
-        """we scale sparse matrix representation with factor"""
-        self.sm_overall_cov *= factor
 
     def normRPM(self):
         """Normalize to read per million (RPM)."""
@@ -293,7 +268,7 @@ class CoverageSet:
 
     def coverage_from_bam(self, bam_file, extension_size=200, binsize=100, stepsize=50, rmdup=False,
                           maxdup=None, mask_file=None, paired_reads=False,
-                          get_strand_info=False, get_sense_info=False, no_gaps=False,use_sm=False):
+                          get_strand_info=False, get_sense_info=False, no_gaps=False):
         """Compute coverage based on GenomicRegionSet.
 
         Iterate over each GenomicRegion in class variable genomicRegions (GenomicRegionSet). The GenomicRegion is divided into consecutive bins with lenth <binsize>.
@@ -309,8 +284,7 @@ class CoverageSet:
         - maxdup -- define the maximum count for the dupliacted reads (0: remove all;-1:no limit)
         - mask_file -- ignore region described in <mask_file> (tab-separated: chrom, start, end)
         - get_strand_info -- compute strand information for each bin
-        ## add one more attribute to use sparse matrix
-        -- use_sm : True to use sparse matrix; False, use np.array (default False)
+        - get_sense_info -- compute strand information for each bin when the region and the read are at the same strand
 
 
         *Output:*
@@ -356,10 +330,7 @@ class CoverageSet:
         log_aver = False
         self.binsize = binsize
         self.stepsize = stepsize
-        # self.coverage we will use sparse matrix
         self.coverage = []
-        if use_sm:
-            self.sm_coverage = []
 
         bam = pysam.Samfile(bam_file, "rb" )
 
@@ -369,7 +340,7 @@ class CoverageSet:
 
         self._init_read_number(bam_file)
 
-        # check whether mask file exists
+        #check whether one should mask
         next_it = True
         if mask_file is not None and os.path.exists(mask_file):
             mask = True
@@ -382,18 +353,20 @@ class CoverageSet:
 
         if get_strand_info:
             self.cov_strand_all = []
-        if get_sense_info:
-            self.cov_sense_all = []
+        elif get_sense_info:
+            if self.genomicRegions.is_stranded():
+                self.cov_strand_all = []
+            else:
+                get_strand_info = True
+                get_sense_info = False
+                self.cov_strand_all = []
 
         for region in self.genomicRegions:
             cov = [0] * (len(region) / stepsize)
 
-            if get_strand_info:
+            if get_strand_info or get_sense_info:
                 cov_strand = [[0,0]] * (len(region) / stepsize)
                 strand_info = {}
-            if get_sense_info:
-                cov_sense = [[0,0]] * (len(region) / stepsize)
-                sense_info = {}
 
             positions = []
             j = 0
@@ -402,8 +375,6 @@ class CoverageSet:
                 for read in bam.fetch(region.chrom, max(0, region.initial-fragment_size), region.final+fragment_size):
                     if len(read.get_blocks()) > 1 and no_gaps: continue # ignore sliced reads
                     j += 1
-                    if j == 2000:
-                        break
                     read_length = read.rlen
                     if not read.is_unmapped:
                         # pos = read.pos - extension_size if read.is_reverse else read.pos
@@ -442,14 +413,14 @@ class CoverageSet:
                             if pos not in strand_info:
                                 strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
                         if get_sense_info:
-                            if pos not in sense_info:
+                            if pos not in strand_info:
                                 if paired_reads and not read.is_read1:
                                     continue
                                 else:
                                     if region.orientation == "+":
-                                        sense_info[pos] = (1,0) if read.is_reverse else (0,1)
+                                        strand_info[pos] = (1,0) if read.is_reverse else (0,1)
                                     elif region.orientation == "-":
-                                        sense_info[pos] = (1,0) if not read.is_reverse else (0,1)
+                                        strand_info[pos] = (1,0) if not read.is_reverse else (0,1)
             except ValueError as e:
                 print("warning: {}".format(e))
                 pass
@@ -458,41 +429,41 @@ class CoverageSet:
             # elif maxdup == 0: # Remove all duplicates
             # else: #
 
-            if rmdup: # remove duplicate reads
+            if rmdup:
                 positions = list(set(positions))
-            # positions are begin positions for forward and reverse strands; we need to add some strand info..Maybe
-            positions.sort() # in ascending order
-            positions.reverse() # positions in descending order
+
+            positions.sort()
+            positions.reverse()
             i = 0
             while positions:
-                win_s = max(0, i * stepsize - binsize*0.5) + region.initial # but this one is from smaller bin and to bigger bins
+                win_s = max(0, i * stepsize - binsize*0.5) + region.initial
                 win_e = i * stepsize + binsize*0.5 + region.initial
                 c = 0
-                if get_strand_info:
+                if get_strand_info or get_sense_info:
                     sum_strand_info = [0,0]
-                if get_sense_info:
-                    sum_sense_info = [0,0]
+                # if get_sense_info:
+                #     sum_sense_info = [0,0]
 
                 taken = []
                 while True:
-                    s = positions.pop() # pop from end of list, so the first one is the smallest
+                    s = positions.pop()
 
                     taken.append(s)
                     if s < win_e: #read within window
                         c += 1
-                        if get_strand_info:
+                        if get_strand_info or get_sense_info:
                             sum_strand_info[0] += strand_info[s][0]
                             sum_strand_info[1] += strand_info[s][1]
-                        if get_sense_info:
-                            try:
-                                sum_sense_info[0] += sense_info[s][0]
-                                sum_sense_info[1] += sense_info[s][1]
-                            except:
-                                pass
+                        # if get_sense_info:
+                        #     try:
+                        #         sum_sense_info[0] += sense_info[s][0]
+                        #         sum_sense_info[1] += sense_info[s][1]
+                        #     except:
+                        #         pass
                     if s >= win_e or not positions:
                         taken.reverse()
-                        for s in taken: # anyway the test here are not meaningful, since win_e > win_s , so we just append positions again.
-                            if s + extension_size + read_length >= win_s: #consider read in next iteration but why it is win_s, next iteration should be win_s + step_size
+                        for s in taken:
+                            if s + extension_size + read_length >= win_s: #consider read in next iteration
                                 positions.append(s)
                             else:
                                 break #as taken decreases monotonously
@@ -500,42 +471,38 @@ class CoverageSet:
                         break
                 if i < len(cov):
                     cov[i] = c
-                    if get_strand_info:
+                    if get_strand_info or get_sense_info:
                         cov_strand[i] = sum_strand_info
-                    if get_sense_info:
-                        cov_sense[i] = sum_sense_info
+                    # if get_sense_info:
+                    #     cov_sense[i] = sum_sense_info
                 i += 1
 
-            if log_aver:
-                cov = np.log(np.array(cov) + 1)
-
-            if use_sm:
-                self.sm_coverage.append(self.cov_to_smatrix(cov))
-                if get_strand_info:
-                    self.sm_cov_strand_all = self.cov_to_smatrix(cov_strand)
-                if get_sense_info:
-                    self.sm_cov_sense_all = self.cov_to_smatrix(cov_sense)
+            if not log_aver:
+                self.coverage.append(np.array(cov))
             else:
-                self.coverage.append(np.asarray(cov))
-                if get_strand_info:
-                    self.cov_strand_all.append(np.array(cov_strand))
-                if get_sense_info:
-                    self.cov_sense_all.append(np.array(cov_sense))
+                cov = [x + 1 for x in cov]
+                self.coverage.append(np.log(np.array(cov)))
 
-        self.update_overall_cov(True)
+            if get_strand_info or get_sense_info:
+                self.cov_strand_all.append(np.array(cov_strand))
+            # if get_sense_info:
+            #     self.cov_sense_all.append(np.array(cov_sense))
+            # print(np.array(cov_sense))
+
+        self.coverageorig = self.coverage[:]
+        self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
         if mask: f.close()
 
-    def cov_to_smatrix(self, coverage):
-        """change list of coverage into sparse matrix by using scipy"""
-        cov_mtx = sparse.csr_matrix(coverage,dtype=float)
-        return cov_mtx
 
     def array_transpose(self, flip=False):
         """Transpose the arrays in strand coverage"""
         self.transpose_cov1 = []
         self.transpose_cov2 = []
         # print(self.coverage)
-        for a in self.cov_sense_all:
+
+        cov_all = self.cov_strand_all
+
+        for a in cov_all:
             if flip:
                 # print(a[:, 0])
                 # print(a[:, 1])
@@ -559,13 +526,7 @@ class CoverageSet:
         # print(self.transpose_cov1)
         # print(self.transpose_cov2)
 
-    def update_overall_cov(self,use_sm=True):
-        if use_sm:
-            # in default it's in coo format, easier to change ; scr format is not easy to change;
-            # after later process, we could change structure by eliminating zeros; so keep it at first
-            self.sm_overall_cov = sparse.hstack(self.sm_coverage,format='csr')
-        else:
-            self.overall_cov = reduce(lambda x,y: np.concatenate((x,y)), [self.coverage[i] for i in range(len(self.genomicRegions))])
+
 
     def index2coordinates(self, index, regions):
         """Convert index of class variable <overall_cov> to genomic coordinates.
@@ -708,33 +669,91 @@ class CoverageSet:
         reads = list(set(reads))
         return len(reads)
 
-    def _get_gc_content_proportion(self,seq):
-        """according to one genome we get the gc-content for one bin """
-        seq = seq.upper()
-        count = seq.count("C") + seq.count("G")
-        if len(seq) > 0:
-            return float(count) / len(seq)
-        else:
-            return None
 
-    def normalization_by_gc_content(self, hv, avg_T, genome_fpath,delta=0.2):
-        """After we get gc-factor from one input-coverage, and then we apply it on the signal file
-        """
-        genome_fasta = pysam.Fastafile(genome_fpath)
-        # fetch genome w.r.t. chromsome
-        chroms = self.genomicRegions.get_chrom()
 
-        # coverage separated by chroms regions; so we need to find out first what it belongs to
-        for i in range(len(chroms)):
-            for bin_idx in self.sm_coverage[i].indices:
-                s = bin_idx * self.stepsize
-                e = s + self.binsize
-                genome_seq = genome_fasta.fetch(reference=chroms[i], start=s, end=e)
-                prop = self._get_gc_content_proportion(genome_seq)
-                # but we need to make prop in range of delta range
-                prop_key = int(prop / delta) * delta
-                if hv[prop_key]: # sometimes zeros occur, do not consider
-                    self.sm_coverage[i][:,bin_idx] *= (avg_T/hv[prop_key])
-    ## after each operation, we need to update sm_overall_cov for it
-    ## and what we hope is after we update here, the reference in MultiCoverageSet should also update
-        self.update_overall_cov()
+    def norm_gc_content(self, cov, genome_path, chrom_sizes):
+        chrom_sizes_dict = {}
+
+        with open(chrom_sizes) as f:
+            for line in f:
+                line = line.strip()
+                line = line.split('\t')
+                c, e = line[0], int(line[1])
+                chrom_sizes_dict[c] = e
+
+        gc_cov, gc_avg, _ = get_gc_context(self.stepsize, self.binsize, genome_path, cov, chrom_sizes_dict)
+
+        import warnings  # todo: ugly, why do warnings occur?
+        warnings.filterwarnings("ignore")
+
+        for i in range(len(self.coverage)):
+            assert len(self.coverage[i]) == len(gc_cov[i])
+            self.coverage[i] = np.array(self.coverage[i])
+            gc_cov[i] = np.array(gc_cov[i])
+            gc_cov[i][gc_cov[i] < 10 * -300] = gc_avg  # sometimes zeros occur, do not consider
+            self.coverage[i] = self.coverage[i] * gc_avg / gc_cov[i]
+            self.coverage[i] = self.coverage[i].clip(0, max(max(self.coverage[i]), 0))  # neg. values to 0
+            self.coverage[i] = self.coverage[i].astype(int)
+
+def get_gc_context(stepsize, binsize, genome_path, cov_list, chrom_sizes_dict):
+    """Get GC content"""
+    class help_content():
+        def __init__(self):
+            self.content = [[] for _ in range(101)]
+            self.g_gc = []
+            self.g = -1
+
+        def add(self, d, c):
+            self.content[int(c * 100)].append(round(float(d), 2))
+
+        def _compute(self):
+            for l in self.content:
+                r = sum(l) / float(len(l)) if len(l) > 0 else 0
+                self.g_gc.append(r)
+
+            self.g = sum(self.g_gc) / float(len(self.g_gc))
+
+        def _map(self, x):
+            return self.g_gc[x]
+
+    # chromosomes = []
+    # get first chromosome, typically chr1
+    # for s in FastaReader(genome_path):
+    #    chromosomes.append(s.name)
+    tmp = chrom_sizes_dict.keys()
+    # tmp = map(lambda x: x.replace('chr',''), chromosomes)
+    tmp.sort()
+    genome_fasta = pysam.Fastafile(genome_path)
+    genome = genome_fasta.fetch(reference=tmp[0])
+
+    content = help_content()
+    gc_content_cov = []
+
+    for cov in cov_list:
+        cur_gc_value = []
+
+        for i in range(len(cov)):
+            s = i * stepsize
+            e = i * stepsize + binsize
+            seq = genome[s: e + 1]
+            seq = seq.upper()
+            count = seq.count("C") + seq.count("G")
+            if len(seq) > 0:
+                gc_content = float(count) / len(seq)
+                # print(float(count), len(seq), float(count) / len(seq), cov[i], file=sys.stderr)
+                content.add(cov[i], gc_content)
+                cur_gc_value.append(int(gc_content * 100))
+            else:
+                #                print("Bins exceed genome (%s - %s), add pseudo counts" %(s, e), file=sys.stderr)
+                #                     content.add(cov[i], 0.5)
+                cur_gc_value.append(0)
+
+        gc_content_cov.append(cur_gc_value)
+
+    content._compute()
+    r = []
+    for l in gc_content_cov:
+        tmp = map(content._map, l)
+        r.append(tmp)
+
+    return r, content.g, content.g_gc

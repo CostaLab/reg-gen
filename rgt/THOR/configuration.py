@@ -9,6 +9,6 @@ global NAME
 global DEBUG
 global VERBOSE
 VERBOSE=True
-
+DEBUG =True
 EPSILON = 1**-320
 ROUND_PRECISION = 3
