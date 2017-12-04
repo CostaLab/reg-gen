@@ -4,19 +4,15 @@
 
 # Python
 from __future__ import print_function
-import os
 import sys
-from glob import glob
 import time
 from random import seed
-from optparse import OptionGroup
-from shutil import copy
+import argparse
 
 # Internal
 from .. import __version__
-from ..Util import ErrorHandler
-from .Match import main_matching
-from .Enrichment import main_enrichment
+from .Match import main_matching, matching_options
+from .Enrichment import main_enrichment, enrichment_options
 
 """
 Motif matching and enrichment based on motif PSSM. Can perform either Matching (finds all putative
@@ -30,67 +26,36 @@ Authors: Eduardo G. Gusmao, Fabio Ticconi
 def main():
     start = time.time()
 
-    ###################################################################################################
-    # Processing Input Arguments
-    ###################################################################################################
-
-    # Parameters
     seed(42)
-    usage_message = ("\n--------------------------------------------------\n"
-                     "The motif analysis program performs various motif-based analyses. "
-                     "In order to use these tools, please type: \n\n"
-                     "%prog [analysis type] [options]\n\n"
-                     "Where [analysis type] refers to the type of the motif analysis performed "
-                     "and [options] are the analysis-specific arguments.\n\n"
-                     "Below you can find all current available analysis types. "
-                     "To check the analyses specific options, please use:\n\n"
-                     "%prog [analysis type] -h\n\n"
-                     "For more information, please refer to our wiki:\n\n"
-                     "https://code.google.com/p/reg-gen/wiki/RegGen\n\n"
-                     "--------------------------------------------------\n\n"
-                     "Options:\n"
-                     "--version     show program's version number and exit.\n"
-                     "-h, --help    show this help message and exit.\n"
-                     "--matching    Performs motif matching analysis.\n"
-                     "--enrichment  Performs motif enrichment analysis.\n")
-    version_message = "Motif Analysis - Regulatory Analysis Toolbox (RGT). Version: " + str(__version__)
 
-    # Processing Help/Version Options
-    if len(sys.argv) <= 1 or sys.argv[1] == "-h" or sys.argv[1] == "--help":
-        print(usage_message)
-        sys.exit(0)
-    elif sys.argv[1] == "--version":
-        print(version_message)
-        sys.exit(0)
+    version_message = "Motif Analysis - Regulatory Analysis Toolbox (RGT) - v" + str(__version__)
 
-    # Initializing Error Handler
-    err = ErrorHandler()
+    parser = argparse.ArgumentParser(prog='rgt-motifanalysis')
+    parser.add_argument('--version', action='version', version=version_message)
 
-    ###################################################################################################
-    # Redirecting to Specific Functions
-    ###################################################################################################
+    subparsers = parser.add_subparsers(help='Commands:')
 
-    # Redirecting Loop
-    if sys.argv[1] == "--matching":
-        main_matching()
-    elif sys.argv[1] == "--enrichment":
-        main_enrichment()
-    else:
-        err.throw_error("MOTIF_ANALYSIS_OPTION_ERROR")
+    matching = subparsers.add_parser('matching', help='find all MPBS from input files')
+    matching_options(matching)
+    matching.set_defaults(func=main_matching)
 
-    print("Completed in", time.time() - start, "seconds")
+    enrichment = subparsers.add_parser('enrichment', help='calculate statistics for MPBS files')
+    enrichment_options(enrichment)
+    enrichment.set_defaults(func=main_enrichment)
 
-    ###################################################################################################
-    # Heatmap
-    ###################################################################################################
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
 
-    # TODO
+    args = parser.parse_args()
+    args.func(args)
 
-    ###################################################################################################
-    # Network
-    ###################################################################################################
+    secs = time.time() - start
+    m, s = divmod(secs, 60)
+    h, m = divmod(m, 60)
+    print()
+    print("[total time: ", "%dh %dm %ds" % (h, m, s), "]", sep="")
 
-    # TODO
 
-    if __name__ == "__main__":
-        main()
+if __name__ == "__main__":
+    main()

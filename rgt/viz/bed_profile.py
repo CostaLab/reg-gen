@@ -363,6 +363,7 @@ class BED_profile:
                 # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
                 ax.set_ylim([0, 100])
                 ax.set_xlim([-0.5, len(self.bednames)-0.5])
+                plt.tight_layout()
 
             elif i > 0:
                 x = [ x for x in range(len(overlapping_counts[i-1])) ]
@@ -373,6 +374,7 @@ class BED_profile:
                 ax.set_xticks([x for x in range(len(overlapping_counts[i-1]))])
                 ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
                 ax.set_xlim([-0.5, len(overlapping_counts[i-1])-0.5])
+                plt.tight_layout()
 
         ax.set_xlabel(tag)
 

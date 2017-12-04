@@ -4,17 +4,17 @@
 
 # Python
 import os
-import numpy as np
 from collections import Counter
 
-from sklearn.externals import joblib
+import numpy as np
 from hmmlearn import hmm
+from sklearn.externals import joblib
 
+from .biasTable import BiasTable
+from .hmm import HMM
+from .signalProcessing import GenomicSignal
 # Internal
 from ..Util import GenomeData
-from .signalProcessing import GenomicSignal
-from .hmm import HMM
-from .biasTable import BiasTable
 
 """
 Train a hidden Markov model (HMM) based on the annotation data
@@ -74,9 +74,9 @@ class TrainHMM:
         raw_signal.load_sg_coefs(slope_window_size=9)
         norm_signal, slope_signal = \
             raw_signal.get_signal(self.chrom, self.start, self.end,
-                                   self.downstream_ext, self.upstream_ext,
-                                   self.forward_shift, self.reverse_shift,
-                                   bias_table=table, genome_file_name=genome_data.get_genome())
+                                  self.downstream_ext, self.upstream_ext,
+                                  self.forward_shift, self.reverse_shift,
+                                  bias_table=table, genome_file_name=genome_data.get_genome())
         if self.print_bed_file:
             self.output_bed_file(states)
 
@@ -99,7 +99,7 @@ class TrainHMM:
 
         # Transition
         trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
-        for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
+        for (x, y), c in Counter(zip(state_list, state_list[1:])).items():
             trans_matrix[x, y] = c
 
         for i in range(hmm_model.states):
@@ -135,7 +135,7 @@ class TrainHMM:
             covs_matrix = np.cov(norm, slope)
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
-                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
+                    covs_list.append(covs_matrix[j][k] + 0.000001)  # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
         output_fname = os.path.join(self.output_location, self.output_prefix)
@@ -158,7 +158,7 @@ class TrainHMM:
 
         # Transition
         trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
-        for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
+        for (x, y), c in Counter(zip(state_list, state_list[1:])).items():
             trans_matrix[x, y] = c
 
         for i in range(hmm_model.states):
@@ -202,7 +202,7 @@ class TrainHMM:
             covs_matrix = np.cov(np.array(signal))
             for j in range(hmm_model.dim):
                 for k in range(hmm_model.dim):
-                    covs_list.append(covs_matrix[j][k] + 0.000001) # covariance must be symmetric, positive-definite
+                    covs_list.append(covs_matrix[j][k] + 0.000001)  # covariance must be symmetric, positive-definite
             hmm_model.covs.append(covs_list)
 
         if self.estimate_bias_correction:
@@ -244,5 +244,3 @@ class TrainHMM:
         model = hmm.GaussianHMM(n_components=9, covariance_type="full", n_iter=100)
         model.fit(observe_sequence)
         joblib.dump(model, "filename.pkl")
-
-

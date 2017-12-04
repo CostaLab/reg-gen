@@ -416,7 +416,7 @@ class GenomicRegionSet:
         return a, b
     
     def gene_association(self, organism, gene_set=None, promoterLength=1000,
-                        threshDist=100000, show_dis=False, strand_specific=False):
+                         threshDist=100000, show_dis=False, strand_specific=False):
         """Associates coordinates to genes given the following rules:
 
             1. If the peak is inside gene (promoter+coding) then this peak is associated with that gene.
@@ -464,6 +464,7 @@ class GenomicRegionSet:
             genes.extend_upstream(length=promoterLength)
 
             if not genes.sorted: genes.sort()
+
 
             last_j = len(genes) - 1
             j = 0
@@ -616,7 +617,7 @@ class GenomicRegionSet:
         """
 
         # Making association with gene_set
-        assoc_grs = self.gene_association(gene_set, organism, promoterLength, threshDist)
+        assoc_grs = self.gene_association(organism=organism, gene_set=gene_set, promoterLength=promoterLength, threshDist=threshDist)
 
         # Initializing updated genomic region set
         updated_grs = GenomicRegionSet(assoc_grs.name) # New GRS will contain only coordinates associated to genes which are in gene_set

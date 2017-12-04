@@ -28,7 +28,7 @@ from hmmlearn.hmm import _BaseHMM
 
 import sys
 from math import fabs
-from scipy.misc import logsumexp
+from scipy.special import logsumexp
 
 import numpy as np
 from .neg_bin import NegBin
