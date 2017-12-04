@@ -28,7 +28,7 @@ from MOODS import tools, scan
 # Functions
 ###################################################################################################
 
-def matching_options(parser):
+def options(parser):
     # Parameters Options
     parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
@@ -82,7 +82,7 @@ def matching_options(parser):
                         help='BED files to perform motif matching on')
 
 
-def main_matching(args):
+def main(args):
     """
     Performs motif matching.
     """

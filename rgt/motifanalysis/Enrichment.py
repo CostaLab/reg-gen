@@ -27,7 +27,7 @@ from fisher import pvalue
 # Functions
 ###################################################################################################
 
-def enrichment_options(parser):
+def options(parser):
     parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19 or hg38.")
@@ -71,7 +71,7 @@ def enrichment_options(parser):
                         help='BED files to be enriched against the background.')
 
 
-def main_enrichment(args):
+def main(args):
     """
     Performs motif enrichment.
     """
