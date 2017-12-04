@@ -201,7 +201,7 @@ def compute_extension_sizes(signal_statics, report=True):
     """
     start = 0
     end = 600
-    ext_stepsize = 3
+    ext_stepsize = 5
     ext_data_list = []
     signal_extension_sizes, read_sizes = None, None
     # inputs_extension_sizes, inputs_read_sizes = None, None
@@ -256,7 +256,6 @@ def compute_extension_sizes(signal_statics, report=True):
     if report and ext_data_list:
         print(ext_data_list, signal_extension_sizes)
 
-    # when data is in same format, we choose to use np.array to save it
     return signal_extension_sizes, read_sizes
 
 
@@ -266,10 +265,6 @@ def update_statics_extension_sizes(statics, exts_list):
         for i in range(statics['dim'][0]):
             for j in range(statics['dim'][1]):
                 statics['data'][i][j]['extension_size'] = exts_list[i*statics['dim'][1] + j]
-
-
-def get_bamfiles(statics):
-    pass
 
 
 if __name__ == "__main__":

@@ -53,7 +53,7 @@ def merge_output(signal_statics, options, no_bw_files, chrom_sizes):
             ## here are to output bed files for each signal file and output files
             temp_bed = npath(options.name + '-s%s-rep%s_temp.bed'% (i, j))
 
-            files = [options.name + '-' + str(j) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
+            files = [options.name + '-' + str(num) + '-s%s-rep%s.bw'%(i, j) for num in no_bw_files]
             if len(no_bw_files) > dim[0]*dim[1]:
                 files = filter(lambda x: isfile(x), files)
                 t = ['bigWigMerge'] + files + [temp_bed]
@@ -158,6 +158,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
 
 def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
+    start = time.time()
     exts = np.mean(exts)
     tmp_peaks = []
     tmp_data = []
@@ -170,16 +171,14 @@ def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_corr
         covs_list, strand_covs_list = cov_set.get_sm_covs(idx, strand_cov=True)  # only return data not indices
         cov1 = covs_list[0]  #np.mean(covs_list[0])  # use avg to present covs
         cov2 = covs_list[1]  #np.mean(covs_list[1])
-        
-        # cov1_strand = np.sum(DCS.overall_coverage_strand[0][0][:,DCS.indices_of_interest[i]]) + np.sum(DCS.overall_coverage_strand[1][0][:,DCS.indices_of_interest[i]])
-        # cov2_strand = np.sum(DCS.overall_coverage_strand[0][1][:,DCS.indices_of_interest[i]] + DCS.overall_coverage_strand[1][1][:,DCS.indices_of_interest[i]])
-        ## here we need to set another function to get the cov_strand information
-        cov1_strand = np.sum(strand_covs_list[0])
-        cov2_strand = np.sum(strand_covs_list[1])
+
+        # strand_cov1 in format [file_0: [forwards: ],[reverse: ]],[file_1:: [forward: ],[reverse: ] ]
+        cov_strand1 = np.sum(strand_covs_list[0][:,0] + strand_covs_list[1][:,0])
+        cov_strand2 = np.sum(strand_covs_list[0][:,1] + strand_covs_list[1][:,1])
         ## get genome information from idx, to get chrom, end and start
         chrom, start, end = cov_set.sm_index2coordinates(idx)
         
-        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov1_strand, cov2_strand))
+        tmp_peaks.append((chrom, start, end, cov1, cov2, strand, cov_strand1, cov_strand2))
         side = 'l' if strand == '+' else 'r'
         tmp_data.append((np.sum(cov1), np.sum(cov2), side, distr))
     
@@ -215,7 +214,10 @@ def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_corr
         pvalues.append(pvalue)
         ratios.append(ratio)
         output.append((el.chrom, el.initial, el.final, el.orientation, counts))
-    
+
+    elapsed_time = time.time() - start
+    if configuration.VERBOSE:
+        print("Compute peaks using time %.3f s" % (elapsed_time), file=sys.stderr)
     return ratios, pvalues, output
 
 
@@ -313,53 +315,49 @@ class HelpfulOptionParser(OptionParser):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
+    def confirm(self, prompt=None, resp=False):
+        """prompts for yes or no response from the user. Returns True for yes and
+        False for no.
 
-def confirm(prompt=None, resp=False):
-    """prompts for yes or no response from the user. Returns True for yes and
-    False for no.
+        'resp' should be set to the default value assumed by the caller when
+        user simply types ENTER.
 
-    'resp' should be set to the default value assumed by the caller when
-    user simply types ENTER.
+        >>> confirm(prompt='Create Directory?', resp=True)
+        Create Directory? [y]|n:
+        True
+        >>> confirm(prompt='Create Directory?', resp=False)
+        Create Directory? [n]|y:
+        False
+        >>> confirm(prompt='Create Directory?', resp=False)
+        Create Directory? [n]|y: y
+        True
 
-    >>> confirm(prompt='Create Directory?', resp=True)
-    Create Directory? [y]|n:
-    True
-    >>> confirm(prompt='Create Directory?', resp=False)
-    Create Directory? [n]|y:
-    False
-    >>> confirm(prompt='Create Directory?', resp=False)
-    Create Directory? [n]|y: y
-    True
+        """
+        if prompt is None:
+            prompt = 'Confirm'
 
-    """
+        if resp:
+            prompt = '%s [%s]|%s: ' % (prompt, 'y', 'n')
+        else:
+            prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
 
-    if prompt is None:
-        prompt = 'Confirm'
+        while True:
+            ans = raw_input(prompt)
+            if not ans:
+                return resp
+            if ans not in ['y', 'Y', 'n', 'N']:
+                print('please enter y or n.')
+                continue
+            if ans == 'y' or ans == 'Y':
+                return True
+            if ans == 'n' or ans == 'N':
+                return False
 
-    if resp:
-        prompt = '%s [%s]|%s: ' % (prompt, 'y', 'n')
-    else:
-        prompt = '%s [%s]|%s: ' % (prompt, 'n', 'y')
+    def callback_list(self, value, parser):
+        setattr(parser.values, self.dest, map(lambda x: int(x), value.split(',')))
 
-    while True:
-        ans = raw_input(prompt)
-        if not ans:
-            return resp
-        if ans not in ['y', 'Y', 'n', 'N']:
-            print('please enter y or n.')
-            continue
-        if ans == 'y' or ans == 'Y':
-            return True
-        if ans == 'n' or ans == 'N':
-            return False
-
-
-def _callback_list(option, opt, value, parser):
-    setattr(parser.values, option.dest, map(lambda x: int(x), value.split(',')))
-
-
-def _callback_list_float(option, opt, value, parser):
-    setattr(parser.values, option.dest, map(lambda x: float(x), value.split(',')))
+    def callback_list_float(self,  value, parser):
+        setattr(parser.values,self.dest, map(lambda x: float(x), value.split(',')))
 
 
 def handle_input():
@@ -386,15 +384,15 @@ def handle_input():
     parser.add_option("-p", "--pvalue", dest="pcutoff", default=0.1, type="float",
                       help="P-value cutoff for peak detection. Call only peaks with p-value lower than cutoff. "
                            "[default: %default]")
-    parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=_callback_list,
+    parser.add_option("--exts", default=None, dest="exts", type="str", action='callback', callback=parser.callback_list,
                       help="Read's extension size for BAM files (comma separated list for each BAM file in config "
                            "file). If option is not chosen, estimate extension sizes. [default: %default]")
     parser.add_option("--factors-inputs", default=None, dest="factors_inputs", type="str", action="callback",
-                      callback=_callback_list_float,
+                      callback=parser.callback_list_float,
                       help="Normalization factors for input-DNA (comma separated list for each BAM file in config "
                            "file). If option is not chosen, estimate factors. [default: %default]")
     parser.add_option("--scaling-factors", default=None, dest="scaling_factors_ip", type="str", action='callback',
-                      callback=_callback_list_float,
+                      callback=parser.callback_list_float,
                       help="Scaling factor for each BAM file (not control input-DNA) as comma separated list for "
                            "each BAM file in config file. If option is not chosen, follow normalization strategy "
                            "(TMM or HK approach) [default: %default]")
@@ -511,7 +509,7 @@ def handle_input():
         # else, we will delete the files
         if isdir(options.outputdir):
             if np.any(map(lambda x: re.search(r".*diffpeaks.bed$", x),os.listdir(options.outputdir))):
-                if confirm(prompt="delete existing results?", resp=True):
+                if parser.confirm(prompt="delete existing results?", resp=True):
                     shutil.rmtree(options.outputdir)
                 else:
                     parser.error("Output directory exists and contains files with names starting with your chosen experiment name! "

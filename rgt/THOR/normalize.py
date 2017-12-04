@@ -215,7 +215,9 @@ def get_sm_norm_TMM_factor(overall_coverage, m_threshold, a_threshold):
             # get the data for each sample under each condition
             data_rep = overall_coverage['data'][i][j][:, mask_ref].data
             # here we sample data but in Manuel method, he uses the biggest ones...
-            tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
+            # we sort data by order which data_rep + ref descends and then choose the highest ones
+            tmp_idx = np.argsort(data_rep + ref)[-min(len(data_rep), 50000):]
+            # tmp_idx = sample(range(len(data_rep)), min(len(data_rep), 100000))
             tmp_ref = ref[tmp_idx]  # use index to make ref and data correspond
             data_rep = data_rep[tmp_idx]
             # calculate m_values and a_values

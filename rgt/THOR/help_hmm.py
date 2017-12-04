@@ -200,8 +200,9 @@ def _get_sm_data_rep(one_sample_cov, sample_size):
     vars = np.asarray(map(np.var, cov))
     """
     # we add 0 to ms and vars, but consider computation time, could we find a better way??
-    idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
-                      vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
+    # idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
+    #                   vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
+    idx = np.logical_and(ms < np.percentile(ms, 99.75),vars < np.percentile(vars, 99.75))
     final_ms = ms[idx]
     final_vars = vars[idx]
 

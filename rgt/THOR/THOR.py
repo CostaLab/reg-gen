@@ -74,13 +74,9 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 
     exp_data = initialize(options=options,strand_cov=True, genome_path=genome, regionset=region_giver.valid_regionset, mask_file=region_giver.mask_file,
                           signal_statics=signal_statics, inputs_statics=inputs_statics)
-    # test if exp_data satisfies conditions to be good enough
-    #if exp_data.count_positive_signal() > len(train_regions.sequences[0]) * 0.00001:
-    #    tracker.write(text=" ".join(map(lambda x: str(x), exp_data.exts)), header="Extension size (rep1, rep2, input1, input2)")
-    #    tracker.write(text=map(lambda x: str(x), exp_data.scaling_factors_ip), header="Scaling factors")
-        # break
-    ## here we need to use tracker to record
-    ## per bins mean, var
+
+    tracker.write(text=map(lambda x: str(x), options.scaling_factors_ip), header="Scaling factors")
+
     func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
                                           report=options.report, poisson=options.poisson)
@@ -96,8 +92,8 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
     print('Train HMM', file=sys.stderr)
     m.fit([training_data], options.hmm_free_para)
     distr = _get_pvalue_distr(m.mu, m.alpha, tracker)
-         
-    return m, exp_data, func_para, init_mu, init_alpha, distr
+    del exp_data
+    return m, func_para, init_mu, init_alpha, distr
 
 
 def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker, m, distr):
@@ -120,10 +116,12 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
             continue
 
         ## After this step, we have already normalized data, so we could output normalization data
+        """
         if options.save_input:
-            exp_data.output_input_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file, options.save_wig)
-        exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file, options.save_wig)
-
+            exp_data.output_input_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
+        if options.save_wig:
+            exp_data.output_signal_bw(options.name + '-' + str(i), region_giver.chrom_sizes_file)
+        """
         no_bw_files.append(i)
         exp_data.compute_sm_putative_region_index()
 
@@ -170,23 +168,27 @@ def main():
     # region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
-    options.exts = [72,96,114,204]
+    options.exts = [70,95,115,90]
     # options.inputs_exts = [228,228,231,231]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
     else:
         options.exts, _ = compute_extension_sizes(signal_statics)
-
-    if options.exts_inputs:
-        # less one step how to get inputs size and then give it
-        update_statics_extension_sizes(inputs_statics,options.exts_inputs)
-    else:
-        options.exts_inputs, _ = compute_extension_sizes(inputs_statics)
+    tracker.write(text=" ".join(map(lambda x: str(x), options.exts)),
+                  header="Extension size for signal files (rep1, rep2, input1, input2)")
+    if inputs_statics:
+        if options.exts_inputs:
+            # less one step how to get inputs size and then give it
+            update_statics_extension_sizes(inputs_statics,options.exts_inputs)
+        else:
+            options.exts_inputs, _ = compute_extension_sizes(inputs_statics)
+        tracker.write(text=" ".join(map(lambda x: str(x), options.exts)),
+                  header="Extension size for inputs files (rep1, rep2, input1, input2)")
     # one function to transform these parameters, after we read and do it into callback function??
     # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
     # options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
     # pass stats_total, stats_data, extension sizes to train_HMM
-    m, exp_data, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome,  tracker)
+    m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
 
     # we need to change region_giver and update the valid_regions
     region_giver.reset_regions()

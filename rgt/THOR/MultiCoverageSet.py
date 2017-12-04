@@ -49,10 +49,14 @@ class MultiCoverageSet(): # DualCoverageSet
                                     stepsize=stepsize, mask_file=mask_file, get_strand_info=strand_cov)
                     if use_sm: # maybe one thiing is how to deal with different operation on sparse matrix
                         tmp = [cov_to_smatrix(chrom_cov) for chrom_cov in covs[i][j].coverage]
-                        covs[i][j].sm_cov_strand_all = [cov_to_smatrix(chrom_cov_strand) for chrom_cov_strand in
-                                                        covs[i][j].cov_strand_all]
+                        # here what we get is not in the format like in coverage... Firstly, it is not in one list
+                        # change into one list and then use sparse matrix to store it
+                        tmp_strand= reduce(lambda x,y: np.concatenate((x,y)), covs[i][j].cov_strand_all)
+                        # transposed into [forward: positions],[reverse: positions]
+                        # then change it into saprse matrix into format (0, postions) (1, positions)
+                        covs[i][j].sm_overall_strand_cov = cov_to_smatrix(np.transpose(tmp_strand))
 
-                        del covs[i][j].coverage, covs[i][j].coverageorig, covs[i][j].overall_cov, covs[i][j].cov_strand_all
+                        del covs[i][j].coverage, covs[i][j].coverageorig, covs[i][j].overall_cov, covs[i][j].cov_strand_all, tmp_strand
                         # want to save memory spaces but should we also delete coveragerig??
                         covs[i][j].coverage = tmp
                         covs[i][j].sm_overall_cov = sparse.hstack(covs[i][j].coverage, format='csr')
@@ -74,7 +78,8 @@ class MultiCoverageSet(): # DualCoverageSet
             for i in range(self.dim[0]):
                 self.overall_strand_coverage['data'].append([])
                 for j in range(self.dim[1]):
-                    self.overall_strand_coverage['data'][i].append(self.covs[i][j].sm_cov_strand_all)
+                    # we need to do sth changes
+                    self.overall_strand_coverage['data'][i].append(self.covs[i][j].sm_overall_strand_cov)
 
     def _is_cov_valid(self, statics, covs):
         """test if data coverage valid
@@ -223,16 +228,17 @@ class MultiCoverageSet(): # DualCoverageSet
     def get_sm_covs(self, indices, strand_cov=False):
         """For a multivariant Coverageset, return coverage cov1 and cov2 at position i
         strand_cov : True also return strand_cov information, False, only coverage information
+         strand_cov1 in format [file_0: [forwards: ],[reverse: ]],[file_1:: [forward: ],[reverse: ] ]
         _get_sm_covs: return all covs according to one idx, [0_sample_0, 0_sample_1, 1_sample_0,1_sample_1]
         """
         cov1 = [np.squeeze(self.overall_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
         cov2 = [np.squeeze(self.overall_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
-        if strand_cov:
-            strand_cov1 = [np.squeeze(self.overall_strand_coverage['data'][0][j][indices,:].toarray()) for j in range(self.dim[1])]
-            strand_cov2 = [np.squeeze(self.overall_strand_coverage['data'][1][j][indices,:].toarray()) for j in range(self.dim[1])]
-            return [cov1, cov2], [strand_cov1, strand_cov2]
+        if strand_cov: # one thing is that strand_cov we don't do normalization, and then results show in file, but how about cov???
+            strand_cov1 = [np.squeeze(self.overall_strand_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
+            strand_cov2 = [np.squeeze(self.overall_strand_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
+            return np.asarray([cov1, cov2]), np.asarray([strand_cov1, strand_cov2])
         else:
-            return [cov1, cov2]
+            return np.asarray([cov1, cov2])
 
     def _compute_sm_score(self):
         """Compute score for each observation (based on Xu et al.), but firstly only to get non-zeros numbers, which we have already done it
@@ -251,7 +257,7 @@ class MultiCoverageSet(): # DualCoverageSet
             else:
                 self.scores += signal_rate
 
-    def compute_sm_putative_region_index(self, l=3, eta=1):
+    def compute_sm_putative_region_index(self, l=10, eta=0.7):
         """Compute putative differential peak regions as follows:
         - score must be > 0, i.e. everthing
         - overall coverage in library 1 and 2 must be > 3"""
@@ -268,31 +274,31 @@ class MultiCoverageSet(): # DualCoverageSet
         except:
             self.indices_of_interest = None
 
-    def output_input_bw(self, filename, chrom_sizes_file, save_wig):
+    def output_input_bw(self, filename, chrom_sizes_file):
         """output inputs as bigwig file"""
         for sig in range(self.dim[0]):
             for rep in range(self.dim[1]):
 
-                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep) + '.wig'
+                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep)
                 write_wig(self.inputs_covs[sig][rep], tmp_path)
                 t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
                 c = " ".join(t)
                 os.system(c)
-                if not save_wig:
-                    os.remove(tmp_path)
+                #if not save_wig:
+                #    os.remove(tmp_path)
 
-    def output_signal_bw(self, filename, chrom_sizes_file, save_wig):
+    def output_signal_bw(self, filename, chrom_sizes_file):
         """Output signal files as bigwig files"""
         for sig in range(self.dim[0]):
             for rep in range(self.dim[1]):
                 # self.covs[sig][rep].write_bigwig(name + '-s%s-rep%s.bw' %(sig, rep), chrom_sizes_file, save_wig=save_wig)
-                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep) + '.wig'
+                tmp_path = filename + '-s%s-rep%s.bw' %(sig, rep)
                 write_wig(self.covs[sig][rep], tmp_path)
                 t = ['wigToBigWig', "-clip", tmp_path, chrom_sizes_file, filename]
                 c = " ".join(t)
                 os.system(c)
-                if not save_wig:
-                    os.remove(tmp_path)
+                #if not save_wig:
+                #    os.remove(tmp_path)
 
 
 def cov_to_smatrix(cov):
@@ -388,8 +394,8 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
     # order of list doesn't matter
     diff_cov = np.percentile(filter(lambda x: x > 0, signal_diff.data), min_t) / exp_data.dim[1]  # get the mean of each
 
-    if test:
-        diff_cov, threshold = 2, 1.5
+    # if test:
+    #    diff_cov, threshold = 2, 1.5
     # here we append s0, s1 and s2;; So if once failure, but it append it into that; which is not right!!
     # compute training set parameters, re-compute training set if criteria do not hold
 
@@ -405,9 +411,9 @@ def get_training_set(exp_data, test, name, threshold, min_t, y=1000, ex=0):
             cov1 = np.mean(covs_list[0])  # use avg to present covs
             cov2 = np.mean(covs_list[1])
             # apply criteria for initial peak calling
-            if ((cov1 + 1) / (float(cov2) + 1) > threshold and cov1 + cov2 > diff_cov / 2) or cov1 - cov2 > diff_cov:
+            if (cov1 / max(float(cov2), 1) > threshold and cov1 + cov2 > diff_cov / 2) or cov1 - cov2 > diff_cov:
                 s1.append((idx, cov1, cov2))
-            elif ((cov1 + 1) / (float(cov2) + 1) < 1 / threshold and cov1 + cov2 > diff_cov / 2) or cov2 - cov1 > diff_cov:
+            elif (cov1 / max(float(cov2), 1) < 1 / threshold and cov1 + cov2 > diff_cov / 2) or cov2 - cov1 > diff_cov:
                 s2.append((idx, cov1, cov2))
             else:
                 s0.append((idx, cov1, cov2))
