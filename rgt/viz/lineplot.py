@@ -4,15 +4,20 @@ from __future__ import division
 import time
 import numpy
 import matplotlib.pyplot as plt
+import os
+from collections import OrderedDict, defaultdict
+from scipy.stats import stats
 
 # Local Libraries
 # Distal Libraries
 from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
+from rgt.CoverageSet import CoverageSet
+from rgt.ExperimentalMatrix import ExperimentalMatrix
 from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
+
 # Local test
-dir = os.getcwd()
+# dir_path = os.getcwd()
+
 
 ###########################################################################################
 #                    Lineplot
@@ -20,13 +25,13 @@ dir = os.getcwd()
 
 
 class Lineplot:
-    def __init__(self, EMpath, title, annotation, organism, center, extend, rs, bs, ss,
+    def __init__(self, em_path, title, annotation, organism, center, extend, rs, bs, ss,
                  df, dft, fields, test, sense, strand, flipnegative):
 
         # Read the Experimental Matrix
         self.title = title
         self.exps = ExperimentalMatrix()
-        self.exps.read(EMpath, test=test, add_region_len=True)
+        self.exps.read(em_path, test=test, add_region_len=True)
         for f in self.exps.fields:
             if f not in ['name', 'type', 'file', "reads", "regions", "factors"]:
                 self.exps.match_ms_tags(f, test=test)
@@ -55,9 +60,10 @@ class Lineplot:
         self.strand = strand
         self.flipnegative = flipnegative
 
-    def relocate_bed(self):
         self.processed_beds = []
         self.processed_bedsF = []  # Processed beds to be flapped
+
+    def relocate_bed(self):
 
         for bed in self.beds:
             if self.center == 'bothends':
@@ -90,24 +96,37 @@ class Lineplot:
             colorby = 'reads','regions','cell',or 'factor'
             sortby = 'reads','regions','cell',or 'factor'
         """
-        self.tag_type = [ groupby, rowby, columnby, colorby, self.dft]
-        if "None" in self.tag_type: self.tag_type.remove("None")
+        self.tag_type = [groupby, rowby, columnby, colorby, self.dft]
+        if "None" in self.tag_type:
+            self.tag_type.remove("None")
 
-        if groupby == "None": self.group_tags = [""]
-        elif groupby == "regions" and self.annotation: self.group_tags = self.bednames
-        else: self.group_tags = gen_tags(self.exps, groupby, region_len=False)
+        if groupby == "None":
+            self.group_tags = [""]
+        elif groupby == "regions" and self.annotation:
+            self.group_tags = self.bednames
+        else:
+            self.group_tags = gen_tags(self.exps, groupby, region_len=False)
 
-        if rowby == "None": self.row_tags = [""]
-        elif rowby == "regions" and self.annotation: self.row_tags = self.bednames
-        else: self.row_tags = gen_tags(self.exps, rowby, region_len=False)
+        if rowby == "None":
+            self.row_tags = [""]
+        elif rowby == "regions" and self.annotation:
+            self.row_tags = self.bednames
+        else:
+            self.row_tags = gen_tags(self.exps, rowby, region_len=False)
 
-        if columnby == "None": self.column_tags = [""]
-        elif columnby == "regions" and self.annotation: self.column_tags = self.bednames
-        else: self.column_tags = gen_tags(self.exps, columnby, region_len=False)
+        if columnby == "None":
+            self.column_tags = [""]
+        elif columnby == "regions" and self.annotation:
+            self.column_tags = self.bednames
+        else:
+            self.column_tags = gen_tags(self.exps, columnby, region_len=False)
 
-        if colorby == "None": self.color_tags = [""]
-        elif colorby == "regions" and self.annotation: self.color_tags = self.bednames
-        else: self.color_tags = gen_tags(self.exps, colorby, region_len=False)
+        if colorby == "None":
+            self.color_tags = [""]
+        elif colorby == "regions" and self.annotation:
+            self.color_tags = self.bednames
+        else:
+            self.color_tags = gen_tags(self.exps, colorby, region_len=False)
 
         print("\tGroup labels:\t" + ",".join(self.group_tags))
         print("\tRow labels:\t" + ",".join(self.row_tags))
@@ -141,8 +160,8 @@ class Lineplot:
 
         def annot_ind(bednames, tags):
             """Find the index for annotation tag"""
-            for ind, a in enumerate(bednames):
-                if a in tags: return ind
+            for ind, a_region in enumerate(bednames):
+                if a_region in tags: return ind
 
         if mp > 0: ts = time.time()
         normRPM = False
@@ -163,7 +182,7 @@ class Lineplot:
                         if not self.dft:
                             dfs = [cc]
                         else:
-                            if self.dft =="regions":
+                            if self.dft == "regions":
                                 dfs = self.exps.get_regionsnames()
                             elif self.dft == "reads":
                                 dfs = self.exps.get_readsnames()
@@ -176,14 +195,15 @@ class Lineplot:
                                 # print(self.cuebed[bed])
                                 # print(set([s,g,c,d]))
                                 # print(self.cuebed[bed].issubset(set([s,g,c,d])))
-                                if len(self.cuebed[bed].intersection(set([g, r, c, cc, d]))) > 2 or self.cuebed[bed].issubset(
-                                        set([g, r, c, cc, d])):
+                                if len(self.cuebed[bed].intersection({g, r, c, cc, d})) > 2 or self.cuebed[
+                                    bed].issubset(
+                                    {g, r, c, cc, d}):
                                     # if self.cuebed[bed] <= set([s,g,c]):
                                     for bam in self.cuebam.keys():
 
                                         # print(self.cuebam[bam])
                                         # print(set([s,g,c]))
-                                        if self.cuebam[bam] <= set([g, r, c, cc, d]):
+                                        if self.cuebam[bam] <= {g, r, c, cc, d}:
                                             i = self.bednames.index(bed)
                                             j = self.readsnames.index(bam)
                                             # print(bed + "." + bam)
@@ -207,11 +227,13 @@ class Lineplot:
                                                 cov = CoverageSet(bed + "." + bam, self.processed_beds[i])
 
                                                 # print(len(self.processed_beds[i]))
-                                                if "Conservation" in [g,r,c,cc,d]:
+                                                if "Conservation" in [g, r, c, cc, d]:
                                                     cov.phastCons46way_score(stepsize=self.ss)
 
-                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
-                                                    cov.coverage_from_bigwig(bigwig_file=self.reads[j], stepsize=self.ss)
+                                                elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
+                                                    j].lower():
+                                                    cov.coverage_from_bigwig(bigwig_file=self.reads[j],
+                                                                             stepsize=self.ss)
                                                 else:
                                                     if not self.sense and not self.strand:
                                                         cov.coverage_from_bam(bam_file=self.reads[j],
@@ -221,7 +243,8 @@ class Lineplot:
                                                     else:  # Sense specific
                                                         cov.coverage_from_bam(bam_file=self.reads[j],
                                                                               extension_size=self.rs, binsize=self.bs,
-                                                                              stepsize=self.ss, get_sense_info=self.sense,
+                                                                              stepsize=self.ss,
+                                                                              get_sense_info=self.sense,
                                                                               get_strand_info=self.strand,
                                                                               paired_reads=True)
                                                         cov.array_transpose()
@@ -236,39 +259,50 @@ class Lineplot:
 
                                                 # When bothends, consider the fliping end
                                                 if self.center == 'bothends' or self.center == 'upstream' or self.center == 'downstream':
-                                                    if "Conservation" in [g,r,c,cc,d]:
+                                                    if "Conservation" in [g, r, c, cc, d]:
                                                         flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                         flap.phastCons46way_score(stepsize=self.ss)
                                                         ffcoverage = numpy.fliplr(flap.coverage)
-                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                                    elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[j].lower():
+                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                         axis=0)
+                                                    elif ".bigwig" in self.reads[j].lower() or ".bw" in self.reads[
+                                                        j].lower():
                                                         flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                         flap.coverage_from_bigwig(bigwig_file=self.reads[j],
                                                                                   stepsize=self.ss)
                                                         ffcoverage = numpy.fliplr(flap.coverage)
-                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
+                                                        cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                         axis=0)
                                                     else:
                                                         flap = CoverageSet("for flap", self.processed_bedsF[i])
                                                         if not self.sense:
-                                                            flap.coverage_from_bam(self.reads[j], extension_size=self.rs,
+                                                            flap.coverage_from_bam(self.reads[j],
+                                                                                   extension_size=self.rs,
                                                                                    binsize=self.bs, stepsize=self.ss)
                                                             if normRPM: flap.normRPM()
                                                         else:  # Sense specific
                                                             flap.coverage_from_bam(bam_file=self.reads[j],
-                                                                                   extension_size=self.rs, binsize=self.bs,
-                                                                                   stepsize=self.ss, get_sense_info=True,
+                                                                                   extension_size=self.rs,
+                                                                                   binsize=self.bs,
+                                                                                   stepsize=self.ss,
+                                                                                   get_sense_info=True,
                                                                                    paired_reads=True)
                                                             flap.array_transpose(flip=True)
                                                             if normRPM: flap.normRPM()
                                                         ffcoverage = numpy.fliplr(flap.coverage)
-                                                        try: cov.coverage = numpy.concatenate((cov.coverage, ffcoverage), axis=0)
-                                                        except: pass
+                                                        try:
+                                                            cov.coverage = numpy.concatenate((cov.coverage, ffcoverage),
+                                                                                             axis=0)
+                                                        except:
+                                                            pass
 
                                                         if self.sense:
                                                             cov.transpose_cov1 = numpy.concatenate((cov.transpose_cov1,
-                                                                                                    flap.transpose_cov1),axis=0)
+                                                                                                    flap.transpose_cov1),
+                                                                                                   axis=0)
                                                             cov.transpose_cov2 = numpy.concatenate((cov.transpose_cov2,
-                                                                                                    flap.transpose_cov2), axis=0)
+                                                                                                    flap.transpose_cov2),
+                                                                                                   axis=0)
 
                                                 # Averaging the coverage of all regions of each bed file
                                                 if heatmap:
@@ -285,23 +319,29 @@ class Lineplot:
                                                         continue
                                                     else:
                                                         for i, car in enumerate(cov.coverage):
-                                                            if i == 0: avearr = np.array(car, ndmin=2)
+                                                            if i == 0:
+                                                                avearr = numpy.array(car, ndmin=2)
                                                             else:
                                                                 # avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
-                                                                try: avearr = numpy.vstack((avearr, np.array(car, ndmin=2)))
-                                                                except: print(bed+"."+bam+"."+str(i))
+                                                                try:
+                                                                    avearr = numpy.vstack(
+                                                                        (avearr, numpy.array(car, ndmin=2)))
+                                                                except:
+                                                                    print(bed + "." + bam + "." + str(i))
                                                         if log:
-                                                            avearr = numpy.log10(avearr+1)
+                                                            avearr = numpy.log10(avearr + 1)
 
                                                         avearr = numpy.average(avearr, axis=0)
                                                         if self.sense or self.strand:
                                                             if log:
-                                                                sense_1 = numpy.average(numpy.log2(cov.transpose_cov1+1), axis=0)
-                                                                sense_2 = numpy.average(numpy.log2(cov.transpose_cov2+1), axis=0)
+                                                                sense_1 = numpy.average(
+                                                                    numpy.log2(cov.transpose_cov1 + 1), axis=0)
+                                                                sense_2 = numpy.average(
+                                                                    numpy.log2(cov.transpose_cov2 + 1), axis=0)
                                                             else:
-                                                                sense_1 = numpy.average(cov.transpose_cov1,axis=0)
-                                                                sense_2 = numpy.average(cov.transpose_cov2,axis=0)
-                                                        cut_end = int(self.bs/self.ss)
+                                                                sense_1 = numpy.average(cov.transpose_cov1, axis=0)
+                                                                sense_2 = numpy.average(cov.transpose_cov2, axis=0)
+                                                        cut_end = int(self.bs / self.ss)
                                                         avearr = avearr[cut_end:-cut_end]
                                                         data[g][r][c][cc][d]["all"].append(avearr)
 
@@ -317,7 +357,6 @@ class Lineplot:
                                                        "\t" + str(bi) + "\t" + "{0:30}\t--{1:<5.1f}\tsec".format(
                                                            bed + "." + bam, ts - te))
 
-
         if mp > 0:
             pool = MyPool(mp)
             mp_output = pool.map(compute_coverage, mp_input)
@@ -329,7 +368,7 @@ class Lineplot:
                         for cc in data[g][r][c].keys():
                             for d in data[g][r][c][cc].keys():
                                 for out in mp_output:
-                                    if out[0]==g and out[1]==r and out[2]==c and out[3]==cc and out[3]==d:
+                                    if out[0] == g and out[1] == r and out[2] == c and out[3] == cc and out[3] == d:
                                         if self.df:
                                             try:
                                                 data[g][r][c][cc][d][-1].append(out[4])
@@ -346,9 +385,10 @@ class Lineplot:
                     for c in data[g][r].keys():
                         for cc in data[g][r][c].keys():
                             for d in data[g][r][c][cc].keys():
-                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(data[g][r][c][cc][d]["all"]) > 1:
-                                    a = np.array(data[g][r][c][cc][d]["all"])
-                                    averaged_array = numpy.array(np.average(a, axis=0))
+                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(
+                                        data[g][r][c][cc][d]["all"]) > 1:
+                                    a = numpy.array(data[g][r][c][cc][d]["all"])
+                                    averaged_array = numpy.array(numpy.average(a, axis=0))
                                     # print(averaged_array)
                                     # sys.exit(1)
                                     data[g][r][c][cc][d]["all"] = [averaged_array]
@@ -359,8 +399,10 @@ class Lineplot:
                     for c in data[g][r].keys():
                         for cc in data[g][r][c].keys():
                             for d in data[g][r][c][cc].keys():
-                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(data[g][r][c][cc][d]["all"]) > 1:
-                                    diff = numpy.subtract(data[g][r][c][cc][d]["all"][0], data[g][r][c][cc][d]["all"][1])
+                                if isinstance(data[g][r][c][cc][d]["all"], list) and len(
+                                        data[g][r][c][cc][d]["all"]) > 1:
+                                    diff = numpy.subtract(data[g][r][c][cc][d]["all"][0],
+                                                          data[g][r][c][cc][d]["all"][1])
                                     data[g][r][c][cc][d]["df"].append(diff.tolist())
                                 else:
                                     print("Warning: There is no repetitive reads for calculating difference.\n"
@@ -399,7 +441,8 @@ class Lineplot:
 
             if printtable:
                 bott = self.extend + int(0.5 * self.ss)
-                pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in range(-bott, bott + 10, self.ss)]]  # Header
+                pArr = [["Group_tag", "Sort_tag", "Color_tag", "Diff"] + [str(x) for x in
+                                                                          range(-bott, bott + 10, self.ss)]]  # Header
             nit = len(self.data[g].keys())
             for ir, r in enumerate(self.data[g].keys()):
 
@@ -428,8 +471,10 @@ class Lineplot:
                                 continue
                             else:
                                 if not self.sense and not self.strand:
-                                    if self.df: pt = self.data[g][r][c][cc][d]["df"]
-                                    else: pt = self.data[g][r][c][cc][d]["all"]
+                                    if self.df:
+                                        pt = self.data[g][r][c][cc][d]["df"]
+                                    else:
+                                        pt = self.data[g][r][c][cc][d]["all"]
 
                                     for l, y in enumerate(pt):
                                         # print(y)
@@ -447,14 +492,17 @@ class Lineplot:
                                         if printtable: pArr.append([g, r, c, cc, d] + list(y))
                                 else:
                                     if self.sense:
-                                        plt.text(0.5, 0.51, 'sense',transform=ax.transAxes,fontsize=ticklabelsize,
+                                        plt.text(0.5, 0.51, 'sense', transform=ax.transAxes, fontsize=ticklabelsize,
                                                  horizontalalignment='center', verticalalignment='bottom')
-                                        plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,fontsize=ticklabelsize,
+                                        plt.text(0.5, 0.49, 'anti-sense', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
                                                  horizontalalignment='center', verticalalignment='top')
                                     elif self.strand:
-                                        plt.text(0.5, 0.51, 'Forward strand', transform=ax.transAxes, fontsize=ticklabelsize,
+                                        plt.text(0.5, 0.51, 'Forward strand', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
                                                  horizontalalignment='center', verticalalignment='bottom')
-                                        plt.text(0.5, 0.49, 'Reverse strand', transform=ax.transAxes, fontsize=ticklabelsize,
+                                        plt.text(0.5, 0.49, 'Reverse strand', transform=ax.transAxes,
+                                                 fontsize=ticklabelsize,
                                                  horizontalalignment='center', verticalalignment='top')
                                     plt.plot((-self.extend, self.extend), (0, 0), '0.1', linewidth=0.2)
                                     # print(self.data[s][g][c][d])
@@ -490,10 +538,10 @@ class Lineplot:
                     ax.locator_params(axis='y', nbins=3)
 
             if printtable:
-                output_array(pArr, directory=output, folder=self.title, filename="plot_table_"+g+".txt")
+                output_array(pArr, directory=output, folder=self.title, filename="plot_table_" + g + ".txt")
 
             handles = []
-            labels =[]
+            labels = []
             for ir, r in enumerate(self.data[g].keys()):
                 if ylog:
                     nr = r + " (log10)"
@@ -510,16 +558,17 @@ class Lineplot:
                         axs.set_ylabel("{}".format(nr), fontsize=ticklabelsize + 1)
                         axs.get_yaxis().set_label_coords(-0.1, 0.5)
 
-
                 for ic, c in enumerate(self.data[g][r].keys()):
-                    try: axx = axs[ir, ic]
+                    try:
+                        axx = axs[ir, ic]
                     except:
                         try:
                             if len(self.data[g].keys()) == 1:
                                 axx = axs[ic]
                             else:
                                 axx = axs[ir]
-                        except: axx = axs
+                        except:
+                            axx = axs
 
                     if self.df:
                         if scol and not srow:
@@ -533,16 +582,23 @@ class Lineplot:
                             ymax = max(yaxmax[ic], sx_ymax[ir]) + abs(max(yaxmax[ic], sx_ymax[ir]) * 0.2)
 
                     else:
-                        if scol and not srow: ymax = yaxmax[ic] * 1.2
-                        elif srow and not scol: ymax = sx_ymax[ir] * 1.2
-                        elif scol and srow: ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
+                        if scol and not srow:
+                            ymax = yaxmax[ic] * 1.2
+                        elif srow and not scol:
+                            ymax = sx_ymax[ir] * 1.2
+                        elif scol and srow:
+                            ymax = max(max(yaxmax), max(sx_ymax)) * 1.2
                         else:
                             ymax = axx.get_ylim()[1]
-                        if self.sense or self.strand: ymin = -ymax
-                        else: ymin = 0
+                        if self.sense or self.strand:
+                            ymin = -ymax
+                        else:
+                            ymin = 0
 
-                    try: axx.set_ylim([ymin, ymax])
-                    except: pass
+                    try:
+                        axx.set_ylim([ymin, ymax])
+                    except:
+                        pass
                     hand, l = axx.get_legend_handles_labels()
                     handles += hand
                     labels += l
@@ -569,7 +625,7 @@ class Lineplot:
 
         for g in self.group_tags:
             html.add_heading(heading=g)
-            html.add_figure("lineplot_"+g+".png", align="center", width="80%")
+            html.add_figure("lineplot_" + g + ".png", align="center", width="80%")
 
         html.write(os.path.join(directory, title, "index.html"))
 
@@ -600,7 +656,7 @@ class Lineplot:
         html.write(os.path.join(directory, title, "parameters.html"))
 
     def hmsort(self, sort):
-        if sort == None:
+        if not sort:
             pass
         elif sort == 0:
             for t in self.data.keys():
@@ -615,7 +671,7 @@ class Lineplot:
                     # numpy.fliplr(ind)
 
                     for j, c in enumerate(self.data[t][g].keys()):
-                        d = numpy.empty(shape=(self.data[t][g][c].shape))
+                        d = numpy.empty(shape=self.data[t][g][c].shape)
                         for k, ranki in enumerate(ind):
                             d[-ranki, :] = self.data[t][g][c][k, :]
                         self.data[t][g][c] = d
@@ -629,7 +685,7 @@ class Lineplot:
                     # list(ind)
                     # print(ind)
                     for j, c in enumerate(self.data[t][g].keys()):
-                        d = numpy.empty(shape=(self.data[t][g][c].shape))
+                        d = numpy.empty(shape=self.data[t][g][c].shape)
                         for k, ranki in enumerate(ind):
                             d[-ranki, :] = self.data[t][g][c][k, :]
                         self.data[t][g][c] = d
@@ -764,4 +820,3 @@ class Lineplot:
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content(['<a href="experimental_matrix.txt" style="margin-left:100">See experimental matrix</a>'])
         html.write(os.path.join(outputname, title, "parameters.html"))
-

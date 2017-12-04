@@ -7,3 +7,4 @@ pyVCF
 fisher
 HTSeq
 hmmlearn
+matplotlib
