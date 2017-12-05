@@ -200,7 +200,7 @@ class MultiCoverageSet(): # DualCoverageSet
                         print('Use scaling factor %s' %round(factors_ip[i][j], configuration.ROUND_PRECISION), file=sys.stderr)
 
                     sm_scale(self.covs[i][j], factors_ip[i][j])
-                    self.overall_coverage['data'][i][j].data *= factors_ip[i][j]
+
         self.factors_ip = factors_ip
         return factors_ip
 
@@ -234,6 +234,7 @@ class MultiCoverageSet(): # DualCoverageSet
         cov1 = [np.squeeze(self.overall_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
         cov2 = [np.squeeze(self.overall_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
         if strand_cov: # one thing is that strand_cov we don't do normalization, and then results show in file, but how about cov???
+            # strand_cov should also be changed w.r.t normalization data
             strand_cov1 = [np.squeeze(self.overall_strand_coverage['data'][0][j][:, indices].toarray()) for j in range(self.dim[1])]
             strand_cov2 = [np.squeeze(self.overall_strand_coverage['data'][1][j][:, indices].toarray()) for j in range(self.dim[1])]
             return np.asarray([cov1, cov2]), np.asarray([strand_cov1, strand_cov2])
@@ -309,7 +310,8 @@ def cov_to_smatrix(cov):
 
 def sm_scale(cov, factor):
     """we scale sparse matrix representation with factor"""
-    cov.sm_overall_cov *= factor
+    cov.sm_overall_cov.data *= factor
+    cov.sm_overall_strand_cov.data *= factor
 
 
 def sm_add(cov, sm_cs):
@@ -318,17 +320,24 @@ def sm_add(cov, sm_cs):
     assert set(cov.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
     # we use overall_cov, so not bother for one chrom and then another, we assume they are in the same order.
     # self.sm_overall_cov is 1-D array
-    cov.sm_overall_cov += sm_cs.sm_overall_cov  # we could assume all values are non-negative
+    cov.sm_overall_cov.data += sm_cs.sm_overall_cov.data  # we could assume all values are non-negative
+    cov.sm_overall_strand_cov.data += sm_cs.sm_overall_strand_cov.data
 
 
 def sm_subtract(cov, sm_cs):
     """subtract coverage set in sparse matrix format"""
     # firstly test if they have same region; else not do it!!
     assert set(cov.genomicRegions.get_chrom()) == set(sm_cs.genomicRegions.get_chrom())
-    cov.sm_overall_cov -= sm_cs.sm_overall_cov
+    cov.sm_overall_cov.data -= sm_cs.sm_overall_cov.data
     cov.sm_overall_cov.data = np.clip(cov.sm_overall_cov.data, 0,
                                       cov.sm_overall_cov.max())  # make negative into zeros
     cov.sm_overall_cov.eliminate_zeros()  # eliminate zeros elements in matrix
+
+    # do process on overall_strand_coverage
+    cov.sm_overall_strand_cov.data -= sm_cs.sm_overall_strand_cov.data
+    cov.sm_overall_strand_cov.data = np.clip(cov.sm_overall_strand_cov.data, 0,
+                                      cov.sm_overall_strand_cov.max())  # make negative into zeros
+    cov.sm_overall_strand_cov.eliminate_zeros()  # eliminate zeros elements in matrix
 
 
 def cov_normalization_by_gc_content(cov, hv, avg_T, genome_fpath,delta=0.2):
@@ -517,3 +526,17 @@ def write_wig(sm_cov, filename):
         for j in c.indices:
             print(j * sm_cov.stepsize + ((sm_cov.binsize-sm_cov.stepsize)/2), c[:,j], file=f)
     f.close()
+
+
+if __name__ == "__main__":
+    """here we want to test unit in MultiCoverageSet, at firstly to make sure programs are right 
+    and then consider other things"""
+
+    # compute_putative_area
+    # we don't want to introduce whole programs, then we need to create data;;
+    # compute_sm_putative_region_index(self, l=10, eta=0.7):
+
+
+    # get training set
+
+    # get normalization paramters

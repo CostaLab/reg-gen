@@ -156,7 +156,7 @@ def _merge_consecutive_bins(tmp_peaks, distr, merge=True):
     return pvalues, peaks
 
 
-def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, deadzones, merge_bin, p=70):
+def get_peaks( cov_set, states, exts, merge, distr, pcutoff, debug, no_correction, merge_bin, p=70):
     """Merge Peaks, compute p-value and give out *.bed and *.narrowPeak"""
     start = time.time()
     exts = np.mean(exts)
@@ -198,8 +198,7 @@ def get_peaks(name, cov_set, states, exts, merge, distr, pcutoff, debug, no_corr
 
     pvalues, peaks, = _merge_consecutive_bins(tmp_peaks, distr, merge_bin) #merge consecutive peaks and compute p-value
     regions = merge_delete(exts, merge, peaks, pvalues) #postprocessing, returns GenomicRegionSet with merged regions
-    if deadzones:
-        regions = filter_deadzones(deadzones, regions)
+
     output = []
     pvalues = []
     ratios = []
@@ -534,11 +533,11 @@ def handle_input():
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/'))
         os.mkdir(join(options.outputdir, 'report_'+basename(options.name), 'pics/data/'))
 
-    configuration.FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
-    configuration.FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
-    configuration.FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
-    configuration.OUTPUTDIR = options.outputdir
-    configuration.NAME = options.name
+        configuration.FOLDER_REPORT = join(options.outputdir, 'report_'+basename(options.name)+"/")
+        configuration.FOLDER_REPORT_PICS = join(options.outputdir, 'report_'+basename(options.name), 'pics/')
+        configuration.FOLDER_REPORT_DATA = join(options.outputdir, 'report_'+basename(options.name), 'pics/data/')
+        configuration.OUTPUTDIR = options.outputdir
+        configuration.NAME = options.name
 
     if not inputs:
         print("Warning: Do not compute GC-content, as there is no input file", file=sys.stderr)

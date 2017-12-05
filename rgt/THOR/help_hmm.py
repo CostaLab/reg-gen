@@ -56,8 +56,8 @@ def _count(posts):
             c_2 += 1
     return c_1, c_2
 
+
 def _valid_posteriors(posteriors, obs, dim):
-    
     warnings.filterwarnings('error')
     
     for i in range(len(obs)):
@@ -151,66 +151,32 @@ def _plot_func(plot_data, outputdir):
             plt.close()
 
 
-def sm_var(sm, axis=None):
-    """get variance of one sparse matrix in axis
-    if axis=None, then for whole data
-    if axis=0, for column
-    if axis=1 for row
-    """
-    # get shape of sm_var and axis
-    if axis is None:
-        tmp = sm.data **2
-        return np.mean(tmp) - (sm.mean()) ** 2
-    elif axis == 0:
-        # in column order, but now it's 1_D array
-        tmp = sm[:,:] # create a new sparse-matrix
-        tmp.data **= 2
-        e_x2 = tmp.mean(axis=0)
-        return e_x2 - np.square(sm.mean(axis=0))
-
-
 def _get_sm_data_rep(one_sample_cov, sample_size):
     """Return list of (mean, var) points for samples 0 and 1
     overall_coverage is a list of sparse matrix
     """
-    # data_rep = []
-    # firstly to get union of non-zeros columns
+    # firstly to get union of non-zeros sum columns
     tmp_cov = sum(one_sample_cov)
     # sample indices and then sample it
     idx = sample(tmp_cov.indices, min(sample_size,len(tmp_cov.indices)))
     idx.sort()
-    # """
-    cov = sparse.vstack([one_sample_cov[j][:,idx] for j in range(len(one_sample_cov))])  # for two data
-    # count the mean and var of it
-    ms = cov.mean(axis=0)
-    vars = sm_var(cov,axis=0)
+    # get idx data and combine them into array
+    cov = np.vstack([one_sample_cov[j][:,idx].toarray() for j in range(len(one_sample_cov))])
+    # use normal mean and var functions
+    ms = np.mean(cov,axis=0)
+    vars = np.var(cov,axis=0)
     ms = np.insert(np.squeeze(np.asarray(ms)), len(idx),0)
     vars = np.insert(np.squeeze(np.asarray(vars)),len(idx),0)
-    """
-    # we combine several bins together and build them; like [idx0, idx1, idx2....]
-    # we build values from [idx0, idx1], [idx1, idx2] , [idx2,idx3].... to the end of of one idx
-    # our data are not from tmp_cov but from ons_sample_cov and we need it
-    cov=[]
-    for i in range(len(idx)-1):
-        tmp = np.concatenate([one_sample_cov[j][:,idx[i]:idx[i+1]].data for j in range(len(one_sample_cov))])
-        cov.append(tmp)
-    # we can use np.array to present it then less trouble to present man-var,
-    # but with a list, a list with contrain the number of it
-    ms = np.asarray(map(np.mean, cov))
-    vars = np.asarray(map(np.var, cov))
-    """
     # we add 0 to ms and vars, but consider computation time, could we find a better way??
     # idx = np.logical_and(ms < np.percentile(ms, 99.75) * (ms > np.percentile(ms, 1.25)),
     #                   vars < np.percentile(vars, 99.75) * (vars > np.percentile(vars, 1.25)))
     idx = np.logical_and(ms < np.percentile(ms, 99.75),vars < np.percentile(vars, 99.75))
     final_ms = ms[idx]
     final_vars = vars[idx]
-
-    # we need to return mean and var list, maybe one by one, we could filter data
     return final_ms, final_vars
 
 
-def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=5000):
+def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, report, poisson, sample_size=10000):
     """Estimate empirical distribution (quadr.) based on empirical distribution
     On paper, it says for smaller samples, we use this, but for big samples, should we change methods ???
     change this method and combine it with get_data_rep;
@@ -238,7 +204,7 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
                     except:
                         print("Optimal parameters for mu-var-function not found, get new datapoints", file=sys.stderr)
                         break  # restart for loop
-                else: # one length is zero, it means??
+                else:
                     p = np.array([0, 1])
 
                 res.append(p)
@@ -258,6 +224,7 @@ def fit_sm_mean_var_distr(overall_coverage, name, debug, verbose, outputdir, rep
         p[0] = 0
         p[1] = 0 # here it should be 0, we assume var = mean
         res = [np.array([0, 0]), np.array([0, 0])]
-
+    # here sth wrong, cause we got two different p for each sample and then build different function
+    # then when we apply this function, we should apply to different samples, not just one!!!
     return lambda x: _func_quad_2p(x, p[0], p[1]), res
 

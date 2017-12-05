@@ -29,12 +29,18 @@ from hmmlearn.hmm import _BaseHMM
 import sys
 from math import fabs
 from scipy.misc import logsumexp
+import matplotlib.pyplot as plt
 
 import numpy as np
+
+import configuration
+print(configuration.FOLDER_REPORT_PICS+'add one')
+
 from neg_bin import NegBin
 
 import warnings
 warnings.filterwarnings('error')
+
 
 def _get_pvalue_distr(mu, alpha, tracker):
     """Derive NB1 parameters for p-value calculation"""
@@ -46,13 +52,18 @@ def _get_pvalue_distr(mu, alpha, tracker):
     nb = NegBin(mu, alpha)
     return {'distr_name': 'nb', 'distr': nb}
 
-def get_init_parameters(s0, s1, s2, **info):
+
+def get_init_parameters(s0, s1, s2, report, **info):
     """For given training set (s0: Background, s1: Gaining, s2: loseing) get inital mu, alpha for NB1."""
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        ## here feel something not correct
+        ## here feel something not correct, here it just use all data
         mu = np.matrix([np.mean(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
         var = np.matrix([np.var(map(lambda x: x[i], s)) for i in range(2) for s in [s0, s1, s2]]).reshape(2, 3)
+        # what did we do before it ?? in mean-var-distribution and now here??
+        # we get training data and we can draw plot of it
+        if report:
+            plot_mu_var(mu, var)
 
     alpha = (var - mu) / np.square(mu)
 
@@ -72,10 +83,28 @@ def get_init_parameters(s0, s1, s2, **info):
         el[1,0] = med
 
     return alpha, mu
-    
+
+
+def plot_mu_var(mu,var):
+    """plot data combined from mu and var, and then we see if it fits relationship of alpha=(var-mu)/np.square(mu)
+    Anyway, it seems to mix with funciton which in find_mean_var relationship; at that point, we get one quad-function of it
+    Then we need to use those quad function to get alpha;;
+    Questions: How to get alpha!!!
+    """
+    # ax = plt.subplot(111)
+    plt.scatter(mu, var, label='empirical datapoints')  # plot datapoints
+    plt.xlabel('mean')
+    plt.ylabel('variance')
+    name='Mean-Variance Distribution for alpha'
+
+    plt.title(name)
+    plt.savefig(configuration.FOLDER_REPORT_PICS + name + '.png')
+    plt.close()
+
+
 class NegBinRepHMM(_BaseHMM):
     def __init__(self, alpha, mu, dim_cond_1, dim_cond_2, init_state_seq=None, n_components=3, covariance_type='diag',
-                  startprob_prior=1.0, transmat_prior=1.0, func=None,
+                  startprob_prior=1.0, transmat_prior=1.0, func=None,func_para=None,
                  algorithm="viterbi", means_prior=None, means_weight=0,
                  covars_prior=1e-2, covars_weight=1,
                  random_state=None, n_iter=30, thresh=1e-2,
@@ -95,6 +124,8 @@ class NegBinRepHMM(_BaseHMM):
         self.mu = mu
         self._update_distr(self.mu, self.alpha)
         self.func = func
+        # now big doubt about it
+        # self.func_para = func_para
         self.em_prob = 0
     
     
@@ -324,7 +355,7 @@ if __name__ == '__main__':
 
     m2 = NegBinRepHMM(alpha = alpha, mu = np.matrix([[50.,130.,110.], [60.,100.,120.]]), dim_cond_1 = dim_cond_1, dim_cond_2 = dim_cond_2, func=f)
     m2.fit([X], three_para=False)
-    
+    # but how to deal with it, if we have different parameters??
     posteriors = m2.predict_proba(X)
     e = m2.predict(X)
     for i, el in enumerate(X):

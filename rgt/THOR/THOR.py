@@ -27,6 +27,7 @@ from __future__ import print_function
 import sys
 
 # Internal
+import configuration
 from dpc_help import get_peaks, initialize, merge_output, handle_input
 from help_hmm import fit_sm_mean_var_distr
 from tracker import Tracker
@@ -36,7 +37,6 @@ from rgt.THOR.RegionGiver import RegionGiver
 from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
 from rgt import __version__
 
-import configuration
 from get_statistics import get_file_statistics, compute_extension_sizes, update_statics_extension_sizes, is_stats_valid
 from MultiCoverageSet import get_training_set, transform_data_for_HMM
 # External
@@ -49,8 +49,8 @@ def _write_info(tracker, report, **data):
     """Write information to tracker"""
     tracker.write(text=data['func_para'][0], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (a)")
     tracker.write(text=data['func_para'][1], header="Parameters for both estimated quadr. function y=max(|a|*x^2 + x + |c|, 0) (c)")
-    #tracker.write(text=data['init_mu'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu)")
-    #tracker.write(text=data['init_alpha'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (alpha)")
+    tracker.write(text=data['init_mu'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (mu)")
+    tracker.write(text=data['init_alpha'], header="Inital parameter estimate for HMM's Neg. Bin. Emission distribution (alpha)")
     #tracker.write(text=data['m'].mu, header="Final HMM's Neg. Bin. Emission distribution (mu)")
     #tracker.write(text=data['m'].alpha, header="Final HMM's Neg. Bin. Emission distribution (alpha)")
     #tracker.write(text=data['m']._get_transmat(), header="Transmission matrix")
@@ -79,14 +79,14 @@ def train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tra
 
     func, func_para = fit_sm_mean_var_distr(exp_data.overall_coverage, options.name, options.debug,
                                           verbose=options.verbose, outputdir=options.outputdir,
-                                          report=options.report, poisson=options.poisson)
+                                          report=True, poisson=options.poisson)
     exp_data.compute_sm_putative_region_index()
      
     print('Compute HMM\'s training set', file=sys.stderr)
 
     training_data, s0, s1, s2 = get_training_set(exp_data, True, options.name, options.foldchange,
                                                        options.threshold, options.size_ts, 0)
-    init_alpha, init_mu = get_init_parameters(s0, s1, s2)
+    init_alpha, init_mu = get_init_parameters(s0, s1, s2, report=True)
     m = NegBinRepHMM(alpha=init_alpha, mu=init_mu, dim_cond_1=signal_statics['dim'][0], dim_cond_2=signal_statics['dim'][1], func=func)
 
     print('Train HMM', file=sys.stderr)
@@ -130,11 +130,11 @@ def run_HMM(region_giver, options, signal_statics, inputs_statics, genome, track
         cov_data = exp_data.get_sm_covs(exp_data.indices_of_interest)
         states = m.predict(transform_data_for_HMM(cov_data))
         
-        inst_ratios, inst_pvalues, inst_output = get_peaks(name=options.name, states=states, cov_set=exp_data,
+        inst_ratios, inst_pvalues, inst_output = get_peaks(states=states, cov_set=exp_data,
                                                            distr=distr, merge=options.merge, exts=options.exts,
                                                            pcutoff=options.pcutoff, debug=options.debug, p=options.par,
                                                            no_correction=options.no_correction,
-                                                           merge_bin=options.merge_bin, deadzones=options.deadzones)
+                                                           merge_bin=options.merge_bin)
 
         output += inst_output
         pvalues += inst_pvalues
@@ -168,7 +168,7 @@ def main():
     # region_giver.update_regions(inputs_statics)
     # compute extension size if option.ext are not given
     # for testing..
-    options.exts = [70,95,115,90]
+    options.exts = [71,64,91,96] #[70,95,115,90]
     # options.inputs_exts = [228,228,231,231]
     if options.exts:
         update_statics_extension_sizes(signal_statics, options.exts)
@@ -186,7 +186,7 @@ def main():
                   header="Extension size for inputs files (rep1, rep2, input1, input2)")
     # one function to transform these parameters, after we read and do it into callback function??
     # options.factors_inputs = [[0.692, 0.719], [0.726,0.708]]
-    # options.scaling_factors_ip = [[1.0537533317434074, 0.9986756833314534], [0.99775712024261831, 1.1606581998669872]]
+    options.scaling_factors_ip = [[0.5567, 0.806], [0.822, 0.716]]
     # pass stats_total, stats_data, extension sizes to train_HMM
     m, func_para, init_mu, init_alpha, distr = train_HMM(region_giver, options, signal_statics, inputs_statics, genome, tracker)
 
