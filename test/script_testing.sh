@@ -209,7 +209,7 @@ cd ../
 echo "Running HINT using only ATAC-seq data.."
 url="http://134.130.18.8/open_data/hint/tutorial/HINT_ATACTest.tar.gz"
 echo "Downloading test data."
-wget -qO- -O HINT_ATACTest.tar.gz $url && tar xvfz HINT_ATAC.tar.gz && rm HINT_ATAC.tar.gz
+wget -qO- -O HINT_ATACTest.tar.gz $url && tar xvfz HINT_ATACTest.tar.gz && rm HINT_ATACTest.tar.gz
 cd HINT_ATACTest
 echo "Running HINT using ATAC-seq data.."
 rgt-hint footprinting --atac-seq ATAC.bam ATACPeaks.bed

@@ -1,10 +1,5 @@
 from __future__ import print_function
 
-# Python
-import warnings
-
-warnings.filterwarnings("ignore")
-
 # Internal
 from rgt import __version__
 from Training import training_args, training_run

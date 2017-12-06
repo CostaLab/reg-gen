@@ -1,18 +1,12 @@
 import os
-import warnings
-
-warnings.filterwarnings("ignore")
 from argparse import SUPPRESS
+from numpy import int
 
 # Internal
 from ..Util import GenomeData, HmmData
 from ..GenomicRegionSet import GenomicRegionSet
 from biasTable import BiasTable
 from signalProcessing import GenomicSignal
-
-
-# External
-from numpy import int
 
 
 def tracks_args(parser):

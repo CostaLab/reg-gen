@@ -3,7 +3,6 @@ import warnings
 import subprocess
 import shutil
 
-warnings.filterwarnings("ignore")
 from itertools import product
 from math import floor
 

@@ -1,18 +1,3 @@
-###################################################################################################
-# Libraries
-###################################################################################################
-
-# Python
-import warnings
-
-from hmmlearn.hmm import GaussianHMM
-from hmmlearn.base import ConvergenceMonitor
-from sklearn.utils import check_array
-from hmmlearn.utils import iter_from_X_lengths
-
-warnings.filterwarnings("ignore")
-
-# Internal
 import numpy as np
 from scipy import linalg
 from hmmlearn.hmm import GaussianHMM

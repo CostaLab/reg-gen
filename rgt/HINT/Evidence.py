@@ -1,10 +1,5 @@
-# Import
 import os
-import sys
-
-# Internal
 from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import OverlapType
 
 """
 Creates a bed file with MPBSs with (in green) and without (in red) evidence.
@@ -17,11 +12,11 @@ Authors: Eduardo G. Gusmao, Zhijian Li
 def evidence_args(parser):
     # Input Options
     parser.add_argument("--mpbs-file", type=str, metavar="FILE", default=None,
-                        help=("motif predicted binding sites file. DEFAULT: None"))
+                        help="motif predicted binding sites file. DEFAULT: None")
     parser.add_argument("--chip-file", type=str, metavar="FILE", default=None,
-                        help=("the ChIP-seq peak files. DEFAULT: None"))
+                        help="the ChIP-seq peak files. DEFAULT: None")
     parser.add_argument("--peak-ext", type=int, metavar="INT", default=100,
-                        help=("The number used to extend the ChIP-seq summit. DEFAULT: 100"))
+                        help="The number used to extend the ChIP-seq summit. DEFAULT: 100")
 
     # Output Options
     parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),

@@ -1,9 +1,6 @@
 import os
 from copy import deepcopy
 from argparse import SUPPRESS
-import warnings
-
-warnings.filterwarnings("ignore")
 
 # Internal
 from rgt.Util import ErrorHandler, HmmData, GenomeData, OverlapType
@@ -1586,5 +1583,3 @@ def atac_test(args):
                     forward_shift=forward_shift, reverse_shift=reverse_shift,
                     initial_clip=initial_clip, output_location=args.output_location,
                     output_prefix=args.output_prefix)
-    # TODO
-    exit(0)

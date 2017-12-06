@@ -1,20 +1,12 @@
-###################################################################################################
-# Libraries
-###################################################################################################
-
-# Python
 import os
 import numpy as np
 from collections import Counter
-
 from sklearn.externals import joblib
-from hmmlearn import hmm
 from scipy import linalg
 
 # Internal
 from ..Util import GenomeData
 from signalProcessing import GenomicSignal
-from rgt.GenomicRegionSet import GenomicRegionSet
 from hmm import HMM, SemiSupervisedGaussianHMM
 from biasTable import BiasTable
 from argparse import SUPPRESS

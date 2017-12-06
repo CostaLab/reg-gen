@@ -5,9 +5,7 @@
 # Python
 import warnings
 
-warnings.filterwarnings("ignore")
 from rgt.GenomicRegionSet import GenomicRegionSet
-
 
 class BiasTable:
     """
