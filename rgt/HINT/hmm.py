@@ -1,14 +1,3 @@
-###################################################################################################
-# Libraries
-###################################################################################################
-
-# Python
-import warnings
-
-warnings.filterwarnings("ignore")
-
-# Internal
-from ..Util import ErrorHandler
 import numpy as np
 from scipy import linalg
 from hmmlearn.hmm import GaussianHMM
