@@ -126,16 +126,16 @@ class MotifData(ConfigurationFile):
 
     def __init__(self):
         ConfigurationFile.__init__(self)
-        self.repositories_list = self.config.get('MotifData','repositories').split(",")
+        self.repositories_list = self.config.get('MotifData', 'repositories').split(",")
         self.pwm_list = []
         self.logo_list = []
         self.mtf_list = []
         self.fpr_list = []
         for current_repository in self.repositories_list:
-            self.pwm_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository))
-            self.logo_list.append(os.path.join(self.data_dir,self.config.get('MotifData','logo_dataset'),current_repository))
-            self.mtf_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".mtf"))
-            self.fpr_list.append(os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".fpr"))
+            self.pwm_list.append(self.get_pwm_path(current_repository))
+            self.logo_list.append(self.get_logo_file(current_repository))
+            self.mtf_list.append(self.get_mtf_path(current_repository))
+            self.fpr_list.append(self.get_fpr_path(current_repository))
 
     def get_repositories_list(self):
         """Returns the current repository list."""
@@ -143,7 +143,7 @@ class MotifData(ConfigurationFile):
 
     def get_pwm_path(self, current_repository):
         """Returns the path to a specific motif repository."""
-        return os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository)
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository)
 
     def get_pwm_list(self):
         """Returns the list of current paths to the PWM repositories."""
@@ -156,7 +156,7 @@ class MotifData(ConfigurationFile):
 
             - current_repository -- Motif repository.
         """
-        return os.path.join(self.data_dir,self.config.get('MotifData','logo_dataset'),current_repository)
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'logo_dataset'), current_repository)
 
     def get_logo_list(self):
         """Returns the list of current paths to the logo images of PWMs in the given repositories."""
@@ -169,16 +169,30 @@ class MotifData(ConfigurationFile):
 
             - current_repository -- Motif repository.
         """
-        return os.path.join(self.data_dir,self.config.get('MotifData','pwm_dataset'),current_repository+".mtf")
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository+".mtf")
 
     def get_mtf_list(self):
         """Returns the list of current paths to the mtf files."""
         return self.mtf_list
 
+    def get_fpr_path(self, current_repository):
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository+".fpr")
+
     def get_fpr_list(self):
         """Returns the list of current paths to the fpr files."""
         return self.fpr_list
 
+    def set_custom(self, repositories):
+        self.repositories_list = repositories
+        self.pwm_list = []
+        self.logo_list = []
+        self.mtf_list = []
+        self.fpr_list = []
+        for current_repository in self.repositories_list:
+            self.pwm_list.append(npath(current_repository))
+            self.logo_list.append("")
+            self.mtf_list.append("")
+            self.fpr_list.append("")
 
 class HmmData(ConfigurationFile):
     """Represent HMM data. Inherits ConfigurationFile."""

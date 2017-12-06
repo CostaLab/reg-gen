@@ -49,19 +49,20 @@ def options(parser):
                              "will be applied to all motifs.")
     parser.add_argument("--use-only-motifs", dest="selected_motifs_filename", type=str, metavar="PATH",
                         help="Only use the motifs contained within this file (one for each line).")
-    parser.add_argument("--input-matrix", type=str, metavar="PATH",
-                        help="If an experimental matrix is provided, the input arguments will be ignored.")
+    parser.add_argument("--motif-dbs", type=str, metavar="PATH", nargs="+",
+                        help="New 'motif DB' folders to use instead of the ones within "
+                             "the RGTDATA folder. Each folder must contain PWM files.")
 
     # Promoter-matching args
     group = parser.add_argument_group("Promoter-regions matching",
-                                      "Takes a list of genes, extracts their promoter regions and performs motif "
-                                      "matching on these. ")
-    group.add_argument("--gene-list", dest="promoter_genes_filename", type=str, metavar="PATH",
-                       help="List of genes (one per line) to get the promoter regions from. "
-                            "If provided, any input file or experimental matrix will be ignored")
+                                      "These arguments are only used with the --promoters-only option (for the "
+                                      "purpose of matching only on the promoters of all or a subset of genes)")
+    group.add_argument("--target-genes", dest="target_genes_filename", type=str, metavar="PATH",
+                       help="List of genes (one per line) to get the promoter regions from.")
     group.add_argument("--make-background", dest="promoter_make_background", action="store_true", default=False,
                        help="If set, it will perform motif matching on the 'background regions', composed of "
-                            "the promoters of all available genes. It doesn't require --gene-list.")
+                            "the promoters of all available genes (minus the target genes, if specified). "
+                            "It doesn't require --target-genes.")
     group.add_argument("--promoter-length", type=int, metavar="INT", default=1000,
                        help="Length of the promoter region (in bp) to be extracted from each gene.")
 
@@ -78,8 +79,16 @@ def options(parser):
                             "Don't use this option if real bitscores should be printed in the resulting bed file. "
                             "Without this option, bigbed files will never be created.")
 
-    parser.add_argument('input_files', metavar='regions.bed', type=str, nargs='*',
-                        help='BED files to perform motif matching on')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--input-matrix", type=str, metavar="matrix.txt",
+                       help="The experimental matrix allows the specification of gene-association rules among "
+                            "input files (see online documentation for details).")
+    group.add_argument('--promoters-only', action="store_true",
+                       help="If you ONLY want to perform promoter matching without providing any input file/matrix. "
+                            "If --target-genes is not provided, then all available promoters will be matched against. "
+                            "Note how this makes '--make-background' redundant.")
+    group.add_argument('--input-files', metavar="regions.bed", nargs='+', type=str,
+                       help='BED files to perform motif matching on.')
 
 
 def main(args):
@@ -99,10 +108,10 @@ def main(args):
     random_region_name = "random_regions"
 
     # we take care of conflicting parameters before going into the core of the method
-    if args.promoter_genes_filename:
-        # disable random regions and input matrix
-        args.rand_proportion = None
-        args.input_matrix = None
+    if not args.promoters_only:
+        # disable any promoter-test option that might have been set
+        args.target_genes_filename = None
+        args.promoter_make_background = None
 
     ###################################################################################################
     # Initializations
@@ -113,22 +122,14 @@ def main(args):
         output_location = args.output_location
     else:
         output_location = npath(matching_folder_name)
-
-    try:
-        if not os.path.isdir(output_location):
-            os.makedirs(output_location)
-    except Exception:
-        err.throw_error("MM_OUT_FOLDER_CREATION")
+    print(">> output location:", output_location)
 
     # Default genomic data
     genome_data = GenomeData(args.organism)
 
     print(">> genome:", genome_data.organism)
-
-    # Default motif data
-    motif_data = MotifData()
-
-    print(">> motif repositories:", motif_data.repositories_list)
+    print(">> pseudocounts:", args.pseudocounts)
+    print(">> fpr threshold:", args.fpr)
 
     # Reading motif file
     selected_motifs = []
@@ -148,41 +149,6 @@ def main(args):
 
     genomic_regions_dict = {}
 
-    # get promoter regions from list of genes (both target and background)
-    # TODO: should be more clever, allow precomputed regions etc
-    if args.promoter_genes_filename:
-        annotation = AnnotationSet(args.organism, alias_source=args.organism,
-                                   protein_coding=True, known_only=True)
-
-        target_genes = GeneSet("target_genes")
-        target_genes.read(args.promoter_genes_filename)
-
-        # TODO what do we do with unmapped genes? maybe just print them out
-        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=args.promoter_length)
-        target_regions.name = "target_regions"
-        target_regions.sort()
-        output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
-        target_regions.write(output_file_name)
-
-        genomic_regions_dict[target_regions.name] = target_regions
-
-        if args.promoter_make_background:
-            # background is made of all genes minus the target genes
-            background_genes = GeneSet("background_genes")
-            background_genes.get_all_genes(organism=args.organism)
-            background_genes.subtract(target_genes)
-
-            background_regions = annotation.get_promoters(gene_set=background_genes,
-                                                          promoterLength=args.promoter_length)
-            background_regions.name = "background_regions"
-            background_regions.sort()
-            output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
-            background_regions.write(output_file_name)
-
-            genomic_regions_dict[background_regions.name] = background_regions
-
-            print(">> promoter background created:", len(background_regions), "regions")
-
     # get experimental matrix, if available
     if args.input_matrix:
         try:
@@ -191,6 +157,9 @@ def main(args):
 
             # if the matrix is present, the (empty) dictionary is overwritten
             genomic_regions_dict = exp_matrix.objectsDict
+
+            print(">> experimental matrix loaded")
+
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
     elif args.input_files:
@@ -202,6 +171,63 @@ def main(args):
             regions.read(npath(input_filename))
 
             genomic_regions_dict[name] = regions
+
+        print(">> input regions BED files loaded")
+
+    # we put this here because we don't want to create the output directory unless we
+    # are sure the initialisation (including loading input files) worked
+    try:
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("MM_OUT_FOLDER_CREATION")
+
+    annotation = None
+    target_genes = None
+    # get promoter regions from list of genes (both target and background)
+    # TODO: should be more clever, allow precomputed regions etc
+    if args.target_genes_filename:
+        annotation = AnnotationSet(args.organism, alias_source=args.organism,
+                                   protein_coding=True, known_only=True)
+
+        target_genes = GeneSet("target_genes")
+        target_genes.read(args.target_genes_filename)
+
+        # TODO what do we do with unmapped genes? maybe just print them out
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=args.promoter_length)
+        target_regions.name = "target_regions"
+        target_regions.sort()
+        output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
+        target_regions.write(output_file_name)
+
+        genomic_regions_dict[target_regions.name] = target_regions
+
+        print(">> target promoter file created:", len(target_regions), "regions")
+
+    # we make a background in case it's requested, but also in case a list of target genes has not been
+    # provided
+    if args.promoter_make_background or (args.promoters_only and not args.target_genes_filename):
+        if not annotation:
+            annotation = AnnotationSet(args.organism, alias_source=args.organism,
+                                       protein_coding=True, known_only=True)
+
+        # background is made of all known genes minus the target genes (if any)
+        background_genes = GeneSet("background_genes")
+        background_genes.get_all_genes(organism=args.organism)
+
+        if target_genes:
+            background_genes.subtract(target_genes)
+
+        background_regions = annotation.get_promoters(gene_set=background_genes,
+                                                      promoterLength=args.promoter_length)
+        background_regions.name = "background_regions"
+        background_regions.sort()
+        output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))
+        background_regions.write(output_file_name)
+
+        genomic_regions_dict[background_regions.name] = background_regions
+
+        print(">> background promoter file created:", len(background_regions), "regions")
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, or at least a "
@@ -275,6 +301,15 @@ def main(args):
     # Initialization
     motif_list = []
 
+    # Default motif data
+    motif_data = MotifData()
+    if args.motif_dbs:
+        # must overwrite the default DBs
+        motif_data.set_custom(args.motif_dbs)
+        print(">> custom motif repositories:", motif_data.repositories_list)
+    else:
+        print(">> motif repositories:", motif_data.repositories_list)
+
     # Creating thresholds object
     thresholds = Thresholds(motif_data)
 
@@ -329,7 +364,7 @@ def main(args):
     for grs in regions_to_match:
 
         start = time.time()
-        print(">>> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
+        print(">> matching [", grs.name, "], ", len(grs), " regions... ", end='', sep="")
         sys.stdout.flush()
 
         # Initializing output bed file

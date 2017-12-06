@@ -115,13 +115,6 @@ def main(args):
     else:
         output_location = os.path.join(os.getcwd(), enrichment_folder_name)
 
-    # if the output folder doesn't exist, we create it
-    try:
-        if not os.path.isdir(output_location):
-            os.makedirs(output_location)
-    except Exception:
-        err.throw_error("ME_OUT_FOLDER_CREATION")
-
     # Matching folder
     if args.matching_location:
         match_location = args.matching_location
@@ -223,6 +216,8 @@ def main(args):
 
             del exp_matrix
 
+            print(">> experimental matrix loaded")
+
         except Exception:
             err.throw_error("MM_WRONG_EXPMAT")
     elif input_files:
@@ -231,12 +226,11 @@ def main(args):
             name, _ = os.path.splitext(os.path.basename(input_filename))
 
             regions = GenomicRegionSet(name)
+            regions.read(os.path.abspath(input_filename))
 
-            try:
-                regions.read(os.path.abspath(input_filename))
-            except:
-                err.throw_error("DEFAULT_ERROR", add_msg="Input file {} could not be loaded.".format(input_filename))
             genomic_regions_dict[name] = regions
+
+        print(">> input regions BED files loaded")
 
     if not genomic_regions_dict:
         err.throw_error("DEFAULT_ERROR", add_msg="You must either specify an experimental matrix, "
@@ -331,6 +325,14 @@ def main(args):
     ###################################################################################################
     # Background Statistics
     ###################################################################################################
+
+    # if the output folder doesn't exist, we create it
+    # (we do this here to not create the output folder when the program fails early)
+    try:
+        if not os.path.isdir(output_location):
+            os.makedirs(output_location)
+    except Exception:
+        err.throw_error("ME_OUT_FOLDER_CREATION")
 
     print()
 
