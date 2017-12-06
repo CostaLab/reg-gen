@@ -2,6 +2,7 @@ import os
 import warnings
 import subprocess
 import shutil
+
 warnings.filterwarnings("ignore")
 from itertools import product
 from math import floor
@@ -17,23 +18,27 @@ from Bio import motifs
 def estimation_args(parser):
     # Input Options
     parser.add_argument("--organism", type=str, metavar="STRING", default="hg19",
-                        help=("Organism considered on the analysis. Check our full documentation for all available "
-                              "options. All default files such as genomes will be based on the chosen organism "
-                              "and the data.config file."))
+                        help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
+                             "Common choices are hg19, hg38. mm9, and mm10. DEFAULT: hg19")
     parser.add_argument("--bias-type", type=str, metavar="STRING", default="VOM",
                         help="The methods that used to estimate the bias table "
-                             "Available options are: 'KMER', 'PPM' and 'VOM'")
-    parser.add_argument("--reads-file", type=str, metavar="FILE", default=None)
-    parser.add_argument("--regions-file", type=str, metavar="FILE", default=None)
+                             "Available options are: 'KMER', 'PWM' and 'VOM'. DEFAULT: VOM")
+    parser.add_argument("--reads-file", type=str, metavar="FILE", default=None,
+                        help="The BAM file containing aligned reads. DEFAULT: None")
+    parser.add_argument("--regions-file", type=str, metavar="FILE", default=None,
+                        help="The BED file containing regions to estimate the bias. DEFAULT: None")
     parser.add_argument("--downstream-ext", type=int, metavar="INT", default=1)
     parser.add_argument("--upstream-ext", type=int, metavar="INT", default=0)
     parser.add_argument("--forward-shift", type=int, metavar="INT", default=5)
     parser.add_argument("--reverse-shift", type=int, metavar="INT", default=-4)
-    parser.add_argument("--k-nb", type=int, metavar=int, default=8)
+    parser.add_argument("--k-nb", type=int, metavar="INT", default=8,
+                        help="Size of k-mer for bias estimation. DEFAULT: 8")
 
     # Output Options
-    parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd())
-    parser.add_argument("--output-prefix", type=str, metavar="STRING", default=None)
+    parser.add_argument("--output-location", type=str, metavar="PATH", default=os.getcwd(),
+                        help="Path where the output bias table files will be written. DEFAULT: current directory")
+    parser.add_argument("--output-prefix", type=str, metavar="STRING", default="Bias",
+                        help="The prefix for results files. DEFAULT: Bias")
 
 
 def estimation_run(args):
@@ -46,7 +51,6 @@ def estimation_run(args):
 
 
 def estimate_bias_kmer(args):
-
     # Parameters
     maxDuplicates = 100
     pseudocount = 1.0
@@ -57,7 +61,6 @@ def estimate_bias_kmer(args):
     fastaFile = Fastafile(genome_data.get_genome())
     regions = GenomicRegionSet("regions")
     regions.read(args.regions_file)
-
 
     # Initializing dictionaries
     obsDictF = dict()
@@ -389,7 +392,7 @@ def create_model(args, seq_file, infix, learn_dependency_model, slim_dimont_pred
 
     with open(output_file, "w") as f:
         subprocess.call(["java", "-jar", slim_dimont_predictor, "slimdimont={}".format(slim_dimont_classifier),
-                        "data=./test.fa", "infix={}".format(infix)], stdout=f)
+                         "data=./test.fa", "infix={}".format(infix)], stdout=f)
 
     os.remove(os.path.join(args.output_location, "Dependency_logo.pdf"))
     os.remove(os.path.join(args.output_location, "Predicted_sequence_orientations_and_scores.tsv"))
@@ -598,22 +601,22 @@ def compute_proba(vector, sequence, model, k_nb):
                 key4 = "P_10(x|y={},c=1)".format(sequence[8])
                 key5 = "P_10(x|y={},c=1)".format(sequence[9])
                 proba10 = model["P_10(c=0)"] * model["P_10(x|c=0)"][vector[10]] + \
-                         model["P_10(c=1)"] * (model["P_10(p|c=1)"][0] * model[key1][vector[10]] +
-                                              model["P_10(p|c=1)"][1] * model[key2][vector[10]] +
-                                              model["P_10(p|c=1)"][2] * model[key3][vector[10]] +
-                                              model["P_10(p|c=1)"][3] * model[key4][vector[10]] +
-                                              model["P_10(p|c=1)"][4] * model[key5][vector[10]])
+                          model["P_10(c=1)"] * (model["P_10(p|c=1)"][0] * model[key1][vector[10]] +
+                                                model["P_10(p|c=1)"][1] * model[key2][vector[10]] +
+                                                model["P_10(p|c=1)"][2] * model[key3][vector[10]] +
+                                                model["P_10(p|c=1)"][3] * model[key4][vector[10]] +
+                                                model["P_10(p|c=1)"][4] * model[key5][vector[10]])
                 key1 = "P_11(x|y={},c=1)".format(sequence[6])
                 key2 = "P_11(x|y={},c=1)".format(sequence[7])
                 key3 = "P_11(x|y={},c=1)".format(sequence[8])
                 key4 = "P_11(x|y={},c=1)".format(sequence[9])
                 key5 = "P_11(x|y={},c=1)".format(sequence[10])
                 proba11 = model["P_11(c=0)"] * model["P_11(x|c=0)"][vector[10]] + \
-                         model["P_11(c=1)"] * (model["P_11(p|c=1)"][0] * model[key1][vector[10]] +
-                                              model["P_11(p|c=1)"][1] * model[key2][vector[10]] +
-                                              model["P_11(p|c=1)"][2] * model[key3][vector[10]] +
-                                              model["P_11(p|c=1)"][3] * model[key4][vector[10]] +
-                                              model["P_11(p|c=1)"][4] * model[key5][vector[10]])
+                          model["P_11(c=1)"] * (model["P_11(p|c=1)"][0] * model[key1][vector[10]] +
+                                                model["P_11(p|c=1)"][1] * model[key2][vector[10]] +
+                                                model["P_11(p|c=1)"][2] * model[key3][vector[10]] +
+                                                model["P_11(p|c=1)"][3] * model[key4][vector[10]] +
+                                                model["P_11(p|c=1)"][4] * model[key5][vector[10]])
                 return proba0 * proba1 * proba2 * proba3 * proba4 * proba5 * proba6 * proba7 * \
                        proba8 * proba9 * proba10 * proba11
 
@@ -845,7 +848,6 @@ def read_model(input_fname, k_nb):
 
 
 def compute_bias(args):
-
     input_f_obs = os.path.join(args.output_location, "{}_f_obs.txt".format(str(args.k_nb)))
     input_f_exp = os.path.join(args.output_location, "{}_f_exp.txt".format(str(args.k_nb)))
     input_r_obs = os.path.join(args.output_location, "{}_r_obs.txt".format(str(args.k_nb)))
@@ -886,4 +888,4 @@ def compute_bias(args):
         bias_table_f[kmer] = min(round(proba_f_obs / proba_f_exp, 6), 10)
         bias_table_r[kmer] = min(round(proba_r_obs / proba_r_exp, 6), 10)
 
-    write_table(args.output_location, args.output_prefix,  [bias_table_f, bias_table_r])
+    write_table(args.output_location, args.output_prefix, [bias_table_f, bias_table_r])

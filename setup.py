@@ -314,7 +314,10 @@ data_config_file.write("default_bias_table_R_SH: fp_hmms/single_hit_bias_table_R
 data_config_file.write("default_bias_table_F_DH: fp_hmms/double_hit_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R.txt\n")
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
-data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
+data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n")
+data_config_file.write("dependency_model: fp_hmms/LearnDependencyModel.jar\n")
+data_config_file.write("slim_dimont_predictor: fp_hmms/SlimDimontPredictor.jar\n")
+data_config_file.write("default_test_fa: fp_hmms/test.fa\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + path.join(rgt_data_location, triplexes_file) + "\n")
 data_config_file.write("path_c_rgt: " + path.join(rgt_data_location, "lib/" + libRGT) + "\n")
@@ -360,7 +363,8 @@ copy_files_dictionary = {
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
                 "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac_paired.pkl", "atac_single.pkl",
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
-                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
+                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
+                "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
     "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr",
                "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",

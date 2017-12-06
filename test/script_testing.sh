@@ -196,39 +196,33 @@ mkdir -p ${DIR}/HINT
 
 cd ${DIR}/HINT
 
-echo "Running HINT using DNase-seq and histone modification data.."
-url="http://134.130.18.8/open_data/hint/tutorial/HINT_DNaseHistoneTest.tar.gz"
+echo "Running HINT using only DNase-seq data.."
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_DNaseTest.tar.gz"
 echo "Downloading test data."
-wget -qO- -O HINT_DNaseHistoneTest.tar.gz $url && tar xvfz HINT_DNaseHistoneTest.tar.gz && rm HINT_DNaseHistoneTest.tar.gz
-cd HINT_DNaseHistoneTest
-rgt-hint --dnase-histone-footprints --output-location=./ --output-prefix=test DNase.bam H3K4me1.bam H3K4me3.bam regions.bed
+wget -qO- -O HINT_DNaseTest.tar.gz $url && tar xvfz HINT_DNaseTest.tar.gz && rm HINT_DNaseTest.tar.gz
+cd HINT_DNaseTest
+rgt-hint footprinting --dnase-seq DNase.bam DNasePeaks.bed
+echo "Running HINT-BC using only DNase-seq data.."
+rgt-hint footprinting --dnase-seq --bias-correction DNase.bam DNasePeaks.bed
 cd ../
+
+echo "Running HINT using only ATAC-seq data.."
+url="http://134.130.18.8/open_data/hint/tutorial/HINT_ATACTest.tar.gz"
+echo "Downloading test data."
+wget -qO- -O HINT_ATACTest.tar.gz $url && tar xvfz HINT_ATAC.tar.gz && rm HINT_ATAC.tar.gz
+cd HINT_ATACTest
+echo "Running HINT using ATAC-seq data.."
+rgt-hint footprinting --atac-seq ATAC.bam ATACPeaks.bed
+echo "Testing the paired-end model of HINT using ATAC-seq data.."
+rgt-hint footprinting --atac-seq --paired-end --output-prefix=fp_paired ATAC.bam ATACPeaks.bed
 
 echo "Running HINT using only histone modification data.."
 url="http://134.130.18.8/open_data/hint/tutorial/HINT_HistoneTest.tar.gz"
 echo "Downloading test data."
 wget -qO- -O HINT_HistoneTest.tar.gz $url && tar xvfz HINT_HistoneTest.tar.gz && rm HINT_HistoneTest.tar.gz
 cd HINT_HistoneTest
-rgt-hint --histone-footprints --output-location=./ --output-prefix=test histone.bam histonePeaks.bed
+rgt-hint footprinting --histone histone.bam histonePeaks.bed
 cd ../
-
-echo "Running HINT using only DNase-seq data.."
-url="http://134.130.18.8/open_data/hint/tutorial/HINT_DNaseTest.tar.gz"
-echo "Downloading test data."
-wget -qO- -O HINT_DNaseTest.tar.gz $url && tar xvfz HINT_DNaseTest.tar.gz && rm HINT_DNaseTest.tar.gz
-cd HINT_DNaseTest
-rgt-hint --dnase-footprints --output-location=./ --output-prefix=test DNase.bam DNasePeaks.bed
-echo "Running HINT-BC using only DNase-seq data.."
-rgt-hint --dnase-footprints --bias-correction --output-location=./ --output-prefix=test_bc DNase.bam DNasePeaks.bed
-cd ../
-
-echo "Running HINT using only ATAC-seq data.."
-url="http://134.130.18.8/open_data/hint/tutorial/HINT_ATAC.tar.gz"
-echo "Downloading test data."
-wget -qO- -O HINT_ATAC.tar.gz $url && tar xvfz HINT_ATAC.tar.gz && rm HINT_ATAC.tar.gz
-cd HINT_ATAC
-mkdir output
-rgt-hint --atac-footprints --organism=mm10 input/B_ATAC_chr1.bam input/B_ATACPeaks_chr1.bed --output-location=output --output-prefix=B_ATAC_chr1_footprints
 
 echo "********* HINT test completed ****************"
 

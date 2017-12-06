@@ -200,6 +200,9 @@ class HmmData(ConfigurationFile):
         self.default_bias_table_R_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_DH'))
         self.default_bias_table_F_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_ATAC'))
         self.default_bias_table_R_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_ATAC'))
+        self.dependency_model = os.path.join(self.data_dir, self.config.get('HmmData', 'dependency_model'))
+        self.slim_dimont_predictor = os.path.join(self.data_dir, self.config.get('HmmData', 'slim_dimont_predictor'))
+        self.default_test_fa = os.path.join(self.data_dir, self.config.get('HmmData', 'default_test_fa'))
 
     def get_default_hmm_dnase(self):
         """Returns the current default DNase only hmm."""
@@ -261,6 +264,14 @@ class HmmData(ConfigurationFile):
         """Returns the ATAC-seq default bias table for the reverse strand."""
         return self.default_bias_table_R_ATAC
 
+    def get_dependency_model(self):
+        return self.dependency_model
+
+    def get_slim_dimont_predictor(self):
+        return self.slim_dimont_predictor
+
+    def get_default_test_fa(self):
+        return self.default_test_fa
 
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""

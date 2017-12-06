@@ -9,7 +9,6 @@ warnings.filterwarnings("ignore")
 from math import log, ceil, floor, isnan
 
 # Internal
-from ..Util import ErrorHandler
 from ..Util import AuxiliaryFunctions
 from pileupRegion import PileupRegion
 
@@ -17,7 +16,7 @@ from pileupRegion import PileupRegion
 import numpy as np
 from pysam import __version__ as ps_version
 from pysam import Samfile, Fastafile
-from numpy import exp, array, abs, int, mat, linalg, convolve, add, subtract, nan_to_num
+from numpy import exp, array, abs, int, mat, linalg, convolve, nan_to_num
 from scipy.stats import scoreatpercentile
 
 """
@@ -310,8 +309,6 @@ class GenomicSignal:
             nhatr = Nr[i - (window / 2)] * (ar[i] / rSum)
             zf = log(nf[i] + 1) - log(nhatf + 1)
             zr = log(nr[i] + 1) - log(nhatr + 1)
-            # zf = (nf[i] + 1) / (nhatf + 1)
-            # zr = (nr[i] + 1) / (nhatr + 1)
             bias_corrected_signal.append(zf + zr)
             fSum -= fLast
             fSum += af[i + (window / 2)]
