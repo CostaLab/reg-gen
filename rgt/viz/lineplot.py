@@ -7,10 +7,13 @@ import matplotlib.pyplot as plt
 
 # Local Libraries
 # Distal Libraries
+from collections import defaultdict
+
 from ..Util import Html
 from ..CoverageSet import *
 from ..ExperimentalMatrix import *
 from .shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
+
 # Local test
 dir = os.getcwd()
 
