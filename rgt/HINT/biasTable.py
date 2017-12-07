@@ -21,7 +21,7 @@ class BiasTable:
         """
         self.regions = GenomicRegionSet("Bias Regions")
         self.reads_file = reads_file
-        if regions_file != None:
+        if regions_file is not None:
             self.regions.read(regions_file)
         self.genome_file = genome_file
         self.k_nb = k_nb

@@ -19,7 +19,7 @@ def tracks_args(parser):
     parser.add_argument("--regions-file", type=str, metavar="STRING", default=None,
                         help="A bed file containing all the interested regions. DEFAULT: None")
     parser.add_argument("--bias-table", type=str, metavar="FILE1_F,FILE1_R", default=None,
-                        help=("Bias table files used to generate bias corrected tracks. DEFAULT: None"))
+                        help="Bias table files used to generate bias corrected tracks. DEFAULT: None")
 
     # Hidden Options
     parser.add_argument("--initial-clip", type=int, metavar="INT", default=50, help=SUPPRESS)

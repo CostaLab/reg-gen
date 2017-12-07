@@ -79,7 +79,7 @@ def semi_supervised(args):
     # make sure covariance is symmetric and positive-definite
     for i in range(hmm_model.n_components):
         while np.any(np.array(linalg.eigvalsh(hmm_model.covars_[i])) <= 0):
-            hmm_model.covars_[i] = hmm_model.covars_[i] + 0.000001 * np.eye(hmm_model.covars_[i].shape[0])
+            hmm_model.covars_[i] += 0.000001 * np.eye(hmm_model.covars_[i].shape[0])
 
     output_fname = os.path.join(args.output_location, "{}.pkl".format(args.output_prefix))
     joblib.dump(hmm_model, output_fname)
