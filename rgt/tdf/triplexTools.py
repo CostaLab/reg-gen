@@ -677,7 +677,7 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, show_dis=True)
+        asso_genes = g.gene_association(organism=organism, promoter_length=1000, show_dis=True)
 
         # genes = asso_genes[0].name.split(":")
         closest_genes = []

@@ -37,7 +37,7 @@ if os.path.isfile(args.i):
 
         genes.genes = de_ensembl
         
-        de_prom, unmapped_gene_list = ann.get_promoters(promoterLength=1000, 
+        de_prom, unmapped_gene_list = ann.get_promoters(promoter_length=1000,
                                                         gene_set=genes,
                                                         unmaplist=True)
         print("\tGetting promoters:")
@@ -55,7 +55,7 @@ if os.path.isfile(args.i):
         nde_gene = GeneSet("nde genes")
         nde_gene.genes = nde_ensembl
 
-        nde_prom, unmapped_gene_list = ann.get_promoters(promoterLength=1000, 
+        nde_prom, unmapped_gene_list = ann.get_promoters(promoter_length=1000,
                                                          gene_set=nde_gene,
                                                          unmaplist=True)
         print("\tGetting background promoters:")

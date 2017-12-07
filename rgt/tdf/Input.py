@@ -88,7 +88,7 @@ class Input(object):
                                     filter_havana=self.pars.filter_havana,
                                     protein_coding=self.pars.protein_coding,
                                     known_only=self.pars.known_only)
-                self.target_regions, unmapped = ann.get_promoters(promoterLength=self.pars.pl, tss=self.pars.tss,
+                self.target_regions, unmapped = ann.get_promoters(promoter_length=self.pars.pl, tss=self.pars.tss,
                                                                   gene_set=self.de_genes,
                                                                   regiondata=self.pars.score,
                                                                   unmaplist=True, variants=False)
@@ -103,7 +103,7 @@ class Input(object):
                 else:
                     self.nde_genes.genes = [g for g in ann.symbol_dict.values() if g not in self.de_genes]
 
-                self.nontarget_regions = ann.get_promoters(promoterLength=self.pars.pl,
+                self.nontarget_regions = ann.get_promoters(promoter_length=self.pars.pl,
                                                            gene_set=self.nde_genes, unmaplist=False)
                 # print2(summary, "   \t" + str(len(nde_prom)) + "\tmapped non-target promoters")
                 self.nontarget_regions.merge(namedistinct=True)
