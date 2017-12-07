@@ -41,7 +41,7 @@ class Motif:
         repository = input_file_name.split("/")[-2]
 
         # Creating PFM & PSSM
-        self.pfm = parsers.pfm(input_file_name)
+        self.pfm = parsers.pfm(str(input_file_name))
         self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
         self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts, 2)
 

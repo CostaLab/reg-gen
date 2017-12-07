@@ -4,15 +4,15 @@
 
 # Python
 from __future__ import print_function
-import time
 import sys
+import time
 from random import seed
 import argparse
 
 # Internal
-from rgt import __version__
-from Match import main_matching, matching_options
-from Enrichment import main_enrichment, enrichment_options
+from .. import __version__
+from .Match import main_matching, matching_options
+from .Enrichment import main_enrichment, enrichment_options
 
 """
 Motif matching and enrichment based on motif PSSM. Can perform either Matching (finds all putative

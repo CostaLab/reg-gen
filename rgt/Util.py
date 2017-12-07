@@ -10,7 +10,7 @@ from __future__ import print_function
 import os
 import sys
 import shutil
-import ConfigParser
+from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
@@ -40,7 +40,7 @@ class ConfigurationFile:
         data_config_file_name = os.path.join(get_rgtdata_path(), "data.config")
 
         # Parsing config file
-        self.config = ConfigParser.ConfigParser()
+        self.config = ConfigParser()
         self.config.read(data_config_file_name)
 
         # Overwriting config using user options
@@ -187,8 +187,8 @@ class HmmData(ConfigurationFile):
         ConfigurationFile.__init__(self)
         self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
         self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
-        self.default_hmm_atac = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac'))
-        self.default_hmm_atac_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_bc'))
+        self.default_hmm_atac_paired = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_paired'))
+        self.default_hmm_atac_single = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_single'))
         self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
         self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
         self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
@@ -200,6 +200,9 @@ class HmmData(ConfigurationFile):
         self.default_bias_table_R_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_DH'))
         self.default_bias_table_F_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_ATAC'))
         self.default_bias_table_R_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_ATAC'))
+        self.dependency_model = os.path.join(self.data_dir, self.config.get('HmmData', 'dependency_model'))
+        self.slim_dimont_predictor = os.path.join(self.data_dir, self.config.get('HmmData', 'slim_dimont_predictor'))
+        self.default_test_fa = os.path.join(self.data_dir, self.config.get('HmmData', 'default_test_fa'))
 
     def get_default_hmm_dnase(self):
         """Returns the current default DNase only hmm."""
@@ -209,13 +212,13 @@ class HmmData(ConfigurationFile):
         """Returns the current default DNase only hmm."""
         return self.default_hmm_dnase_bc
 
-    def get_default_hmm_atac(self):
+    def get_default_hmm_atac_paired(self):
         """Returns the current default atac only hmm."""
-        return self.default_hmm_atac
+        return self.default_hmm_atac_paired
 
-    def get_default_hmm_atac_bc(self):
+    def get_default_hmm_atac_single(self):
         """Returns the current default atac only hmm."""
-        return self.default_hmm_atac_bc
+        return self.default_hmm_atac_single
 
     def get_default_hmm_histone(self):
         """Returns the current default Histone only hmm."""
@@ -261,6 +264,14 @@ class HmmData(ConfigurationFile):
         """Returns the ATAC-seq default bias table for the reverse strand."""
         return self.default_bias_table_R_ATAC
 
+    def get_dependency_model(self):
+        return self.dependency_model
+
+    def get_slim_dimont_predictor(self):
+        return self.slim_dimont_predictor
+
+    def get_default_test_fa(self):
+        return self.default_test_fa
 
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""

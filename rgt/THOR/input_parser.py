@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from rgt.Util import npath
+from ..Util import npath
 
 
 def get_data_block(filepath, feature):

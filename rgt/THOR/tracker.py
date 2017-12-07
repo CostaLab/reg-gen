@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 import re
 import numpy as np
-from rgt.Util import Html
+from ..Util import Html
 from collections import OrderedDict
 from os import path
 # import sys

@@ -5,11 +5,11 @@ import os
 import sys
 import pickle
 import shutil
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.AnnotationSet import AnnotationSet
-from rgt.Util import GenomeData
-from rgt.tdf.triplexTools import get_rna_region_str, rna_associated_gene, connect_rna
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..AnnotationSet import AnnotationSet
+from ..Util import GenomeData
+from ..tdf.triplexTools import get_rna_region_str, rna_associated_gene, connect_rna
 
 
 def load_dump(path, filename):

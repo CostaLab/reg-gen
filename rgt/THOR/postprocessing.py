@@ -23,12 +23,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 from __future__ import print_function
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from ..GenomicRegionSet import GenomicRegionSet
 import sys
 # import re
 from scipy.stats.mstats import zscore
-from rgt.motifanalysis.Statistics import multiple_test_correction
+from ..motifanalysis.Statistics import multiple_test_correction
 import numpy as np
 from numpy import log10
 

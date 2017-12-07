@@ -6,7 +6,7 @@ GenomicVariant is a specialized GenomicRegion class and describes a SNP or InDel
 """
 
 
-from rgt.GenomicRegion import GenomicRegion
+from .GenomicRegion import GenomicRegion
 
 class GenomicVariant(GenomicRegion):
     """*Keyword arguments:*

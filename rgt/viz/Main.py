@@ -1,6 +1,7 @@
 # Python Libraries
 from __future__ import division
 from __future__ import print_function
+
 import os
 import sys
 import time
@@ -8,19 +9,18 @@ import getpass
 import argparse
 import datetime
 import matplotlib
-# import matplotlib.pyplot as plt
 matplotlib.use('Agg', warn=False)
-from boxplot import Boxplot
-from lineplot import Lineplot
-from jaccard_test import Jaccard
-from projection_test import Projection
-from intersection_test import Intersect
-from bed_profile import BED_profile
-from shared_function import check_dir, print2, output_parameters, \
-    copy_em, list_all_index, output
-from plotTools import Venn
-from rgt import __version__
 
+from .boxplot import Boxplot
+from .lineplot import Lineplot
+from .jaccard_test import Jaccard
+from .projection_test import Projection
+from .intersection_test import Intersect
+from .bed_profile import BED_profile
+from .shared_function import check_dir, print2, output_parameters,\
+                            copy_em, list_all_index, output
+from .plotTools import Venn
+from .. import __version__
 dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix
@@ -450,6 +450,7 @@ def main():
                 else:
                     args.other = [True for i in args.labels]
 
+
             bed_profile = BED_profile(args.i, args.organism, args)
             bed_profile.cal_statistics()
             bed_profile.plot_distribution_length()
@@ -645,6 +646,7 @@ def main():
             # if args.stackedbar:
             # inter.colors(args.c, args.color,ref_que = "ref")
             inter.comb_stacked_plot()
+            
 
             output(f=inter.sbar, directory=args.o, folder=args.t, filename="intersection_stackedbar",
                    extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
@@ -849,7 +851,7 @@ def main():
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)
-
+       
         ################### Venn Diagram ##########################################
         if args.mode == 'venn':
             print("\n################# Venn Diagram ###############")
