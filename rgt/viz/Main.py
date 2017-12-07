@@ -646,7 +646,7 @@ def main():
             print2(parameter, "\t\tStep size:\t"+str(args.ss))
             print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
             
-            lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
+            lineplot = Lineplot(em_path=args.input, title=args.t, annotation=args.ga,
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=args.df, dft=args.dft, fields=[args.g,args.col,args.row,args.c],
                                 test=args.test, sense=args.sense, strand=args.strand, flipnegative=args.flip_negative)
@@ -700,7 +700,7 @@ def main():
             print2(parameter, "\t\tStep size:\t"+str(args.ss))
             print2(parameter, "\t\tCenter mode:\t"+str(args.center+"\n"))
 
-            lineplot = Lineplot(EMpath=args.input, title=args.t, annotation=args.ga, 
+            lineplot = Lineplot(em_path=args.input, title=args.t, annotation=args.ga,
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs, 
                                 bs=args.bs, ss=args.ss, df=False, fields=[args.col,args.row,args.c])
             # Processing the regions by given parameters

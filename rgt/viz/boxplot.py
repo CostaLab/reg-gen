@@ -1,20 +1,22 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
+
 import os
-import sys
-import numpy
 from collections import OrderedDict
+
+import numpy
 from matplotlib import pyplot as plt
-from scipy.stats import mstats, mannwhitneyu
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from scipy.stats import mstats, mannwhitneyu
+
+from .shared_function import output_array, gen_tags, tag_from_r, colormap, multiple_correction, value2str
+from ..CoverageSet import CoverageSet
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..GenomicRegionSet import GenomicRegionSet
 # Local Libraries
 # Distal Libraries
 from ..Util import Html
-from ..CoverageSet import CoverageSet
-from ..GenomicRegionSet import GenomicRegionSet
-from ..ExperimentalMatrix import ExperimentalMatrix
-from .shared_function import output_array, gen_tags, tag_from_r, colormap, multiple_correction, value2str
 
 
 ###########################################################################################

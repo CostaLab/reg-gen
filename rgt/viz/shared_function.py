@@ -1,28 +1,29 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
-import re
-import sys
-import time
-import numpy
-import pickle
-import fnmatch
-import urllib2
+from __future__ import print_function
+
 import datetime
-from shutil import copyfile
+import fnmatch
 import multiprocessing.pool
+import pickle
+import re
+import time
+import urllib2
+from shutil import copyfile
+
 import matplotlib
-import matplotlib.pyplot as plt
-import matplotlib.colors as colormat
 import matplotlib.cm as cmx
+import matplotlib.colors as colormat
+import matplotlib.pyplot as plt
+import numpy
 from matplotlib.backends.backend_pdf import PdfPages
 
+from ..AnnotationSet import AnnotationSet
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
 # Local Libraries
 # Distal Libraries
 from ..Util import Html
-from ..CoverageSet import *
-from ..ExperimentalMatrix import *
-from ..AnnotationSet import AnnotationSet
 from ..motifanalysis.Statistics import multiple_test_correction
 
 # Local test
@@ -330,11 +331,11 @@ def count_intersect(reference, query, mode_count="count", threshold=False):
 
 
 def value2str(value):
-    if (isinstance(value, str)): return value
+    if isinstance(value, str): return value
     if value == 0: return "0"
-    if (isinstance(value, int)):
+    if isinstance(value, int):
         return str(value)
-    elif (isinstance(value, float)):
+    elif isinstance(value, float):
         if value >= 1000:
             r = "{}".format(int(value))
         elif 1000 > value > 10:
@@ -591,12 +592,12 @@ def output(f, directory, folder, filename, extra=None, pdf=False, show=None):
                   bbox_inches='tight', dpi=400)
     else:
         f.savefig(os.path.join(pd, filename), facecolor='w', edgecolor='w',
-                  bbox_extra_artists=(extra), bbox_inches='tight', dpi=400)
+                  bbox_extra_artists=extra, bbox_inches='tight', dpi=400)
 
     if pdf:
         try:
             pp = PdfPages(os.path.join(pd, filename) + '.pdf')
-            pp.savefig(f, bbox_extra_artists=(extra), bbox_inches='tight')
+            pp.savefig(f, bbox_extra_artists=extra, bbox_inches='tight')
             pp.close()
         except:
             print("ERROR: Problem in PDF conversion. Skipped.")

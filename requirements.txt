@@ -9,3 +9,6 @@ fisher
 HTSeq
 hmmlearn
 configparser
+matplotlib
+pyx
+natsort

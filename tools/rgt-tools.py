@@ -1591,7 +1591,7 @@ if __name__ == "__main__":
             for r in regions:
                 print(r.name)
                 s = get_sequence(ch=r.chrom, ss=r.initial, es=r.final, strand=r.orientation, 
-                                 rna=args.r, ex=args.ex)
+                                 rna=args.rna, ex=args.ex)
                 print(s[:20])
                 ss = [s[i:i+70] for i in range(0, len(s), 70)]
 

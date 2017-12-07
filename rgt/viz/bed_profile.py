@@ -1,19 +1,19 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
-import sys
-import matplotlib
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-import numpy
-import natsort
+from __future__ import print_function
 
+import matplotlib
+import matplotlib.pyplot as plt
+import natsort
+import numpy
+from matplotlib.backends.backend_pdf import PdfPages
+
+from .shared_function import shiftedColorMap, walklevel
+from ..ExperimentalMatrix import *
 # Local Libraries
 # Distal Libraries
 from ..Util import Html
-from ..CoverageSet import *
-from ..ExperimentalMatrix import *
-from .shared_function import shiftedColorMap, walklevel
+
 # Local test
 dir = os.getcwd()
 
