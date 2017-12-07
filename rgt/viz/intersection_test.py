@@ -11,11 +11,34 @@ from matplotlib_venn import venn3
 from .shared_function import *
 
 # Local test
-dir = os.getcwd()
 
 ###########################################################################################
 #                    Inersection test
 ###########################################################################################
+
+
+def posi2set(regions, p):
+    alln = range(len(regions))
+    inter_r = copy.deepcopy(regions[p[0]])
+
+    for i in alln:
+        # print("inter_r: "+inter_r.name)
+        if i in p[1:]:
+            inter_r = inter_r.intersect(regions[i], mode=OverlapType.OVERLAP)
+        elif i == p[0]:
+            pass
+        else:
+            inter_r = inter_r.subtract(regions[i], whole_region=False)
+    # print("inter_r: "+inter_r.name)
+    return inter_r
+
+
+def posi2region(regions, p):
+    # all = range(len(regions))
+    new_r = GenomicRegionSet(name="")
+    for r in p:
+        new_r.combine(regions[r])
+    return new_r
 
 
 class Intersect:
@@ -112,7 +135,8 @@ class Intersect:
         self.rlen, self.qlen = {}, {}
         self.nalist = []
 
-        if frequency: self.frequency = OrderedDict()
+        if frequency:
+            self.frequency = OrderedDict()
 
         # if self.mode_count == "bp":
         #    print2(self.parameter, "\n{0}\t{1}\t{2}\t{3}\t{4}".format("Reference","Length(bp)", "Query", "Length(bp)", "Length of Intersection(bp)"))
@@ -122,7 +146,8 @@ class Intersect:
         for ty in self.groupedreference.keys():
             self.counts[ty] = OrderedDict()
             self.rlen[ty], self.qlen[ty] = OrderedDict(), OrderedDict()
-            if frequency: self.frequency[ty] = OrderedDict()
+            if frequency:
+                self.frequency[ty] = OrderedDict()
 
             for r in self.groupedreference[ty]:
                 if r.total_coverage() == 0 and len(r) > 0:
@@ -144,7 +169,7 @@ class Intersect:
                             mp_input.append([q, self.nalist, self.mode_count, self.qlen, threshold,
                                              self.counts, frequency, self.frequency, ty, r])
                     # q, nalist, mode_count, qlen_dict, threshold, counts, frequency, self_frequency, ty, r
-                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count()-1)
+                    pool = multiprocessing.Pool(processes=multiprocessing.cpu_count() - 1)
                     mp_output = pool.map(mp_count_intersect, mp_input)
                     pool.close()
                     pool.join()
@@ -386,7 +411,8 @@ class Intersect:
 
         html.add_figure("intersection_bar.png", align="center")
         html.add_figure("intersection_barp.png", align="center")
-        if self.sbar: html.add_figure("intersection_stackedbar.png", align="center")
+        if self.sbar:
+            html.add_figure("intersection_stackedbar.png", align="center")
 
         header_list = ["#",
                        "Reference<br>name",
@@ -414,61 +440,62 @@ class Intersect:
             c = 0
             for ind_r, r in enumerate(self.counts[ty]):
                 for ind_q, q in enumerate(self.counts[ty][r]):
-                    if r == q: continue
+                    if r == q:
+                        continue
                     c += 1
                     pt = self.counts[ty][r][q][2] / self.rlen[ty][r]
-                    intern = self.counts[ty][r][q][2]
+                    internal_overlap = self.counts[ty][r][q][2]
                     if self.test_d:
                         aveinter = self.test_d[ty][r][q][0]
                         chisqua = value2str(self.test_d[ty][r][q][1])
                         pv = self.test_d[ty][r][q][2]
                         if isinstance(pv, str):
                             data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                               str(intern), "{:.2f}%".format(100 * pt),
+                                               str(internal_overlap), "{:.2f}%".format(100 * pt),
                                                aveinter, chisqua, pv, "-"])
                         else:
                             npv = 1 - pv
                             if pv < 0.05:
-                                if intern > aveinter:
+                                if internal_overlap > aveinter:
                                     data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                                       str(intern), "{:.2f}%".format(100 * pt),
+                                                       str(internal_overlap), "{:.2f}%".format(100 * pt),
                                                        value2str(aveinter), chisqua,
                                                        "<font color=\"red\">" + value2str(pv) + "</font>",
                                                        value2str(npv)])
                                     statistic_table.append(
-                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(intern),
+                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(internal_overlap),
                                          "{:.2f}%".format(100 * pt),
                                          value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                                       str(intern), "{:.2f}%".format(100 * pt),
+                                                       str(internal_overlap), "{:.2f}%".format(100 * pt),
                                                        value2str(aveinter), chisqua, value2str(npv),
                                                        "<font color=\"red\">" + value2str(pv) + "</font>"])
                                     statistic_table.append(
-                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(intern),
+                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(internal_overlap),
                                          "{:.2f}%".format(100 * pt),
                                          value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                             elif self.test_d[ty][r][q][2] >= 0.05:
-                                if intern > aveinter:
+                                if internal_overlap > aveinter:
                                     data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                                       str(intern), "{:.2f}%".format(100 * pt),
+                                                       str(internal_overlap), "{:.2f}%".format(100 * pt),
                                                        value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                     statistic_table.append(
-                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(intern),
+                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(internal_overlap),
                                          "{:.2f}%".format(100 * pt),
                                          value2str(aveinter), chisqua, value2str(pv), value2str(npv)])
                                 else:
                                     data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                                       str(intern), "{:.2f}%".format(100 * pt),
+                                                       str(internal_overlap), "{:.2f}%".format(100 * pt),
                                                        value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                                     statistic_table.append(
-                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(intern),
+                                        [r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(internal_overlap),
                                          "{:.2f}%".format(100 * pt),
                                          value2str(aveinter), chisqua, value2str(npv), value2str(pv)])
                     else:
                         data_table.append([str(c), r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]),
-                                           str(intern), "{:.2f}%".format(100 * pt)])
-                        statistic_table.append([r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(intern),
+                                           str(internal_overlap), "{:.2f}%".format(100 * pt)])
+                        statistic_table.append([r, q, str(self.rlen[ty][r]), str(self.qlen[ty][q]), str(internal_overlap),
                                                 "{:.2f}%".format(100 * pt)])
 
             html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, sortable=True)
@@ -504,7 +531,7 @@ class Intersect:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_free_content([
-                                  '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+            '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(
             ['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
@@ -597,33 +624,11 @@ class Intersect:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_free_content([
-                                  '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+            '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(
             ['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
         html.write(os.path.join(directory, title, "parameters.html"))
-
-    def posi2region(self, regions, p):
-        # all = range(len(regions))
-        new_r = GenomicRegionSet(name="")
-        for r in p:
-            new_r.combine(regions[r])
-        return new_r
-
-    def posi2set(self, regions, p):
-        alln = range(len(regions))
-        inter_r = copy.deepcopy(regions[p[0]])
-
-        for i in alln:
-            # print("inter_r: "+inter_r.name)
-            if i in p[1:]:
-                inter_r = inter_r.intersect(regions[i], mode=OverlapType.OVERLAP)
-            elif i == p[0]:
-                pass
-            else:
-                inter_r = inter_r.subtract(regions[i], whole_region=False)
-        # print("inter_r: "+inter_r.name)
-        return inter_r
 
     def combinatorial(self, background=None):
         def p2sign(plist, length):
@@ -650,11 +655,11 @@ class Intersect:
 
                 for p in posi:
                     # print("   " + str(p))
-                    pr = self.posi2set(self.groupedreference[ty], p)
+                    pr = posi2set(self.groupedreference[ty], p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
                     self.comb_ref_infor[pr.name] = p2sign(p, n)
-            all_int = self.posi2set(self.groupedreference[ty], range(n))
+            all_int = posi2set(self.groupedreference[ty], range(n))
             new_refs[ty].append(all_int)
             ref_names.append(all_int.name)
             self.comb_ref_infor[all_int.name] = p2sign(range(n), n)
@@ -690,7 +695,7 @@ class Intersect:
                 posi = [list(i) for i in posi]
                 for p in posi:
                     # print("   " + str(p))
-                    pr = self.posi2region(self.groupedreference[ty], p)
+                    pr = posi2region(self.groupedreference[ty], p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)
 
@@ -735,7 +740,8 @@ class Intersect:
                     y = rc / summ  # intersect number
                     bar = ax.bar(x, y, width=width, bottom=bottom, color=self.color_list[ind_r], align='center')
                     bottom = bottom + y
-                    if ind_q == 0: legends.append(bar)
+                    if ind_q == 0:
+                        legends.append(bar)
             ax.yaxis.tick_left()
             ax.set_xticks(range(len(q_label)))
             ax.set_xticklabels(q_label, fontsize=9, rotation=self.xtickrotation, ha=self.xtickalign)
@@ -794,7 +800,8 @@ class Intersect:
             self.test_d[ty] = {}
             plist[ty] = OrderedDict()
             for r in self.groupedreference[ty]:
-                if r.name in self.nalist: continue
+                if r.name in self.nalist:
+                    continue
                 print("\t" + r.name)
                 self.test_d[ty][r.name] = {}
                 plist[ty][r.name] = OrderedDict()
@@ -806,7 +813,8 @@ class Intersect:
                     else:
                         print(".", end="")
                         sys.stdout.flush()
-                        if q.name in self.nalist: continue
+                        if q.name in self.nalist:
+                            continue
                         # True intersection
                         obs = self.counts[ty][r.name][q.name]
                         qn = q.name
@@ -845,6 +853,7 @@ class Intersect:
 
             # c_p = 0
             for r in self.test_d[ty].keys():
-                if r in self.nalist: continue
+                if r in self.nalist:
+                    continue
                 for q in self.test_d[ty][r].keys():
                     self.test_d[ty][r][q][2] = plist[ty][r][q]

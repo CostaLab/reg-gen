@@ -9,6 +9,7 @@ import getpass
 import argparse
 import datetime
 import matplotlib
+
 matplotlib.use('Agg', warn=False)
 
 from .boxplot import Boxplot
@@ -16,12 +17,13 @@ from .lineplot import Lineplot
 from .jaccard_test import Jaccard
 from .projection_test import Projection
 from .intersection_test import Intersect
-from .bed_profile import BED_profile
-from .shared_function import check_dir, print2, output_parameters,\
-                            copy_em, list_all_index, output
+from .bed_profile import BedProfile
+from .shared_function import check_dir, print2, output_parameters, \
+    copy_em, list_all_index, output
 from .plotTools import Venn
 from .. import __version__
-dir = os.getcwd()
+
+current_dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix
 
@@ -44,7 +46,7 @@ def main():
     helpsort = "Sort the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helpcolor = "Color the data by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
     helpcolorbb = "Color the data by any optional column (for example, 'cell') of experimental matrix, or None. (default: %(default)s)"
-    helpDefinedColot = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB. (default: %(default)s)'
+    help_define_color = 'Define the specific colors with the given column "color" in experimental matrix. The color should be in the format of matplotlib.colors. For example, "r" for red, "b" for blue, or "(100, 35, 138)" for RGB. (default: %(default)s)'
     helpreference = 'The file name of the reference Experimental Matrix. Multiple references are acceptable. (default: %(default)s)'
     helpquery = 'The file name of the query Experimental Matrix. Multiple queries are acceptable. (default: %(default)s)'
     helpcol = "Group the data in columns by reads(needs 'factor' column), regions(needs 'factor' column), another name of column (for example, 'cell')in the header of experimental matrix, or None. (default: %(default)s)"
@@ -98,7 +100,7 @@ def main():
                                    help='Define the organism. (default: %(default)s)')
     parser_projection.add_argument('-log', action="store_true",
                                    help='Set y axis of the plot in log scale. (default: %(default)s)')
-    parser_projection.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_projection.add_argument('-color', action="store_true", help=help_define_color)
     parser_projection.add_argument('-show', action="store_true",
                                    help='Show the figure in the screen. (default: %(default)s)')
     parser_projection.add_argument('-table', action="store_true",
@@ -132,7 +134,7 @@ def main():
     parser_intersect.add_argument('-ex', metavar='  ', type=int, default=0,
                                   help="Define the extension(in bp) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20 bp in order to include proximal queries. (default: %(default)s)")
     parser_intersect.add_argument('-log', action="store_true", help='Set y axis of the plot in log scale.')
-    parser_intersect.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_intersect.add_argument('-color', action="store_true", help=help_define_color)
     parser_intersect.add_argument('-show', action="store_true",
                                   help='Show the figure in the screen. (default: %(default)s)')
     parser_intersect.add_argument('-stest', metavar='  ', type=int, default=0,
@@ -159,7 +161,7 @@ def main():
     parser_jaccard.add_argument('-organism', default='hg19', help='Define the organism. (default: %(default)s)')
     parser_jaccard.add_argument('-nlog', action="store_false",
                                 help='Set y axis of the plot not in log scale. (default: %(default)s)')
-    parser_jaccard.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_jaccard.add_argument('-color', action="store_true", help=help_define_color)
     parser_jaccard.add_argument('-show', action="store_true",
                                 help='Show the figure in the screen. (default: %(default)s)')
     parser_jaccard.add_argument('-table', action="store_true",
@@ -190,7 +192,7 @@ def main():
                                       help="Define the extension(in percentage) of reference length for intersection counting. For example, '20' means that each region of reference is extended by 20%% in order to include proximal queries. (default: %(default)s)")
     parser_combinatorial.add_argument('-log', action="store_true",
                                       help='Set y axis of the plot in log scale. (default: %(default)s)')
-    parser_combinatorial.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_combinatorial.add_argument('-color', action="store_true", help=help_define_color)
     parser_combinatorial.add_argument('-venn', action="store_true",
                                       help='Show the Venn diagram of the combinatorials of references. (default: %(default)s)')
     parser_combinatorial.add_argument('-show', action="store_true",
@@ -215,7 +217,7 @@ def main():
     parser_boxplot.add_argument('-scol', action="store_true", help="Share y axis among columns. (default: %(default)s)")
     parser_boxplot.add_argument('-nlog', action="store_false",
                                 help='Set y axis of the plot not in log scale. (default: %(default)s)')
-    parser_boxplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_boxplot.add_argument('-color', action="store_true", help=help_define_color)
     parser_boxplot.add_argument('-pw', metavar='  ', type=int, default=3,
                                 help='Define the width of single panel. (default: %(default)s)')
     parser_boxplot.add_argument('-ph', metavar='  ', type=int, default=3,
@@ -266,7 +268,7 @@ def main():
     parser_lineplot.add_argument('-srow', action="store_true", help="Share y axis among rows. (default: %(default)s)")
     parser_lineplot.add_argument('-organism', metavar='  ', default='hg19',
                                  help='Define the organism. (default: %(default)s)')
-    parser_lineplot.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_lineplot.add_argument('-color', action="store_true", help=help_define_color)
     parser_lineplot.add_argument('-pw', metavar='  ', type=int, default=3,
                                  help='Define the width of single panel. (default: %(default)s)')
     parser_lineplot.add_argument('-ph', metavar='  ', type=int, default=3,
@@ -325,7 +327,7 @@ def main():
                                 help='Define the binsize for calculating coverage. (default: %(default)s)')
     parser_heatmap.add_argument('-organism', metavar='  ', default='hg19',
                                 help='Define the organism. (default: %(default)s)')
-    parser_heatmap.add_argument('-color', action="store_true", help=helpDefinedColot)
+    parser_heatmap.add_argument('-color', action="store_true", help=help_define_color)
     parser_heatmap.add_argument('-log', action="store_true", help='Set colorbar in log scale. (default: %(default)s)')
     parser_heatmap.add_argument('-mp', action="store_true",
                                 help="Perform multiprocessing for faster computation. (default: %(default)s)")
@@ -394,15 +396,14 @@ def main():
 
             t0 = time.time()
             # Normalised output path
-            args.o = os.path.normpath(os.path.join(dir, args.o))
+            args.o = os.path.normpath(os.path.join(current_dir, args.o))
             check_dir(args.o)
             check_dir(os.path.join(args.o, args.t))
 
             # Input parameters dictionary
-            parameter = []
-            parameter.append("Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-            parameter.append("User: " + getpass.getuser())
-            parameter.append("\nCommand:\n\t$ " + " ".join(sys.argv))
+            parameter = ["Time: " + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                         "User: " + getpass.getuser(),
+                         "\nCommand:\n\t$ " + " ".join(sys.argv)]
 
         #################################################################################################
         ##### Main #####################################################################################
@@ -430,28 +431,27 @@ def main():
                     sys.exit(1)
                 if args.strand:
                     strands = []
-                    for i, bool in enumerate(args.strand.split(",")):
-                        if bool == "T":
+                    for i, bss in enumerate(args.strand.split(",")):
+                        if bss == "T":
                             strands.append(True)
                             args.labels[i] += "(strand-specific)"
-                        elif bool == "F":
+                        elif bss == "F":
                             strands.append(False)
                     args.strand = strands
                 else:
                     args.strand = [True for i in args.labels]
                 if args.other:
                     others = []
-                    for i, bool in enumerate(args.other.split(",")):
-                        if bool == "T":
+                    for i, bss in enumerate(args.other.split(",")):
+                        if bss == "T":
                             others.append(True)
-                        elif bool == "F":
+                        elif bss == "F":
                             others.append(False)
                     args.other = others
                 else:
                     args.other = [True for i in args.labels]
 
-
-            bed_profile = BED_profile(args.i, args.organism, args)
+            bed_profile = BedProfile(args.i, args.organism, args)
             bed_profile.cal_statistics()
             bed_profile.plot_distribution_length()
             bed_profile.plot_motif_composition()
@@ -646,7 +646,6 @@ def main():
             # if args.stackedbar:
             # inter.colors(args.c, args.color,ref_que = "ref")
             inter.comb_stacked_plot()
-            
 
             output(f=inter.sbar, directory=args.o, folder=args.t, filename="intersection_stackedbar",
                    extra=matplotlib.pyplot.gci(), pdf=True, show=args.show)
@@ -656,13 +655,13 @@ def main():
             # if args.lineplot:
             #    inter.comb_lineplot()
             if args.stest > 0:
-                inter.stest(repeat=args.stest, threshold=args.tc)
+                inter.stest(repeat=args.stest, threshold=args.tc, mp=args.mp)
             # generate html
             inter.gen_html_comb(directory=args.o, title=args.t, align=50, args=args)
 
             # parameter = parameter + inter.parameter
             t1 = time.time()
-            print("\nAll related files are saved in:  " + os.path.join(dir, args.o, args.t))
+            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
             print2(parameter, "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t1 - t0))))
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.r, directory=args.o, folder=args.t, filename="Reference_experimental_matrix.txt")
@@ -711,8 +710,10 @@ def main():
             boxplot.group_data(directory=args.o, folder=args.t, log=args.nlog)
             boxplot.color_map(colorby=args.c, definedinEM=args.color)
             boxplot.plot(title=args.t, logT=args.nlog, scol=args.scol, ylim=args.ylim, pw=args.pw, ph=args.ph)
-            if args.table: boxplot.print_table(directory=args.o, folder=args.t)
-            output(f=boxplot.fig, directory=args.o, folder=args.t, filename="boxplot", extra=matplotlib.pyplot.gci(), pdf=True,
+            if args.table:
+                boxplot.print_table(directory=args.o, folder=args.t)
+            output(f=boxplot.fig, directory=args.o, folder=args.t, filename="boxplot", extra=matplotlib.pyplot.gci(),
+                   pdf=True,
                    show=args.show)
             # HTML
             boxplot.gen_html(args.o, args.t, align=50)
@@ -720,7 +721,7 @@ def main():
             print2(parameter, "    --- finished in {0} secs\n".format(round(t5 - t4)))
             print2(parameter,
                    "Total running time is: " + str(datetime.timedelta(seconds=round(t5 - t0))) + " (H:M:S)\n")
-            print("\nAll related files are saved in:  " + os.path.join(dir, args.o, args.t))
+            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)
@@ -812,7 +813,8 @@ def main():
 
             lineplot = Lineplot(em_path=args.input, title=args.t, annotation=args.ga,
                                 organism=args.organism, center=args.center, extend=args.e, rs=args.rs,
-                                bs=args.bs, ss=args.ss, df=False, fields=[args.col, args.row, args.c])
+                                bs=args.bs, ss=args.ss, df=False, fields=[args.col, args.row, args.c],
+                                dft=args.dft, flipnegative=False, sense=False, strand=False, test=False)
             # Processing the regions by given parameters
             print2(parameter, "Step 1/4: Processing regions by given parameters")
             lineplot.relocate_bed()
@@ -847,11 +849,11 @@ def main():
             print2(parameter, "    --- finished in {0} secs".format(str(round(t4 - t3))))
             print2(parameter,
                    "\nTotal running time is : " + str(datetime.timedelta(seconds=round(t4 - t0))) + "(H:M:S)\n")
-            print("\nAll related files are saved in:  " + os.path.join(dir, args.o, args.t))
+            print("\nAll related files are saved in:  " + os.path.join(current_dir, args.o, args.t))
             output_parameters(parameter, directory=args.o, folder=args.t, filename="parameters.txt")
             copy_em(em=args.input, directory=args.o, folder=args.t)
             list_all_index(path=args.o)
-       
+
         ################### Venn Diagram ##########################################
         if args.mode == 'venn':
             print("\n################# Venn Diagram ###############")
