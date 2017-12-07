@@ -2,8 +2,11 @@
 # Libraries
 ###################################################################################################
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
+from __future__ import division
+
+# Python
 import os
 import sys
 from glob import glob
@@ -11,13 +14,13 @@ from shutil import copy
 import time
 
 # Internal
-from rgt.Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
-from Statistics import multiple_test_correction, get_fisher_dict
-from Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
+from ..Util import ErrorHandler, MotifData, GenomeData, ImageData, Html, npath
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from .Statistics import multiple_test_correction, get_fisher_dict
+from .Util import Input, Result, bb_to_bed, bed_to_bb, is_bb, is_bed, write_bed_color
 
 # External
 from fisher import pvalue

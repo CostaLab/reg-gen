@@ -2,15 +2,17 @@
 # Libraries
 ###################################################################################################
 
-# Python
+# Python 3 compatibility
 from __future__ import print_function
+
+# Python
 import time
 import sys
 from random import seed
 import argparse
 
 # Internal
-from rgt import __version__
+from .. import __version__
 import Match
 import Enrichment
 import Mapper
