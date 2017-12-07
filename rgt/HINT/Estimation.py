@@ -1,17 +1,15 @@
 import os
-import warnings
-import subprocess
 import shutil
-
+import subprocess
 from itertools import product
 from math import floor
 
-from rgt.Util import AuxiliaryFunctions, GenomeData, HmmData
-from rgt.GenomicRegionSet import GenomicRegionSet
-
+from Bio import motifs
 # External
 from pysam import Samfile, Fastafile
-from Bio import motifs
+
+from rgt.GenomicRegionSet import GenomicRegionSet
+from rgt.Util import AuxiliaryFunctions, GenomeData, HmmData
 
 
 def estimation_args(parser):
@@ -83,7 +81,7 @@ def estimate_bias_kmer(args):
         for r in bamFile.fetch(region.chrom, region.initial, region.final):
 
             # Calculating positions
-            if (not r.is_reverse):
+            if not r.is_reverse:
                 cut_site = r.pos + args.forward_shift - 1
                 p1 = cut_site - int(floor(args.k_nb / 2))
             else:
@@ -92,22 +90,22 @@ def estimate_bias_kmer(args):
             p2 = p1 + args.k_nb
 
             # Verifying PCR artifacts
-            if (p1 == prevPos):
+            if p1 == prevPos:
                 trueCounter += 1
             else:
                 prevPos = p1
                 trueCounter = 0
-            if (trueCounter > maxDuplicates): continue
+            if trueCounter > maxDuplicates: continue
 
             # Fetching k-mer
             try:
                 currStr = str(fastaFile.fetch(region.chrom, p1, p2)).upper()
             except Exception:
                 continue
-            if (r.is_reverse): currStr = AuxiliaryFunctions.revcomp(currStr)
+            if r.is_reverse: currStr = AuxiliaryFunctions.revcomp(currStr)
 
             # Counting k-mer in dictionary
-            if (not r.is_reverse):
+            if not r.is_reverse:
                 ct_reads_f += 1
                 try:
                     obsDictF[currStr] += 1
@@ -213,7 +211,7 @@ def estimate_bias_pwm(args):
         # Fetching reads
         for r in bamFile.fetch(region.chrom, region.initial, region.final):
             # Calculating positions
-            if (not r.is_reverse):
+            if not r.is_reverse:
                 cut_site = r.pos + args.forward_shift - 1
                 p1 = cut_site - int(floor(args.k_nb / 2))
             else:
@@ -222,22 +220,22 @@ def estimate_bias_pwm(args):
             p2 = p1 + args.k_nb
 
             # Verifying PCR artifacts
-            if (p1 == prev_pos):
+            if p1 == prev_pos:
                 true_counter += 1
             else:
                 prev_pos = p1
                 true_counter = 0
-            if (true_counter > max_duplicates): continue
+            if true_counter > max_duplicates: continue
 
             # Fetching k-mer
             try:
                 currStr = str(fastaFile.fetch(region.chrom, p1, p2)).upper()
             except Exception:
                 continue
-            if (r.is_reverse): currStr = AuxiliaryFunctions.revcomp(currStr)
+            if r.is_reverse: currStr = AuxiliaryFunctions.revcomp(currStr)
 
             # Counting k-mer in dictionary
-            if (not r.is_reverse):
+            if not r.is_reverse:
                 for i in range(0, len(currStr)):
                     obs_f_pwm_dict[currStr[i]][i] += 1
             else:
@@ -431,7 +429,7 @@ def create_signal(args, regions):
             except Exception:
                 continue
             if 'N' not in dna_sequence_obs:
-                if (read.is_reverse):
+                if read.is_reverse:
                     dna_sequence_obs = revcomp(dna_sequence_obs)
                     r_obs_dict[dna_sequence_obs] += 1
                 else:

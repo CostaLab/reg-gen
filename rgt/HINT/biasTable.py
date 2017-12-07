@@ -3,9 +3,9 @@
 ###################################################################################################
 
 # Python
-import warnings
 
 from rgt.GenomicRegionSet import GenomicRegionSet
+
 
 class BiasTable:
     """

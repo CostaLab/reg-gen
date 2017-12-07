@@ -420,17 +420,17 @@ def dnase_seq(args):
         fp_state_nb = 4
         for k in range(r.initial, r.initial + len(posterior_list)):
             curr_index = k - r.initial
-            if (flag_start):
-                if (posterior_list[curr_index] != fp_state_nb):
-                    if (k - start_pos < fp_max_size):
+            if flag_start:
+                if posterior_list[curr_index] != fp_state_nb:
+                    if k - start_pos < fp_max_size:
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
                     flag_start = False
             else:
-                if (posterior_list[curr_index] == fp_state_nb):
+                if posterior_list[curr_index] == fp_state_nb:
                     flag_start = True
                     start_pos = k
-        if (flag_start):
+        if flag_start:
             fp = GenomicRegion(r.chrom, start_pos, r.final)
             footprints.add(fp)
 
@@ -540,12 +540,12 @@ def histone(args):
             curr_index = k - r.initial
             if flag_start:
                 if posterior_list[curr_index] != fp_state_nb:
-                    if (k - start_pos < fp_max_size):
+                    if k - start_pos < fp_max_size:
                         fp = GenomicRegion(r.chrom, start_pos, k)
                         footprints.add(fp)
                     flag_start = False
             else:
-                if (posterior_list[curr_index] == fp_state_nb):
+                if posterior_list[curr_index] == fp_state_nb:
                     flag_start = True
                     start_pos = k
         if flag_start:
@@ -676,7 +676,7 @@ def dnase_histone(args):
 
             # Formatting sequence
             input_sequence = array([dnase_norm, dnase_slope, histone_norm, histone_slope]).T
-            if (isnan(sum(input_sequence))): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
+            if isnan(sum(input_sequence)): continue  # Handling NAN's in signal / hmmlearn throws error TODO ERROR
             try:
                 posterior_list = scikit_hmm.predict(input_sequence)
             except Exception:
@@ -925,7 +925,7 @@ def atac_test(args):
                     reads_file.get_bc_signal_by_fragment_length(ref=region.chrom, start=p1, end=p2,
                                                                 bam=bam, fasta=fasta, bias_table=bias_table,
                                                                 forward_shift=forward_shift,
-                                                                reverse_shift=options.reverse_shift,
+                                                                reverse_shift=reverse_shift,
                                                                 min_length=145, max_length=None, strand=True)
 
                 signal_bc_f_max_145 = reads_file.boyle_norm(signal_bc_f_max_145)

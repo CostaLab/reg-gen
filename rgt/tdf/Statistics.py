@@ -7,13 +7,13 @@ numpy.seterr(divide='ignore', invalid='ignore')
 from scipy import stats
 import multiprocessing
 from collections import OrderedDict
-from rgt.tdf.RNADNABindingSet import RNADNABindingSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.tdf.triplexTools import dbd_regions
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import OverlapType
-from rgt.tdf.triplexTools import rna_associated_gene
-from rgt.tdf.Triplexes import random_each
+from ..tdf.RNADNABindingSet import RNADNABindingSet
+from ..motifanalysis.Statistics import multiple_test_correction
+from ..tdf.triplexTools import dbd_regions
+from ..GenomicRegionSet import GenomicRegionSet
+from ..Util import OverlapType
+from ..tdf.triplexTools import rna_associated_gene
+from ..tdf.Triplexes import random_each
 
 
 

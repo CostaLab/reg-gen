@@ -10,8 +10,9 @@ from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
+p3_supported = False
 if not sys.version_info[0] == 2:
-    sys.exit("Sorry, Python 3 is not supported (yet)")
+    p3_supported = True
 
 """
 Installs the RGT tool with standard setuptools options and additional
@@ -88,7 +89,13 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
     triplexes_file = "lib/libtriplexator.so"
-    common_deps.append("ngslib")
+    # ngslib doesn't support Python 3 (28/08/2017)
+    if not p3_supported:
+        common_deps.append("ngslib")
+
+if not p3_supported:
+    # needed to be able to do "import configparser", which is the new Python 3 name for ConfigParser
+    common_deps.append("configparser")
 
 tools_dictionary = {
     "core": (
@@ -102,13 +109,13 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.4"],
+        ["Biopython>=1.64", "fisher>=0.1.5"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx" if p3_supported else "pyx==0.12.1"],
         []
     ),
     "THOR": (
@@ -402,9 +409,29 @@ author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
+if p3_supported:
+    # I'm not really sure what was going on here, but without this few lines
+    # the installation fails when processing the external Bedtools binaries.
+    # It looks like Python3 setuptools expects the "external scripts" to be python scripts.
+    # If they are not, the tokenize function fails. This few lines of code "hijack" the tokenize function
+    # to allow it to support binaries files as scripts.
+    import tokenize
+    try:
+        _detect_encoding = tokenize.detect_encoding
+    except AttributeError:
+        pass
+    else:
+        def detect_encoding(readline):
+            try:
+                return _detect_encoding(readline)
+            except SyntaxError:
+                return 'latin-1', []
+        tokenize.detect_encoding = detect_encoding
+
 # External scripts
 external_scripts = []
 for tool_option in options.param_rgt_tool:
+    print(tools_dictionary[tool_option][3])
     for e in tools_dictionary[tool_option][3]:
         external_scripts.append(e)
 
@@ -442,8 +469,8 @@ setup(name="RGT",
 # Modifying Permissions when Running Superuser/Admin
 # $SUDO_USER exists only if you are sudo, and returns the original user name
 current_user = getenv("SUDO_USER")
-default_file_permission = 0644
-default_path_permission = 0755
+default_file_permission = 0o644
+default_path_permission = 0o755
 
 if current_user:
     current_user_uid = getpwnam(current_user).pw_uid

@@ -1,7 +1,7 @@
 from __future__ import print_function
 import os
-from rgt.GenomicRegion import GenomicRegion
-from rgt.GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from ..GenomicRegionSet import GenomicRegionSet
 
 ####################################################################################
 ####################################################################################

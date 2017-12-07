@@ -7,10 +7,10 @@ import numpy
 
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
+from ..Util import Html
+from ..CoverageSet import *
+from ..ExperimentalMatrix import *
+from .shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
 # Local test
 dir = os.getcwd()
 ###########################################################################################

@@ -27,13 +27,13 @@ from __future__ import print_function
 import sys
 
 # Internal
-from dpc_help import get_peaks, _fit_mean_var_distr, initialize, merge_output, handle_input
-from tracker import Tracker
-from postprocessing import _output_BED, _output_narrowPeak
-from rgt.THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
-from rgt.THOR.RegionGiver import RegionGiver
-from rgt.THOR.postprocessing import filter_by_pvalue_strand_lag
-from rgt import __version__
+from .dpc_help import get_peaks, _fit_mean_var_distr, initialize, merge_output, handle_input
+from .tracker import Tracker
+from .postprocessing import _output_BED, _output_narrowPeak
+from ..THOR.neg_bin_rep_hmm import NegBinRepHMM, get_init_parameters, _get_pvalue_distr
+from ..THOR.RegionGiver import RegionGiver
+from ..THOR.postprocessing import filter_by_pvalue_strand_lag
+from .. import __version__
 
 # External
 

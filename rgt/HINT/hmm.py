@@ -73,7 +73,7 @@ class HMM:
         # Reading emission probabilities of multivariate HMM
         E = []
         for i in range(0, hmm_states):
-            if (i == 0):
+            if i == 0:
                 Elist = first_emis_line.strip().split("#")
             else:
                 Elist = input_file.readline().strip().split("#")

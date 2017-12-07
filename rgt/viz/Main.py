@@ -12,16 +12,16 @@ import matplotlib
 matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
 
-from boxplot import Boxplot
-from lineplot import Lineplot
-from jaccard_test import Jaccard
-from projection_test import Projection
-from intersection_test import Intersect
-from bed_profile import BED_profile
-from shared_function import check_dir, print2, output_parameters,\
+from .boxplot import Boxplot
+from .lineplot import Lineplot
+from .jaccard_test import Jaccard
+from .projection_test import Projection
+from .intersection_test import Intersect
+from .bed_profile import BED_profile
+from .shared_function import check_dir, print2, output_parameters,\
                             copy_em, list_all_index, output
-from plotTools import Venn
-from rgt import __version__
+from .plotTools import Venn
+from .. import __version__
 dir = os.getcwd()
 """
 Statistical analysis methods and plotting tools for ExperimentalMatrix

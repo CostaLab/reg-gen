@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 # Local Libraries
 # Distal Libraries
-from rgt import __version__
+from .. import __version__
 # from rgt.Util import Html
 from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
@@ -22,10 +22,10 @@ from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_i
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
-from rgt.tdf.Input import Input
-from rgt.tdf.Triplexes import Triplexes
-from rgt.tdf.Statistics import Statistics
-from rgt.tdf.Report import Report
+from ..tdf.Input import Input
+from ..tdf.Triplexes import Triplexes
+from ..tdf.Statistics import Statistics
+from ..tdf.Report import Report
 
 
 dir = os.getcwd()

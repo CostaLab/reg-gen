@@ -25,10 +25,10 @@ import sys
 import gc
 from random import sample
 import numpy as np
-from normalize import get_normalization_factor
-from DualCoverageSet import DualCoverageSet
-from norm_genelevel import norm_gene_level
-from rgt.CoverageSet import CoverageSet, get_gc_context
+from .normalize import get_normalization_factor
+from .DualCoverageSet import DualCoverageSet
+from .norm_genelevel import norm_gene_level
+from ..CoverageSet import CoverageSet, get_gc_context
 
 EPSILON = 1**-320
 ROUND_PRECISION = 3

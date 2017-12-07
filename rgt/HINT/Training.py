@@ -138,7 +138,7 @@ def supervised(args):
 
     # Transition
     trans_matrix = np.zeros((hmm_model.states, hmm_model.states))
-    for (x, y), c in Counter(zip(state_list, state_list[1:])).iteritems():
+    for (x, y), c in Counter(zip(state_list, state_list[1:])).items():
         trans_matrix[x, y] = c
 
     for i in range(hmm_model.states):

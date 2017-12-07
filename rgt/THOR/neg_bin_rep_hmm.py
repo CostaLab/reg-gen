@@ -31,7 +31,7 @@ from math import fabs
 from scipy.special import logsumexp
 
 import numpy as np
-from neg_bin import NegBin
+from .neg_bin import NegBin
 
 import warnings
 

@@ -10,7 +10,7 @@ from __future__ import print_function
 import os
 import sys
 import shutil
-import ConfigParser
+from configparser import ConfigParser
 import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
@@ -40,7 +40,7 @@ class ConfigurationFile:
         data_config_file_name = os.path.join(get_rgtdata_path(), "data.config")
 
         # Parsing config file
-        self.config = ConfigParser.ConfigParser()
+        self.config = ConfigParser()
         self.config.read(data_config_file_name)
 
         # Overwriting config using user options

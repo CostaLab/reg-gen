@@ -9,10 +9,11 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.ticker import MaxNLocator
 from collections import OrderedDict
+from matplotlib.backends.backend_pdf import PdfPages
 from matplotlib.ticker import FuncFormatter
-from rgt.SequenceSet import SequenceSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import Html, SequenceType
+from ..SequenceSet import SequenceSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..Util import Html, SequenceType
 
 # Color code for all analysis
 target_color = "mediumblue"

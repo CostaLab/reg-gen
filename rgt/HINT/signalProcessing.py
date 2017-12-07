@@ -3,20 +3,19 @@
 ###################################################################################################
 
 # Python
-import warnings
 
 from math import log, ceil, floor, isnan
 
-# Internal
-from ..Util import AuxiliaryFunctions
-from pileupRegion import PileupRegion
-
 # External
 import numpy as np
-from pysam import __version__ as ps_version
-from pysam import Samfile, Fastafile
 from numpy import exp, array, abs, int, mat, linalg, convolve, nan_to_num
+from pysam import Samfile, Fastafile
+from pysam import __version__ as ps_version
 from scipy.stats import scoreatpercentile
+
+from .pileupRegion import PileupRegion
+# Internal
+from ..Util import AuxiliaryFunctions
 
 """
 Processes DNase-seq and histone modification signal for
@@ -80,7 +79,7 @@ class GenomicSignal:
 
         # Fetch raw signal
         pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if (ps_version == "0.7.5"):
+        if ps_version == "0.7.5":
             self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
         else:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
@@ -129,7 +128,7 @@ class GenomicSignal:
         """
         # Fetch raw signal
         pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-        if (ps_version == "0.7.5"):
+        if ps_version == "0.7.5":
             self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
         else:
             iter = self.bam.fetch(reference=ref, start=start, end=end)
@@ -245,13 +244,13 @@ class GenomicSignal:
         p2_w = p2 + (window / 2)
         p1_wk = p1_w - int(floor(k_nb / 2.))
         p2_wk = p2_w + int(ceil(k_nb / 2.))
-        if (p1 <= 0 or p1_w <= 0 or p1_wk <= 0): return signal
+        if p1 <= 0 or p1_w <= 0 or p1_wk <= 0: return signal
 
         # Raw counts
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
@@ -344,7 +343,7 @@ class GenomicSignal:
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
@@ -439,7 +438,7 @@ class GenomicSignal:
         nf = [0.0] * (p2_w - p1_w)
         nr = [0.0] * (p2_w - p1_w)
         for read in self.bam.fetch(chrName, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if cut_site >= p1_w and cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
@@ -551,9 +550,9 @@ class GenomicSignal:
         #    return sequence
         norm_seq = []
         for e in sequence:
-            if (e == 0.0):
+            if e == 0.0:
                 norm_seq.append(0.0)
-            elif (e > 0.0):
+            elif e > 0.0:
                 norm_seq.append(1.0 / (1.0 + (exp(-(e - mean) / std))))
             else:
                 norm_seq.append(-1.0 / (1.0 + (exp(-(-e - mean) / std))))
@@ -631,7 +630,7 @@ class GenomicSignal:
 
         if raw_signal_file:
             pileup_region = PileupRegion(start, end, downstream_ext, upstream_ext, forward_shift, reverse_shift)
-            if (ps_version == "0.7.5"):
+            if ps_version == "0.7.5":
                 self.bam.fetch(reference=ref, start=start, end=end, callback=pileup_region)
             else:
                 iter = self.bam.fetch(reference=ref, start=start, end=end)
@@ -683,7 +682,7 @@ class GenomicSignal:
             signal_raw_f = [0.0] * (p2_w - p1_w)
             signal_raw_r = [0.0] * (p2_w - p1_w)
             for read in self.bam.fetch(ref, p1_w, p2_w):
-                if (not read.is_reverse):
+                if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if cut_site >= p1_w and cut_site < p2_w:
                         signal_raw_f[cut_site - p1_w] += 1.0
@@ -794,7 +793,7 @@ class GenomicSignal:
 
         if min_length is None and max_length is None:
             for read in bam.fetch(ref, p1, p2):
-                if (not read.is_reverse):
+                if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if cut_site >= p1 and cut_site < p2:
                         raw_f[cut_site - p1] += 1.0
@@ -805,7 +804,7 @@ class GenomicSignal:
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
                 if abs(read.template_length) <= max_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1 and cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
@@ -816,7 +815,7 @@ class GenomicSignal:
         elif min_length is not None and max_length is None:
             for read in bam.fetch(ref, p1, p2):
                 if abs(read.template_length) > min_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1 and cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
@@ -827,7 +826,7 @@ class GenomicSignal:
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
                 if min_length <= abs(read.template_length) <= max_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1 and cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
@@ -882,7 +881,7 @@ class GenomicSignal:
 
         if min_length is None and max_length is None:
             for read in bam.fetch(ref, p1_w, p2_w):
-                if (not read.is_reverse):
+                if not read.is_reverse:
                     cut_site = read.pos + forward_shift
                     if cut_site >= p1_w and cut_site < p2_w:
                         raw_f[cut_site - p1_w] += 1.0
@@ -893,7 +892,7 @@ class GenomicSignal:
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if abs(read.template_length) <= max_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1_w and cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
@@ -904,7 +903,7 @@ class GenomicSignal:
         elif min_length is not None and max_length is None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if abs(read.template_length) > min_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1_w and cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
@@ -915,7 +914,7 @@ class GenomicSignal:
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if min_length < abs(read.template_length) <= max_length:
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + forward_shift
                         if cut_site >= p1_w and cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
@@ -1003,7 +1002,7 @@ class GenomicSignal:
         signal_raw_f = [0.0] * (p2_w - p1_w)
         signal_raw_r = [0.0] * (p2_w - p1_w)
         for read in bam.fetch(ref, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + forward_shift
                 if cut_site >= p1_w and cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
