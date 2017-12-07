@@ -110,12 +110,6 @@ def main(args):
     matching_folder_name = "match"
     random_region_name = "random_regions"
 
-    # we take care of conflicting parameters before going into the core of the method
-    if not args.promoters_only:
-        # disable any promoter-test option that might have been set
-        args.target_genes_filename = None
-        args.promoter_make_background = None
-
     ###################################################################################################
     # Initializations
     ###################################################################################################
@@ -197,7 +191,7 @@ def main(args):
         target_genes.read(args.target_genes_filename)
 
         # TODO what do we do with unmapped genes? maybe just print them out
-        target_regions = annotation.get_promoters(gene_set=target_genes, promoterLength=args.promoter_length)
+        target_regions = annotation.get_promoters(gene_set=target_genes, promoter_length=args.promoter_length)
         target_regions.name = "target_regions"
         target_regions.sort()
         output_file_name = npath(os.path.join(output_location, target_regions.name + ".bed"))
@@ -222,7 +216,7 @@ def main(args):
             background_genes.subtract(target_genes)
 
         background_regions = annotation.get_promoters(gene_set=background_genes,
-                                                      promoterLength=args.promoter_length)
+                                                      promoter_length=args.promoter_length)
         background_regions.name = "background_regions"
         background_regions.sort()
         output_file_name = npath(os.path.join(output_location, background_regions.name + ".bed"))

@@ -138,7 +138,7 @@ fi
 # Run test script
 cd RGT_MotifAnalysis_FullSiteTest
 echo "Running matching.."
-rgt-motifanalysis matching --organism hg19 input/regions_K562.bed input/background.bed
+rgt-motifanalysis matching --organism hg19 --input-files input/regions_K562.bed input/background.bed
 echo "Running enrichment.."
 rgt-motifanalysis enrichment --organism hg19 input/background.bed input/regions_K562.bed
 cd ..
@@ -161,9 +161,9 @@ fi
 # Run test script
 cd RGT_MotifAnalysis_PromoterTest
 echo "Running matching.."
-rgt-motifanalysis matching --organism hg19 --gene-list input/genes.txt input/background.bed
+rgt-motifanalysis matching --organism hg19 --target-genes input/genes.txt --make-background
 echo "Running enrichment.."
-rgt-motifanalysis enrichment --organism hg19 input/background.bed match/target_regions.bed
+rgt-motifanalysis enrichment --organism hg19 match/background_regions.bed match/target_regions.bed
 cd ..
 
 # Gene-association test
