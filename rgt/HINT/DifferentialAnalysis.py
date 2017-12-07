@@ -33,13 +33,13 @@ def diff_analysis_args(parser):
                         help="Organism considered on the analysis. Must have been setup in the RGTDATA folder. "
                              "Common choices are hg19, hg38. mm9, and mm10. DEFAULT: hg19")
     parser.add_argument("--mpbs-file1", type=str, metavar="FILE", default=None,
-                        help=("motif predicted binding sites file for condition 1, must be .bed file. DEFAULT: None"))
+                        help="motif predicted binding sites file for condition 1, must be .bed file. DEFAULT: None")
     parser.add_argument("--mpbs-file2", type=str, metavar="FILE", default=None,
-                        help=("motif predicted binding sites file for condition 2, must be .bed file. DEFAULT: None"))
+                        help="motif predicted binding sites file for condition 2, must be .bed file. DEFAULT: None")
     parser.add_argument("--reads-file1", type=str, metavar="FILE", default=None,
-                        help=("The BAM file containing the DNase-seq or ATAC-seq reads for condition 1. DEFAULT: None"))
+                        help="The BAM file containing the DNase-seq or ATAC-seq reads for condition 1. DEFAULT: None")
     parser.add_argument("--reads-file2", type=str, metavar="FILE", default=None,
-                        help=("The BAM file containing the DNase-seq or ATAC-seq reads for condition 2. DEFAULT: None"))
+                        help="The BAM file containing the DNase-seq or ATAC-seq reads for condition 2. DEFAULT: None")
     parser.add_argument("--bias-table1", type=str, metavar="FILE1_F,FILE1_R", default=None,
                         help="Bias table files for condition 1. DEFAULT: None")
     parser.add_argument("--bias-table2", type=str, metavar="FILE2_F,FILE2_R", default=None,

@@ -15,6 +15,10 @@ import traceback
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
 
+def cmp(a, b):
+    return (a > b) - (a < b)
+
+
 def npath(filename):
     """Returns a normalised, absolute version of the path, with expanded user directory."""
     return os.path.abspath(os.path.expanduser(filename))
@@ -35,7 +39,6 @@ class ConfigurationFile:
     """
 
     def __init__(self):
-        
         # Reading config file directory
         data_config_file_name = os.path.join(get_rgtdata_path(), "data.config")
 
@@ -53,7 +56,7 @@ class ConfigurationFile:
 class GenomeData(ConfigurationFile):
     """Represent genomic data. Inherits ConfigurationFile."""
 
-    def __init__(self,organism):
+    def __init__(self, organism):
         """Initializes GenomeData.
 
         *Keyword arguments:*
@@ -62,14 +65,14 @@ class GenomeData(ConfigurationFile):
         """
         ConfigurationFile.__init__(self)
         self.organism = organism
-        self.genome = self.config.get(organism,'genome')
-        self.chromosome_sizes = self.config.get(organism,'chromosome_sizes')
+        self.genome = self.config.get(organism, 'genome')
+        self.chromosome_sizes = self.config.get(organism, 'chromosome_sizes')
         # self.gene_regions = self.config.get(organism,'gene_regions')
         self.genes_gencode = self.config.get(organism, 'genes_Gencode')
         self.genes_refseq = self.config.get(organism, 'genes_RefSeq')
-        self.annotation = self.config.get(organism,'annotation')
+        self.annotation = self.config.get(organism, 'annotation')
         self.annotation_dump_dir = os.path.dirname(self.annotation)
-        self.gene_alias = self.config.get(organism,'gene_alias')
+        self.gene_alias = self.config.get(organism, 'gene_alias')
         if organism in ["hg19", "hg38", "mm9"]:
             self.repeat_maskers = self.config.get(organism, 'repeat_maskers')
         else:
@@ -85,8 +88,8 @@ class GenomeData(ConfigurationFile):
 
     def get_chromosome_sizes(self):
         """Returns the current path to the chromosome sizes text file."""
-        return self.chromosome_sizes   
-    
+        return self.chromosome_sizes
+
     def get_gene_regions(self):
         """Returns the current path to the gene_regions BED file."""
         return self.genes_gencode
@@ -118,7 +121,7 @@ class GenomeData(ConfigurationFile):
         if self.repeat_maskers:
             return self.repeat_maskers
         else:
-            print("*** There is no repeat masker data for "+self.organism)
+            print("*** There is no repeat masker data for " + self.organism)
 
 
 class MotifData(ConfigurationFile):
@@ -169,14 +172,14 @@ class MotifData(ConfigurationFile):
 
             - current_repository -- Motif repository.
         """
-        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository+".mtf")
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository + ".mtf")
 
     def get_mtf_list(self):
         """Returns the list of current paths to the mtf files."""
         return self.mtf_list
 
     def get_fpr_path(self, current_repository):
-        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository+".fpr")
+        return os.path.join(self.data_dir, self.config.get('MotifData', 'pwm_dataset'), current_repository + ".fpr")
 
     def get_fpr_list(self):
         """Returns the list of current paths to the fpr files."""
@@ -194,26 +197,39 @@ class MotifData(ConfigurationFile):
             self.mtf_list.append("")
             self.fpr_list.append("")
 
+
 class HmmData(ConfigurationFile):
     """Represent HMM data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
-        self.default_hmm_dnase = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase'))
-        self.default_hmm_dnase_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_bc'))
-        self.default_hmm_atac_paired = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_paired'))
-        self.default_hmm_atac_single = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_single'))
-        self.default_hmm_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_histone'))
-        self.default_hmm_dnase_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone'))
-        self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_dnase_histone_bc'))
-        self.default_hmm_atac_histone = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone'))
-        self.default_hmm_atac_histone_bc = os.path.join(self.data_dir,self.config.get('HmmData','default_hmm_atac_histone_bc'))
-        self.default_bias_table_F_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_SH'))
-        self.default_bias_table_R_SH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_SH'))
-        self.default_bias_table_F_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_DH'))
-        self.default_bias_table_R_DH = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_DH'))
-        self.default_bias_table_F_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_F_ATAC'))
-        self.default_bias_table_R_ATAC = os.path.join(self.data_dir,self.config.get('HmmData','default_bias_table_R_ATAC'))
+        self.default_hmm_dnase = os.path.join(self.data_dir, self.config.get('HmmData', 'default_hmm_dnase'))
+        self.default_hmm_dnase_bc = os.path.join(self.data_dir, self.config.get('HmmData', 'default_hmm_dnase_bc'))
+        self.default_hmm_atac_paired = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_hmm_atac_paired'))
+        self.default_hmm_atac_single = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_hmm_atac_single'))
+        self.default_hmm_histone = os.path.join(self.data_dir, self.config.get('HmmData', 'default_hmm_histone'))
+        self.default_hmm_dnase_histone = os.path.join(self.data_dir,
+                                                      self.config.get('HmmData', 'default_hmm_dnase_histone'))
+        self.default_hmm_dnase_histone_bc = os.path.join(self.data_dir,
+                                                         self.config.get('HmmData', 'default_hmm_dnase_histone_bc'))
+        self.default_hmm_atac_histone = os.path.join(self.data_dir,
+                                                     self.config.get('HmmData', 'default_hmm_atac_histone'))
+        self.default_hmm_atac_histone_bc = os.path.join(self.data_dir,
+                                                        self.config.get('HmmData', 'default_hmm_atac_histone_bc'))
+        self.default_bias_table_F_SH = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_bias_table_F_SH'))
+        self.default_bias_table_R_SH = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_bias_table_R_SH'))
+        self.default_bias_table_F_DH = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_bias_table_F_DH'))
+        self.default_bias_table_R_DH = os.path.join(self.data_dir,
+                                                    self.config.get('HmmData', 'default_bias_table_R_DH'))
+        self.default_bias_table_F_ATAC = os.path.join(self.data_dir,
+                                                      self.config.get('HmmData', 'default_bias_table_F_ATAC'))
+        self.default_bias_table_R_ATAC = os.path.join(self.data_dir,
+                                                      self.config.get('HmmData', 'default_bias_table_R_ATAC'))
         self.dependency_model = os.path.join(self.data_dir, self.config.get('HmmData', 'dependency_model'))
         self.slim_dimont_predictor = os.path.join(self.data_dir, self.config.get('HmmData', 'slim_dimont_predictor'))
         self.default_test_fa = os.path.join(self.data_dir, self.config.get('HmmData', 'default_test_fa'))
@@ -287,19 +303,20 @@ class HmmData(ConfigurationFile):
     def get_default_test_fa(self):
         return self.default_test_fa
 
+
 class ImageData(ConfigurationFile):
     """Represent image data. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
-        self.rgt_logo = os.path.join(self.data_dir,"fig","rgt_logo.gif")
-        self.css_file = os.path.join(self.data_dir,"fig","style.css")
-        self.default_motif_logo = os.path.join(self.data_dir,"fig","default_motif_logo.png")
-        self.tablesorter = os.path.join(self.data_dir,"fig","jquery.tablesorter.min.js")
-        self.jquery = os.path.join(self.data_dir,"fig","jquery-1.11.1.js")
-        self.jquery_metadata = os.path.join(self.data_dir,"fig","jquery.metadata.js")
-        self.tdf_logo = os.path.join(self.data_dir,"fig","tdf_logo.png")
-        self.viz_logo = os.path.join(self.data_dir,"fig","viz_logo.png")
+        self.rgt_logo = os.path.join(self.data_dir, "fig", "rgt_logo.gif")
+        self.css_file = os.path.join(self.data_dir, "fig", "style.css")
+        self.default_motif_logo = os.path.join(self.data_dir, "fig", "default_motif_logo.png")
+        self.tablesorter = os.path.join(self.data_dir, "fig", "jquery.tablesorter.min.js")
+        self.jquery = os.path.join(self.data_dir, "fig", "jquery-1.11.1.js")
+        self.jquery_metadata = os.path.join(self.data_dir, "fig", "jquery.metadata.js")
+        self.tdf_logo = os.path.join(self.data_dir, "fig", "tdf_logo.png")
+        self.viz_logo = os.path.join(self.data_dir, "fig", "viz_logo.png")
 
     def get_rgt_logo(self):
         """Returns the rgt logo image file location."""
@@ -312,11 +329,11 @@ class ImageData(ConfigurationFile):
     def get_default_motif_logo(self):
         """Returns the default motif logo file location."""
         return self.default_motif_logo
-    
+
     def get_sorttable_file(self):
         """Returns the default sorttable code location."""
         return self.default_motif_logo
-    
+
     def get_jquery(self):
         """Returns the jquery code location."""
         return self.jquery
@@ -324,11 +341,11 @@ class ImageData(ConfigurationFile):
     def get_tablesorter(self):
         """Returns the table sorter code location."""
         return self.tablesorter
-    
+
     def get_jquery_metadata(self):
         """Returns the jquery metadata location."""
         return self.jquery_metadata
-        
+
     def get_tdf_logo(self):
         """Returns the default TDF logo."""
         return self.tdf_logo
@@ -338,18 +355,18 @@ class ImageData(ConfigurationFile):
         return self.viz_logo
 
 
-class Library_path(ConfigurationFile):
+class LibraryPath(ConfigurationFile):
     """Represent the path to triplexator. Inherits ConfigurationFile."""
 
     def __init__(self):
         ConfigurationFile.__init__(self)
-        self.path_triplexator = self.config.get("Library",'path_triplexator')
+        self.path_triplexator = self.config.get("Library", 'path_triplexator')
 
         self.path_c_rgt = self.config.get("Library", 'path_c_rgt')
 
     def get_triplexator(self):
         return self.path_triplexator
-    
+
     def get_c_rgt(self):
         return self.path_c_rgt
 
@@ -364,7 +381,7 @@ class OverlapType:
         - COMP_INCL -- Return region(s) of the GenomicRegionSet which are 'completely' included.
     """
 
-    OVERLAP = 0 
+    OVERLAP = 0
     ORIGINAL = 1
     COMP_INCL = 2
 
@@ -383,24 +400,29 @@ class SequenceType:
 
 class HelpfulOptionParser(OptionParser):
     """An OptionParser that prints full help on errors. Inherits OptionParser."""
+
     def error(self, msg):
         self.print_help(sys.stderr)
         self.exit(2, "\n%s: error: %s\n" % (self.get_prog_name(), msg))
 
 
 class PassThroughOptionParser(HelpfulOptionParser):
-    """When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted. sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or bad argument types, etc.). Inherits HelpfulOptionParser."""
+    """
+    When unknown arguments are encountered, bundle with largs and try again, until rargs is depleted.
+    sys.exit(status) will still be called if a known argument is passed incorrectly (e.g. missing arguments or
+    bad argument types, etc.). Inherits HelpfulOptionParser.
+    """
+
     def _process_args(self, largs, rargs, values):
         while rargs:
             try:
                 HelpfulOptionParser._process_args(self, largs, rargs, values)
-            except (BadOptionError, AmbiguousOptionError) as err:
+            except (BadOptionError, AmbiguousOptionError):
                 pass
-                #largs.append(err.opt_str)
+                # largs.append(err.opt_str)
 
 
-
-class ErrorHandler():
+class ErrorHandler:
     """Handles errors in a standardized way.
 
         *Error Dictionary Standard:*
@@ -426,53 +448,68 @@ class ErrorHandler():
         self.program_name = os.path.basename(sys.argv[0])
 
         self.error_dictionary = {
-            "DEFAULT_ERROR": [0,0,"Undefined error. Program terminated with exit status 0."],
-            "MOTIF_ANALYSIS_OPTION_ERROR": [1,0,"You must define one specific analysis. Run '"+self.program_name+" -h' for help."],
+            "DEFAULT_ERROR": [0, 0, "Undefined error. Program terminated with exit status 0."],
+            "MOTIF_ANALYSIS_OPTION_ERROR": [1, 0,
+                                            "You must define one specific analysis. Run '" + self.program_name + " -h' for help."],
 
-            "FP_WRONG_ARGUMENT": [2,0,"You must provide at least one and no more than one experimental matrix as input argument."],
-            "FP_WRONG_EXPMAT": [3,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
-            "FP_ONE_REGION": [4,0,"You must provide one 'regions' bed file in the experiment matrix."],
-            "FP_NO_DNASE": [5,0,"You must provide one 'reads' file termed DNASE or ATAC in the experiment matrix."],
-            "FP_NO_HISTONE": [6,0,"You must provide at least one 'reads' file not termed DNASE or ATAC (histone modification) in the experiment matrix."],
-            "FP_NB_HMMS": [7,0,"You must provide one HMM file or X HMM files where X is the number of histone tracks detected in the experiment matrix."],
-            "FP_HMM_FILES": [8,0,"Your HMM file could not be read. If you did not provide any HMM file, you may not have installed scikit correctly."],
-            "FP_BB_CREATION": [9,0,"Big Bed file (.bb) could not be created. Check if you have the bedToBigBed script in $PATH."],
-            "MM_OUT_FOLDER_CREATION": [10,0,"Could not create output folder."],
-            "MM_NO_ARGUMENT": [11,0,"Could not read the arguments. Make sure you provided an experimental matrix."],
-            "MM_WRONG_EXPMAT": [12,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
-            "MM_WRONG_RANDPROP": [13,0,"Proportion of random regions is too low (<= 0)."],
-            "MM_LOW_NPROC": [14,0,"Number of processors is too low (<= 0)."],
-            "ME_OUT_FOLDER_CREATION": [15,0,"Could not create output folder."],
-            "ME_FEW_ARG": [16,0,"There are too few arguments. Please use -h option in order to verify command usage."],
-            "ME_WRONG_EXPMAT": [17,0,"The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
-            "ME_MATCH_NOTFOUND": [18,0,"Motif matching file was not found. Are you sure you performed --matching before --enrichment?"],
-            "ME_BAD_MATCH": [19,0,"Motif matching file is incorrect. Please perform --matching again."],
-            "ME_LOW_NPROC": [20,0,"Number of processor is too low (<= 0)."],
-            "ME_RAND_NOTFOUND": [21,0,"Random regions not found. Are you sure --matching was correctly performed?"],
-            "ME_BAD_RAND": [22,0,"Could not read random regions."],
-            "ME_RAND_NOT_BED_BB": [23,0,"Random regions are not in bed or bigbed format."],
-            "MM_PSEUDOCOUNT_0": [24,0,"There were errors involved in the creation of Position Weight Matrices. Some distributions of numpy  and/or scipy does not allow for pseudocounts == 0. Please increase the pseudocount (or use default value of 0.1) and try again."],
-            "MM_MOTIFS_NOTFOUND": [25,0,"A motif file was provided but it could not be loaded."],
-            "XXXXXXX": [26,0,"Xxxxxx"]
+            "FP_WRONG_ARGUMENT": [2, 0,
+                                  "You must provide at least one and no more than one experimental matrix as input argument."],
+            "FP_WRONG_EXPMAT": [3, 0,
+                                "The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
+            "FP_ONE_REGION": [4, 0, "You must provide one 'regions' bed file in the experiment matrix."],
+            "FP_NO_DNASE": [5, 0, "You must provide one 'reads' file termed DNASE or ATAC in the experiment matrix."],
+            "FP_NO_HISTONE": [6, 0,
+                              "You must provide at least one 'reads' file not termed DNASE or ATAC (histone modification) in the experiment matrix."],
+            "FP_NB_HMMS": [7, 0,
+                           "You must provide one HMM file or X HMM files where X is the number of histone tracks detected in the experiment matrix."],
+            "FP_HMM_FILES": [8, 0,
+                             "Your HMM file could not be read. If you did not provide any HMM file, you may not have installed scikit correctly."],
+            "FP_BB_CREATION": [9, 0,
+                               "Big Bed file (.bb) could not be created. Check if you have the bedToBigBed script in $PATH."],
+            "MM_OUT_FOLDER_CREATION": [10, 0, "Could not create output folder."],
+            "MM_NO_ARGUMENT": [11, 0, "Could not read the arguments. Make sure you provided an experimental matrix."],
+            "MM_WRONG_EXPMAT": [12, 0,
+                                "The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
+            "MM_WRONG_RANDPROP": [13, 0, "Proportion of random regions is too low (<= 0)."],
+            "MM_LOW_NPROC": [14, 0, "Number of processors is too low (<= 0)."],
+            "ME_OUT_FOLDER_CREATION": [15, 0, "Could not create output folder."],
+            "ME_FEW_ARG": [16, 0,
+                           "There are too few arguments. Please use -h option in order to verify command usage."],
+            "ME_WRONG_EXPMAT": [17, 0,
+                                "The experimental matrix could not be loaded. Check if it is correctly formatted and that your python version is >= 2.7."],
+            "ME_MATCH_NOTFOUND": [18, 0,
+                                  "Motif matching file was not found. Are you sure you performed --matching before --enrichment?"],
+            "ME_BAD_MATCH": [19, 0, "Motif matching file is incorrect. Please perform --matching again."],
+            "ME_LOW_NPROC": [20, 0, "Number of processor is too low (<= 0)."],
+            "ME_RAND_NOTFOUND": [21, 0, "Random regions not found. Are you sure --matching was correctly performed?"],
+            "ME_BAD_RAND": [22, 0, "Could not read random regions."],
+            "ME_RAND_NOT_BED_BB": [23, 0, "Random regions are not in bed or bigbed format."],
+            "MM_PSEUDOCOUNT_0": [24, 0,
+                                 "There were errors involved in the creation of Position Weight Matrices. Some distributions of numpy  and/or scipy does not allow for pseudocounts == 0. Please increase the pseudocount (or use default value of 0.1) and try again."],
+            "MM_MOTIFS_NOTFOUND": [25, 0, "A motif file was provided but it could not be loaded."],
+            "XXXXXXX": [26, 0, "Xxxxxx"]
         }
         self.error_number = 0
         self.exit_status = 1
         self.error_message = 2
 
         self.warning_dictionary = {
-            "DEFAULT_WARNING": [0,"Undefined warning."],
-            "FP_ONE_REGION": [1,"There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
-            "FP_MANY_DNASE": [2,"There are more than one DNASE or ATAC 'reads' file. Only the first one will be used."],
-            "FP_MANY_HISTONE": [3,"It is recomended that no more than three histone modifications should be used."],
-            "FP_DNASE_PROC": [4,"The DNase  or ATAC file could not be processed."],
-            "FP_HISTONE_PROC": [5,"The Histone file could not be processed."],
-            "FP_SEQ_FORMAT": [6,"The DNase/ATAC+Histone sequence could not be formatted to be input for scikit."],
-            "FP_HMM_APPLIC": [7,"The scikit HMM encountered errors when applied."],
-            "MM_MANY_ARG": [8,"There are more than one arguments, only the first experimental matrix will be used."],
-            "ME_MANY_ARG": [9,"There are more than two arguments, only the two first arguments will be used."],
-            "ME_MANY_GENESETS": [10,"There are more than one geneset associated to a group, only the first one will be used."],
-            "ME_FEW_GENESETS": [11,"There seems to be a geneset column, but no geneset was found for some entries."],
-            "XXXXXXX": [12,"Xxxxxx"]
+            "DEFAULT_WARNING": [0, "Undefined warning."],
+            "FP_ONE_REGION": [1,
+                              "There are more than one 'regions' file in the experiment matrix. Only the first will be used."],
+            "FP_MANY_DNASE": [2,
+                              "There are more than one DNASE or ATAC 'reads' file. Only the first one will be used."],
+            "FP_MANY_HISTONE": [3, "It is recomended that no more than three histone modifications should be used."],
+            "FP_DNASE_PROC": [4, "The DNase  or ATAC file could not be processed."],
+            "FP_HISTONE_PROC": [5, "The Histone file could not be processed."],
+            "FP_SEQ_FORMAT": [6, "The DNase/ATAC+Histone sequence could not be formatted to be input for scikit."],
+            "FP_HMM_APPLIC": [7, "The scikit HMM encountered errors when applied."],
+            "MM_MANY_ARG": [8, "There are more than one arguments, only the first experimental matrix will be used."],
+            "ME_MANY_ARG": [9, "There are more than two arguments, only the two first arguments will be used."],
+            "ME_MANY_GENESETS": [10,
+                                 "There are more than one geneset associated to a group, only the first one will be used."],
+            "ME_FEW_GENESETS": [11, "There seems to be a geneset column, but no geneset was found for some entries."],
+            "XXXXXXX": [12, "Xxxxxx"]
         }
         self.warning_number = 0
         self.warning_message = 1
@@ -498,16 +535,17 @@ class ErrorHandler():
 
         # Handling error
         complete_error_message = ("--------------------------------------------------\n"
-                                  "Error Number: "+str(error_number)+".\n"
-                                  "Program: "+self.program_name+".\n"
-                                  "Report: "+error_message+" "+add_msg+"\n"
-                                  "Behaviour: The program will quit with exit status "+str(exit_status)+".\n"
-                                  "--------------------------------------------------")
+                                  "Error Number: " + str(error_number) + ".\n"
+                                                                         "Program: " + self.program_name + ".\n"
+                                                                                                           "Report: " + error_message + " " + add_msg + "\n"
+                                                                                                                                                        "Behaviour: The program will quit with exit status " + str(
+            exit_status) + ".\n"
+                           "--------------------------------------------------")
         print(complete_error_message, file=sys.stderr)
         traceback.print_exc()
         sys.exit(exit_status)
 
-    def throw_warning(self, warning_type, add_msg = ""):
+    def throw_warning(self, warning_type, add_msg=""):
         """Throws the specified warning type. If the warning type does not exist, throws a default warning message and exits.
 
         *Keyword arguments:*
@@ -526,10 +564,10 @@ class ErrorHandler():
 
         # Handling warning
         complete_warning_message = ("--------------------------------------------------\n"
-                                    "Warning Number: "+str(warning_number)+".\n"
-                                    "Program: "+self.program_name+".\n"
-                                    "Report: "+warning_message+" "+add_msg+"\n"
-                                    "--------------------------------------------------")
+                                    "Warning Number: " + str(warning_number) + ".\n"
+                                                                               "Program: " + self.program_name + ".\n"
+                                                                                                                 "Report: " + warning_message + " " + add_msg + "\n"
+                                                                                                                                                                "--------------------------------------------------")
         print(complete_warning_message, file=sys.stderr)
 
 
@@ -550,7 +588,7 @@ class Html:
     .. warning:: cluster_path_fix is going to be deprecated soon. Do not use it.
     """
 
-    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="", 
+    def __init__(self, name, links_dict, fig_dir=None, fig_rpath="../fig", cluster_path_fix="",
                  RGT_header=True, other_logo=None, homepage=None):
 
         # Variable initializations
@@ -561,7 +599,7 @@ class Html:
         self.image_data = ImageData()
         self.other_logo = other_logo
         self.homepage = homepage
-        
+
         # Initialize document
         if fig_dir:
             if not os.path.isdir(fig_dir):
@@ -569,7 +607,7 @@ class Html:
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
         else:
             self.create_header(relative_dir=fig_rpath, RGT_name=RGT_header, other_logo=other_logo)
-        
+
         self.add_links()
 
     def copy_relevent_files(self, target_dir):
@@ -584,20 +622,20 @@ class Html:
             os.stat(target_dir)
         except:
             os.mkdir(target_dir)
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_rgt_logo(),
-                        dst=os.path.join(target_dir,"rgt_logo.gif"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_css_file(),
-                        dst=os.path.join(target_dir,"style.css"))
-        shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tablesorter(),
-                        dst=os.path.join(target_dir,"jquery.tablesorter.min.js"))
+        shutil.copyfile(src=self.cluster_path_fix + self.image_data.get_rgt_logo(),
+                        dst=os.path.join(target_dir, "rgt_logo.gif"))
+        shutil.copyfile(src=self.cluster_path_fix + self.image_data.get_css_file(),
+                        dst=os.path.join(target_dir, "style.css"))
+        shutil.copyfile(src=self.cluster_path_fix + self.image_data.get_tablesorter(),
+                        dst=os.path.join(target_dir, "jquery.tablesorter.min.js"))
         if self.other_logo:
             if self.other_logo == "TDF":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_tdf_logo(),
-                                dst=os.path.join(target_dir,"tdf_logo.png"))
+                shutil.copyfile(src=self.cluster_path_fix + self.image_data.get_tdf_logo(),
+                                dst=os.path.join(target_dir, "tdf_logo.png"))
             if self.other_logo == "viz":
-                shutil.copyfile(src=self.cluster_path_fix+self.image_data.get_viz_logo(),
-                                dst=os.path.join(target_dir,"viz_logo.png"))
-          
+                shutil.copyfile(src=self.cluster_path_fix + self.image_data.get_viz_logo(),
+                                dst=os.path.join(target_dir, "viz_logo.png"))
+
     def create_header(self, relative_dir=None, RGT_name=True, other_logo=None):
         """Creates default document header.
 
@@ -609,55 +647,66 @@ class Html:
         """
 
         self.document.append('<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>')
-            
+
         if relative_dir:
-            self.document.append('<script type="text/javascript" src="'+relative_dir+'/jquery.tablesorter.min.js"></script>')
+            self.document.append(
+                '<script type="text/javascript" src="' + relative_dir + '/jquery.tablesorter.min.js"></script>')
         else:
-            self.document.append('<script type="text/javascript" src="'+self.cluster_path_fix+self.image_data.get_tablesorter()+'"></script>')
-        
+            self.document.append(
+                '<script type="text/javascript" src="' + self.cluster_path_fix + self.image_data.get_tablesorter() + '"></script>')
+
         self.document.append("<html>")
-        self.document.append("<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT "+self.name+"</title>")
+        self.document.append(
+            "<head><meta http-equiv=\"Content-Type\" content=\"text/html\"><title>RGT " + self.name + "</title>")
 
         self.document.append("<style type=\"text/css\">")
         self.document.append("<!--")
-        
+
         if relative_dir:
-            self.document.append("@import url(\""+relative_dir+"/style.css\");")
+            self.document.append("@import url(\"" + relative_dir + "/style.css\");")
         else:
-            self.document.append("@import url(\""+self.cluster_path_fix+self.image_data.get_css_file()+"\");")
-        
+            self.document.append("@import url(\"" + self.cluster_path_fix + self.image_data.get_css_file() + "\");")
+
         self.document.append("-->")
         self.document.append("</style></head>")
-        self.document.append("<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")        
-        
-        self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray; border-bottom:3px solid gray;\">")
+        self.document.append(
+            "<body topmargin=\"0\" leftmargin=\"0\" rightmargin=\"0\" bottommargin=\"0\" marginheight=\"0\" marginwidth=\"0\" bgcolor=\"#FFFFFF\">")
+
+        self.document.append(
+            "<h3 style=\"background-color:white; border-top:3px solid gray; border-bottom:3px solid gray;\">")
         self.document.append("<table border=\"0\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">")
         self.document.append("\t<tr>")
 
         # Logo
-        if relative_dir:            
+        if relative_dir:
             self.document.append("\t\t<td width=\"5%\">")
-            if self.homepage: self.document.append("<a href=\""+self.homepage+"\">")
+            if self.homepage: self.document.append("<a href=\"" + self.homepage + "\">")
             if other_logo == "TDF":
-                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/tdf_logo.png"+"\" width=\"130\" height=\"100\">")
+                self.document.append(
+                    "\t\t<img border=\"0\" src=\"" + relative_dir + "/tdf_logo.png" + "\" width=\"130\" height=\"100\">")
             elif other_logo == "viz":
-                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/viz_logo.png"+"\" width=\"130\" height=\"100\">")
+                self.document.append(
+                    "\t\t<img border=\"0\" src=\"" + relative_dir + "/viz_logo.png" + "\" width=\"130\" height=\"100\">")
             else:
-                self.document.append("\t\t<img border=\"0\" src=\""+relative_dir+"/rgt_logo.gif\" width=\"130\" height=\"100\">")
+                self.document.append(
+                    "\t\t<img border=\"0\" src=\"" + relative_dir + "/rgt_logo.gif\" width=\"130\" height=\"100\">")
             if self.homepage: self.document.append("</a>")
             self.document.append("\t\t</td>")
-            
+
         else:
-            self.document.append("\t\t<td width=\"5%\"><img border=\"0\" src=\""+self.cluster_path_fix+self.image_data.get_rgt_logo()+"\" width=\"130\" height=\"100\"></td>")
+            self.document.append(
+                "\t\t<td width=\"5%\"><img border=\"0\" src=\"" + self.cluster_path_fix + self.image_data.get_rgt_logo() + "\" width=\"130\" height=\"100\"></td>")
 
         # Gap
         self.document.append("\t\t<td width=\"5%\"></td>")
         # Title
         if RGT_name:
-            self.document.append("\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - "+self.name+"</font></td>")
+            self.document.append(
+                "\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">Regulatory Genomics Toolbox - " + self.name + "</font></td>")
         else:
-            self.document.append("\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">"+self.name+"</font></td>")
-        
+            self.document.append(
+                "\t\t<td width=\"90%\"><p align=\"left\"><font color=\"black\" size=\"5\">" + self.name + "</font></td>")
+
         self.document.append("\t</tr>")
         self.document.append("</table>")
         self.document.append("</h3>")
@@ -665,17 +714,17 @@ class Html:
     def add_links(self):
         """Adds all the links."""
         for k in self.links_dict.keys():
-
-            self.document.append("<a class=\"pure-button\" href=\""+\
-                                 os.path.join(self.cluster_path_fix,self.links_dict[k])+\
-                                 "\">"+\
-                                 "<font size='1'>"+k+"</font>"+"</a>")
+            self.document.append("<a class=\"pure-button\" href=\"" + \
+                                 os.path.join(self.cluster_path_fix, self.links_dict[k]) + \
+                                 "\">" + \
+                                 "<font size='1'>" + k + "</font>" + "</a>")
 
     def create_footer(self):
         """Adds footer."""
         self.document.append("<br><br>")
         self.document.append("<p align=\"center\"><font face=\"Arial\" color=\"#000000\" size=\"2\">")
-        self.document.append("For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
+        self.document.append(
+            "For more details please visit the <a href=\"http://www.regulatory-genomics.org/\"> RGT Website </a>")
         self.document.append("</font></p>")
         self.document.append("<h3 style=\"background-color:white; border-top:3px solid gray;\"></h3>")
         self.document.append("</body>")
@@ -696,16 +745,19 @@ class Html:
         """
 
         if idtag:
-            idstr = ' id="'+idtag+'"'
+            idstr = ' id="' + idtag + '"'
         else:
             idstr = ""
 
         # Creating header
         content_str = ""
-        if(isinstance(align,int)): content_str += "\t<p style=\"margin-left: "+str(align)+"\""+idstr+">"
-        elif(isinstance(align,str)): content_str += "\t<p align=\""+align+"\""+idstr+">"
-        else: pass # ERROR
-        content_str += "<font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\""+idstr+">"
+        if isinstance(align, int):
+            content_str += "\t<p style=\"margin-left: " + str(align) + "\"" + idstr + ">"
+        elif isinstance(align, str):
+            content_str += "\t<p align=\"" + align + "\"" + idstr + ">"
+        else:
+            pass  # ERROR
+        content_str += "<font color=\"" + color + "\" face=\"" + face + "\" size=\"" + str(size) + "\"" + idstr + ">"
         if bold: content_str += "<b>"
         self.document.append(content_str)
 
@@ -743,31 +795,35 @@ class Html:
             - border_list -- Table borders (default = None).
             - sortable -- Whether it is a sortable table (default = False).
         """
-        #if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
-        
+        # if header_notes: self.document.append("<style> .ami div {display:none} .ami:hover div {display:block} </style>")
+
         if not border_list:
             border_list = [""] * len(data_table[0])
-        if auto_width: auto= " table-layout: auto"
-        else: auto=""
-
+        if auto_width:
+            auto = " table-layout: auto"
+        else:
+            auto = ""
 
         # Starting table
         type_list = type_list.lower()
-        if(isinstance(align,int)): self.document.append("<p style=\"margin-left: "+str(align)+"\">")
-        elif(isinstance(align,str)): self.document.append("<p align=\""+align+"\">")
-        else: pass # TODO ERROR
-        
-        # Table header
-        #self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
-        
-        if sortable: 
-            sortableclass=" class=\"tablesorter\""
-            tableid="sortable"
+        if isinstance(align, int):
+            self.document.append("<p style=\"margin-left: " + str(align) + "\">")
+        elif isinstance(align, str):
+            self.document.append("<p align=\"" + align + "\">")
         else:
-            sortableclass=""
-            tableid="hor-zebra"
+            pass  # TODO ERROR
 
-        self.document.append("<table id=\""+tableid+"\""+sortableclass+auto+">")
+        # Table header
+        # self.document.append("<table id=\"myTable\" class=\"tablesorter\">")
+
+        if sortable:
+            sortableclass = " class=\"tablesorter\""
+            tableid = "sortable"
+        else:
+            sortableclass = ""
+            tableid = "hor-zebra"
+
+        self.document.append("<table id=\"" + tableid + "\"" + sortableclass + auto + ">")
 
         if colorcode:
             for line in colorcode:
@@ -776,108 +832,119 @@ class Html:
         #############################
         ##### Header ################
         self.document.append("\t<thead>")
-        if (isinstance(header_list[0], list)):
-        # For headers more than one row
+        if isinstance(header_list[0], list):
+            # For headers more than one row
             for r, row_list in enumerate(header_list):
                 self.document.append("\t\t<tr>")
                 header_str = []
 
                 merge_num = [1] * len(row_list)
                 for i, value in enumerate(row_list):
-                    if value == None:
+                    if value is None:
                         merge_num[last_true] += 1
                         merge_num[i] -= 1
                     else:
                         last_true = i
 
-                for i in range(0,len(row_list)):
+                for i in range(0, len(row_list)):
                     if merge_num[i] > 1:
                         if header_titles and not clean:
-                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                              "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\" "+
-                                              "title=\""+header_titles[r][i]+"\""+border_list[i+merge_num[i]-1]+auto+" >"+
-                                              row_list[i]+"</th>")
+                            header_str.append("\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) +
+                                              "\" align=\"" + 'center' + "\"" + " colspan=\"" + str(
+                                merge_num[i]) + "\" " +
+                                              "title=\"" + header_titles[r][i] + "\"" + border_list[
+                                                  i + merge_num[i] - 1] + auto + " >" +
+                                              row_list[i] + "</th>")
                         elif header_titles and clean:
                             header_str.append("\t\t<th>" + row_list[i] + "</th>")
                         else:
-                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                              "\" align=\""+'center'+"\""+" colspan=\""+str(merge_num[i])+"\""+
-                                              border_list[i+merge_num[i]-1]+auto+">"+row_list[i]+"</th>")
-                        
+                            header_str.append("\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) +
+                                              "\" align=\"" + 'center' + "\"" + " colspan=\"" + str(
+                                merge_num[i]) + "\"" +
+                                              border_list[i + merge_num[i] - 1] + auto + ">" + row_list[i] + "</th>")
+
                     elif merge_num[i] == 0:
                         continue
                     else:
                         if header_titles and not clean:
-                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                              "\" align=\""+cell_align+"\" "+
-                                              "title=\""+header_titles[r][i]+"\""+border_list[i]+auto+">"+
-                                              row_list[i]+"</th>")
+                            header_str.append("\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) +
+                                              "\" align=\"" + cell_align + "\" " +
+                                              "title=\"" + header_titles[r][i] + "\"" + border_list[i] + auto + ">" +
+                                              row_list[i] + "</th>")
                         elif header_titles and clean:
                             header_str.append("\t\t<th>" + row_list[i] + "</th>")
                         else:
-                            header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+
-                                              "\" align=\""+cell_align+"\""+border_list[i]+auto+">"+
-                                              row_list[i]+"</th>")
+                            header_str.append("\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) +
+                                              "\" align=\"" + cell_align + "\"" + border_list[i] + auto + ">" +
+                                              row_list[i] + "</th>")
 
-                header_str = "    "+"\n    ".join(header_str)
+                header_str = "    " + "\n    ".join(header_str)
                 self.document.append(header_str)
                 self.document.append("\t\t</tr>")
 
         else:
             self.document.append("\t\t<tr>")
             header_str = []
-            for i in range(0,len(header_list)):
+            for i in range(0, len(header_list)):
                 if header_titles and not clean:
-                    header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\" "+
-                                      "title=\""+header_titles[i]+"\" >"+header_list[i]+"</th>")
+                    header_str.append(
+                        "\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) + "\" align=\"" + cell_align + "\" " +
+                        "title=\"" + header_titles[i] + "\" >" + header_list[i] + "</th>")
                 elif header_titles and clean:
                     header_str.append("\t\t<th>" + header_list[i] + "</th>")
                 else:
-                    header_str.append("\t\t<th scope=\"col\" width=\""+str(col_size_list[i])+"\" align=\""+cell_align+"\">"+
-                                      header_list[i]+"</th>")
-                
-            header_str = "    "+"\n    ".join(header_str)
+                    header_str.append(
+                        "\t\t<th scope=\"col\" width=\"" + str(col_size_list[i]) + "\" align=\"" + cell_align + "\">" +
+                        header_list[i] + "</th>")
+
+            header_str = "    " + "\n    ".join(header_str)
             self.document.append(header_str)
             self.document.append("\t\t</tr>")
         self.document.append("\t</thead>")
 
-        
         #############################
         ##### Table body ############
         self.document.append("\t<tbody>")
-        for i in range(0,len(data_table)):
+        for i in range(0, len(data_table)):
 
             # Row type
-            if(i%2==0) and not sortable: self.document.append("\t\t<tr class=\"odd\">")
-            else: self.document.append("\t\t<tr>")
+            if (i % 2 == 0) and not sortable:
+                self.document.append("\t\t<tr class=\"odd\">")
+            else:
+                self.document.append("\t\t<tr>")
 
             # Body data
             if not clean:
-                for j in range(0,len(data_table[i])):
-                    if(type_list[j] == "s"):
-                        self.document.append("\t\t\t<td align=\""+cell_align+"\" "+border_list[j]+">"+data_table[i][j]+"</td>")
-                    elif(type_list[j] == "i"):
-                        self.document.append("\t\t\t<td align=\""+cell_align+"\"><img src=\""+self.cluster_path_fix+
-                                             data_table[i][j][0]+"\" width="+str(data_table[i][j][1])+" ></td>")
-                    elif(type_list[j] == "l"):
-                        self.document.append("\t\t\t<td align=\""+cell_align+"\"><a href=\""+data_table[i][j][1]+"\">"+
-                                             data_table[i][j][0]+"</a></td>")
-                    else: pass # TODO ERROR
+                for j in range(0, len(data_table[i])):
+                    if type_list[j] == "s":
+                        self.document.append(
+                            "\t\t\t<td align=\"" + cell_align + "\" " + border_list[j] + ">" + data_table[i][
+                                j] + "</td>")
+                    elif type_list[j] == "i":
+                        self.document.append(
+                            "\t\t\t<td align=\"" + cell_align + "\"><img src=\"" + self.cluster_path_fix +
+                            data_table[i][j][0] + "\" width=" + str(data_table[i][j][1]) + " ></td>")
+                    elif type_list[j] == "l":
+                        self.document.append(
+                            "\t\t\t<td align=\"" + cell_align + "\"><a href=\"" + data_table[i][j][1] + "\">" +
+                            data_table[i][j][0] + "</a></td>")
+                    else:
+                        pass  # TODO ERROR
 
             else:
                 for j in range(0, len(data_table[i])):
-                    if (type_list[j] == "s"):
+                    if type_list[j] == "s":
                         self.document.append("\t\t\t<td>" + data_table[i][j] + "</td>")
-                    elif (type_list[j] == "i"):
+                    elif type_list[j] == "i":
                         self.document.append("\t\t\t<td></td>")
-                    elif (type_list[j] == "l"):
+                    elif type_list[j] == "l":
                         self.document.append("\t\t\t<td>" + data_table[i][j][0] + "</a></td>")
                     else:
                         pass  # TODO ERROR
 
             # Row ending
             self.document.append("\t\t</tr>")
-        
+
         # Finishing table
         self.document.append("</tbody></table></p>")
 
@@ -906,7 +973,7 @@ class Html:
         for s in scripts:
             self.document.append(s)
 
-    def add_figure(self, figure_path, notes=None, align=50, color="black", face="Arial", size=3, 
+    def add_figure(self, figure_path, notes=None, align=50, color="black", face="Arial", size=3,
                    bold=False, width="800", more_images=None):
         """Add a figure with notes underneath.
         
@@ -921,30 +988,38 @@ class Html:
             - bold -- Whether it is bold (default = False).
             - width -- Width (default = 800).
             - more_images -- Add more images (default = None).
-        """        
-        if isinstance(align, int): img_str = "<p style=\"margin-left: "+str(align)+"\">"
-        elif isinstance(align, str): img_str = "<p align=\""+str(align)+"\">"
-        else: pass # TODO ERROR
-        
-        img_str += '<a href="'+figure_path+'"><img src="'+ figure_path +'" width='+width+'></a>'
-        
+        """
+        if isinstance(align, int):
+            img_str = "<p style=\"margin-left: " + str(align) + "\">"
+        elif isinstance(align, str):
+            img_str = "<p align=\"" + str(align) + "\">"
+        else:
+            pass  # TODO ERROR
+
+        img_str += '<a href="' + figure_path + '"><img src="' + figure_path + '" width=' + width + '></a>'
+
         if more_images:
             for im in more_images:
-                img_str += '<a href="'+im+'"><img src="'+ im +'" width='+width+'></a>'
-        
+                img_str += '<a href="' + im + '"><img src="' + im + '" width=' + width + '></a>'
+
         img_str += '</p>'
 
         self.document.append(img_str)
         if notes:
-            if isinstance(align,int):
-                note_str = "<p style=\"margin-left: "+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"
-            elif isinstance(align,str):
-                note_str = "<p align=\""+str(align)+"\"><font color=\""+color+"\" face=\""+face+"\" size=\""+str(size)+"\ align=\""+ str(align) + "\">"            
-            else: pass # TODO ERROR
-            
+            if isinstance(align, int):
+                note_str = "<p style=\"margin-left: " + str(
+                    align) + "\"><font color=\"" + color + "\" face=\"" + face + "\" size=\"" + str(
+                    size) + "\ align=\"" + str(align) + "\">"
+            elif isinstance(align, str):
+                note_str = "<p align=\"" + str(
+                    align) + "\"><font color=\"" + color + "\" face=\"" + face + "\" size=\"" + str(
+                    size) + "\ align=\"" + str(align) + "\">"
+            else:
+                pass  # TODO ERROR
+
             if bold: note_str += "<b>"
             for line in notes:
-                note_str += line + "<br>" 
+                note_str += line + "<br>"
             if bold: note_str += "</b>"
             note_str += "</font></p>"
             self.document.append(note_str)
@@ -968,17 +1043,21 @@ class Html:
         """
         codes = ""
 
-        if ordered: codes += "<ol>"
-        else: codes += "<ul>"
-        
+        if ordered:
+            codes += "<ol>"
+        else:
+            codes += "<ul>"
+
         for item in list_of_items:
-            codes += "<li style=\"margin-left: 50\">"+item+"</li>"
-        
-        if ordered: codes += "</ol>"
-        else: codes += "</ul>"
+            codes += "<li style=\"margin-left: 50\">" + item + "</li>"
+
+        if ordered:
+            codes += "</ol>"
+        else:
+            codes += "</ul>"
 
         self.document.append(codes)
-        
+
     def write(self, file_name):
         """Write HTML document to file name.
 
@@ -991,9 +1070,9 @@ class Html:
         self.create_footer()
 
         # Writing document to file
-        f = open(file_name,"w")
+        f = open(file_name, "w")
         for e in self.document:
-            if e: f.write(e+"\n")
+            if e: f.write(e + "\n")
         f.close()
 
 
@@ -1036,7 +1115,7 @@ class AuxiliaryFunctions:
 
             - score -- Score.
         """
-        return min(max(score,0),1000)
+        return min(max(score, 0), 1000)
 
     @staticmethod
     def overlap(t1, t2, strand_specific=False):
@@ -1053,16 +1132,16 @@ class AuxiliaryFunctions:
             - 0 -- if there is any overlap.
         """
         if strand_specific:
-            if (t1[1] <= t2[0]): return -1  # interval1 is before interval2
-            if (t2[1] <= t1[0]): return 1  # interval1 is after interval2
+            if t1[1] <= t2[0]: return -1  # interval1 is before interval2
+            if t2[1] <= t1[0]: return 1  # interval1 is after interval2
             if t1[4] == t2[2]:
                 return 0  # interval1 overlaps interval2
             else:
                 return 2  # interval1 overlaps interval2 on the opposite strand
         else:
-            if(t1[1] <= t2[0]): return -1 # interval1 is before interval2
-            if(t2[1] <= t1[0]): return 1 # interval1 is after interval2
-            return 0 # interval1 overlaps interval2
+            if t1[1] <= t2[0]: return -1  # interval1 is before interval2
+            if t2[1] <= t1[0]: return 1  # interval1 is after interval2
+            return 0  # interval1 overlaps interval2
 
     @staticmethod
     def revcomp(s):
@@ -1072,16 +1151,17 @@ class AuxiliaryFunctions:
 
             - s -- String.
         """
-        revDict = dict([("A","T"),("T","A"),("C","G"),("G","C"),("N","N")])
+        revDict = dict([("A", "T"), ("T", "A"), ("C", "G"), ("G", "C"), ("N", "N")])
         return "".join([revDict[e] for e in s[::-1]])
 
-        
+
 def which(program):
     """Return path of program or None, see
     http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python"""
-    import os
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+
     fpath, fname = os.path.split(program)
     if fpath:
         if is_exe(program):

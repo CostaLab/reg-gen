@@ -28,7 +28,7 @@ from ..GenomicRegion import GenomicRegion
 from .RNADNABindingSet import RNADNABindingSet
 from ..GenomicRegionSet import GenomicRegionSet
 from ..motifanalysis.Statistics import multiple_test_correction
-from ..Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
+from ..Util import SequenceType, Html, ConfigurationFile, GenomeData, LibraryPath
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -579,7 +579,7 @@ def run_triplexator(ss, ds, output, l=None, e=None, c=None, fr=None, fm=None, of
     """Perform Triplexator"""
     #triplexator_path = check_triplexator_path()
     # triplexator -ss -ds -l 15 -e 20 -c 2 -fr off -fm 0 -of 1 -rm
-    triclass = Library_path()
+    triclass = LibraryPath()
     triplex_lib_path = triclass.get_triplexator()
     triplex_lib  = cdll.LoadLibrary(triplex_lib_path)
 
@@ -677,7 +677,7 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, show_dis=True)
+        asso_genes = g.gene_association(organism=organism, promoter_length=1000, show_dis=True)
 
         # genes = asso_genes[0].name.split(":")
         closest_genes = []

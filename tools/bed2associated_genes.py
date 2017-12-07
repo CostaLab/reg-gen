@@ -20,8 +20,8 @@ genome = GenomeData(args.organism)
 if os.path.isfile(args.bed):
     regionset = GenomicRegionSet("bed")
     regionset.read(args.bed)
-    gr = regionset.gene_association(organism=args.organism, promoterLength=1000, 
-                                    threshDist=500000, show_dis=True)
+    gr = regionset.gene_association(organism=args.organism, promoter_length=1000,
+                                    thresh_dist=500000, show_dis=True)
     regionset.replace_region_name(gr,combine=True)
     
     regionset.write(args.output)
@@ -39,8 +39,8 @@ elif os.path.isdir(args.bed):
                 try:
                     regionset = GenomicRegionSet("bed")
                     regionset.read(os.path.join(args.bed,fnn))
-                    gr = regionset.gene_association(organism=args.organism, promoterLength=1000, 
-                                                    threshDist=500000, show_dis=True)
+                    gr = regionset.gene_association(organism=args.organism, promoter_length=1000,
+                                                    thresh_dist=500000, show_dis=True)
                     regionset.replace_region_name(gr,combine=True)
                     regionset.write(os.path.join(args.output, fn+"_associated.bed"))
                     

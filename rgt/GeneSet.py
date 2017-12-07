@@ -8,32 +8,37 @@ GeneSet describes genes and their expression.
 ###############################################################################
 # Libraries
 ###############################################################################
+
 # Python
 from __future__ import print_function
+
 # Internal
 from .Util import GenomeData
+
 # External
 
 ###############################################################################
 # Class
 ###############################################################################
 
+
 class GeneSet:
     """*Keyword arguments:*
 
         - name -- Name of the GeneSet
     """
+
     def __init__(self, name):
         self.name = name
-        self.genes = [] #list of genes to consider
-        self.values = {} #keys: gene, value: expression data as a list
+        self.genes = []  # list of genes to consider
+        self.values = {}  # keys: gene, value: expression data as a list
         self.cond = []
         self.symbol_dict = {}
 
     def __len__(self):
         """Return the number of genes."""
         return len(self.genes)
-    
+
     def __iter__(self):
         """Iterate this GeneSet."""
         return iter(self.genes)
@@ -43,14 +48,14 @@ class GeneSet:
         if value:
             self.values[gene_name] = value
 
-    def read(self, geneListFile, score=False):
+    def read(self, gene_list_file, score=False):
         """Read genes from the file.
 
         *Keyword arguments:*
 
             - geneListFile -- Path to the file which contains a list of genes.
         """
-        with open(geneListFile) as f:
+        with open(gene_list_file) as f:
             for line in f:
                 line = line.strip()
                 if line:
@@ -67,7 +72,7 @@ class GeneSet:
                         self.genes.append(gene_name)
                         if score:
                             self.values[gene_name] = l[1]
-            
+
     def read_expression(self, geneListFile, header=False, valuestr=False):
         """Read gene expression data.
 
@@ -87,7 +92,7 @@ class GeneSet:
                 l = f.readline()
                 l = l.strip("\n")
                 l = l.split("\t")
-                self.cond = [str(e) for e in range(len(l)-1)]
+                self.cond = [str(e) for e in range(len(l) - 1)]
             for line in f.readlines():
                 line = line.strip("\n")
                 l = line.split("\t")
@@ -99,13 +104,13 @@ class GeneSet:
                         else:
                             na = l[0].upper()
                         self.genes.append(na)
-                        #self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
+                        # self.values[l[0].upper()] = [float(v) for v in l[1:len(l)]]
                         if not valuestr:
                             self.values[na] = float(l[1])
                         else:
                             self.values[na] = l[1]
                     except:
-                        print("*** error in loading gene: "+line)
+                        print("*** error in loading gene: " + line)
 
     def get_all_genes(self, organism):
         """Get all gene names for a given organism.
@@ -144,7 +149,7 @@ class GeneSet:
         # g = a_gene.partition(".")[0].upper()
         g = a_gene.upper()
 
-        return (g in self.genes)
+        return g in self.genes
 
     def save(self, filename):
         """Save gene list into the given filename."""
@@ -157,10 +162,9 @@ class GeneSet:
                 for g in self.genes:
                     print(g, file=f)
 
-
     # def load_alias(self, organism):
     #     """Load alias file for gene names"""
-        
+
     #     genome_data = GenomeData(organism)
     #     # Opening alias file
     #     alias_file = open(genome_data.get_gene_alias(),"r")
@@ -189,5 +193,3 @@ class GeneSet:
     #         except Exception: unmapped_list.append(self.symbol_dict[e])
 
     #     self.genes = mapped_list
-        
-        

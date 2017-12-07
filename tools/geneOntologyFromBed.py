@@ -40,7 +40,7 @@ class HelpfulOptionParser(OptionParser):
 def mode_1(exp_matrix):
     for region in exp_matrix.get_regionsets():
         region_set = GenomicRegionSet("")
-        _, _, mappedGenes, _, _ = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=50000)
+        _, _, mappedGenes, _, _ = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, thresh_dist=50000)
         print('#number of mapped genes:', mappedGenes)
         print(region.name+"\t"+("\t".join(region_set.genes)))
 
@@ -56,7 +56,7 @@ def mode_2(exp_matrix):
         f = open("region_" + str(region.name) + ".data", 'w')
         
         region_set = GenomicRegionSet("")
-        _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
+        _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, thresh_dist=2000)
         
         for k in gene_peaks_mapping.keys():
             chr, raw_positions = k.split(':')
@@ -84,7 +84,7 @@ def mode_3(exp_matrix):
         f = open("region_" + str(region.name) + ".data", 'w')
         
         region_set = GenomicRegionSet("")
-        _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, threshDist=2000)
+        _, _, mappedGenes, _, gene_peaks_mapping = region_set.filter_by_gene_association(region.fileName, None, gene_file, genome_file, thresh_dist=2000)
         
         avg_score = {} #score per peak
         genes = {}
