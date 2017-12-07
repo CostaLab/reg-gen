@@ -576,11 +576,11 @@ class AnnotationSet:
         Gets promoters of genes given a specific promoter length. It returns a GenomicRegionSet with such promoters.
         The ID of each gene will be put in the NAME field of each GenomicRegion.
         Each promoter includes also the coordinate of the 5' base pair, therefore each promoter actual
-        length is promoterLength+1.
+        length is promoter_length+1.
 
         *Keyword arguments:*
 
-            - promoterLength -- The length of the promoter region.
+            - promoter_length -- The length of the promoter region.
             - gene_set -- A set of genes to narrow the search.
             - unmaplist -- If True than also return the unmappable genes list (default = False).
 
