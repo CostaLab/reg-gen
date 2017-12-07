@@ -583,7 +583,7 @@ def main(args):
                     logo_dir_path = npath(os.path.join(output_location, "logos"))
                     try:
                         os.stat(logo_dir_path)
-                    except:
+                    except Exception:
                         os.mkdir(logo_dir_path)
 
                 # Printing statistics html - Creating data table
@@ -724,7 +724,7 @@ def main(args):
                 logo_dir_path = npath(os.path.join(output_location, "logos"))
                 try:
                     os.stat(logo_dir_path)
-                except:
+                except Exception:
                     os.mkdir(logo_dir_path)
 
             # Printing statistics html - Creating data table

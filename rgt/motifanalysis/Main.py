@@ -11,7 +11,9 @@ import argparse
 
 # Internal
 from rgt import __version__
-import Match, Enrichment, Mapper
+import Match
+import Enrichment
+import Mapper
 
 """
 Motif matching and enrichment based on motif PSSM. Can perform either Matching (finds all putative
