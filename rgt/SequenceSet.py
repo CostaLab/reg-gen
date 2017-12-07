@@ -1,4 +1,3 @@
-
 # Python Libraries
 from __future__ import print_function
 import copy
@@ -6,13 +5,14 @@ import copy
 # External
 import pysam
 
-
 """
 Sequence
 ===================
 Sequence describes the sequence with ATCG as alphabets as well as its types.
 
 """
+
+
 class Sequence:
 
     def __init__(self, seq, strand, name=None):
@@ -21,29 +21,29 @@ class Sequence:
             - seq -- The sequence composef of A, T, C, G, or U.
             - strand -- Orientation of the sequence, '+' or '-'.
         """
-        self.name = name # Extra information about the sequence
-        self.seq = seq.upper() # Convert all alphabets into upper case
+        self.name = name  # Extra information about the sequence
+        self.seq = seq.upper()  # Convert all alphabets into upper case
         self.strand = strand
-        
+
     def __len__(self):
         """Return the length of the sequence."""
         return len(self.seq)
 
     def __str__(self):
         return ":".join([str(x) for x in [self.name, self.seq] if x])
-        
+
     def dna_to_rna(self):
         """Convert the sequence from DNA sequence to RNA sequence."""
         self.seq = self.seq.replace("T", "U")
-        
+
     def rna_to_dna(self):
         """Convert the sequence from RNA sequence to DNA sequence."""
         self.seq = self.seq.replace("U", "T")
-        
+
     def gc_content(self):
         """Return the ratio of GC content in this sequence."""
         gc = self.seq.count("G") + self.seq.count("C")
-        return gc/float(len(self))
+        return gc / float(len(self))
 
     def methylate(self, cpg_sites):
         aux = list(self.seq)
@@ -54,18 +54,21 @@ class Sequence:
             elif self.seq[pos] == "G":
                 aux[pos] = "1"
             else:
-                raise Exception("Position "+str(pos)+"-"+self.seq[pos]+" from "+self.seq+" can not be methylated")
+                raise Exception(
+                    "Position " + str(pos) + "-" + self.seq[pos] + " from " + self.seq + " can not be methylated")
 
         self.seq = "".join(aux)
-        
+
     def complement(self):
         """Return another Sequence which is the complement to original sequence."""
         if self.strand == "RNA":
-            print("No complement strand for RNA "+self.name)
+            print("No complement strand for RNA " + self.name)
             return
-        elif self.strand == "+": strand = "-"
-        else: strand = "-"
-        
+        elif self.strand == "+":
+            strand = "-"
+        else:
+            strand = "-"
+
         seq = copy.deepcopy(self.seq)
         seq.replace("A", "G")
         seq.replace("G", "A")
@@ -73,9 +76,10 @@ class Sequence:
         seq.replace("T", "C")
         seq.replace("m", "1")
         seq.replace("1", "m")
-        
-        s = Sequence(seq, name=self.name+"_complement",  strand=strand)
+
+        s = Sequence(seq, name=self.name + "_complement", strand=strand)
         return s
+
 
 ####################################################################################
 ####################################################################################
@@ -86,6 +90,8 @@ SequenceSet
 SequenceSet represents the collection of sequences and their functions.
 
 """
+
+
 class SequenceSet:
 
     def __init__(self, name, seq_type):
@@ -97,10 +103,10 @@ class SequenceSet:
         self.name = name
         self.sequences = []
         self.seq_type = seq_type
-        
+
     def __len__(self):
         return len(self.sequences)
-        
+
     def __iter__(self):
         return iter(self.sequences)
 
@@ -127,21 +133,26 @@ class SequenceSet:
         with open(fasta_file) as f:
             for line in f:
                 line = line.strip()
-                if not line: pass
+                if not line:
+                    pass
                 elif line[0] == ">":
                     if pre_seq:
                         self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
                         pre_seq = False
                     info = line.split()[0][1:]
                     seq = ""
-                    try: strand = line[line.index("strand")+7]
-                    except: strand = "+"
+                    try:
+                        strand = line[line.index("strand") + 7]
+                    except:
+                        strand = "+"
                 else:
-                    try: seq = seq + line
-                    except: seq = line
+                    try:
+                        seq = seq + line
+                    except:
+                        seq = line
                     pre_seq = True
             if not strand:
-                print("Error: There is no header in "+fasta_file)
+                print("Error: There is no header in " + fasta_file)
                 self.sequences.append(Sequence(seq=seq, strand=".", name=info))
             else:
                 self.sequences.append(Sequence(seq=seq, strand=strand, name=info))
@@ -167,13 +178,13 @@ class SequenceSet:
         for s in self:
             tol += len(s)
         return tol
- 
+
     def cal_motif_statistics(self):
-        self.motif_statistics_1 = {"A":0, "T":0, "C":0, "G":0}
+        self.motif_statistics_1 = {"A": 0, "T": 0, "C": 0, "G": 0}
         motif_statistics_2 = {"AA": 0, "AT": 0, "AC": 0, "AG": 0,
                               "TA": 0, "TT": 0, "TC": 0, "TG": 0,
                               "CA": 0, "CT": 0, "CC": 0, "CG": 0,
-                              "GA": 0, "GT": 0, "GC": 0, "GG": 0 }
+                              "GA": 0, "GT": 0, "GC": 0, "GG": 0}
         for s in self:
             for nt1 in self.motif_statistics_1.keys():
                 self.motif_statistics_1[nt1] += s.seq.count(nt1)

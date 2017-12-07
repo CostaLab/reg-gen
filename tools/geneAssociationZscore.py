@@ -68,7 +68,8 @@ for region in exps.get_regionsets():
             random_regions.append(br)
     for g in genesets:
         region_aux=deepcopy(region)
-        [all_genes,mapped_genes,all_proxs,mapped_proxs] = region_aux.filter_by_gene_association(gene_set=g,organism=genomeName,threshDist=distance)
+        [all_genes,mapped_genes,all_proxs,mapped_proxs] = region_aux.filter_by_gene_association(gene_set=g, organism=genomeName,
+                                                                                                thresh_dist=distance)
 
 #            self in order to keep only the coordinates associated to genes which are in gene_set
 #
@@ -83,7 +84,8 @@ for region in exps.get_regionsets():
         #backBed.read(backGroundPeaks)
         for br in random_regions:
           random=deepcopy(br)
-          [back_all_genes,back_mapped_genes,back_all_proxs,back_mapped_proxs] = random.filter_by_gene_association(gene_set=g,organism=genomeName,threshDist=distance)
+          [back_all_genes,back_mapped_genes,back_all_proxs,back_mapped_proxs] = random.filter_by_gene_association(gene_set=g, organism=genomeName,
+                                                                                                                  thresh_dist=distance)
           randomRes.append(len(back_mapped_genes))
 
         randomRes=numpy.array(randomRes)
