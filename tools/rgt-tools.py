@@ -11,6 +11,7 @@ import pysam
 import numpy
 import argparse
 import natsort
+from operator import attrgetter
 import matplotlib
 matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
@@ -1571,7 +1572,11 @@ if __name__ == "__main__":
                     lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
                                                  orientation=region.orientation, data=data, name=region.name))
                     lose_peaks.add(region)
-
+        # sort table
+        gain_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
+        gain_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
+        lose_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
+        lose_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
         gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
         lose_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))

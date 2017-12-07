@@ -212,14 +212,14 @@ def main():
                 integrate_stat(path=target)
                 summerize_stat(target=target, link_d=link_d, score=args.exp)
             # Project level index file
-            integrate_html(args.path)
+
             for item in os.listdir(args.path):
                 # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue
                 elif os.path.isdir(os.path.join(args.path, item)):
-                    integrate_html(os.path.join(args.path, item))
+
                     for it in os.listdir(os.path.join(args.path, item)):
                         # print("\t" + item + "\t" + it)
                         if it == "style": continue
@@ -227,7 +227,8 @@ def main():
                             continue
                         elif os.path.isdir(os.path.join(args.path, item, it)):
                             integrate_html(os.path.join(args.path, item, it))
-
+                    integrate_html(os.path.join(args.path, item))
+            integrate_html(args.path)
 
             # gen_heatmap(path=args.path)
             # generate_rna_exp_pv_table(root=args.path, multi_corr=False)
