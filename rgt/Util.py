@@ -406,7 +406,7 @@ class PassThroughOptionParser(HelpfulOptionParser):
         while rargs:
             try:
                 HelpfulOptionParser._process_args(self, largs, rargs, values)
-            except (BadOptionError, AmbiguousOptionError) as err:
+            except (BadOptionError, AmbiguousOptionError):
                 pass
                 # largs.append(err.opt_str)
 
@@ -740,9 +740,9 @@ class Html:
 
         # Creating header
         content_str = ""
-        if (isinstance(align, int)):
+        if isinstance(align, int):
             content_str += "\t<p style=\"margin-left: " + str(align) + "\"" + idstr + ">"
-        elif (isinstance(align, str)):
+        elif isinstance(align, str):
             content_str += "\t<p align=\"" + align + "\"" + idstr + ">"
         else:
             pass  # ERROR
@@ -795,9 +795,9 @@ class Html:
 
         # Starting table
         type_list = type_list.lower()
-        if (isinstance(align, int)):
+        if isinstance(align, int):
             self.document.append("<p style=\"margin-left: " + str(align) + "\">")
-        elif (isinstance(align, str)):
+        elif isinstance(align, str):
             self.document.append("<p align=\"" + align + "\">")
         else:
             pass  # TODO ERROR
@@ -821,7 +821,7 @@ class Html:
         #############################
         ##### Header ################
         self.document.append("\t<thead>")
-        if (isinstance(header_list[0], list)):
+        if isinstance(header_list[0], list):
             # For headers more than one row
             for r, row_list in enumerate(header_list):
                 self.document.append("\t\t<tr>")
@@ -829,7 +829,7 @@ class Html:
 
                 merge_num = [1] * len(row_list)
                 for i, value in enumerate(row_list):
-                    if value == None:
+                    if value is None:
                         merge_num[last_true] += 1
                         merge_num[i] -= 1
                     else:
@@ -905,15 +905,15 @@ class Html:
             # Body data
             if not clean:
                 for j in range(0, len(data_table[i])):
-                    if (type_list[j] == "s"):
+                    if type_list[j] == "s":
                         self.document.append(
                             "\t\t\t<td align=\"" + cell_align + "\" " + border_list[j] + ">" + data_table[i][
                                 j] + "</td>")
-                    elif (type_list[j] == "i"):
+                    elif type_list[j] == "i":
                         self.document.append(
                             "\t\t\t<td align=\"" + cell_align + "\"><img src=\"" + self.cluster_path_fix +
                             data_table[i][j][0] + "\" width=" + str(data_table[i][j][1]) + " ></td>")
-                    elif (type_list[j] == "l"):
+                    elif type_list[j] == "l":
                         self.document.append(
                             "\t\t\t<td align=\"" + cell_align + "\"><a href=\"" + data_table[i][j][1] + "\">" +
                             data_table[i][j][0] + "</a></td>")
@@ -922,11 +922,11 @@ class Html:
 
             else:
                 for j in range(0, len(data_table[i])):
-                    if (type_list[j] == "s"):
+                    if type_list[j] == "s":
                         self.document.append("\t\t\t<td>" + data_table[i][j] + "</td>")
-                    elif (type_list[j] == "i"):
+                    elif type_list[j] == "i":
                         self.document.append("\t\t\t<td></td>")
-                    elif (type_list[j] == "l"):
+                    elif type_list[j] == "l":
                         self.document.append("\t\t\t<td>" + data_table[i][j][0] + "</a></td>")
                     else:
                         pass  # TODO ERROR
@@ -1121,15 +1121,15 @@ class AuxiliaryFunctions:
             - 0 -- if there is any overlap.
         """
         if strand_specific:
-            if (t1[1] <= t2[0]): return -1  # interval1 is before interval2
-            if (t2[1] <= t1[0]): return 1  # interval1 is after interval2
+            if t1[1] <= t2[0]: return -1  # interval1 is before interval2
+            if t2[1] <= t1[0]: return 1  # interval1 is after interval2
             if t1[4] == t2[2]:
                 return 0  # interval1 overlaps interval2
             else:
                 return 2  # interval1 overlaps interval2 on the opposite strand
         else:
-            if (t1[1] <= t2[0]): return -1  # interval1 is before interval2
-            if (t2[1] <= t1[0]): return 1  # interval1 is after interval2
+            if t1[1] <= t2[0]: return -1  # interval1 is before interval2
+            if t2[1] <= t1[0]: return 1  # interval1 is after interval2
             return 0  # interval1 overlaps interval2
 
     @staticmethod
@@ -1147,7 +1147,7 @@ class AuxiliaryFunctions:
 def which(program):
     """Return path of program or None, see
     http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python"""
-    import os
+
     def is_exe(fpath):
         return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
 
