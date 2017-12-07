@@ -2,9 +2,9 @@
 from __future__ import print_function
 from __future__ import division
 import os
-from rgt.Util import GenomeData
-from rgt.tdf.triplexTools import save_sequence, run_triplexator, silentremove
-from rgt.tdf.RNADNABindingSet import RNADNABindingSet
+from ..Util import GenomeData
+from ..tdf.triplexTools import save_sequence, run_triplexator, silentremove
+from ..tdf.RNADNABindingSet import RNADNABindingSet
 # from rgt.GenomicRegionSet import GenomicRegionSet
 
 

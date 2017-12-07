@@ -155,7 +155,7 @@ class MotifSet:
                     except:
                         motifs_genes[m.name] = [g]
 
-            except Exception as e:
+            except:
                 not_found_genes.append(g)  # keep genes for inexact search
         if search == "inexact":
             genes = not_found_genes

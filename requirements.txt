@@ -1,3 +1,4 @@
+scikit-learn
 cython
 numpy
 scipy
@@ -7,3 +8,7 @@ pyVCF
 fisher
 HTSeq
 hmmlearn
+configparser
+matplotlib
+pyx
+natsort

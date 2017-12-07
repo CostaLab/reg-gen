@@ -10,14 +10,14 @@ import time
 import sys
 
 # Internal
-from rgt.Util import ErrorHandler, MotifData, GenomeData, npath
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.AnnotationSet import AnnotationSet
-from Motif import Motif, Thresholds
-from Util import bed_to_bb
+from ..Util import ErrorHandler, MotifData, GenomeData, npath
+from ..ExperimentalMatrix import ExperimentalMatrix
+from ..GeneSet import GeneSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..GenomicRegion import GenomicRegion
+from ..AnnotationSet import AnnotationSet
+from .Motif import Motif, Thresholds
+from .Util import bed_to_bb
 
 # External
 from pysam import Fastafile

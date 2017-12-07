@@ -8,7 +8,7 @@ from matplotlib_venn import venn3
 
 # Local Libraries
 # Distal Libraries
-from shared_function import *
+from .shared_function import *
 
 # Local test
 dir = os.getcwd()

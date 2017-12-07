@@ -20,10 +20,10 @@ from copy import deepcopy
 from collections import OrderedDict
 
 # Internal
-from rgt.SequenceSet import *
-from rgt.GeneSet import GeneSet
-from rgt.GenomicRegion import GenomicRegion
-from rgt.Util import GenomeData, OverlapType, Library_path
+from .SequenceSet import *
+from .GeneSet import GeneSet
+from .GenomicRegion import GenomicRegion
+from .Util import GenomeData, OverlapType, Library_path
 
 # External
 from pysam import Fastafile

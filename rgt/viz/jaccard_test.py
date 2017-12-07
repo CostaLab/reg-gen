@@ -4,7 +4,7 @@ from __future__ import division
 
 # Local Libraries
 # Distal Libraries
-from shared_function import *
+from .shared_function import *
 
 # Local test
 dir = os.getcwd()

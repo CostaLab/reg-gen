@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 # Local Libraries
 # Distal Libraries
-from rgt import __version__
+from .. import __version__
 # from rgt.Util import Html
 from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_index, \
                          no_binding_response, integrate_stat, update_profile, integrate_html, \
@@ -22,10 +22,10 @@ from triplexTools import get_dbss, check_dir,generate_rna_exp_pv_table, revise_i
 
 # from tdf_promotertest import PromoterTest
 # from tdf_regiontest import RandomTest
-from rgt.tdf.Input import Input
-from rgt.tdf.Triplexes import Triplexes
-from rgt.tdf.Statistics import Statistics
-from rgt.tdf.Report import Report
+from ..tdf.Input import Input
+from ..tdf.Triplexes import Triplexes
+from ..tdf.Statistics import Statistics
+from ..tdf.Report import Report
 
 
 dir = os.getcwd()
@@ -212,14 +212,14 @@ def main():
                 integrate_stat(path=target)
                 summerize_stat(target=target, link_d=link_d, score=args.exp)
             # Project level index file
-            integrate_html(args.path)
+
             for item in os.listdir(args.path):
                 # print("\t"+item)
                 if item == "style": continue
                 elif os.path.isfile(os.path.join(args.path, item)):
                     continue
                 elif os.path.isdir(os.path.join(args.path, item)):
-                    integrate_html(os.path.join(args.path, item))
+
                     for it in os.listdir(os.path.join(args.path, item)):
                         # print("\t" + item + "\t" + it)
                         if it == "style": continue
@@ -227,7 +227,8 @@ def main():
                             continue
                         elif os.path.isdir(os.path.join(args.path, item, it)):
                             integrate_html(os.path.join(args.path, item, it))
-
+                    integrate_html(os.path.join(args.path, item))
+            integrate_html(args.path)
 
             # gen_heatmap(path=args.path)
             # generate_rna_exp_pv_table(root=args.path, multi_corr=False)

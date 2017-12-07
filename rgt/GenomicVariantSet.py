@@ -6,8 +6,8 @@ GenomicVariantSet represents list of GenomicVariant.
 """
 
 from __future__ import print_function
-from rgt.GenomicVariant import GenomicVariant
-from rgt.GenomicRegionSet import GenomicRegionSet
+from .GenomicVariant import GenomicVariant
+from .GenomicRegionSet import GenomicRegionSet
 import vcf
 
 class GenomicVariantSet(GenomicRegionSet):

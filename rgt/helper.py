@@ -4,8 +4,9 @@ helper codes
 some other extra codes
 """
 
-from GenomicRegion import GenomicRegion
-from GenomicRegionSet import GenomicRegionSet
+from .GenomicRegion import GenomicRegion
+from .GenomicRegionSet import GenomicRegionSet
+
 
 def get_chrom_sizes_as_genomicregionset(chrom_size_path):
     regionset = GenomicRegionSet('')
@@ -15,14 +16,15 @@ def get_chrom_sizes_as_genomicregionset(chrom_size_path):
             line = line.split('\t')
             chrom, end = line[0], int(line[1])
             regionset.add(GenomicRegion(chrom=chrom, initial=0, final=end))
-    
+
     return regionset
 
+
 def pretty(d, indent=0):
-    for key, value in d.iteritems():
+    for key, value in d.items():
         print('\t' * indent + str(key))
         if isinstance(value, dict):
-            pretty(value, indent+1)
+            pretty(value, indent + 1)
         else:
             for t in value:
-                print('\t' * (indent+1) + str(t))
+                print('\t' * (indent + 1) + str(t))

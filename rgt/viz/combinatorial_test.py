@@ -2,9 +2,9 @@ import sys
 import copy
 import itertools
 from collections import OrderedDict
-from rgt.Util import OverlapType
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ExperimentalMatrix import ExperimentalMatrix
+from ..Util import OverlapType
+from ..GenomicRegionSet import GenomicRegionSet
+from ..ExperimentalMatrix import ExperimentalMatrix
 
 
 
