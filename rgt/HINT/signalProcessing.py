@@ -252,11 +252,11 @@ class GenomicSignal:
         for read in self.bam.fetch(chrName, p1_w, p2_w):
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -345,11 +345,11 @@ class GenomicSignal:
         for read in self.bam.fetch(chrName, p1_w, p2_w):
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -440,11 +440,11 @@ class GenomicSignal:
         for read in self.bam.fetch(chrName, p1_w, p2_w):
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nf[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     nr[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -684,11 +684,11 @@ class GenomicSignal:
             for read in self.bam.fetch(ref, p1_w, p2_w):
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
-                    if cut_site >= p1_w and cut_site < p2_w:
+                    if p1_w <= cut_site < p2_w:
                         signal_raw_f[cut_site - p1_w] += 1.0
                 else:
                     cut_site = read.aend + reverse_shift - 1
-                    if cut_site >= p1_w and cut_site < p2_w:
+                    if p1_w <= cut_site < p2_w:
                         signal_raw_r[cut_site - p1_w] += 1.0
 
             # Smoothed counts
@@ -795,44 +795,44 @@ class GenomicSignal:
             for read in bam.fetch(ref, p1, p2):
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
-                    if cut_site >= p1 and cut_site < p2:
+                    if p1 <= cut_site < p2:
                         raw_f[cut_site - p1] += 1.0
                 else:
                     cut_site = read.aend + reverse_shift - 1
-                    if cut_site >= p1 and cut_site < p2:
+                    if p1 <= cut_site < p2:
                         raw_r[cut_site - p1] += 1.0
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
                 if abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_r[cut_site - p1] += 1.0
         elif min_length is not None and max_length is None:
             for read in bam.fetch(ref, p1, p2):
                 if abs(read.template_length) > min_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_r[cut_site - p1] += 1.0
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1, p2):
                 if min_length <= abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             raw_r[cut_site - p1] += 1.0
         if strand:
             return np.array(raw_f), np.array(raw_r)
@@ -883,44 +883,44 @@ class GenomicSignal:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if not read.is_reverse:
                     cut_site = read.pos + forward_shift
-                    if cut_site >= p1_w and cut_site < p2_w:
+                    if p1_w <= cut_site < p2_w:
                         raw_f[cut_site - p1_w] += 1.0
                 else:
                     cut_site = read.aend + reverse_shift - 1
-                    if cut_site >= p1_w and cut_site < p2_w:
+                    if p1_w <= cut_site < p2_w:
                         raw_r[cut_site - p1_w] += 1.0
         elif min_length is None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_r[cut_site - p1_w] += 1.0
         elif min_length is not None and max_length is None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if abs(read.template_length) > min_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_r[cut_site - p1_w] += 1.0
         elif min_length is not None and max_length is not None:
             for read in bam.fetch(ref, p1_w, p2_w):
                 if min_length < abs(read.template_length) <= max_length:
                     if not read.is_reverse:
                         cut_site = read.pos + forward_shift
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_f[cut_site - p1_w] += 1.0
                     else:
                         cut_site = read.aend + reverse_shift - 1
-                        if cut_site >= p1_w and cut_site < p2_w:
+                        if p1_w <= cut_site < p2_w:
                             raw_r[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -1004,11 +1004,11 @@ class GenomicSignal:
         for read in bam.fetch(ref, p1_w, p2_w):
             if not read.is_reverse:
                 cut_site = read.pos + forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_r[cut_site - p1_w] += 1.0
 
         # Smoothed counts

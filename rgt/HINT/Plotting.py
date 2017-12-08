@@ -86,7 +86,7 @@ def seq_logo(args):
 
     for region in regions:
         for r in bam.fetch(region.chrom, region.initial, region.final):
-            if (not r.is_reverse):
+            if not r.is_reverse:
                 cut_site = r.pos - 1
                 p1 = cut_site - int(args.window_size / 2)
             else:
@@ -844,13 +844,13 @@ class Plot:
         signal_raw_f = [0.0] * (p2_w - p1_w)
         signal_raw_r = [0.0] * (p2_w - p1_w)
         for read in bam.fetch(ref, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + self.forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + self.reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_r[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -928,13 +928,13 @@ class Plot:
 
                 # Fetch raw signal
                 for read in bam.fetch(region.chrom, p1, p2):
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + self.forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_raw_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + self.reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_raw_r[cut_site - p1] += 1.0
 
                 num_sites += 1
@@ -1205,13 +1205,13 @@ class Plot:
         signal_raw_f = [0.0] * (p2_w - p1_w)
         signal_raw_r = [0.0] * (p2_w - p1_w)
         for read in bam.fetch(ref, p1_w, p2_w):
-            if (not read.is_reverse):
+            if not read.is_reverse:
                 cut_site = read.pos + self.forward_shift
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_f[cut_site - p1_w] += 1.0
             else:
                 cut_site = read.aend + self.reverse_shift - 1
-                if cut_site >= p1_w and cut_site < p2_w:
+                if p1_w <= cut_site < p2_w:
                     signal_raw_r[cut_site - p1_w] += 1.0
 
         # Smoothed counts
@@ -1275,24 +1275,24 @@ class Plot:
 
                 # Fetch raw signal
                 for read in bam_atac.fetch(region.chrom, p1, p2):
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + self.forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             mean_signal_atac[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + self.reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             mean_signal_atac[cut_site - p1] += 1.0
 
                 # Fetch raw signal
                 for read in bam_dnase.fetch(region.chrom, p1, p2):
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             mean_signal_dnase[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             mean_signal_dnase[cut_site - p1] += 1.0
 
                 num_sites += 1
@@ -1413,46 +1413,46 @@ class Plot:
                 # Fetch raw signal
                 for read in bam.fetch(region.chrom, p1, p2):
                     # All reads
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + self.forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + self.reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_r[cut_site - p1] += 1.0
 
                     # length <= 145
                     if abs(read.template_length) <= 145:
-                        if (not read.is_reverse):
+                        if not read.is_reverse:
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_f_max_145[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_r_max_145[cut_site - p1] += 1.0
 
                     # length > 145 and <= 307
-                    if abs(read.template_length) > 145 and abs(read.template_length) <= 307:
-                        if (not read.is_reverse):
+                    if 145 < abs(read.template_length) <= 307:
+                        if not read.is_reverse:
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_f_146_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_r_146_307[cut_site - p1] += 1.0
 
                     # length > 307
                     if abs(read.template_length) > 307:
-                        if (not read.is_reverse):
+                        if not read.is_reverse:
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_f_min_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_r_min_307[cut_site - p1] += 1.0
 
         # Output the norm and slope signal
@@ -1644,25 +1644,25 @@ class Plot:
                 # Fetch raw signal
                 for read in bam.fetch(region.chrom, p1, p2):
                     # length > 145 and <= 307
-                    if abs(read.template_length) > 145 and abs(read.template_length) <= 307:
-                        if (not read.is_reverse):
+                    if 145 < abs(read.template_length) <= 307:
+                        if not read.is_reverse:
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_f_146_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_r_146_307[cut_site - p1] += 1.0
 
                     # length > 307
                     if abs(read.template_length) > 307:
-                        if (not read.is_reverse):
+                        if not read.is_reverse:
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_f_min_307[cut_site - p1] += 1.0
                         else:
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_r_min_307[cut_site - p1] += 1.0
 
         # Apply a Savitzky-Golay filter to an array.
@@ -2587,8 +2587,8 @@ class Plot:
                     length = abs(read.template_length)
                     lengths.append(length)
                     if length <= 145: lengths_shorter_than_145.append(length)
-                    if length > 145 and length <= 307: lengths_between_146_307.append(length)
-                    if length > 307 and length <= 500: lengths_between_307_500.append(length)
+                    if 145 < length <= 307: lengths_between_146_307.append(length)
+                    if 307 < length <= 500: lengths_between_307_500.append(length)
                     if length > 500: lengths_longer_than_500.append(length)
 
         elif motif_file is not None:
@@ -2606,8 +2606,8 @@ class Plot:
                             length = abs(read.template_length)
                             lengths.append(length)
                             if length <= 145: lengths_shorter_than_145.append(length)
-                            if length > 145 and length <= 307: lengths_between_146_307.append(length)
-                            if length > 307 and length <= 500: lengths_between_307_500.append(length)
+                            if 145 < length <= 307: lengths_between_146_307.append(length)
+                            if 307 < length <= 500: lengths_between_307_500.append(length)
                             if length > 500: lengths_longer_than_500.append(length)
 
         # output the plot
@@ -2751,12 +2751,12 @@ class Plot:
             if not read.is_reverse:
                 length_f.append(abs(read.template_length))
                 cut_site = read.pos + self.forward_shift
-                if cut_site >= p1 and cut_site < p2:
+                if p1 <= cut_site < p2:
                     signal_f[cut_site - p1] += 1.0
             else:
                 length_r.append(abs(read.template_length))
                 cut_site = read.aend + self.reverse_shift - 1
-                if cut_site >= p1 and cut_site < p2:
+                if p1 <= cut_site < p2:
                     signal_r[cut_site - p1] += 1.0
 
         def output2file(output_loc, output_prefix, outputs):
@@ -2860,7 +2860,7 @@ class Plot:
                             update_signal(length_f_2N_II, length_r_2N_II, signal_f_2N_II, signal_r_2N_II, read, p1, p2)
 
                         # 2 Nucleosome III
-                        elif (start in range(-322, -142) and end in range(142, 322)):
+                        elif start in range(-322, -142) and end in range(142, 322):
                             update_signal(length_f_2N_III, length_r_2N_III, signal_f_2N_III, signal_r_2N_III, read, p1, p2)
 
 
@@ -2974,13 +2974,13 @@ class Plot:
                     length = abs(read.template_length)
                     lengths.append(length)
 
-                    if (not read.is_reverse):
+                    if not read.is_reverse:
                         cut_site = read.pos + self.forward_shift
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_raw_f[cut_site - p1] += 1.0
                     else:
                         cut_site = read.aend + self.reverse_shift - 1
-                        if cut_site >= p1 and cut_site < p2:
+                        if p1 <= cut_site < p2:
                             signal_raw_r[cut_site - p1] += 1.0
 
                     if length <= 145:
@@ -2990,7 +2990,7 @@ class Plot:
                                 lengths_class_1.append(length)
                                 lengths_class_1_f.append(length)
                                 cut_site = read.pos + self.forward_shift
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_1_f[cut_site - p1] += 1.0
                         else:
                             # if mid - 142 < read.pos < mid < read.pos + length < mid + 142:
@@ -2998,26 +2998,26 @@ class Plot:
                                 lengths_class_1.append(length)
                                 lengths_class_1_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_1_r[cut_site - p1] += 1.0
 
                     elif 145 < length <= 307:
                         # nucleosome only
                         if not read.is_reverse:
-                            if (mid - 248 < read.pos < mid - 142 and mid - 142 <= read.pos + length <= mid) or \
-                                    (mid < read.pos <= mid + 142 and mid + 142 < read.pos + length < mid + 284):
+                            if (mid - 248 < read.pos < mid - 142 <= read.pos + length <= mid) or \
+                                    (mid < read.pos <= mid + 142 < read.pos + length < mid + 284):
                                 lengths_class_2.append(length)
                                 lengths_class_2_f.append(length)
                                 cut_site = read.pos + self.forward_shift
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_2_f[cut_site - p1] += 1.0
                         else:
-                            if (mid - 248 < read.aend - length < mid - 142 and mid - 142 <= read.aend <= mid) or \
-                                    (mid < read.aend - length <= mid + 142 and mid + 142 < read.aend < mid + 284):
+                            if (mid - 248 < read.aend - length < mid - 142 <= read.aend <= mid) or \
+                                    (mid < read.aend - length <= mid + 142 < read.aend < mid + 284):
                                 lengths_class_2.append(length)
                                 lengths_class_2_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_2_r[cut_site - p1] += 1.0
 
                         # nucleosome and TF
@@ -3027,7 +3027,7 @@ class Plot:
                                 lengths_class_3.append(length)
                                 lengths_class_3_f.append(length)
                                 cut_site = read.pos + self.forward_shift
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_3_f[cut_site - p1] += 1.0
                         else:
                             if (read.aend - length < mid - 142 and mid <= read.aend < mid + 142) or \
@@ -3035,20 +3035,20 @@ class Plot:
                                 lengths_class_3.append(length)
                                 lengths_class_3_r.append(length)
                                 cut_site = read.aend + self.reverse_shift - 1
-                                if cut_site >= p1 and cut_site < p2:
+                                if p1 <= cut_site < p2:
                                     signal_raw_class_3_r[cut_site - p1] += 1.0
 
                     elif length > 307:
                         lengths_class_4.append(length)
-                        if (not read.is_reverse):
+                        if not read.is_reverse:
                             lengths_class_4_f.append(length)
                             cut_site = read.pos + self.forward_shift
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_raw_class_4_f[cut_site - p1] += 1.0
                         else:
                             lengths_class_4_r.append(length)
                             cut_site = read.aend + self.reverse_shift - 1
-                            if cut_site >= p1 and cut_site < p2:
+                            if p1 <= cut_site < p2:
                                 signal_raw_class_4_r[cut_site - p1] += 1.0
 
         # output the plot

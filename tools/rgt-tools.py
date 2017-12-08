@@ -690,14 +690,14 @@ if __name__ == "__main__":
         else:
             if not args.genes:
                 renamebed = bed.gene_association(gene_set=None, organism=args.organism,
-                                                 promoterLength=args.l, strand_specific=args.s,
-                                                 threshDist=args.t, show_dis=args.d)
+                                                 promoter_length=args.l, strand_specific=args.s,
+                                                 thresh_dist=args.t, show_dis=args.d)
             else:
                 genes = GeneSet("genes")
                 genes.read(args.genes)
                 renamebed = bed.gene_association(gene_set=genes, organism=args.organism,
-                                                 promoterLength=args.l, strand_specific=args.s,
-                                                 threshDist=args.t, show_dis=args.d)
+                                                 promoter_length=args.l, strand_specific=args.s,
+                                                 thresh_dist=args.t, show_dis=args.d)
 
             renamebed.write(args.o)
 
@@ -789,7 +789,7 @@ if __name__ == "__main__":
             de_gene = GeneSet("de genes")
             de_gene.read(args.i)
             print(len(de_gene))
-            promoter = ann.get_promoters(promoterLength=args.l, gene_set=de_gene, unmaplist=False)
+            promoter = ann.get_promoters(promoter_length=args.l, gene_set=de_gene, unmaplist=False)
             #print(len(de_prom))
 
         
@@ -1348,8 +1348,8 @@ if __name__ == "__main__":
         target = GenomicRegionSet(args.t)
         target.read(args.t, io=GRSFileIO.Bed)
 
-        res = bed.gene_association(organism=args.organism, target_regions=target, promoterLength=args.l,
-                                   threshDist=0, show_dis=False, strand_specific=False, add_data=True)
+        res = bed.gene_association(organism=args.organism, target_regions=target, promoter_length=args.l,
+                                   thresh_dist=0, show_dis=False, strand_specific=False, add_data=True)
         res.write(args.o)
 
 

@@ -3,6 +3,7 @@ from __future__ import print_function
 from __future__ import division
 from .shared_function import *
 
+
 # Local test
 
 
@@ -24,7 +25,7 @@ class Venn:
                 gregions = GenomicRegionSet(gs)
                 gregions.read(gs)
                 associated_gr = gregions.gene_association(organism=self.organism,
-                                                          promoterLength=1000, threshDist=0, show_dis=False)
+                                                          promoter_length=1000, thresh_dist=0, show_dis=False)
                 genes = []
                 for r in associated_gr:
                     if ":" in r.name:
