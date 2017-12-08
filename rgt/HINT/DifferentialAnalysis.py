@@ -1,4 +1,3 @@
-# Import
 import os
 import numpy as np
 from pysam import Samfile, Fastafile
@@ -199,8 +198,8 @@ def diff_analysis_run(args):
             ps_tc_results_by_tf[mpbs_name].append(res)
 
     stat_results_by_tf = get_stat_results(ps_tc_results_by_tf)
-    output_stat_results(args, stat_results_by_tf)
     scatter_plot(args, stat_results_by_tf)
+    output_stat_results(args, stat_results_by_tf)
 
 
 def get_bc_signal(chrom, start, end, bam, bias_table, genome_file_name, forward_shift, reverse_shift):
@@ -452,14 +451,22 @@ def scatter_plot(args, stat_results_by_tf):
     mpbs_names = list()
     for mpbs_name in stat_results_by_tf.keys():
         mpbs_names.append(mpbs_name)
-        tc_diff.append(stat_results_by_tf[mpbs_name][-1])
+        tc_diff.append(stat_results_by_tf[mpbs_name][-2])
         ps_diff.append(stat_results_by_tf[mpbs_name][2])
 
-    fig, ax = plt.subplots()
-    ax.scatter(tc_diff, ps_diff, alpha=0.4)
+    fig, ax = plt.subplots(figsize=(12,12))
+    ax.scatter(tc_diff, ps_diff, alpha=0.0)
     for i, txt in enumerate(mpbs_names):
-        ax.annotate(txt, (tc_diff[i], ps_diff[i]), )
+        ax.annotate(txt, (tc_diff[i], ps_diff[i]), alpha=0.6)
     ax.margins(0.05)
+
+    tc_diff_mean = np.mean(tc_diff)
+    ps_diff_mean = np.mean(ps_diff)
+    ax.axvline(x=tc_diff_mean, linewidth=2, linestyle='dashed')
+    ax.axhline(y=ps_diff_mean, linewidth=2, linestyle='dashed')
+
+    ax.set_xlabel("TC DIFF of {} - {}".format(args.condition1, args.condition2), fontweight='bold')
+    ax.set_ylabel("Protection Score of {} - {}".format(args.condition1, args.condition2), fontweight='bold', rotation=90)
 
     figure_name = os.path.join(args.output_location, "{}_{}_statistics.pdf".format(args.condition1, args.condition2))
     fig.tight_layout()
