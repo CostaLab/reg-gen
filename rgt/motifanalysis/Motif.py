@@ -29,7 +29,7 @@ class Motif:
         pfm -- Position Frequency Matrix.
         bg -- Background frequencies.
         pssm -- Position Specific Scoring Matrix.
-        alphabet -- A list of letters, eg ["A", "C", "G", "T"]
+        alphabet -- A list of letters, eg ["Aa", "Cc", "Gg", "Tt"]
         threshold -- Motif matching threshold.
         len -- Length of the motif.
         max -- Maximum PSSM score possible.
@@ -41,12 +41,14 @@ class Motif:
         repository = input_file_name.split("/")[-2]
 
         # Creating PFM & PSSM
-        self.pfm = parsers.pfm(input_file_name)
+        self.pfm = parsers.pfm(str(input_file_name))
         self.bg = tools.flat_bg(len(self.pfm))  # total number of "points" to add, not per-row
         self.pssm = tools.log_odds(self.pfm, self.bg, pseudocounts, 2)
 
-        # maximum value found in the whole PSSM
+        # how many bases this motif has
         self.len = len(self.pfm[0])
+
+        # maximum value found in the whole PSSM
         self.max = max([max(e) for e in self.pssm])
 
         # we only support pure DNA or methylated DNA, for now.

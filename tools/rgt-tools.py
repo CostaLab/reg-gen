@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Python Libraries
 from __future__ import print_function
 import os
@@ -9,6 +11,7 @@ import pysam
 import numpy
 import argparse
 import natsort
+from operator import attrgetter
 import matplotlib
 matplotlib.use('Agg', warn=False)
 import matplotlib.pyplot as plt
@@ -318,6 +321,7 @@ if __name__ == "__main__":
     parser_adddata.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_adddata.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_adddata.add_argument('-t', metavar='target', type=str, help="Target BED file")
+    parser_adddata.add_argument('-s', metavar='strand', type=str, default=None, help="same or opposite")
 
     ############### BED sampling regions randomly ################################
     parser_sampling = subparsers.add_parser('bed_sampling',
@@ -332,6 +336,15 @@ if __name__ == "__main__":
     parser_bed12tobed6.add_argument('-i', metavar='input', type=str, help="Input BED file")
     parser_bed12tobed6.add_argument('-o', metavar='output', type=str, help="Output BED file")
     parser_bed12tobed6.add_argument('-e', action="store_true", help="Add exon number or not")
+
+    ############### BED check up stream ################################
+    parser_bedcheckup = subparsers.add_parser('bed_check_up',
+                                               help="[BED] Convert BED12 to BED6")
+    parser_bedcheckup.add_argument('-i', metavar='input', type=str, help="Input BED file")
+    parser_bedcheckup.add_argument('-o', metavar='output', type=str, help="Output BED file")
+    parser_bedcheckup.add_argument('-t',  metavar='target', type=str, help="Target BED file")
+    parser_bedcheckup.add_argument('-l', type=int, default=1000, help="Define the length (bp) to detect")
+    parser_bedcheckup.add_argument('-organism', type=str, help="Define the organism")
 
     ############### Divide regions in BED by expression #######################
     # python rgt-tools.py divideBED -bed -t -o1 -o1 -c -m
@@ -677,14 +690,14 @@ if __name__ == "__main__":
         else:
             if not args.genes:
                 renamebed = bed.gene_association(gene_set=None, organism=args.organism,
-                                                 promoterLength=args.l, strand_specific=args.s,
-                                                 threshDist=args.t, show_dis=args.d)
+                                                 promoter_length=args.l, strand_specific=args.s,
+                                                 thresh_dist=args.t, show_dis=args.d)
             else:
                 genes = GeneSet("genes")
                 genes.read(args.genes)
                 renamebed = bed.gene_association(gene_set=genes, organism=args.organism,
-                                                 promoterLength=args.l, strand_specific=args.s,
-                                                 threshDist=args.t, show_dis=args.d)
+                                                 promoter_length=args.l, strand_specific=args.s,
+                                                 thresh_dist=args.t, show_dis=args.d)
 
             renamebed.write(args.o)
 
@@ -776,7 +789,7 @@ if __name__ == "__main__":
             de_gene = GeneSet("de genes")
             de_gene.read(args.i)
             print(len(de_gene))
-            promoter = ann.get_promoters(promoterLength=args.l, gene_set=de_gene, unmaplist=False)
+            promoter = ann.get_promoters(promoter_length=args.l, gene_set=de_gene, unmaplist=False)
             #print(len(de_prom))
 
         
@@ -1294,8 +1307,14 @@ if __name__ == "__main__":
                         line = line.strip()
                         l = line.split()
                         overlapping = overlap_regions.covered_by_aregion(GenomicRegion(chrom=l[0], initial=int(l[1]), final=int(l[2])))
+                        # print(l[5])
                         if len(overlapping) > 0:
-                            print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
+                            if not args.s:
+                                print(line + "\t" + ",".join([g.name for g in overlapping]), file=fout)
+                            elif args.s == "same":
+                                print(line + "\t" + ",".join([g.name for g in overlapping if g.orientation == l[5]]), file=fout)
+                            elif args.s == "opposite":
+                                print(line + "\t" + ",".join([g.name for g in overlapping if g.orientation != l[5]]), file=fout)
                         else:
                             print(line + "\t.", file=fout)
 
@@ -1317,6 +1336,21 @@ if __name__ == "__main__":
         bed = GenomicRegionSet(args.i)
         bed.read(args.i, io=GRSFileIO.Bed12)
         bed.write(args.o)
+
+
+
+    ############### BED bed_check_up ###########################
+    #
+    elif args.mode == "bed_check_up":
+        print(tag + ": [BED] Check the upstream region overlapping target BED file")
+        bed = GenomicRegionSet(args.i)
+        bed.read(args.i, io=GRSFileIO.Bed)
+        target = GenomicRegionSet(args.t)
+        target.read(args.t, io=GRSFileIO.Bed)
+
+        res = bed.gene_association(organism=args.organism, target_regions=target, promoter_length=args.l,
+                                   thresh_dist=0, show_dis=False, strand_specific=False, add_data=True)
+        res.write(args.o)
 
 
     ############### BAM filtering by BED ###########################
@@ -1488,7 +1522,12 @@ if __name__ == "__main__":
 
         for region in bed2:
             data = region.data.split()
-            stat = data[5].split(";")
+            # print(data)
+            # sys.exit(1)
+            if ";" in data[4]:
+                stat = data[4].split(";")
+            else:
+                stat = data[5].split(";")
             s1 = [float(x) + 1 for x in stat[0].split(":")]
             s2 = [float(x) + 1 for x in stat[1].split(":")]
             fc = math.log((sum(s2) / len(s2)) / (sum(s1) / len(s1)), 2)
@@ -1501,7 +1540,12 @@ if __name__ == "__main__":
 
         for region in bed2:
             l = region.data.split()
-            s = l[5].split(";")
+            # print(l)
+            # sys.exit(1)
+            if ";" in l[4]:
+                s = l[4].split(";")
+            else:
+                s = l[5].split(";")
             if abs(float(l[0])) > args.fc and float(s[2]) > args.p:
 
                 s1 = sum([int(x) for x in s[0].split(":")]) / len(s[0].split(":"))
@@ -1528,7 +1572,11 @@ if __name__ == "__main__":
                     lose_table.add(GenomicRegion(chrom=region.chrom, initial=region.initial, final=region.final,
                                                  orientation=region.orientation, data=data, name=region.name))
                     lose_peaks.add(region)
-
+        # sort table
+        gain_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
+        gain_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
+        lose_table.sort(key=lambda x: float(x.data.split("\t")[-2]), reverse=True)
+        lose_table.sort(key=lambda x: float(x.data.split("\t")[-1]), reverse=True)
         gain_peaks.write(os.path.join(args.o, name + tag + "_gain.bed"))
         lose_peaks.write(os.path.join(args.o, name + tag + "_lost.bed"))
         gain_table.write(os.path.join(args.o, name + tag + "_gain.table"))
@@ -1548,7 +1596,7 @@ if __name__ == "__main__":
             for r in regions:
                 print(r.name)
                 s = get_sequence(ch=r.chrom, ss=r.initial, es=r.final, strand=r.orientation, 
-                                 rna=args.r, ex=args.ex)
+                                 rna=args.rna, ex=args.ex)
                 print(s[:20])
                 ss = [s[i:i+70] for i in range(0, len(s), 70)]
 
@@ -1813,4 +1861,3 @@ if __name__ == "__main__":
                 else:
                     os.rename(os.path.join(args.o, file),
                               os.path.join(args.o, name_dict[id] + "." + formatf))
-

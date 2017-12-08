@@ -22,13 +22,13 @@ from matplotlib.ticker import MaxNLocator
 
 
 # Distal Libraries
-from rgt.SequenceSet import SequenceSet
-from rgt.viz.plotTools import output_array
-from rgt.GenomicRegion import GenomicRegion
-from RNADNABindingSet import RNADNABindingSet
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
+from ..SequenceSet import SequenceSet
+from ..viz.plotTools import output_array
+from ..GenomicRegion import GenomicRegion
+from .RNADNABindingSet import RNADNABindingSet
+from ..GenomicRegionSet import GenomicRegionSet
+from ..motifanalysis.Statistics import multiple_test_correction
+from ..Util import SequenceType, Html, ConfigurationFile, GenomeData, Library_path
 
 # Color code for all analysis
 target_color = "mediumblue"
@@ -677,7 +677,7 @@ def rna_associated_gene(rna_regions, name, organism):
               max([e[2] for e in rna_regions]), rna_regions[0][3] ]
         g = GenomicRegionSet("RNA associated genes")
         g.add( GenomicRegion(chrom=s[0], initial=s[1], final=s[2], name=name, orientation=s[3]) )
-        asso_genes = g.gene_association(organism=organism, promoterLength=1000, show_dis=True)
+        asso_genes = g.gene_association(organism=organism, promoter_length=1000, show_dis=True)
 
         # genes = asso_genes[0].name.split(":")
         closest_genes = []

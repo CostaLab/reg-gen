@@ -2,15 +2,22 @@ import sys
 import copy
 import itertools
 from collections import OrderedDict
-from rgt.Util import OverlapType
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.ExperimentalMatrix import ExperimentalMatrix
-
+from ..Util import OverlapType
+from ..GenomicRegionSet import GenomicRegionSet
+from ..ExperimentalMatrix import ExperimentalMatrix
 
 
 ###########################################################################################
 #                    Combinatorial test
 ###########################################################################################
+
+def posi2region(regions, p):
+    all = range(len(regions))
+    new_r = GenomicRegionSet(name="")
+    for r in p:
+        new_r.combine(regions[r])
+    return new_r
+
 
 class Combinatorial:
     def __init__(self, em_path, query):
@@ -32,18 +39,11 @@ class Combinatorial:
             print("** Please define grouping column '-g'")
             sys.exit(1)
 
-    def posi2region(self, regions, p):
-        all = range(len(regions))
-        new_r = GenomicRegionSet(name="")
-        for r in p:
-            new_r.combine(regions[r])
-        return new_r
-
     def posi2set(self, regions, p):
-        all = range(len(regions))
+        all_len = range(len(regions))
         inter_r = copy.deepcopy(regions[p[0]])
 
-        for i in all:
+        for i in all_len:
             # print("inter_r: "+inter_r.name)
             if i in p[1:]:
                 inter_r = inter_r.intersect(regions[i], mode=OverlapType.OVERLAP)
@@ -118,6 +118,6 @@ class Combinatorial:
                 posi = [list(i) for i in posi]
                 for p in posi:
                     print("   " + str(p))
-                    pr = self.posi2region(self.groupedreference[ty], p)
+                    pr = posi2region(self.groupedreference[ty], p)
                     new_refs[ty].append(pr)
                     ref_names.append(pr.name)

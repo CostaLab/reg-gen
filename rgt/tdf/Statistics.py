@@ -7,13 +7,13 @@ numpy.seterr(divide='ignore', invalid='ignore')
 from scipy import stats
 import multiprocessing
 from collections import OrderedDict
-from rgt.tdf.RNADNABindingSet import RNADNABindingSet
-from rgt.motifanalysis.Statistics import multiple_test_correction
-from rgt.tdf.triplexTools import dbd_regions
-from rgt.GenomicRegionSet import GenomicRegionSet
-from rgt.Util import OverlapType
-from rgt.tdf.triplexTools import rna_associated_gene
-from rgt.tdf.Triplexes import random_each
+from ..tdf.RNADNABindingSet import RNADNABindingSet
+from ..motifanalysis.Statistics import multiple_test_correction
+from ..tdf.triplexTools import dbd_regions
+from ..GenomicRegionSet import GenomicRegionSet
+from ..Util import OverlapType
+from ..tdf.triplexTools import rna_associated_gene
+from ..tdf.Triplexes import random_each
 
 
 
@@ -403,7 +403,7 @@ class Statistics(object):
         for rbs in self.rbss:
             tr = len(tpx.merged_dict[rbs])
             self.counts_tr[rbs] = [tr, len(target_regions) - tr]
-            self.counts_dbs[rbs] = len(tpxf.merged_dict[rbs])
+            self.counts_dbs[rbs] = len(tpx.merged_dict[rbs])
         self.region_dbd = tpxf.sort_rbs_by_regions(target_regions)
         self.region_dbs = tpxf.sort_rd_by_regions(regionset=target_regions)
         self.region_dbsm = {}

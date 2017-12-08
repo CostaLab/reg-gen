@@ -10,8 +10,9 @@ from setuptools import setup, find_packages
 from os import walk, chown, chmod, path, getenv, makedirs, remove
 from optparse import OptionParser, BadOptionError, AmbiguousOptionError
 
+p3_supported = False
 if not sys.version_info[0] == 2:
-    sys.exit("Sorry, Python 3 is not supported (yet)")
+    p3_supported = True
 
 """
 Installs the RGT tool with standard setuptools options and additional
@@ -88,7 +89,13 @@ else:
     bin_dir = "linux"
     libRGT = "librgt_linux.so"
     triplexes_file = "lib/libtriplexator.so"
-    common_deps.append("ngslib")
+    # ngslib doesn't support Python 3 (28/08/2017)
+    if not p3_supported:
+        common_deps.append("ngslib")
+
+if not p3_supported:
+    # needed to be able to do "import configparser", which is the new Python 3 name for ConfigParser
+    common_deps.append("configparser")
 
 tools_dictionary = {
     "core": (
@@ -102,13 +109,13 @@ tools_dictionary = {
     "motifanalysis": (
         "rgt-motifanalysis",
         "rgt.motifanalysis.Main:main",
-        ["Biopython>=1.64", "fisher>=0.1.4"],
+        ["Biopython>=1.64", "fisher>=0.1.5"],
         ["data/bin/" + bin_dir + "/bedToBigBed", "data/bin/" + bin_dir + "/bigBedToBed"]
     ),
     "hint": (
         "rgt-hint",
         "rgt.HINT.Main:main",
-        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx==0.12.1"],
+        ["scikit-learn>=0.19.0", "hmmlearn>=0.2", "pyx" if p3_supported else "pyx==0.12.1"],
         []
     ),
     "THOR": (
@@ -298,12 +305,12 @@ data_config_file.write("gene_alias: " + path.join(genome_dir, "alias_zebrafish.t
 data_config_file.write("[MotifData]\n")
 data_config_file.write("pwm_dataset: motifs\n")
 data_config_file.write("logo_dataset: logos\n")
-data_config_file.write("repositories: jaspar_vertebrates,uniprobe_primary\n\n")
+data_config_file.write("repositories: hocomoco\n\n")
 data_config_file.write("[HmmData]\n")
 data_config_file.write("default_hmm_dnase: fp_hmms/dnase.hmm\n")
 data_config_file.write("default_hmm_dnase_bc: fp_hmms/dnase_bc.hmm\n")
-data_config_file.write("default_hmm_atac: fp_hmms/atac.hmm\n")
-data_config_file.write("default_hmm_atac_bc: fp_hmms/atac.pkl\n")
+data_config_file.write("default_hmm_atac_paired: fp_hmms/atac_paired.pkl\n")
+data_config_file.write("default_hmm_atac_single: fp_hmms/atac_single.pkl\n")
 data_config_file.write("default_hmm_histone: fp_hmms/histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone: fp_hmms/dnase_histone.hmm\n")
 data_config_file.write("default_hmm_dnase_histone_bc: fp_hmms/dnase_histone_bc.hmm\n")
@@ -314,7 +321,10 @@ data_config_file.write("default_bias_table_R_SH: fp_hmms/single_hit_bias_table_R
 data_config_file.write("default_bias_table_F_DH: fp_hmms/double_hit_bias_table_F.txt\n")
 data_config_file.write("default_bias_table_R_DH: fp_hmms/double_hit_bias_table_R.txt\n")
 data_config_file.write("default_bias_table_F_ATAC: fp_hmms/atac_bias_table_F.txt\n")
-data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n\n")
+data_config_file.write("default_bias_table_R_ATAC: fp_hmms/atac_bias_table_R.txt\n")
+data_config_file.write("dependency_model: fp_hmms/LearnDependencyModel.jar\n")
+data_config_file.write("slim_dimont_predictor: fp_hmms/SlimDimontPredictor.jar\n")
+data_config_file.write("default_test_fa: fp_hmms/test.fa\n\n")
 data_config_file.write("[Library]\n")
 data_config_file.write("path_triplexator: " + path.join(rgt_data_location, triplexes_file) + "\n")
 data_config_file.write("path_c_rgt: " + path.join(rgt_data_location, "lib/" + libRGT) + "\n")
@@ -358,9 +368,10 @@ copy_files_dictionary = {
     "zv9": ["genes_zv9.bed", "chrom.sizes.zv9", "alias_zebrafish.txt"],
     "zv10": ["genes_zv10.bed", "chrom.sizes.zv10", "alias_zebrafish.txt"],
     "fp_hmms": ["dnase.hmm", "dnase_bc.hmm", "histone.hmm", "dnase_histone.hmm", "dnase_histone_bc.hmm",
-                "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac.pkl", "atac.hmm", "atac_bc.hmm",
+                "single_hit_bias_table_F.txt", "single_hit_bias_table_R.txt", "atac_paired.pkl", "atac_single.pkl",
                 "atac_bias_table_F.txt", "atac_bias_table_R.txt", "atac_histone.hmm", "atac_histone_bc.hmm",
-                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm"],
+                "double_hit_bias_table_F.txt", "double_hit_bias_table_R.txt", "H3K4me3_proximal.hmm",
+                "LearnDependencyModel.jar", "SlimDimontPredictor.jar", "test.fa"],
     "motifs": ["jaspar_vertebrates", "uniprobe_primary", "uniprobe_secondary", "hocomoco", "hocomoco.fpr",
                "jaspar_vertebrates.fpr", "uniprobe_primary.fpr", "uniprobe_secondary.fpr"],
     "fig": ["rgt_logo.gif", "style.css", "default_motif_logo.png", "jquery-1.11.1.js", "jquery.tablesorter.min.js",
@@ -398,9 +409,29 @@ author_list = ["Eduardo G. Gusmao", "Manuel Allhoff", "Joseph Chao-Chung Kuo", "
 corresponding_mail = "software@costalab.org"
 license_type = "GPL"
 
+if p3_supported:
+    # I'm not really sure what was going on here, but without this few lines
+    # the installation fails when processing the external Bedtools binaries.
+    # It looks like Python3 setuptools expects the "external scripts" to be python scripts.
+    # If they are not, the tokenize function fails. This few lines of code "hijack" the tokenize function
+    # to allow it to support binaries files as scripts.
+    import tokenize
+    try:
+        _detect_encoding = tokenize.detect_encoding
+    except AttributeError:
+        pass
+    else:
+        def detect_encoding(readline):
+            try:
+                return _detect_encoding(readline)
+            except SyntaxError:
+                return 'latin-1', []
+        tokenize.detect_encoding = detect_encoding
+
 # External scripts
 external_scripts = []
 for tool_option in options.param_rgt_tool:
+    print(tools_dictionary[tool_option][3])
     for e in tools_dictionary[tool_option][3]:
         external_scripts.append(e)
 
@@ -438,8 +469,8 @@ setup(name="RGT",
 # Modifying Permissions when Running Superuser/Admin
 # $SUDO_USER exists only if you are sudo, and returns the original user name
 current_user = getenv("SUDO_USER")
-default_file_permission = 0644
-default_path_permission = 0755
+default_file_permission = 0o644
+default_path_permission = 0o755
 
 if current_user:
     current_user_uid = getpwnam(current_user).pw_uid

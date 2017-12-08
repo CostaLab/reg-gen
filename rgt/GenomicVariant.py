@@ -5,8 +5,8 @@ GenomicVariant is a specialized GenomicRegion class and describes a SNP or InDel
 
 """
 
+from .GenomicRegion import GenomicRegion
 
-from rgt.GenomicRegion import GenomicRegion
 
 class GenomicVariant(GenomicRegion):
     """*Keyword arguments:*
@@ -25,36 +25,40 @@ class GenomicVariant(GenomicRegion):
         
     .. note:: all necessary information are contained in a VCF file.
     """
-    
-    def __init__(self, chrom, pos, ref, alt, qual, filter = None, id = None, info = None, format = None, genotype = None, samples = None):
+
+    def __init__(self, chrom, pos, ref, alt, qual, filter=None, id=None, info=None, format=None, genotype=None,
+                 samples=None):
         GenomicRegion.__init__(self, chrom, pos, pos + 1)
-        
+
         self.chrom = str(chrom)
         self.pos = int(pos)
         self.id = id
         self.ref = ref
         self.alt = alt
         self.qual = qual
-        self.filter = filter 
+        self.filter = filter
         self.info = info
         self.format = format
         self.genotype = genotype
         self.samples = samples
-        
+
         self.name = self.__str__
-        self.data = "_$_".join(map(lambda x: str(x), [self.id, self.ref, self.alt, self.qual, self.filter, self.info, self.format, self.genotype, self.samples]))
-    
+        self.data = "_$_".join(map(lambda x: str(x),
+                                   [self.id, self.ref, self.alt, self.qual, self.filter, self.info, self.format,
+                                    self.genotype, self.samples]))
+
     def __str__(self):
         """Give informal string representation"""
-        s = '-'.join( [self.chrom, str(self.pos)] )
+        s = '-'.join([self.chrom, str(self.pos)])
         if self.id is not None:
             s += '-' + self.id
-        
+
         return s
 
     def __repr__(self):
         """Return official representation of GenomicRegion"""
-        return ','.join( [self.chrom, str(self.pos)] )
+        return ','.join([self.chrom, str(self.pos)])
+
 
 if __name__ == '__main__':
     a = GenomicVariant('chr1', 1, "T", "A", 20)

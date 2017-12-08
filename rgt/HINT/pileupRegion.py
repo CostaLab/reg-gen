@@ -1,17 +1,4 @@
 ###################################################################################################
-# Libraries
-###################################################################################################
-
-# Python
-import warnings
-
-warnings.filterwarnings("ignore")
-
-# Internal
-from ..Util import ErrorHandler
-
-
-###################################################################################################
 # Classes
 ###################################################################################################
 
@@ -61,15 +48,15 @@ class PileupRegion:
 
     def __call__(self, alignment):
         try:
-            if (not alignment.is_reverse):
+            if not alignment.is_reverse:
                 cut_site = alignment.pos + self.forward_shift
-                if cut_site >= self.start and cut_site < self.end:
+                if self.start <= cut_site < self.end:
                     self.vector[cut_site - self.start] += 1.0
                 #for i in range(max(alignment.pos + self.forward_shift - self.upstream_ext, self.start),
                 #               min(alignment.pos + self.forward_shift + self.downstream_ext, self.end - 1)):
             else:
                 cut_site = alignment.aend + self.reverse_shift - 1
-                if cut_site >= self.start and cut_site < self.end:
+                if self.start <= cut_site < self.end:
                     self.vector[cut_site - self.start] += 1.0
                 #for i in range(max(alignment.aend + self.reverse_shift - self.downstream_ext, self.start),
                 #               min(alignment.aend + self.reverse_shift + self.upstream_ext, self.end - 1)):

@@ -4,10 +4,11 @@ from __future__ import division
 
 # Local Libraries
 # Distal Libraries
-from shared_function import *
+from .shared_function import *
 
 # Local test
-dir = os.getcwd()
+
+
 ###########################################################################################
 #                    Jaccard test
 ###########################################################################################
@@ -51,7 +52,8 @@ class Jaccard:
                     self.nalist.append(r.name)
                     continue
                 else:
-                    if r.name not in self.rlen.keys(): self.rlen[r.name] = len(r)
+                    if r.name not in self.rlen.keys():
+                        self.rlen[r.name] = len(r)
                     self.jlist[ty][r.name] = OrderedDict()
                     self.realj[ty][r.name] = OrderedDict()
                     self.plist[ty][r.name] = OrderedDict()
@@ -64,7 +66,8 @@ class Jaccard:
                             self.nalist.append(q.name)
                             continue
                         else:
-                            if q.name not in self.qlen.keys(): self.qlen[q.name] = len(q)
+                            if q.name not in self.qlen.keys():
+                                self.qlen[q.name] = len(q)
                             self.jlist[ty][r.name][q.name] = []
                             self.realj[ty][r.name][q.name] = q.jaccard(r)
                             for k in range(runtime):
@@ -133,8 +136,6 @@ class Jaccard:
                     color_t.append(self.color_list[q])
                     # x_ticklabels.append(q)
                 # Fine tuning boxplot
-
-
                 bp = axarr[i].boxplot(d, notch=False, sym='o', vert=True, whis=1.5, positions=None, widths=None,
                                       patch_artist=True, bootstrap=None)
                 z = 10  # zorder for bosplot
@@ -231,13 +232,13 @@ class Jaccard:
         self.nalist = set(self.nalist)
         if len(self.nalist) > 0:
             data_table.append([
-                                  'The following region sets contain zero-length regions which cause error in Jaccard index calculation, please check it:<br>' +
-                                  '<font color=\"red\">' + ', '.join([s for s in self.nalist]) + '</font>'])
+                'The following region sets contain zero-length regions which cause error in Jaccard index calculation, please check it:<br>' +
+                '<font color=\"red\">' + ', '.join([s for s in self.nalist]) + '</font>'])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
 
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content([
-                                  '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+            '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(
             ['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp, "index.html"))

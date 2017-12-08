@@ -1,29 +1,27 @@
 # Python Libraries
-from __future__ import print_function
 from __future__ import division
-import sys
-import matplotlib
-from matplotlib.backends.backend_pdf import PdfPages
-import matplotlib.pyplot as plt
-import numpy
-import natsort
+from __future__ import print_function
 
+import matplotlib
+import matplotlib.pyplot as plt
+import natsort
+import numpy
+from matplotlib.backends.backend_pdf import PdfPages
+
+from .shared_function import shiftedColorMap, walklevel
+from ..ExperimentalMatrix import *
 # Local Libraries
 # Distal Libraries
-from rgt.Util import Html
-from rgt.CoverageSet import *
-from rgt.ExperimentalMatrix import *
-from shared_function import shiftedColorMap, walklevel
+from ..Util import Html
+
 # Local test
-dir = os.getcwd()
 
 ###########################################################################################
 #                    BED Profile
 ###########################################################################################
 
 
-
-class BED_profile:
+class BedProfile:
     def __init__(self, input_path, organism, args):
 
         if os.path.isdir(input_path):
@@ -83,7 +81,7 @@ class BED_profile:
             for label in args.labels:
                 self.ind_col[label] = cols
                 cols += 1
-        self.fig_f, self.fig_axs = plt.subplots(rows+1, cols, dpi=300, figsize=(cols*size_panel, rows*size_panel))
+        self.fig_f, self.fig_axs = plt.subplots(rows + 1, cols, dpi=300, figsize=(cols * size_panel, rows * size_panel))
         self.table_h = {}
         self.tables = {}
         self.count_table = {}
@@ -93,11 +91,8 @@ class BED_profile:
             self.tables[self.bednames[i]] = []
             self.tables[self.bednames[i]].append([r.toString() for r in bed])
             self.table_h[self.bednames[i]].append("strand")
-            self.tables[self.bednames[i]].append([r.orientation if r.orientation else "." for r in bed ])
+            self.tables[self.bednames[i]].append([r.orientation if r.orientation else "." for r in bed])
             self.count_table[bed.name] = {}
-
-
-
 
     def cal_statistics(self):
         for i, bed in enumerate(self.beds):
@@ -125,7 +120,7 @@ class BED_profile:
             dis.append([numpy.log10(len(r)) for r in bed])
         max_len = max([max(x) for x in dis])
 
-        for i in range(len(self.beds)+1):
+        for i in range(len(self.beds) + 1):
             try:
                 ax = self.fig_axs[i, 0]
             except:
@@ -153,13 +148,12 @@ class BED_profile:
                 ax.set_ylabel("Length (log10)")
 
             elif i > 0:
-                ax.hist(dis[i-1], bins=100, color="cornflowerblue", linewidth=0)
-                ax.set_title(self.bednames[i-1])
+                ax.hist(dis[i - 1], bins=100, color="cornflowerblue", linewidth=0)
+                ax.set_title(self.bednames[i - 1])
 
                 ax.set_ylabel("Frequency")
                 ax.set_xlim([0, max_len])
         ax.set_xlabel("Length (log10)")
-
 
     def plot_motif_composition(self):
         motifs_1 = []
@@ -195,7 +189,7 @@ class BED_profile:
                 bars = []
                 for j, y in enumerate(ptable):
                     bar = ax.bar(range(len(self.bednames)), y, width=width, bottom=bottom, color=color_list[j],
-                           edgecolor="none", align='center')
+                                 edgecolor="none", align='center')
                     bars.append(bar)
                     bottom = [x + y for x, y in zip(bottom, y)]
                 ax.set_title("Composition")
@@ -207,7 +201,7 @@ class BED_profile:
                 ax.set_ylim([0, 100])
                 ax.set_xlim([-0.5, len(self.bednames) - 0.5])
                 # ax.legend(bars, ntlist, ax=ax)
-                ax.legend(bars[::-1], ntlist[::-1], ncol=4, bbox_to_anchor=(0.05,0.9,0.90,0.08),
+                ax.legend(bars[::-1], ntlist[::-1], ncol=4, bbox_to_anchor=(0.05, 0.9, 0.90, 0.08),
                           mode="expand", borderaxespad=0)
 
             elif i > 0:
@@ -224,8 +218,8 @@ class BED_profile:
                 total = numpy.sum(ar)
                 amin = numpy.amin(ar)
                 amax = numpy.amax(ar)
-                random_freq = (total/16)/amax
-                amin = amin/amax
+                random_freq = (total / 16) / amax
+                amin = amin / amax
 
                 orig_cmap = matplotlib.cm.coolwarm
                 shifted_cmap = shiftedColorMap(orig_cmap, start=amin, midpoint=random_freq, name='shifted')
@@ -241,7 +235,6 @@ class BED_profile:
                 ticks = ["A", "G", "C", "T"]
                 ax.set_xticklabels(ticks, minor=False)
                 ax.set_yticklabels(ticks[::-1], minor=False)
-
 
     # def plot_distribution_chromosome(self, outdir):
     #
@@ -261,7 +254,7 @@ class BED_profile:
     #         ax.set_ylabel("Frequency")
 
     def plot_ref(self, ref_dir, tag, other=False, strand=False):
-        print("Processing "+tag+" ....")
+        print("Processing " + tag + " ....")
         refs = []
         refs_names = []
         if os.path.isdir(ref_dir):
@@ -281,7 +274,7 @@ class BED_profile:
             refs.append(bed)
             refs_names.append(name)
         else:
-            print("*** Error: Not a valid directory: "+ref_dir)
+            print("*** Error: Not a valid directory: " + ref_dir)
             sys.exit(1)
 
         index = natsort.index_natsorted(refs_names)
@@ -341,7 +334,7 @@ class BED_profile:
                 for counts in overlapping_counts:
                     ss = sum(counts)
                     if ss > 0:
-                        proportion.append([x/ss * 100 for x in counts])
+                        proportion.append([x / ss * 100 for x in counts])
                     else:
                         proportion.append([0 for x in counts])
                 # print(proportion)
@@ -362,30 +355,28 @@ class BED_profile:
                 ax.set_ylabel("Percentage %")
                 # ax.tick_params(axis='x', which='both', top='off', bottom='off', labelbottom='on')
                 ax.set_ylim([0, 100])
-                ax.set_xlim([-0.5, len(self.bednames)-0.5])
+                ax.set_xlim([-0.5, len(self.bednames) - 0.5])
+                plt.tight_layout()
 
             elif i > 0:
-                x = [ x for x in range(len(overlapping_counts[i-1])) ]
-                ax.bar(x, overlapping_counts[i-1],
+                x = [x for x in range(len(overlapping_counts[i - 1]))]
+                ax.bar(x, overlapping_counts[i - 1],
                        color=color_list, linewidth=0, edgecolor="none", align='center')
-                ax.set_title(self.bednames[i-1])
+                ax.set_title(self.bednames[i - 1])
                 # ax.set_ylabel("Number")
-                ax.set_xticks([x for x in range(len(overlapping_counts[i-1]))])
+                ax.set_xticks([x for x in range(len(overlapping_counts[i - 1]))])
                 ax.set_xticklabels(refs_names, fontsize=7, rotation=20, ha="right")
-                ax.set_xlim([-0.5, len(overlapping_counts[i-1])-0.5])
+                ax.set_xlim([-0.5, len(overlapping_counts[i - 1]) - 0.5])
+                plt.tight_layout()
 
         ax.set_xlabel(tag)
 
-
-
-
     def save_fig(self, filename):
-        self.fig_f.savefig(filename+".png", facecolor='w', edgecolor='w',
-                  bbox_inches='tight', dpi=400)
-        pp = PdfPages(filename+".pdf")
+        self.fig_f.savefig(filename + ".png", facecolor='w', edgecolor='w',
+                           bbox_inches='tight', dpi=400)
+        pp = PdfPages(filename + ".pdf")
         pp.savefig(self.fig_f, bbox_inches='tight')
         pp.close()
-
 
     def gen_html(self, directory, title):
         dir_name = os.path.basename(directory)
@@ -397,7 +388,7 @@ class BED_profile:
         html = Html(name=html_header, links_dict=link_d, fig_dir=os.path.join(directory, "style"),
                     fig_rpath="../style", RGT_header=False, other_logo="viz", homepage="../index.html")
 
-        type_list = 's'*10
+        type_list = 's' * 10
         col_size_list = [10] * 10
 
         data_table = []
@@ -405,17 +396,17 @@ class BED_profile:
         c = 0
         for bed in self.bednames:
             c += 1
-            data_table.append([ str(c), bed,
-                                str(self.stats[bed]["Number of regions"]),
-                                "{0:.2f}".format(self.stats[bed]["Average length"]),
-                                "{0:.2f}".format(self.stats[bed]["s.d. of length"]),
-                                str(self.stats[bed]["min"]),
-                                str(self.stats[bed]["max"]),
-                                str(self.stats[bed]["Internal overlaps"])])
+            data_table.append([str(c), bed,
+                               str(self.stats[bed]["Number of regions"]),
+                               "{0:.2f}".format(self.stats[bed]["Average length"]),
+                               "{0:.2f}".format(self.stats[bed]["s.d. of length"]),
+                               str(self.stats[bed]["min"]),
+                               str(self.stats[bed]["max"]),
+                               str(self.stats[bed]["Internal overlaps"])])
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table,
                              border_list=None, sortable=True, clean=True)
-        html.add_figure("figure_"+title+".png", align=50, width=str(300*(2+len(self.ind_col.keys()))))
+        html.add_figure("figure_" + title + ".png", align=50, width=str(300 * (2 + len(self.ind_col.keys()))))
         html.add_fixed_rank_sortable()
         html.write(os.path.join(directory, title, "index.html"))
 
@@ -424,7 +415,7 @@ class BED_profile:
         for bed in self.bednames:
             # print(len(self.tables[bed]))
             # print([ len(l) for l in self.tables[bed] ])
-            with open(os.path.join(target_dir, "table_"+bed+".txt"), "w") as f:
+            with open(os.path.join(target_dir, "table_" + bed + ".txt"), "w") as f:
                 print("\t".join(self.table_h[bed]), file=f)
                 m = numpy.array(self.tables[bed])
                 # print(m.shape)
@@ -433,7 +424,6 @@ class BED_profile:
                     if line:
                         print("\t".join(line), file=f)
         with open(os.path.join(target_dir, "count_table.txt"), "w") as f:
-            print("\t".join(["Counts"]+self.count_tableh), file=f)
+            print("\t".join(["Counts"] + self.count_tableh), file=f)
             for bed in self.bednames:
-                print("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh ]), file=f)
-
+                print("\t".join([bed] + [str(self.count_table[bed][ref]) for ref in self.count_tableh]), file=f)
