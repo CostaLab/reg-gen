@@ -11,8 +11,11 @@ from ..Util import Html
 from ..CoverageSet import *
 from ..ExperimentalMatrix import *
 from .shared_function import output_array, group_refque, color_groupded_region, multiple_correction, value2str
+
 # Local test
-dir = os.getcwd()
+# dir = os.getcwd()
+
+
 ###########################################################################################
 #                    Projection test
 ###########################################################################################
@@ -55,9 +58,9 @@ class Projection:
             self.background[ty].merge()
 
         for ty in self.groupedreference.keys():
-            rlist = [ r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
+            rlist = [r.trim_by(background=self.background[ty]) for r in self.groupedreference[ty]]
             self.groupedreference[ty] = rlist
-            qlist = [ q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
+            qlist = [q.trim_by(background=self.background[ty]) for q in self.groupedquery[ty]]
             self.groupedquery[ty] = qlist
 
     def set_background(self, bed_path):
@@ -66,10 +69,10 @@ class Projection:
         self.background = OrderedDict()
         for ty in self.groupedreference.keys():
             self.background[ty] = bg
-            rlist = [ r.trim_by(background=bg) for r in self.groupedreference[ty]]
+            rlist = [r.trim_by(background=bg) for r in self.groupedreference[ty]]
             self.groupedreference[ty] = rlist
 
-            qlist = [ q.trim_by(background=bg) for q in self.groupedquery[ty]]
+            qlist = [q.trim_by(background=bg) for q in self.groupedquery[ty]]
             self.groupedquery[ty] = qlist
 
     def projection_test(self, organism):
@@ -88,8 +91,10 @@ class Projection:
             self.qlist[ty] = OrderedDict()
             self.plist[ty] = OrderedDict()
             self.interq_list[ty] = OrderedDict()
-            if self.background: bgset = self.background[ty]
-            else: bgset = None
+            if self.background:
+                bgset = self.background[ty]
+            else:
+                bgset = None
 
             for i, r in enumerate(self.groupedreference[ty]):
                 # print(r.name)
@@ -100,7 +105,8 @@ class Projection:
                 self.lenlist[r.name] = len(r)
                 for j, q in enumerate(self.groupedquery[ty]):
                     # print(r.name, q.name, sep="\t")
-                    if r.name == q.name: continue
+                    if r.name == q.name:
+                        continue
                     else:
                         bg, ratio, p, interq = r.projection_test(q, organism, extra=True, background=bgset)
                         self.bglist[ty][r.name][q.name] = bg
@@ -135,7 +141,8 @@ class Projection:
         except:
             os.mkdir(directory)
         for ty in self.interq_list.keys():
-            if ty: g = ty+ "_"
+            if ty:
+                g = ty + "_"
             else:
                 g = ""
             for r in self.interq_list[ty].keys():
@@ -146,7 +153,7 @@ class Projection:
 
         tw = pw
         th = len(self.qlist.keys()) * ph
-        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300,figsize=(tw, th))
+        f, ax = plt.subplots(len(self.qlist.keys()), 1, dpi=300, figsize=(tw, th))
 
         # f, ax = plt.subplots(len(self.qlist.keys()),1)
         try:
@@ -167,7 +174,8 @@ class Projection:
                 for ind_q, q in enumerate(self.qlist[ty][r].keys()):
                     x = ind_r + ind_q * width + 0.1
                     y = self.qlist[ty][r][q]
-                    if y == 0 and logt: y = 0.000001
+                    if y == 0 and logt:
+                        y = 0.000001
                     # print("    "+r+"     "+q+"     "+str(x)+"     "+str(y))
                     ax[ind_ty].bar(x, y, width=width, color=self.color_list[q], edgecolor="none",
                                    align='edge', log=logt, label=q)
@@ -294,8 +302,8 @@ class Projection:
         nalist = set(nalist)
         if len(nalist) > 0:
             data_table.append([
-                                  'The following references contain zero-length region which cause error in proportion calculation, please check it:<br>' +
-                                  '     <font color=\"red\">' + ', '.join([s for s in nalist]) + '</font></p>'])
+                'The following references contain zero-length region which cause error in proportion calculation, please check it:<br>' +
+                '     <font color=\"red\">' + ', '.join([s for s in nalist]) + '</font></p>'])
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_fixed_rank_sortable()
 
@@ -317,7 +325,7 @@ class Projection:
 
         html.add_zebra_table(header_list, col_size_list, type_list, data_table, align=align, cell_align="left")
         html.add_free_content([
-                                  '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+            '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(
             ['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See details</a>'])
@@ -376,7 +384,7 @@ class Projection:
             # Genome
             # self.distriDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)) for chr in self.chrom_list]
 
-            self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chr)[0]) / all_cov for chr in self.chrom_list]
+            self.disperDict[ty]["Genome"] = [len(genome.any_chrom(chrom=chrom)[0]) / all_cov for chrom in self.chrom_list]
 
     def plot_distribution(self):
         def to_percentage(x, pos=0):
@@ -439,7 +447,7 @@ class Projection:
 
         html.add_free_content(['<a href="parameters.txt" style="margin-left:100">See parameters</a>'])
         html.add_free_content([
-                                  '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
+            '<a href="reference_experimental_matrix.txt" style="margin-left:100">See reference experimental matrix</a>'])
         html.add_free_content(
             ['<a href="query_experimental_matrix.txt" style="margin-left:100">See query experimental matrix</a>'])
         html.write(os.path.join(fp, "distribution.html"))

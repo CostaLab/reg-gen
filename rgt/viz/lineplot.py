@@ -15,6 +15,7 @@ from rgt.CoverageSet import CoverageSet
 from rgt.ExperimentalMatrix import ExperimentalMatrix
 from shared_function import gen_tags, tag_from_r, print2, MyPool, compute_coverage, colormap, unique, output_array
 
+
 # Local test
 # dir_path = os.getcwd()
 
@@ -163,7 +164,8 @@ class Lineplot:
             for ind, a_region in enumerate(bednames):
                 if a_region in tags: return ind
 
-        if mp > 0: ts = time.time()
+        if mp > 0:
+            ts = time.time()
         normRPM = False
         # Calculate for coverage
         mp_input = []
@@ -489,7 +491,8 @@ class Lineplot:
                                         if ir < nit - 1:
                                             ax.set_xticklabels([])
                                         # Processing for future output
-                                        if printtable: pArr.append([g, r, c, cc, d] + list(y))
+                                        if printtable:
+                                            pArr.append([g, r, c, cc, d] + list(y))
                                 else:
                                     if self.sense:
                                         plt.text(0.5, 0.51, 'sense', transform=ax.transAxes, fontsize=ticklabelsize,
@@ -599,9 +602,9 @@ class Lineplot:
                         axx.set_ylim([ymin, ymax])
                     except:
                         pass
-                    hand, l = axx.get_legend_handles_labels()
+                    hand, lab = axx.get_legend_handles_labels()
                     handles += hand
-                    labels += l
+                    labels += lab
             # handles, labels = ax.get_legend_handles_labels()
             uniq_labels = unique(labels)
 
@@ -732,7 +735,6 @@ class Lineplot:
                     # for bi, g in enumerate(self.data[t].keys()):
                     #    for bj, c in enumerate(self.data[t][g].keys()):
 
-
                     # im = axs[bi, bj].imshow(self.data[t][g][c], extent=[-self.extend, self.extend, 0,1], aspect='auto',
                     #                        vmin=0, vmax=max_value, interpolation='nearest', cmap=cm.coolwarm)
                     axs[bi, bj].set_xlim([-self.extend, self.extend])
@@ -761,7 +763,6 @@ class Lineplot:
                         cbar_ax = plt.subplot2grid((rows * ratio + 4, columns), (rows * ratio + 3, bj))
                         # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
 
-
                         # cbar = grid.cbar_axes[i//2].colorbar(im)
                         # cbar = plt.colorbar(im, cax = axs[rows,bj], ticks=[0, max_value], orientation='horizontal')
                         # cbar = axs[rows,bj].imshow(range(int(max_value)), extent=[0, int(max_value),0,0], aspect=10, extent=[-self.extend, self.extend,0,0]
@@ -774,7 +775,6 @@ class Lineplot:
                         # axs[rows,bj].set_ticks_position('none')
                         # axs[rows,bj].tick_params(axis='x', which='both', bottom='off', top='off', labelbottom='off')
                         # axs[rows,bj].tick_params(axis='y', which='both', left='off', right='off', labelleft='off')
-
 
                         # cbar.set_label('Amplitute of signal')
                         max_value = int(max_value)
